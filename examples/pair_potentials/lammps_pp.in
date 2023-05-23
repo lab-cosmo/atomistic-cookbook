@@ -1,0 +1,27 @@
+boundary p p p
+units           metal
+atom_style      atomic
+
+read_data       struct.in
+mass    1   1.008
+mass    2   12.011
+mass    3   14.007
+mass    4   15.999
+
+pair_style table linear 3000
+pair_coeff 1 1 /Users/matthiaskellner/Documents/COSMO_book/software-cookbook/examples/pair_potentials/potential.table REPULSIVE_HH
+pair_coeff 1 2 /Users/matthiaskellner/Documents/COSMO_book/software-cookbook/examples/pair_potentials/potential.table REPULSIVE_HC
+pair_coeff 1 3 /Users/matthiaskellner/Documents/COSMO_book/software-cookbook/examples/pair_potentials/potential.table REPULSIVE_HN
+pair_coeff 1 4 /Users/matthiaskellner/Documents/COSMO_book/software-cookbook/examples/pair_potentials/potential.table REPULSIVE_HO
+pair_coeff 2 2 /Users/matthiaskellner/Documents/COSMO_book/software-cookbook/examples/pair_potentials/potential.table REPULSIVE_CC
+pair_coeff 2 3 /Users/matthiaskellner/Documents/COSMO_book/software-cookbook/examples/pair_potentials/potential.table REPULSIVE_CN
+pair_coeff 2 4 /Users/matthiaskellner/Documents/COSMO_book/software-cookbook/examples/pair_potentials/potential.table REPULSIVE_CO
+pair_coeff 3 3 /Users/matthiaskellner/Documents/COSMO_book/software-cookbook/examples/pair_potentials/potential.table REPULSIVE_NN
+pair_coeff 3 4 /Users/matthiaskellner/Documents/COSMO_book/software-cookbook/examples/pair_potentials/potential.table REPULSIVE_NO
+pair_coeff 4 4 /Users/matthiaskellner/Documents/COSMO_book/software-cookbook/examples/pair_potentials/potential.table REPULSIVE_OO
+
+timestep        1
+thermo          1
+
+dump myDump2 all custom 1 pp_forces.xyz type id x y z fx fy fz
+run 0

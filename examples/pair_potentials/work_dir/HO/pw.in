@@ -1,0 +1,38 @@
+&CONTROL
+   calculation      = 'relax'
+   restart_mode     = 'from_scratch'
+   tprnfor          = .true.
+   pseudo_dir       = '../../pseudos/'
+/
+&SYSTEM
+   ibrav            = 1
+   ecutwfc          = 60.0
+   ecutrho          = 240.0
+   nosym            = .true.
+   occupations      = 'smearing'
+   degauss          = 0.02
+   smearing         = 'mv'
+   vdw_corr         = 'dft-d'
+   ntyp             = 2
+   nat              = 2
+   celldm(1)        = 24.982179487911292
+/
+&ELECTRONS
+   conv_thr         = 1e-10
+   mixing_beta      = 0.5
+/
+&IONS
+/
+&CELL
+/
+
+ATOMIC_SPECIES
+H 1.008 H.pbe-tm-new-gipaw-dc.UPF
+O 15.999 O.pbe-n-kjpaw_psl.1.0.0.UPF
+
+K_POINTS gamma
+
+ATOMIC_POSITIONS angstrom
+H 0.0000000000 0.0000000000 0.0000000000 0 0 0
+O 0.1000000000 0.0000000000 0.0000000000 1 0 0
+

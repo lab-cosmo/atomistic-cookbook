@@ -6,7 +6,7 @@ COSMO Software Cookbook
    :end-before: marker-building
 
 .. toctree::
-  :maxdepth: 1
-  :caption: Contents:
+   :maxdepth: 1
+   :caption: Contents:
 
-  tutorials
+   tutorials

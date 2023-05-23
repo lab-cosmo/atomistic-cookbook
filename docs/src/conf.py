@@ -17,7 +17,7 @@ extensions = [
     "jupyter_sphinx",
 ]
 
-example_subdirs = ["mlp_models", "sample_selection"]
+example_subdirs = ["mlp_models", "pair_potentials", "sample_selection"]
 sphinx_gallery_conf = {
     "filename_pattern": "/*",
     "examples_dirs": [f"../../examples/{p}" for p in example_subdirs],
@@ -32,5 +32,6 @@ exclude_patterns = ["_build"]
 
 project = "cosmo-software-cookbook"
 copyright = f"BSD 3-Clause License, Copyright (c) 2023, cosmo software cookbook team"
+
 
 htmlhelp_basename = "cosmo-software-cookbook"

@@ -1,0 +1,34 @@
+<simulation verbosity="high">
+  <output prefix='simulation'>
+     <properties stride='10'> [ step, time{picosecond}, potential{electronvolt}, conserved, temperature{kelvin}, ensemble_temperature{kelvin} ] </properties>
+     <trajectory stride='10' filename='pos'> positions </trajectory>
+     <trajectory stride='10' filename='frc'> forces </trajectory>
+     <checkpoint stride='1000' overwrite='False'/>
+  </output>
+  <total_steps>100</total_steps>
+  <total_time>1000</total_time>
+  <prng><seed>4441</seed></prng>
+  <ffsocket mode="unix" name="driver-lammps" pbc="True"> <address>lammps</address> </ffsocket>
+  <ffsocket mode="unix" name="driver-gap" pbc="True"> <address>gapd</address> </ffsocket>
+  <system>
+    <initialize nbeads="32">
+      <file mode="xyz"> init.xyz </file>
+      <velocities mode="thermal" units="kelvin"> 20 </velocities>
+    </initialize>
+    <forces>
+      <force forcefield="driver-lammps" weight='1.0'> </force>
+      <force forcefield="driver-gap" weight='1.0'> </force>
+    </forces>
+    <motion mode='dynamics'>
+      <dynamics mode='nvt'>
+        <timestep units='femtosecond'> 0.5 </timestep>
+        <thermostat mode='langevin'>
+          <tau units='femtosecond'> 100 </tau>
+        </thermostat>
+      </dynamics>
+    </motion>
+    <ensemble>
+      <temperature units="kelvin"> 300 </temperature>
+    </ensemble>
+  </system>
+</simulation>

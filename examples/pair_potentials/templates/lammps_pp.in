@@ -1,0 +1,27 @@
+boundary p p p  #don't change, just means periodic boundary conditions
+units           metal  #Uses eV, angstrom, picosecond for time
+atom_style      atomic #just stick with atomic
+
+read_data       struct.in  #this is name of your input structure, which was created using ASE
+mass    1   1.008   # label of the atom, and its mass next to it (this is for hydrogen)
+mass    2   12.011  # label for carbon
+mass    3   14.007  # label for nitrogen
+mass    4   15.999  # label for oxygen
+
+pair_style table linear 3000   # do not alter
+pair_coeff 1 1 /scratch/vprincip/pair_potentials/potential.table REPULSIVE_HH # The numbers (1 1) at the start indicate the label pairs for which to apply the potential. The REPULSIVE_HH indicates the section of the potential.table file to use.
+pair_coeff 1 2 /scratch/vprincip/pair_potentials/potential.table REPULSIVE_HC
+pair_coeff 1 3 /scratch/vprincip/pair_potentials/potential.table REPULSIVE_HN
+pair_coeff 1 4 /scratch/vprincip/pair_potentials/potential.table REPULSIVE_HO
+pair_coeff 2 2 /scratch/vprincip/pair_potentials/potential.table REPULSIVE_CC
+pair_coeff 2 3 /scratch/vprincip/pair_potentials/potential.table REPULSIVE_CN
+pair_coeff 2 4 /scratch/vprincip/pair_potentials/potential.table REPULSIVE_CO
+pair_coeff 3 3 /scratch/vprincip/pair_potentials/potential.table REPULSIVE_NN
+pair_coeff 3 4 /scratch/vprincip/pair_potentials/potential.table REPULSIVE_NO
+pair_coeff 4 4 /scratch/vprincip/pair_potentials/potential.table REPULSIVE_OO
+
+timestep        1  # Don't change, we just want a single-point calculation
+thermo          1  # Don't change - this writes to the output very step (only 1 step in this case)
+
+dump myDump2 all custom 1 pp_forces.xyz type id x y z fx fy fz #this will store positions and forces - you need to get the energy from the lammps output file
+run 0 #run single calculation

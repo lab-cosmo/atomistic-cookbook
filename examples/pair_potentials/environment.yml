@@ -1,0 +1,21 @@
+name: ppp
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - qe
+  - jupyterlab
+  - lammps
+  - i-pi
+  - pip
+  - pip:
+    - numpy
+    - pandas
+    - ase
+    - matplotlib
+    - skcosmo
+    - chemiscope
+    - scipy
+    - scikit-learn
+    - tqdm 
+    - git+https://github.com/lab-cosmo/librascal
