@@ -5,3 +5,5 @@
 
   examples/mlp_models/index
   examples/sample_selection/index
+  examples/GPRmodel+MDAnalysis/index
+

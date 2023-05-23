@@ -17,7 +17,7 @@ extensions = [
     "jupyter_sphinx",
 ]
 
-example_subdirs = ["mlp_models", "sample_selection"]
+example_subdirs = ["mlp_models", "sample_selection", "GPRmodel+MDAnalysis"]
 sphinx_gallery_conf = {
     "filename_pattern": "/*",
     "examples_dirs": [f"../../examples/{p}" for p in example_subdirs],
