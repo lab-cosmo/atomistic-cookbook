@@ -40,8 +40,9 @@ for frame in frames:
 # Compute SOAP feature vectors using rascaline
 # --------------------------------------------
 #
-# First, define the rascaline hyperparameters used to compute SOAP,
-# taken from `Lopanitsyna et al. <https://journals.aps.org/prmaterials/abstract/10.1103/PhysRevMaterials.7.045802>`.
+# First, we define the SOAP hyperparameters taken from 
+# `Lopanitsyna et al. <https://journals.aps.org/prmaterials/abstract/10.1103/PhysRevMaterials.7.045802>`_ 
+# Then we compute the raw feature vectors using rascaline.
 
 # rascaline hyperparameters
 HYPER_PARAMETERS = {
@@ -56,9 +57,19 @@ HYPER_PARAMETERS = {
 }
 
 calculator = SoapPowerSpectrum(**HYPER_PARAMETERS)
-# we pass `species_center`, `species_neighbor_1`, and `species_neighbor_2`
+raw_featvec = calculator.compute(frames).keys_to_properties(["species_center", "species_neighbor_1", "species_neighbor_2"])
+temp_featvec = np.array(raw_featvec.block().values)
+print(temp_featvec.shape)
+
+# %%
+# Notice that we pass `species_center`, `species_neighbor_1`, and `species_neighbor_2`
 # all to properties. This results in the description of the two atomic species
 # in strictly disonnected, separate feature spaces.
-raw_featvec = calculator.compute(frames).keys_to_properties(["species_center", "species_neighbor_1", "species_neighbor_2"])
+#
+# Also, from the array shape, one can see that the feature vectors are saved by all 
+# the atoms that appear in the individual structures.
+
+
+
 
 
