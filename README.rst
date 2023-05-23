@@ -6,7 +6,7 @@ COSMO Software Cookbook
 .. marker-intro
 
 The COSMO cookbook contains recipes for atomic-scale modelling for materials and molecules, with a aprticular focus on machine learning and statistical sampling methods.
-Rather than focusing on the usage of a specific package (see the [COSMO github page](https://https://github.com/lab-cosmo) for a list of available tools, and their documentations) this cookbook provides concrete examples of the solution of modeling problems using a combination of the various tools.  
+Rather than focusing on the usage of a specific package (see the `COSMO github page <https://https://github.com/lab-cosmo>`_ for a list of available tools, and their documentations) this cookbook provides concrete examples of the solution of modeling problems using a combination of the various tools.  
 
 .. marker-building
 
