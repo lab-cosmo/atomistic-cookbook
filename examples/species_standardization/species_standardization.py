@@ -20,7 +20,7 @@ from skmatter.preprocessing import StandardFlexibleScaler
 
 # %%
 # Load structures
-# -------------------
+# ---------------
 #
 # Load 100 GaAs structures from file, reading them using
 # `ASE <https://wiki.fysik.dtu.dk/ase/>`_. Note that first
@@ -38,7 +38,7 @@ for frame in frames:
 
 # %%
 # Compute SOAP feature vectors using rascaline
-# ---------------------------------------
+# --------------------------------------------
 #
 # First, define the rascaline hyperparameters used to compute SOAP,
 # taken from `Lopanitsyna et al. <https://journals.aps.org/prmaterials/abstract/10.1103/PhysRevMaterials.7.045802>`.
