@@ -35,4 +35,4 @@ Chemiscope widgets are not currently integrated into our sphinx gallery.
 Contributors
 ------------
 
-We welcome and recognize all contributions. You can see a list of current contributors in the `contributors tab <https://github.com/lab-cosmo/software-cookbook/graphs/contributors>`_.
+We welcome and recognize all contributions. You can see a list of current contributors in the `contributors tab <https://github.com/lab-cosmo/software-cookbook/graphs/contributors>`_. See ``Contributing.md`` for an introduction to requirements and best practices for this project. 

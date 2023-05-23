@@ -3,6 +3,15 @@
 Contributions are welcome, and they are greatly appreciated! Every little bit
 helps, and credit will always be given. You can contribute in the ways listed below.
 
+## Adding an example/tutorial
+
+Examples are implemented as `sphinx-gallery` projects, and are compiled automatically into an HTML documentation, from which they can be downloaded as Jupyter notebooks.
+You will find examples of tutorials in the `examples/` folder of the repository. 
+Each new example consists of a folder, e.g. `new_example/`, which should, at the very 
+least, contain a `README.rst` file that describes briefly what is contained in the example, and a python file that contains the example itself. 
+This file should be formatted as expected by `sphinx-gallery` (see the [project homepage](https://sphinx-gallery.github.io/stable/index.html) for examples and documentation. 
+You should also add a reference to the new example to the sphinx configuration in the `docs/src`. 
+
 ## Report Bugs
 
 Report bugs using GitHub issues.
@@ -25,9 +34,11 @@ and "help wanted" is open to whoever wants to implement it.
 
 ## Write Documentation
 
-COSMO_cookbook could always use more documentation, whether as part of the
-official COSMO_cookbook docs, in docstrings, or even on the web in blog posts,
-articles, and such.
+The `software cookbok` is primarily a collection of tutorials and usage examples
+for atomistic modeling techniques - see above for a brief overview of how to add
+a new examples. However, the build, testing and validation process for these 
+examples also requires dedicated code, and so you are also encouraged to contributing
+to documenting (and/or improving) this support infrastructure.
 
 ## Submit Feedback
 
@@ -42,7 +53,7 @@ If you are proposing a feature:
 
 ## Get Started
 
-Ready to contribute? Here's how to set up `COSMO_cookbook` for local development.
+Ready to contribute? Here's how to set up `software cookbok` for local development.
 
 1. Fork the repo on GitHub.
 2. Clone your fork locally.
