@@ -1,0 +1,23 @@
+# Sphinx
+sphinx
+sphinx_rtd_theme
+sphinx-gallery
+sphinx-toggleprompt
+
+# Jupyter widgets
+ipywidgets
+jupyter_sphinx
+
+# Scientific libraries
+matplotlib
+numpy
+ase
+
+# COSMO stack and friends
+scikit-learn
+skmatter
+chemiscope
+# TODO: use pre-built versions here
+git+https://github.com/lab-cosmo/librascal.git
+# git+https://github.com/Luthaf/rascaline.git
+# git+https://github.com/lab-cosmo/equistore.git

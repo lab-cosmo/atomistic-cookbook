@@ -1,0 +1,16 @@
+[build-system]
+# setuptools requirement due to specifiying the version the in pyproject.toml
+# https://packaging.python.org/en/latest/guides/single-sourcing-package-version/
+requires = [
+    "setuptools>=61.0.0",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cosmo-software-cookbook"
+description = "A set of code snippets, tutorials that combine different software packages to one pipeline."
+readme = "README.rst"
+requires-python = ">=3.7"
+version = "0.0.0"
+license = {text = "BSD-3-Clause"}
