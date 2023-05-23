@@ -1,9 +1,5 @@
 # Sphinx documentation build configuration file
 
-import os
-import re
-import time
-
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.doctest",
@@ -31,6 +27,6 @@ templates_path = ["_templates"]
 exclude_patterns = ["_build"]
 
 project = "cosmo-software-cookbook"
-copyright = f"BSD 3-Clause License, Copyright (c) 2023, cosmo software cookbook team"
+copyright = "BSD 3-Clause License, Copyright (c) 2023, cosmo software cookbook team"
 
 htmlhelp_basename = "cosmo-software-cookbook"
