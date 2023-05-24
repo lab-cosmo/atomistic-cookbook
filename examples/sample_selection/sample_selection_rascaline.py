@@ -16,6 +16,7 @@ import equistore
 import equisolve
 import rascaline
 
+from equisolve.numpy import sample_selection
 
 # %%
 # Load molecular data
@@ -63,4 +64,16 @@ print(soap)
 #
 # For more info on the functions: `skmatter
 # <https://scikit-cosmo.readthedocs.io/en/latest/selection.html>`_
+
+# Define the number of structures to select using FPS/CUR
+n_structures = 5
+
+#FPS sample selection
+selector=sample_selection.FPS(n_to_select=n_structures, initialize='random').fit(soap)
+
+struct_fps_idxs=selector.support[0].samples['structure'] #samples selected in of first block?
+
+print("Structure indices obtained with FPS ", struct_fps_idxs)
+
+
 
