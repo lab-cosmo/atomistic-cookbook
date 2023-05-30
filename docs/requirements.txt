@@ -12,6 +12,7 @@ jupyter_sphinx
 matplotlib
 numpy
 ase
+scipy
 
 # COSMO stack and friends
 scikit-learn
@@ -19,7 +20,3 @@ skmatter
 chemiscope
 # git+https://github.com/Luthaf/rascaline.git
 # git+https://github.com/lab-cosmo/equistore.git
-
-# use pre-built versions here
---extra-index-url http://luthaf.fr/nightly-wheels/
-rascal
