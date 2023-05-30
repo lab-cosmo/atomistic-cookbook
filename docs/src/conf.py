@@ -1,4 +1,5 @@
 # Sphinx documentation build configuration file
+import os
 
 extensions = [
     "sphinx.ext.autodoc",
@@ -13,11 +14,17 @@ extensions = [
     "jupyter_sphinx",
 ]
 
-example_subdirs = ["mlp_models", "sample_selection"]
+examples_root = os.path.join(os.getcwd(), '../../examples/')
+examples_subdirs = []
+for path in os.listdir(examples_root):
+    # ignores files and hidden directories
+    if os.path.isdir(os.path.join(examples_root, path)) and path[0] != ".":
+        examples_subdirs.append(path)
+
 sphinx_gallery_conf = {
     "filename_pattern": "/*",
-    "examples_dirs": [f"../../examples/{p}" for p in example_subdirs],
-    "gallery_dirs": [f"examples/{p}" for p in example_subdirs],
+    "examples_dirs": [f"../../examples/{p}" for p in examples_subdirs],
+    "gallery_dirs": [f"examples/{p}" for p in examples_subdirs],
     "min_reported_time": 60,
     # Make the code snippet for own functions clickable
     "reference_url": {"cosmo-software-cookbook": None},
