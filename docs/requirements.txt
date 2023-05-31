@@ -12,12 +12,14 @@ jupyter_sphinx
 matplotlib
 numpy
 ase
+scipy
 
 # COSMO stack and friends
 scikit-learn
 skmatter
 chemiscope
-# TODO: use pre-built versions here
-git+https://github.com/lab-cosmo/librascal.git
 # git+https://github.com/Luthaf/rascaline.git
 # git+https://github.com/lab-cosmo/equistore.git
+
+# Temporary needed to update rpath correctly so we can include the prebuilt rascal version
+patchelf

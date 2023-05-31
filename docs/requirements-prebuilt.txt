@@ -1,0 +1,3 @@
+# use prebuilt versions from https://github.com/Luthaf/nightly-wheels
+--index-url https://luthaf.fr/nightly-wheels/
+rascal

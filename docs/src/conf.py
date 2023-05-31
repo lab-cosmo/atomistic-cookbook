@@ -37,3 +37,8 @@ project = "cosmo-software-cookbook"
 copyright = "BSD 3-Clause License, Copyright (c) 2023, cosmo software cookbook team"
 
 htmlhelp_basename = "cosmo-software-cookbook"
+
+
+# Temporary needed to update rpath correctly so we can include the prebuilt rascal version
+import os
+os.system("patchelf --force-rpath --set-rpath '$ORIGIN/../../../../../lib:$ORIGIN/../../lib:$ORIGIN/../../src:$ORIGIN/../src:$ORIGIN/../../rascal.libs' /home/docs/checkouts/readthedocs.org/user_builds/software-cookbook/envs/13/lib/python3.10/site-packages/rascal/lib/_rascal.cpython-310-x86_64-linux-gnu.so")
