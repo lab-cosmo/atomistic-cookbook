@@ -21,3 +21,6 @@ chemiscope
 git+https://github.com/lab-cosmo/librascal.git
 # git+https://github.com/Luthaf/rascaline.git
 # git+https://github.com/lab-cosmo/equistore.git
+
+# torch related packages
+torch_geometric
