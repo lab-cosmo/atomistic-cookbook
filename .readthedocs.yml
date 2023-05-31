@@ -24,4 +24,5 @@ python:
      path: .
    - requirements: docs/requirements.txt
    - requirements: docs/requirements-prebuilt.txt
+   - requirements: patchelf 
 
