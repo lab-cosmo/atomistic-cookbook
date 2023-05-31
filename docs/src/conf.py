@@ -23,8 +23,8 @@ for path in os.listdir(examples_root):
 
 sphinx_gallery_conf = {
     "filename_pattern": "/*",
-    "examples_dirs": [f"../../examples/{p}" for p in examples_subdirs],
-    "gallery_dirs": [f"examples/{p}" for p in examples_subdirs],
+    "examples_dirs": [f"../../examples/{subdir}" for subdir in examples_subdirs],
+    "gallery_dirs": [f"{subdir}" for subdir in examples_subdirs],
     "min_reported_time": 60,
     # Make the code snippet for own functions clickable
     "reference_url": {"cosmo-software-cookbook": None},
@@ -34,10 +34,30 @@ templates_path = ["_templates"]
 exclude_patterns = ["_build"]
 
 project = "cosmo-software-cookbook"
-copyright = "BSD 3-Clause License, Copyright (c) 2023, cosmo software cookbook team"
+copyright = "BSD 3-Clause License, Copyright (c) 2023, COSMO software cookbook team"
 
-htmlhelp_basename = "cosmo-software-cookbook"
+htmlhelp_basename = "COSMO software-cookbook"
 
+# We create the index.rst here because sphinx is not able to automatically
+# include all subdirectories using regex expression
+root_index_rst_content = r"""
+COSMO Software Cookbook
+=======================
+
+.. include:: ../../README.rst
+   :start-after: marker-intro
+   :end-before: marker-building
+
+.. toctree::
+   :caption: Table of Contents
+
+"""
+root_index_rst_content += ''.join([f"   {subdir}/index\n" for subdir in examples_subdirs])
+print("Creating index.rst including all examples")
+print(root_index_rst_content)
+
+with open('index.rst', 'w') as f:
+    f.write(root_index_rst_content)
 
 # Temporary needed to update rpath correctly so we can include the prebuilt rascal version
 import os
