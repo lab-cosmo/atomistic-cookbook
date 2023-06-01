@@ -40,8 +40,8 @@ Support
 
 If you still have problems adding your example to the repository, please feel free to contact one of the people
 
-`@agoscinski (Alexander Goscinski) <https://github.com/agoscinski>`_
-`@davidetisi (Davide Tisi) <https://github.com/davidetisi>`_
+`@agoscinski (Alexander Goscinski) <alexander.goscinski@epfl.ch>`_
+`@davidetisi (Davide Tisi) <davide.tisi@epfl.ch>`_
 
 Code of Conduct
 ---------------
