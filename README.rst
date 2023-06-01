@@ -1,29 +1,33 @@
 COSMO Software Cookbook
 =======================
 
-`COSMO Software Cookbook <http://software-cookbook.rtfd.io/>`_
+`COSMO Software Cookbook <https://software-cookbook.rtfd.io/>`_
 
-.. marker-intro
+.. marker-intro-start
 
 The COSMO cookbook contains recipes for atomic-scale modelling for materials and molecules, with a particular focus on machine learning and statistical sampling methods.
 Rather than focusing on the usage of a specific package (see the `COSMO github page <https://github.com/lab-cosmo>`_ for a list of available tools, and their documentations) this cookbook provides concrete examples of the solution of modeling problems using a combination of the various tools.  
 
-.. marker-building
+.. marker-intro-end
 
 Building the cookbook locally
 -----------------------------
+
+.. marker-building-start
 
 When you add a new example, you can build the doc and check if your code runs with
 
 .. code-block:: bash
 
-    tox -e docs
+    tox
 
-To visualize the generated cookbook open in a browser the file 
+To visualize the generated cookbook open in a browser the file
 ``<cookbook folder>/docs/build/html/index.html``.
 
 When you generate the examples locally all the notebook will be automatically generated
 in the folder ``<cookbook folder>/docs/src/examples/<name of the example>``
+
+.. marker-building-end
 
 Known issues
 ------------
