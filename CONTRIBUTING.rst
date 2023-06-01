@@ -30,7 +30,7 @@ Converting a Jupyter notebook to a sphinx-gallery compatible Python script
 
 Often it is more convenient to work in a Jupyter notebook and convert in later to 
 sphinx-gallery example. To convert your Jupyter notebook you can just use the 
-`ipynb_to_gallery.py <ipynb_to_gallery.py>` file that is root folder of the repository
+`ipynb_to_gallery.py <ipynb_to_gallery.py>`_ file that is root folder of the repository
 
 .. code-block:: bash
 
