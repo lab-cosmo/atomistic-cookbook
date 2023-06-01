@@ -3,6 +3,7 @@ sphinx
 sphinx_rtd_theme
 sphinx-gallery
 sphinx-toggleprompt
+furo
 
 # Jupyter widgets
 ipywidgets
