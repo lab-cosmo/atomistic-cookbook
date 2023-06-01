@@ -19,10 +19,10 @@ Adding an sphinx-gallery examples
 
 To visualize examples on our readthedocs page we use `sphinx-gallery`.
 When building the doc the examples are run and compiled automatically into HTML files
-and moved to the documentation folder `docs/src/`.
+and moved to the documentation folder `docs/src <docs/src>`_.
 You will find all the examples Python scripts in the `examples/` folder of the repository. 
-Each example is put into one of the example category folders, e.g. `examples/sample_selection`.
-If you do not know where to put your example, just put in the `examples/uncategorized`
+Each example is put into one of the example category folders, e.g. `examples/sample_selection <examples/sample_selection>`_.
+If you do not know where to put your example, just put in the `examples/uncategorized <examples/uncategorized>`_
 folder and when doing a pull request, we will figure out where to put it.
 
 Converting a Jupyter notebook to a sphinx-gallery compatible Python script
@@ -30,7 +30,7 @@ Converting a Jupyter notebook to a sphinx-gallery compatible Python script
 
 Often it is more convenient to work in a Jupyter notebook and convert in later to 
 sphinx-gallery example. To convert your Jupyter notebook you can just use the 
-`ipynb_to_gallery.py` file that is root folder of the repository
+`ipynb_to_gallery.py <ipynb_to_gallery.py>` file that is root folder of the repository
 
 .. code-block:: bash
 
