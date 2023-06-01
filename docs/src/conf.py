@@ -45,8 +45,8 @@ COSMO Software Cookbook
 =======================
 
 .. include:: ../../README.rst
-   :start-after: marker-intro
-   :end-before: marker-building
+   :start-after: marker-intro-start
+   :end-before: marker-intro-end
 
 .. toctree::
    :caption: Table of Contents
