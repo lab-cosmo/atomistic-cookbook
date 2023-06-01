@@ -30,7 +30,7 @@ sphinx-gallery example. To convert your Jupyter notebook you can just use the
 Building the cookbook locally
 -----------------------------
 
-.. include:: ../README.rst
+.. include:: README.rst
    :start-after: marker-building-start
    :end-before: marker-building-end
 
