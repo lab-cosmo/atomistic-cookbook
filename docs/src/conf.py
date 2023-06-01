@@ -37,6 +37,7 @@ project = "cosmo-software-cookbook"
 copyright = "BSD 3-Clause License, Copyright (c) 2023, COSMO software cookbook team"
 
 htmlhelp_basename = "COSMO software-cookbook"
+html_theme = "furo"
 
 # We create the index.rst here because sphinx is not able to automatically
 # include all subdirectories using regex expression
