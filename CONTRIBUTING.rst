@@ -24,22 +24,24 @@ sphinx-gallery example. To convert your Jupyter notebook you can just use the
 
 .. code-block:: bash
 
-    python ipynb_to_gallery.py <notebook.ipynb>ytohn 
+    python ipynb_to_gallery.py <notebook.ipynb>
 
 
 Building the cookbook locally
 -----------------------------
 
 .. include:: ../README.rst
-   :start-after: marker-building
-   :end-before: marker-known-issues
+   :start-after: marker-building-start
+   :end-before: marker-building-end
+
 
 Support
 -------
 
 If you still have problems adding your example to the repository, please feel free to contact one of the people
 
-@agoscinski Alexander Goscinski 
+`@agoscinski (Alexander Goscinski) <https://github.com/agoscinski>`_
+`@davidetisi (Davide Tisi) <https://github.com/davidetisi>`_
 
 Code of Conduct
 ---------------

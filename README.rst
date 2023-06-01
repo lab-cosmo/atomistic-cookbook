@@ -1,7 +1,7 @@
 COSMO Software Cookbook
 =======================
 
-`COSMO Software Cookbook <http://software-cookbook.rtfd.io/>`_
+`COSMO Software Cookbook <https://software-cookbook.rtfd.io/>`_
 
 .. marker-intro-start
 
