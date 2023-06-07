@@ -24,4 +24,5 @@ python:
      path: .
    - requirements: docs/requirements.txt
    - requirements: docs/requirements-rascal.txt
+   - requirements: docs/requirements-equistore.txt
 
