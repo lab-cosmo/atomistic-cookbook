@@ -23,5 +23,5 @@ python:
    - method: pip
      path: .
    - requirements: docs/requirements.txt
-   - requirements: docs/requirements-prebuilt.txt
+   - requirements: docs/requirements-rascal.txt
 
