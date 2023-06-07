@@ -59,9 +59,3 @@ print(root_index_rst_content)
 
 with open('index.rst', 'w') as f:
     f.write(root_index_rst_content)
-
-# Temporary needed to update rpath correctly so we can include the prebuilt rascal version
-import os
-import rascal
-rascal_shared_lib_path = '/'.join(rascal.__file__.split("/")[:-1]) + '/lib/_rascal.cpython-310-x86_64-linux-gnu.so'
-os.system(f"patchelf --force-rpath --set-rpath '$ORIGIN/../../../../../lib:$ORIGIN/../../lib:$ORIGIN/../../src:$ORIGIN/../src:$ORIGIN/../../rascal.libs' {rascal_shared_lib_path}")
