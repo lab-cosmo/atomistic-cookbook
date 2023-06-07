@@ -19,5 +19,6 @@ scipy
 scikit-learn
 skmatter
 chemiscope
+
+# Luthaf nightly wheels
 # git+https://github.com/Luthaf/rascaline.git
-# git+https://github.com/lab-cosmo/equistore.git
