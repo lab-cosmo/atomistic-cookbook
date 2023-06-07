@@ -21,6 +21,3 @@ skmatter
 chemiscope
 # git+https://github.com/Luthaf/rascaline.git
 # git+https://github.com/lab-cosmo/equistore.git
-
-# Temporary needed to update rpath correctly so we can include the prebuilt rascal version
-patchelf
