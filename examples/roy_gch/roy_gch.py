@@ -9,23 +9,23 @@ conventional density-energy convex hull with a Generalized Convex Hull
 (GCH) analysis (see `Anelli et al., Phys. Rev. Materials
 (2018) <https://doi.org/10.1103/PhysRevMaterials.2.103804>`__).
 It uses features computed with `rascaline <https://github.com/lab-cosmo/rascaline>`
-and uses the directional convex hull function from 
-`scikit-matter <https://github.com/lab-cosmo/scikit-matter>` 
-to make the figure. 
+and uses the directional convex hull function from
+`scikit-matter <https://github.com/lab-cosmo/scikit-matter>`
+to make the figure.
 """
+import chemiscope
 import matplotlib.tri as mtri
 import numpy as np
 from matplotlib import pyplot as plt
+from metatensor import mean_over_samples
+from rascaline import SoapPowerSpectrum
 from sklearn.decomposition import PCA
-
 from skmatter.datasets import load_roy_dataset
 from skmatter.sample_selection import DirectionalConvexHull
 
 
 # %%
-# Loads the structures (that also contain properties in the ``info``
-# field)
-#
+# Loads the structures (that also contain properties in the ``info`` field)
 
 roy_data = load_roy_dataset()
 
@@ -44,22 +44,20 @@ iothers = np.where(structype != "known")[0]
 #
 # The Directional Convex Hull routines can be used to compute a
 # conventional density-energy hull
-#
 
 dch_builder = DirectionalConvexHull(low_dim_idx=[0])
 dch_builder.fit(density.reshape(-1, 1), energy)
 
-
 # %%
 # We can get the indices of the selection, and compute the distance from
 # the hull
-#
 
 sel = dch_builder.selected_idx_
 dch_dist = dch_builder.score_samples(density.reshape(-1, 1), energy)
 
 
 # %%
+#
 # Hull energies
 # -------------
 #
@@ -70,8 +68,7 @@ dch_dist = dch_builder.score_samples(density.reshape(-1, 1), energy)
 # synthesis can be performed in other ways than by fixing the density,
 # structures that are not exactly on the hull might also be stable. One
 # can compute a “hull energy” as an indication of how close these
-# structures are to being stable .
-#
+# structures are to being stable.
 
 fig, ax = plt.subplots(1, 1, figsize=(6, 4))
 ax.scatter(density, energy, c=dch_dist, marker=".")
@@ -95,26 +92,26 @@ print(f"Mean hull energy for 'other' structures {dch_dist[iothers].mean()} kJ/mo
 # requires having the ``chemiscope`` package installed.
 #
 
-import chemiscope
 if chemiscope.jupyter._is_running_in_notebook():
     chemiscope.show(
         structures,
         dict(
-            energy=energy, density=density,
-            hull_energy=dch_dist, structure_type=structype
+            energy=energy,
+            density=density,
+            hull_energy=dch_dist,
+            structure_type=structype,
         ),
         settings={
             "map": {
-                   "x": {"property": "density"},
-                   "y": {"property": "energy"},
-                   "color": {"property": "hull_energy"},
-                   "symbol": "structure_type",
-                   "size": {"factor": 35},
+                "x": {"property": "density"},
+                "y": {"property": "energy"},
+                "color": {"property": "hull_energy"},
+                "symbol": "structure_type",
+                "size": {"factor": 35},
             },
             "structure": [{"unitCell": True, "supercell": {"0": 2, "1": 2, "2": 2}}],
         },
     )
-
 
 
 # %%
@@ -137,14 +134,11 @@ if chemiscope.jupyter._is_running_in_notebook():
 # ------------------------------
 #
 # A first step is to computes suitable ML descriptors. Here we have used
-# ``rascaline`` to evaluate average SOAP features for the structures. 
+# ``rascaline`` to evaluate average SOAP features for the structures.
 # If you don't want to install these dependencies for this example you
-# can also use the pre-computed features, but you can use this as a stub 
+# can also use the pre-computed features, but you can use this as a stub
 # to apply this analysis to other chemical systems
-#
 
-from rascaline import SoapPowerSpectrum
-from metatensor import mean_over_samples
 hypers = {
     "cutoff": 4,
     "max_radial": 6,
@@ -152,29 +146,28 @@ hypers = {
     "atomic_gaussian_width": 0.7,
     "cutoff_function": {"ShiftedCosine": {"width": 0.5}},
     "radial_basis": {"Gto": {"accuracy": 1e-6}},
-    "center_atom_weight": 1.0
+    "center_atom_weight": 1.0,
 }
 calculator = SoapPowerSpectrum(**hypers)
 rho2i = calculator.compute(structures)
-rho2i=rho2i.keys_to_samples(['species_center']).keys_to_properties(
-                   ['species_neighbor_1', 'species_neighbor_2'])
-rho2i_structure = mean_over_samples(rho2i,
-                        samples_names=["center", "species_center"])
+rho2i = rho2i.keys_to_samples(["species_center"]).keys_to_properties(
+    ["species_neighbor_1", "species_neighbor_2"]
+)
+rho2i_structure = mean_over_samples(rho2i, samples_names=["center", "species_center"])
 np.savez("roy_features.npz", feats=rho2i_structure.block(0).values)
 
 
-#features = roy_data["features"]
+# features = roy_data["features"]
 features = rho2i_structure.block(0).values
 
 
 # %%
 # PCA projection
 # --------------
-# 
+#
 # Computes PCA projection to generate low-dimensional descriptors that
 # reflect structural diversity. Any other dimensionality reduction scheme
 # could be used in a similar fashion.
-#
 
 pca = PCA(n_components=4)
 pca_features = pca.fit_transform(features)
@@ -190,9 +183,8 @@ cbar.set_label("energy / kJ/mol")
 # %%
 # Builds the Generalized Convex Hull
 # ----------------------------------
-# 
-# Builds a convex hull on the first two PCA features
 #
+# Builds a convex hull on the first two PCA features
 
 dch_builder = DirectionalConvexHull(low_dim_idx=[0, 1])
 dch_builder.fit(pca_features, energy)
@@ -219,7 +211,6 @@ ax.view_init(25, 110)
 # The GCH construction improves the separation between the hull energies
 # of “known” and hypothetical polymorphs (compare with the density-energy
 # values above)
-#
 
 print(
     f"Mean hull energy for 'known' stable structures {dch_dist[iknown].mean()} kJ/mol"
@@ -230,9 +221,7 @@ print(f"Mean hull energy for 'other' structures {dch_dist[iothers].mean()} kJ/mo
 # %%
 # Visualize in ``chemiscope``. This runs only in a notebook, and
 # requires having the ``chemiscope`` package installed.
-#
 
-import chemiscope
 for i, f in enumerate(structures):
     for j in range(len(pca_features[i])):
         f.info["pca_" + str(j + 1)] = pca_features[i, j]
@@ -252,14 +241,18 @@ if chemiscope.jupyter._is_running_in_notebook():
                 "symbol": "type",
                 "symbol": "type",
                 "color": {"property": "hull_energy"},
-                "size": {"factor": 35, "mode": "linear",
-                         "property": "", "reverse": True},
+                "size": {
+                    "factor": 35,
+                    "mode": "linear",
+                    "property": "",
+                    "reverse": True,
+                },
             },
             "structure": [
                 {
-                   "bonds": True,
-                   "unitCell": True,
-                   "keepOrientation": True,
+                    "bonds": True,
+                    "unitCell": True,
+                    "keepOrientation": True,
                 }
             ],
         },

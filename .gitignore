@@ -1,5 +1,5 @@
-docs/src/examples
-docs/src/index.rst
+docs/src/*
 
 *build*
 *egg-info/
+*.npz
