@@ -1,6 +1,0 @@
-# we need to use --pre to install dev version
-# by specifying --index-url https://luthaf.fr/nightly-wheels/ we don't install the dependencies
-# because the --pre option would also install the prerelease version the dependencies
-# the dependencies are already installed in the requirements.txt
---pre --index-url https://luthaf.fr/nightly-wheels/ equistore
-equistore
