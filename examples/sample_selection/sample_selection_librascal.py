@@ -7,9 +7,11 @@ Sample Selection with FPS and CUR (librascal)
 In this tutorial we generate descriptors using librascal, then select a subset
 of structures using both the farthest-point sampling (FPS) and CUR algorithms
 implemented in scikit-matter.
+
+First, import all the necessary packages
 """
 # %%
-# First, import all the necessary packages
+
 import ase.io
 import numpy as np
 from sklearn.decomposition import PCA

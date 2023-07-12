@@ -1,17 +1,12 @@
 # Sphinx documentation build configuration file
 import os
 
+# Add any Sphinx extension module names here, as strings.
 extensions = [
-    "sphinx.ext.autodoc",
-    "sphinx.ext.doctest",
-    "sphinx.ext.todo",
-    "sphinx.ext.autosummary",
-    "sphinx.ext.extlinks",
-    "sphinx_gallery.gen_gallery",
-    "sphinx.ext.intersphinx",
-    "sphinx.ext.viewcode",
-    "sphinx.ext.inheritance_diagram",
-    "jupyter_sphinx",
+    'sphinx.ext.autodoc', # import the modules you are documenting
+    'sphinx.ext.intersphinx', # generate links to the documentation of objects in external projects
+    "sphinx.ext.viewcode", # add links to highlighted source code
+    "sphinx_gallery.gen_gallery", # provides a source parser for *.ipynb files
 ]
 
 examples_root = os.path.join(os.getcwd(), '../../examples/')
@@ -59,3 +54,22 @@ print(root_index_rst_content)
 
 with open('index.rst', 'w') as f:
     f.write(root_index_rst_content)
+
+# Configuration for intersphinx: refer to the Python standard library
+# and other packages used by the cookbook
+
+intersphinx_mapping = {
+    "ase": ("https://wiki.fysik.dtu.dk/ase/", None),
+    "chemiscope": ('https://chemiscope.org/docs/', None),
+    "equistore": ("https://lab-cosmo.github.io/equistore/latest/", None),
+    "equisolve": ("https://lab-cosmo.github.io/equisolve/latest/", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "python": ("https://docs.python.org/3", None),
+    "rascaline": ("https://luthaf.fr/rascaline/latest/", None),
+    "rascal": ("https://lab-cosmo.github.io/librascal/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+    "sklearn": ('http://scikit-learn.org/stable',
+               (None, './_intersphinx/sklearn-objects.inv')),
+    "skmatter": ("https://scikit-matter.readthedocs.io/en/latest/", None),
+}

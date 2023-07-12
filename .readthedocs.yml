@@ -12,6 +12,7 @@ build:
     - cmake
   tools:
     python: "3.10"
+    rust: "1.61"
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
@@ -24,5 +25,4 @@ python:
      path: .
    - requirements: docs/requirements.txt
    - requirements: docs/requirements-rascal.txt
-   - requirements: docs/requirements-equistore.txt
 

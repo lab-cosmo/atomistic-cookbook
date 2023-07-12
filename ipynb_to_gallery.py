@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Code is from
 https://gist.github.com/chsasank/7218ca16f8d022e02a9c0deb94a310fe
@@ -32,7 +33,7 @@ def convert_ipynb_to_gallery(file_name):
                 rst_source = pdoc.convert_text(md_source, 'rst', 'md')
                 commented_source = '\n'.join(['# ' + x for x in
                                               rst_source.split('\n')])
-                python_file = python_file + '\n\n\n' + '#' * 70 + '\n' + \
+                python_file = python_file + "\n\n\n # %% \n" + \
                     commented_source
             elif cell['cell_type'] == 'code':
                 source = ''.join(cell['source'])
