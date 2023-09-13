@@ -20,7 +20,7 @@ scipy
 scikit-learn
 skmatter
 chemiscope
-equisolve @ https://github.com/lab-cosmo/equisolve/archive/pre_build.zip
+equisolve @ git+https://github.com/lab-cosmo/equisolve.git@71b3dfd
 
-equistore
+metatensor
 rascaline
