@@ -61,7 +61,7 @@ with open('index.rst', 'w') as f:
 intersphinx_mapping = {
     "ase": ("https://wiki.fysik.dtu.dk/ase/", None),
     "chemiscope": ('https://chemiscope.org/docs/', None),
-    "equistore": ("https://lab-cosmo.github.io/equistore/latest/", None),
+    "metatensor": ("https://lab-cosmo.github.io/metatensor/latest/", None),
     "equisolve": ("https://lab-cosmo.github.io/equisolve/latest/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
