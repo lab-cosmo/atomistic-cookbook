@@ -17,7 +17,7 @@ import ase.io
 
 from equisolve.numpy.models.linear_model import Ridge
 from equisolve.utils.convert import ase_to_tensormap
-import equistore
+import metatensor
 from rascaline import AtomicComposition, LodeSphericalExpansion, SphericalExpansion
 from rascaline.utils import PowerSpectrum
 
@@ -41,13 +41,13 @@ from rascaline.utils import PowerSpectrum
 frames = ase.io.read("dataset/charge-charge.xyz", ":")
 
 
-# %% Convert target properties to equistore format
+# %% Convert target properties to metatensor format
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # If we want to train models using the
 # `equisolve <https://github.com/lab-cosmo/equisolve>`_ package, we need to
 # convert the target properties (in this case, the energies and forces)
-# into the appropriate format #justequistorethings
+# into the appropriate format #justmetatensorthings
 #
 
 y = ase_to_tensormap(frames, energy="energy", forces="forces")
@@ -110,8 +110,8 @@ calculator_lr = LodeSphericalExpansion(**LR_HYPERS)
 # As you notices the calculation of the long range features takes significant more time
 # compared to the sr features.
 #
-# Taking a look at the output we find that the resulting :py:class:`equistore.TensorMap`
-# are quite similar in their structure. The short range :py:class:`equistore.TensorMap`
+# Taking a look at the output we find that the resulting :py:class:`metatensor.TensorMap`
+# are quite similar in their structure. The short range :py:class:`metatensor.TensorMap`
 # contains more blocks due to the higher ``max_angular`` paramater we choosed above.
 #
 # Generate the rotational invariants (power spectra)
@@ -159,8 +159,8 @@ ps_lr = ps_lr.keys_to_samples("species_center")
 
 samples_names_to_sum = ['center', 'species_center']
 
-ps_sr = equistore.sum_over_samples(ps_sr, sample_names=samples_names_to_sum)
-ps_lr = equistore.sum_over_samples(ps_lr, sample_names=samples_names_to_sum)
+ps_sr = metatensor.sum_over_samples(ps_sr, samples_names=samples_names_to_sum)
+ps_lr = metatensor.sum_over_samples(ps_lr, samples_names=samples_names_to_sum)
 
 
 # %% Initialize tensormaps for energy baselining
@@ -175,7 +175,7 @@ calculator_co = AtomicComposition(per_structure=False)
 descriptor_co = calculator_co.compute(frames, gradients=["positions"])
 
 co = descriptor_co.keys_to_properties(["species_center"])
-co = equistore.sum_over_samples(co, sample_names=['center'])
+co = metatensor.sum_over_samples(co, samples_names=['center'])
 
 
 # %%
@@ -196,13 +196,13 @@ co = equistore.sum_over_samples(co, sample_names=['center'])
 # LR features.
 #
 # Furthermore, energy baselining can be performed by concatenating the
-# information about chemical species as well. There is an equistore
-# function called :py:func:`equistore.join()` for this purpose. Formally, we can write for
+# information about chemical species as well. There is an metatensor
+# function called :py:func:`metatensor.join()` for this purpose. Formally, we can write for
 # the SR model
 #
 # X_sr: :math:`1 \oplus \left(\rho \otimes \rho\right)`
 
-X_sr = equistore.join([co, ps_sr], axis="properties")
+X_sr = metatensor.join([co, ps_sr], axis="properties")
 
 
 # %%
@@ -215,7 +215,7 @@ X_sr = equistore.join([co, ps_sr], axis="properties")
 # X_lr: :math:`1 \oplus \left(\rho \otimes \rho\right) \oplus \left(\rho \otimes
 # V\right)`
 
-X_lr = equistore.join([co, ps_sr, ps_lr], axis="properties")
+X_lr = metatensor.join([co, ps_sr, ps_lr], axis="properties")
 
 
 # %%
@@ -226,7 +226,7 @@ X_lr = equistore.join([co, ps_sr, ps_lr], axis="properties")
 # with respect to ``"values"`` (energies) and ``"positions"`` gradients (forces).
 #
 # If you only want a fit with respect to energies you can remove the gradients with
-# ``equistore.remove_gradients()``
+# ``metatensor.remove_gradients()``
 
 clf_sr = Ridge()
 clf_lr = Ridge()
@@ -257,22 +257,22 @@ idx_test = [i for i, f in enumerate(frames) if f.info["distance"] >= r_cut]
 #
 # For doing the split we define two ``Labels`` instances
 
-samples_train = equistore.Labels(["structure"], np.reshape(idx_train, (-1, 1)))
-samples_test = equistore.Labels(["structure"], np.reshape(idx_test, (-1, 1)))
+samples_train = metatensor.Labels(["structure"], np.reshape(idx_train, (-1, 1)))
+samples_test = metatensor.Labels(["structure"], np.reshape(idx_test, (-1, 1)))
 
 
 # %%
 #
 # That we use as input to the ``slice`` function
 
-X_sr_train = equistore.slice(X_sr, axis="samples", labels=samples_train)
-X_sr_test = equistore.slice(X_sr, axis="samples", labels=samples_test)
+X_sr_train = metatensor.slice(X_sr, axis="samples", labels=samples_train)
+X_sr_test = metatensor.slice(X_sr, axis="samples", labels=samples_test)
 
-X_lr_train = equistore.slice(X_lr, axis="samples", labels=samples_train)
-X_lr_test = equistore.slice(X_lr, axis="samples", labels=samples_test)
+X_lr_train = metatensor.slice(X_lr, axis="samples", labels=samples_train)
+X_lr_test = metatensor.slice(X_lr, axis="samples", labels=samples_test)
 
-y_train = equistore.slice(y, axis="samples", labels=samples_train)
-y_test = equistore.slice(y, axis="samples", labels=samples_test)
+y_train = metatensor.slice(y, axis="samples", labels=samples_train)
+y_test = metatensor.slice(y, axis="samples", labels=samples_test)
 
 
 # %%
