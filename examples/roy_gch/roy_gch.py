@@ -13,7 +13,6 @@ and uses the directional convex hull function from
 `scikit-matter <https://github.com/lab-cosmo/scikit-matter>` 
 to make the figure. 
 """
-
 import matplotlib.tri as mtri
 import numpy as np
 from matplotlib import pyplot as plt
@@ -97,23 +96,24 @@ print(f"Mean hull energy for 'other' structures {dch_dist[iothers].mean()} kJ/mo
 #
 
 import chemiscope
-chemiscope.show(
-    structures,
-    dict(
-        energy=energy, density=density,
-        hull_energy=dch_dist, structure_type=structype
-    ),
-    settings={
-        "map": {
-               "x": {"property": "density"},
-               "y": {"property": "energy"},
-               "color": {"property": "hull_energy"},
-               "symbol": "structure_type",
-               "size": {"factor": 35},
+if chemiscope.jupyter._is_running_in_notebook():
+    chemiscope.show(
+        structures,
+        dict(
+            energy=energy, density=density,
+            hull_energy=dch_dist, structure_type=structype
+        ),
+        settings={
+            "map": {
+                   "x": {"property": "density"},
+                   "y": {"property": "energy"},
+                   "color": {"property": "hull_energy"},
+                   "symbol": "structure_type",
+                   "size": {"factor": 35},
+            },
+            "structure": [{"unitCell": True, "supercell": {"0": 2, "1": 2, "2": 2}}],
         },
-        "structure": [{"unitCell": True, "supercell": {"0": 2, "1": 2, "2": 2}}],
-    },
-)
+    )
 
 
 
@@ -238,26 +238,29 @@ for i, f in enumerate(structures):
         f.info["pca_" + str(j + 1)] = pca_features[i, j]
 structure_properties = chemiscope.extract_properties(structures)
 structure_properties.update({"per_atom_energy": energy, "hull_energy": dch_dist})
-chemiscope.show(
-    frames=structures,
-    properties=structure_properties,
-    settings={
-        "map": {
-            "x": {"property": "pca_1"},
-            "y": {"property": "pca_2"},
-            "z": {"property": "energy"},
-            "symbol": "type",
-            "symbol": "type",
-            "color": {"property": "hull_energy"},
-            "size": {"factor": 35, "mode": "linear",
-                     "property": "", "reverse": True},
+
+# shows chemiscope if not run in terminal
+if chemiscope.jupyter._is_running_in_notebook():
+    chemiscope.show(
+        frames=structures,
+        properties=structure_properties,
+        settings={
+            "map": {
+                "x": {"property": "pca_1"},
+                "y": {"property": "pca_2"},
+                "z": {"property": "energy"},
+                "symbol": "type",
+                "symbol": "type",
+                "color": {"property": "hull_energy"},
+                "size": {"factor": 35, "mode": "linear",
+                         "property": "", "reverse": True},
+            },
+            "structure": [
+                {
+                   "bonds": True,
+                   "unitCell": True,
+                   "keepOrientation": True,
+                }
+            ],
         },
-        "structure": [
-            {
-               "bonds": True,
-               "unitCell": True,
-               "keepOrientation": True,
-            }
-        ],
-    },
-)
+    )
