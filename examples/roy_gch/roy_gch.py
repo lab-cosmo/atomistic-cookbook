@@ -41,7 +41,7 @@ iothers = np.where(structype != "known")[0]
 
 # %%
 # Energy-density hull
-# -------------------
+# ===================
 #
 # The Directional Convex Hull routines can be used to compute a
 # conventional density-energy hull
@@ -61,6 +61,9 @@ dch_dist = dch_builder.score_samples(density.reshape(-1, 1), energy)
 
 
 # %%
+# Hull energies
+# -------------
+#
 # Structures on the hull are stable with respect to synthesis at constant
 # molar volume. Any other structure would lower the energy by decomposing
 # into a mixture of the two nearest structures along the hull. Given that
@@ -85,12 +88,14 @@ print(f"Mean hull energy for 'other' structures {dch_dist[iothers].mean()} kJ/mo
 
 
 # %%
+# Interactive visualization
+# -------------------------
+#
 # You can also visualize the hull with ``chemiscope``.
 # This runs only in a notebook, and
 # requires having the ``chemiscope`` package installed.
 #
 
-"""
 import chemiscope
 chemiscope.show(
     structures,
@@ -109,12 +114,12 @@ chemiscope.show(
         "structure": [{"unitCell": True, "supercell": {"0": 2, "1": 2, "2": 2}}],
     },
 )
-"""
+
 
 
 # %%
 # Generalized Convex Hull
-# -----------------------
+# =======================
 #
 # A GCH is a similar construction, in which generic structural descriptors
 # are used in lieu of composition, density or other thermodynamic
@@ -127,16 +132,19 @@ chemiscope.show(
 #
 
 
-# %%#
+# %%
+# Compute structural descriptors
+# ------------------------------
+#
 # A first step is to computes suitable ML descriptors. Here we have used
-# ``rascaline`` to evaluate average SOAP features for the structures. We
-# will load pre-computed features to reduce the dependencies of these
-# examples on external packages, but you can use this as a stub to apply
-# this analysis to other chemical systems
+# ``rascaline`` to evaluate average SOAP features for the structures. 
+# If you don't want to install these dependencies for this example you
+# can also use the pre-computed features, but you can use this as a stub 
+# to apply this analysis to other chemical systems
 #
 
 from rascaline import SoapPowerSpectrum
-from equistore import mean_over_samples
+from metatensor import mean_over_samples
 hypers = {
     "cutoff": 4,
     "max_radial": 6,
@@ -151,7 +159,7 @@ rho2i = calculator.compute(structures)
 rho2i=rho2i.keys_to_samples(['species_center']).keys_to_properties(
                    ['species_neighbor_1', 'species_neighbor_2'])
 rho2i_structure = mean_over_samples(rho2i,
-                        sample_names=["center", "species_center"])
+                        samples_names=["center", "species_center"])
 np.savez("roy_features.npz", feats=rho2i_structure.block(0).values)
 
 
@@ -160,6 +168,9 @@ features = rho2i_structure.block(0).values
 
 
 # %%
+# PCA projection
+# --------------
+# 
 # Computes PCA projection to generate low-dimensional descriptors that
 # reflect structural diversity. Any other dimensionality reduction scheme
 # could be used in a similar fashion.
@@ -177,6 +188,9 @@ cbar.set_label("energy / kJ/mol")
 
 
 # %%
+# Builds the Generalized Convex Hull
+# ----------------------------------
+# 
 # Builds a convex hull on the first two PCA features
 #
 
@@ -218,7 +232,6 @@ print(f"Mean hull energy for 'other' structures {dch_dist[iothers].mean()} kJ/mo
 # requires having the ``chemiscope`` package installed.
 #
 
-"""
 import chemiscope
 for i, f in enumerate(structures):
     for j in range(len(pca_features[i])):
@@ -248,4 +261,3 @@ chemiscope.show(
         ],
     },
 )
-"""
