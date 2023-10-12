@@ -8,13 +8,14 @@ This notebook analyzes the structures of 264 polymorphs of ROY, from
 conventional density-energy convex hull with a Generalized Convex Hull
 (GCH) analysis (see `Anelli et al., Phys. Rev. Materials
 (2018) <https://doi.org/10.1103/PhysRevMaterials.2.103804>`__).
-It uses features computed with `rascaline <https://github.com/lab-cosmo/rascaline>`
-and uses the directional convex hull function from
-`scikit-matter <https://github.com/lab-cosmo/scikit-matter>`
-to make the figure.
+It uses features computed with `rascaline <https://github.com/lab-cosmo/rascaline>`__
+and uses the directional convex hull function from 
+`scikit-matter <https://github.com/lab-cosmo/scikit-matter>`__ 
+to make the figure. 
 """
+
 import chemiscope
-import matplotlib.tri
+import matplotlib.tri as mtri
 import numpy as np
 from matplotlib import pyplot as plt
 from metatensor import mean_over_samples
@@ -229,10 +230,23 @@ structure_properties = chemiscope.extract_properties(structures)
 structure_properties.update({"per_atom_energy": energy, "hull_energy": dch_dist})
 
 # shows chemiscope if not run in terminal
-if chemiscope.jupyter._is_running_in_notebook():
-    chemiscope.show(
+
+cs = chemiscope.show(
         frames=structures,
         properties=structure_properties,
+        meta={"name" : "GCH for ROY polymorphs",
+              "description": 
+"""
+Demonstration of the Generalized Convex Hull construction for polymorphs of the ROY molecule.
+Molecules that are closest to the hull built on PCA-based structural descriptors and having the 
+internal energy predicted by electronic-structure calculations as the z axis are the most 
+thermodynamically stable. Indeed most of the known polymorphs of ROY are on (or very close) to
+this hull. 
+""",
+              "authors": "Michele Ceriotti <michele.ceriotti@gmail.com>",
+              "references": ['A. Anelli, E. A. Engel, C. J. Pickard, and M. Ceriotti, "Generalized convex hull construction for materials discovery," Physical Review Materials 2(10), 103804 (2018).',
+                             '1.  G. J. O. Beran, I. J. Sugden, C. Greenwell, D. H. Bowskill, C. C. Pantelides, and C. S. Adjiman, "How many more polymorphs of ROY remain undiscovered," Chem. Sci. 13(5), 1288–1297 (2022).'
+                            ]},
         settings={
             "map": {
                 "x": {"property": "pca_1"},
@@ -256,3 +270,8 @@ if chemiscope.jupyter._is_running_in_notebook():
             ],
         },
     )
+
+if chemiscope.jupyter._is_running_in_notebook():
+    display(cs)
+else:
+    cs.save("roy_gch.json.gz")
