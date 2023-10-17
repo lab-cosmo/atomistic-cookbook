@@ -25,7 +25,7 @@ species when using a multi-block descriptor.
 # %%
 # First, import all the necessary packages
 import ase.io  # we need to add ASE to the requirements.txt
-import equistore
+import metatensor
 import rascaline
 
 from equisolve.numpy import sample_selection
@@ -70,13 +70,13 @@ soap_atomic = calculator.compute(frames)
 
 # Using FPS and CUR algorithms, we can perform selection of atomic environments.
 # These are implemented in equisolve, which provides a wrapper around
-# scikit-matter to allow for interfacing with data stored in the equistore
+# scikit-matter to allow for interfacing with data stored in the metatensor
 # format.
 #
 # Suppose we want to select the 10 most diverse environments for each chemical
 # species.
 #
-# First, we can use the `keys_to_properties` operation in equistore to move the
+# First, we can use the `keys_to_properties` operation in metatensor to move the
 # neighbour species indices to the properties of the TensorBlocks. The resulting
 # descriptor will be a TensorMap comprised of three blocks, one for each
 # chemical species, where the chemical species indices are solely present in the
@@ -100,9 +100,11 @@ selector_atomic_fps = sample_selection.FPS(n_to_select=n_envs, initialize="rando
     soap_atomic
 )
 
+#selector=sample_selection.FPS(n_to_select=n_envs, initialize='random').fit(soap_atomic)
+
 # Print the selected envs for each block
 print("atomic envs selected with FPS:\n")
-for key, block in selector_atomic_fps.support:
+for key, block in selector_atomic_fps.support.items():
     print("species_center:", key, "(struct_idx, atom_idx)", block.samples)
 
 # %%
@@ -110,7 +112,7 @@ for key, block in selector_atomic_fps.support:
 # ---------------------------------------------------------
 #
 # Instead of atomic environments, one can also select diverse structures. We can
-# use the `sum_over_samples` operation in equistore to define features in the
+# use the `sum_over_samples` operation in metatensor to define features in the
 # structural basis instead of the atomic basis. This is done by summing over the
 # atomic environments, labeled by the 'center' index in the samples of the
 # TensorMap.
@@ -119,7 +121,7 @@ for key, block in selector_atomic_fps.support:
 # the specific inhomogeneity of the size of the structures in the training set.
 
 # Sum over atomic environments.
-soap_struct = equistore.sum_over_samples(soap_atomic, "center")
+soap_struct = metatensor.sum_over_samples(soap_atomic, "center")
 print(soap_struct)
 print(soap_struct.block(0))
 
@@ -147,9 +149,12 @@ print("structures selected with CUR:", selector_struct_cur.support.block(0).samp
 # sample selection, the most diverse atomic environments will be selected,
 # regardless of their chemical species.
 
+print('keys',soap_atomic.keys)
+print('blocks',soap_atomic[0])
+
 # Using the original SOAP descriptor, move all keys to properties.
-soap_atomic_single_block = soap_atomic.keys_to_properties(
-    keys_to_move=["species_center", "species_neighbor_1", "species_neighbor_2"]
+soap_atomic_single_block = soap_atomic.keys_to_samples(
+    keys_to_move=["species_center"]#, "species_neighbor_1", "species_neighbor_2"]
 )
 print(soap_atomic_single_block)
 print(soap_atomic_single_block.block(0))  # There is only one block now!
