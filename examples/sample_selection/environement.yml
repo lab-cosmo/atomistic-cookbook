@@ -1,0 +1,12 @@
+name: lode_linear
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+    # example dependencies
+    - chemiscope
+    - skmatter
+    - scikit-learn
+    - ase
+    # needed to install rascal
+    - setuptools

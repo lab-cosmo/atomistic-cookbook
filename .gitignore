@@ -1,4 +1,4 @@
-docs/src/*
+docs/src/examples/
 
 *build*
 *egg-info/
