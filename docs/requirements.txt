@@ -1,25 +1,4 @@
-# Sphinx
 sphinx
-sphinx_rtd_theme
 sphinx-gallery
 sphinx-toggleprompt
 furo
-
-# Jupyter widgets
-ipywidgets
-jupyter_sphinx
-
-# Scientific libraries
-matplotlib
-numpy
-ase
-scipy
-
-# COSMO stack and friends
-scikit-learn
-skmatter
-chemiscope
-equisolve @ https://github.com/lab-cosmo/equisolve/archive/63c9c54.zip
-
-metatensor
-rascaline @ https://github.com/luthaf/rascaline/archive/581d0ca.zip

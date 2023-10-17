@@ -6,7 +6,7 @@ This notebook analyzes the structures of 264 polymorphs of ROY, from
 `Beran et Al, Chemical Science
 (2022) <https://doi.org/10.1039/D1SC06074K>`__, comparing the
 conventional density-energy convex hull with a Generalized Convex Hull
-(GCH) analysis (see `Anelli et al., Phys. Rev. Materials
+(GCH) analysis (see `Anelli et al., Phys. Rev. Materials
 (2018) <https://doi.org/10.1103/PhysRevMaterials.2.103804>`__).
 It uses features computed with `rascaline <https://github.com/lab-cosmo/rascaline>`
 and uses the directional convex hull function from
@@ -14,7 +14,7 @@ and uses the directional convex hull function from
 to make the figure.
 """
 import chemiscope
-import matplotlib.tri as mtri
+import matplotlib.tri
 import numpy as np
 from matplotlib import pyplot as plt
 from metatensor import mean_over_samples
@@ -40,7 +40,7 @@ iothers = np.where(structype != "known")[0]
 
 # %%
 # Energy-density hull
-# ===================
+# -------------------
 #
 # The Directional Convex Hull routines can be used to compute a
 # conventional density-energy hull
@@ -59,7 +59,7 @@ dch_dist = dch_builder.score_samples(density.reshape(-1, 1), energy)
 # %%
 #
 # Hull energies
-# -------------
+# ^^^^^^^^^^^^^
 #
 # Structures on the hull are stable with respect to synthesis at constant
 # molar volume. Any other structure would lower the energy by decomposing
@@ -85,7 +85,7 @@ print(f"Mean hull energy for 'other' structures {dch_dist[iothers].mean()} kJ/mo
 
 # %%
 # Interactive visualization
-# -------------------------
+# ^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # You can also visualize the hull with ``chemiscope``.
 # This runs only in a notebook, and
@@ -116,7 +116,7 @@ if chemiscope.jupyter._is_running_in_notebook():
 
 # %%
 # Generalized Convex Hull
-# =======================
+# -----------------------
 #
 # A GCH is a similar construction, in which generic structural descriptors
 # are used in lieu of composition, density or other thermodynamic
@@ -131,7 +131,7 @@ if chemiscope.jupyter._is_running_in_notebook():
 
 # %%
 # Compute structural descriptors
-# ------------------------------
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # A first step is to computes suitable ML descriptors. Here we have used
 # ``rascaline`` to evaluate average SOAP features for the structures.
@@ -163,7 +163,7 @@ features = rho2i_structure.block(0).values
 
 # %%
 # PCA projection
-# --------------
+# ^^^^^^^^^^^^^^
 #
 # Computes PCA projection to generate low-dimensional descriptors that
 # reflect structural diversity. Any other dimensionality reduction scheme
@@ -182,7 +182,7 @@ cbar.set_label("energy / kJ/mol")
 
 # %%
 # Builds the Generalized Convex Hull
-# ----------------------------------
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # Builds a convex hull on the first two PCA features
 
@@ -196,7 +196,7 @@ dch_dist = dch_builder.score_samples(pca_features, energy)
 # Generates a 3D Plot
 #
 
-triang = mtri.Triangulation(pca_features[sel, 0], pca_features[sel, 1])
+triang = matplotlib.tri.Triangulation(pca_features[sel, 0], pca_features[sel, 1])
 fig = plt.figure(figsize=(7, 5), tight_layout=True)
 ax = fig.add_subplot(projection="3d")
 ax.plot_trisurf(triang, energy[sel], color="gray")
@@ -238,7 +238,6 @@ if chemiscope.jupyter._is_running_in_notebook():
                 "x": {"property": "pca_1"},
                 "y": {"property": "pca_2"},
                 "z": {"property": "energy"},
-                "symbol": "type",
                 "symbol": "type",
                 "color": {"property": "hull_energy"},
                 "size": {
