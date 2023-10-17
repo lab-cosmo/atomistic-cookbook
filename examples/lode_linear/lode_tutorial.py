@@ -11,18 +11,19 @@ First, import all the necessary packages
 
 # %%
 
-import numpy as np
-import matplotlib.pyplot as plt
 import ase.io
-
+import matplotlib.pyplot as plt
+import metatensor
+import numpy as np
 from equisolve.numpy.models.linear_model import Ridge
 from equisolve.utils.convert import ase_to_tensormap
-import metatensor
 from rascaline import AtomicComposition, LodeSphericalExpansion, SphericalExpansion
 from rascaline.utils import PowerSpectrum
 
 
-# %% Step 0: Prepare Data Set
+# %%
+#
+# Step 0: Prepare Data Set
 # ------------------------
 #
 # Get structures
@@ -36,25 +37,27 @@ from rascaline.utils import PowerSpectrum
 #
 # For speeding up the calculations we already selected the first 130
 # structures of the charge-charge structures.
-#
 
 frames = ase.io.read("dataset/charge-charge.xyz", ":")
 
 
-# %% Convert target properties to metatensor format
+# %%
+#
+# Convert target properties to equistore format
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # If we want to train models using the
 # `equisolve <https://github.com/lab-cosmo/equisolve>`_ package, we need to
 # convert the target properties (in this case, the energies and forces)
-# into the appropriate format #justmetatensorthings
-#
+# into the appropriate format #justequistorethings
 
 y = ase_to_tensormap(frames, energy="energy", forces="forces")
 
 
-# %% Step 1: Compute short-range (SR) and LODE features
-# --------------------------------------------------
+# %%
+#
+# Step 1: Compute short-range and LODE features
+# ---------------------------------------------
 #
 # Define hypers and get the expansion coefficients :math:`\langle anlm | \rho_i \rangle`
 # and :math:`\langle anlm | V_i \rangle`
@@ -62,12 +65,11 @@ y = ase_to_tensormap(frames, energy="energy", forces="forces")
 # The short-range and long-range descriptors have very similar hyperparameters. We
 # highlight the differences below.
 #
-# We first define the hyperparameters for the short-range part. These will be used to
-# create SOAP features.
-#
+# We first define the hyperparameters for the short-range (SR) part. These will be used
+# to create SOAP features.
 
 SR_HYPERS = {
-    "cutoff": 3.,
+    "cutoff": 3.0,
     "max_radial": 6,
     "max_angular": 2,
     "atomic_gaussian_width": 0.3,
@@ -77,42 +79,48 @@ SR_HYPERS = {
 }
 
 
-# %% And next the hyperparaters for the LODE / long-range (lr) part
+# %%
+#
+# And next the hyperparaters for the LODE / long-range (LR) part
 
 
 LR_HYPERS = {
-     # Cutoff on which to project potential density
-    'cutoff': 3.,
+    # Cutoff on which to project potential density
+    "cutoff": 3.0,
     # keep max_radial slightly smaller than for SR part
-    'max_radial': 3,
+    "max_radial": 3,
     # max_angular should be <= 4, more precisely, max_angular + potential_exponent < 10
-    'max_angular': 2,
-     # keep at >=1, WARNING: CUBIC SCALING, do not use values <0.5
-    'atomic_gaussian_width': 3.,
+    "max_angular": 2,
+    # keep at >=1, WARNING: CUBIC SCALING, do not use values <0.5
+    "atomic_gaussian_width": 3.0,
     "center_atom_weight": 1.0,
     "radial_basis": {"Gto": {}},
     # the exponent p that determines the 1/r^p potential
-    'potential_exponent': 1,
+    "potential_exponent": 1,
 }
 
 
-# %% We then use the above defined hyperparaters to define the per atom short range (sr)
+# %%
+# We then use the above defined hyperparaters to define the per atom short range (sr)
 # and long range (sr) descriptors.
 
 calculator_sr = SphericalExpansion(**SR_HYPERS)
 calculator_lr = LodeSphericalExpansion(**LR_HYPERS)
 
 
-# %% Note that LODE requires periodic systems. Therefore, if the data set does not come
+# %%
+#
+# Note that LODE requires periodic systems. Therefore, if the data set does not come
 # with periodic boundary conditions by default you can not use the data set and you will
 # face an error if you try to compute the features.
 #
 # As you notices the calculation of the long range features takes significant more time
 # compared to the sr features.
 #
-# Taking a look at the output we find that the resulting :py:class:`metatensor.TensorMap`
-# are quite similar in their structure. The short range :py:class:`metatensor.TensorMap`
-# contains more blocks due to the higher ``max_angular`` paramater we choosed above.
+# Taking a look at the output we find that the resulting
+# :py:class:`metatensor.TensorMap` are quite similar in their structure. The short range
+# :py:class:`metatensor.TensorMap` contains more blocks due to the higher
+# ``max_angular`` paramater we choosed above.
 #
 # Generate the rotational invariants (power spectra)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -127,19 +135,22 @@ ps_calculator_sr = PowerSpectrum(calculator_sr, calculator_sr)
 ps_sr = ps_calculator_sr.compute(frames, gradients=["positions"])
 
 
-# %% We calculate gradients with respect to pistions by providing the
+# %%
+#
+# We calculate gradients with respect to pistions by providing the
 # ``gradients=["positions"]`` option to the
 # :py:meth:`rascaline.calculators.CalculatorBase.compute()` method.
-
-
-# %% For the long-range part, we combine the long-range descriptor :math:`V` with one a
+#
+# For the long-range part, we combine the long-range descriptor :math:`V` with one a
 # short-range density :math:`\rho` to get :math:`\rho \otimes V` features.
 
 ps_calculator_lr = PowerSpectrum(calculator_sr, calculator_lr)
 ps_lr = ps_calculator_lr.compute(systems=frames, gradients=["positions"])
 
 
-# %% Step 2: Building a Simple Linear SR + LR Model with energy baselining
+# %%
+#
+# Step 2: Building a Simple Linear SR + LR Model with energy baselining
 # ---------------------------------------------------------------------
 #
 # Preprocessing (model dependent)
@@ -153,30 +164,31 @@ ps_sr = ps_sr.keys_to_samples("species_center")
 ps_lr = ps_lr.keys_to_samples("species_center")
 
 
-# %% For linear models only: Sum features up over atoms (``samples``) in the same
-# structure.
+# %%
 #
+# For linear models only: Sum features up over atoms (``samples``) in the same
+# structure.
 
-samples_names_to_sum = ['center', 'species_center']
+samples_names_to_sum = ["center", "species_center"]
 
 ps_sr = metatensor.sum_over_samples(ps_sr, samples_names=samples_names_to_sum)
 ps_lr = metatensor.sum_over_samples(ps_lr, samples_names=samples_names_to_sum)
 
 
-# %% Initialize tensormaps for energy baselining
+# %%
+#
+# Initialize tensormaps for energy baselining
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# We add a simple extra descriptor :py:class:`rascaline.AtomicComposition` that stores how
-# many atoms of each chemical species are contained in the structures.
-# This is used for energy baselining.
-#
+# We add a simple extra descriptor :py:class:`rascaline.AtomicComposition` that stores
+# how many atoms of each chemical species are contained in the structures. This is used
+# for energy baselining.
 
 calculator_co = AtomicComposition(per_structure=False)
 descriptor_co = calculator_co.compute(frames, gradients=["positions"])
 
 co = descriptor_co.keys_to_properties(["species_center"])
-co = metatensor.sum_over_samples(co, samples_names=['center'])
-
+co = metatensor.sum_over_samples(co, samples_names=["center"])
 
 # %%
 #
@@ -195,10 +207,10 @@ co = metatensor.sum_over_samples(co, samples_names=['center'])
 # built on a feature vector that is simply the concatenation of the SR and
 # LR features.
 #
-# Furthermore, energy baselining can be performed by concatenating the
-# information about chemical species as well. There is an metatensor
-# function called :py:func:`metatensor.join()` for this purpose. Formally, we can write for
-# the SR model
+# Furthermore, energy baselining can be performed by concatenating the information about
+# chemical species as well. There is an metatensor function called
+# :py:func:`metatensor.join()` for this purpose. Formally, we can write for the SR
+# model.
 #
 # X_sr: :math:`1 \oplus \left(\rho \otimes \rho\right)`
 
@@ -263,7 +275,7 @@ samples_test = metatensor.Labels(["structure"], np.reshape(idx_test, (-1, 1)))
 
 # %%
 #
-# That we use as input to the ``slice`` function
+# That we use as input to the :py:func:`equistore.slice()` function
 
 X_sr_train = metatensor.slice(X_sr, axis="samples", labels=samples_train)
 X_sr_test = metatensor.slice(X_sr, axis="samples", labels=samples_test)
@@ -281,8 +293,8 @@ y_test = metatensor.slice(y, axis="samples", labels=samples_test)
 # -------------
 #
 # For this model, we use a very simple regularization scheme where all features are
-# regularized in the same way (the amount being controlled by the parameter alpha). For
-# more advanced regularization schemes (regularizing energies and forces differently
+# regularized in the same way (the amount being controlled by the parameter ``alpha``).
+# For more advanced regularization schemes (regularizing energies and forces differently
 # and/or the SR and LR parts differently), see further down.
 
 clf_sr.fit(X_sr_train, y_train, alpha=1e-6)
@@ -299,17 +311,21 @@ clf_lr.fit(X_lr_train, y_train, alpha=1e-6)
 
 print(
     "SR: RMSE energies = "
-    f"{clf_sr.score(X_sr_test, y_test, parameter_key='values')[0]:.3f} eV")
+    f"{clf_sr.score(X_sr_test, y_test, parameter_key='values')[0]:.3f} eV"
+)
 print(
     "SR: RMSE forces = "
-    f"{clf_sr.score(X_sr_test, y_test, parameter_key='positions')[0]:.3f} eV/Å")
+    f"{clf_sr.score(X_sr_test, y_test, parameter_key='positions')[0]:.3f} eV/Å"
+)
 
 print(
     "LR: RMSE energies = "
-    f"{clf_lr.score(X_lr_test, y_test, parameter_key='values')[0]:.3f} eV")
+    f"{clf_lr.score(X_lr_test, y_test, parameter_key='values')[0]:.3f} eV"
+)
 print(
     "LR: RMSE forces = "
-    f"{clf_lr.score(X_lr_test, y_test, parameter_key='positions')[0]:.3f} eV/Å")
+    f"{clf_lr.score(X_lr_test, y_test, parameter_key='positions')[0]:.3f} eV/Å"
+)
 
 
 # %%
@@ -323,8 +339,7 @@ print(
 
 dist = np.array([f.info["distance"] for f in frames])
 energies = np.array([f.info["energy"] for f in frames])
-monomer_energies = np.array(
-    [f.info["energyA"] + f.info["energyB"] for f in frames])
+monomer_energies = np.array([f.info["energyA"] + f.info["energyB"] for f in frames])
 
 
 # %%
@@ -345,16 +360,15 @@ y_lr_pred = clf_lr.predict(X_lr)
 # And, finally perform the plot.
 
 plt.scatter(
-    dist,
-    y.block().values[:, 0] - monomer_energies,
-    label="target data",
-    color="black")
+    dist, y.block().values[:, 0] - monomer_energies, label="target data", color="black"
+)
 
 plt.scatter(
     dist,
     y_sr_pred.block().values[:, 0] - monomer_energies,
     label="short range model",
-    marker="x")
+    marker="x",
+)
 
 plt.scatter(
     dist,
@@ -362,11 +376,12 @@ plt.scatter(
     label="long range model",
     marker="s",
     facecolor="None",
-    edgecolor="orange")
+    edgecolor="orange",
+)
 
 plt.xlabel("center of mass distance in Å")
-plt.ylabel("$E - E_\mathrm{monomer}$ in eV")
-plt.axvline(r_cut, c="red", label="$r_\mathrm{train}$")
+plt.ylabel(r"$E - E_\mathrm{monomer}$ in eV")
+plt.axvline(r_cut, c="red", label=r"$r_\mathrm{train}$")
 
 plt.legend()
 plt.tight_layout()
