@@ -15,8 +15,8 @@ example in an external repository and link to it on the `Wiki page
 <https://github.com/lab-cosmo/software-cookbook/wiki>`_. If you feel unsure if a
 contribution is suitable, feel free to contact one of the `support`_ before.
 
-Adding an sphinx-gallery examples
----------------------------------
+Adding a new examples
+---------------------
 
 To visualize examples on our readthedocs page we use `sphinx-gallery`. When building the
 doc the examples are run and compiled automatically into HTML files and moved to the
@@ -27,16 +27,20 @@ If you do not know where to put your example, just put in the `examples/uncatego
 <examples/uncategorized>`_ folder and when doing a pull request, we will figure out
 where to put it.
 
+After adding a file, you'll need to update ``tox.ini`` to build your example when
+building the documentation. Look how it's done for the ``lode_linear`` example, and
+do the same for yours!
+
 Converting a Jupyter notebook to a sphinx-gallery compatible Python script
 --------------------------------------------------------------------------
 
 Often it is more convenient to work in a Jupyter notebook and convert in later to
 sphinx-gallery example. To convert your Jupyter notebook you can just use the
-`ipynb_to_gallery.py <ipynb_to_gallery.py>`_ file that is root folder of the repository
+`ipynb-to-gallery.py <ipynb_to_gallery.py>`_ file that is root folder of the repository
 
 .. code-block:: bash
 
-    python ipynb_to_gallery.py <notebook.ipynb>
+    python ipynb-to-gallery.py <notebook.ipynb>
 
 Building the cookbook locally
 -----------------------------
@@ -59,13 +63,10 @@ formatting issues remaining, then the reviewer of your pull request can fix them
 To visualize the generated cookbook open in a browser the file
 ``docs/build/html/index.html``.
 
-When you generate the examples locally all the notebook will be automatically generated
-in the folder ``docs/src/examples/<name of the example>``
-
 Known issues
 ------------
 
-Sometimes the doc preview from readthedocs is not correcty rendered. If something works
+Sometimes the doc preview from readthedocs is not rendered correctly. If something works
 in your local build but not in the readthedocs PR preview. It could that the issue is
 fixed once you merge with the main branch.
 
