@@ -51,7 +51,7 @@ frames = ase.io.read("./dataset/input-fps.xyz", f":{n_frames}", format="extxyz")
 
 # Define SOAP hyperparameters in rascaline format
 soap_hypers = {
-    "cutoff": 3.0,  # Angstrom
+    "cutoff": 5.0,  # Angstrom
     "max_radial": 8,  # Exclusive
     "max_angular": 5,  # Inclusive
     "atomic_gaussian_width": 0.3,
@@ -100,12 +100,10 @@ selector_atomic_fps = sample_selection.FPS(n_to_select=n_envs, initialize="rando
     soap_atomic
 )
 
-#selector=sample_selection.FPS(n_to_select=n_envs, initialize='random').fit(soap_atomic)
-
 # Print the selected envs for each block
 print("atomic envs selected with FPS:\n")
 for key, block in selector_atomic_fps.support.items():
-    print("species_center:", key, "(struct_idx, atom_idx)", block.samples)
+    print("species_center:", key, "\n(struct_idx, atom_idx)\n", block.samples.values)
 
 # %%
 # Perform structure (i.e. sample) selection with FPS/CUR
@@ -132,11 +130,11 @@ n_structures = 5
 selector_struct_fps = sample_selection.FPS(
     n_to_select=n_structures, initialize="random"
 ).fit(soap_struct)
-print("structures selected with FPS:", selector_struct_fps.support.block(0).samples)
+print("structures selected with FPS:\n", selector_struct_fps.support.block(0).samples.values)
 
-# FPS structure selection
-selector_struct_cur = sample_selection.FPS(n_to_select=n_structures).fit(soap_struct)
-print("structures selected with CUR:", selector_struct_cur.support.block(0).samples)
+# CUR structure selection
+selector_struct_cur = sample_selection.CUR(n_to_select=n_structures).fit(soap_struct)
+print("structures selected with CUR:\n", selector_struct_cur.support.block(0).samples.values)
 
 # %%
 # Selecting from a combined pool of atomic environments
@@ -144,17 +142,18 @@ print("structures selected with CUR:", selector_struct_cur.support.block(0).samp
 #
 # One can also select from a combined pool of atomic environments and
 # structures, instead of selecting an equal number of atomic environments for
-# each chemical species. In this case, we can move all the keys to properties
+# each chemical species. In this case, we can move the 'species_center' key to samples
 # such that our descriptor is a TensorMap consisting of a single block. Upon
 # sample selection, the most diverse atomic environments will be selected,
 # regardless of their chemical species.
 
 print('keys',soap_atomic.keys)
 print('blocks',soap_atomic[0])
+print('samples in first block',soap_atomic[0].samples)
 
 # Using the original SOAP descriptor, move all keys to properties.
 soap_atomic_single_block = soap_atomic.keys_to_samples(
-    keys_to_move=["species_center"]#, "species_neighbor_1", "species_neighbor_2"]
+    keys_to_move=["species_center"]
 )
 print(soap_atomic_single_block)
 print(soap_atomic_single_block.block(0))  # There is only one block now!
@@ -167,6 +166,6 @@ selector_atomic_fps = sample_selection.FPS(n_to_select=n_envs, initialize="rando
     soap_atomic_single_block
 )
 print(
-    "atomic envs selected with FPS (struct_idx, atom_idx):\n",
-    selector_atomic_fps.support.block(0).samples,
+    "atomic envs selected with FPS: \n (struct_idx, atom_idx, species_center) \n",
+    selector_atomic_fps.support.block(0).samples.values,
 )
