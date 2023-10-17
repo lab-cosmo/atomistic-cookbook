@@ -9,9 +9,9 @@ conventional density-energy convex hull with a Generalized Convex Hull
 (GCH) analysis (see `Anelli et al., Phys. Rev. Materials
 (2018) <https://doi.org/10.1103/PhysRevMaterials.2.103804>`__).
 It uses features computed with `rascaline <https://github.com/lab-cosmo/rascaline>`__
-and uses the directional convex hull function from 
-`scikit-matter <https://github.com/lab-cosmo/scikit-matter>`__ 
-to make the figure. 
+and uses the directional convex hull function from
+`scikit-matter <https://github.com/lab-cosmo/scikit-matter>`__
+to make the figure.
 """
 
 import chemiscope
@@ -93,27 +93,33 @@ print(f"Mean hull energy for 'other' structures {dch_dist[iothers].mean()} kJ/mo
 # requires having the ``chemiscope`` package installed.
 #
 
-if chemiscope.jupyter._is_running_in_notebook():
-    chemiscope.show(
-        structures,
-        dict(
-            energy=energy,
-            density=density,
-            hull_energy=dch_dist,
-            structure_type=structype,
-        ),
-        settings={
-            "map": {
-                "x": {"property": "density"},
-                "y": {"property": "energy"},
-                "color": {"property": "hull_energy"},
-                "symbol": "structure_type",
-                "size": {"factor": 35},
-            },
-            "structure": [{"unitCell": True, "supercell": {"0": 2, "1": 2, "2": 2}}],
+cs = chemiscope.show(
+    structures,
+    dict(
+        energy=energy,
+        density=density,
+        hull_energy=dch_dist,
+        structure_type=structype,
+    ),
+    settings={
+        "map": {
+            "x": {"property": "density"},
+            "y": {"property": "energy"},
+            "color": {"property": "hull_energy"},
+            "symbol": "structure_type",
+            "size": {"factor": 35},
         },
-    )
+        "structure": [{"unitCell": True, "supercell": {"0": 2, "1": 2, "2": 2}}],
+    },
+)
 
+
+if chemiscope.jupyter._is_running_in_notebook():
+    from IPython.display import display
+
+    display(cs)
+else:
+    cs.save("roy_ch.json.gz")
 
 # %%
 # Generalized Convex Hull
@@ -232,46 +238,55 @@ structure_properties.update({"per_atom_energy": energy, "hull_energy": dch_dist}
 # shows chemiscope if not run in terminal
 
 cs = chemiscope.show(
-        frames=structures,
-        properties=structure_properties,
-        meta={"name" : "GCH for ROY polymorphs",
-              "description": 
-"""
-Demonstration of the Generalized Convex Hull construction for polymorphs of the ROY molecule.
-Molecules that are closest to the hull built on PCA-based structural descriptors and having the 
-internal energy predicted by electronic-structure calculations as the z axis are the most 
-thermodynamically stable. Indeed most of the known polymorphs of ROY are on (or very close) to
-this hull. 
+    frames=structures,
+    properties=structure_properties,
+    meta={
+        "name": "GCH for ROY polymorphs",
+        "description": """
+Demonstration of the Generalized Convex Hull construction for
+polymorphs of the ROY molecule. Molecules that are closest to
+the hull built on PCA-based structural descriptors and having the
+internal energy predicted by electronic-structure calculations as
+the z axis are the most thermodynamically stable. Indeed most of the
+known polymorphs of ROY are on (or very close) to this hull.
 """,
-              "authors": "Michele Ceriotti <michele.ceriotti@gmail.com>",
-              "references": ['A. Anelli, E. A. Engel, C. J. Pickard, and M. Ceriotti, "Generalized convex hull construction for materials discovery," Physical Review Materials 2(10), 103804 (2018).',
-                             '1.  G. J. O. Beran, I. J. Sugden, C. Greenwell, D. H. Bowskill, C. C. Pantelides, and C. S. Adjiman, "How many more polymorphs of ROY remain undiscovered," Chem. Sci. 13(5), 1288–1297 (2022).'
-                            ]},
-        settings={
-            "map": {
-                "x": {"property": "pca_1"},
-                "y": {"property": "pca_2"},
-                "z": {"property": "energy"},
-                "symbol": "type",
-                "color": {"property": "hull_energy"},
-                "size": {
-                    "factor": 35,
-                    "mode": "linear",
-                    "property": "",
-                    "reverse": True,
-                },
+        "authors": ["Michele Ceriotti <michele.ceriotti@gmail.com>"],
+        "references": [
+            'A. Anelli, E. A. Engel, C. J. Pickard, and M. Ceriotti, \
+            "Generalized convex hull construction for materials discovery," \
+            Physical Review Materials 2(10), 103804 (2018).',
+            'G. J. O. Beran, I. J. Sugden, C. Greenwell, D. H. Bowskill, \
+            C. C. Pantelides, and C. S. Adjiman, "How many more polymorphs of \
+            ROY remain undiscovered," Chem. Sci. 13(5), 1288–1297 (2022).',
+        ],
+    },
+    settings={
+        "map": {
+            "x": {"property": "pca_1"},
+            "y": {"property": "pca_2"},
+            "z": {"property": "energy"},
+            "symbol": "type",
+            "color": {"property": "hull_energy"},
+            "size": {
+                "factor": 35,
+                "mode": "linear",
+                "property": "",
+                "reverse": True,
             },
-            "structure": [
-                {
-                    "bonds": True,
-                    "unitCell": True,
-                    "keepOrientation": True,
-                }
-            ],
         },
-    )
+        "structure": [
+            {
+                "bonds": True,
+                "unitCell": True,
+                "keepOrientation": True,
+            }
+        ],
+    },
+)
 
 if chemiscope.jupyter._is_running_in_notebook():
+    from IPython.display import display
+
     display(cs)
 else:
     cs.save("roy_gch.json.gz")
