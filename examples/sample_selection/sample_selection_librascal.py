@@ -14,12 +14,9 @@ First, import all the necessary packages
 
 import ase.io
 import numpy as np
-from sklearn.decomposition import PCA
-
-import chemiscope
 from rascal.representations import SphericalInvariants
-from rascal.utils import FPSFilter
-from skmatter import sample_selection, feature_selection
+from sklearn.decomposition import PCA
+from skmatter import feature_selection, sample_selection
 
 
 # %%
@@ -72,7 +69,8 @@ soap_hypers = {
 # Generate a SOAP spherical expansion
 soap = SphericalInvariants(**soap_hypers)
 
-# Perform a data trasnformation and get the descriptor with samples as atomic environments
+# Perform a data trasnformation and get the descriptor with samples as atomic
+# environments
 atom_dscrptr = soap.transform(frames).get_features(soap)
 
 # Calculate the stucture features as the mean over the atomic features for each
