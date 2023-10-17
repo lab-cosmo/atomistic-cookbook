@@ -153,7 +153,7 @@ rho2i = calculator.compute(structures)
 rho2i = rho2i.keys_to_samples(["species_center"]).keys_to_properties(
     ["species_neighbor_1", "species_neighbor_2"]
 )
-rho2i_structure = mean_over_samples(rho2i, samples_names=["center", "species_center"])
+rho2i_structure = mean_over_samples(rho2i, sample_names=["center", "species_center"])
 np.savez("roy_features.npz", feats=rho2i_structure.block(0).values)
 
 

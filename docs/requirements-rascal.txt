@@ -1,5 +1,5 @@
 # rascal needs to be in a separate requirements file because we need to specify
-# the packages index-url for it te use the prebuilt from 
+# the packages index-url for it te use the prebuilt from
 # from https://github.com/Luthaf/nightly-wheels
 # extra-url does not work here because there is another rascal package on pypi
 --index-url https://luthaf.fr/nightly-wheels/
