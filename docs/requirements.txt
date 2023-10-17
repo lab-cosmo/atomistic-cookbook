@@ -1,8 +1,10 @@
+--extra-index-url https://luthaf.fr/nightly-wheels/
 # Sphinx
 sphinx
 sphinx_rtd_theme
 sphinx-gallery
 sphinx-toggleprompt
+furo
 
 # Jupyter widgets
 ipywidgets
@@ -12,15 +14,13 @@ jupyter_sphinx
 matplotlib
 numpy
 ase
+scipy
 
 # COSMO stack and friends
 scikit-learn
 skmatter
 chemiscope
-# TODO: use pre-built versions here
-git+https://github.com/lab-cosmo/librascal.git
-# git+https://github.com/Luthaf/rascaline.git
-# git+https://github.com/lab-cosmo/equistore.git
+equisolve @ git+https://github.com/lab-cosmo/equisolve.git@71b3dfd
 
-# torch related packages
-torch_geometric
+metatensor
+rascaline
