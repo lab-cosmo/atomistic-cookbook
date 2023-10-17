@@ -1,7 +1,8 @@
 COSMO Software Cookbook
 =======================
 
-`COSMO Software Cookbook <https://software-cookbook.rtfd.io/>`_
+The source code for the COSMO cookbook is maintained as a GitHub pages site. The home
+page is accessible at https://lab-cosmo.github.io/software-cookbook/latest.
 
 .. marker-intro-start
 

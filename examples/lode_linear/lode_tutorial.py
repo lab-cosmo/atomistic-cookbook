@@ -169,10 +169,10 @@ ps_lr = ps_lr.keys_to_samples("species_center")
 # For linear models only: Sum features up over atoms (``samples``) in the same
 # structure.
 
-samples_names_to_sum = ["center", "species_center"]
+sample_names_to_sum = ["center", "species_center"]
 
-ps_sr = metatensor.sum_over_samples(ps_sr, samples_names=samples_names_to_sum)
-ps_lr = metatensor.sum_over_samples(ps_lr, samples_names=samples_names_to_sum)
+ps_sr = metatensor.sum_over_samples(ps_sr, sample_names=sample_names_to_sum)
+ps_lr = metatensor.sum_over_samples(ps_lr, sample_names=sample_names_to_sum)
 
 
 # %%
@@ -188,7 +188,7 @@ calculator_co = AtomicComposition(per_structure=False)
 descriptor_co = calculator_co.compute(frames, gradients=["positions"])
 
 co = descriptor_co.keys_to_properties(["species_center"])
-co = metatensor.sum_over_samples(co, samples_names=["center"])
+co = metatensor.sum_over_samples(co, sample_names=["center"])
 
 # %%
 #

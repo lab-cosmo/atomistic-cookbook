@@ -1,4 +1,3 @@
---extra-index-url https://luthaf.fr/nightly-wheels/
 # Sphinx
 sphinx
 sphinx_rtd_theme
@@ -20,7 +19,7 @@ scipy
 scikit-learn
 skmatter
 chemiscope
-equisolve @ git+https://github.com/lab-cosmo/equisolve.git@71b3dfd
+equisolve @ https://github.com/lab-cosmo/equisolve/archive/63c9c54.zip
 
 metatensor
-rascaline
+rascaline @ https://github.com/luthaf/rascaline/archive/581d0ca.zip
