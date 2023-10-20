@@ -15,7 +15,7 @@ to make the figure.
 """
 
 import chemiscope
-import matplotlib.tri as mtri
+import matplotlib.tri
 import numpy as np
 from matplotlib import pyplot as plt
 from metatensor import mean_over_samples
