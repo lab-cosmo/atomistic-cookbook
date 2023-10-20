@@ -1,11 +1,10 @@
-name: lode_linear
+name: roy_gch
 dependencies:
   - python=3.11
   - pip
   - pip:
     - ase
-    - chemiscope
+    - chemiscope @ git+https://github.com/lab-cosmo/chemiscope
     - skmatter
     - metatensor
-    - equisolve @ git+https://github.com/lab-cosmo/equisolve.git@63c9c54046507b27f115efb1d9b9fa8a1573c4da
     - rascaline @ git+https://github.com/Luthaf/rascaline@581d0ca4dece424b4594c8c3cac40a7381e13ae5
