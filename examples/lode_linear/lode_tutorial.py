@@ -43,8 +43,8 @@ frames = ase.io.read("dataset/charge-charge.xyz", ":")
 
 # %%
 #
-# Convert target properties to equistore format
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Convert target properties to metatensor format
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # If we want to train models using the
 # `equisolve <https://github.com/lab-cosmo/equisolve>`_ package, we need to
@@ -197,8 +197,8 @@ co = metatensor.sum_over_samples(co, sample_names=["center"])
 #
 # .. code:: python
 #
-#    descriptor_co = AtomicComposition(per_structure=True).compute(**compute_args) co =
-#    descriptor_co.keys_to_properties(["species_center"])
+#    descriptor_co = AtomicComposition(per_structure=True).compute(**compute_args)
+#    co = descriptor_co.keys_to_properties(["species_center"])
 #
 # Stack all the features together for linear model
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -267,24 +267,27 @@ idx_test = [i for i, f in enumerate(frames) if f.info["distance"] >= r_cut]
 
 # %%
 #
-# For doing the split we define two ``Labels`` instances
+# For doing the split we define two ``Labels`` instances and combine them in a
+# :py:class:`List`.
 
 samples_train = metatensor.Labels(["structure"], np.reshape(idx_train, (-1, 1)))
 samples_test = metatensor.Labels(["structure"], np.reshape(idx_test, (-1, 1)))
+grouped_labels = [samples_train, samples_test]
 
 
 # %%
 #
-# That we use as input to the :py:func:`equistore.slice()` function
+# That we use as input to the :py:func:`metatensor.split()` function
 
-X_sr_train = metatensor.slice(X_sr, axis="samples", labels=samples_train)
-X_sr_test = metatensor.slice(X_sr, axis="samples", labels=samples_test)
+X_sr_train, X_sr_test = metatensor.split(
+    X_sr, axis="samples", grouped_labels=grouped_labels
+)
 
-X_lr_train = metatensor.slice(X_lr, axis="samples", labels=samples_train)
-X_lr_test = metatensor.slice(X_lr, axis="samples", labels=samples_test)
+X_lr_train, X_lr_test = metatensor.split(
+    X_lr, axis="samples", grouped_labels=grouped_labels
+)
 
-y_train = metatensor.slice(y, axis="samples", labels=samples_train)
-y_test = metatensor.slice(y, axis="samples", labels=samples_test)
+y_train, y_test = metatensor.split(y, axis="samples", grouped_labels=grouped_labels)
 
 
 # %%
