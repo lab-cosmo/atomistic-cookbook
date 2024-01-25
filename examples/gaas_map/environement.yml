@@ -8,4 +8,4 @@ dependencies:
     - skmatter
     - scikit-learn
     - metatensor
-    - rascaline
+    - rascaline @ git+https://github.com/Luthaf/rascaline@ca957642f512e141c7570e987aadc05c7ac71983
