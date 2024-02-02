@@ -9,6 +9,7 @@ Usage: python ipynb_to_gallery.py <notebook.ipynb>
 Dependencies:
 pypandoc: install using `pip install pypandoc`
 """
+
 import json
 
 import pypandoc as pdoc

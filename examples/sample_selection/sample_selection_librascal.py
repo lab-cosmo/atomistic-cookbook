@@ -10,6 +10,7 @@ implemented in scikit-matter.
 
 First, import all the necessary packages
 """
+
 # %%
 
 import ase.io
