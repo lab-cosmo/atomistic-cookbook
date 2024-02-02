@@ -7,4 +7,4 @@ dependencies:
     - chemiscope @ git+https://github.com/lab-cosmo/chemiscope
     - skmatter
     - metatensor
-    - rascaline @ git+https://github.com/Luthaf/rascaline@581d0ca4dece424b4594c8c3cac40a7381e13ae5
+    - rascaline @ git+https://github.com/Luthaf/rascaline@ca957642f512e141c7570e987aadc05c7ac71983
