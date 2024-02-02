@@ -5,5 +5,5 @@ dependencies:
   - pip:
     - ase
     - metatensor
-    - equisolve @ git+https://github.com/lab-cosmo/equisolve.git@63c9c54046507b27f115efb1d9b9fa8a1573c4da
-    - rascaline @ git+https://github.com/Luthaf/rascaline@581d0ca4dece424b4594c8c3cac40a7381e13ae5
+    - equisolve @ git+https://github.com/lab-cosmo/equisolve.git@c858bedef4b2799eb445e4c92535ee387224089a
+    - rascaline @ git+https://github.com/Luthaf/rascaline@ca957642f512e141c7570e987aadc05c7ac71983
