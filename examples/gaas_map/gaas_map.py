@@ -11,10 +11,13 @@ description of the dataset, that is then visualized using
 
 """
 
+import os
+
 import ase
 import ase.io
 import chemiscope
 import numpy as np
+import requests
 from matplotlib import pyplot as plt
 from metatensor import mean_over_samples
 from rascaline import AtomicComposition, SoapPowerSpectrum
@@ -32,7 +35,15 @@ from skmatter.preprocessing import StandardFlexibleScaler
 # train a ML potential to describe the full composition range.
 #
 
-structures = ase.io.read("gaas_training.xyz", ":")
+filename = "gaas_training.xyz"
+if not os.path.exists(filename):
+    url = f"https://zenodo.org/records/10566825/files/{filename}"
+    response = requests.get(url)
+    response.raise_for_status()
+    with open(filename, "wb") as f:
+        f.write(response.content)
+
+structures = ase.io.read(filename, ":")
 energy = np.array([f.info["energy"] for f in structures])
 natoms = np.array([len(f) for f in structures])
 
