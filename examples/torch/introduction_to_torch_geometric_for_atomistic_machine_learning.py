@@ -18,7 +18,7 @@ Introduction to PyTorch Geometric for Atomistic Machine Learning
 # tutorials <https://pytorch.org/tutorials/>`__.
 # 
 # For the following work we need to first install the PyTorch and PyTorch
-# Geometric libraries. YThere are several options how to do it, the
+# Geometric libraries. There are several options how to do it, the
 # easiest one is to do it via PyPI:
 # 
 # .. code:: bash
