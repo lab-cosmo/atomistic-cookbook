@@ -27,6 +27,13 @@ jobs:
       - name: build documentation
         run: tox -e docs
 
+      - name: store documentation as github artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation
+          path: docs/build/html/*
+          overwrite: true  # only keep the latest version of the documentation
+
       - name: put documentation in the website
         run: |
           git clone https://github.com/$GITHUB_REPOSITORY --branch gh-pages gh-pages
