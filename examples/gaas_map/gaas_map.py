@@ -2,7 +2,7 @@
 PCA/PCovR Visualization for the rattled GaAs training dataset
 =============================================================
 
-This examples uses ``rascaline`` and ``metatensor`` to compute
+This example uses ``rascaline`` and ``metatensor`` to compute
 structural properties for the structures in a training for a ML model.
 These are then used with simple dimensionality reduction algorithms
 (implemented in ``sklearn`` and ``skmatter``) to obtain a simplified
