@@ -1,0 +1,11 @@
+name: gaas_map
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+    - ase
+    - chemiscope @ git+https://github.com/lab-cosmo/chemiscope
+    - skmatter
+    - scikit-learn
+    - metatensor
+    - rascaline @ git+https://github.com/Luthaf/rascaline@ca957642f512e141c7570e987aadc05c7ac71983
