@@ -6,6 +6,8 @@ name: Lint
 on:
   pull_request:
     branches: [main]
+  schedule:
+    - cron: '0 8 * * 1' # run every Monday at 8am UTC
 
 jobs:
   lint:
