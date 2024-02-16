@@ -4,7 +4,7 @@ dependencies:
   - pip
   - pip:
     - ase
-    - chemiscope @ git+https://github.com/lab-cosmo/chemiscope
+    - chemiscope
     - skmatter
     - metatensor
     - rascaline @ git+https://github.com/Luthaf/rascaline@ca957642f512e141c7570e987aadc05c7ac71983
