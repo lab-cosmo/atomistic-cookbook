@@ -2,7 +2,7 @@ Generalized Convex Hull analysis of the polymorphs of ROY
 =========================================================
 
 This is an example of the construction of a generalized convex hull
-based on SOAP figures, for a dataset containing known (and hypothetical)
+based on SOAP features, for a dataset containing known (and hypothetical)
 polymorphs of 5-methyl-2-[(2-nitrophenyl)amino]-3-thiophenecabonitrile
 (ROY).
 
