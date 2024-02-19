@@ -4,7 +4,7 @@ dependencies:
   - pip
   - pip:
     - ase
-    - chemiscope @ git+https://github.com/lab-cosmo/chemiscope
+    - chemiscope
     - skmatter
     - scikit-learn
     - metatensor

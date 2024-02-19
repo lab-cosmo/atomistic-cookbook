@@ -1,12 +1,13 @@
 """
-Sample Selection with FPS and CUR (librascal)
+Sample and Feature Selection with FPS and CUR
 =============================================
 
 .. start-body
 
-In this tutorial we generate descriptors using librascal, then select a subset
+In this tutorial we generate descriptors using rascaline, then select a subset
 of structures using both the farthest-point sampling (FPS) and CUR algorithms
-implemented in scikit-matter.
+implemented in scikit-matter. Finally, we also generate a selection of
+the most important features using the same techniques.
 
 First, import all the necessary packages
 """
@@ -14,8 +15,11 @@ First, import all the necessary packages
 # %%
 
 import ase.io
+import chemiscope
 import numpy as np
-from rascal.representations import SphericalInvariants
+from matplotlib import pyplot as plt
+from metatensor import mean_over_samples
+from rascaline import SoapPowerSpectrum
 from sklearn.decomposition import PCA
 from skmatter import feature_selection, sample_selection
 
@@ -24,64 +28,44 @@ from skmatter import feature_selection, sample_selection
 # Load molecular data
 # -------------------
 #
-# Load 100 example BTO structures from file, reading them using
+# Load 500 example BTO structures from file, reading them using
 # `ASE <https://wiki.fysik.dtu.dk/ase/>`_.
 
 # Load a subset of structures of the example dataset
-n_frames = 250
+n_frames = 500
 frames = ase.io.read("./dataset/input-fps.xyz", f":{n_frames}", format="extxyz")
 
-# librascal requires the atomic positions to be wrapped in the cell
-for frame in frames:
-    frame.wrap(eps=1.0e-12)
-
-
 # %%
-# Compute SOAP descriptor using librascal
-# ---------------------------------------
+# Compute SOAP descriptors using rascaline
+# ----------------------------------------
 #
-# First, define the librascal hyperparameters used to compute SOAP.
+# First, define the rascaline hyperparameters used to compute SOAP.
 
-# librascal hyperparameters
-soap_hypers = {
-    "soap_type": "PowerSpectrum",
-    "interaction_cutoff": 6.0,
+
+# rascaline hyperparameters
+hypers = {
+    "cutoff": 6.0,
     "max_radial": 8,
     "max_angular": 6,
-    "gaussian_sigma_constant": 0.3,
-    "gaussian_sigma_type": "Constant",
-    "cutoff_function_type": "RadialScaling",
-    "cutoff_smooth_width": 0.5,
-    "cutoff_function_parameters": {
-        "rate": 1,
-        "scale": 3.5,
-        "exponent": 4,
-    },
-    "radial_basis": "GTO",
-    "normalize": True,
-    "optimization": {
-        "Spline": {
-            "accuracy": 1.0e-05,
-        },
-    },
-    "compute_gradients": False,
+    "atomic_gaussian_width": 0.3,
+    "cutoff_function": {"ShiftedCosine": {"width": 0.5}},
+    "radial_basis": {"Gto": {"accuracy": 1e-6}},
+    "radial_scaling": {"Willatt2018": {"exponent": 4, "rate": 1, "scale": 3.5}},
+    "center_atom_weight": 1.0,
 }
 
-# Generate a SOAP spherical expansion
-soap = SphericalInvariants(**soap_hypers)
+# Generate a SOAP power spectrum
+calculator = SoapPowerSpectrum(**hypers)
+rho2i = calculator.compute(frames)
+# Makes a dense block
+rho2i = rho2i.keys_to_samples(["species_center"]).keys_to_properties(
+    ["species_neighbor_1", "species_neighbor_2"]
+)
+# Averages over atomic centers to compute structure features
+rho2i_structure = mean_over_samples(rho2i, sample_names=["center", "species_center"])
 
-# Perform a data trasnformation and get the descriptor with samples as atomic
-# environments
-atom_dscrptr = soap.transform(frames).get_features(soap)
-
-# Calculate the stucture features as the mean over the atomic features for each
-# structure
-struct_dscrptr = np.zeros((len(frames), atom_dscrptr.shape[1]))
-atom_idx_start = 0
-for i, frame in enumerate(frames):
-    atom_idx_stop = atom_idx_start + len(frame.numbers)
-    struct_dscrptr[i] = atom_dscrptr[atom_idx_start:atom_idx_stop].mean(axis=0)
-    atom_idx_start = atom_idx_stop
+atom_dscrptr = rho2i.block(0).values
+struct_dscrptr = rho2i_structure.block(0).values
 
 print("atom feature descriptor shape:", atom_dscrptr.shape)
 print("structure feature descriptor shape:", struct_dscrptr.shape)
@@ -124,8 +108,8 @@ print("Structure descriptor shape after selection ", struct_dscrptr_fps.shape)
 
 
 # %%
-# Visualize selected structures with chemiscope
-# ---------------------------------------------
+# Visualize selected structures
+# -----------------------------
 #
 # sklearn can be used to perform PCA dimensionality reduction on the SOAP
 # descriptors. The resulting PC coordinates can be used to visualize the the
@@ -134,9 +118,46 @@ print("Structure descriptor shape after selection ", struct_dscrptr_fps.shape)
 # Note: chemiscope widgets are not currently integrated into our sphinx gallery:
 # coming soon.
 
+
 # Generate a structure PCA
 struct_dscrptr_pca = PCA(n_components=2).fit_transform(struct_dscrptr)
 assert struct_dscrptr_pca.shape == (n_frames, 2)
+
+
+# %%
+# Plot the PCA map
+# ~~~~~~~~~~~~~~~~
+#
+# Notice how the selected points avoid the densely-sampled area, and cover
+# the periphery of the dataset
+
+# Matplotlib plot
+fig, ax = plt.subplots(1, 1, figsize=(6, 4))
+scatter = ax.scatter(struct_dscrptr_pca[:, 0], struct_dscrptr_pca[:, 1], c="red")
+ax.plot(
+    struct_dscrptr_pca[struct_cur_idxs, 0],
+    struct_dscrptr_pca[struct_cur_idxs, 1],
+    "kx",
+    label="CUR selection",
+)
+ax.plot(
+    struct_dscrptr_pca[struct_fps_idxs, 0],
+    struct_dscrptr_pca[struct_fps_idxs, 1],
+    "ko",
+    fillstyle="none",
+    label="FPS selection",
+)
+ax.set_xlabel("PCA[1]")
+ax.set_ylabel("PCA[2]")
+ax.legend()
+fig.show()
+
+
+# %%
+# Creates a chemiscope viewer
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Interactive viewer (only works in notebooks)
 
 # Selected level
 selection_levels = []
@@ -146,19 +167,51 @@ for i in range(len(frames)):
         level += 1
     if i in struct_fps_idxs:
         level += 2
+    if level == 0:
+        level = "Not selected"
+    elif level == 1:
+        level = "CUR"
+    elif level == 2:
+        level = "FPS"
+    else:
+        level = "FPS+CUR"
     selection_levels.append(level)
 
+properties = chemiscope.extract_properties(frames)
 
-properties = {
-    "PC1": struct_dscrptr_pca[:, 0],
-    "PC2": struct_dscrptr_pca[:, 1],
-    "Selection: (1) CUR, (2) FPS, (3) both": np.array(selection_levels),
-}
+properties.update(
+    {
+        "PC1": struct_dscrptr_pca[:, 0],
+        "PC2": struct_dscrptr_pca[:, 1],
+        "selection": np.array(selection_levels),
+    }
+)
 
+print(properties)
 
 # Display with chemiscope. This currently does not work - as raised in issue #8
 # https://github.com/lab-cosmo/software-cookbook/issues/8
-# chemiscope.show(frames, properties=properties)
+cs = chemiscope.show(
+    frames,
+    properties=properties,
+    settings={
+        "map": {
+            "x": {"property": "PC1"},
+            "y": {"property": "PC2"},
+            "color": {"property": "energy"},
+            "symbol": "selection",
+            "size": {"factor": 50},
+        },
+        "structure": [{"unitCell": True}],
+    },
+)
+
+if chemiscope.jupyter._is_running_in_notebook():
+    from IPython.display import display
+
+    display(cs)
+else:
+    cs.save("sample_selection.json.gz")
 
 
 # %%

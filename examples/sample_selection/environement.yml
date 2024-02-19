@@ -1,12 +1,10 @@
-name: lode_linear
+name: sample_selection
 dependencies:
-  - python=3.10
+  - python=3.11
   - pip
   - pip:
-    # example dependencies
+    - ase
     - chemiscope
     - skmatter
-    - scikit-learn
-    - ase
-    # needed to install rascal
-    - setuptools
+    - metatensor
+    - rascaline @ git+https://github.com/Luthaf/rascaline@ca957642f512e141c7570e987aadc05c7ac71983
