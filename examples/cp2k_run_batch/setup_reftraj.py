@@ -12,6 +12,7 @@ The script will create a directory `./production` containing subdirectories for 
 This is only necessary, because CP2K can only run calculations using a single stoichiometry at a time, using the reftraj functionality.
 """
 
+import shutil
 import os
 from os.path import basename, splitext
 from typing import List, Union
@@ -21,6 +22,7 @@ import numpy as np
 from ase.build import molecule
 from ase.calculators.cp2k import CP2K
 from numpy.testing import assert_allclose
+from pathlib import Path
 import subprocess
 
 
@@ -30,7 +32,8 @@ import subprocess
 # ============
 # 
 
-IDENTFIER_CP2K_INSTALL = "PATH_TO_CP2KINSTALL"
+
+
 
 def write_reftraj(fname: str, frames: Union[ase.Atoms, List[ase.Atoms]]):
     if isinstance(frames, ase.Atoms):
@@ -78,6 +81,11 @@ def write_cp2k_in(fname: str, project: str, last_snapshot: int, cell: List[float
     cp2k_in = cp2k_in.replace("//PROJECT//", project)
     cp2k_in = cp2k_in.replace("//LAST_SNAPSHOT//", str(last_snapshot))
     cp2k_in = cp2k_in.replace("//CELL//", " ".join([f"{c:.6f}" for c in cell]))
+
+    IDENTFIER_CP2K_INSTALL = "PATH_TO_CP2KINSTALL"
+    PATH_TO_CP2K_DATA = str(Path(shutil.which("cp2k.ssmp")).parents[1] / "share/cp2k/data/")
+
+    cp2k_in = cp2k_in.replace(IDENTFIER_CP2K_INSTALL, PATH_TO_CP2K_DATA)
 
     with open(fname, "w") as f:
         f.write(cp2k_in)
@@ -129,8 +137,8 @@ for stoichiometry, frames in frames_dict.items():
 # %%
 # Run simulations
 # ===============
-# 
-subprocess.run(f"cp2k.ssmp -i ./H4O2/in.cp2k | tee cp2k.log")
+#
+subprocess.run(f"cd ./production && for i in $(find . -mindepth 1 -type d); do cd \"$i\"; cp2k.ssmp -i in.cp2k ; cd -; done", shell=True)
 
 # %%
 # Load results
@@ -148,7 +156,7 @@ for stoichiometry, frames in frames_dict.items():
 
     frames_dft = ase.io.read(f"{current_directory}/{project}-pos-1.xyz", ":")
     forces_dft = ase.io.read(f"{current_directory}/{project}-frc-1.xyz", ":")
-    cell_dft = np.loadtxt(f"{current_directory}/{project}-1.cell")[:, 2:-1]
+    cell_dft = np.atleast_2d(np.loadtxt(f"{current_directory}/{project}-1.cell"))[:, 2:-1]
 
     for i_atoms, atoms in enumerate(frames_dft):
         frames_ref = frames[i_atoms]
@@ -175,3 +183,32 @@ ase.io.write(f"{project_directory}/{new_fname}", new_frames)
 # Perform calculations using ase calculator
 # ==========================================
 #
+# ASE requires a name of the executable that has the exact name cp2k_shell.
+# We create a symlink to follow this requirement.
+try:
+    os.symlink(shutil.which("cp2k.ssmp"), "cp2k_shell.ssmp")
+except OSError:
+    pass
+
+# set an alias for 
+calc = CP2K(
+    inp=open("./production/H4O2/in.cp2k", "r").read(),
+    max_scf=None,
+    cutoff=None,
+    xc=None,
+    force_eval_method=None,
+    basis_set=None,
+    pseudo_potential=None,
+    basis_set_file=None,
+    potential_file=None,
+    stress_tensor=False,
+    #multiplicity=None,
+    poisson_solver=None,
+    print_level=None,
+    command=f"./cp2k_shell.ssmp --shell",
+)
+
+atoms = ase.io.read("./data/example.xyz")
+atoms.set_calculator(calc)
+atoms.get_potential_energy()
+# %%
