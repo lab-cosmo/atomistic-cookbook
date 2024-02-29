@@ -24,6 +24,7 @@ from ase.calculators.cp2k import CP2K
 from numpy.testing import assert_allclose
 from pathlib import Path
 import subprocess
+import re
 
 
 
@@ -190,9 +191,16 @@ try:
 except OSError:
     pass
 
+
+
+# remove GLOBAl section becaus eotherwirse we get an error by the ase claculator
+inp = open("./production/H4O2/in.cp2k", "r").read()
+inp = re.sub(f"{re.escape('&GLOBAL')}.*?{re.escape('&END GLOBAL')}", "", inp, flags=re.DOTALL)
+
+
 # set an alias for 
 calc = CP2K(
-    inp=open("./production/H4O2/in.cp2k", "r").read(),
+    inp=inp,
     max_scf=None,
     cutoff=None,
     xc=None,
@@ -210,5 +218,5 @@ calc = CP2K(
 
 atoms = ase.io.read("./data/example.xyz")
 atoms.set_calculator(calc)
-atoms.get_potential_energy()
+#atoms.get_potential_energy()
 # %%
