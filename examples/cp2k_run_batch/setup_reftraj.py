@@ -39,6 +39,7 @@ from ase.calculators.cp2k import CP2K
 
 subprocess.run("bash return_CP2K_versions.sh", shell=True)
 
+
 def write_reftraj(fname: str, frames: Union[ase.Atoms, List[ase.Atoms]]):
     """Writes a list of ase atoms objects to a reference trajectory.
     A reference trajectory is the CP2K compatible format for the compuation of batches.
