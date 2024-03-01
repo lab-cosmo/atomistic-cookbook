@@ -7,7 +7,7 @@ Batch run of CP2K calculations
 This is an example of a batch calculation using CP2K.
 The inputs are a set of structures in `./data/example.xyz` using the parameters defined
 in `./data/reftraj_template.cp2k` importing basisset and
-pseudopotentials from `./data/basis/`.
+pseudopotentials from the local CP2K install.
 
 The script will create a directory `./production`
 containing subdirectories for each stoichiometry.
@@ -33,8 +33,8 @@ from ase.calculators.cp2k import CP2K
 
 
 # %%
-# Define nescassary functions
-# ============
+# Define necessary functions
+# ===============================================
 #
 
 
@@ -131,7 +131,7 @@ def mkdir_force(*args, **kwargs):
 
 # %%
 # Prepare calculation inputs
-# ============
+# ===============================================
 #
 
 # %%
@@ -188,12 +188,13 @@ subprocess.run("bash run_calcs.sh", shell=True)
 # %%
 # This command will run the following bash script:
 # .. literalinclude:: run_calcs.sh
-#   :language: bash
-# .. download:: Download the script <run_calcs.sh>
+# :language: bash
+#
+# Download the :download:`run_calcs.sh`
 
 # %%
 # Load results
-# ============
+# ===============================================
 #
 
 cflength = 0.529177210903  # Bohr -> Å
@@ -234,7 +235,7 @@ ase.io.write(f"{project_directory}/{new_fname}", new_frames)
 
 # %%
 # Perform calculations using ase calculator
-# ==========================================
+# ===============================================
 #
 # ASE requires a name of the executable that has the exact name cp2k_shell.
 # We create a symlink to follow this requirement.
