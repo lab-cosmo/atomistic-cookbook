@@ -10,6 +10,8 @@ in `./data/reftraj_template.cp2k` importing basisset and pseudopotentials from `
 
 The script will create a directory `./production` containing subdirectories for each stoichiometry.
 This is only necessary, because CP2K can only run calculations using a single stoichiometry at a time, using the reftraj functionality.
+
+The reference paramaters are taken from: Cheng et al. Ab initio thermodynamics of liquid and solid water 2019.
 """
 
 import shutil
@@ -25,6 +27,7 @@ from numpy.testing import assert_allclose
 from pathlib import Path
 import subprocess
 import re
+import warnings
 
 
 
@@ -90,6 +93,10 @@ def write_cp2k_in(fname: str, project: str, last_snapshot: int, cell: List[float
 
     with open("./data/reftraj_template.cp2k", "r") as f:
         cp2k_in = f.read()
+
+    warnings.warn("Due to the small size of the test structure and convergence issues, we have\
+                  decreased the size of the CUTOFF_RADIUS from 6.0 to 3.0. \
+                  For actual production calculations adapt the template!")
 
     cp2k_in = cp2k_in.replace("//PROJECT//", project)
     cp2k_in = cp2k_in.replace("//LAST_SNAPSHOT//", str(last_snapshot))
