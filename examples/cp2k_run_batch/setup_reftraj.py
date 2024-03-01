@@ -37,6 +37,7 @@ from ase.calculators.cp2k import CP2K
 # ===============================================
 #
 
+subprocess.run("bash return_CP2K_versions.sh", shell=True)
 
 def write_reftraj(fname: str, frames: Union[ase.Atoms, List[ase.Atoms]]):
     """Writes a list of ase atoms objects to a reference trajectory.
@@ -112,6 +113,7 @@ def write_cp2k_in(fname: str, project: str, last_snapshot: int, cell: List[float
     cp2k_in = cp2k_in.replace("//CELL//", " ".join([f"{c:.6f}" for c in cell]))
 
     IDENTFIER_CP2K_INSTALL = "PATH_TO_CP2KINSTALL"
+
     PATH_TO_CP2K_DATA = str(
         Path(shutil.which("cp2k.ssmp")).parents[1] / "share/cp2k/data/"
     )
