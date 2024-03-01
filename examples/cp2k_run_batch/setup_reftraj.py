@@ -14,9 +14,13 @@ This is only necessary, because CP2K can only run calculations using a single st
 The reference paramaters are taken from: Cheng et al. Ab initio thermodynamics of liquid and solid water 2019.
 """
 
-import shutil
 import os
+import re
+import shutil
+import subprocess
+import warnings
 from os.path import basename, splitext
+from pathlib import Path
 from typing import List, Union
 
 import ase.io
@@ -24,17 +28,12 @@ import numpy as np
 from ase.build import molecule
 from ase.calculators.cp2k import CP2K
 from numpy.testing import assert_allclose
-from pathlib import Path
-import subprocess
-import re
-import warnings
-
 
 
 # %%
 # Define nescassary functions
 # ============
-# 
+#
 
 
 def write_reftraj(fname: str, frames: Union[ase.Atoms, List[ase.Atoms]]):
@@ -42,7 +41,6 @@ def write_reftraj(fname: str, frames: Union[ase.Atoms, List[ase.Atoms]]):
     A reference trajectory is the CP2K compatible format for the compuation of batches.
     All frames must have the stoichiometry/composition.
     """
-
 
     if isinstance(frames, ase.Atoms):
         frames = [frames]
@@ -68,8 +66,9 @@ def write_reftraj(fname: str, frames: Union[ase.Atoms, List[ase.Atoms]]):
     with open(fname, "w") as f:
         f.write(out)
 
+
 def write_cellfile(fname: str, frames: Union[ase.Atoms, List[ase.Atoms]]):
-    """ Writes a cellfile for a list of ase.Atoms. 
+    """Writes a cellfile for a list of ase.Atoms.
     A Cellfile accompanies a refrtraj containing the cell parameters.
     """
     if isinstance(frames, ase.Atoms):
@@ -85,6 +84,7 @@ def write_cellfile(fname: str, frames: Union[ase.Atoms, List[ase.Atoms]]):
     with open(fname, "w") as f:
         f.write(out)
 
+
 def write_cp2k_in(fname: str, project: str, last_snapshot: int, cell: List[float]):
     """Writes a cp2k input file from a template.
     Importantly it writes the location of the basis set definitions,
@@ -94,21 +94,26 @@ def write_cp2k_in(fname: str, project: str, last_snapshot: int, cell: List[float
     with open("./data/reftraj_template.cp2k", "r") as f:
         cp2k_in = f.read()
 
-    warnings.warn("Due to the small size of the test structure and convergence issues, we have\
+    warnings.warn(
+        "Due to the small size of the test structure and convergence issues, we have\
                   decreased the size of the CUTOFF_RADIUS from 6.0 to 3.0. \
-                  For actual production calculations adapt the template!")
+                  For actual production calculations adapt the template!"
+    )
 
     cp2k_in = cp2k_in.replace("//PROJECT//", project)
     cp2k_in = cp2k_in.replace("//LAST_SNAPSHOT//", str(last_snapshot))
     cp2k_in = cp2k_in.replace("//CELL//", " ".join([f"{c:.6f}" for c in cell]))
 
     IDENTFIER_CP2K_INSTALL = "PATH_TO_CP2KINSTALL"
-    PATH_TO_CP2K_DATA = str(Path(shutil.which("cp2k.ssmp")).parents[1] / "share/cp2k/data/")
+    PATH_TO_CP2K_DATA = str(
+        Path(shutil.which("cp2k.ssmp")).parents[1] / "share/cp2k/data/"
+    )
 
     cp2k_in = cp2k_in.replace(IDENTFIER_CP2K_INSTALL, PATH_TO_CP2K_DATA)
 
     with open(fname, "w") as f:
         f.write(cp2k_in)
+
 
 def mkdir_force(*args, **kwargs):
     try:
@@ -116,22 +121,23 @@ def mkdir_force(*args, **kwargs):
     except OSError as e:
         pass
 
+
 # %%
 # Prepare calculation inputs
 # ============
-# 
+#
 
-#%%
+# %%
 # Defining input/output names
-    
+
 project = "test_calcs"
 project_directory = "production"
 write_to_file = "out.xyz"
-frames_full = ase.io.read("./data/example.xyz",":")
+frames_full = ase.io.read("./data/example.xyz", ":")
 
 frames_dict = {}
 
-#%%
+# %%
 # Determine unique compositions
 
 for atoms in frames_full:
@@ -143,7 +149,7 @@ for atoms in frames_full:
 
     frames_dict[chemical_formula].append(atoms)
 
-#%%
+# %%
 # Make calculation subdirectories (reftraj, input and cellfile)
 
 mkdir_force(project_directory)
@@ -167,7 +173,7 @@ for stoichiometry, frames in frames_dict.items():
 # Run simulations
 # ===============
 #
-    
+
 # run the bash script directly from this script
 subprocess.run(f"bash run_calcs.sh", shell=True)
 
@@ -177,14 +183,14 @@ subprocess.run(f"bash run_calcs.sh", shell=True)
 # .. literalinclude:: run_calcs.sh
 #   :language: bash
 # .. download:: Download the script <run_calcs.sh>
-    
-#alternatively do:
-#subprocess.run(f"cd ./production && for i in $(find . -mindepth 1 -type d); do cd \"$i\"; cp2k.ssmp -i in.cp2k ; cd -; done", shell=True)
+
+# alternatively do:
+# subprocess.run(f"cd ./production && for i in $(find . -mindepth 1 -type d); do cd \"$i\"; cp2k.ssmp -i in.cp2k ; cd -; done", shell=True)
 
 # %%
 # Load results
 # ============
-# 
+#
 
 cflength = 0.529177210903  # Bohr -> Å
 cfenergy = 27.211386245988  # Hartree -> eV
@@ -197,7 +203,9 @@ for stoichiometry, frames in frames_dict.items():
 
     frames_dft = ase.io.read(f"{current_directory}/{project}-pos-1.xyz", ":")
     forces_dft = ase.io.read(f"{current_directory}/{project}-frc-1.xyz", ":")
-    cell_dft = np.atleast_2d(np.loadtxt(f"{current_directory}/{project}-1.cell"))[:, 2:-1]
+    cell_dft = np.atleast_2d(np.loadtxt(f"{current_directory}/{project}-1.cell"))[
+        :, 2:-1
+    ]
 
     for i_atoms, atoms in enumerate(frames_dft):
         frames_ref = frames[i_atoms]
@@ -232,10 +240,11 @@ except OSError:
     pass
 
 
-
 # remove GLOBAl section becaus eotherwirse we get an error by the ase claculator
 inp = open("./production/H4O2/in.cp2k", "r").read()
-inp = re.sub(f"{re.escape('&GLOBAL')}.*?{re.escape('&END GLOBAL')}", "", inp, flags=re.DOTALL)
+inp = re.sub(
+    f"{re.escape('&GLOBAL')}.*?{re.escape('&END GLOBAL')}", "", inp, flags=re.DOTALL
+)
 
 calc = CP2K(
     inp=inp,
@@ -248,7 +257,7 @@ calc = CP2K(
     basis_set_file=None,
     potential_file=None,
     stress_tensor=False,
-    #multiplicity=None,
+    # multiplicity=None,
     poisson_solver=None,
     print_level=None,
     command=f"./cp2k_shell.ssmp --shell",
@@ -256,5 +265,5 @@ calc = CP2K(
 
 atoms = ase.io.read("./data/example.xyz")
 atoms.set_calculator(calc)
-#atoms.get_potential_energy()
+# atoms.get_potential_energy()
 # %%
