@@ -5,13 +5,17 @@ Batch run of CP2K calculations
 .. start-body
 
 This is an example of a batch calculation using CP2K.
-The inputs are a set of structures in `./data/example.xyz` using the parameters defined 
-in `./data/reftraj_template.cp2k` importing basisset and pseudopotentials from `./data/basis/`.
+The inputs are a set of structures in `./data/example.xyz` using the parameters defined
+in `./data/reftraj_template.cp2k` importing basisset and
+pseudopotentials from `./data/basis/`.
 
-The script will create a directory `./production` containing subdirectories for each stoichiometry.
-This is only necessary, because CP2K can only run calculations using a single stoichiometry at a time, using the reftraj functionality.
+The script will create a directory `./production`
+containing subdirectories for each stoichiometry.
+This is only necessary, because CP2K can only run calculations
+using a single stoichiometry at a time, using the reftraj functionality.
 
-The reference paramaters are taken from: Cheng et al. Ab initio thermodynamics of liquid and solid water 2019.
+The reference paramaters are taken from:
+Cheng et al. Ab initio thermodynamics of liquid and solid water 2019.
 """
 
 import os
@@ -25,9 +29,7 @@ from typing import List, Union
 
 import ase.io
 import numpy as np
-from ase.build import molecule
 from ase.calculators.cp2k import CP2K
-from numpy.testing import assert_allclose
 
 
 # %%
@@ -57,7 +59,7 @@ def write_reftraj(fname: str, frames: Union[ase.Atoms, List[ase.Atoms]]):
                 f"{frames[0].get_chemical_formula()}. "
                 "CP2K does not support changing atom types within a reftraj run!"
             )
-        n_atoms = len(atoms)
+
         out += f"{len(atoms):>8}\n i = {i+1:>8}, time = {0:>12.3f}\n"
         for atom in atoms:
             pos = atom.position
@@ -74,7 +76,11 @@ def write_cellfile(fname: str, frames: Union[ase.Atoms, List[ase.Atoms]]):
     if isinstance(frames, ase.Atoms):
         frames = [frames]
 
-    out = "#   Step   Time [fs]       Ax [Angstrom]       Ay [Angstrom]       Az [Angstrom]       Bx [Angstrom]       By [Angstrom]       Bz [Angstrom]       Cx [Angstrom]       Cy [Angstrom]       Cz [Angstrom]      Volume [Angstrom^3]\n"
+    out = "#   Step   Time [fs]       Ax [Angstrom]       Ay [Angstrom]\
+            Az [Angstrom]       Bx [Angstrom]       By [Angstrom]\
+                            Bz [Angstrom]       Cx [Angstrom]\
+                                            Cy [Angstrom]       Cz [Angstrom]\
+                                                        Volume [Angstrom^3]\n"
     for i, atoms in enumerate(frames):
         out += f"{i+1:>8}{0:>12.3f}"
         out += "".join([f"{c:>20.10f}" for c in atoms.cell.flatten()])
@@ -95,9 +101,10 @@ def write_cp2k_in(fname: str, project: str, last_snapshot: int, cell: List[float
         cp2k_in = f.read()
 
     warnings.warn(
-        "Due to the small size of the test structure and convergence issues, we have\
-                  decreased the size of the CUTOFF_RADIUS from 6.0 to 3.0. \
-                  For actual production calculations adapt the template!"
+        "Due to the small size of the test structure and convergence issues, we have \
+        decreased the size of the CUTOFF_RADIUS from 6.0 to 3.0. \
+        For actual production calculations adapt the template!",
+        stacklevel=2,
     )
 
     cp2k_in = cp2k_in.replace("//PROJECT//", project)
@@ -118,7 +125,7 @@ def write_cp2k_in(fname: str, project: str, last_snapshot: int, cell: List[float
 def mkdir_force(*args, **kwargs):
     try:
         os.mkdir(*args, **kwargs)
-    except OSError as e:
+    except OSError:
         pass
 
 
@@ -175,7 +182,7 @@ for stoichiometry, frames in frames_dict.items():
 #
 
 # run the bash script directly from this script
-subprocess.run(f"bash run_calcs.sh", shell=True)
+subprocess.run("bash run_calcs.sh", shell=True)
 
 
 # %%
@@ -183,9 +190,6 @@ subprocess.run(f"bash run_calcs.sh", shell=True)
 # .. literalinclude:: run_calcs.sh
 #   :language: bash
 # .. download:: Download the script <run_calcs.sh>
-
-# alternatively do:
-# subprocess.run(f"cd ./production && for i in $(find . -mindepth 1 -type d); do cd \"$i\"; cp2k.ssmp -i in.cp2k ; cd -; done", shell=True)
 
 # %%
 # Load results
@@ -260,7 +264,7 @@ calc = CP2K(
     # multiplicity=None,
     poisson_solver=None,
     print_level=None,
-    command=f"./cp2k_shell.ssmp --shell",
+    command="./cp2k_shell.ssmp --shell",
 )
 
 atoms = ase.io.read("./data/example.xyz")

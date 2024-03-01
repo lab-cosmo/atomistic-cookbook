@@ -13,3 +13,4 @@ COSMO Software Cookbook
    examples/lode_linear/lode_tutorial
    examples/sample_selection/sample_selection
    examples/gaas_map/gaas_map
+   example/cp2k_run_batch/setup_reftraj
