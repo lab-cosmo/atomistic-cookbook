@@ -34,9 +34,13 @@ import re
 # 
 
 
-
-
 def write_reftraj(fname: str, frames: Union[ase.Atoms, List[ase.Atoms]]):
+    """Writes a list of ase atoms objects to a reference trajectory.
+    A reference trajectory is the CP2K compatible format for the compuation of batches.
+    All frames must have the stoichiometry/composition.
+    """
+
+
     if isinstance(frames, ase.Atoms):
         frames = [frames]
 
@@ -62,6 +66,9 @@ def write_reftraj(fname: str, frames: Union[ase.Atoms, List[ase.Atoms]]):
         f.write(out)
 
 def write_cellfile(fname: str, frames: Union[ase.Atoms, List[ase.Atoms]]):
+    """ Writes a cellfile for a list of ase.Atoms. 
+    A Cellfile accompanies a refrtraj containing the cell parameters.
+    """
     if isinstance(frames, ase.Atoms):
         frames = [frames]
 
@@ -76,6 +83,11 @@ def write_cellfile(fname: str, frames: Union[ase.Atoms, List[ase.Atoms]]):
         f.write(out)
 
 def write_cp2k_in(fname: str, project: str, last_snapshot: int, cell: List[float]):
+    """Writes a cp2k input file from a template.
+    Importantly it writes the location of the basis set definitions,
+    determined from the path of the system cp2k install to the input file.
+    """
+
     with open("./data/reftraj_template.cp2k", "r") as f:
         cp2k_in = f.read()
 
@@ -102,12 +114,18 @@ def mkdir_force(*args, **kwargs):
 # ============
 # 
 
+#%%
+# Defining input/output names
+    
 project = "test_calcs"
 project_directory = "production"
 write_to_file = "out.xyz"
 frames_full = ase.io.read("./data/example.xyz",":")
 
 frames_dict = {}
+
+#%%
+# Determine unique compositions
 
 for atoms in frames_full:
     chemical_formula = atoms.get_chemical_formula()
@@ -117,6 +135,9 @@ for atoms in frames_full:
         frames_dict[chemical_formula] = []
 
     frames_dict[chemical_formula].append(atoms)
+
+#%%
+# Make calculation subdirectories (reftraj, input and cellfile)
 
 mkdir_force(project_directory)
 
@@ -139,7 +160,19 @@ for stoichiometry, frames in frames_dict.items():
 # Run simulations
 # ===============
 #
-subprocess.run(f"cd ./production && for i in $(find . -mindepth 1 -type d); do cd \"$i\"; cp2k.ssmp -i in.cp2k ; cd -; done", shell=True)
+    
+# run the bash script directly from this script
+subprocess.run(f"bash run_calcs.sh", shell=True)
+
+
+# %%
+# This command will run the following bash script:
+# .. literalinclude:: run_calcs.sh
+#   :language: bash
+# .. download:: Download the script <run_calcs.sh>
+    
+#alternatively do:
+#subprocess.run(f"cd ./production && for i in $(find . -mindepth 1 -type d); do cd \"$i\"; cp2k.ssmp -i in.cp2k ; cd -; done", shell=True)
 
 # %%
 # Load results
@@ -197,8 +230,6 @@ except OSError:
 inp = open("./production/H4O2/in.cp2k", "r").read()
 inp = re.sub(f"{re.escape('&GLOBAL')}.*?{re.escape('&END GLOBAL')}", "", inp, flags=re.DOTALL)
 
-
-# set an alias for 
 calc = CP2K(
     inp=inp,
     max_scf=None,
