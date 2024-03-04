@@ -6,5 +6,7 @@ echo "cp2k.popt"
 which cp2k.popt
 echo "cp2k.psmp"
 which cp2k.psmp
+echo "cp2k.sopt"
+which cp2k.sopt
 echo "cp2k"
 which cp2k
