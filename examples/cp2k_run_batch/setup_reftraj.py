@@ -5,12 +5,12 @@ Batch run of CP2K calculations
 .. start-body
 
 This is an example how to perform single point calculations based on list of structures
-using `CP2K <https://www.cp2k.org>`_ using its `reftraj
-functionality <https://manual.cp2k.org/trunk/CP2K_INPUT/MOTION/MD/REFTRAJ.html>`_. The
-inputs are a set of structures in :download:`example.xyz` using the DFT parameters
-defined in :download:`reftraj_template.cp2k` importing basis set and pseudopotentials
-from the local CP2K installation. The reference DFT parameters are taken from `Cheng et al.
-Ab initio thermodynamics of liquid and solid water 2019
+using `CP2K <https://www.cp2k.org>`_ using its `reftraj functionality
+<https://manual.cp2k.org/trunk/CP2K_INPUT/MOTION/MD/REFTRAJ.html>`_. The inputs are a
+set of structures in :download:`example.xyz` using the DFT parameters defined in
+:download:`reftraj_template.cp2k` importing basis set and pseudopotentials from the
+local CP2K installation. The reference DFT parameters are taken from `Cheng et al. Ab
+initio thermodynamics of liquid and solid water 2019
 <https://www.pnas.org/doi/10.1073/pnas.1815117116>`_. Due to the small size of the test
 structure and convergence issues, we have decreased the size of the ``CUTOFF_RADIUS``
 from :math:`6.0\,\mathrm{Å}` to :math:`3.0\,\mathrm{Å}`. For actual production
@@ -41,7 +41,7 @@ from ase.calculators.cp2k import CP2K
 
 # %%
 # Define necessary functions
-# ==========================
+# --------------------------
 # Next we below define necessary helper functions to run the example.
 
 
@@ -152,7 +152,7 @@ def mkdir_force(*args, **kwargs) -> None:
 
 # %%
 # Prepare calculation inputs
-# ===============================================
+# --------------------------
 # During this example we will create a directory named ``project_directory`` containing
 # the subdirectories for each stoichiometry. This is necessary, because CP2K can only
 # run calculations using a fixed stoichiometry at a time, using its ``reftraj``
@@ -220,7 +220,7 @@ for stoichiometry, frames in frames_dict.items():
 
 # %%
 # Run simulations
-# ===============
+# ---------------
 # Now we have all ingredients to run the simulations. Below we call the bash script
 # :download:`run_calcs.sh`.
 #
@@ -240,7 +240,7 @@ subprocess.run("bash run_calcs.sh", shell=True)
 #    and submit and single job per stoichiometry.
 #
 # Load results
-# ============
+# ------------
 # After the simulation we load the results and perform a unit version from the default
 # CP2K output units (Bohr and Hartree) to Å and eV.
 
@@ -287,7 +287,7 @@ ase.io.write(f"{project_directory}/{new_fname}", new_frames)
 
 # %%
 # Perform calculations using ASE calculator
-# =========================================
+# -----------------------------------------
 # Above we performed the calculations using an external bash script. ASE also provides a
 # calculator class that we can use the perform the caclulations with our input file
 # without a detour of writing files to disk.
