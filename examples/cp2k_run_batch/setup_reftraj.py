@@ -8,15 +8,15 @@ This is an example how to perform single point calculations based on list of str
 using `CP2K <https://www.cp2k.org>`_ using its `reftraj
 functionality <https://manual.cp2k.org/trunk/CP2K_INPUT/MOTION/MD/REFTRAJ.html>`_. The
 inputs are a set of structures in :download:`example.xyz` using the DFT parameters
-defined in :download:`reftraj_template.cp2k` importing basisset and pseudopotentials
-from the local CP2K install. The reference DFT paramaters are taken from `Cheng et al.
+defined in :download:`reftraj_template.cp2k` importing basis set and pseudopotentials
+from the local CP2K installation. The reference DFT parameters are taken from `Cheng et al.
 Ab initio thermodynamics of liquid and solid water 2019
 <https://www.pnas.org/doi/10.1073/pnas.1815117116>`_. Due to the small size of the test
 structure and convergence issues, we have decreased the size of the ``CUTOFF_RADIUS``
 from :math:`6.0\,\mathrm{Å}` to :math:`3.0\,\mathrm{Å}`. For actual production
 calculations adapt the template!
 
-To run this example we use a bare exectubale called with ``cp2k``. If you want to use
+To run this example, we use a bare executable called with ``cp2k``. If you want to use
 another version you can either adjust the the names within this example or link your
 binary with a different name to ``cp2k``.
 """
