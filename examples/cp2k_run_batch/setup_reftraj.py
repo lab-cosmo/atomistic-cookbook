@@ -236,8 +236,8 @@ subprocess.run("bash run_calcs.sh", shell=True)
 # %%
 # .. note::
 #
-#    For a usage on an HPC machine you can parallize the loop over the subfolders abd
-#    submit and single job per stoichiometry.
+#    For a usage on an HPC environment you can parallize the loop over the subfolders
+#    and submit and single job per stoichiometry.
 #
 # Load results
 # ============
