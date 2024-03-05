@@ -171,7 +171,7 @@ write_to_file = "out.xyz"
 
 # %%
 # Below we show the initial configuration of two water molecules in a cubic box with a
-# sidelength of :math:`\approx 4\,\mathrm{Å}`.
+# side length of :math:`\approx 4\,\mathrm{Å}`.
 
 ase.visualize.plot.plot_atoms(frames_full[0])
 
