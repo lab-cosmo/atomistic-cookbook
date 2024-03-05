@@ -38,7 +38,8 @@ class PseudoSphinxApp:
             "examples_dirs": os.path.join(HERE, example),
             "gallery_dirs": gallery_dir,
             "min_reported_time": 60,
-            "copyfile_regex": r".*\.(sh|xyz)",
+            "copyfile_regex": r".*\.(sh|xyz|cp2k)",
+            "matplotlib_animations": True,
         }
 
         self.builder = AttrDict()
