@@ -289,7 +289,7 @@ ase.io.write(f"{project_directory}/{new_fname}", new_frames)
 # Perform calculations using ASE calculator
 # =========================================
 # Above we performed the calculations using an external bash script. ASE also provides a
-# calculator class that we can use the perform the caclulations with pur input file
+# calculator class that we can use the perform the caclulations with our input file
 # without a detour of writing files to disk.
 #
 # To use the ASE calculator together with a custom input script this requires some
