@@ -1,4 +1,4 @@
-"""
+r"""
 Batch run of CP2K calculations
 ==============================
 
@@ -8,15 +8,17 @@ This is an example how to perform single point calculations based on list of str
 using `CP2K <https://www.cp2k.org>`_ using its `reftraj
 functionality <https://manual.cp2k.org/trunk/CP2K_INPUT/MOTION/MD/REFTRAJ.html>`_. The
 inputs are a set of structures in :download:`example.xyz` using the DFT parameters
-defined in :download:`reftraj_template.cp2k` importing basisset and
-pseudopotentials from the local CP2K install. The reference DFT paramaters are taken
-from `Cheng et al. Ab initio thermodynamics of liquid and solid water 2019
-<https://www.pnas.org/doi/10.1073/pnas.1815117116>`_ but adjusted in way to perform the
-quick evaluation of this example
+defined in :download:`reftraj_template.cp2k` importing basisset and pseudopotentials
+from the local CP2K install. The reference DFT paramaters are taken from `Cheng et al.
+Ab initio thermodynamics of liquid and solid water 2019
+<https://www.pnas.org/doi/10.1073/pnas.1815117116>`_. Due to the small size of the test
+structure and convergence issues, we have decreased the size of the ``CUTOFF_RADIUS``
+from :math:`6.0\,\mathrm{Å}` to :math:`3.0\,\mathrm{Å}`. For actual production
+calculations adapt the template!
 
 To run this example we use a bare exectubale called with ``cp2k``. If you want to use
 another version you can either adjust the the names within this example or link your
-binary accordingly.
+binary with a different name to ``cp2k``.
 """
 
 # %%
@@ -27,9 +29,7 @@ import os
 import re
 import shutil
 import subprocess
-import warnings
 from os.path import basename, splitext
-from pathlib import Path
 from typing import List, Union
 
 import ase.io
@@ -43,11 +43,6 @@ from ase.calculators.cp2k import CP2K
 # Define necessary functions
 # ==========================
 # Next we below define necessary helper functions to run the example.
-
-subprocess.run("bash return_CP2K_versions.sh", shell=True)
-
-
-# %%
 
 
 def write_reftraj(fname: str, frames: Union[ase.Atoms, List[ase.Atoms]]) -> None:
@@ -131,23 +126,11 @@ def write_cp2k_in(
     determined from the path of the system CP2K install to the input file.
     """
 
-    with open("reftraj_template.cp2k", "r") as f:
-        cp2k_in = f.read()
-
-    warnings.warn(
-        "Due to the small size of the test structure and convergence issues, we have \
-        decreased the size of the CUTOFF_RADIUS from 6.0 to 3.0. \
-        For actual production calculations adapt the template!",
-        stacklevel=2,
-    )
+    cp2k_in = open("reftraj_template.cp2k", "r").read()
 
     cp2k_in = cp2k_in.replace("//PROJECT//", project_name)
     cp2k_in = cp2k_in.replace("//LAST_SNAPSHOT//", str(last_snapshot))
     cp2k_in = cp2k_in.replace("//CELL//", " ".join([f"{c:.6f}" for c in cell]))
-
-    PATH_TO_CP2K_SHARE = str(Path(shutil.which("cp2k")).parents[1] / "share/cp2k/")
-
-    cp2k_in = cp2k_in.replace("CP2K_SHARE", PATH_TO_CP2K_SHARE)
 
     with open(fname, "w") as f:
         f.write(cp2k_in)
@@ -327,8 +310,8 @@ inp = re.sub(
 )
 
 # %%
-# Afterwards we define the ``CP2K`` calculator. Note that we disable all parameters
-# because we want to use all DFT options from our input file
+# Afterwards we define the :py:class:`ase.calculators.cp2k.CP2K`` calculator. Note that
+# we disable all parameters because we want to use all options from our input file
 
 calc = CP2K(
     inp=inp,
