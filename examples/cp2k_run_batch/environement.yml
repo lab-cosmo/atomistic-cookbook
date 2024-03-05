@@ -2,7 +2,6 @@ name: cp2k_run_batch
 dependencies:
   - python=3.10
   - pip
-  - conda-forge::libopenblas
   - conda-forge::cp2k
   - pip:
     - ase
