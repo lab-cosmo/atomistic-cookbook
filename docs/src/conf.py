@@ -1,6 +1,7 @@
 # Add any Sphinx extension module names here, as strings.
 extensions = [
     "sphinx.ext.viewcode",
+    "sphinx.ext.intersphinx",
     "sphinx_gallery.load_style",
 ]
 
@@ -12,3 +13,14 @@ copyright = "BSD 3-Clause License, Copyright (c) 2023, COSMO software cookbook t
 
 htmlhelp_basename = "COSMO software-cookbook"
 html_theme = "furo"
+
+
+intersphinx_mapping = {
+    "ase": ("https://wiki.fysik.dtu.dk/ase/", None),
+    "metatensor": ("https://lab-cosmo.github.io/metatensor/latest/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
+    "python": ("https://docs.python.org/3", None),
+    "rascaline": ("https://luthaf.fr/rascaline/latest/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+}
