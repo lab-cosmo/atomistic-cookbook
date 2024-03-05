@@ -14,9 +14,9 @@ from `Cheng et al. Ab initio thermodynamics of liquid and solid water 2019
 <https://www.pnas.org/doi/10.1073/pnas.1815117116>`_ but adjusted in way to perform the
 quick evaluation of this example
 
-To run this example we use a "hardcoded" ``ssmp`` version of CP2K which is available via
-``cp2k.ssmp``. If you want to use another version please adjust the the names
-accordingly.
+To run this example we use a bare exectubale called with ``cp2k``. If you want to use
+another version you can either adjust the the names within this example or link your
+binary accordingly.
 """
 
 # %%
@@ -147,9 +147,7 @@ def write_cp2k_in(
 
     IDENTFIER_CP2K_INSTALL = "PATH_TO_CP2KINSTALL"
 
-    PATH_TO_CP2K_DATA = str(
-        Path(shutil.which("cp2k.ssmp")).parents[1] / "share/cp2k/data/"
-    )
+    PATH_TO_CP2K_DATA = str(Path(shutil.which("cp2k")).parents[1] / "share/cp2k/data/")
 
     cp2k_in = cp2k_in.replace(IDENTFIER_CP2K_INSTALL, PATH_TO_CP2K_DATA)
 
@@ -318,7 +316,7 @@ ase.io.write(f"{project_directory}/{new_fname}", new_frames)
 # We create a symlink to follow this requirement.
 
 try:
-    os.symlink(shutil.which("cp2k.ssmp"), "cp2k_shell.ssmp")
+    os.symlink(shutil.which("cp2k"), "cp2k_shell.ssmp")
 except OSError:
     pass
 
