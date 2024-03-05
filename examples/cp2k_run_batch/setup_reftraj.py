@@ -293,7 +293,7 @@ ase.io.write(f"{project_directory}/{new_fname}", new_frames)
 # without a detour of writing files to disk.
 #
 # To use the ASE calculator together with a custom input script this requires some
-# adjsutements. First the name of the executable that has the exact name ``cp2k_shell``.
+# adjustments. First the name of the executable that has the exact name ``cp2k_shell``.
 # We create a symlink to follow this requirement.
 
 try:
