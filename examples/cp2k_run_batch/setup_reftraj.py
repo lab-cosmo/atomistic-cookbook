@@ -145,11 +145,9 @@ def write_cp2k_in(
     cp2k_in = cp2k_in.replace("//LAST_SNAPSHOT//", str(last_snapshot))
     cp2k_in = cp2k_in.replace("//CELL//", " ".join([f"{c:.6f}" for c in cell]))
 
-    IDENTFIER_CP2K_INSTALL = "PATH_TO_CP2KINSTALL"
+    PATH_TO_CP2K_SHARE = str(Path(shutil.which("cp2k")).parents[1] / "share/cp2k/")
 
-    PATH_TO_CP2K_DATA = str(Path(shutil.which("cp2k")).parents[1] / "share/cp2k/data/")
-
-    cp2k_in = cp2k_in.replace(IDENTFIER_CP2K_INSTALL, PATH_TO_CP2K_DATA)
+    cp2k_in = cp2k_in.replace("CP2K_SHARE", PATH_TO_CP2K_SHARE)
 
     with open(fname, "w") as f:
         f.write(cp2k_in)
