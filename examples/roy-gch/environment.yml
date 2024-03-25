@@ -1,4 +1,3 @@
-name: gaas_map
 dependencies:
   - python=3.11
   - pip
@@ -7,6 +6,5 @@ dependencies:
     - chemiscope
     - matplotlib
     - metatensor
-    - skmatter
     - rascaline @ git+https://github.com/Luthaf/rascaline@ca957642f512e141c7570e987aadc05c7ac71983
-    - scikit-learn
+    - skmatter

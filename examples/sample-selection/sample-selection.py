@@ -191,7 +191,7 @@ print(properties)
 
 # Display with chemiscope. This currently does not work - as raised in issue #8
 # https://github.com/lab-cosmo/software-cookbook/issues/8
-cs = chemiscope.show(
+widget = chemiscope.show(
     frames,
     properties=properties,
     settings={
@@ -209,9 +209,9 @@ cs = chemiscope.show(
 if chemiscope.jupyter._is_running_in_notebook():
     from IPython.display import display
 
-    display(cs)
+    display(widget)
 else:
-    cs.save("sample_selection.json.gz")
+    widget.save("sample-selection.json.gz")
 
 
 # %%

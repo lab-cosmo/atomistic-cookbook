@@ -14,12 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        example-name: 
-          - lode_linear
-          - roy_gch
-          - sample_selection
-          - gaas_map
-          - cp2k_run_batch
+        example-name:
+          - lode-linear
+          - roy-gch
+          - sample-selection
+          - gaas-map
+          - batch-cp2k
 
     steps:
       - uses: actions/checkout@v4
