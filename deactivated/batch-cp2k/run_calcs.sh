@@ -5,4 +5,3 @@ for i in $(find ./production/ -mindepth 1 -type d); do
     cp2k -i in.cp2k
     cd -
 done
-

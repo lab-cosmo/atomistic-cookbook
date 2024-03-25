@@ -19,7 +19,7 @@ jobs:
           - roy-gch
           - sample-selection
           - gaas-map
-          - batch-cp2k
+          # - batch-cp2k
 
     steps:
       - uses: actions/checkout@v4
