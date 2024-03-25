@@ -13,4 +13,3 @@ COSMO Software Cookbook
    examples/lode-linear/lode-linear
    examples/sample-selection/sample-selection
    examples/gaas-map/gaas-map
-   examples/batch-cp2k/reference-trajectory

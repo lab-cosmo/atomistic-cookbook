@@ -27,7 +27,6 @@ binary with a different name to ``cp2k``.
 
 import os
 import re
-import shutil
 import subprocess
 from os.path import basename, splitext
 from typing import List, Union
@@ -296,11 +295,6 @@ ase.io.write(f"{project_directory}/{new_fname}", new_frames)
 # adjustments. First the name of the executable that has the exact name ``cp2k_shell``.
 # We create a symlink to follow this requirement.
 
-try:
-    os.symlink(shutil.which("cp2k"), "cp2k_shell.ssmp")
-except OSError:
-    pass
-
 # %%
 # Next, we load the input file abd remove ``GLOBAL`` section because from it
 
@@ -326,7 +320,6 @@ calc = CP2K(
     stress_tensor=False,
     poisson_solver=None,
     print_level=None,
-    command="./cp2k_shell.ssmp --shell",
 )
 
 # %%
