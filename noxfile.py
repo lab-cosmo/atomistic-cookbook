@@ -95,13 +95,17 @@ for name in EXAMPLES:
         session.run("python", "generate-gallery.py", f"examples/{name}")
         os.unlink(f"docs/src/examples/{name}/index.rst")
 
+        if "--no-build-docs" not in session.posargs:
+            session.notify("build_docs")
+
 
 @nox.session(venv_backend="none")
 def docs(session):
     """Run all examples and build the documentation"""
 
     for example in EXAMPLES:
-        session.run("nox", "-e", example, external=True)
+        session.run("nox", "-e", example, "--", "--no-build-docs", external=True)
+
     session.run("nox", "-e", "build_docs", external=True)
 
 
@@ -112,6 +116,17 @@ def build_docs(session):
     requirements = "docs/requirements.txt"
     if should_reinstall_dependencies(session, requirements=requirements):
         session.install("-r", requirements)
+
+    with open("docs/src/index.rst", "w") as output:
+        with open("docs/src/index.rst.in") as fd:
+            output.write(fd.read())
+
+        output.write("\n")
+        for file in glob.glob("docs/src/examples/*/*.rst"):
+            if os.path.basename(file) != "sg_execution_times.rst":
+                path = file[9:-4]
+
+                output.write(f"   {path}\n")
 
     session.run("sphinx-build", "-W", "-b", "html", "docs/src", "docs/build/html")
 
