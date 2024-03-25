@@ -36,9 +36,10 @@ from rascaline.utils import PowerSpectrum
 # certain direction in the subsequent structures.
 #
 # For speeding up the calculations we already selected the first 130
-# structures of the charge-charge structures.
+# :download:`structures <charge-charge.xyz>` of the charge-charge molecule
+# pairs.
 
-frames = ase.io.read("dataset/charge-charge.xyz", ":")
+frames = ase.io.read("charge-charge.xyz", ":")
 
 
 # %%
