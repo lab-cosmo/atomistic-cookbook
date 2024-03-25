@@ -33,7 +33,7 @@ from skmatter import feature_selection, sample_selection
 
 # Load a subset of structures of the example dataset
 n_frames = 500
-frames = ase.io.read("./dataset/input-fps.xyz", f":{n_frames}", format="extxyz")
+frames = ase.io.read("input-fps.xyz", f":{n_frames}", format="extxyz")
 
 # %%
 # Compute SOAP descriptors using rascaline

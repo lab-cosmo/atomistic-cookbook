@@ -10,27 +10,71 @@ on:
     - cron: '0 8 * * 1' # run every Monday at 8am UTC
 
 jobs:
+  generate-example:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        example-name: [lode_linear, roy_gch, sample_selection, gaas_map, cp2k_run_batch]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: setup rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+
+      - name: setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: install tox
+        run: python -m pip install tox
+
+      - name: install cp2k
+        if: matrix.example-name == 'cp2k_run_batch'
+        run: sudo apt-get install -y cp2k
+
+      - name: build example
+        run: tox -e ${{ matrix.example-name }}
+
+      - name: store example as a github artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: example-${{ matrix.example-name }}
+          path: docs/src/examples/*  # folders for each example will be merged later
+          overwrite: true  # only keep the latest version of the example
+
   build-and-publish:
+    needs: generate-example
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: setup rust
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: stable
       - name: setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
-      - name: install dependencies
-        run: |
-          sudo apt-get install -y cp2k
-          python -m pip install tox
-      - name: build documentation
-        run: tox -e docs
+          python-version: "3.12"
 
-      - name: store documentation as github artifacts
+      - name: install tox
+        run: python -m pip install tox
+
+      - name: load github artifact for each example
+        uses: actions/download-artifact@v4
+        with:
+          path: docs/src/examples
+          pattern: example-*
+          merge-multiple: true
+
+      - name: build documentation
+        run: tox -e build_docs
+
+      - name: store documentation as github artifact to be downloaded by users
         uses: actions/upload-artifact@v4
         with:
           name: documentation
