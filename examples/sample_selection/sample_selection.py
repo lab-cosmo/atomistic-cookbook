@@ -31,9 +31,9 @@ from skmatter import feature_selection, sample_selection
 # Load 500 example BTO structures from file, reading them using
 # `ASE <https://wiki.fysik.dtu.dk/ase/>`_.
 
-# Load a subset of structures of the example dataset
+# Load a subset of :download:`structures <input-fps.xyz>` of the example dataset
 n_frames = 500
-frames = ase.io.read("./dataset/input-fps.xyz", f":{n_frames}", format="extxyz")
+frames = ase.io.read("input-fps.xyz", f":{n_frames}", format="extxyz")
 
 # %%
 # Compute SOAP descriptors using rascaline
