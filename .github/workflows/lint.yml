@@ -21,7 +21,7 @@ jobs:
         python-version: "3.12"
 
     - name: install dependencies
-      run: pip install tox
+      run: pip install nox
 
     - name: test lint
-      run: tox -e lint
+      run: nox -e lint
