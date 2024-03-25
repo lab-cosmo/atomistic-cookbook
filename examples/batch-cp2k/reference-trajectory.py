@@ -68,7 +68,7 @@ def write_reftraj(fname: str, frames: Union[ase.Atoms, List[ase.Atoms]]) -> None
                 "CP2K does not support changing atom types within a reftraj run!"
             )
 
-        out += f"{len(atoms):>8}\n i = {i+1:>8}, time = {0:>12.3f}\n"
+        out += f"{len(atoms):>8}\n i = {i + 1:>8}, time = {0:>12.3f}\n"
         for atom in atoms:
             pos = atom.position
             out += f"{atom.symbol}{pos[0]:24.15f}{pos[1]:24.15f}{pos[2]:24.15f}\n"
@@ -105,7 +105,7 @@ def write_cellfile(fname: str, frames: Union[ase.Atoms, List[ase.Atoms]]) -> Non
     )
 
     for i, atoms in enumerate(frames):
-        out += f"{i+1:>8}{0:>12.3f}"
+        out += f"{i + 1:>8}{0:>12.3f}"
         out += "".join([f"{c:>20.10f}" for c in atoms.cell.flatten()])
         out += f"{atoms.cell.volume:>25.10f}"
         out += "\n"
@@ -162,7 +162,7 @@ def mkdir_force(*args, **kwargs) -> None:
 # files for the structures, the ``project_name`` used to build the name of the
 # trajectory during the CP2K run, the ``project_directory`` where we store all
 # simulation output as well as the path ``write_to_file`` which is the name of the file
-# containing the computed energies and forces of the sinulation.
+# containing the computed energies and forces of the simulation.
 
 frames_full = ase.io.read("example.xyz", ":")
 project_name = "test_calcs"  # name of the global PROJECT
@@ -181,7 +181,7 @@ plt.ylabel("Å")
 plt.show()
 
 # %%
-# We now extreact the stoichiometry from the input dataset using ASE's
+# We now extract the stoichiometry from the input dataset using ASE's
 # :py:meth:`ase.symbols.Symbols.get_chemical_formula` method.
 
 frames_dict = {}
@@ -236,8 +236,8 @@ subprocess.run("bash run_calcs.sh", shell=True)
 # %%
 # .. note::
 #
-#    For a usage on an HPC environment you can parallize the loop over the subfolders
-#    and submit and single job per stoichiometry.
+#    For a usage on an HPC environment you can parallelize the loop over the
+#    sub-directories and submit and single job per stoichiometry.
 #
 # Load results
 # ------------
@@ -289,7 +289,7 @@ ase.io.write(f"{project_directory}/{new_fname}", new_frames)
 # Perform calculations using ASE calculator
 # -----------------------------------------
 # Above we performed the calculations using an external bash script. ASE also provides a
-# calculator class that we can use the perform the caclulations with our input file
+# calculator class that we can use the perform the calculations with our input file
 # without a detour of writing files to disk.
 #
 # To use the ASE calculator together with a custom input script this requires some
@@ -330,7 +330,7 @@ calc = CP2K(
 )
 
 # %%
-# We now load a new struture, add the calculator and perform the computation.
+# We now load a new structure, add the calculator and perform the computation.
 
 atoms = ase.io.read("example.xyz")
 atoms.set_calculator(calc)

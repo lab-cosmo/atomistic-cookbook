@@ -1,4 +1,3 @@
-name: cp2k_run_batch
 dependencies:
   - python=3.11
   - pip
