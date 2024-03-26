@@ -1,0 +1,97 @@
+name: Documentation
+
+on:
+  push:
+    branches: [main]
+    tags: ["*"]
+  pull_request:
+    # Check all PR
+  schedule:
+    - cron: '0 8 * * 1' # run every Monday at 8am UTC
+
+jobs:
+  generate-example:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        example-name:
+          - lode-linear
+          - roy-gch
+          - sample-selection
+          - gaas-map
+          - batch-cp2k
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: install nox
+        run: python -m pip install nox
+
+      - name: build example
+        run: nox -e ${{ matrix.example-name }}
+
+      - name: store example as a github artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: example-${{ matrix.example-name }}
+          path: docs/src/examples/*  # folders for each example will be merged later
+          overwrite: true  # only keep the latest version of the example
+
+  build-and-publish:
+    needs: generate-example
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: install nox
+        run: python -m pip install nox
+
+      - name: load github artifact for each example
+        uses: actions/download-artifact@v4
+        with:
+          path: docs/src/examples
+          pattern: example-*
+          merge-multiple: true
+
+      - name: build documentation
+        run: nox -e build_docs
+
+      - name: store documentation as github artifact to be downloaded by users
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation
+          path: docs/build/html/*
+          overwrite: true  # only keep the latest version of the documentation
+
+      - name: put documentation in the website
+        run: |
+          git clone https://github.com/$GITHUB_REPOSITORY --branch gh-pages gh-pages
+          rm -rf gh-pages/.git
+          cd gh-pages
+
+          REF_KIND=$(echo $GITHUB_REF | cut -d / -f2)
+          if [[ "$REF_KIND" == "tags" ]]; then
+              TAG=${GITHUB_REF#refs/tags/}
+              mv ../docs/build/html $TAG
+          else
+              rm -rf latest
+              mv ../docs/build/html latest
+          fi
+
+      - name: deploy to gh-pages
+        if: github.event_name == 'push'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./gh-pages/
+          force_orphan: true

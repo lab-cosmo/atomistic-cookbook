@@ -1,0 +1,5 @@
+production/
+parameters/
+
+cp2k.out
+cp2k.inp

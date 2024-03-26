@@ -1,1 +1,6 @@
+docs/src/examples/
+
 *build*
+*egg-info/
+
+.nox/
