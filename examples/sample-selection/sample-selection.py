@@ -23,6 +23,7 @@ from matplotlib import pyplot as plt
 from metatensor import sum_over_samples
 from rascaline import SoapPowerSpectrum
 from sklearn.decomposition import PCA
+from skmatter import feature_selection as skfeat_selection
 
 
 # %%
@@ -348,8 +349,6 @@ print(
 # Now perform feature selection. In this example we will go back to using the
 # descriptor decomposed into atomic environments, as opposed to the one
 # decomposed into structure environments, but only use FPS for brevity.
-from skmatter import feature_selection
-
 
 print("----Feature selection (skmatter)-----")
 
@@ -357,7 +356,7 @@ print("----Feature selection (skmatter)-----")
 n_features = 200
 
 # FPS feature selection
-feat_fps = feature_selection.FPS(n_to_select=n_features, initialize="random").fit(
+feat_fps = skfeat_selection.FPS(n_to_select=n_features, initialize="random").fit(
     atom_soap_single_block.block(0).values
 )
 feat_fps_idxs = feat_fps.selected_idx_
