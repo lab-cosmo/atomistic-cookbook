@@ -2,7 +2,8 @@ r"""
 Batch run of CP2K calculations
 ==============================
 
-.. start-body
+:Authors: Matthias Kellner `@bananenpampe <https://github.com/bananenpampe/>`_,
+          Philip Loche `@PicoCentauri <https://github.com/PicoCentauri/>`_
 
 This is an example how to perform single point calculations based on list of structures
 using `CP2K <https://www.cp2k.org>`_ using its `reftraj functionality
