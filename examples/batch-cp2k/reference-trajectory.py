@@ -157,7 +157,7 @@ def download_parameter(file):
     path = os.path.join("parameters", file)
 
     if not os.path.exists(path):
-        url = f"https://raw.githubusercontent.com/cp2k/cp2k/master/data/{file}"
+        url = f"https://raw.githubusercontent.com/cp2k/cp2k/support/v2024.1/data/{file}"
         response = requests.get(url)
         response.raise_for_status()
         with open(path, "wb") as f:
