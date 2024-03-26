@@ -1,0 +1,12 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - rust
+  - pip:
+    - ase
+    - chemiscope
+    - matplotlib
+    - rascaline @ git+https://github.com/Luthaf/rascaline@5c2a79838bda0a52d0fde2fbe65941f4792c4cae
+    - skmatter
