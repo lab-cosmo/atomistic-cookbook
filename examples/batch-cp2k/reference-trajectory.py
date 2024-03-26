@@ -8,34 +8,46 @@ This is an example how to perform single point calculations based on list of str
 using `CP2K <https://www.cp2k.org>`_ using its `reftraj functionality
 <https://manual.cp2k.org/trunk/CP2K_INPUT/MOTION/MD/REFTRAJ.html>`_. The inputs are a
 set of structures in :download:`example.xyz` using the DFT parameters defined in
-:download:`reftraj_template.cp2k` importing basis set and pseudopotentials from the
-local CP2K installation. The reference DFT parameters are taken from `Cheng et al. Ab
-initio thermodynamics of liquid and solid water 2019
+:download:`reftraj_template.cp2k`. The reference DFT parameters are taken from `Cheng et
+al. Ab initio thermodynamics of liquid and solid water 2019
 <https://www.pnas.org/doi/10.1073/pnas.1815117116>`_. Due to the small size of the test
 structure and convergence issues, we have decreased the size of the ``CUTOFF_RADIUS``
 from :math:`6.0\,\mathrm{Å}` to :math:`3.0\,\mathrm{Å}`. For actual production
 calculations adapt the template!
-
-To run this example, we use a bare executable called with ``cp2k``. If you want to use
-another version you can either adjust the the names within this example or link your
-binary with a different name to ``cp2k``.
 """
 
 # %%
 # We start the example by importing the required packages.
 
-
 import os
-import re
+import platform
 import subprocess
-from os.path import basename, splitext
 from typing import List, Union
 
 import ase.io
 import ase.visualize.plot
 import matplotlib.pyplot as plt
 import numpy as np
-from ase.calculators.cp2k import CP2K
+import requests
+
+
+# %%
+#
+# Install CP2K
+# ------------
+#
+# We'll need a working installation of cp2k. The best way to do so depends on your
+# platform, here are some possible solutions, but feel free to replace them with another
+# installation method.
+
+if platform.system() == "Linux":
+    # use conda on Linux
+    subprocess.run(["conda", "install", "cp2k", "-c", "conda-forge", "-y"], check=True)
+elif platform.system() == "Darwin":
+    # use homebrew on macOS
+    subprocess.run(["brew", "install", "cp2k"], check=True)
+else:
+    print("no known way to install cp2k, skipping installation")
 
 
 # %%
@@ -136,17 +148,25 @@ def write_cp2k_in(
 
 
 # %%
+#
+# We will now download basis set files from CP2K website. Depending on your CP2K
+# installation, this might not be necessary!
 
 
-def mkdir_force(*args, **kwargs) -> None:
-    """Warpper to ``os.mkdir``.
+def download_parameter(file):
+    path = os.path.join("parameters", file)
 
-    The function does not raise an error if the directory already exists.
-    """
-    try:
-        os.mkdir(*args, **kwargs)
-    except OSError:
-        pass
+    if not os.path.exists(path):
+        url = f"https://raw.githubusercontent.com/cp2k/cp2k/master/data/{file}"
+        response = requests.get(url)
+        response.raise_for_status()
+        with open(path, "wb") as f:
+            f.write(response.content)
+
+
+os.makedirs("parameters", exist_ok=True)
+for file in ["GTH_BASIS_SETS", "BASIS_ADMM", "POTENTIAL", "dftd3.dat", "t_c_g.dat"]:
+    download_parameter(file)
 
 
 # %%
@@ -200,11 +220,9 @@ for atoms in frames_full:
 # directory named ``H4O2`` because our dataset consists only of a single structure with
 # two water molecules.
 
-mkdir_force(project_directory)
-
 for stoichiometry, frames in frames_dict.items():
     current_directory = f"{project_directory}/{stoichiometry}"
-    mkdir_force(current_directory)
+    os.makedirs(current_directory, exist_ok=True)
 
     write_cp2k_in(
         f"{current_directory}/in.cp2k",
@@ -281,50 +299,5 @@ for stoichiometry, frames in frames_dict.items():
 
     new_frames += frames_dft
 
-new_fname = f"{splitext(basename(write_to_file))[0]}_dft.xyz"
+new_fname = f"{os.path.splitext(os.path.basename(write_to_file))[0]}_dft.xyz"
 ase.io.write(f"{project_directory}/{new_fname}", new_frames)
-
-# %%
-# Perform calculations using ASE calculator
-# -----------------------------------------
-# Above we performed the calculations using an external bash script. ASE also provides a
-# calculator class that we can use the perform the calculations with our input file
-# without a detour of writing files to disk.
-#
-# To use the ASE calculator together with a custom input script this requires some
-# adjustments. First the name of the executable that has the exact name ``cp2k_shell``.
-# We create a symlink to follow this requirement.
-
-# %%
-# Next, we load the input file abd remove ``GLOBAL`` section because from it
-
-inp = open("./production/H4O2/in.cp2k", "r").read()
-inp = re.sub(
-    f"{re.escape('&GLOBAL')}.*?{re.escape('&END GLOBAL')}", "", inp, flags=re.DOTALL
-)
-
-# %%
-# Afterwards we define the :py:class:`ase.calculators.cp2k.CP2K`` calculator. Note that
-# we disable all parameters because we want to use all options from our input file
-
-calc = CP2K(
-    inp=inp,
-    max_scf=None,
-    cutoff=None,
-    xc=None,
-    force_eval_method=None,
-    basis_set=None,
-    pseudo_potential=None,
-    basis_set_file=None,
-    potential_file=None,
-    stress_tensor=False,
-    poisson_solver=None,
-    print_level=None,
-)
-
-# %%
-# We now load a new structure, add the calculator and perform the computation.
-
-atoms = ase.io.read("example.xyz")
-atoms.set_calculator(calc)
-# atoms.get_potential_energy()
