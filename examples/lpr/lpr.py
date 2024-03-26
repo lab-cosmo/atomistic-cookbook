@@ -2,7 +2,8 @@
 LPR analysis for amorphous silicon dataset
 ==========================================
 
-.. start-body
+:Authors: Sanggyu "Raymond" Chong `@SanggyuChong <https://github.com/sanggyuChong/>`_,
+          Federico Grasselli `@fgrassel <https://github.com/fgrassel/>`_
 
 In this tutorial, we calculate the SOAP descriptors of an amorphous
 silicon dataset using rascaline, then compute the local prediction
@@ -142,9 +143,9 @@ n_train = 400
 n_add = 50
 n_test = 50
 
-X_pristine = [Xlist for Xlist in Xlist_pristine[:n_train+n_add]]
+X_pristine = [Xlist for Xlist in Xlist_pristine[: n_train + n_add]]
 X_defect = [Xlist for Xlist in Xlist_defect[:n_add]]
-X_test = [Xlist for Xlist in Xlist_defect[n_add:n_add+n_test]]
+X_test = [Xlist for Xlist in Xlist_defect[n_add : n_add + n_test]]
 
 # Save coordination values for visualization
 test_coord = []
