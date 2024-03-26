@@ -85,7 +85,7 @@ print("structure feature descriptor shape:", struct_soap.block(0).values.shape)
 
 # %%
 # Perform atomic environment (i.e. sample) selection
-# -----------------------------------------
+# ---------------------------------------------------
 #
 # Using FPS and CUR algorithms, we can perform selection of atomic environments.
 # These are implemented in equisolve, which provides a wrapper around
@@ -344,7 +344,7 @@ print(
 
 # %%
 # Perform feature selection (skmatter)
-# -------------------------
+# ------------------------------------
 #
 # Now perform feature selection. In this example we will go back to using the
 # descriptor decomposed into atomic environments, as opposed to the one
