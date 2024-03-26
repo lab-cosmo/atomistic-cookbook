@@ -18,19 +18,12 @@ import ase.io
 import chemiscope
 import numpy as np
 from matplotlib import pyplot as plt
-<<<<<<< HEAD
 from metatensor import  sum_over_samples
 import metatensor
 from rascaline import SoapPowerSpectrum
 from sklearn.decomposition import PCA
 
 from equisolve.numpy import sample_selection, feature_selection
-=======
-from metatensor import mean_over_samples
-from rascaline import SoapPowerSpectrum
-from sklearn.decomposition import PCA
-from skmatter import feature_selection, sample_selection
->>>>>>> 3a073a0c2c8ead4bde227652b2a2f87d86eafb0f
 
 
 # %%
@@ -66,7 +59,6 @@ hypers = {
 # Generate a SOAP power spectrum
 calculator = SoapPowerSpectrum(**hypers)
 rho2i = calculator.compute(frames)
-<<<<<<< HEAD
 
 
 
@@ -114,9 +106,6 @@ print('----Atomic environment selection-----')
 # Define the number of structures to select using FPS/CUR
 n_envs = 25
 
-#atom_soap = atom_soap.keys_to_properties(
-#    keys_to_move=["species_neighbor_1", "species_neighbor_2"]
-#)
 print(atom_soap)
 print(atom_soap.block(0))
 
@@ -136,11 +125,11 @@ print("atomic envs selected with FPS:\n")
 for key, block in selector_atomic_fps.support.items():
     print("species_center:", key, "\n(struct_idx, atom_idx)\n", block.samples.values)
 
-#selector_atomic_cur = sample_selection.CUR(n_to_select=n_envs).fit(atom_soap)
-## Print the selected envs for each block
-#print("atomic envs selected with CUR:\n")
-#for key, block in selector_atomic_cur.support.items():
-#    print("species_center:", key, "\n(struct_idx, atom_idx)\n", block.samples.values)
+selector_atomic_cur = sample_selection.CUR(n_to_select=n_envs).fit(atom_soap)
+# Print the selected envs for each block
+print("atomic envs selected with CUR:\n")
+for key, block in selector_atomic_cur.support.items():
+    print("species_center:", key, "\n(struct_idx, atom_idx)\n", block.samples.values)
 
 
 # %%
@@ -237,56 +226,6 @@ print("Structure descriptor shape before selection ", struct_soap.block(0).value
 print("Structure descriptor shape after selection (FPS)", struct_soap_fps.shape)
 print("Structure descriptor shape after selection (CUR)", struct_soap_cur.shape)
 
-=======
-# Makes a dense block
-rho2i = rho2i.keys_to_samples(["species_center"]).keys_to_properties(
-    ["species_neighbor_1", "species_neighbor_2"]
-)
-# Averages over atomic centers to compute structure features
-rho2i_structure = mean_over_samples(rho2i, sample_names=["center", "species_center"])
-
-atom_dscrptr = rho2i.block(0).values
-struct_dscrptr = rho2i_structure.block(0).values
-
-print("atom feature descriptor shape:", atom_dscrptr.shape)
-print("structure feature descriptor shape:", struct_dscrptr.shape)
-
-
-# %%
-# Perform structure (i.e. sample) selection
-# -----------------------------------------
-#
-# Using FPS and CUR algorithms implemented in scikit-matter, select a subset of
-# the structures. skmatter assumes that our descriptor is represented as a 2D
-# matrix, with the samples along axis 0 and features along axis 1.
-#
-# For more info on the functions: `skmatter
-# <https://scikit-cosmo.readthedocs.io/en/latest/selection.html>`_
-
-# Define the number of structures to select using FPS/CUR
-n_structures = 25
-
-# FPS sample selection
-struct_fps = sample_selection.FPS(n_to_select=n_structures, initialize="random").fit(
-    struct_dscrptr
-)
-struct_fps_idxs = struct_fps.selected_idx_
-
-# CUR sample selection
-struct_cur = sample_selection.CUR(n_to_select=n_structures).fit(struct_dscrptr)
-struct_cur_idxs = struct_cur.selected_idx_
-
-print("Structure indices obtained with FPS ", struct_fps_idxs)
-print("Structure indices obtained with CUR ", struct_cur_idxs)
-
-# Slice structure descriptor along axis 0 to contain only the selected structures
-struct_dscrptr_fps = struct_dscrptr[struct_fps_idxs, :]
-struct_dscrptr_cur = struct_dscrptr[struct_cur_idxs, :]
-assert struct_dscrptr_fps.shape == struct_dscrptr_cur.shape
-
-print("Structure descriptor shape before selection ", struct_dscrptr.shape)
-print("Structure descriptor shape after selection ", struct_dscrptr_fps.shape)
->>>>>>> 3a073a0c2c8ead4bde227652b2a2f87d86eafb0f
 
 
 # %%
@@ -302,13 +241,8 @@ print("Structure descriptor shape after selection ", struct_dscrptr_fps.shape)
 
 
 # Generate a structure PCA
-<<<<<<< HEAD
 struct_soap_pca = PCA(n_components=2).fit_transform(struct_soap.block(0).values)
 assert struct_soap_pca.shape == (n_frames, 2)
-=======
-struct_dscrptr_pca = PCA(n_components=2).fit_transform(struct_dscrptr)
-assert struct_dscrptr_pca.shape == (n_frames, 2)
->>>>>>> 3a073a0c2c8ead4bde227652b2a2f87d86eafb0f
 
 
 # %%
@@ -320,28 +254,10 @@ assert struct_dscrptr_pca.shape == (n_frames, 2)
 
 # Matplotlib plot
 fig, ax = plt.subplots(1, 1, figsize=(6, 4))
-<<<<<<< HEAD
 scatter = ax.scatter(struct_soap_pca[:, 0], struct_soap_pca[:, 1], c="red")
 ax.plot(
     struct_soap_pca[struct_cur_idxs, 0],
     struct_soap_pca[struct_cur_idxs, 1],
-=======
-scatter = ax.scatter(struct_dscrptr_pca[:, 0], struct_dscrptr_pca[:, 1], c="red")
-ax.plot(
-    struct_dscrptr_pca[struct_cur_idxs, 0],
-    struct_dscrptr_pca[struct_cur_idxs, 1],
->>>>>>> 3a073a0c2c8ead4bde227652b2a2f87d86eafb0f
-    "kx",
-    label="CUR selection",
-)
-ax.plot(
-<<<<<<< HEAD
-    struct_soap_pca[struct_fps_idxs, 0],
-    struct_soap_pca[struct_fps_idxs, 1],
-=======
-    struct_dscrptr_pca[struct_fps_idxs, 0],
-    struct_dscrptr_pca[struct_fps_idxs, 1],
->>>>>>> 3a073a0c2c8ead4bde227652b2a2f87d86eafb0f
     "ko",
     fillstyle="none",
     label="FPS selection",
@@ -380,22 +296,12 @@ properties = chemiscope.extract_properties(frames)
 
 properties.update(
     {
-<<<<<<< HEAD
         "PC1": struct_soap_pca[:, 0],
         "PC2": struct_soap_pca[:, 1],
-=======
-        "PC1": struct_dscrptr_pca[:, 0],
-        "PC2": struct_dscrptr_pca[:, 1],
->>>>>>> 3a073a0c2c8ead4bde227652b2a2f87d86eafb0f
         "selection": np.array(selection_levels),
     }
 )
 
-<<<<<<< HEAD
-#print(properties)
-=======
-print(properties)
->>>>>>> 3a073a0c2c8ead4bde227652b2a2f87d86eafb0f
 
 # Display with chemiscope. This currently does not work - as raised in issue #8
 # https://github.com/lab-cosmo/software-cookbook/issues/8
