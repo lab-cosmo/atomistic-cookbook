@@ -15,9 +15,9 @@ First, we import all the necessary packages:
 # %%
 import os
 import tarfile
-import requests
-import numpy as np
 
+import numpy as np
+import requests
 from ase.io import read
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
@@ -30,21 +30,21 @@ from skmatter.metrics import local_prediction_rigidity as lpr
 # Load and prepare amorphous silicon data
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# 
+#
 # We first download the dataset associated with LPR
 # analysis from Materials Cloud and load the the amorphous
 # silicon structures using `ASE <https://wiki.fysik.dtu.dk/ase/>`_.
 
 filename = "LPR_supp_notebook_dataset.tar.gz"
 if not os.path.exists(filename):
-    url = f"https://archive.materialscloud.org/record/file?record_id=1805&filename=LPR_supp_notebook_dataset.tar.gz"
+    url = "https://rb.gy/wxsrug"  # shortened URL
     response = requests.get(url)
     response.raise_for_status()
     with open(filename, "wb") as f:
         f.write(response.content)
 
 with tarfile.open(filename) as tar:
-    tar.extractall(path='.')
+    tar.extractall(path=".")
 
 frames_pristine = read("datasets/Si_amo_defect_free.xyz", ":")
 frames_defect = read("datasets/Si_amo_defect_containing.xyz", ":")
@@ -65,7 +65,7 @@ frames_defect = [frames_defect[ii] for ii in ids]
 # We now further refine the loaded datasets according the the
 # number of coordinated atoms that each atomic environment exhibits.
 # "Pristine" refers to structures where all of the atoms have strictly
-# 4 coordinating atoms. "Defect" refers to structures that contain 
+# 4 coordinating atoms. "Defect" refers to structures that contain
 # atoms with coordination numbers other than 4.
 #
 # We use :code:`get_all_distances` funciton of :code:`ase.Atoms` to detect the
@@ -94,7 +94,7 @@ for frame in frames_defect:
 #
 # Now, we move on and compute the SOAP descriptors for the refined
 # structures. First, define the rascaline hyperparameters used to
-# compute SOAP. Among the hypers, notice that the cutoff is chosen 
+# compute SOAP. Among the hypers, notice that the cutoff is chosen
 # to be 2.85 Å, and the radial scaling is turned off. These were
 # heuristic choices made to accentuate the difference in the LPR
 # based on the nearest-neighbor coordination. (Do not blindly
@@ -142,9 +142,9 @@ n_train = 400
 n_add = 50
 n_test = 50
 
-X_pristine = [Xlist for Xlist in Xlist_pristine[: n_train + n_add]]
+X_pristine = [Xlist for Xlist in Xlist_pristine[:n_train+n_add]]
 X_defect = [Xlist for Xlist in Xlist_defect[:n_add]]
-X_test = [Xlist for Xlist in Xlist_defect[n_add : n_add + n_test]]
+X_test = [Xlist for Xlist in Xlist_defect[n_add:n_add+n_test]]
 
 # Save coordination values for visualization
 test_coord = []
@@ -189,7 +189,7 @@ PCA_test = pca.transform(np.vstack(X_test))
 rmin = np.log10(LPR_test.min()) + 0.5
 rmax = np.log10(LPR_test.max()) - 0.5
 
-fig = plt.figure(figsize=(5,4), dpi=200)
+fig = plt.figure(figsize=(5, 4), dpi=200)
 ax = fig.add_subplot()
 im = ax.scatter(
     PCA_test[:, 0],
@@ -203,7 +203,7 @@ im = ax.scatter(
 
 ax.set_xlabel("PC1")
 ax.set_ylabel("PC2")
-fig.colorbar(im, ax=ax, label='LPR')
+fig.colorbar(im, ax=ax, label="LPR")
 ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
 
 # %%
@@ -237,27 +237,24 @@ LPR_test_new = np.hstack(LPR_test_new)
 # values (after dataset modification) over the original
 # one.
 
-fig = plt.figure(figsize=(5,4), dpi=200)
+fig = plt.figure(figsize=(5, 4), dpi=200)
 ax = fig.add_subplot()
 im = ax.scatter(
     PCA_test[:, 0],
     PCA_test[:, 1],
-    c=LPR_test_new/LPR_test,
+    c=LPR_test_new / LPR_test,
     s=20,
     linewidths=0,
-    #norm=LogNorm(vmin=10**rmin, vmax=10**rmax),
+    # norm=LogNorm(vmin=10**rmin, vmax=10**rmax),
     cmap="OrRd",
 )
 ax.set_xlabel("PC1")
 ax.set_ylabel("PC2")
-fig.colorbar(
-    im, ax=ax,
-    label=r'LPR$_{\mathrm{new}}$ / LPR$_{\mathrm{old}}$'
-    )
+fig.colorbar(im, ax=ax, label=r"LPR$_{\mathrm{new}}$ / LPR$_{\mathrm{old}}$")
 ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
 
 # %%
-# It is apparent that while the LPR stays more or less consistent for the 
+# It is apparent that while the LPR stays more or less consistent for the
 # 4-coordinated atoms, it is significantly enhanced for the defective environments
 # as a result of the inclusion of defective structures in the training set.
 
