@@ -6,6 +6,18 @@ COSMO Software Cookbook
    :end-before: marker-intro-end
 
 
+All the examples provide an ``environment.yml`` file that you can download and
+then use with conda to create a new environment with all the required
+dependencies for this example.
+
+.. code-block:: bash
+
+   # Pick a name for the environment and replace <environment-name> with it
+   conda env create --name <environment-name> --file environment.yml
+
+   # when you want to use the environment
+   conda env activate --name <environment-name>
+
 .. toctree::
    :caption: Table of Contents
    :maxdepth: 1
