@@ -2,7 +2,7 @@
 Sample and Feature Selection with FPS and CUR
 =============================================
 
-.. start-body
+:Authors: Davide Tisi `@DavideTisi <https://github.com/DavideTisi>`_
 
 In this tutorial we generate descriptors using rascaline, then select a subset
 of structures using both the farthest-point sampling (FPS) and CUR algorithms

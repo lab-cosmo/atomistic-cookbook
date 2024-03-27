@@ -128,6 +128,30 @@ def build_docs(session):
 
                 output.write(f"   {path}\n")
 
+                # TODO: Explain
+                with open(file) as fd:
+                    content = fd.read()
+
+                if "Download Conda environment file" in content:
+                    # do not add the download link twice
+                    pass
+                else:
+                    lines = content.split("\n")
+                    with open(file, "w") as fd:
+                        for line in lines:
+                            if "sphx-glr-download-jupyter" in line:
+                                # add the new download link before
+                                fd.write(
+                                    """
+    .. container:: sphx-glr-download
+
+      :download:`Download Conda environment file: environment.yml <environment.yml>`
+"""
+                                )
+
+                            fd.write(line)
+                            fd.write("\n")
+
     session.run("sphinx-build", "-W", "-b", "html", "docs/src", "docs/build/html")
 
 
