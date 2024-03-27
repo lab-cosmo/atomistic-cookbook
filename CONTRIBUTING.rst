@@ -1,82 +1,103 @@
 Contributing
 ============
 
-Contributions are welcome, and they are greatly appreciated! Every little bit helps, and
-credit will always be given. You can contribute in the ways listed below.
+Contributions are welcome, and they are greatly appreciated! Every little bit
+helps, and credit will always be given. You can contribute in the ways listed
+below.
 
 Requirements for new contributions
 ----------------------------------
 
-All code included in this repository is executed in each pull request. This ensures that
-the code in this repository stays executable for a longer time frame. Because of that we
-do not want to have examples with heavy calculations that take more than 30 seconds to
-execute. If heavy calculations are needed, it might be a better option to put your
-example in an external repository and link to it on the `Wiki page
-<https://github.com/lab-cosmo/software-cookbook/wiki>`_. If you feel unsure if a
-contribution is suitable, feel free to contact one of the `support`_ before.
+All code included in this repository is executed in each pull request. This
+ensures that the code in this repository stays executable for a longer time
+frame. Because of that we do not want to have examples with heavy calculations
+that take more than 30 to 1 min seconds to execute. If you feel unsure if a
+contribution is suitable, feel free to contact one of the `support`_ person
+beforehand.
 
 Adding a new examples
 ---------------------
 
-To visualize examples on our readthedocs page we use `sphinx-gallery`. When building the
-doc the examples are run and compiled automatically into HTML files and moved to the
-documentation folder `docs/src <docs/src>`_. You will find all the examples Python
-scripts in the `examples/` folder of the repository. Each example is put into one of the
-example category folders, e.g. `examples/sample_selection <examples/sample_selection>`_.
-If you do not know where to put your example, just put in the `examples/uncategorized
-<examples/uncategorized>`_ folder and when doing a pull request, we will figure out
-where to put it.
+The examples in this repository are python files that we render for the website
+using `sphinx-gallery`_. In short, these are python files containing comments
+formatted as `RestructuredText`_, which are executed, and then the comments,
+code and outputs (including plots, ``print`` outputs, etc.) are assembled in a
+single HTML webpage.
 
-After adding a file, you'll need to update ``tox.ini`` to build your example when
-building the documentation. Look how it's done for the ``lode_linear`` example, and
-do the same for yours!
+To add a new example, you'll need to create a new folder in example (substitute
+``<example-name>`` with the folder name in the instructions below), and add the
+following files inside:
+
+- ``README.rst``, can be empty or can contain a short description of the example;
+- ``environment.yml``, a `conda`_ environment file containing the list of
+  dependencies needed by your example;
+- as many Python files as you want, each one will be converted to a separate
+  HTML page.
+
+.. _sphinx-gallery: https://sphinx-gallery.github.io/
+.. _RestructuredText: https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
+.. _conda: https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-file-manually
+
+Finally, you'll need to add your example to the list so it is automatically
+build on CI. The list is in the ``.github/workflows/docs.yml`` file, near the
+``example-name:`` section.
 
 Converting a Jupyter notebook to a sphinx-gallery compatible Python script
 --------------------------------------------------------------------------
 
-Often it is more convenient to work in a Jupyter notebook and convert in later to
-sphinx-gallery example. To convert your Jupyter notebook you can just use the
-`ipynb-to-gallery.py <ipynb_to_gallery.py>`_ file that is root folder of the repository
+Often it is more convenient to work in a Jupyter notebook and convert in later
+to sphinx-gallery example. To convert your Jupyter notebook you can use the
+`ipynb-to-gallery.py <ipynb_to_gallery.py>`_ file that is root folder of the
+repository
 
 .. code-block:: bash
 
     python ipynb-to-gallery.py <notebook.ipynb>
 
-Building the cookbook locally
------------------------------
+Running your example and visualizing the HTML
+---------------------------------------------
 
-When you add a new example, you can run the linter (code format checker) and build the
-doc to check if your code runs with
+We use `nox`_ as a task runner to run all examples and assemble the final
+documentation. You can install it with ``pip install nox``.
 
-.. code-block:: bash
-
-    tox
-
-If there are formatting errors appearing you can format your file automatically with
+To run your example and make sure it conforms to the expected code formatting,
+you can use the following commands:
 
 .. code-block:: bash
 
-    tox -e format
+    # execute the example and render it to HTML
+    nox -e <example-name>
 
-That should fix most of the formatting issues automatically. If there are still
-formatting issues remaining, then the reviewer of your pull request can fix them.
-To visualize the generated cookbook open in a browser the file
-``docs/build/html/index.html``.
+    # check the code formatting
+    nox -e lint
+
+To visualize the generated cookbook open ``docs/build/html/index.html`` in a web
+browser.
+
+If there are formatting errors you can try to fix them automatically with:
+
+.. code-block:: bash
+
+    nox -e format
+
+You can also build all examples (warning, this will take quite some time) with:
+
+.. code-block:: bash
+
+    nox -e docs
+
+.. _nox: https://nox.thea.codes/
 
 Known issues
 ------------
-
-Sometimes the doc preview from readthedocs is not rendered correctly. If something works
-in your local build but not in the readthedocs PR preview. It could that the issue is
-fixed once you merge with the main branch.
 
 Chemiscope widgets are not currently integrated into our sphinx gallery.
 
 Support
 -------
 
-If you still have problems adding your example to the repository, please feel free to
-contact one of the people
+If you still have problems adding your example to the repository, please feel
+free to contact one of the people
 
 `@agoscinski (Alexander Goscinski) <alexander.goscinski@epfl.ch>`_
 
@@ -85,5 +106,6 @@ contact one of the people
 Code of Conduct
 ---------------
 
-Please note that the COSMO cookbook project is released with a `Contributor Code of
-Conduct <CONDUCT.md>`_. By contributing to this project you agree to abide by its terms.
+Please note that the COSMO cookbook project is released with a `Contributor Code
+of Conduct <CONDUCT.md>`_. By contributing to this project you agree to abide by
+its terms.
