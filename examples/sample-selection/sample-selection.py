@@ -20,7 +20,6 @@ import metatensor
 import numpy as np
 from equisolve.numpy import feature_selection, sample_selection
 from matplotlib import pyplot as plt
-
 from rascaline import SoapPowerSpectrum
 from sklearn.decomposition import PCA
 from skmatter import feature_selection as skfeat_selection
