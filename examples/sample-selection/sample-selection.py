@@ -20,7 +20,6 @@ import metatensor
 import numpy as np
 from equisolve.numpy import feature_selection, sample_selection
 from matplotlib import pyplot as plt
-from metatensor import sum_over_samples
 from rascaline import SoapPowerSpectrum
 from sklearn.decomposition import PCA
 from skmatter import feature_selection as skfeat_selection
@@ -66,11 +65,8 @@ atom_soap = rho2i.keys_to_properties(["species_neighbor_1", "species_neighbor_2"
 
 atom_soap_single_block = atom_soap.keys_to_samples(keys_to_move=["species_center"])
 
-# print(atom_soap_single_block)
-# print(atom_soap_single_block.block(0))  # There is only one block now!
-
 # Sum over atomic centers to compute structure features
-struct_soap = sum_over_samples(
+struct_soap = metatensor.sum_over_samples(
     atom_soap_single_block, sample_names=["center", "species_center"]
 )
 
