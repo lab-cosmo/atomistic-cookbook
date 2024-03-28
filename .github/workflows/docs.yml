@@ -20,6 +20,7 @@ jobs:
           - sample-selection
           - gaas-map
           - batch-cp2k
+          - lpr
 
     steps:
       - uses: actions/checkout@v4

@@ -175,6 +175,7 @@ def lint(session):
         "flake8",
         "--max-line-length=88",
         "--exclude=docs/src/examples/",
+        "--extend-ignore=E203",
         *LINT_FILES,
     )
 
