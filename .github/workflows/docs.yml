@@ -19,7 +19,8 @@ jobs:
           - roy-gch
           - sample-selection
           - gaas-map
-          # - batch-cp2k
+          - batch-cp2k
+          - lpr
 
     steps:
       - uses: actions/checkout@v4
