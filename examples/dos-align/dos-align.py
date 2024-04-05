@@ -135,7 +135,7 @@ for structure_eigenenergies in total_eigenenergies:
     total_edos.append(e_dos)
 
 total_edos = torch.vstack(total_edos)
-total_edos = ((total_edos.T * normalization).T) 
+total_edos = (total_edos.T * normalization).T
 
 print(f"The final shape of all the DOS in the dataset is: {list(total_edos.shape)}")
 
@@ -240,7 +240,8 @@ def edos_derivative(x, eigenenergies, normalization):
     dfn_dos_E = (
         torch.sum(
             torch.exp(-0.5 * ((x - eigenenergies.view(-1, 1)) / sigma) ** 2)
-            * (-1 * ((x - eigenenergies.view(-1, 1)) / sigma) ** 2), dim=0
+            * (-1 * ((x - eigenenergies.view(-1, 1)) / sigma) ** 2),
+            dim=0,
         )
         * normalization
     )
@@ -872,7 +873,7 @@ and the Fermi Level will increase with more epochs"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # Average Hartree Energy Reference
-# 
+#
 
 for i in total_edos_H[train_index]:
     plt.plot(x_dos_H, i, color="C0", alpha=0.6)
@@ -905,5 +906,5 @@ plt.title("Energy Reference - Optimized")
 plt.xlabel("Energy [eV]")
 plt.ylabel("DOS")
 print("The DOS alignment is better under the optimized energy reference")
-print ("The difference will increase with more training epochs")
+print("The difference will increase with more training epochs")
 # %%
