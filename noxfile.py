@@ -7,6 +7,7 @@ import nox
 
 
 # global nox options
+nox.needs_version = ">=2024"
 nox.options.reuse_venv = "yes"
 nox.options.sessions = ["lint", "docs"]
 

@@ -3,7 +3,7 @@ channels:
 dependencies:
   - python=3.11
   - pip
-  - rust
+  - rust >=1.65
   - pip:
     - ase
     - chemiscope
