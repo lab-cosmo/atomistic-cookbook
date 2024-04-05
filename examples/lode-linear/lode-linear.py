@@ -2,6 +2,9 @@
 LODE Tutorial
 =============
 
+:Authors: Philip Loche `@PicoCentauri <https://github.com/PicoCentauri/>`_,
+          Kevin Huguenin-Dumittan `@kvhuguenin <https://github.com/kvhuguenin>`_
+
 This tutorial explains how Long range equivariant descriptors can be constructed using
 rascaline and the resulting descriptors be used to construct a linear model with
 equisolve
