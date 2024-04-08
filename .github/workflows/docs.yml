@@ -10,17 +10,23 @@ on:
     - cron: '0 8 * * 1' # run every Monday at 8am UTC
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      examplesmatrix: ${{ steps.collectExamples.outputs.examplesjson }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: collectExamples
+        run: |
+          echo examplesjson=$(./developer/get_examples.py) >> $GITHUB_OUTPUT
+
   generate-example:
+    needs: setup
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        example-name:
-          - lode-linear
-          - roy-gch
-          - sample-selection
-          - gaas-map
-          - batch-cp2k
-          - lpr
+        ${{ fromJson(needs.setup.outputs.examplesmatrix) }}
 
     steps:
       - uses: actions/checkout@v4

@@ -2,8 +2,15 @@ import glob
 import hashlib
 import json
 import os
+import sys
 
 import nox
+
+
+ROOT = os.path.realpath(os.path.dirname(__file__))
+
+sys.path.append(ROOT)
+from developer.get_examples import get_examples  # noqa: E402
 
 
 # global nox options
@@ -19,12 +26,10 @@ LINT_FILES = [
     "noxfile.py",
     "docs/src/conf.py",
     "examples",
+    "developer",
 ]
 
-# the current list of examples, determined from the directories on disk
-EXAMPLES = [
-    os.path.basename(os.path.normpath(file)) for file in glob.glob("examples/*/")
-]
+EXAMPLES = get_examples()
 
 # ==================================================================================== #
 #                                 helper functions                                     #
