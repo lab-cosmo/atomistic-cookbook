@@ -1,7 +1,7 @@
 """
 Training the DOS with different Energy References
 ==============================================================================
-
+:Authors: How Wei Bin `@HowWeiBin <https://github.com/HowWeiBin/>`_,
 
 This tutorial would go through the entire machine learning framework for the electronic
 density of states (DOS). It will cover the construction of the DOS and SOAP
@@ -46,8 +46,9 @@ from torch.utils.data import BatchSampler, DataLoader, Dataset, RandomSampler
 # Each structure in the dataset contains two atoms.
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# Downloading and Extracting Data
+# %%
+# 1) Downloading and Extracting Data
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 filename = "dataset.zip"
 if not os.path.exists(filename):
     url = "https://github.com/HowWeiBin/datasets/archive/refs/tags/Silicon-Diamonds.zip"
@@ -58,9 +59,9 @@ if not os.path.exists(filename):
 
 with zipfile.ZipFile("./dataset.zip", "r") as zip_ref:
     zip_ref.extractall("./")
-
-# Loading Data
-
+# %%
+# 2) Loading Data
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 structures = ase.io.read("./datasets-Silicon-Diamonds/diamonds.xyz", ":")
 n_structures = len(structures)
 n_atoms = torch.tensor([len(i) for i in structures])
@@ -69,6 +70,10 @@ k_normalization = torch.tensor(
     [len(i) for i in eigenenergies]
 )  # Calculates number of kpoints sampled per structure
 print(f"Total number of structures: {len(structures)}")
+
+# %%
+# 3) Find range of eigenenergies
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Process eigenenergies to flattened torch tensors
 
@@ -93,9 +98,9 @@ print(f"The highest eigenenergy in the dataset is {maxE:.3}")
 # 6) Construct Splines for the DOS to facilitate interpolation during model training
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+# %%
 # 1) Construct the DOS using the original reference
-# ------------------------------------------------------------------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # The DOS will first be constructed from the full set of eigenenergies to
 # determine the Fermi level of each structure. The original reference is the
 # Average Hartree Potential in this example.
@@ -143,7 +148,7 @@ print(f"The final shape of all the DOS in the dataset is: {list(total_edos.shape
 
 # %%
 # 2) Calculate the Fermi level from the DOS
-# ------------------------------------------------------------------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Now we integration the DOS, and then use cubic interpolation and brentq
 # to calculate the fermi level. Since only the 4 valence electrons in Silicon
 # are represented in this energy range, we take the point where the DOS integrates
@@ -165,7 +170,7 @@ for i in total_i_edos:
 fermi_levels = torch.tensor(fermi_levels)
 # %%
 # 3) Build a set of eigenenergies, with the energy reference set to the fermi level
-# ------------------------------------------------------------------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Using the fermi levels, we are now able to change the energy reference
 # of the eigenenergies to the fermi level
 
@@ -183,7 +188,7 @@ print(f"The highest eigenenergy using the fermi level energy reference is {maxE_
 
 # %%
 # 4) Truncate the DOS energy window so that the DOS is well-defined at each point
-# ------------------------------------------------------------------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # With the fermi levels, we can also truncate the energy window for DOS prediction.
 # In this example, we truncate the energy window such that it is 3eV above
 # the highest Fermi level in the dataset.
@@ -195,7 +200,7 @@ x_dos_H = torch.arange(minE - 1.5, max(fermi_levels) + 3, energy_interval)
 x_dos_Ef = torch.arange(minE_Ef - 1.5, 3, energy_interval)
 # %%
 # 5) Construct the DOS in the truncated energy window under both references
-# ------------------------------------------------------------------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Here we construct 2 different targets where they differ in the energy reference
 # chosen. These targets will then be treated as different datasets for the model
 # to learn on.
@@ -235,7 +240,7 @@ total_edos_Ef = (total_edos_Ef.T * normalization).T
 
 # %%
 # 6) Construct Splines for the DOS to facilitate interpolation during model training
-# ------------------------------------------------------------------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Building Cubic Hermite Splines on the DOS on the truncated energy window
 # to facilitate interpolation during training. Cubic Hermite Splines takes
 # in information on the value and derivative of a function at a point to build splines.
@@ -420,9 +425,9 @@ total_soap = torch.stack(total_atom_soap)
 # 5) Evaluate the model
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+# %%
 # 1) Split the data into Training, Validation and Test
-# ---------------------------------------------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # We will first split the data in a 7:1:2 manner, corresponding to train, val and test.
 np.random.seed(0)
 train_index = np.arange(n_structures)
@@ -435,7 +440,7 @@ train_index = train_index[:val_mark]
 
 # %%
 # 2) Define the dataloader and the Model Architecture
-# ---------------------------------------------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # We will now build a dataloader and dataset to facillitate training the model batchwise
 
 
@@ -580,7 +585,7 @@ Model_Align = SOAP_NN(
 
 # %%
 # 3) Define relevant loss functions for training and inference
-# ---------------------------------------------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # We will now define some loss functions that will be useful when we implement
 # the model training loop later and during model evaluation on the test set.
 
