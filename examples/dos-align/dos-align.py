@@ -1,7 +1,7 @@
 """
 Training the DOS with different Energy References
 ==============================================================================
-:Authors: How Wei Bin `@HowWeiBin <https://github.com/HowWeiBin/>`_,
+:Authors: How Wei Bin `@HowWeiBin <https://github.com/HowWeiBin/>`_
 
 This tutorial would go through the entire machine learning framework for the electronic
 density of states (DOS). It will cover the construction of the DOS and SOAP
@@ -41,11 +41,12 @@ from torch.utils.data import BatchSampler, DataLoader, Dataset, RandomSampler
 # 2) Loading Data
 # 3) Find range of eigenenergies
 #
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
 # We take a small subset of 104 structures in the Si dataset from `Bartok et al.,
 # 2018 <https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.041048>`.
 # Each structure in the dataset contains two atoms.
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+
 
 # %%
 # 1) Downloading and Extracting Data
