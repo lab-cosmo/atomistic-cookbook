@@ -26,14 +26,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        example-name:
-          - lode-linear
-          - roy-gch
-          - sample-selection
-          - gaas-map
-          - batch-cp2k
-          - lpr
-          - dos-align
+        ${{ fromJson(needs.setup.outputs.examplesmatrix) }}
+
     steps:
       - uses: actions/checkout@v4
 
