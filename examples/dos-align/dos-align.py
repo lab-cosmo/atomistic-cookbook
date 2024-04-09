@@ -41,11 +41,12 @@ from torch.utils.data import BatchSampler, DataLoader, Dataset, RandomSampler
 # 2) Loading Data
 # 3) Find range of eigenenergies
 #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
 # We take a small subset of 104 structures in the Si dataset from `Bartok et al.,
 # 2018 <https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.041048>`.
 # Each structure in the dataset contains two atoms.
-#
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 # %%
 # 1) Downloading and Extracting Data
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -98,6 +99,7 @@ print(f"The highest eigenenergy in the dataset is {maxE:.3}")
 # 6) Construct Splines for the DOS to facilitate interpolation during model training
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 # %%
 # 1) Construct the DOS using the original reference
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -425,6 +427,7 @@ total_soap = torch.stack(total_atom_soap)
 # 5) Evaluate the model
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 # %%
 # 1) Split the data into Training, Validation and Test
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
