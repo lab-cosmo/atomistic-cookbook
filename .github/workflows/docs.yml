@@ -10,7 +10,19 @@ on:
     - cron: '0 8 * * 1' # run every Monday at 8am UTC
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      examplesmatrix: ${{ steps.collectExamples.outputs.examplesjson }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: collectExamples
+        run: |
+          echo examplesjson=$(./developer/get_examples.py) >> $GITHUB_OUTPUT
+
   generate-example:
+    needs: setup
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -22,7 +34,6 @@ jobs:
           - batch-cp2k
           - lpr
           - dos-align
-
     steps:
       - uses: actions/checkout@v4
 
