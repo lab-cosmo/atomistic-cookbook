@@ -497,7 +497,8 @@ class AtomicDataset(Dataset):
 def collate(
     batch,
 ):  # Defines how to collate the outputs of the __getitem__ function at each batch
-    return tuple(batch)
+    for x, idx, index in batch:
+        return (x, idx, index)
 
 
 x_train = torch.flatten(total_soap[train_index], 0, 1).float()
