@@ -21,6 +21,7 @@ jobs:
           - gaas-map
           - batch-cp2k
           - lpr
+          - dos-align
 
     steps:
       - uses: actions/checkout@v4
