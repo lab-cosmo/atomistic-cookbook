@@ -44,7 +44,7 @@ from torch.utils.data import BatchSampler, DataLoader, Dataset, RandomSampler
 # We take a small subset of 104 structures in the Si dataset from `Bartok et al.,
 # 2018 <https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.041048>`.
 # Each structure in the dataset contains two atoms.
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 
 #
 
 
