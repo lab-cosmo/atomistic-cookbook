@@ -20,16 +20,6 @@ nox.options.reuse_venv = "yes"
 nox.options.sessions = ["lint", "docs"]
 
 
-# Files that need to be linted & formatted
-LINT_FILES = [
-    "ipynb-to-gallery.py",
-    "generate-gallery.py",
-    "noxfile.py",
-    "docs/src/conf.py",
-    "examples",
-    "developer",
-]
-
 EXAMPLES = get_examples()
 
 # ==================================================================================== #
@@ -37,30 +27,20 @@ EXAMPLES = get_examples()
 # ==================================================================================== #
 
 
+# Files that need to be linted & formatted
 def get_lint_files():
     LINT_FILES = [
         "ipynb-to-gallery.py",
         "generate-gallery.py",
         "noxfile.py",
         "docs/src/conf.py",
+        "developer",
     ]
     return LINT_FILES
 
 
-def get_command_output(command, cwd):
-    """Execute a command and return its output."""
-    process = subprocess.Popen(
-        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=cwd
-    )
-    output, errors = process.communicate()
-    if process.returncode == 0:
-        return output
-    else:
-        raise RuntimeError(f"Command failed with errors: {errors}")
-
-
-def filter_files(tracked_files, ignored_files):
-    """Filter tracked files by removing any that appear in ignored_files."""
+def filter_files(tracked_files):
+    """Filter tracked files of waht we do not want to lint"""
     returns = []
     for file in tracked_files.splitlines():
         tmp = file.split(".")[-1]
@@ -69,34 +49,23 @@ def filter_files(tracked_files, ignored_files):
                 file.split("/")[-1] != ".gitignore"
                 and file.split("/")[-1] != "README.rst"
             ):
-                if file not in ignored_files.splitlines():
-                    returns.append(file)
+                returns.append(file)
 
     return returns
 
 
 # We want to mimic
-# git ls-files examples |
-# grep -v -x -f <(git ls-files --others --ignored --exclude-standard examples)
-def get_list_of_ignored_files():
+# git ls-files examples
+def get_list_of_files():
     folder = os.getcwd() + "/examples"
     # Get the list of ignored files
-    ignored_files_command = [
-        "git",
-        "ls-files",
-        "--others",
-        "--ignored",
-        "--exclude-standard",
-        folder,
-    ]
-    ignored_files_output = get_command_output(ignored_files_command, cwd=folder)
-
     # Get the list of all tracked files
     tracked_files_command = ["git", "ls-files", folder]
-    tracked_files_output = get_command_output(tracked_files_command, cwd=folder)
-
+    tracked_files_output = subprocess.check_output(
+        tracked_files_command, cwd=folder, text=True
+    )
     # Filter the tracked files to exclude ignored ones
-    filtered_files = filter_files(tracked_files_output, ignored_files_output)
+    filtered_files = filter_files(tracked_files_output)
 
     return [folder + "/" + file for file in filtered_files]
 
@@ -237,7 +206,7 @@ def lint(session):
         session.install("sphinx-lint")
 
     # Get files
-    LINT_FILES = get_lint_files() + get_list_of_ignored_files()
+    LINT_FILES = get_lint_files() + get_list_of_files()
 
     # Formatting
     session.run("black", "--check", "--diff", *LINT_FILES)
@@ -272,7 +241,7 @@ def format(session):
         session.install("black", "blackdoc")
         session.install("isort")
     # Get files
-    LINT_FILES = get_lint_files() + get_list_of_ignored_files()
+    LINT_FILES = get_lint_files() + get_list_of_files()
 
     session.run("black", *LINT_FILES)
     session.run("blackdoc", *LINT_FILES)
