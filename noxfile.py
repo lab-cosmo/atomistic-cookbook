@@ -2,6 +2,7 @@ import glob
 import hashlib
 import json
 import os
+import subprocess
 import sys
 
 import nox
@@ -19,21 +20,57 @@ nox.options.reuse_venv = "yes"
 nox.options.sessions = ["lint", "docs"]
 
 
-# Files that need to be linted & formatted
-LINT_FILES = [
-    "ipynb-to-gallery.py",
-    "generate-gallery.py",
-    "noxfile.py",
-    "docs/src/conf.py",
-    "examples",
-    "developer",
-]
-
 EXAMPLES = get_examples()
 
 # ==================================================================================== #
 #                                 helper functions                                     #
 # ==================================================================================== #
+
+
+# Files that need to be linted & formatted
+def get_lint_files():
+    LINT_FILES = [
+        "ipynb-to-gallery.py",
+        "generate-gallery.py",
+        "noxfile.py",
+        "docs/src/conf.py",
+        "developer",
+    ]
+    return LINT_FILES + get_example_files()
+
+
+def filter_files(tracked_files):
+    """Filter tracked files of waht we do not want to lint.
+    The list of files tracked by `git ls-files` used in the `get_example_files`
+    contains also input, trajectory and README files that we do not want
+    to lint. This function filter these kind of files out of the main list."""
+    returns = []
+    for file in tracked_files.splitlines():
+        tmp = file.split(".")[-1]
+        if tmp != "xyz" and tmp != "sh" and tmp != "yml" and tmp != "cp2k":
+            if (
+                file.split("/")[-1] != ".gitignore"
+                and file.split("/")[-1] != "README.rst"
+            ):
+                returns.append(file)
+
+    return returns
+
+
+# We want to mimic
+# git ls-files examples
+def get_example_files():
+    folder = os.getcwd() + "/examples"
+    # Get the list of ignored files
+    # Get the list of all tracked files
+    tracked_files_command = ["git", "ls-files", folder]
+    tracked_files_output = subprocess.check_output(
+        tracked_files_command, cwd=folder, text=True
+    )
+    # Filter the tracked files to exclude ignored ones
+    filtered_files = filter_files(tracked_files_output)
+
+    return [folder + "/" + file for file in filtered_files]
 
 
 def should_reinstall_dependencies(session, **metadata):
@@ -171,6 +208,9 @@ def lint(session):
         session.install("isort")
         session.install("sphinx-lint")
 
+    # Get files
+    LINT_FILES = get_lint_files()
+
     # Formatting
     session.run("black", "--check", "--diff", *LINT_FILES)
     session.run("blackdoc", "--check", "--diff", *LINT_FILES)
@@ -203,6 +243,8 @@ def format(session):
     if not session.virtualenv._reused:
         session.install("black", "blackdoc")
         session.install("isort")
+    # Get files
+    LINT_FILES = get_lint_files()
 
     session.run("black", *LINT_FILES)
     session.run("blackdoc", *LINT_FILES)
