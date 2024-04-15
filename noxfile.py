@@ -40,7 +40,10 @@ def get_lint_files():
 
 
 def filter_files(tracked_files):
-    """Filter tracked files of waht we do not want to lint"""
+    """Filter tracked files of waht we do not want to lint.
+    The list of files tracked by `git ls-files` used in the `get_example_files`
+    contains also input, trajectory and README files that we do not want
+    to lint. This function filter these kind of files out of the main list."""
     returns = []
     for file in tracked_files.splitlines():
         tmp = file.split(".")[-1]
