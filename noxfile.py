@@ -36,7 +36,7 @@ def get_lint_files():
         "docs/src/conf.py",
         "developer",
     ]
-    return LINT_FILES
+    return LINT_FILES + get_example_files()
 
 
 def filter_files(tracked_files):
@@ -56,7 +56,7 @@ def filter_files(tracked_files):
 
 # We want to mimic
 # git ls-files examples
-def get_list_of_files():
+def get_example_files():
     folder = os.getcwd() + "/examples"
     # Get the list of ignored files
     # Get the list of all tracked files
@@ -206,7 +206,7 @@ def lint(session):
         session.install("sphinx-lint")
 
     # Get files
-    LINT_FILES = get_lint_files() + get_list_of_files()
+    LINT_FILES = get_lint_files()
 
     # Formatting
     session.run("black", "--check", "--diff", *LINT_FILES)
@@ -241,7 +241,7 @@ def format(session):
         session.install("black", "blackdoc")
         session.install("isort")
     # Get files
-    LINT_FILES = get_lint_files() + get_list_of_files()
+    LINT_FILES = get_lint_files()
 
     session.run("black", *LINT_FILES)
     session.run("blackdoc", *LINT_FILES)
