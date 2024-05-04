@@ -1,5 +1,5 @@
 production/
+parameters/
 
 cp2k.out
 cp2k.inp
-cp2k_shell.ssmp

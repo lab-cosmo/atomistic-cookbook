@@ -3,12 +3,11 @@ channels:
 dependencies:
   - python=3.11
   - pip
-  - rust >=1.65
+  - rust > 1.65
   - pip:
     - ase
-    - chemiscope
     - matplotlib
-    - metatensor
     - rascaline @ git+https://github.com/Luthaf/rascaline@ca957642f512e141c7570e987aadc05c7ac71983
-    - scikit-learn
-    - skmatter
+    - torch
+    - scipy
+    - numpy
