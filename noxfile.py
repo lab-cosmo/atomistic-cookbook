@@ -271,7 +271,7 @@ def clean(session):
     tracked_files_output = get_example_other_files()
     for ifile in tracked_files_output:
         os.remove(ifile)
-    flist = glob.glob("example/*")
+    flist = glob.glob("examples/*")
     # check for empty list and remove them
     for fl in flist:
         if 0 == len(glob.glob(fl + "/*")):
