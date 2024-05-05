@@ -153,7 +153,7 @@ ax.legend()
 # statistically inefficient when increasing the number of beads, whereas the 'centroid virial' estimator
 # remains well-behaved. Note how quickly these estimators equilibrate to roughly their stationary value,
 # much faster than the equilibration of the potential energy above. This is thanks to the ``pile_g`` thermostat
-# (see `DOI:10.1063/1.3489925 <http://doi.org/10.1063/1.3489925>`) that is optimally coupled to the normal
+# (see `DOI:10.1063/1.3489925 <http://doi.org/10.1063/1.3489925>`_) that is optimally coupled to the normal
 # modes of the ring polymer.
 
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
