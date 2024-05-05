@@ -2,11 +2,12 @@
 Path integral molecular dynamics
 ================================
 
+:Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm/>`_
+
 This example shows how to run a path integral molecular dynamics 
 simulation using ``i-PI``, analyze the output and visualize the 
 trajectory in ``chemiscope``. It uses `LAMMPS <http://lammps.org>`_
-as the driver to simulate the q-TIP4P/f water model. 
-
+as the driver to simulate the `q-TIP4P/f water model <http://doi.org/10.1063/1.3167790>`_. 
 """
 
 import subprocess
@@ -124,7 +125,7 @@ traj_data = [ipi.read_trajectory(f"simulation.pos_{i}.xyz") for i in range(8)]
 # conserved quantity. This is usually not affecting physical observables, but if you see this level of
 # drift in a production run, check carefully for convergence and stability with a reduced time step.
 
-fix, ax = plt.subplots(1, 1, figsize=(4, 3))
+fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(
     output_data["time"],
     output_data["potential"] - output_data["potential"][0],
@@ -155,7 +156,7 @@ ax.legend()
 # (see `DOI:10.1063/1.3489925 <http://doi.org/10.1063/1.3489925>`) that is optimally coupled to the normal
 # modes of the ring polymer.
 
-fix, ax = plt.subplots(1, 1, figsize=(4, 3))
+fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(
     output_data["time"],
     output_data["kinetic_cv"],
@@ -231,7 +232,7 @@ lmp_process[1].wait()
 output_gle, desc_gle = ipi.read_output("simulation_piglet.out")
 traj_gle = [ipi.read_trajectory(f"simulation_piglet.pos_{i}.xyz") for i in range(8)]
 
-fix, ax = plt.subplots(1, 1, figsize=(4, 3))
+fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(
     output_data["time"],
     output_data["potential"] - output_data["potential"][0],
@@ -256,7 +257,7 @@ ax.legend()
 # PIGLET uses a Langevin equation that breaks the classical fluctuation-dissipation theorem, and
 # generates a steady-state distribution that mimics quantum fluctuations.
 
-fix, ax = plt.subplots(1, 1, figsize=(4, 3))
+fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(output_data["time"], output_data["kinetic_cv"], "b--", label="PIMD, $K_{CV}$")
 ax.plot(output_gle["time"], output_gle["kinetic_cv"], "b", label="PIGLET, $K_{CV}$")
 ax.plot(output_data["time"], output_data["kinetic_td"], "r--", label="PIMD, $K_{TD}$")
