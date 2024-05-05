@@ -73,6 +73,20 @@ def get_example_files():
     return [folder + "/" + file for file in filtered_files]
 
 
+# We want to mimic
+# git ls-files --other examples
+def get_example_other_files():
+    folder = os.getcwd() + "/examples"
+    # Get the list of ignored files
+    # Get the list of all not tracked files
+    tracked_files_command = ["git", "ls-files", "--other", folder]
+    tracked_files_output = subprocess.check_output(
+        tracked_files_command, cwd=folder, text=True
+    )
+
+    return tracked_files_output.splitlines()
+
+
 def should_reinstall_dependencies(session, **metadata):
     """
     Returns a bool indicating whether the dependencies should be re-installed in the
@@ -249,3 +263,11 @@ def format(session):
     session.run("black", *LINT_FILES)
     session.run("blackdoc", *LINT_FILES)
     session.run("isort", *LINT_FILES)
+
+
+@nox.session
+def clean(session):
+    """remove temporary files"""
+    tracked_files_output = get_example_other_files()
+    for ifile in tracked_files_output:
+        print(ifile)
