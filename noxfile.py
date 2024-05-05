@@ -84,7 +84,7 @@ def get_example_other_files():
         tracked_files_command, cwd=folder, text=True
     )
 
-    return tracked_files_output.splitlines()
+    return [folder + "/" + file for file in tracked_files_output.splitlines()]
 
 
 def should_reinstall_dependencies(session, **metadata):
