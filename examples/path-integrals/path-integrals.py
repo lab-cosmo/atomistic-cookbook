@@ -11,11 +11,11 @@ as the driver to simulate the q-TIP4P/f water model.
 
 import subprocess
 import time
-import numpy as np
 
 import chemiscope
 import ipi
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 # %%
@@ -70,7 +70,7 @@ with open("input_pimd.xml", "r") as file:
 print(xml_content)
 
 # %%
-# NB1: In a realistic simulation you may want to increase the field ``total_steps``, 
+# NB1: In a realistic simulation you may want to increase the field ``total_steps``,
 # to simulate at least a few 100s of picoseconds.
 #
 # NB2: To converge a simulation of water at room temperature, you typically need at least
@@ -78,7 +78,7 @@ print(xml_content)
 # but you can try modify the input to check convergence with conventional PIMD
 
 # %%
-# i-PI and lammps should be run separately, and it is possible to launch separate lammps processes 
+# i-PI and lammps should be run separately, and it is possible to launch separate lammps processes
 # to parallelize the evaluation over the beads. On the the command line, this amounts to launching
 #
 # .. code-block:: bash
@@ -90,14 +90,14 @@ print(xml_content)
 #
 # Note how ``i-PI`` and ``LAMMPS`` are completely independent, and therefore need
 # a separate set of input files. The client-side communication in ``LAMMPS`` is described
-# in the ``fix_ipi`` section, that matches the socket name and mode defined in the 
-# ``ffsocket`` field in the ``i-PI`` file. 
-# 
-# We can launch the external processes from a Python script as follows 
+# in the ``fix_ipi`` section, that matches the socket name and mode defined in the
+# ``ffsocket`` field in the ``i-PI`` file.
+#
+# We can launch the external processes from a Python script as follows
 
 ipi_process = subprocess.Popen(["i-pi", "input_pimd.xml"])
 time.sleep(2)  # wait for i-PI to start
-lmp_process = [ subprocess.Popen(["lmp", "-in", "in.lmp"]) for i in range(2) ]
+lmp_process = [subprocess.Popen(["lmp", "-in", "in.lmp"]) for i in range(2)]
 
 # %%
 # If you run this in a notebook, you can go ahead and start loading
@@ -106,67 +106,90 @@ lmp_process = [ subprocess.Popen(["lmp", "-in", "in.lmp"]) for i in range(2) ]
 
 ipi_process.wait()
 lmp_process[0].wait()
-lmp_process[1].wait();
+lmp_process[1].wait()
 
 
 # %%
-# After the simulation has run, you can visualize and post-process the trajectory data. 
+# After the simulation has run, you can visualize and post-process the trajectory data.
 # Note that i-PI prints a separate trajectory for each bead, as structural properties can
 # be computed averaging over the configurations of any of the beads.
 
 output_data, output_desc = ipi.read_output("simulation.out")
-traj_data = [ ipi.read_trajectory(f"simulation.pos_{i}.xyz") for i in range(8) ]
+traj_data = [ipi.read_trajectory(f"simulation.pos_{i}.xyz") for i in range(8)]
 
 
 # %%
 # The simulation parameters are pushed at the limits: with the aggressive stochastic thermostatting
-# and the high-frequency normal modes of the ring polymer, there are fairly large fluctuations of the 
-# conserved quantity. This is usually not affecting physical observables, but if you see this level of 
+# and the high-frequency normal modes of the ring polymer, there are fairly large fluctuations of the
+# conserved quantity. This is usually not affecting physical observables, but if you see this level of
 # drift in a production run, check carefully for convergence and stability with a reduced time step.
 
-fix, ax = plt.subplots(1,1,figsize=(4,3))
-ax.plot(output_data["time"], output_data["potential"]-output_data["potential"][0], 'b-', label="Potential, $V$")
-ax.plot(output_data["time"], output_data["conserved"]-output_data["conserved"][0], 'r-', label="Conserved, $H$")
+fix, ax = plt.subplots(1, 1, figsize=(4, 3))
+ax.plot(
+    output_data["time"],
+    output_data["potential"] - output_data["potential"][0],
+    "b-",
+    label="Potential, $V$",
+)
+ax.plot(
+    output_data["time"],
+    output_data["conserved"] - output_data["conserved"][0],
+    "r-",
+    label="Conserved, $H$",
+)
 ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"energy / eV")
-ax.legend();
+ax.legend()
 
 # %%
 # The fast relaxation of the ring polymers, starting from an initial configuration where all beads overlap
 # can be also visualized by drawing the ring pol
 
 # %%
-# While the potential energy is simply the mean over the beads of the energy of individual replicas, 
+# While the potential energy is simply the mean over the beads of the energy of individual replicas,
 # computing the kinetic energy requires averaging special quantities that involve also the correlations
 # between beads. Here we compare two of these *estimators*: the 'thermodynamic' estimator becomes
 # statistically inefficient when increasing the number of beads, whereas the 'centroid virial' estimator
 # remains well-behaved. Note how quickly these estimators equilibrate to roughly their stationary value,
 # much faster than the equilibration of the potential energy above. This is thanks to the ``pile_g`` thermostat
 # (see `DOI:10.1063/1.3489925 <http://doi.org/10.1063/1.3489925>`) that is optimally coupled to the normal
-# modes of the ring polymer. 
+# modes of the ring polymer.
 
-fix, ax = plt.subplots(1,1,figsize=(4,3))
-ax.plot(output_data["time"], output_data["kinetic_cv"], 'b-', label="Centroid virial, $K_{CV}$")
-ax.plot(output_data["time"], output_data["kinetic_td"], 'r-', label="Thermodynamic, $K_{TD}$")
+fix, ax = plt.subplots(1, 1, figsize=(4, 3))
+ax.plot(
+    output_data["time"],
+    output_data["kinetic_cv"],
+    "b-",
+    label="Centroid virial, $K_{CV}$",
+)
+ax.plot(
+    output_data["time"],
+    output_data["kinetic_td"],
+    "r-",
+    label="Thermodynamic, $K_{TD}$",
+)
 ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"energy / eV")
-ax.legend();
+ax.legend()
 
 # %%
-# You can also visualize the (very short) trajectory in a way that highlights the spread of the 
-# beads of the ring polymer. ``chemiscope`` provides a utility function to interleave the 
+# You can also visualize the (very short) trajectory in a way that highlights the spread of the
+# beads of the ring polymer. ``chemiscope`` provides a utility function to interleave the
 # trajectories of the beads, forming a trajectory that shows the connecttions between the replicas
-# of each atom. Each atom and its connections are color-coded. 
+# of each atom. Each atom and its connections are color-coded.
 
 traj_pimd = chemiscope.ase_merge_pi_frames(traj_data)
-# we also tweak the visualization options, and then show the viewer 
-traj_pimd["shapes"]['paths']['parameters']['global']['radius'] = 0.05
+# we also tweak the visualization options, and then show the viewer
+traj_pimd["shapes"]["paths"]["parameters"]["global"]["radius"] = 0.05
 traj_pimd["settings"]["structure"][0].update(
-       dict(atoms=False, keepOrientation=True,
-            color={'property': 'bead_id', 'palette': 'hsv (periodic)'} ) )
+    dict(
+        atoms=False,
+        keepOrientation=True,
+        color={"property": "bead_id", "palette": "hsv (periodic)"},
+    )
+)
 
-cs=chemiscope.show(**traj_pimd,
-                    mode="structure")
+cs = chemiscope.show(**traj_pimd, mode="structure")
 
 if chemiscope.jupyter._is_running_in_notebook():
     from IPython.display import display
@@ -178,23 +201,23 @@ else:
 # %%
 # Accelerating PIMD with a PIGLET thermostat
 # ------------------------------------------
-# 
+#
 # The simulations in the previous sections are very far from converged -- typically one
 # would need approximately 32 replicas to converge a simulation of room-temperature water.
-# To address this problem we will use a method based on generalized Langevin equations, 
+# To address this problem we will use a method based on generalized Langevin equations,
 # called `PIGLET <http://doi.org/10.1103/PhysRevLett.109.100604>`_
-# 
+#
 # The input file is ``input_piglet.xml``, that only differs by the definition ot
 # the thermostat, that uses a ``nm_gle`` mode in which each normal mode
 # of the ring polymer is attached to a different colored-noise Generalized Langevin equation.
 # This makes it possible to converge exactly the simulation results with a small number
-# of replicas, and to accelerate greatly convergence for realistic systems such as this. 
+# of replicas, and to accelerate greatly convergence for realistic systems such as this.
 # The thermostat parameters can be generated on `the GLE4MD website <https://gle4md.org/index.html?page=matrix&kind=piglet&centroid=kh_8-4&cw0=4000&ucw0=cm1&nbeads=8&temp=298&utemp=k&parset=50_8_t&outmode=ipi&aunits=ps&cunits=k>`_
 #
-    
+
 ipi_process = subprocess.Popen(["i-pi", "input_piglet.xml"])
 time.sleep(2)  # wait for i-PI to start
-lmp_process = [ subprocess.Popen(["lmp", "-in", "in.lmp"]) for i in range(2) ]
+lmp_process = [subprocess.Popen(["lmp", "-in", "in.lmp"]) for i in range(2)]
 
 ipi_process.wait()
 lmp_process[0].wait()
@@ -202,78 +225,97 @@ lmp_process[1].wait()
 
 # %%
 # The mean potential energy from the PIGLET trajectory is higher than that for the PIMD one,
-# because it is closer to the converged value (try to run a PIMD trajectory with 64 beads for 
+# because it is closer to the converged value (try to run a PIMD trajectory with 64 beads for
 # comparison)
 
 output_gle, desc_gle = ipi.read_output("simulation_piglet.out")
-traj_gle = [ ipi.read_trajectory(f"simulation_piglet.pos_{i}.xyz") for i in range(8) ]
+traj_gle = [ipi.read_trajectory(f"simulation_piglet.pos_{i}.xyz") for i in range(8)]
 
-fix, ax = plt.subplots(1,1,figsize=(4,3))
-ax.plot(output_data["time"], output_data["potential"]-output_data["potential"][0], 'b--', label="PIMD")
-ax.plot(output_gle["time"], output_gle["potential"]-output_gle["potential"][0], 'b-', label="PIGLET")
+fix, ax = plt.subplots(1, 1, figsize=(4, 3))
+ax.plot(
+    output_data["time"],
+    output_data["potential"] - output_data["potential"][0],
+    "b--",
+    label="PIMD",
+)
+ax.plot(
+    output_gle["time"],
+    output_gle["potential"] - output_gle["potential"][0],
+    "b-",
+    label="PIGLET",
+)
 ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"energy / eV")
-ax.legend();
+ax.legend()
 
 # %%
-# However, you should be somewhat careful: PIGLET converges *some* but not all the 
+# However, you should be somewhat careful: PIGLET converges *some* but not all the
 # correlations within a path. For instance, it is designed to converge the centroid-virial estimator
 # for the kinetic energy, but not the thermodynamic estimator. For the same reason, don't try
 # to look at equilibration in terms of the mean temperature: it won't match the target value, because
-# PIGLET uses a Langevin equation that breaks the classical fluctuation-dissipation theorem, and 
-# generates a steady-state distribution that mimics quantum fluctuations. 
+# PIGLET uses a Langevin equation that breaks the classical fluctuation-dissipation theorem, and
+# generates a steady-state distribution that mimics quantum fluctuations.
 
-fix, ax = plt.subplots(1,1,figsize=(4,3))
-ax.plot(output_data["time"], output_data["kinetic_cv"], 'b--', label="PIMD, $K_{CV}$")
-ax.plot(output_gle["time"], output_gle["kinetic_cv"], 'b', label="PIGLET, $K_{CV}$")
-ax.plot(output_data["time"], output_data["kinetic_td"], 'r--', label="PIMD, $K_{TD}$")
-ax.plot(output_gle["time"], output_gle["kinetic_td"], 'r', label="PIGLET, $K_{TD}$")
+fix, ax = plt.subplots(1, 1, figsize=(4, 3))
+ax.plot(output_data["time"], output_data["kinetic_cv"], "b--", label="PIMD, $K_{CV}$")
+ax.plot(output_gle["time"], output_gle["kinetic_cv"], "b", label="PIGLET, $K_{CV}$")
+ax.plot(output_data["time"], output_data["kinetic_td"], "r--", label="PIMD, $K_{TD}$")
+ax.plot(output_gle["time"], output_gle["kinetic_td"], "r", label="PIGLET, $K_{TD}$")
 ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"energy / eV")
-ax.legend();
+ax.legend()
 
 # %%
 # Kinetic energy tensors
 # ~~~~~~~~~~~~~~~~~~~~~~
 #
 # While we're at it, let's do something more complicated (and instructive). Classically, the
-# momentum distribution of any atom is isotropic, so the kinetic energy tensor (KET) 
+# momentum distribution of any atom is isotropic, so the kinetic energy tensor (KET)
 # :math:`\mathbf{p}\mathbf{p}^T/2m` is a constant times the identity matrix. Quantum mechanically,
 # the kinetic energy tensor has more structure, that reflects the higher kinetic energy of particles
 # along directions with stiff bonds. We can compute a moving average of the centroid virial estimator
 # of the KET, and plot it to show the direction of anisotropy. Note that there are some subtleties
-# connected with the evaluation of the moving average, see e.g. 
+# connected with the evaluation of the moving average, see e.g.
 # `DOI:10.1103/PhysRevLett.109.100604 <http://doi.org/10.1103/PhysRevLett.109.100604>`_.
 
 # %%
-# We first need to postprocess the components of the kinetic energy tensors (that i-PI prints 
+# We first need to postprocess the components of the kinetic energy tensors (that i-PI prints
 # out separating the diagonal and off-diagonal bits), averaging them over the last 10 frames
 # and combining them with the centroid configuration from the last frame in the trajectory.
 
 kinetic_cv = ipi.read_trajectory(f"simulation_piglet.kin.xyz")
 kinetic_od = ipi.read_trajectory(f"simulation_piglet.kod.xyz")
-kinetic_tens = np.hstack( [
-    np.asarray([ k.positions for k in kinetic_cv[-10:]]).mean(axis=0),
-    np.asarray([ k.positions for k in kinetic_od[-10:]]).mean(axis=0)
-] )
+kinetic_tens = np.hstack(
+    [
+        np.asarray([k.positions for k in kinetic_cv[-10:]]).mean(axis=0),
+        np.asarray([k.positions for k in kinetic_od[-10:]]).mean(axis=0),
+    ]
+)
 
 centroid = traj_gle[-1][-1].copy()
 centroid.positions = np.asarray([t[-1].positions for t in traj_gle]).mean(axis=0)
 centroid.arrays["kinetic_cv"] = kinetic_tens
 
-# %% 
-# We can then view these in ``chemiscope``, setting the proper parameters to visualize the 
+# %%
+# We can then view these in ``chemiscope``, setting the proper parameters to visualize the
 # ellipsoids associated with the KET. Note that some KETs have negative eigenvalues, because
 # we are averaging over a few frames, which is insufficient to converge the estimator fully.
 
-ellipsoids = chemiscope.ase_tensors_to_ellipsoids([centroid], "kinetic_cv", 
-                                                  scale=15, force_positive=True)
+ellipsoids = chemiscope.ase_tensors_to_ellipsoids(
+    [centroid], "kinetic_cv", scale=15, force_positive=True
+)
 
-cs = chemiscope.show([centroid], shapes = {"kinetic_cv": ellipsoids}, mode="structure", 
-               settings = chemiscope.quick_settings(
-                   structure_settings={"shape" : ["kinetic_cv"],
-                                       'unitCell': True,} )
-               )
+cs = chemiscope.show(
+    [centroid],
+    shapes={"kinetic_cv": ellipsoids},
+    mode="structure",
+    settings=chemiscope.quick_settings(
+        structure_settings={
+            "shape": ["kinetic_cv"],
+            "unitCell": True,
+        }
+    ),
+)
 
 # %%
 
