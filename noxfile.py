@@ -267,7 +267,7 @@ def format(session):
 
 @nox.session
 def clean(session):
-    """remove temporary files"""
+    """Remove temporary files"""
     tracked_files_output = get_example_other_files()
     for ifile in tracked_files_output:
-        print(ifile)
+        os.remove(ifile)
