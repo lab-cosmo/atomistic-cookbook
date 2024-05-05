@@ -274,5 +274,5 @@ def clean(session):
     flist = glob.glob("example/*")
     # check for empty list and remove them
     for fl in flist:
-        if 0 == len(glob.glob(fl)):
+        if 0 == len(glob.glob(fl + "/*")):
             os.rmdir(fl)
