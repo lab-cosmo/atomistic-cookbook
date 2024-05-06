@@ -148,14 +148,16 @@ ax.set_ylabel(r"energy / eV")
 ax.legend()
 
 # %%
-# While the potential energy is simply the mean over the beads of the energy of individual replicas,
-# computing the kinetic energy requires averaging special quantities that involve also the correlations
-# between beads. Here we compare two of these *estimators*: the 'thermodynamic' estimator becomes
-# statistically inefficient when increasing the number of beads, whereas the 'centroid virial' estimator
-# remains well-behaved. Note how quickly these estimators equilibrate to roughly their stationary value,
-# much faster than the equilibration of the potential energy above. This is thanks to the ``pile_g`` thermostat
-# (see `DOI:10.1063/1.3489925 <http://doi.org/10.1063/1.3489925>`_) that is optimally coupled to the normal
-# modes of the ring polymer.
+# While the potential energy is simply the mean over the beads of the
+# energy of individual replicas, computing the kinetic energy requires
+# averaging special quantities that involve also the correlations between beads.
+# Here we compare two of these *estimators*: the 'thermodynamic' estimator becomes
+# statistically inefficient when increasing the number of beads, whereas the
+# 'centroid virial' estimator remains well-behaved. Note how quickly these estimators
+# equilibrate to roughly their stationary value, much faster than the equilibration
+# of the potential energy above. This is thanks to the ``pile_g`` thermostat
+# (see `DOI:10.1063/1.3489925 <http://doi.org/10.1063/1.3489925>`_) that is
+# optimally coupled to the normal modes of the ring polymer.
 
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(
@@ -205,17 +207,19 @@ else:
 # Accelerating PIMD with a PIGLET thermostat
 # ------------------------------------------
 #
-# The simulations in the previous sections are very far from converged -- typically one
-# would need approximately 32 replicas to converge a simulation of room-temperature water.
-# To address this problem we will use a method based on generalized Langevin equations,
-# called `PIGLET <http://doi.org/10.1103/PhysRevLett.109.100604>`_
+# The simulations in the previous sections are very far from converged -- typically
+# one would need approximately 32 replicas to converge a simulation of
+# room-temperature water. To address this problem we will use a method based on
+# generalized Langevin equations, called
+# `PIGLET <http://doi.org/10.1103/PhysRevLett.109.100604>`_
 #
-# The input file is ``input_piglet.xml``, that only differs by the definition ot
+# The input file is ``input_piglet.xml``, that only differs by the definition of
 # the thermostat, that uses a ``nm_gle`` mode in which each normal mode
-# of the ring polymer is attached to a different colored-noise Generalized Langevin equation.
-# This makes it possible to converge exactly the simulation results with a small number
-# of replicas, and to accelerate greatly convergence for realistic systems such as this.
-# The thermostat parameters can be generated on `the GLE4MD website <https://gle4md.org/index.html?page=matrix&kind=piglet&centroid=kh_8-4&cw0=4000&ucw0=cm1&nbeads=8&temp=298&utemp=k&parset=50_8_t&outmode=ipi&aunits=ps&cunits=k>`_ # noqa: E501
+# of the ring polymer is attached to a different colored-noise Generalized Langevin
+# equation. This makes it possible to converge exactly the simulation results with
+# a small number of replicas, and to accelerate greatly convergence for realistic
+# systems such as this. The thermostat parameters can be generated on
+# `the GLE4MD website <https://tinyurl.com/4y2e45jx>`_
 #
 
 ipi_process = subprocess.Popen(["i-pi", "input_piglet.xml"])
@@ -227,9 +231,9 @@ lmp_process[0].wait()
 lmp_process[1].wait()
 
 # %%
-# The mean potential energy from the PIGLET trajectory is higher than that for the PIMD one,
-# because it is closer to the converged value (try to run a PIMD trajectory with 64 beads for
-# comparison)
+# The mean potential energy from the PIGLET trajectory is higher than that for the
+# PIMD one, because it is closer to the converged value (try to run a PIMD trajectory
+# with 64 beads for comparison)
 
 output_gle, desc_gle = ipi.read_output("simulation_piglet.out")
 traj_gle = [ipi.read_trajectory(f"simulation_piglet.pos_{i}.xyz") for i in range(8)]
@@ -253,10 +257,11 @@ ax.legend()
 
 # %%
 # However, you should be somewhat careful: PIGLET converges *some* but not all the
-# correlations within a path. For instance, it is designed to converge the centroid-virial estimator
-# for the kinetic energy, but not the thermodynamic estimator. For the same reason, don't try
-# to look at equilibration in terms of the mean temperature: it won't match the target value, because
-# PIGLET uses a Langevin equation that breaks the classical fluctuation-dissipation theorem, and
+# correlations within a path. For instance, it is designed to converge the
+# centroid-virial estimator for the kinetic energy, but not the thermodynamic
+# estimator. For the same reason, don't try to look at equilibration in terms of
+# the mean temperature: it won't match the target value, because PIGLET uses a
+# Langevin equation that breaks the classical fluctuation-dissipation theorem, and
 # generates a steady-state distribution that mimics quantum fluctuations.
 
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
@@ -272,19 +277,22 @@ ax.legend()
 # Kinetic energy tensors
 # ~~~~~~~~~~~~~~~~~~~~~~
 #
-# While we're at it, let's do something more complicated (and instructive). Classically, the
-# momentum distribution of any atom is isotropic, so the kinetic energy tensor (KET)
-# :math:`\mathbf{p}\mathbf{p}^T/2m` is a constant times the identity matrix. Quantum mechanically,
-# the kinetic energy tensor has more structure, that reflects the higher kinetic energy of particles
-# along directions with stiff bonds. We can compute a moving average of the centroid virial estimator
-# of the KET, and plot it to show the direction of anisotropy. Note that there are some subtleties
-# connected with the evaluation of the moving average, see e.g.
-# `DOI:10.1103/PhysRevLett.109.100604 <http://doi.org/10.1103/PhysRevLett.109.100604>`_.
+# While we're at it, let's do something more complicated (and instructive).
+# Classically, the momentum distribution of any atom is isotropic, so the
+# kinetic energy tensor (KET) :math:`\mathbf{p}\mathbf{p}^T/2m` is a constant
+# times the identity matrix. Quantum mechanically, the kinetic energy tensor
+# has more structure, that reflects the higher kinetic energy of particles
+# along directions with stiff bonds. We can compute a moving average of the
+# centroid virial estimator of the KET, and plot it to show the direction
+# of anisotropy. Note that there are some subtleties connected with the
+# evaluation of the moving average, see e.g.
+# `DOI:10.1103/PhysRevLett.109.100604 <http://doi.org/10.1103/PhysRevLett.109.100604>`_
 
 # %%
-# We first need to postprocess the components of the kinetic energy tensors (that i-PI prints
-# out separating the diagonal and off-diagonal bits), averaging them over the last 10 frames
-# and combining them with the centroid configuration from the last frame in the trajectory.
+# We first need to postprocess the components of the kinetic energy tensors
+# (that i-PI prints out separating the diagonal and off-diagonal bits), averaging
+# them over the last 10 frames and combining them with the centroid configuration
+# from the last frame in the trajectory.
 
 kinetic_cv = ipi.read_trajectory("simulation_piglet.kin.xyz")
 kinetic_od = ipi.read_trajectory("simulation_piglet.kod.xyz")
@@ -300,9 +308,10 @@ centroid.positions = np.asarray([t[-1].positions for t in traj_gle]).mean(axis=0
 centroid.arrays["kinetic_cv"] = kinetic_tens
 
 # %%
-# We can then view these in ``chemiscope``, setting the proper parameters to visualize the
-# ellipsoids associated with the KET. Note that some KETs have negative eigenvalues, because
-# we are averaging over a few frames, which is insufficient to converge the estimator fully.
+# We can then view these in ``chemiscope``, setting the proper parameters to
+# visualize the ellipsoids associated with the KET. Note that some KETs have
+# negative eigenvalues, because we are averaging over a few frames, which is
+# insufficient to converge the estimator fully.
 
 ellipsoids = chemiscope.ase_tensors_to_ellipsoids(
     [centroid], "kinetic_cv", scale=15, force_positive=True
