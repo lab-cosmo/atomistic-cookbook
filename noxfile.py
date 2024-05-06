@@ -272,7 +272,7 @@ def clean(session):
     for ifile in tracked_files_output:
         os.remove(ifile)
     flist = glob.glob("examples/*")
-    # check for empty list and remove them
+    # Remove empty folders
     for fl in flist:
         if 0 == len(glob.glob(fl + "/*")):
             os.rmdir(fl)
