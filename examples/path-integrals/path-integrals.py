@@ -4,10 +4,11 @@ Path integral molecular dynamics
 
 :Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm/>`_
 
-This example shows how to run a path integral molecular dynamics 
-simulation using ``i-PI``, analyze the output and visualize the 
+This example shows how to run a path integral molecular dynamics
+simulation using ``i-PI``, analyze the output and visualize the
 trajectory in ``chemiscope``. It uses `LAMMPS <http://lammps.org>`_
-as the driver to simulate the `q-TIP4P/f water model <http://doi.org/10.1063/1.3167790>`_. 
+as the driver to simulate the `q-TIP4P/f water
+model <http://doi.org/10.1063/1.3167790>`_.
 """
 
 import subprocess
@@ -41,8 +42,9 @@ import numpy as np
 # the *path integral formalism*  to map the quantum partition function of a
 # set of distinguishable particles onto the classical partition function of
 # *ring polymers* composed by multiple beads (replicas) with
-# corresponding atoms in adjacent replicas being connected by harmonic springs.
-# `The textbook by Tuckerman <https://global.oup.com/academic/product/statistical-mechanics-theory-and-molecular-simulation-9780198825562>`_
+# corresponding atoms in adjacent replicas being connected by harmonic
+# springs.
+# `The textbook by Tuckerman <https://tinyurl.com/bdfhk2tx>`_
 # contains a pedagogic introduction to the topic, while
 # `this paper <https://doi.org/10.1063/1.3489925>`_ outlines the implementation
 # used in ``i-PI``.
@@ -71,16 +73,18 @@ with open("input_pimd.xml", "r") as file:
 print(xml_content)
 
 # %%
-# NB1: In a realistic simulation you may want to increase the field ``total_steps``,
-# to simulate at least a few 100s of picoseconds.
+# NB1: In a realistic simulation you may want to increase the field
+# ``total_steps``, to simulate at least a few 100s of picoseconds.
 #
-# NB2: To converge a simulation of water at room temperature, you typically need at least
-# 32 beads. We will see later how to accelerate convergence using a colored-noise thermostat,
-# but you can try modify the input to check convergence with conventional PIMD
+# NB2: To converge a simulation of water at room temperature, you
+# typically need at least 32 beads. We will see later how to accelerate
+# convergence using a colored-noise thermostat, but you can try to
+# modify the input to check convergence with conventional PIMD
 
 # %%
-# i-PI and lammps should be run separately, and it is possible to launch separate lammps processes
-# to parallelize the evaluation over the beads. On the the command line, this amounts to launching
+# i-PI and lammps should be run separately, and it is possible to
+# launch separate lammps processes to parallelize the evaluation over
+# the beads. On the the command line, this amounts to launching
 #
 # .. code-block:: bash
 #
@@ -89,10 +93,10 @@ print(xml_content)
 #    lmp -in in.lmp &
 #    lmp -in in.lmp &
 #
-# Note how ``i-PI`` and ``LAMMPS`` are completely independent, and therefore need
-# a separate set of input files. The client-side communication in ``LAMMPS`` is described
-# in the ``fix_ipi`` section, that matches the socket name and mode defined in the
-# ``ffsocket`` field in the ``i-PI`` file.
+# Note how ``i-PI`` and ``LAMMPS`` are completely independent, and
+# therefore need a separate set of input files. The client-side communication
+# in ``LAMMPS`` is described in the ``fix_ipi`` section, that matches the socket
+# name and mode defined in the ``ffsocket`` field in the ``i-PI`` file.
 #
 # We can launch the external processes from a Python script as follows
 
@@ -112,18 +116,19 @@ lmp_process[1].wait()
 
 # %%
 # After the simulation has run, you can visualize and post-process the trajectory data.
-# Note that i-PI prints a separate trajectory for each bead, as structural properties can
-# be computed averaging over the configurations of any of the beads.
+# Note that i-PI prints a separate trajectory for each bead, as structural properties
+# can be computed averaging over the configurations of any of the beads.
 
 output_data, output_desc = ipi.read_output("simulation.out")
 traj_data = [ipi.read_trajectory(f"simulation.pos_{i}.xyz") for i in range(8)]
 
 
 # %%
-# The simulation parameters are pushed at the limits: with the aggressive stochastic thermostatting
-# and the high-frequency normal modes of the ring polymer, there are fairly large fluctuations of the
-# conserved quantity. This is usually not affecting physical observables, but if you see this level of
-# drift in a production run, check carefully for convergence and stability with a reduced time step.
+# The simulation parameters are pushed at the limits: with the aggressive stochastic
+# thermostatting and the high-frequency normal modes of the ring polymer, there are
+# fairly large fluctuations of the conserved quantity. This is usually not affecting
+# physical observables, but if you see this level of drift in a production run, check
+# carefully for convergence and stability with a reduced time step.
 
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(
@@ -141,10 +146,6 @@ ax.plot(
 ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"energy / eV")
 ax.legend()
-
-# %%
-# The fast relaxation of the ring polymers, starting from an initial configuration where all beads overlap
-# can be also visualized by drawing the ring pol
 
 # %%
 # While the potential energy is simply the mean over the beads of the energy of individual replicas,
@@ -174,10 +175,11 @@ ax.set_ylabel(r"energy / eV")
 ax.legend()
 
 # %%
-# You can also visualize the (very short) trajectory in a way that highlights the spread of the
-# beads of the ring polymer. ``chemiscope`` provides a utility function to interleave the
-# trajectories of the beads, forming a trajectory that shows the connecttions between the replicas
-# of each atom. Each atom and its connections are color-coded.
+# You can also visualize the (very short) trajectory in a way that highlights the
+# fast spreading out of the beads of the ring polymer. ``chemiscope`` provides a
+# utility function to interleave the trajectories of the beads, forming a trajectory
+# that shows the connecttions between the replicas of each atom. Each atom and its
+# connections are color-coded.
 
 traj_pimd = chemiscope.ase_merge_pi_frames(traj_data)
 # we also tweak the visualization options, and then show the viewer
@@ -213,7 +215,7 @@ else:
 # of the ring polymer is attached to a different colored-noise Generalized Langevin equation.
 # This makes it possible to converge exactly the simulation results with a small number
 # of replicas, and to accelerate greatly convergence for realistic systems such as this.
-# The thermostat parameters can be generated on `the GLE4MD website <https://gle4md.org/index.html?page=matrix&kind=piglet&centroid=kh_8-4&cw0=4000&ucw0=cm1&nbeads=8&temp=298&utemp=k&parset=50_8_t&outmode=ipi&aunits=ps&cunits=k>`_
+# The thermostat parameters can be generated on `the GLE4MD website <https://gle4md.org/index.html?page=matrix&kind=piglet&centroid=kh_8-4&cw0=4000&ucw0=cm1&nbeads=8&temp=298&utemp=k&parset=50_8_t&outmode=ipi&aunits=ps&cunits=k>`_ # noqa: E501
 #
 
 ipi_process = subprocess.Popen(["i-pi", "input_piglet.xml"])
@@ -284,8 +286,8 @@ ax.legend()
 # out separating the diagonal and off-diagonal bits), averaging them over the last 10 frames
 # and combining them with the centroid configuration from the last frame in the trajectory.
 
-kinetic_cv = ipi.read_trajectory(f"simulation_piglet.kin.xyz")
-kinetic_od = ipi.read_trajectory(f"simulation_piglet.kod.xyz")
+kinetic_cv = ipi.read_trajectory("simulation_piglet.kin.xyz")
+kinetic_od = ipi.read_trajectory("simulation_piglet.kod.xyz")
 kinetic_tens = np.hstack(
     [
         np.asarray([k.positions for k in kinetic_cv[-10:]]).mean(axis=0),
