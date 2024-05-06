@@ -38,7 +38,7 @@ class PseudoSphinxApp:
             "examples_dirs": os.path.join(HERE, example),
             "gallery_dirs": gallery_dir,
             "min_reported_time": 60,
-            "copyfile_regex": r".*\.(sh|xyz|cp2k|yml)",
+            "copyfile_regex": r".*\.(sh|xyz|cp2k|yml|png)",
             "matplotlib_animations": True,
         }
 

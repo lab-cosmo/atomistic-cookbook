@@ -1,0 +1,12 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - lammps  
+  - pip:
+    - ase
+    - ipi  
+    - chemiscope
+    - matplotlib
+    - skmatter

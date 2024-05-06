@@ -1,0 +1,35 @@
+<simulation verbosity='medium' safe_stride='100'>
+  <output prefix='simulation'>
+    <properties stride='1' filename='out'>  [ step, time{picosecond}, conserved{electronvolt}, temperature{kelvin}, kinetic_cv{electronvolt}, potential{electronvolt}, pressure_cv{megapascal}, kinetic_td{electronvolt} ] </properties>
+    <trajectory filename='pos' stride='20'> positions </trajectory>
+    <trajectory filename='kin' stride='20'> kinetic_cv </trajectory>
+    <trajectory filename='kod' stride='20'> kinetic_od </trajectory>
+  </output>
+  <total_steps> 200 </total_steps>
+  <prng>
+    <seed> 32342 </seed>
+  </prng>
+  <ffsocket name='lmpserial' mode='unix'>
+      <address>h2o-lammps</address> <latency> 1e-4 </latency>
+  </ffsocket>
+  <system>
+    <initialize nbeads='8'>
+      <file mode='pdb'> water_32.pdb </file>
+      <velocities mode='thermal' units='kelvin'> 298 </velocities>
+    </initialize>
+    <forces>
+      <force forcefield='lmpserial'> lmpserial </force>
+    </forces>
+    <ensemble>
+      <temperature units='kelvin'>298</temperature>
+    </ensemble>
+    <motion mode='dynamics'>
+      <dynamics mode='nvt'>
+        <thermostat mode='pile_g'>
+          <tau units="femtosecond"> 5.0 </tau>     
+        </thermostat>
+        <timestep units='femtosecond'> 0.5 </timestep>
+      </dynamics>
+    </motion>
+  </system>
+</simulation>
