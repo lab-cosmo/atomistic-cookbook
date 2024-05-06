@@ -268,8 +268,7 @@ def format(session):
 @nox.session
 def clean(session):
     """Remove temporary files"""
-    tracked_files_output = get_example_other_files()
-    for ifile in tracked_files_output:
+    for ifile in get_example_other_files():
         os.remove(ifile)
     flist = glob.glob("examples/*")
     # Remove empty folders
