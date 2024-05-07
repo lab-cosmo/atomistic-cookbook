@@ -75,8 +75,8 @@ def get_example_files():
 
 # We want to mimic
 # git ls-files --other examples
-def get_example_other_files():
-    folder = os.getcwd() + "/examples"
+def get_example_other_files(fd):
+    folder = os.getcwd() + "/" + fd
     # Get the list of ignored files
     # Get the list of all not tracked files
     tracked_files_command = ["git", "ls-files", "--other", folder]
@@ -268,7 +268,9 @@ def format(session):
 @nox.session
 def clean(session):
     """Remove temporary files"""
-    for ifile in get_example_other_files():
+    for ifile in get_example_other_files("examples") + get_example_other_files(
+        "docs/src/examples"
+    ):
         os.remove(ifile)
     flist = glob.glob("examples/*")
     # Remove empty folders
