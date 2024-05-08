@@ -2,6 +2,7 @@ import glob
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 import sys
 
@@ -266,11 +267,15 @@ def format(session):
 
 
 @nox.session
-def clean(session):
-    """Remove temporary files"""
-    for ifile in get_example_other_files("examples") + get_example_other_files(
-        "docs/src/examples"
-    ):
+def clean_build(session):
+    """Remove temporary files and building folders"""
+
+    # remove building folders
+    for i in ["docs/src/examples/", "docs/build"]:
+        if os.path.isdir(i):
+            shutil.rmtree(i)
+    # remove temp files if any
+    for ifile in get_example_other_files("examples") + get_example_other_files("docs/"):
         os.remove(ifile)
     flist = glob.glob("examples/*")
     # Remove empty folders
