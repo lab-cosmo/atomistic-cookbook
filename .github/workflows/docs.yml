@@ -10,39 +10,37 @@ on:
     - cron: '0 8 * * 1' # run every Monday at 8am UTC
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      examplesmatrix: ${{ steps.collectExamples.outputs.examplesjson }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: collectExamples
+        run: |
+          echo examplesjson=$(./developer/get_examples.py) >> $GITHUB_OUTPUT
+
   generate-example:
+    needs: setup
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        example-name: 
-          - lode_linear
-          - roy_gch
-          - sample_selection
-          - gaas_map
-          - cp2k_run_batch
+        ${{ fromJson(needs.setup.outputs.examplesmatrix) }}
 
     steps:
       - uses: actions/checkout@v4
-      - name: setup rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
 
       - name: setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: install tox
-        run: python -m pip install tox
-
-      - name: install cp2k
-        if: matrix.example-name == 'cp2k_run_batch'
-        run: sudo apt-get install -y cp2k
+      - name: install nox
+        run: python -m pip install nox
 
       - name: build example
-        run: tox -e ${{ matrix.example-name }}
+        run: nox -e ${{ matrix.example-name }}
 
       - name: store example as a github artifact
         uses: actions/upload-artifact@v4
@@ -56,18 +54,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: setup rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
+
       - name: setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: install tox
-        run: python -m pip install tox
+      - name: install nox
+        run: python -m pip install nox
 
       - name: load github artifact for each example
         uses: actions/download-artifact@v4
@@ -77,7 +71,7 @@ jobs:
           merge-multiple: true
 
       - name: build documentation
-        run: tox -e build_docs
+        run: nox -e build_docs
 
       - name: store documentation as github artifact to be downloaded by users
         uses: actions/upload-artifact@v4

@@ -1,3 +1,6 @@
+from datetime import datetime
+
+
 # Add any Sphinx extension module names here, as strings.
 extensions = [
     "sphinx.ext.viewcode",
@@ -9,7 +12,11 @@ templates_path = ["_templates"]
 exclude_patterns = ["_build"]
 
 project = "cosmo-software-cookbook"
-copyright = "BSD 3-Clause License, Copyright (c) 2023, COSMO software cookbook team"
+copyright = (
+    "BSD 3-Clause License, "
+    f"Copyright (c) {datetime.now().date().year}, "
+    "COSMO software cookbook team"
+)
 
 htmlhelp_basename = "COSMO software-cookbook"
 html_theme = "furo"
