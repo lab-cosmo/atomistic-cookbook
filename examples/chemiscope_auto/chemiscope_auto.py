@@ -1,8 +1,7 @@
-"""
-Chemiscope Auto
-~~~~~~~~~~~~~~~
-"""
+# %% [markdown]
+# ###  Chemiscope Auto
 
+# %%
 import ase.io
 from mace.calculators import mace_off, mace_mp
 import numpy as np
@@ -11,21 +10,19 @@ import matplotlib.pyplot as plt
 import os
 import chemiscope
 
+# %% [markdown]
+# Load QM9
 
 # %%
-# Load QM9
-# 
-
 from load_atoms import load_dataset
 
 frames = load_dataset("QM9")
 
+# %% [markdown]
+# ### Computation of features
+
 
 # %%
-# Computation of features
-# ~~~~~~~~~~~~~~~~~~~~~~~
-# 
-
 def compute_mace_features(frames, calculator, invariants_only=True):
     descriptors = []
     for frame in tqdm(frames):
@@ -36,9 +33,13 @@ def compute_mace_features(frames, calculator, invariants_only=True):
         descriptors.append(structure_avg)
     return np.array(descriptors)
 
+
+# %%
 def save_descriptors(file_name, descriptors):
     np.save(file_name, descriptors)
 
+
+# %%
 import numpy as np
 
 
@@ -53,19 +54,18 @@ def load_or_compute_descriptors(file_name, frames, calculator, invariants_only=F
     return descriptors
 
 
-# %%
+# %% [markdown]
 # Initialize calculators
-# 
 
-descriptor_opt = {"model": "small", "device": "cpu"}
+# %%
+descriptor_opt = {"model": "small", "device": "cpu", "default_dtype": "float64"}
 calculator_mace_off = mace_off(**descriptor_opt)
 calculator_mace_mp = mace_mp(**descriptor_opt)
 
+# %% [markdown]
+# Load or calculate MACE-OFF and MACE-MP features
 
 # %%
-# Load or calculate MACE-OFF and MACE-MP features
-# 
-
 mace_mp_features_file = "data/descriptors_MACE_MP0_all.npy"
 mace_mp_features = load_or_compute_descriptors(
     mace_mp_features_file, frames, calculator_mace_mp
@@ -76,12 +76,10 @@ mace_off_features = load_or_compute_descriptors(
     mace_off_features_file, frames, calculator_mace_off
 )
 
+# %% [markdown]
+# ### Perform deminsionality reduction technics on the MACE features
 
 # %%
-# Perform deminsionality reduction technics on the MACE features
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 
-
 import time
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA, FastICA
@@ -89,6 +87,8 @@ import umap
 from sklearn.manifold import TSNE
 import numpy as np
 
+
+# %%
 def dimensionality_reduction_analysis(descriptors, method="PCA", use_gpu=False):
     start_time = time.time()
 
@@ -117,6 +117,8 @@ def dimensionality_reduction_analysis(descriptors, method="PCA", use_gpu=False):
 
     return X_reduced, execution_time
 
+
+# %%
 methods = ["PCA", "UMAP", "TSNE", "ICA"]
 use_gpu = [False, False, True, False]
 descriptors = [mace_off_features, mace_mp_features]
@@ -139,12 +141,37 @@ for i, descriptors in enumerate(descriptors):
 plt.tight_layout()
 plt.show()
 
+# %% [markdown]
+# Dimensionality Reduction on the concatenated features
 
 # %%
-# Methods separately
-# ~~~~~~~~~~~~~~~~~~
-# 
+concatenated_features = np.concatenate((mace_off_features, mace_mp_features), axis=1)
 
+# %%
+methods = ["PCA", "UMAP", "TSNE", "ICA"]
+use_gpu = [False, False, True, False]
+
+_fig, axes = plt.subplots(1, len(methods), figsize=(20, 5))
+
+for j, method in enumerate(methods):
+    ax = axes[j]
+    X_reduced, execution_time = dimensionality_reduction_analysis(
+        concatenated_features, method=method, use_gpu=use_gpu[j]
+    )
+    ax.scatter(X_reduced[:, 0], X_reduced[:, 1], alpha=0.3, s=1)
+    ax.set_title(f"{method} ({execution_time:.2f} seconds)")
+    ax.set_xlabel("Component 1")
+    if j == 0:
+        ax.set_ylabel("Component 2")
+
+plt.tight_layout()
+plt.show()
+
+# %% [markdown]
+# ### Methods separately
+
+
+# %%
 def show_plt(
     data, method_name, features_name, x_label="Component 1", y_label="Component 2"
 ):
@@ -155,31 +182,31 @@ def show_plt(
     plt.show()
 
 
-# %%
-# PCA
-# ^^^
-# 
+# %% [markdown]
+# #### PCA
 
+# %%
 from sklearn.decomposition import PCA
 
 
 def apply_pca(descriptors):
     return PCA(n_components=2).fit_transform(descriptors)
 
+
+# %%
 X_pca_mace_off = apply_pca(mace_off_features)
 
 show_plt(X_pca_mace_off, method_name="PCA", features_name="MACE OFF")
 
+# %%
 X_pca_mace_mp = apply_pca(mace_mp_features)
 
 show_plt(X_pca_mace_mp, method_name="PCA", features_name="MACE MP0")
 
+# %% [markdown]
+# #### UMAP
 
 # %%
-# UMAP
-# ^^^^
-# 
-
 import umap
 
 
@@ -193,40 +220,42 @@ def apply_umap(descriptors):
     )
     return reducer.fit_transform(descriptors)
 
+
+# %%
 X_umap_mace_off = apply_umap(mace_off_features)
 
 show_plt(X_umap_mace_off, method_name="UMAP", features_name="MACE OFF")
 
+# %%
 X_umap_mace_mp = apply_umap(mace_off_features)
 
 show_plt(X_umap_mace_mp, method_name="UMAP", features_name="MACE MP0")
 
+# %% [markdown]
+# #### TSNE
 
 # %%
-# TSNE
-# ^^^^
-# 
-
 from sklearn.manifold import TSNE
 
 
 def apply_tsne(descriptors):
     return TSNE(n_components=2).fit_transform(descriptors)
 
+
+# %%
 X_tsne_mace_off = apply_tsne(mace_off_features)
 
 show_plt(X_tsne_mace_off, method_name="TSNE", features_name="MACE OFF")
 
+# %%
 X_tsne_mace_mp = apply_tsne(mace_mp_features)
 
 show_plt(X_tsne_mace_mp, method_name="TSNE", features_name="MACE MP0")
 
+# %% [markdown]
+# #### ICA
 
 # %%
-# ICA
-# ^^^
-# 
-
 from sklearn.decomposition import FastICA
 
 
@@ -234,25 +263,25 @@ def apply_ica(descriptors):
     reducer = FastICA(n_components=2)
     return reducer.fit_transform(descriptors)
 
+
+# %%
 X_ica_mace_off = apply_ica(mace_off_features)
 
 show_plt(X_ica_mace_off, method_name="ICA", features_name="MACE OFF")
 
+# %%
 X_ica_mace_mp = apply_ica(mace_mp_features)
 
 show_plt(X_ica_mace_mp, method_name="ICA", features_name="MACE MP0")
 
+# %% [markdown]
+# ### Chemiscope Visualisation
 
-# %%
-# Chemiscope Visualisation
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-# 
-
-
-# %%
+# %% [markdown]
 # Extracting all properties
-# 
 
+
+# %%
 def extract_properties(frames):
     properties = {prop: [] for prop in frames[0].info.keys()}
     for frame in frames:
@@ -263,6 +292,7 @@ def extract_properties(frames):
 
 properties = extract_properties(frames)
 
+# %%
 EVERY_N = 25
 
 
@@ -280,15 +310,14 @@ def display_chemiscope(X_pca, properties, meta):
     )
 
 
-# %%
+# %% [markdown]
 # MACE OFF
-# 
 
+# %%
 display_chemiscope(X_pca_mace_off, properties, meta={"name": "QM9 MACE OFF features"})
 
+# %% [markdown]
+# MACE MP
 
 # %%
-# MACE MP
-# 
-
 display_chemiscope(X_pca_mace_mp, properties, meta={"name": "QM9 MACE MP features"})
