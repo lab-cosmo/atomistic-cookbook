@@ -3,7 +3,8 @@ import shutil
 import sys
 
 import sphinx_gallery.gen_gallery
-
+import chemiscope
+from chemiscope.sphinx import ChemiscopeScraper
 
 HERE = os.path.realpath(os.path.dirname(__file__))
 
@@ -40,6 +41,7 @@ class PseudoSphinxApp:
             "min_reported_time": 60,
             "copyfile_regex": r".*\.(sh|xyz|cp2k|yml|png)",
             "matplotlib_animations": True,
+             "image_scrapers": ("matplotlib", ChemiscopeScraper()),
         }
 
         self.builder = AttrDict()
@@ -64,7 +66,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     app = PseudoSphinxApp(example=sys.argv[1])
-
+    #chemiscope.sphinx.setup(app)
     sphinx_gallery.gen_gallery.fill_gallery_conf_defaults(app, app.config)
     sphinx_gallery.gen_gallery.update_gallery_conf_builder_inited(app)
     sphinx_gallery.gen_gallery.generate_gallery_rst(app)

@@ -50,6 +50,7 @@ iothers = np.where(structype != "known")[0]
 
 dch_builder = DirectionalConvexHull(low_dim_idx=[0])
 dch_builder.fit(density.reshape(-1, 1), energy)
+print("ae")
 
 # %%
 # We can get the indices of the selection, and compute the distance from
@@ -114,14 +115,12 @@ cs = chemiscope.show(
         "structure": [{"unitCell": True, "supercell": {"0": 2, "1": 2, "2": 2}}],
     },
 )
+cs
 
-
-if chemiscope.jupyter._is_running_in_notebook():
-    from IPython.display import display
-
-    display(cs)
-else:
-    cs.save("roy_ch.json.gz")
+# %%
+#
+# Save chemiscope file 
+cs.save("roy_ch.json.gz")
 
 # %%
 # Generalized Convex Hull
@@ -285,10 +284,11 @@ known polymorphs of ROY are on (or very close) to this hull.
         ],
     },
 )
+cs
 
-if chemiscope.jupyter._is_running_in_notebook():
-    from IPython.display import display
+# %%
+#
+# Also save to a file that can be viewed on chemiscope.org
 
-    display(cs)
-else:
-    cs.save("roy_gch.json.gz")
+
+cs.save("roy_gch.json.gz")

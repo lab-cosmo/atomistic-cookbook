@@ -1,12 +1,19 @@
 from datetime import datetime
-
+from chemiscope.sphinx import ChemiscopeScraper
 
 # Add any Sphinx extension module names here, as strings.
 extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "sphinx_gallery.load_style",
+#    "sphinx_gallery.gen_gallery",
+    "chemiscope.sphinx",
 ]
+
+sphinx_gallery_conf = {
+#    "image_scrapers": ("matplotlib", ChemiscopeScraper()),
+}
+
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build"]

@@ -2,3 +2,4 @@ sphinx
 sphinx-gallery
 sphinx-toggleprompt
 furo
+git+https://github.com/lab-cosmo/chemiscope@sphinx-gallery
