@@ -1,17 +1,23 @@
+import os
 from datetime import datetime
 from chemiscope.sphinx import ChemiscopeScraper
+
+ROOT = os.path.abspath(os.path.join("..", ".."))
 
 # Add any Sphinx extension module names here, as strings.
 extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
-    "sphinx_gallery.load_style",
-#    "sphinx_gallery.gen_gallery",
+    "sphinx_gallery.gen_gallery",
     "chemiscope.sphinx",
 ]
-
+examples_dirs = os.path.join(ROOT, "examples")
 sphinx_gallery_conf = {
-#    "image_scrapers": ("matplotlib", ChemiscopeScraper()),
+    "examples_dirs": examples_dirs,
+    "gallery_dirs": "examples",
+    "filename_pattern": ".*",
+    "within_subsection_order": "FileNameSortKey",
+    "image_scrapers": (ChemiscopeScraper(examples_dirs)),
 }
 
 
