@@ -138,7 +138,7 @@ for name in EXAMPLES:
                 "sphinx",
                 "pillow",
                 "matplotlib",
-                "chemiscope git+https://github.com/lab-cosmo/chemiscope@sphinx-gallery",  # noqa
+                "git+https://github.com/lab-cosmo/chemiscope@sphinx-gallery",
             )
 
         session.run("python", "generate-gallery.py", f"examples/{name}")
