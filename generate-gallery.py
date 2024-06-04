@@ -2,9 +2,10 @@ import os
 import shutil
 import sys
 
+import chemiscope  # noqa: F401
 import sphinx_gallery.gen_gallery
-import chemiscope
 from chemiscope.sphinx import ChemiscopeScraper
+
 
 HERE = os.path.realpath(os.path.dirname(__file__))
 

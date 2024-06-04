@@ -1,6 +1,8 @@
 import os
 from datetime import datetime
+
 from chemiscope.sphinx import ChemiscopeScraper
+
 
 ROOT = os.path.abspath(os.path.join("..", ".."))
 
