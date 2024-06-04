@@ -28,7 +28,8 @@ class PseudoSphinxApp:
         )
         if os.path.exists(gallery_dir):
             shutil.rmtree(gallery_dir)
-        examples_dir = os.path.join(HERE, example)
+        example_dir = os.path.join(HERE, example)
+        examples_dir = os.path.join(HERE, "examples")
 
         # the options here are the minimal set of options to get sphinx-gallery to run
         # feel free to add more if sphinx-gallery uses more options in the future
@@ -38,7 +39,7 @@ class PseudoSphinxApp:
         self.config.default_role = ""
         self.config.sphinx_gallery_conf = {
             "filename_pattern": ".*",
-            "examples_dirs": examples_dir,
+            "examples_dirs": example_dir,
             "gallery_dirs": gallery_dir,
             "min_reported_time": 60,
             "copyfile_regex": r".*\.(sh|xyz|cp2k|yml|png)",
@@ -72,7 +73,6 @@ if __name__ == "__main__":
         sys.exit(1)
 
     app = PseudoSphinxApp(example=sys.argv[1])
-    # chemiscope.sphinx.setup(app)
     sphinx_gallery.gen_gallery.fill_gallery_conf_defaults(app, app.config)
     sphinx_gallery.gen_gallery.update_gallery_conf_builder_inited(app)
     sphinx_gallery.gen_gallery.generate_gallery_rst(app)

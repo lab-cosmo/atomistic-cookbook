@@ -119,7 +119,7 @@ cs
 
 # %%
 #
-# Save chemiscope file 
+# Save chemiscope file
 cs.save("roy_ch.json.gz")
 
 # %%
