@@ -5,7 +5,7 @@ Generalized Convex Hull construction for the polymorphs of ROY
 :Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm/>`_
 
 This notebook analyzes the structures of 264 polymorphs of ROY, from
-`Beran et Al, Chemical Science
+ `Beran et Al, Chemical Science
 (2022) <https://doi.org/10.1039/D1SC06074K>`__, comparing the
 conventional density-energy convex hull with a Generalized Convex Hull
 (GCH) analysis (see `Anelli et al., Phys. Rev. Materials

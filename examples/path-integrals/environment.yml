@@ -5,8 +5,8 @@ dependencies:
   - pip
   - lammps  
   - pip:
-    - ase
+    - ase==3.22.1
+    - chemiscope @ git+https://github.com/lab-cosmo/chemiscope@sphinx-gallery
     - ipi  
-    - chemiscope
     - matplotlib
     - skmatter
