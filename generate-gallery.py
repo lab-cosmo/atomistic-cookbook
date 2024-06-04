@@ -44,7 +44,6 @@ class PseudoSphinxApp:
             "min_reported_time": 60,
             "copyfile_regex": r".*\.(sh|xyz|cp2k|yml|png)",
             "matplotlib_animations": True,
-            "within_subsection_order": "FileNameSortKey",
             "image_scrapers": ("matplotlib", ChemiscopeScraper(examples_dir)),
         }
 
@@ -53,10 +52,7 @@ class PseudoSphinxApp:
         self.builder.outdir = ""
         self.builder.name = os.path.basename(example)
 
-        self.extensions = [
-            "sphinx_gallery.gen_gallery",
-            "chemiscope.sphinx",
-        ]
+        self.extensions = []
 
         self.builder.config = AttrDict()
         self.builder.config.plot_gallery = "True"

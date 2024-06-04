@@ -1,8 +1,6 @@
 import os
 from datetime import datetime
 
-from chemiscope.sphinx import ChemiscopeScraper
-
 
 ROOT = os.path.abspath(os.path.join("..", ".."))
 
@@ -13,15 +11,14 @@ extensions = [
     "sphinx_gallery.gen_gallery",
     "chemiscope.sphinx",
 ]
+
 examples_dirs = os.path.join(ROOT, "examples")
 sphinx_gallery_conf = {
     "examples_dirs": examples_dirs,
     "gallery_dirs": "examples",
     "filename_pattern": ".*",
     "within_subsection_order": "FileNameSortKey",
-    "image_scrapers": (ChemiscopeScraper(examples_dirs)),
 }
-
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build"]
