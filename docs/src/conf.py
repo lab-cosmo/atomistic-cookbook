@@ -1,24 +1,14 @@
-import os
 from datetime import datetime
 
-
-ROOT = os.path.abspath(os.path.join("..", ".."))
 
 # Add any Sphinx extension module names here, as strings.
 extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
-    "sphinx_gallery.gen_gallery",
+    "sphinx_gallery.load_style",
     "chemiscope.sphinx",
 ]
 
-examples_dirs = os.path.join(ROOT, "examples")
-sphinx_gallery_conf = {
-    "examples_dirs": examples_dirs,
-    "gallery_dirs": "examples",
-    "filename_pattern": ".*",
-    "within_subsection_order": "FileNameSortKey",
-}
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build"]

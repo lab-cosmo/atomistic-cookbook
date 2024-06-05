@@ -29,7 +29,6 @@ class PseudoSphinxApp:
         if os.path.exists(gallery_dir):
             shutil.rmtree(gallery_dir)
         example_dir = os.path.join(HERE, example)
-        examples_dir = os.path.join(HERE, "examples")
 
         # the options here are the minimal set of options to get sphinx-gallery to run
         # feel free to add more if sphinx-gallery uses more options in the future
@@ -44,7 +43,8 @@ class PseudoSphinxApp:
             "min_reported_time": 60,
             "copyfile_regex": r".*\.(sh|xyz|cp2k|yml|png)",
             "matplotlib_animations": True,
-            "image_scrapers": ("matplotlib", ChemiscopeScraper(examples_dir)),
+            "within_subsection_order": "FileNameSortKey",
+            "image_scrapers": ("matplotlib", ChemiscopeScraper(example)),
         }
 
         self.builder = AttrDict()
@@ -52,7 +52,9 @@ class PseudoSphinxApp:
         self.builder.outdir = ""
         self.builder.name = os.path.basename(example)
 
-        self.extensions = []
+        self.extensions = [
+            "chemiscope.sphinx",
+        ]
 
         self.builder.config = AttrDict()
         self.builder.config.plot_gallery = "True"
