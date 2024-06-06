@@ -12,9 +12,7 @@ EXAMPLES = os.path.join(ROOT, "examples")
 def get_examples():
     """The current list of examples, determined from the directories on disk"""
     return [
-        os.path.basename(os.path.normpath(file))
-        for file in glob.glob(f"{EXAMPLES}/*")
-        if os.path.isdir(file) and os.path.basename(file) != "_chemiscope_sphinx_data"
+        os.path.basename(os.path.normpath(file)) for file in glob.glob(f"{EXAMPLES}/*")
     ]
 
 
