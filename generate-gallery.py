@@ -44,7 +44,7 @@ class PseudoSphinxApp:
             "copyfile_regex": r".*\.(sh|xyz|cp2k|yml|png)",
             "matplotlib_animations": True,
             "within_subsection_order": "FileNameSortKey",
-            "image_scrapers": ("matplotlib", ChemiscopeScraper(example)),
+            "image_scrapers": ("matplotlib", ChemiscopeScraper(example_dir)),
         }
 
         self.builder = AttrDict()
