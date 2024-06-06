@@ -1,29 +1,33 @@
 # %% [markdown]
 # ###  Chemiscope Auto
 
-# %%
-import ase.io
-from mace.calculators import mace_off, mace_mp
-import numpy as np
-from tqdm.auto import tqdm
-import matplotlib.pyplot as plt
 import os
-import chemiscope
 
-# %% [markdown]
-# Load QM9
+import chemiscope
+import matplotlib.pyplot as plt
+import numpy as np
 
 # %%
 from load_atoms import load_dataset
 
+# %%
+from mace.calculators import mace_mp, mace_off
+from tqdm.auto import tqdm
+
+
+# %% [markdown]
+# Load QM9
+
+
 frames = load_dataset("QM9")
+frames = frames[:25]
 
 # %% [markdown]
 # ### Computation of features
 
 
 # %%
-def compute_mace_features(frames, calculator, invariants_only=True):
+def compute_mace_features(frames, calculator, invariants_only=False):
     descriptors = []
     for frame in tqdm(frames):
         structure_avg = np.mean(
@@ -34,26 +38,6 @@ def compute_mace_features(frames, calculator, invariants_only=True):
     return np.array(descriptors)
 
 
-# %%
-def save_descriptors(file_name, descriptors):
-    np.save(file_name, descriptors)
-
-
-# %%
-import numpy as np
-
-
-def load_or_compute_descriptors(file_name, frames, calculator, invariants_only=False):
-    if os.path.exists(file_name):
-        print(f"Loading descriptors from {file_name}")
-        descriptors = np.load(file_name)
-    else:
-        print(f"Computing descriptors and saving to {file_name}")
-        descriptors = compute_mace_features(frames, calculator, invariants_only)
-        np.save(file_name, descriptors)
-    return descriptors
-
-
 # %% [markdown]
 # Initialize calculators
 
@@ -62,65 +46,105 @@ descriptor_opt = {"model": "small", "device": "cpu", "default_dtype": "float64"}
 calculator_mace_off = mace_off(**descriptor_opt)
 calculator_mace_mp = mace_mp(**descriptor_opt)
 
-# %% [markdown]
-# Load or calculate MACE-OFF and MACE-MP features
 
 # %%
-mace_mp_features_file = "data/descriptors_MACE_MP0_all.npy"
-mace_mp_features = load_or_compute_descriptors(
-    mace_mp_features_file, frames, calculator_mace_mp
-)
+def compute_descriptors(frames, calculator, invariants_only=False):
+    print(f"Computing descriptors")
+    descriptors = compute_mace_features(frames, calculator, invariants_only)
+    return descriptors
 
-mace_off_features_file = "data/descriptors_MACE_OFF_all.npy"
-mace_off_features = load_or_compute_descriptors(
-    mace_off_features_file, frames, calculator_mace_off
-)
 
 # %% [markdown]
-# ### Perform deminsionality reduction technics on the MACE features
+# ### Deminsionality reduction technics on the MACE features
+
+import os
 
 # %%
 import time
+
+import joblib
 import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA, FastICA
-import umap
-from sklearn.manifold import TSNE
 import numpy as np
-
-
-# %%
-def dimensionality_reduction_analysis(descriptors, method="PCA", use_gpu=False):
-    start_time = time.time()
-
-    if method == "PCA":
-        reducer = PCA(n_components=2)
-    elif method == "UMAP":
-        reducer = umap.UMAP(
-            n_components=2,
-            n_neighbors=15,
-            min_dist=0.1,
-            metric="euclidean",
-            target_metric="categorical",
-        )
-    elif method == "TSNE":
-        perplexity = min(30, descriptors.shape[0] - 1)
-        reducer = TSNE(n_components=2, perplexity=perplexity)
-    elif method == "ICA":
-        reducer = FastICA(n_components=2)
-    else:
-        raise ValueError("Invalid method name.")
-
-    X_reduced = reducer.fit_transform(descriptors)
-
-    execution_time = time.time() - start_time
-    print(f"{method} execution time: {execution_time:.2f} seconds")
-
-    return X_reduced, execution_time
+import rascaline
+import umap
+from metatensor import mean_over_samples
+from rascaline.calculators import SoapPowerSpectrum
+from sklearn.decomposition import PCA, FastICA
+from sklearn.manifold import TSNE
 
 
 # %%
 methods = ["PCA", "UMAP", "TSNE", "ICA"]
-use_gpu = [False, False, True, False]
+
+
+# %%
+def dimensionality_reduction_analysis(descriptors, method="PCA", use_gpu=False):
+    if method not in methods:
+        raise ValueError("Invalid method name.")
+
+    start_time = time.time()
+
+    if method == "SOAP":
+        hypers_ps = {
+            "cutoff": 5.0,
+            "max_radial": 6,
+            "max_angular": 6,
+            "atomic_gaussian_width": 0.3,
+            "center_atom_weight": 0.0,
+            "radial_basis": {
+                "Gto": {},
+            },
+            "cutoff_function": {
+                "ShiftedCosine": {"width": 0.5},
+            },
+            "radial_scaling": {
+                "Willatt2018": {"exponent": 7.0, "rate": 1.0, "scale": 2.0}
+            },
+        }
+        calculator = SoapPowerSpectrum(**hypers_ps)
+        reducer = calculator.compute(frames)
+        feat = feat.keys_to_samples(["center_type"])
+        feat = feat.keys_to_properties(["neighbor_1_type", "neighbor_2_type"])
+        X_reduced = mean_over_samples(feat, sample_names=["atom", "center_type"])
+
+    else:
+        if method == "PCA":
+            reducer = PCA(n_components=2)
+
+        elif method == "UMAP":
+            reducer = umap.UMAP(
+                n_components=2,
+                n_neighbors=15,
+                min_dist=0.1,
+                metric="euclidean",
+                target_metric="categorical",
+            )
+
+        elif method == "TSNE":
+            perplexity = min(30, descriptors.shape[0] - 1)
+            reducer = TSNE(n_components=2, perplexity=perplexity)
+
+        elif method == "ICA":
+            reducer = FastICA(n_components=2)
+
+        X_reduced = reducer.fit_transform(descriptors)
+
+    execution_time = time.time() - start_time
+    print(f"{method} execution time: {execution_time:.2f} seconds")
+    return X_reduced, execution_time
+
+
+# %% [markdown]
+# ### Dimensionality Reduction on every 25 structures
+
+# %% [markdown]
+# Calculate MACE-OFF and MACE-MP features
+
+# %%
+mace_mp_features = compute_descriptors(frames, calculator_mace_mp)
+mace_off_features = compute_descriptors(frames, calculator_mace_off)
+
+# %%
 descriptors = [mace_off_features, mace_mp_features]
 
 fig, axes = plt.subplots(2, len(methods), figsize=(15, 8))
@@ -129,10 +153,10 @@ for i, descriptors in enumerate(descriptors):
     for j, method in enumerate(methods):
         ax = axes[i, j]
         X_reduced, execution_time = dimensionality_reduction_analysis(
-            descriptors, method=method, use_gpu=use_gpu[j]
+            descriptors, method=method
         )
         ax.scatter(X_reduced[:, 0], X_reduced[:, 1])
-        ax.set_title(f"{method} ({execution_time:.2f} seconds)")
+        ax.set_title(f"{method} ({execution_time:.3f} seconds)")
         if i == 1:
             ax.set_xlabel("Component 1")
         if j == 0:
@@ -142,27 +166,65 @@ plt.tight_layout()
 plt.show()
 
 # %% [markdown]
-# Dimensionality Reduction on the concatenated features
+# #### Dimensionality Reduction on the concatenated features
 
 # %%
 concatenated_features = np.concatenate((mace_off_features, mace_mp_features), axis=1)
 
 # %%
-methods = ["PCA", "UMAP", "TSNE", "ICA"]
-use_gpu = [False, False, True, False]
-
-_fig, axes = plt.subplots(1, len(methods), figsize=(20, 5))
+fig, axes = plt.subplots(1, len(methods), figsize=(20, 5))
 
 for j, method in enumerate(methods):
     ax = axes[j]
     X_reduced, execution_time = dimensionality_reduction_analysis(
-        concatenated_features, method=method, use_gpu=use_gpu[j]
+        concatenated_features, method=method
     )
     ax.scatter(X_reduced[:, 0], X_reduced[:, 1], alpha=0.3, s=1)
-    ax.set_title(f"{method} ({execution_time:.2f} seconds)")
+    ax.set_title(f"{method} ({execution_time:.3f} seconds)")
     ax.set_xlabel("Component 1")
     if j == 0:
         ax.set_ylabel("Component 2")
+
+plt.tight_layout()
+plt.show()
+
+# %% [markdown]
+# ### Dimensionality Reduction on whole dataset
+
+# %% [markdown]
+# Load MACE-OFF and MACE-MP features
+
+# %%
+mace_mp_features_file = "data/descriptors_MACE_MP0_all.npy"
+mace_mp_features = np.load(mace_mp_features_file)
+
+mace_off_features_file = "data/descriptors_MACE_OFF_all.npy"
+mace_off_features = np.load(mace_off_features_file)
+
+# %%
+descriptors = [mace_off_features, mace_mp_features]
+descriptor_names = ["mace_off", "mace_mp"]
+
+fig, axes = plt.subplots(2, len(methods), figsize=(15, 8))
+
+for i, descriptors in enumerate(descriptors):
+    for j, method in enumerate(methods):
+        ax = axes[i, j]
+
+        print(f"Loading existing reducer and points for {method}...")
+        descriptor = descriptor_names[i]
+        reducer_path = os.path.join("data", f"{method}_{descriptor}_reducer.pkl")
+        points_path = os.path.join("data", f"{method}_{descriptor}_points.npy")
+
+        reducer = joblib.load(reducer_path)
+        X_reduced = np.load(points_path)
+
+        ax.scatter(X_reduced[:, 0], X_reduced[:, 1])
+        ax.set_title(method)
+        if i == 1:
+            ax.set_xlabel("Component 1")
+        if j == 0:
+            ax.set_ylabel("Component 2")
 
 plt.tight_layout()
 plt.show()
@@ -273,6 +335,45 @@ show_plt(X_ica_mace_off, method_name="ICA", features_name="MACE OFF")
 X_ica_mace_mp = apply_ica(mace_mp_features)
 
 show_plt(X_ica_mace_mp, method_name="ICA", features_name="MACE MP0")
+
+# %% [markdown]
+# #### SOAP
+
+# %%
+import rascaline
+from metatensor import mean_over_samples
+from rascaline.calculators import SoapPowerSpectrum
+
+
+hypers_ps = {
+    "cutoff": 5.0,
+    "max_radial": 6,
+    "max_angular": 6,
+    "atomic_gaussian_width": 0.3,
+    "center_atom_weight": 0.0,
+    "radial_basis": {
+        "Gto": {},
+    },
+    "cutoff_function": {
+        "ShiftedCosine": {"width": 0.5},
+    },
+    "radial_scaling": {"Willatt2018": {"exponent": 7.0, "rate": 1.0, "scale": 2.0}},
+}
+
+calculator = SoapPowerSpectrum(**hypers_ps)
+
+# %%
+feat = calculator.compute(frames)
+
+feat = feat.keys_to_samples(["center_type"])
+feat = feat.keys_to_properties(["neighbor_1_type", "neighbor_2_type"])
+
+feat = mean_over_samples(feat, sample_names=["atom", "center_type"])
+
+Xfeat = feat.block(0).values
+
+# %%
+
 
 # %% [markdown]
 # ### Chemiscope Visualisation
