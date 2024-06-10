@@ -9,7 +9,6 @@ extensions = [
     "chemiscope.sphinx",
 ]
 
-
 templates_path = ["_templates"]
 exclude_patterns = ["_build"]
 

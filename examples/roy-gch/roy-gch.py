@@ -49,7 +49,6 @@ iothers = np.where(structype != "known")[0]
 
 dch_builder = DirectionalConvexHull(low_dim_idx=[0])
 dch_builder.fit(density.reshape(-1, 1), energy)
-print("ae")
 
 # %%
 # We can get the indices of the selection, and compute the distance from
