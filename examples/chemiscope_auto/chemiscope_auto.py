@@ -8,16 +8,14 @@ and ICA. It calculates features like MACE-OFF, MACE-MP, and SOAP for the
 molecular structures, then applies dimensionality reduction methods to explore
 their intrinsic structures.
 
-First, we import all the necessary packages:
+First, import the necessary packages:
 """
 
 # %%
 import os
 import time
-from itertools import isli
 
 import chemiscope
-import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 import umap
@@ -30,37 +28,43 @@ from sklearn.manifold import TSNE
 from tqdm.auto import tqdm
 
 
-# %% [markdown]
-# Load QM9
-
 # %%
+# Load `QM9 <https://jla-gardner.github.io/load-atoms/index.html>`_ dataset and
+# select the first 20 structures.
+
 frames = load_dataset("QM9")
-# frames = frames[:20]
-
-# %% [markdown]
-# ### Deminsionality reduction technics
+frames = frames[:20]
 
 # %%
+# Define the dimensionality reduction techniques to be used.
+
 methods = ["PCA", "UMAP", "TSNE", "ICA"]
 
-
 # %%
+# Let's define a function to perform dimensionality reduction using specified methods.
+# It takes as input a set of descriptors and the name of the dimensionality
+# reduction method to use. It returns the reduced data and the execution time
+# for the reduction process.
+
+
 def dimensionality_reduction_analysis(descriptors, method="PCA"):
     if method not in methods:
         raise ValueError("Invalid method name.")
 
+    # Record the start time for measuring execution duration
     start_time = time.time()
 
+    # Initialize the reducer based on the specified method
     if method == "PCA":
         reducer = PCA(n_components=2)
 
     elif method == "UMAP":
         reducer = umap.UMAP(
-            n_components=2,
-            n_neighbors=15,
-            min_dist=0.1,
-            metric="euclidean",
-            target_metric="categorical",
+            n_components=2,  # reduce to 2 dimensions
+            n_neighbors=15,  # number of neighbors to consider
+            min_dist=0.1,  # minimum distance between points
+            metric="euclidean",  # distance metric
+            target_metric="categorical",  # metric for the target space
         )
 
     elif method == "TSNE":
@@ -70,47 +74,37 @@ def dimensionality_reduction_analysis(descriptors, method="PCA"):
     elif method == "ICA":
         reducer = FastICA(n_components=2)
 
+    # Apply the dimensionality reduction to the descriptors
     X_reduced = reducer.fit_transform(descriptors)
 
+    # Calculate the execution time
     execution_time = time.time() - start_time
     print(f"{method} execution time: {execution_time:.2f} seconds")
+
     return X_reduced, execution_time
 
 
-# %% [markdown]
-# ### Dimensionality Reduction on every 25 structures
-
-# %% [markdown]
-# #### Computation of features
-
-# %% [markdown]
-# Initialize MACE calculators
+######################################################################
+# Compute structural descriptors
+# ------------------------------
+# This section calculates features that describe the structure of molecules
+# in the frames data.
 
 # %%
+# At first, initialise the calculatorsf for MACE-OFF and MACE-MP.
+
 descriptor_opt = {"model": "small", "device": "cpu", "default_dtype": "float64"}
 calculator_mace_off = mace_off(**descriptor_opt)
 calculator_mace_mp = mace_mp(**descriptor_opt)
 
-# %% [markdown]
-# Initialize SOAP calculator
-
 # %%
-hypers = {
-    "cutoff": 4,
-    "max_radial": 6,
-    "max_angular": 4,
-    "atomic_gaussian_width": 0.7,
-    "cutoff_function": {"ShiftedCosine": {"width": 0.5}},
-    "radial_basis": {"Gto": {"accuracy": 1e-6}},
-    "center_atom_weight": 1.0,
-}
-calculator_soap = SoapPowerSpectrum(**hypers)
-
-# %% [markdown]
-# Calculate MACE-OFF and MACE-MP features
+# Here we define a function to compute MACE features.
+# This function takes a list of frames (molecules) and a MACE calculator as input.
+# It iterates through each frame, calculates the MACE descriptors, and then computes
+# the average descriptor value across all atoms in the frame. Finally, it returns
+# these average descriptors for all frames in a numpy array.
 
 
-# %%
 def compute_mace_features(frames, calculator, invariants_only=False):
     descriptors = []
     for frame in tqdm(frames):
@@ -123,68 +117,113 @@ def compute_mace_features(frames, calculator, invariants_only=False):
 
 
 # %%
+# Compute MACE MP and MACE OFF descriptors.
+
 mace_mp_features = compute_mace_features(frames, calculator_mace_mp)
 mace_off_features = compute_mace_features(frames, calculator_mace_off)
 
-# %% [markdown]
-# Calculate SOAP features
+# %%
+# Here we set up a SOAP calculator to compute another type of structural
+# descriptor called SOAP features. We define a dictionary containing
+# hyperparameters for the SOAP calculator for evaluating rascaline features.
 
+hypers = {
+    "cutoff": 4,
+    "max_radial": 6,
+    "max_angular": 4,
+    "atomic_gaussian_width": 0.7,
+    "cutoff_function": {"ShiftedCosine": {"width": 0.5}},
+    "radial_basis": {"Gto": {"accuracy": 1e-6}},
+    "center_atom_weight": 1.0,
+}
+calculator_soap = SoapPowerSpectrum(**hypers)
 
 # %%
+# Let's use a function to compute SOAP features for the given frames.
+
+
 def compute_soap_features(frames, calculator):
     reducer = calculator.compute(frames)
-    feat = reducer.keys_to_samples(["center_type"])
-    feat = feat.keys_to_properties(["neighbor_1_type", "neighbor_2_type"])
-    X_reduced = mean_over_samples(feat, sample_names=["atom", "center_type"])
-    return X_reduced.block(0).values
+
+    # Extract SOAP features at the atom level
+    atom_soap_single_block = reducer.keys_to_samples(["center_type"])
+
+    # Group them by atom and its surrounding neighbors
+    atom_soap_grouped = atom_soap_single_block.keys_to_properties(
+        ["neighbor_1_type", "neighbor_2_type"]
+    )
+
+    # Aggregate over frames and atom types
+    aggregated_features = mean_over_samples(
+        atom_soap_grouped, sample_names=["atom", "center_type"]
+    )
+
+    # Extract the values from the resulting tensor block
+    return aggregated_features.block(0).values
 
 
 # %%
+# Compute SOAP descriptors.
+
 soap_features = compute_soap_features(frames, calculator_soap)
 
-# %% [markdown]
-# ### Permorm the dimensionality reduction
-
 # %%
+# Dimensionality Reduction and Visualization of Descriptors
+# ---------------------------------------------------------
+# In this section we perform dimensionality reduction on the computed descriptors
+# (MACE-OFF, MACE-MP, and SOAP) and visualize the results.
+
+
 descriptors = [mace_off_features, mace_mp_features, soap_features]
 descriptor_names = ["MACE OFF", "MACE MP", "SOAP"]
 
 # %%
+# Create a grid of subplots with the results for each descriptor and method.
+
 fig, axes = plt.subplots(len(descriptors), len(methods), figsize=(15, 8))
 
-for i, descriptors in enumerate(descriptors):
+for i, descriptor in enumerate(descriptors):
     descriptor_name = descriptor_names[i]
     print(descriptor_name)
 
     for j, method in enumerate(methods):
         ax = axes[i, j]
         X_reduced, execution_time = dimensionality_reduction_analysis(
-            descriptors, method=method
+            descriptor, method
         )
 
         ax.scatter(X_reduced[:, 0], X_reduced[:, 1])
         ax.set_title(f"{method} ({execution_time:.3f} seconds)")
-        if i == 2:  # Last row
+        if i == len(descriptors) - 1:  # Last row
             ax.set_xlabel("Component 1")
-        if j == 0 and i == 1:  # First column
-            ax.set_ylabel(f"Component 2\n{descriptor_name}")
-        elif j == 0:
-            ax.set_ylabel(descriptor_name)
+        if j == 0:
+            if i == 1:
+                ax.set_ylabel(f"Component 2\n{descriptor_name}")
+            else:
+                ax.set_ylabel(descriptor_name)
 
     print("")
 
 plt.tight_layout()
 plt.show()
 
-# %% [markdown]
-# #### Dimensionality reduction on the concatenated features
-
 # %%
+# Dimensionality Reduction on Combined Features
+# ---------------------------------------------
+# This section explores dimensionality reduction after combining all the
+# previously computed features into a single dataset. This combined dataset might
+# capture a broader representation of the data, and dimensionality reduction can
+# help visualize potential relationships between data points in a lower-dimensional
+# space.
+
 concatenated_features = np.concatenate(
     (mace_off_features, mace_mp_features, soap_features), axis=1
 )
 
 # %%
+# Let's also create a subplot to visualize the dimensionality reduction
+# results.
+
 fig, axes = plt.subplots(1, len(methods), figsize=(20, 5))
 
 for j, method in enumerate(methods):
@@ -201,63 +240,45 @@ for j, method in enumerate(methods):
 plt.tight_layout()
 plt.show()
 
-# %% [markdown]
-# ### Dimensionality Reduction on whole dataset
-
-# %% [markdown]
-# Load precomputed descriptors
-
 # %%
-mace_mp_features_file = os.path.join("data", "descriptors_MACE_MP0_all.npy")
-mace_mp_features = np.load(mace_mp_features_file)
+# Visualization of Precomputed Descriptors
+# ----------------------------------------
+# In this section we visualise the precomputed dimensionality reduction results
+# for the whole dataset.
 
-mace_off_features_file = os.path.join("data", "descriptors_MACE_OFF_all.npy")
-mace_off_features = np.load(mace_off_features_file)
-
-soap_features_file = os.path.join("data", "descriptors_SOAP_all.npy")
-soap_features = np.load(soap_features_file)
-
-# %%
-descriptors = [mace_off_features, mace_mp_features, soap_features]
 descriptor_names = ["mace_off", "mace_mp", "soap"]
 
 fig, axes = plt.subplots(len(descriptors), len(methods), figsize=(15, 8))
 
-for i, descriptors in enumerate(descriptors):
+for i, descriptor_name in enumerate(descriptor_names):
     for j, method in enumerate(methods):
         ax = axes[i, j]
 
-        print(f"Loading existing reducer and points for {method}...")
-        descriptor = descriptor_names[i]
-        reducer_path = os.path.join("data", f"{method}_{descriptor}_reducer.pkl")
-        points_path = os.path.join("data", f"{method}_{descriptor}_points.npy")
-
-        reducer = joblib.load(reducer_path)
+        # Load precomputed data points for this descriptor and method
+        print(f"Loading precomputed visualisation points for {method}...")
+        points_path = os.path.join("data", f"{method}_{descriptor_name}_points.npy")
         X_reduced = np.load(points_path)
 
+        # Scatter plot
         ax.scatter(X_reduced[:, 0], X_reduced[:, 1], alpha=0.3, s=1)
         ax.set_title(method)
-        if i == 1:
+        if i == len(descriptors) - 1:  # Last row
             ax.set_xlabel("Component 1")
         if j == 0:
             ax.set_ylabel("Component 2")
 
 plt.tight_layout()
 plt.show()
-
-######################################################################
+# %%
 # Chemiscope visualization
 # ------------------------
+# Finally, we use Chemiscope, a visualization tool for exploring
+# relationships between molecular structures and their properties. We will
+# extract relevant properties from the data and then use
+# Chemiscope to create an interactive structure-property map.
 #
-# Visualizes the structure-property map using a chemiscope widget (and
-# generates a .json file that can be viewed on
-# `chemiscope.org <https://chemiscope.org>`__).
-#
-
-# %% [markdown]
-# Extracting all properties
-
-# %%
+# Le's define a function to extracts properties from the frames for visualization
+# with chemiscope.
 
 
 def get_properties(frames):
@@ -265,7 +286,6 @@ def get_properties(frames):
 
     for frame in frames:
         for prop, value in frame.info.items():
-            # if prop in ['index', 'A', 'B', 'C', 'mu', 'alpha', 'homo']:
             if prop != "frequencies":
                 structure_entry = properties_structure.setdefault(
                     prop, {"target": "structure", "values": []}
@@ -276,171 +296,11 @@ def get_properties(frames):
 
 
 # %%
+# Extract properties
+
 properties = get_properties(frames)
 
 # %%
-chemiscope.show(frames, properties, meta={"name": "QM9 MACE OFF features"})
-
-# %% [markdown]
-# ### Methods separately
-
-
-# %%
-
-
-def show_plt(data, method_name, features_name):
-    plt.scatter(data[:, 0], data[:, 1], alpha=0.1, s=1)
-    plt.xlabel("Component 1")
-    plt.ylabel("Component 2")
-    plt.title(f"{method_name} of {features_name} Features")
-    plt.show()
-
-
-# %% [markdown]
-# #### PCA
-
-# %%
-from sklearn.decomposition import PCA
-
-
-def apply_pca(descriptors):
-    return PCA(n_components=2).fit_transform(descriptors)
-
-
-# %%
-X_pca_mace_off = apply_pca(mace_off_features)
-
-show_plt(X_pca_mace_off, method_name="PCA", features_name="MACE OFF")
-
-# %%
-X_pca_mace_mp = apply_pca(mace_mp_features)
-
-show_plt(X_pca_mace_mp, method_name="PCA", features_name="MACE MP0")
-
-# %% [markdown]
-# #### UMAP
-
-# %%
-import umap
-
-
-def apply_umap(descriptors):
-    reducer = umap.UMAP(
-        n_components=2,
-        n_neighbors=15,
-        min_dist=0.1,
-        metric="euclidean",
-        target_metric="categorical",
-    )
-    return reducer.fit_transform(descriptors)
-
-
-# %%
-X_umap_mace_off = apply_umap(mace_off_features)
-
-show_plt(X_umap_mace_off, method_name="UMAP", features_name="MACE OFF")
-
-# %%
-X_umap_mace_mp = apply_umap(mace_off_features)
-
-show_plt(X_umap_mace_mp, method_name="UMAP", features_name="MACE MP0")
-
-# %% [markdown]
-# #### TSNE
-
-# %%
-from sklearn.manifold import TSNE
-
-
-def apply_tsne(descriptors):
-    return TSNE(n_components=2).fit_transform(descriptors)
-
-
-# %%
-X_tsne_mace_off = apply_tsne(mace_off_features)
-
-show_plt(X_tsne_mace_off, method_name="TSNE", features_name="MACE OFF")
-
-# %%
-X_tsne_mace_mp = apply_tsne(mace_mp_features)
-
-show_plt(X_tsne_mace_mp, method_name="TSNE", features_name="MACE MP0")
-
-# %% [markdown]
-# #### ICA
-
-# %%
-from sklearn.decomposition import FastICA
-
-
-def apply_ica(descriptors):
-    reducer = FastICA(n_components=2)
-    return reducer.fit_transform(descriptors)
-
-
-# %%
-X_ica_mace_off = apply_ica(mace_off_features)
-
-show_plt(X_ica_mace_off, method_name="ICA", features_name="MACE OFF")
-
-# %%
-X_ica_mace_mp = apply_ica(mace_mp_features)
-
-show_plt(X_ica_mace_mp, method_name="ICA", features_name="MACE MP0")
-
-# %% [markdown]
-# #### SOAP
-
-
-# %%
-def batched(iterable, n):
-    "Batch data into tuples of length n. The last batch may be shorter."
-    if n < 1:
-        raise ValueError("n must be at least one")
-    it = iter(iterable)
-    while batch := tuple(islice(it, n)):
-        yield batch
-
-
-# %%
-hypers_ps = {
-    "cutoff": 5.0,
-    "max_radial": 6,
-    "max_angular": 6,
-    "atomic_gaussian_width": 0.3,
-    "center_atom_weight": 0.0,
-    "radial_basis": {
-        "Gto": {},
-    },
-    "cutoff_function": {
-        "ShiftedCosine": {"width": 0.5},
-    },
-    "radial_scaling": {"Willatt2018": {"exponent": 7.0, "rate": 1.0, "scale": 2.0}},
-}
-
-calculator = SoapPowerSpectrum(**hypers_ps)
-
-# %%
-for batch in batched(frames, 100):
-    feat = calculator.compute(batch)
-
-# %%
-# feat = calculator.compute(frames)
-
-# %%
-feat = feat.keys_to_samples(["center_type"])
-feat = feat.keys_to_properties(["neighbor_1_type", "neighbor_2_type"])
-
-feat = mean_over_samples(feat, sample_names=["atom", "center_type"])
-
-Xfeat = feat.block(0).values
-
-# %%
-import numpy as np
-
-
-# Assuming `calculator` is your SoapPowerSpectrum instance
-# and `Xfeat` is your descriptor array
-
-# Save the descriptors (features)
-# np.save('data/descriptors_SOAP_all.npy', Xfeat)
+# Load the interactive chemisope widget
+cs = chemiscope.show(frames, properties, meta={"name": "QM9 MACE OFF features"})
+cs
