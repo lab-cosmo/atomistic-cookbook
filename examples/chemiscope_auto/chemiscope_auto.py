@@ -33,7 +33,7 @@ from tqdm.auto import tqdm
 # select the first 20 structures.
 
 frames = load_dataset("QM9")
-frames = frames[:20]
+frames20 = frames[:20]
 
 # %%
 # Define the dimensionality reduction techniques to be used.
@@ -119,8 +119,8 @@ def compute_mace_features(frames, calculator, invariants_only=False):
 # %%
 # Compute MACE MP and MACE OFF descriptors.
 
-mace_mp_features = compute_mace_features(frames, calculator_mace_mp)
-mace_off_features = compute_mace_features(frames, calculator_mace_off)
+mace_mp_features = compute_mace_features(frames20, calculator_mace_mp)
+mace_off_features = compute_mace_features(frames20, calculator_mace_off)
 
 # %%
 # Here we set up a SOAP calculator to compute another type of structural
@@ -165,7 +165,7 @@ def compute_soap_features(frames, calculator):
 # %%
 # Compute SOAP descriptors.
 
-soap_features = compute_soap_features(frames, calculator_soap)
+soap_features = compute_soap_features(frames20, calculator_soap)
 
 # %%
 # Dimensionality Reduction and Visualization of Descriptors
@@ -216,9 +216,7 @@ plt.show()
 # help visualize potential relationships between data points in a lower-dimensional
 # space.
 
-concatenated_features = np.concatenate(
-    (mace_off_features, mace_mp_features, soap_features), axis=1
-)
+concatenated_features = np.concatenate((mace_off_features, mace_mp_features), axis=1)
 
 # %%
 # Let's also create a subplot to visualize the dimensionality reduction
@@ -245,19 +243,26 @@ plt.show()
 # ----------------------------------------
 # In this section we visualise the precomputed dimensionality reduction results
 # for the whole dataset.
+# Let's start with the MACE OFF and MACE MP.
 
-descriptor_names = ["mace_off", "mace_mp", "soap"]
+reduced_points = {}
 
-fig, axes = plt.subplots(len(descriptors), len(methods), figsize=(15, 8))
+descriptor_names = ["mace_off", "mace_mp"]
+
+fig, axes = plt.subplots(len(descriptor_names), len(methods), figsize=(15, 8))
 
 for i, descriptor_name in enumerate(descriptor_names):
     for j, method in enumerate(methods):
         ax = axes[i, j]
 
         # Load precomputed data points for this descriptor and method
-        print(f"Loading precomputed visualisation points for {method}...")
-        points_path = os.path.join("data", f"{method}_{descriptor_name}_points.npy")
+        print(f"Loading precomputed reduced data for {method}...")
+        name = f"{method}_{descriptor_name}"
+        points_path = os.path.join("data", f"{name}_points.npy")
         X_reduced = np.load(points_path)
+
+        # Save to the object to use later
+        reduced_points[name] = X_reduced
 
         # Scatter plot
         ax.scatter(X_reduced[:, 0], X_reduced[:, 1], alpha=0.3, s=1)
@@ -269,6 +274,7 @@ for i, descriptor_name in enumerate(descriptor_names):
 
 plt.tight_layout()
 plt.show()
+
 # %%
 # Chemiscope visualization
 # ------------------------
@@ -277,30 +283,37 @@ plt.show()
 # extract relevant properties from the data and then use
 # Chemiscope to create an interactive structure-property map.
 #
-# Le's define a function to extracts properties from the frames for visualization
-# with chemiscope.
-
-
-def get_properties(frames):
-    properties_structure = {}
-
-    for frame in frames:
-        for prop, value in frame.info.items():
-            if prop != "frequencies":
-                structure_entry = properties_structure.setdefault(
-                    prop, {"target": "structure", "values": []}
-                )
-                structure_entry["values"].append(value)
-
-    return properties_structure
-
+# Let's use the 10% of the dataset to visulise it.
+_train, test = frames.random_split([0.9, 0.1])
 
 # %%
-# Extract properties
+# Extract properties except "frequencies".
 
-properties = get_properties(frames)
+props_keys = test[0].info.keys()
+properties = chemiscope.extract_properties(
+    test, only={key for key in props_keys if key != "frequencies"}
+)
 
 # %%
-# Load the interactive chemisope widget
-cs = chemiscope.show(frames, properties, meta={"name": "QM9 MACE OFF features"})
+# Load the interactive chemiscope widget.
+cs = chemiscope.show(test, properties, meta={"name": "QM9 properties"})
+cs
+
+# %%
+# Visualize all reduced data using chemiscope.
+
+# Prepare properties dictionary for chemiscope visualization
+props = {}
+for prop, value in reduced_points.items():
+    props[f"{prop} 1"] = value[:, 0].tolist()
+    props[f"{prop} 2"] = value[:, 1].tolist()
+
+# %%
+# Create a chemiscope widget for MACE OFF and MACE MP reduced data.
+
+cs = chemiscope.show(
+    frames=frames,
+    properties=props,
+    meta={"name": "QM9 features"},
+)
 cs
