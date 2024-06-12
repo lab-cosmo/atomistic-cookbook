@@ -5,8 +5,8 @@ dependencies:
   - pip
   - rust >=1.65
   - pip:
-    - ase
-    - chemiscope
+    - ase==3.22.1
+    - chemiscope @ git+https://github.com/lab-cosmo/chemiscope@sphinx-gallery
     - matplotlib
     - rascaline @ git+https://github.com/Luthaf/rascaline@5c2a79838bda0a52d0fde2fbe65941f4792c4cae
     - skmatter

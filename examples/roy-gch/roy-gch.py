@@ -5,9 +5,8 @@ Generalized Convex Hull construction for the polymorphs of ROY
 :Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm/>`_
 
 This notebook analyzes the structures of 264 polymorphs of ROY, from
-`Beran et Al, Chemical Science
-(2022) <https://doi.org/10.1039/D1SC06074K>`__, comparing the
-conventional density-energy convex hull with a Generalized Convex Hull
+`Beran et Al, Chemical Science (2022) <https://doi.org/10.1039/D1SC06074K>`__,
+comparing the conventional density-energy convex hull with a Generalized Convex Hull
 (GCH) analysis (see `Anelli et al., Phys. Rev. Materials
 (2018) <https://doi.org/10.1103/PhysRevMaterials.2.103804>`__).
 It uses features computed with `rascaline <https://github.com/lab-cosmo/rascaline>`__
@@ -114,14 +113,12 @@ cs = chemiscope.show(
         "structure": [{"unitCell": True, "supercell": {"0": 2, "1": 2, "2": 2}}],
     },
 )
+cs
 
-
-if chemiscope.jupyter._is_running_in_notebook():
-    from IPython.display import display
-
-    display(cs)
-else:
-    cs.save("roy_ch.json.gz")
+# %%
+#
+# Save chemiscope file
+cs.save("roy_ch.json.gz")
 
 # %%
 # Generalized Convex Hull
@@ -285,10 +282,11 @@ known polymorphs of ROY are on (or very close) to this hull.
         ],
     },
 )
+cs
 
-if chemiscope.jupyter._is_running_in_notebook():
-    from IPython.display import display
+# %%
+#
+# Also save to a file that can be viewed on chemiscope.org
 
-    display(cs)
-else:
-    cs.save("roy_gch.json.gz")
+
+cs.save("roy_gch.json.gz")

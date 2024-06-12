@@ -4,5 +4,5 @@ dependencies:
   - python=3.11
   - pip
   - pip:
-    - ase
+    - ase==3.22.1
     - matplotlib
