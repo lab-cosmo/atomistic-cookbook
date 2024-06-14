@@ -210,9 +210,6 @@ print("Structure descriptor shape after selection (CUR)", struct_soap_cur.shape)
 # descriptors. The resulting PC coordinates can be used to visualize the the
 # data alongside their structures in a chemiscope widget.
 #
-# Note: chemiscope widgets are not currently integrated into our sphinx gallery:
-# coming soon.
-
 
 # Generate a structure PCA
 struct_soap_pca = PCA(n_components=2).fit_transform(struct_soap.block(0).values)
@@ -246,7 +243,6 @@ fig.show()
 # Creates a chemiscope viewer
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# Interactive viewer (only works in notebooks)
 
 # Selected level
 selection_levels = []
@@ -276,9 +272,6 @@ properties.update(
     }
 )
 
-
-# Display with chemiscope. This currently does not work - as raised in issue #8
-# https://github.com/lab-cosmo/software-cookbook/issues/8
 widget = chemiscope.show(
     frames,
     properties=properties,
@@ -293,14 +286,10 @@ widget = chemiscope.show(
         "structure": [{"unitCell": True}],
     },
 )
+widget.save("sample-selection.json.gz")
 
-if chemiscope.jupyter._is_running_in_notebook():
-    from IPython.display import display
-
-    display(widget)
-else:
-    widget.save("sample-selection.json.gz")
-
+# display, if in notebook or sphinx
+widget
 
 # %%
 # Perform feature selection

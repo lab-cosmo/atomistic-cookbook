@@ -51,7 +51,9 @@ class PseudoSphinxApp:
         self.builder.outdir = ""
         self.builder.name = os.path.basename(example)
 
-        self.extensions = ["chemiscope.sphinx"]
+        self.extensions = [
+            "chemiscope.sphinx",
+        ]
 
         self.builder.config = AttrDict()
         self.builder.config.plot_gallery = "True"
@@ -68,7 +70,6 @@ if __name__ == "__main__":
         sys.exit(1)
 
     app = PseudoSphinxApp(example=sys.argv[1])
-
     sphinx_gallery.gen_gallery.fill_gallery_conf_defaults(app, app.config)
     sphinx_gallery.gen_gallery.update_gallery_conf_builder_inited(app)
     sphinx_gallery.gen_gallery.generate_gallery_rst(app)
