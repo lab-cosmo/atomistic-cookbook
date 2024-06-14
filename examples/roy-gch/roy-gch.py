@@ -89,9 +89,7 @@ print(f"Mean hull energy for 'other' structures {dch_dist[iothers].mean()} kJ/mo
 # Interactive visualization
 # ^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# You can also visualize the hull with ``chemiscope``.
-# This runs only in a notebook, and
-# requires having the ``chemiscope`` package installed.
+# You can also visualize the hull with ``chemiscope`` in a juptyer notebook.
 #
 
 cs = chemiscope.show(
@@ -117,7 +115,7 @@ cs
 
 # %%
 #
-# Save chemiscope file
+# Save chemiscope file in a format that can be shared and viewed on `chemiscope.org`
 cs.save("roy_ch.json.gz")
 
 # %%
@@ -225,8 +223,7 @@ print(f"Mean hull energy for 'other' structures {dch_dist[iothers].mean()} kJ/mo
 
 
 # %%
-# Visualize in ``chemiscope``. This runs only in a notebook, and
-# requires having the ``chemiscope`` package installed.
+# Visualize in a ``chemiscope`` widget
 
 for i, f in enumerate(structures):
     for j in range(len(pca_features[i])):
@@ -234,7 +231,7 @@ for i, f in enumerate(structures):
 structure_properties = chemiscope.extract_properties(structures)
 structure_properties.update({"per_atom_energy": energy, "hull_energy": dch_dist})
 
-# saves a chemiscope file for visualization
+# You can save a chemiscope file to disk (for viewing on chemiscope.org)
 
 chemiscope.write_input(
     "roy_gch.json.gz",
@@ -286,6 +283,6 @@ known polymorphs of ROY are on (or very close) to this hull.
 
 # %%
 #
-# open an interactive viewer
+# ... and also load one as an interactive viewer
 
 chemiscope.show_input("roy_gch.json.gz")
