@@ -246,10 +246,6 @@ Phys. Rev. Materials 5(6), 063804 (2021).
     },
 )
 
-# shows chemiscope if run in a jupyter environment
-if chemiscope.jupyter._is_running_in_notebook():
-    from IPython.display import display
+cs.save("gaas_map.chemiscope.json.gz")
 
-    display(cs)
-else:
-    cs.save("gaas_map.chemiscope.json.gz")
+cs # display if in a notebook

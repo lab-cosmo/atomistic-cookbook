@@ -234,9 +234,10 @@ for i, f in enumerate(structures):
 structure_properties = chemiscope.extract_properties(structures)
 structure_properties.update({"per_atom_energy": energy, "hull_energy": dch_dist})
 
-# shows chemiscope if not run in terminal
+# saves a chemiscope file for visualization
 
-cs = chemiscope.show(
+chemiscope.write_input(
+    "roy_gch.json.gz",    
     frames=structures,
     properties=structure_properties,
     meta={
@@ -282,11 +283,9 @@ known polymorphs of ROY are on (or very close) to this hull.
         ],
     },
 )
-cs
 
 # %%
 #
-# Also save to a file that can be viewed on chemiscope.org
+# open an interactive viewer
 
-
-cs.save("roy_gch.json.gz")
+chemiscope.show_input("roy_gch.json.gz")
