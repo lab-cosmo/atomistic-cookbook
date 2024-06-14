@@ -2,3 +2,4 @@ sphinx
 sphinx-gallery
 sphinx-toggleprompt
 furo
+chemiscope>=0.7
