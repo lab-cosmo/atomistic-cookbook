@@ -237,7 +237,7 @@ structure_properties.update({"per_atom_energy": energy, "hull_energy": dch_dist}
 # saves a chemiscope file for visualization
 
 chemiscope.write_input(
-    "roy_gch.json.gz",    
+    "roy_gch.json.gz",
     frames=structures,
     properties=structure_properties,
     meta={

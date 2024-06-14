@@ -248,4 +248,4 @@ Phys. Rev. Materials 5(6), 063804 (2021).
 
 cs.save("gaas_map.chemiscope.json.gz")
 
-cs # display if in a notebook
+cs  # display if in a notebook
