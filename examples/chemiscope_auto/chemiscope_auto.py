@@ -79,7 +79,7 @@ def dimensionality_reduction_analysis(descriptors, method="PCA"):
 
     # Calculate the execution time
     execution_time = time.time() - start_time
-    print(f"{method} execution time: {execution_time:.2f} seconds")
+    print(f"{method} execution time: {execution_time:.3f} seconds")
 
     return X_reduced, execution_time
 
@@ -105,7 +105,7 @@ calculator_mace_mp = mace_mp(**descriptor_opt)
 # these average descriptors for all frames in a numpy array.
 
 
-def compute_mace_features(frames, calculator, invariants_only=False):
+def compute_mace_features(frames, calculator, invariants_only=True):
     descriptors = []
     for frame in tqdm(frames):
         structure_avg = np.mean(
@@ -170,8 +170,8 @@ soap_features = compute_soap_features(frames20, calculator_soap)
 # %%
 # Dimensionality Reduction and Visualization of Descriptors
 # ---------------------------------------------------------
-# In this section we perform dimensionality reduction on the computed descriptors
-# (MACE-OFF, MACE-MP, and SOAP) and visualize the results.
+# In this section we perform dimensionality reduction on the computed
+# descriptors (MACE-OFF, MACE-MP, and SOAP) and visualize the results.
 
 
 descriptors = [mace_off_features, mace_mp_features, soap_features]
@@ -184,7 +184,7 @@ fig, axes = plt.subplots(len(descriptors), len(methods), figsize=(15, 8))
 
 for i, descriptor in enumerate(descriptors):
     descriptor_name = descriptor_names[i]
-    print(descriptor_name)
+    print("\n" + descriptor_name)
 
     for j, method in enumerate(methods):
         ax = axes[i, j]
@@ -202,8 +202,6 @@ for i, descriptor in enumerate(descriptors):
             else:
                 ax.set_ylabel(descriptor_name)
 
-    print("")
-
 plt.tight_layout()
 plt.show()
 
@@ -211,10 +209,10 @@ plt.show()
 # Dimensionality Reduction on Combined Features
 # ---------------------------------------------
 # This section explores dimensionality reduction after combining all the
-# previously computed features into a single dataset. This combined dataset might
-# capture a broader representation of the data, and dimensionality reduction can
-# help visualize potential relationships between data points in a lower-dimensional
-# space.
+# previously computed features (MACE OFF and MACE MP) into a single dataset.
+# This combined dataset might capture a broader representation of the data,
+# and dimensionality reduction can help visualize potential relationships
+# between data points.
 
 concatenated_features = np.concatenate((mace_off_features, mace_mp_features), axis=1)
 
@@ -283,25 +281,16 @@ plt.show()
 # extract relevant properties from the data and then use
 # Chemiscope to create an interactive structure-property map.
 #
-# Let's use the 10% of the dataset to visulise it.
-_train, test = frames.random_split([0.9, 0.1])
+# Let's extract meaningful properties.
 
-# %%
-# Extract properties except "frequencies".
-
-props_keys = test[0].info.keys()
-properties = chemiscope.extract_properties(
-    test, only={key for key in props_keys if key != "frequencies"}
+props_keys = frames[0].info.keys()
+exclude_props = ["frequencies", "smiles", "inchi"]
+structural_properties = chemiscope.extract_properties(
+    frames,
+    only={key for key in props_keys if key not in exclude_props},
 )
 
 # %%
-# Load the interactive chemiscope widget.
-cs = chemiscope.show(test, properties, meta={"name": "QM9 properties"})
-cs
-
-# %%
-# Visualize all reduced data using chemiscope.
-
 # Prepare properties dictionary for chemiscope visualization
 props = {}
 for prop, value in reduced_points.items():
@@ -311,9 +300,8 @@ for prop, value in reduced_points.items():
 # %%
 # Create a chemiscope widget for MACE OFF and MACE MP reduced data.
 
-cs = chemiscope.show(
+chemiscope.show(
     frames=frames,
-    properties=props,
+    properties={**props, **structural_properties},
     meta={"name": "QM9 features"},
 )
-cs
