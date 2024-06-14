@@ -194,14 +194,7 @@ traj_pimd["settings"]["structure"][0].update(
     )
 )
 
-cs = chemiscope.show(**traj_pimd, mode="structure")
-
-if chemiscope.jupyter._is_running_in_notebook():
-    from IPython.display import display
-
-    display(cs)
-else:
-    cs.save("path-integrals.json.gz")
+chemiscope.show(**traj_pimd, mode="structure")
 
 # %%
 # Accelerating PIMD with a PIGLET thermostat
@@ -317,7 +310,7 @@ ellipsoids = chemiscope.ase_tensors_to_ellipsoids(
     [centroid], "kinetic_cv", scale=15, force_positive=True
 )
 
-cs = chemiscope.show(
+chemiscope.show(
     [centroid],
     shapes={"kinetic_cv": ellipsoids},
     mode="structure",
@@ -328,12 +321,3 @@ cs = chemiscope.show(
         }
     ),
 )
-
-# %%
-
-if chemiscope.jupyter._is_running_in_notebook():
-    from IPython.display import display
-
-    display(cs)
-else:
-    cs.save("path-integrals.json.gz")

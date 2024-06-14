@@ -5,8 +5,8 @@ dependencies:
   - pip
   - rust >=1.65
   - pip:
-    - ase
-    - chemiscope
+    - ase==3.22.1
+    - chemiscope>=0.7
     - matplotlib
     - metatensor
     - rascaline @ git+https://github.com/Luthaf/rascaline@ca957642f512e141c7570e987aadc05c7ac71983

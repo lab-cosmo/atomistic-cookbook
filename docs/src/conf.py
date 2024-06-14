@@ -6,6 +6,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "sphinx_gallery.load_style",
+    "chemiscope.sphinx",
 ]
 
 templates_path = ["_templates"]

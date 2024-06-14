@@ -133,7 +133,13 @@ for name in EXAMPLES:
             )
 
             # install sphinx-gallery and its dependencies
-            session.install("sphinx-gallery", "sphinx", "pillow", "matplotlib")
+            session.install(
+                "sphinx-gallery",
+                "sphinx",
+                "pillow",
+                "matplotlib",
+                "chemiscope",
+            )
 
         session.run("python", "generate-gallery.py", f"examples/{name}")
         os.unlink(f"docs/src/examples/{name}/index.rst")
