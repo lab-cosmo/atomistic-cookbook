@@ -41,10 +41,10 @@ frames20 = frames[:20]
 methods = ["PCA", "UMAP", "TSNE", "ICA"]
 
 # %%
-# Let's define a function to perform dimensionality reduction using specified methods.
-# It takes as input a set of descriptors and the name of the dimensionality
-# reduction method to use. It returns the reduced data and the execution time
-# for the reduction process.
+# Let's define a function to perform dimensionality reduction using specified
+# methods. It takes as input a set of descriptors and the name of the
+# dimensionality reduction method to use. It returns the reduced data and
+# the execution time for the reduction process.
 
 
 def dimensionality_reduction_analysis(descriptors, method="PCA"):
@@ -87,10 +87,6 @@ def dimensionality_reduction_analysis(descriptors, method="PCA"):
 ######################################################################
 # Compute structural descriptors
 # ------------------------------
-# This section calculates features that describe the structure of molecules
-# in the frames data.
-
-# %%
 # At first, initialise the calculatorsf for MACE-OFF and MACE-MP.
 
 descriptor_opt = {"model": "small", "device": "cpu", "default_dtype": "float64"}
@@ -99,17 +95,18 @@ calculator_mace_mp = mace_mp(**descriptor_opt)
 
 # %%
 # Here we define a function to compute MACE features.
-# This function takes a list of frames (molecules) and a MACE calculator as input.
-# It iterates through each frame, calculates the MACE descriptors, and then computes
-# the average descriptor value across all atoms in the frame. Finally, it returns
-# these average descriptors for all frames in a numpy array.
+# This function takes a list of frames (molecules) and a MACE calculator as
+# input. It iterates through each frame, calculates the MACE descriptors, and
+# then computes the average descriptor value across all atoms in the frame.
+# Finally, it returns these average descriptors for all frames in a numpy
+# array.
 
 
 def compute_mace_features(frames, calculator, invariants_only=True):
     descriptors = []
     for frame in tqdm(frames):
         structure_avg = np.mean(
-            (calculator.get_descriptors(frame, invariants_only=invariants_only)),
+            (calculator.get_descriptors(frame, invariants_only)),
             axis=0,
         )
         descriptors.append(structure_avg)
@@ -245,7 +242,7 @@ plt.show()
 
 reduced_points = {}
 
-descriptor_names = ["mace_off", "mace_mp"]
+descriptor_names = ["mace_off", "mace_mp", "soap", "mace_mp_mace_off"]
 
 fig, axes = plt.subplots(len(descriptor_names), len(methods), figsize=(15, 8))
 
@@ -268,7 +265,7 @@ for i, descriptor_name in enumerate(descriptor_names):
         if i == len(descriptors) - 1:  # Last row
             ax.set_xlabel("Component 1")
         if j == 0:
-            ax.set_ylabel("Component 2")
+            ax.set_ylabel(f"{descriptor_name}\nComponent 2")
 
 plt.tight_layout()
 plt.show()
