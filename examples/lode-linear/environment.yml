@@ -5,7 +5,7 @@ dependencies:
   - pip
   - rust >=1.65
   - pip:
-    - ase
+    - ase==3.22.1
     - equisolve @ git+https://github.com/lab-cosmo/equisolve.git@c858bedef4b2799eb445e4c92535ee387224089a
     - matplotlib
     - metatensor
