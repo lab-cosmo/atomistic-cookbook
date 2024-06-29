@@ -119,8 +119,9 @@ lmp_process[1].wait()
 # Note that i-PI prints a separate trajectory for each bead, as structural properties
 # can be computed averaging over the configurations of any of the beads.
 
+# drops first frame where all atoms overlap
 output_data, output_desc = ipi.read_output("simulation.out")
-traj_data = [ipi.read_trajectory(f"simulation.pos_{i}.xyz") for i in range(8)]
+traj_data = [ipi.read_trajectory(f"simulation.pos_{i}.xyz")[1:] for i in range(8)]
 
 
 # %%
@@ -228,8 +229,9 @@ lmp_process[1].wait()
 # PIMD one, because it is closer to the converged value (try to run a PIMD trajectory
 # with 64 beads for comparison)
 
+# drops first frame
 output_gle, desc_gle = ipi.read_output("simulation_piglet.out")
-traj_gle = [ipi.read_trajectory(f"simulation_piglet.pos_{i}.xyz") for i in range(8)]
+traj_gle = [ipi.read_trajectory(f"simulation_piglet.pos_{i}.xyz")[1:] for i in range(8)]
 
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(
@@ -287,8 +289,8 @@ ax.legend()
 # them over the last 10 frames and combining them with the centroid configuration
 # from the last frame in the trajectory.
 
-kinetic_cv = ipi.read_trajectory("simulation_piglet.kin.xyz")
-kinetic_od = ipi.read_trajectory("simulation_piglet.kod.xyz")
+kinetic_cv = ipi.read_trajectory("simulation_piglet.kin.xyz")[1:]
+kinetic_od = ipi.read_trajectory("simulation_piglet.kod.xyz")[1:]
 kinetic_tens = np.hstack(
     [
         np.asarray([k.positions for k in kinetic_cv[-10:]]).mean(axis=0),
