@@ -12,14 +12,14 @@ extensions = [
 templates_path = ["_templates"]
 exclude_patterns = ["_build"]
 
-project = "cosmo-software-cookbook"
+project = "atomistic-simulations-cookbook"
 copyright = (
     "BSD 3-Clause License, "
     f"Copyright (c) {datetime.now().date().year}, "
-    "COSMO software cookbook team"
+    "Atomistic simulations cookbook team"
 )
 
-htmlhelp_basename = "COSMO software-cookbook"
+htmlhelp_basename = "Atomistic simulation cookbook"
 html_theme = "furo"
 
 
