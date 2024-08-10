@@ -9,7 +9,7 @@
   <prng>
     <seed> 32342 </seed>
   </prng>
-  <ffsocket name='lmpserial' mode='unix'>
+  <ffsocket name='lmpserial' mode='unix' pbc='false'>
       <address>h2o-lammps</address> <latency> 1e-4 </latency>
   </ffsocket>
   <system>
