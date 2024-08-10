@@ -167,7 +167,8 @@ def build_docs(session):
         session.install("-r", requirements)
 
     with open("docs/src/all-examples.rst", "w") as output:
-        output.write("""
+        output.write(
+            """
 Complete List of All Recipes
 ============================
 
@@ -178,7 +179,8 @@ that are not part of any of the other sections.
    :caption:  Recipes
    :maxdepth: 1
 
-""")        
+"""
+        )
         for file in glob.glob("docs/src/examples/*/*.rst"):
             if os.path.basename(file) != "sg_execution_times.rst":
                 path = file[9:-4]
