@@ -166,11 +166,7 @@ def build_docs(session):
     if should_reinstall_dependencies(session, requirements=requirements):
         session.install("-r", requirements)
 
-    with open("docs/src/index.rst", "w") as output:
-        with open("docs/src/index.rst.in") as fd:
-            output.write(fd.read())
-
-        output.write("\n")
+    with open("docs/src/all-examples.rst", "w") as output:
         for file in glob.glob("docs/src/examples/*/*.rst"):
             if os.path.basename(file) != "sg_execution_times.rst":
                 path = file[9:-4]

@@ -1,0 +1,13 @@
+Analysis and post-processing
+============================
+
+This section contains recipes that analyze the output of a simulation,
+for analysis or visualization purposes.
+
+.. toctree::
+   :caption: Recipes
+   :maxdepth: 1
+
+   examples/gaas-map/gaas-map
+   examples/lpr/lpr
+   examples/roy-gch/roy-gch

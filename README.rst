@@ -9,11 +9,11 @@ The home page is accessible at https://lab-cosmo.github.io/software-cookbook/lat
 This cookbook contains recipes for atomic-scale modelling for materials and
 molecules, with a particular focus on machine learning and statistical sampling methods.
 Most of the examples rely heavily on software developed by the laboratory of 
-computational science and modeling (COSMO, see the `COSMO github page
+computational science and modeling (COSMO, see its `github page
 <https://github.com/lab-cosmo>`_) but the cookbook is open for recipes using 
 all types of modeling tools and techniques. 
 Rather than focusing on the usage of a specific package, this cookbook provides concrete 
-examples of the solution of modeling problems using a combination of the various tools.
+examples of the solution of modeling problems, often using a combination of several tools.
 
 .. marker-intro-end
 
