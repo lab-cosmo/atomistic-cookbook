@@ -173,7 +173,7 @@ Complete List of All Recipes
 ============================
 
 This section contains the list of all compiled recipes, including those
-that are not part of any of the other sections. 
+that are not part of any of the other sections.
 
 .. toctree::
    :caption:  Recipes

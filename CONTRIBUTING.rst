@@ -106,6 +106,6 @@ free to contact one of the people
 Code of Conduct
 ---------------
 
-Please note that this project is released with a 
-`Contributor Code of Conduct <CONDUCT.md>`_. 
+Please note that this project is released with a
+`Contributor Code of Conduct <CONDUCT.md>`_.
 By contributing to this project you agree to abide by its terms.
