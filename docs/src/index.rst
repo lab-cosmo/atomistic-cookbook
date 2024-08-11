@@ -22,3 +22,6 @@ then use with conda to create a new environment with all the required dependenci
    :maxdepth: 1
    
    analysis
+   sampling
+   ml-models
+   all-examples
