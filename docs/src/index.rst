@@ -1,14 +1,13 @@
-COSMO Software Cookbook
-=======================
+Atomistic Cookbook
+==================
 
 .. include:: ../../README.rst
    :start-after: marker-intro-start
    :end-before: marker-intro-end
 
 
-All the examples provide an ``environment.yml`` file that you can download and
-then use with conda to create a new environment with all the required
-dependencies for this example.
+Each example provides an ``environment.yml`` file that you can download and
+then use with conda to create a new environment with all the required dependencies.
 
 .. code-block:: bash
 
@@ -21,3 +20,8 @@ dependencies for this example.
 .. toctree::
    :caption: Table of Contents
    :maxdepth: 1
+   
+   analysis
+   sampling
+   ml-models
+   all-examples

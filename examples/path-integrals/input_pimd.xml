@@ -9,12 +9,12 @@
   <prng>
     <seed> 32342 </seed>
   </prng>
-  <ffsocket name='lmpserial' mode='unix'>
+  <ffsocket name='lmpserial' mode='unix' pbc='false'>
       <address>h2o-lammps</address> <latency> 1e-4 </latency>
   </ffsocket>
   <system>
     <initialize nbeads='8'>
-      <file mode='pdb'> water_32.pdb </file>
+      <file mode='pdb' units='angstrom'> water_32.pdb </file>
       <velocities mode='thermal' units='kelvin'> 298 </velocities>
     </initialize>
     <forces>
