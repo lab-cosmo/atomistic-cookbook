@@ -43,4 +43,3 @@ html_js_files = [
 
 html_static_path = [os.path.join("..", "_static")]
 html_favicon = "../_static/cookbook-icon.png"
-
