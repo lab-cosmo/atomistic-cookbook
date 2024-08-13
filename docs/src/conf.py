@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 
 
@@ -12,14 +13,14 @@ extensions = [
 templates_path = ["_templates"]
 exclude_patterns = ["_build"]
 
-project = "atomistic-simulations-cookbook"
+project = "atomistic-cookbook"
 copyright = (
     "BSD 3-Clause License, "
     f"Copyright (c) {datetime.now().date().year}, "
-    "Atomistic simulations cookbook team"
+    "Atomistic cookbook team"
 )
 
-htmlhelp_basename = "Atomistic simulation cookbook"
+htmlhelp_basename = "Atomistic cookbook"
 html_theme = "furo"
 
 
@@ -39,3 +40,7 @@ html_js_files = [
         {"data-domain": "lab-cosmo.github.io/atomistic-cookbook", "defer": "defer"},
     ),
 ]
+
+html_static_path = [os.path.join("..", "_static")]
+html_favicon = "../_static/cookbook-icon.png"
+

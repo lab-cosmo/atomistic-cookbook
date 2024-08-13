@@ -1,7 +1,7 @@
-Atomistic Simulations Cookbook
-==============================
+Atomistic Cookbook
+==================
 
-The source code for the Atomistic Simulations Cookbook is maintained
+The source code for the Atomistic Cookbook is maintained
 as a GitHub pages site.
 The home page is accessible at https://lab-cosmo.github.io/software-cookbook/latest.
 

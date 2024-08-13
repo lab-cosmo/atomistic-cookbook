@@ -1,5 +1,5 @@
-Atomistic Simulations Cookbook
-==============================
+Atomistic Cookbook
+==================
 
 .. include:: ../../README.rst
    :start-after: marker-intro-start
