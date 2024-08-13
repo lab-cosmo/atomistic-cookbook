@@ -33,6 +33,7 @@ class PseudoSphinxApp:
         # feel free to add more if sphinx-gallery uses more options in the future
         self.config = AttrDict()
         self.config.html_static_path = []
+        self.config.templates_path = []
         self.config.source_suffix = [".rst"]
         self.config.default_role = ""
         self.config.sphinx_gallery_conf = {
