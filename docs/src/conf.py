@@ -32,3 +32,10 @@ intersphinx_mapping = {
     "rascaline": ("https://luthaf.fr/rascaline/latest/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
 }
+
+html_js_files = [
+    (
+        "https://plausible.io/js/script.js",
+        {"data-domain": "lab-cosmo.github.io/atomistic-cookbook", "defer": "defer"},
+    ),
+]
