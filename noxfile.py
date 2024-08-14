@@ -2,6 +2,7 @@ import glob
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 import sys
 
@@ -141,7 +142,14 @@ for name in EXAMPLES:
                 "chemiscope",
             )
 
+        # Creates data.zip if there's a data folder
+        if os.path.exists(f"examples/{name}/data"):
+            shutil.make_archive(
+                f"examples/{name}/data", "zip", f"examples/{name}/", "data/"
+            )
+
         session.run("python", "generate-gallery.py", f"examples/{name}")
+
         os.unlink(f"docs/src/examples/{name}/index.rst")
 
         if "--no-build-docs" not in session.posargs:
@@ -183,6 +191,7 @@ that are not part of any of the other sections.
         )
         for file in glob.glob("docs/src/examples/*/*.rst"):
             if os.path.basename(file) != "sg_execution_times.rst":
+                root = os.path.dirname(file)
                 path = file[9:-4]
 
                 output.write(f"   {path}\n")
@@ -207,6 +216,15 @@ that are not part of any of the other sections.
       :download:`Download Conda environment file: environment.yml <environment.yml>`
 """
                                 )
+
+                                if os.path.join(root, "data.zip"):
+                                    fd.write(
+                                        """
+    .. container:: sphx-glr-download
+
+      :download:`Download data file: data.zip <data.zip>`
+"""
+                                    )
 
                             fd.write(line)
                             fd.write("\n")
