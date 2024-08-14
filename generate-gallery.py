@@ -41,7 +41,7 @@ class PseudoSphinxApp:
             "examples_dirs": os.path.join(HERE, example),
             "gallery_dirs": gallery_dir,
             "min_reported_time": 60,
-            "copyfile_regex": r".*\.(sh|xyz|cp2k|yml|png)",
+            "copyfile_regex": r".*\.(sh|xyz|cp2k|yml|png|zip)",
             "matplotlib_animations": True,
             "within_subsection_order": "FileNameSortKey",
             "image_scrapers": ("matplotlib", ChemiscopeScraper()),

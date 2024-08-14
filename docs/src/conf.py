@@ -20,10 +20,6 @@ copyright = (
     "Atomistic cookbook team"
 )
 
-htmlhelp_basename = "Atomistic cookbook"
-html_theme = "furo"
-
-
 intersphinx_mapping = {
     "ase": ("https://wiki.fysik.dtu.dk/ase/", None),
     "metatensor": ("https://lab-cosmo.github.io/metatensor/latest/", None),
@@ -35,11 +31,14 @@ intersphinx_mapping = {
 }
 
 html_js_files = [
-    (
+    (  # plausible.io tracking
         "https://plausible.io/js/script.js",
         {"data-domain": "lab-cosmo.github.io/atomistic-cookbook", "defer": "defer"},
     ),
 ]
 
+htmlhelp_basename = "Atomistic cookbook"
+html_theme = "furo"
 html_static_path = [os.path.join("..", "_static")]
 html_favicon = "../_static/cookbook-icon.png"
+html_logo = "../_static/cookbook-icon.svg"

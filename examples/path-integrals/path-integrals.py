@@ -68,7 +68,7 @@ import numpy as np
 # An i-PI calculation is specified by an XML file.
 
 # Open and read the XML file
-with open("input_pimd.xml", "r") as file:
+with open("data/input_pimd.xml", "r") as file:
     xml_content = file.read()
 print(xml_content)
 
@@ -88,10 +88,10 @@ print(xml_content)
 #
 # .. code-block:: bash
 #
-#    i-pi input_pimd.xml > log &
+#    i-pi data/input_pimd.xml > log &
 #    sleep 2
-#    lmp -in in.lmp &
-#    lmp -in in.lmp &
+#    lmp -in data/in.lmp &
+#    lmp -in data/in.lmp &
 #
 # Note how ``i-PI`` and ``LAMMPS`` are completely independent, and
 # therefore need a separate set of input files. The client-side communication
@@ -100,9 +100,9 @@ print(xml_content)
 #
 # We can launch the external processes from a Python script as follows
 
-ipi_process = subprocess.Popen(["i-pi", "input_pimd.xml"])
+ipi_process = subprocess.Popen(["i-pi", "data/input_pimd.xml"])
 time.sleep(2)  # wait for i-PI to start
-lmp_process = [subprocess.Popen(["lmp", "-in", "in.lmp"]) for i in range(2)]
+lmp_process = [subprocess.Popen(["lmp", "-in", "data/in.lmp"]) for i in range(2)]
 
 # %%
 # If you run this in a notebook, you can go ahead and start loading
@@ -216,9 +216,9 @@ chemiscope.show(**traj_pimd, mode="structure")
 # `the GLE4MD website <https://tinyurl.com/4y2e45jx>`_
 #
 
-ipi_process = subprocess.Popen(["i-pi", "input_piglet.xml"])
+ipi_process = subprocess.Popen(["i-pi", "data/input_piglet.xml"])
 time.sleep(2)  # wait for i-PI to start
-lmp_process = [subprocess.Popen(["lmp", "-in", "in.lmp"]) for i in range(2)]
+lmp_process = [subprocess.Popen(["lmp", "-in", "data/in.lmp"]) for i in range(2)]
 
 ipi_process.wait()
 lmp_process[0].wait()
