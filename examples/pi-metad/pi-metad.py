@@ -1,14 +1,20 @@
 """
-Path integral molecular dynamics
-================================
+Path integral metadynamics
+==========================
 
 :Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm/>`_
 
-This example shows how to run a path integral molecular dynamics
-simulation using ``i-PI``, analyze the output and visualize the
-trajectory in ``chemiscope``. It uses `LAMMPS <http://lammps.org>`_
-as the driver to simulate the `q-TIP4P/f water
-model <http://doi.org/10.1063/1.3167790>`_.
+This example shows how to run a free-energy sampling calculation that 
+combines path integral molecular dynamics to model nuclear quantum effects
+and metadynamics to accelerate sampling of the high-free-energy regions. 
+
+The rather complicated setup combines ``i-PI`` to perform path integra
+MD, the built-in driver to compute energy and forces for the Zundel
+H5O2+ cation, and `PLUMED <http://plumed.org/>` to perform metadynamics.
+If you want to see an example in a more realistic scenario, you can look
+at `this paper <http://doi.org/10.1021/acs.jctc.0c00362>`, in which this
+methodology is used to simulate the decomposition of methanesulphonic
+acid in a solution of phenol and hydrogen peroxide. 
 """
 
 import subprocess
@@ -19,17 +25,33 @@ import ipi
 import matplotlib.pyplot as plt
 import numpy as np
 
+# %%
+# Install the Python driver
+# -------------------------
+#
+# i-PI comes with a FORTRAN driver, which however has to be installed
+# from source. We use a utility function to compile it. Note that this requires
+# a functioning build system with `gfortran` and `make`.
+
+ipi.install_driver()
 
 # %%
-# Quantum nuclear effects and path integral methods
-# -------------------------------------------------
+# Metadynamics for the Zundel cation
+# ----------------------------------
 #
-# The Born-Oppenheimer approximation separates the joint quantum mechanical
-# problem for electrons and nuclei into two independent problems. Even though
-# often one makes the additional approximation of treating nuclei as classical
-# particles, this is not necessary, and in some cases (typically when H atoms are
-# present) can add considerable error.
+# Metadynamics is a metnod to accelerate sampling of rare events - microscopic processes
+# that are too infrequent to be observed over the time scale (ns-µs) accessible to 
+# molecular dynamics simulations. You can read one of the many excellent reviews
+# on metadynamics (see e.g. 
+# `Bussi and Branduardi (2015) <https://doi.org/10.1002/9781118889886.ch1>`_)
+# In short, during a metadynamics simulation an adaptive biasing potential is 
+# built as a superimposition of Gaussians centered over configurations that have
+# been previously visited by the trajectory. This discourages the system from remaining
+# in high-probability configurations and accelerates sampling of free-energy barriers.
 #
+# Crucially, the bias is *not* built relative to the Cartesian coordinates of the atoms,
+# but relative to a lower-dimensional description of the system (so-called collective 
+# variables) that are suited to describe the processes being studied. 
 #
 # .. figure:: pimd-slices-round.png
 #    :align: center
@@ -55,15 +77,6 @@ import numpy as np
 # `PIGLET <http://doi.org/10.1103/PhysRevLett.109.100604>`_ to accelerate the
 # convergence.
 
-# %%
-# Install the Python driver
-# -------------------------
-#
-# i-PI comes with a FORTRAN driver, which however has to be installed
-# from source. We use a utility function to compile it. Note that this requires
-# a functioning build system with `gfortran` and `make`
-
-ipi.install_driver()
 
 # %%
 # Running PIMD calculations with ``i-PI``
@@ -77,7 +90,7 @@ ipi.install_driver()
 # An i-PI calculation is specified by an XML file.
 
 # Open and read the XML file
-with open("data/input_pimd.xml", "r") as file:
+with open("data/input-md.xml", "r") as file:
     xml_content = file.read()
 print(xml_content)
 
@@ -109,9 +122,9 @@ print(xml_content)
 #
 # We can launch the external processes from a Python script as follows
 
-ipi_process = subprocess.Popen(["i-pi", "data/input_pimd.xml"])
+ipi_process = subprocess.Popen(["i-pi", "data/input-md.xml"])
 time.sleep(2)  # wait for i-PI to start
-lmp_process = [subprocess.Popen(["lmp", "-in", "data/in.lmp"]) for i in range(2)]
+driver_process = [subprocess.Popen(["i-pi-driver", "-u", "-a", "zundel", "-m", "zundel"], cwd="data/") for i in range(1)]
 
 # %%
 # If you run this in a notebook, you can go ahead and start loading
@@ -119,9 +132,24 @@ lmp_process = [subprocess.Popen(["lmp", "-in", "data/in.lmp"]) for i in range(2)
 # skipping this cell
 
 ipi_process.wait()
-lmp_process[0].wait()
-lmp_process[1].wait()
+for process in driver_process:
+    process.wait()
 
+
+# We can launch the external processes from a Python script as follows
+
+ipi_process = subprocess.Popen(["i-pi", "data/input-pimd.xml"])
+time.sleep(2)  # wait for i-PI to start
+driver_process = [subprocess.Popen(["i-pi-driver", "-u", "-a", "zundel", "-m", "zundel"], cwd="data/") for i in range(4)]
+
+# %%
+# If you run this in a notebook, you can go ahead and start loading
+# output files _before_ i-PI and lammps have finished running, by
+# skipping this cell
+
+ipi_process.wait()
+for process in driver_process:
+    process.wait()
 
 # %%
 # After the simulation has run, you can visualize and post-process the trajectory data.
@@ -129,8 +157,8 @@ lmp_process[1].wait()
 # can be computed averaging over the configurations of any of the beads.
 
 # drops first frame where all atoms overlap
-output_data, output_desc = ipi.read_output("simulation.out")
-traj_data = [ipi.read_trajectory(f"simulation.pos_{i}.xyz")[1:] for i in range(8)]
+output_data, output_desc = ipi.read_output("metad-md.out")
+traj_data = [ipi.read_trajectory(f"metad-md.pos_{i}.xyz")[1:] for i in range(1)]
 
 
 # %%

@@ -1,4 +1,5 @@
 channels:
+  - plumed/label/ipi-demo
   - conda-forge
 dependencies:
   - python=3.11
@@ -6,6 +7,8 @@ dependencies:
   - gfortran
   - make
   - git
+  - plumed
+  - py-plumed  
   - pip:
     - ase==3.22.1
     - chemiscope>=0.7

@@ -217,7 +217,7 @@ that are not part of any of the other sections.
 """
                                 )
 
-                                if os.path.exists(os.path.join(root, "data.zip"):
+                                if os.path.exists(os.path.join(root, "data.zip")):
                                     fd.write(
                                         """
     .. container:: sphx-glr-download
