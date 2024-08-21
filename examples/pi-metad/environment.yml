@@ -1,5 +1,5 @@
 channels:
-  - plumed/label/ipi-demo
+  - plumed/label/nightly
   - conda-forge
 dependencies:
   - python=3.11

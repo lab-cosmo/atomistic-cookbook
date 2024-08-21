@@ -15,7 +15,14 @@ If you want to see an example in a more realistic scenario, you can look
 at `this paper <http://doi.org/10.1021/acs.jctc.0c00362>`, in which this
 methodology is used to simulate the decomposition of methanesulphonic
 acid in a solution of phenol and hydrogen peroxide. 
+
+Note also that, in order to keep the execution time of this example as 
+low as possible, several parameters are set to values that would not be 
+suitable for an accurate, converged simulation. They will be highlighted
+and more reasonable values will be provided. 
 """
+
+# %%
 
 import subprocess
 import time
@@ -24,10 +31,76 @@ import chemiscope
 import ipi
 import matplotlib.pyplot as plt
 import numpy as np
+import ase, ase.io
+from ipi import read_output, read_trajectory
+import xml.etree.ElementTree as ET
+
+
+# %%
+# Metadynamics for the Zundel cation
+# ----------------------------------
+#
+# Metadynamics is a metnod to accelerate sampling of rare events - microscopic processes
+# that are too infrequent to be observed over the time scale (ns-µs) accessible to
+# molecular dynamics simulations. You can read one of the many excellent reviews
+# on metadynamics (see e.g.
+# `Bussi and Branduardi (2015) <https://doi.org/10.1002/9781118889886.ch1>`_)
+# In short, during a metadynamics simulation an adaptive biasing potential is
+# built as a superimposition of Gaussians centered over configurations that have
+# been previously visited by the trajectory. This discourages the system from remaining
+# in high-probability configurations and accelerates sampling of free-energy barriers.
+#
+# .. figure:: metad-scheme.png
+#    :align: center
+#    :width: 600px
+#
+#    A schematic representation of how metadynamics work by adaptively building
+#    a repulsive bias based on the trajectory of a molecule, compensating for
+#    low-energy regions in the free energy surface.
+#
+# Crucially, the bias is *not* built relative to the Cartesian coordinates of the atoms,
+# but relative to a lower-dimensional description of the system (so-called collective
+# variables) that are suited to describe the processes being studied.
+
+# %%
+#
+# The Zundel cation :math:`\mathrm{H_5O_2^+}` is one of the limiting
+# structures of the solvated proton, and in the gas phase leads to a
+# stable structure, with the additional proton shared between two water
+# molecules (see the structure below).
+# We will use a potential fitted on high-end quantum-chemistry calculations
+# `Huang et al. (2005) <http://doi.org/10.1063/1.1834500>`_ to compute energy
+# and forces acting on the atoms.
+
+zundel = ase.io.read("data/h5o2+.xyz", ":")
+chemiscope.show(frames=zundel, mode="structure")
+
+# %%
+#
+# As the two water molecules are separated, the proton remains attached
+# to one of the two, effectively leading to a dissociated
+# :math:`\mathrm{H_2O+H_3O^+}` configuration. Thus, two natural
+# coordinates to describe the physics of this system are the distance
+# between the O atoms, and the difference in coordination number of
+# the two O atoms, which is 0 for a shared proton and ±1 for the
+# dissociated system.
+
+# %%
+# Running metadynamics calculations with ``i-PI`` and ``PLUMED``
+# --------------------------------------------------------------
+#
+# The client-server model `i-PI <http://ipi-code.org>`_ is based on makes it easy
+# to combine multiple programs to realize complicated simulation workflows.
+# In this case we will use an implementation of the Zundel potential in a simple
+# driver code that is available in the i-PI repository, and use
+# `PLUMED <http://plumed.org/>` to compute collective variables and build
+# the adaptive bias. We will then perform some post-processing to
+# estimate the free energy.
+
 
 # %%
 # Install the Python driver
-# -------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # i-PI comes with a FORTRAN driver, which however has to be installed
 # from source. We use a utility function to compile it. Note that this requires
@@ -36,111 +109,104 @@ import numpy as np
 ipi.install_driver()
 
 # %%
-# Metadynamics for the Zundel cation
-# ----------------------------------
+# Defining the molecular dynamics setup
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# The `input-md.xml` file defines the way the MD simulation is performed.
+
+xmlroot = ET.parse("data/input-md.xml").getroot()
+
+# %%
+# The `<ffsocket>` block describe the way communication will occur with the
+# driver code
+
+print("   " + ET.tostring(xmlroot.find("ffsocket"), encoding="unicode"))
+
+# %%
+# ... and the `<motion>` section describes the MD setup.
+# This is a relatively standard NVT setup, with an efficient
+# generalized Langevin equation thermostat (important to
+# compensate for the non-equilibrium nature of metadynamics).
+# Note that the time step is rather long (typical value for
+# aqueous systems is around 0.5 fs). This is done to improve
+# efficiency for this example, but you should check if it
+# affects results in a realistic scenario.
+
+print("   " + ET.tostring(xmlroot.find(".//motion"), encoding="unicode"))
+
+# %%
+# The metadynamics setup requires three ingredients:
+# a `<ffplumed>` forcefield that defines what input to use
+# (more on that later) and the file from which to initialize
+# the structural information (number of atoms, ...);
+# `<plumed_extras>` is an advanced feature, available from
+# PLUMED 2.10, that allows extracting internal variables
+# from plumed and integrate them into the outputs of
+# i-PI.
 #
-# Metadynamics is a metnod to accelerate sampling of rare events - microscopic processes
-# that are too infrequent to be observed over the time scale (ns-µs) accessible to 
-# molecular dynamics simulations. You can read one of the many excellent reviews
-# on metadynamics (see e.g. 
-# `Bussi and Branduardi (2015) <https://doi.org/10.1002/9781118889886.ch1>`_)
-# In short, during a metadynamics simulation an adaptive biasing potential is 
-# built as a superimposition of Gaussians centered over configurations that have
-# been previously visited by the trajectory. This discourages the system from remaining
-# in high-probability configurations and accelerates sampling of free-energy barriers.
+# The `<ensemble>` section contains a `<bias>` key that
+# specifies that energy and forces from PLUMED should be
+# treated as a bias (so that e.g. are not included in the
+# potential, even though they're used to propagate the
+# trajectory).
 #
-# Crucially, the bias is *not* built relative to the Cartesian coordinates of the atoms,
-# but relative to a lower-dimensional description of the system (so-called collective 
-# variables) that are suited to describe the processes being studied. 
-#
-# .. figure:: pimd-slices-round.png
-#    :align: center
-#    :width: 600px
-#
-#    A representation of ther ring-polymer Hamiltonian for a water molecule.
-#
-# In order to describe the quantum mechanical nature of light nuclei
-# (nuclear quantum effects) one of the most widely-applicable methods uses
-# the *path integral formalism*  to map the quantum partition function of a
-# set of distinguishable particles onto the classical partition function of
-# *ring polymers* composed by multiple beads (replicas) with
-# corresponding atoms in adjacent replicas being connected by harmonic
-# springs.
-# `The textbook by Tuckerman <https://tinyurl.com/bdfhk2tx>`_
-# contains a pedagogic introduction to the topic, while
-# `this paper <https://doi.org/10.1063/1.3489925>`_ outlines the implementation
-# used in ``i-PI``.
-#
-# The classical partition function of the path converges to quantum statistics
-# in the limit of a large number of replicas. In this example, we will use a
-# technique based on generalized Langevin dynamics, known as
-# `PIGLET <http://doi.org/10.1103/PhysRevLett.109.100604>`_ to accelerate the
-# convergence.
+# The `<smotion>` section contains a `<metad>` class that
+# instructs to call the PLUMED internal that adds hills
+# along the trajectory.
+
+print("   " + ET.tostring(xmlroot.find("ffplumed"), encoding="unicode"))
+print("   " + ET.tostring(xmlroot.find(".//ensemble"), encoding="unicode"))
+print("   " + ET.tostring(xmlroot.find("smotion"), encoding="unicode"))
 
 
 # %%
-# Running PIMD calculations with ``i-PI``
-# ---------------------------------------
+# CVs and metadynamics
+# ~~~~~~~~~~~~~~~~~~~~
 #
-# `i-PI <http://ipi-code.org>`_ is based on a client-server model, with ``i-PI``
-# controlling the nuclear dynamics (in this case sampling the path Hamiltonian using
-# molecular dynamics) while the calculation of energies and forces is delegated to
-# an external client program, in this example ``LAMMPS``.
-#
-# An i-PI calculation is specified by an XML file.
+# The calculation of the collective variables and the
+# metadynamics bias is delegated to PLUMED, and controlled by
+# a separate `plumed-md.dat` input file.
+# Without going in detail into the syntax, one can recognize the
+# calculation of the distance between the O atoms `doo`,
+# the coordination of the two oxygens `co1` and `co2`,
+# and the difference between the two, `dc`.
+# The `METAD` action specifies the CVs to be used, the pace of
+# hill depositon (which is way too frequent, but suitable for this
+# example), the width along the two CVs and the initial height of
+# the repulsive Gaussians. The `BIASFACTOR` keyword specifies
+# that the height of the hills will be progressively reduced
+# according to the "well-tempered metadynamics" protocol, see
+# `Barducci et al., Phys. Rev. Lett. (2008) <http://doi.org/10.1103/PhysRevLett.100.020603>`_
+# A repulsive static bias prevents complete dissociation of the
+# cation by limiting the range of the O-O distance.
 
-# Open and read the XML file
-with open("data/input-md.xml", "r") as file:
-    xml_content = file.read()
-print(xml_content)
+with open("data/plumed-md.dat", "r") as file:
+    plumed_dat = file.read()
+print(plumed_dat)
 
 # %%
-# NB1: In a realistic simulation you may want to increase the field
-# ``total_steps``, to simulate at least a few 100s of picoseconds.
+# Running the simulations
+# ~~~~~~~~~~~~~~~~~~~~~~~
 #
-# NB2: To converge a simulation of water at room temperature, you
-# typically need at least 32 beads. We will see later how to accelerate
-# convergence using a colored-noise thermostat, but you can try to
-# modify the input to check convergence with conventional PIMD
-
-# %%
-# i-PI and lammps should be run separately, and it is possible to
-# launch separate lammps processes to parallelize the evaluation over
-# the beads. On the the command line, this amounts to launching
+# Now we can launch the actual calculations. On the the command line,
+# this requires launching i-PI first, and then the built-in driver,
+# specifying the appropriate communication mode, and the `zundel` potential.
+# `PLUMED` is called from within i-PI as a library, so there is no need to
+# launch a separate process. Note that the Zundel potential requires some data
+# files, with a hard-coded location, which is why the driver should be run from
+# within the ``data/`` folder.
 #
 # .. code-block:: bash
 #
-#    i-pi data/input_pimd.xml > log &
+#    i-pi data/input-md.xml > log &
 #    sleep 2
-#    lmp -in data/in.lmp &
-#    lmp -in data/in.lmp &
-#
-# Note how ``i-PI`` and ``LAMMPS`` are completely independent, and
-# therefore need a separate set of input files. The client-side communication
-# in ``LAMMPS`` is described in the ``fix_ipi`` section, that matches the socket
-# name and mode defined in the ``ffsocket`` field in the ``i-PI`` file.
-#
-# We can launch the external processes from a Python script as follows
+#    cd data; i-pi-driver -u -a zundel -m zundel
 
 ipi_process = subprocess.Popen(["i-pi", "data/input-md.xml"])
 time.sleep(2)  # wait for i-PI to start
-driver_process = [subprocess.Popen(["i-pi-driver", "-u", "-a", "zundel", "-m", "zundel"], cwd="data/") for i in range(1)]
-
-# %%
-# If you run this in a notebook, you can go ahead and start loading
-# output files _before_ i-PI and lammps have finished running, by
-# skipping this cell
-
-ipi_process.wait()
-for process in driver_process:
-    process.wait()
-
-
-# We can launch the external processes from a Python script as follows
-
-ipi_process = subprocess.Popen(["i-pi", "data/input-pimd.xml"])
-time.sleep(2)  # wait for i-PI to start
-driver_process = [subprocess.Popen(["i-pi-driver", "-u", "-a", "zundel", "-m", "zundel"], cwd="data/") for i in range(4)]
+driver_process = [
+    subprocess.Popen(["i-pi-driver", "-u", "-a", "zundel", "-m", "zundel"], cwd="data/")
+    for i in range(1)
+]
 
 # %%
 # If you run this in a notebook, you can go ahead and start loading
@@ -152,211 +218,208 @@ for process in driver_process:
     process.wait()
 
 # %%
-# After the simulation has run, you can visualize and post-process the trajectory data.
-# Note that i-PI prints a separate trajectory for each bead, as structural properties
-# can be computed averaging over the configurations of any of the beads.
-
-# drops first frame where all atoms overlap
-output_data, output_desc = ipi.read_output("metad-md.out")
-traj_data = [ipi.read_trajectory(f"metad-md.pos_{i}.xyz")[1:] for i in range(1)]
-
-
-# %%
-# The simulation parameters are pushed at the limits: with the aggressive stochastic
-# thermostatting and the high-frequency normal modes of the ring polymer, there are
-# fairly large fluctuations of the conserved quantity. This is usually not affecting
-# physical observables, but if you see this level of drift in a production run, check
-# carefully for convergence and stability with a reduced time step.
-
-fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-ax.plot(
-    output_data["time"],
-    output_data["potential"] - output_data["potential"][0],
-    "b-",
-    label="Potential, $V$",
-)
-ax.plot(
-    output_data["time"],
-    output_data["conserved"] - output_data["conserved"][0],
-    "r-",
-    label="Conserved, $H$",
-)
-ax.set_xlabel(r"$t$ / ps")
-ax.set_ylabel(r"energy / eV")
-ax.legend()
-
-# %%
-# While the potential energy is simply the mean over the beads of the
-# energy of individual replicas, computing the kinetic energy requires
-# averaging special quantities that involve also the correlations between beads.
-# Here we compare two of these *estimators*: the 'thermodynamic' estimator becomes
-# statistically inefficient when increasing the number of beads, whereas the
-# 'centroid virial' estimator remains well-behaved. Note how quickly these estimators
-# equilibrate to roughly their stationary value, much faster than the equilibration
-# of the potential energy above. This is thanks to the ``pile_g`` thermostat
-# (see `DOI:10.1063/1.3489925 <http://doi.org/10.1063/1.3489925>`_) that is
-# optimally coupled to the normal modes of the ring polymer.
-
-fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-ax.plot(
-    output_data["time"],
-    output_data["kinetic_cv"],
-    "b-",
-    label="Centroid virial, $K_{CV}$",
-)
-ax.plot(
-    output_data["time"],
-    output_data["kinetic_td"],
-    "r-",
-    label="Thermodynamic, $K_{TD}$",
-)
-ax.set_xlabel(r"$t$ / ps")
-ax.set_ylabel(r"energy / eV")
-ax.legend()
-
-# %%
-# You can also visualize the (very short) trajectory in a way that highlights the
-# fast spreading out of the beads of the ring polymer. ``chemiscope`` provides a
-# utility function to interleave the trajectories of the beads, forming a trajectory
-# that shows the connecttions between the replicas of each atom. Each atom and its
-# connections are color-coded.
-
-traj_pimd = chemiscope.ase_merge_pi_frames(traj_data)
-# we also tweak the visualization options, and then show the viewer
-traj_pimd["shapes"]["paths"]["parameters"]["global"]["radius"] = 0.05
-traj_pimd["settings"]["structure"][0].update(
-    dict(
-        atoms=False,
-        keepOrientation=True,
-        color={"property": "bead_id", "palette": "hsv (periodic)"},
-    )
-)
-
-chemiscope.show(**traj_pimd, mode="structure")
-
-# %%
-# Accelerating PIMD with a PIGLET thermostat
-# ------------------------------------------
+# Trajectory post-processing
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The simulations in the previous sections are very far from converged -- typically
-# one would need approximately 32 replicas to converge a simulation of
-# room-temperature water. To address this problem we will use a method based on
-# generalized Langevin equations, called
-# `PIGLET <http://doi.org/10.1103/PhysRevLett.109.100604>`_
-#
-# The input file is ``input_piglet.xml``, that only differs by the definition of
-# the thermostat, that uses a ``nm_gle`` mode in which each normal mode
-# of the ring polymer is attached to a different colored-noise Generalized Langevin
-# equation. This makes it possible to converge exactly the simulation results with
-# a small number of replicas, and to accelerate greatly convergence for realistic
-# systems such as this. The thermostat parameters can be generated on
-# `the GLE4MD website <https://tinyurl.com/4y2e45jx>`_
+# We can now post-process the simulation to see metadynamics in action.
 #
 
-ipi_process = subprocess.Popen(["i-pi", "data/input_piglet.xml"])
-time.sleep(2)  # wait for i-PI to start
-lmp_process = [subprocess.Popen(["lmp", "-in", "data/in.lmp"]) for i in range(2)]
-
-ipi_process.wait()
-lmp_process[0].wait()
-lmp_process[1].wait()
-
-# %%
-# The mean potential energy from the PIGLET trajectory is higher than that for the
-# PIMD one, because it is closer to the converged value (try to run a PIMD trajectory
-# with 64 beads for comparison)
-
-# drops first frame
-output_gle, desc_gle = ipi.read_output("simulation_piglet.out")
-traj_gle = [ipi.read_trajectory(f"simulation_piglet.pos_{i}.xyz")[1:] for i in range(8)]
-
-fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-ax.plot(
-    output_data["time"],
-    output_data["potential"] - output_data["potential"][0],
-    "b--",
-    label="PIMD",
-)
-ax.plot(
-    output_gle["time"],
-    output_gle["potential"] - output_gle["potential"][0],
-    "b-",
-    label="PIGLET",
-)
-ax.set_xlabel(r"$t$ / ps")
-ax.set_ylabel(r"energy / eV")
-ax.legend()
+# First, read the trajectory outputs. Note that these have all been
+# printed with the same stride
+output_data, output_desc = ipi.read_output("meta-md.out")
+print(ipi.read_trajectory("meta-md.colvar_0", format="extras"))
+colvar_data = ipi.read_trajectory("meta-md.colvar_0", format="extras")[
+    "doo,dc,mtd.bias"
+]
+traj_data = ipi.read_trajectory(f"meta-md.pos_0.xyz")
+print(colvar_data)
 
 # %%
-# However, you should be somewhat careful: PIGLET converges *some* but not all the
-# correlations within a path. For instance, it is designed to converge the
-# centroid-virial estimator for the kinetic energy, but not the thermodynamic
-# estimator. For the same reason, don't try to look at equilibration in terms of
-# the mean temperature: it won't match the target value, because PIGLET uses a
-# Langevin equation that breaks the classical fluctuation-dissipation theorem, and
-# generates a steady-state distribution that mimics quantum fluctuations.
-
-fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-ax.plot(output_data["time"], output_data["kinetic_cv"], "b--", label="PIMD, $K_{CV}$")
-ax.plot(output_gle["time"], output_gle["kinetic_cv"], "b", label="PIGLET, $K_{CV}$")
-ax.plot(output_data["time"], output_data["kinetic_td"], "r--", label="PIMD, $K_{TD}$")
-ax.plot(output_gle["time"], output_gle["kinetic_td"], "r", label="PIGLET, $K_{TD}$")
-ax.set_xlabel(r"$t$ / ps")
-ax.set_ylabel(r"energy / eV")
-ax.legend()
-
-# %%
-# Kinetic energy tensors
-# ~~~~~~~~~~~~~~~~~~~~~~
-#
-# While we're at it, let's do something more complicated (and instructive).
-# Classically, the momentum distribution of any atom is isotropic, so the
-# kinetic energy tensor (KET) :math:`\mathbf{p}\mathbf{p}^T/2m` is a constant
-# times the identity matrix. Quantum mechanically, the kinetic energy tensor
-# has more structure, that reflects the higher kinetic energy of particles
-# along directions with stiff bonds. We can compute a moving average of the
-# centroid virial estimator of the KET, and plot it to show the direction
-# of anisotropy. Note that there are some subtleties connected with the
-# evaluation of the moving average, see e.g.
-# `DOI:10.1103/PhysRevLett.109.100604 <http://doi.org/10.1103/PhysRevLett.109.100604>`_
-
-# %%
-# We first need to postprocess the components of the kinetic energy tensors
-# (that i-PI prints out separating the diagonal and off-diagonal bits), averaging
-# them over the last 10 frames and combining them with the centroid configuration
-# from the last frame in the trajectory.
-
-kinetic_cv = ipi.read_trajectory("simulation_piglet.kin.xyz")[1:]
-kinetic_od = ipi.read_trajectory("simulation_piglet.kod.xyz")[1:]
-kinetic_tens = np.hstack(
-    [
-        np.asarray([k.positions for k in kinetic_cv[-10:]]).mean(axis=0),
-        np.asarray([k.positions for k in kinetic_od[-10:]]).mean(axis=0),
-    ]
-)
-
-centroid = traj_gle[-1][-1].copy()
-centroid.positions = np.asarray([t[-1].positions for t in traj_gle]).mean(axis=0)
-centroid.arrays["kinetic_cv"] = kinetic_tens
-
-# %%
-# We can then view these in ``chemiscope``, setting the proper parameters to
-# visualize the ellipsoids associated with the KET. Note that some KETs have
-# negative eigenvalues, because we are averaging over a few frames, which is
-# insufficient to converge the estimator fully.
-
-ellipsoids = chemiscope.ase_tensors_to_ellipsoids(
-    [centroid], "kinetic_cv", scale=15, force_positive=True
-)
-
+# then, assemble a visualization
 chemiscope.show(
-    [centroid],
-    shapes={"kinetic_cv": ellipsoids},
-    mode="structure",
+    frames=traj_data,
+    properties=dict(
+        d_OO=10 * colvar_data[:, 0],  # nm to Å
+        delta_coord=colvar_data[:, 1],
+        bias=27.211386 * output_data["ensemble_bias"],  # Ha to eV
+        time=2.4188843e-05 * output_data["time"],
+    ),  # attime to ps
     settings=chemiscope.quick_settings(
-        structure_settings={
-            "shape": ["kinetic_cv"],
-            "unitCell": True,
-        }
+        x="d_OO", y="delta_coord", z="bias", color="time", trajectory=True
     ),
+    mode="default",
 )
+
+
+# %%
+# The visualization above shows how the growing metadynamics bias pushes
+# progressively the atoms towards geometries with larger O-O separations,
+# and that for these distorted configurations the proton is not shared
+# symmetrically between the O atoms, but is preferentially attached to
+# one of the two water molecules.
+
+# %%
+# The time history of the bias is instructive, as it shows how the
+# bias grows until the trajectory gets pushed in a new region (where the
+# bias is zero) and then grows again. The envelope of the bias increase
+# slows down over time, because the "well-tempered" deposition strategy
+# reduces the height of the hills deposited in high-bias regions.
+#
+# Note that, even for this small system, the potential energy has fluctuations
+# that are larger than the magnitude of the bias: this is because only two
+# degrees of freedom are affected by it, while all degrees of freedom
+# undergo thermal fluctuations.
+
+
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+
+ax.plot(
+    2.4188843e-05 * output_data["time"],
+    27.211386 * output_data["potential"],
+    "r",
+    label="potential",
+)
+ax.plot(
+    2.4188843e-05 * output_data["time"],
+    27.211386 * output_data["ensemble_bias"],
+    "b",
+    label="bias",
+)
+
+ax.set_xlabel(r"$t$ / ps")
+ax.set_ylabel(r"energy / eV")
+ax.legend()
+
+# %%
+# It's important to keep in mind that the growing metadynamics bias can
+# lead to deviations from the quasi-equilibrium sampling that is necessary
+# to recover the correct properties of the rare event. It is not easy
+# to verify this condition, but one simple diagnostics that can highlight
+# problems is looking at the kinetic temperature of all (or part of) the
+# system. Computing a moving average to have a clearer signal, it is clear
+# that the very high rate of biasing used in this demonstrative example
+# leads to a temperature that is consistently higher than the target,
+# with spikes up to 380 K and different temperatures for O and H atoms
+# (i.e. equipartition is broken). While this does not affect the qualitative
+# nature of the results, it is clear these parameters are unsuitable for
+# a production run.
+
+
+def moving_average(arr, window_size):
+    # Create a window of the specified size with equal weights
+    window = np.ones(window_size) / window_size
+    # Use the 'valid' mode to only return elements where the window fully overlaps with the data
+    return np.convolve(arr, window, mode="valid")
+
+
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+
+ax.plot(
+    2.4188843e-05 * output_data["time"][50:-49],
+    moving_average(output_data["temperature(O)"], 100),
+    "r",
+    label=r"$T_\mathrm{O}$",
+)
+ax.plot(
+    2.4188843e-05 * output_data["time"][50:-49],
+    moving_average(output_data["temperature(H)"], 100),
+    "gray",
+    label=r"$T_\mathrm{H}$",
+)
+ax.plot(
+    2.4188843e-05 * output_data["time"][50:-49],
+    moving_average(output_data["temperature"], 100),
+    "b",
+    label="T",
+)
+
+ax.set_xlabel(r"$t$ / ps")
+ax.set_ylabel(r"temperature / K")
+ax.legend()
+
+# %%
+# One of the advantages of metadynamics is that it allows to easily
+# estimate the free-energy associated with the collective variables
+# that are used to accelerate sampling by summing the repulsive hills
+# that have been deposited during the run and taking the negative of
+# the total bias at the end of the trajectory.
+#
+# Even though more sophisticated strategies exist that provide explicit
+# weighting factors to estimate the unbiased Boltzmann distribution
+# (see e.g.
+# `Giberti et al., JCTC 2020 <http://doi.org/10.1021/acs.jctc.9b00907>`_),
+# this simple approach is good enough for this example, and can be
+# realized as a post-processing step using the ``plumed sum_hills`` module,
+# that also applies a (simple) correction to the negative bias that
+# is needed when using the well-tempered bias scaling protocol.
+# The ``--stride`` option generates a list of files showing the estimates
+# of :math:`F` at different times along the trajectory.
+
+with open("data/plumed-md.dat", "r") as file:
+    subprocess.run(
+        [
+            "plumed",
+            "sum_hills",
+            "--hills",
+            "HILLS-md",
+            "--min",
+            "0.21,-1",
+            "--max",
+            "0.31,1",
+            "--bin",
+            "100,100",
+            "--outfile",
+            "FES-md",
+            "--stride",
+            "100",
+            "--mintozero",
+        ],
+        stdin=file,
+        text=True,
+    )
+
+# rearrange data and converts to Å and eV
+data = np.loadtxt("FES-md0.dat", comments="#")[:, :3]
+xyz_0 = np.array([10, 1, 0.01036427])[:, np.newaxis, np.newaxis] * data.T.reshape(
+    3, 101, 101
+)
+data = np.loadtxt("FES-md2.dat", comments="#")[:, :3]
+xyz_2 = np.array([10, 1, 0.01036427])[:, np.newaxis, np.newaxis] * data.T.reshape(
+    3, 101, 101
+)
+data = np.loadtxt("FES-md5.dat", comments="#")[:, :3]
+xyz_5 = np.array([10, 1, 0.01036427])[:, np.newaxis, np.newaxis] * data.T.reshape(
+    3, 101, 101
+)
+
+fig, ax = plt.subplots(
+    1, 3, figsize=(8, 3), sharex=True, sharey=True, constrained_layout=True
+)
+
+cf_0 = ax[0].contourf(*xyz_0)
+cf_1 = ax[1].contourf(*xyz_2)
+cf_2 = ax[2].contourf(*xyz_5)
+fig.colorbar(cf_2, ax=ax, orientation="vertical", label=r"$F$ / eV")
+ax[0].set_ylabel(r"$\Delta C_\mathrm{H}$")
+ax[0].set_xlabel(r"$d_\mathrm{OO}$ / Å")
+ax[1].set_xlabel(r"$d_\mathrm{OO}$ / Å")
+ax[2].set_xlabel(r"$d_\mathrm{OO}$ / Å")
+
+
+# %%
+# Biasing a path integral calculation
+# -----------------------------------
+#
+# You can see :ref:``
+
+xmlroot = ET.parse("data/input-md.xml").getroot()
+
+# %%
+# The `<ffsocket>` block describe the way communication will occur with the
+# driver code
+
+print("   " + ET.tostring(xmlroot.find("ffsocket"), encoding="unicode"))
+
+#
+# %%
+#

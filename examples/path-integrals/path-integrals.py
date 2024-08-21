@@ -233,7 +233,7 @@ lmp_process[1].wait()
 output_gle, desc_gle = ipi.read_output("simulation_piglet.out")
 traj_gle = [ipi.read_trajectory(f"simulation_piglet.pos_{i}.xyz")[1:] for i in range(8)]
 
-fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(
     output_data["time"],
     output_data["potential"] - output_data["potential"][0],
