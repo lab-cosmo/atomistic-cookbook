@@ -8,18 +8,22 @@ This example shows how to run a free-energy sampling calculation that
 combines path integral molecular dynamics to model nuclear quantum effects
 and metadynamics to accelerate sampling of the high-free-energy regions. 
 
-The rather complicated setup combines ``i-PI`` to perform path integra
+The rather complicated setup combines `i-PI <http://ipi-code.org>`_ 
+to perform path integral
 MD, the built-in driver to compute energy and forces for the Zundel
-H5O2+ cation, and `PLUMED <http://plumed.org/>` to perform metadynamics.
+:math:`\mathrm{H_5O_2^+}` cation, and `PLUMED <http://plumed.org/>`_ to perform metadynamics.
 If you want to see an example in a more realistic scenario, you can look
-at `this paper <http://doi.org/10.1021/acs.jctc.0c00362>`, in which this
+at `this paper <http://doi.org/10.1021/acs.jctc.0c00362>`_, in which this
 methodology is used to simulate the decomposition of methanesulphonic
 acid in a solution of phenol and hydrogen peroxide. 
 
 Note also that, in order to keep the execution time of this example as 
 low as possible, several parameters are set to values that would not be 
-suitable for an accurate, converged simulation. They will be highlighted
-and more reasonable values will be provided. 
+suitable for an accurate, converged simulation. 
+They will be highlighted and more reasonable values will be provided. 
+"High-quality" runs can also be realized substituting the input files
+used in this example with those labeled with the ``_hiq`` suffix, that 
+are also present in the ``data/`` folder.
 """
 
 # %%
@@ -29,6 +33,7 @@ import time
 
 import chemiscope
 import ipi
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 import ase, ase.io
@@ -89,11 +94,11 @@ chemiscope.show(frames=zundel, mode="structure")
 # Running metadynamics calculations with ``i-PI`` and ``PLUMED``
 # --------------------------------------------------------------
 #
-# The client-server model `i-PI <http://ipi-code.org>`_ is based on makes it easy
+# The client-server architecture `i-PI <http://ipi-code.org>`_ is based on makes it easy
 # to combine multiple programs to realize complicated simulation workflows.
 # In this case we will use an implementation of the Zundel potential in a simple
 # driver code that is available in the i-PI repository, and use
-# `PLUMED <http://plumed.org/>` to compute collective variables and build
+# `PLUMED <http://plumed.org/>`_ to compute collective variables and build
 # the adaptive bias. We will then perform some post-processing to
 # estimate the free energy.
 
@@ -126,12 +131,12 @@ print("   " + ET.tostring(xmlroot.find("ffsocket"), encoding="unicode"))
 # This is a relatively standard NVT setup, with an efficient
 # generalized Langevin equation thermostat (important to
 # compensate for the non-equilibrium nature of metadynamics).
-# Note that the time step is rather long (typical value for
+# Note that the time step is rather long (the recommended value for
 # aqueous systems is around 0.5 fs). This is done to improve
 # efficiency for this example, but you should check if it
 # affects results in a realistic scenario.
 
-print("   " + ET.tostring(xmlroot.find(".//motion"), encoding="unicode"))
+print("      " + ET.tostring(xmlroot.find(".//motion"), encoding="unicode"))
 
 # %%
 # The metadynamics setup requires three ingredients:
@@ -150,12 +155,12 @@ print("   " + ET.tostring(xmlroot.find(".//motion"), encoding="unicode"))
 # trajectory).
 #
 # The `<smotion>` section contains a `<metad>` class that
-# instructs to call the PLUMED internal that adds hills
+# instructs to call the PLUMED action that adds hills
 # along the trajectory.
 
 print("   " + ET.tostring(xmlroot.find("ffplumed"), encoding="unicode"))
-print("   " + ET.tostring(xmlroot.find(".//ensemble"), encoding="unicode"))
-print("   " + ET.tostring(xmlroot.find("smotion"), encoding="unicode"))
+print("      " + ET.tostring(xmlroot.find(".//ensemble"), encoding="unicode"))
+print("  " + ET.tostring(xmlroot.find("smotion"), encoding="unicode"))
 
 
 # %%
@@ -176,7 +181,7 @@ print("   " + ET.tostring(xmlroot.find("smotion"), encoding="unicode"))
 # that the height of the hills will be progressively reduced
 # according to the "well-tempered metadynamics" protocol, see
 # `Barducci et al., Phys. Rev. Lett. (2008) <http://doi.org/10.1103/PhysRevLett.100.020603>`_
-# A repulsive static bias prevents complete dissociation of the
+# A repulsive static bias (`UPPER_WALLS`) prevents complete dissociation of the
 # cation by limiting the range of the O-O distance.
 
 with open("data/plumed-md.dat", "r") as file:
@@ -200,22 +205,26 @@ print(plumed_dat)
 #    i-pi data/input-md.xml > log &
 #    sleep 2
 #    cd data; i-pi-driver -u -a zundel -m zundel
+#
+# The same can be achieved from Python using ``subprocess.Popen``
 
-ipi_process = subprocess.Popen(["i-pi", "data/input-md.xml"])
-time.sleep(2)  # wait for i-PI to start
-driver_process = [
-    subprocess.Popen(["i-pi-driver", "-u", "-a", "zundel", "-m", "zundel"], cwd="data/")
-    for i in range(1)
-]
+if not os.path.exists("meta-md.out"):
+    # don't rerun if the outputs already exist
+    ipi_process = subprocess.Popen(["i-pi", "data/input-md.xml"])
+    time.sleep(2)  # wait for i-PI to start
+    driver_process = [
+        subprocess.Popen(["i-pi-driver", "-u", "-a", "zundel", "-m", "zundel"], cwd="data/")
+        for i in range(1)
+    ]
 
 # %%
 # If you run this in a notebook, you can go ahead and start loading
-# output files _before_ i-PI and lammps have finished running, by
-# skipping this cell
+# output files *before* i-PI has finished running by skipping this cell
 
-ipi_process.wait()
-for process in driver_process:
-    process.wait()
+if not os.path.exists("meta-md.out"):
+    ipi_process.wait()
+    for process in driver_process:
+        process.wait()
 
 # %%
 # Trajectory post-processing
@@ -223,16 +232,14 @@ for process in driver_process:
 #
 # We can now post-process the simulation to see metadynamics in action.
 #
-
-# First, read the trajectory outputs. Note that these have all been
+# First, we read the trajectory outputs. Note that these have all been
 # printed with the same stride
+
 output_data, output_desc = ipi.read_output("meta-md.out")
-print(ipi.read_trajectory("meta-md.colvar_0", format="extras"))
 colvar_data = ipi.read_trajectory("meta-md.colvar_0", format="extras")[
     "doo,dc,mtd.bias"
-]
+    ]
 traj_data = ipi.read_trajectory(f"meta-md.pos_0.xyz")
-print(colvar_data)
 
 # %%
 # then, assemble a visualization
@@ -242,7 +249,7 @@ chemiscope.show(
         d_OO=10 * colvar_data[:, 0],  # nm to Å
         delta_coord=colvar_data[:, 1],
         bias=27.211386 * output_data["ensemble_bias"],  # Ha to eV
-        time=2.4188843e-05 * output_data["time"],
+        time=2.4188843e-05 * output_data["time"], # atomictime to ps
     ),  # attime to ps
     settings=chemiscope.quick_settings(
         x="d_OO", y="delta_coord", z="bias", color="time", trajectory=True
@@ -259,16 +266,21 @@ chemiscope.show(
 # one of the two water molecules.
 
 # %%
+# Trajectory diagnostics
+# ...................... 
+#
 # The time history of the bias is instructive, as it shows how the
 # bias grows until the trajectory gets pushed in a new region (where the
 # bias is zero) and then grows again. The envelope of the bias increase
 # slows down over time, because the "well-tempered" deposition strategy
 # reduces the height of the hills deposited in high-bias regions.
 #
-# Note that, even for this small system, the potential energy has fluctuations
-# that are larger than the magnitude of the bias: this is because only two
-# degrees of freedom are affected by it, while all degrees of freedom
-# undergo thermal fluctuations.
+# Note that the potential energy has fluctuations that are larger than 
+# the magnitude of the bias, although it shows a tendency to reach higher
+# values as the simulation progresses. This is because only two degrees 
+# of freedom are affected by the bias, while all degrees of freedom
+# undergo thermal fluctuations, which are dominant even for this 
+# small system.
 
 
 fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
@@ -291,19 +303,13 @@ ax.set_ylabel(r"energy / eV")
 ax.legend()
 
 # %%
+#
 # It's important to keep in mind that the growing metadynamics bias can
 # lead to deviations from the quasi-equilibrium sampling that is necessary
 # to recover the correct properties of the rare event. It is not easy
 # to verify this condition, but one simple diagnostics that can highlight
-# problems is looking at the kinetic temperature of all (or part of) the
-# system. Computing a moving average to have a clearer signal, it is clear
-# that the very high rate of biasing used in this demonstrative example
-# leads to a temperature that is consistently higher than the target,
-# with spikes up to 380 K and different temperatures for O and H atoms
-# (i.e. equipartition is broken). While this does not affect the qualitative
-# nature of the results, it is clear these parameters are unsuitable for
-# a production run.
-
+# problems is looking at the kinetic temperature of different portions of the
+# system, computing a moving average to have a clearer signal.
 
 def moving_average(arr, window_size):
     # Create a window of the specified size with equal weights
@@ -338,7 +344,17 @@ ax.set_ylabel(r"temperature / K")
 ax.legend()
 
 # %%
-# One of the advantages of metadynamics is that it allows to easily
+# It is clear that the very high rate of biasing used in this demonstrative 
+# example leads to a temperature that is consistently higher than the target,
+# with spikes up to 380 K and different temperatures for O and H atoms
+# (i.e. equipartition is broken). While this does not affect the qualitative
+# nature of the results, these parameters are unsuitable for a production run.
+
+# %%
+# Free energy profiles
+# ....................
+#
+# One of the advantages of metadynamics is that it allows one to easily
 # estimate the free-energy associated with the collective variables
 # that are used to accelerate sampling by summing the repulsive hills
 # that have been deposited during the run and taking the negative of
@@ -352,6 +368,12 @@ ax.legend()
 # realized as a post-processing step using the ``plumed sum_hills`` module,
 # that also applies a (simple) correction to the negative bias that
 # is needed when using the well-tempered bias scaling protocol.
+# On the command line,
+#
+# .. code-block:: bash
+#
+#    plumed sum_hills --hills HILLS-md --min 0.21,-1 --max 0.31,1 --bin 100,100 --outfile FES-md --stride 100 --mintozero < data/plumed-md.dat
+#
 # The ``--stride`` option generates a list of files showing the estimates
 # of :math:`F` at different times along the trajectory.
 
@@ -392,6 +414,10 @@ xyz_5 = np.array([10, 1, 0.01036427])[:, np.newaxis, np.newaxis] * data.T.reshap
     3, 101, 101
 )
 
+# %%
+# The plots show, left-to-right, the accumulation of the 
+# metadynamics bias as simulation progresses.
+
 fig, ax = plt.subplots(
     1, 3, figsize=(8, 3), sharex=True, sharey=True, constrained_layout=True
 )
@@ -404,22 +430,273 @@ ax[0].set_ylabel(r"$\Delta C_\mathrm{H}$")
 ax[0].set_xlabel(r"$d_\mathrm{OO}$ / Å")
 ax[1].set_xlabel(r"$d_\mathrm{OO}$ / Å")
 ax[2].set_xlabel(r"$d_\mathrm{OO}$ / Å")
-
+ax[0].set_title(r"$t=0.8$ ps")
+ax[1].set_title(r"$t=2.5$ ps")
+ax[2].set_title(r"$t=5.0$ ps")
 
 # %%
 # Biasing a path integral calculation
 # -----------------------------------
 #
-# You can see :ref:``
+# You can see `this recipe <http://lab-cosmo.github.io/atomistic-cookbook/examples/path-integrals>`_
+# for a brief introduction to path integral simulations with `i-PI`.
+# From a practical perspective, very little needs to change with respect
+# to the classical case.
 
-xmlroot = ET.parse("data/input-md.xml").getroot()
+xmlroot = ET.parse("data/input-pimd.xml").getroot()
 
 # %%
-# The `<ffsocket>` block describe the way communication will occur with the
-# driver code
+# The `nbeads` option determines the number of path integral
+# replicas. The value of 8 used here is not sufficient to converge
+# quantum statistics at 300 K (a more typical value would be 
+# around 32). There are methods to reduce the number of replicas
+# needed for convergence, see e.g. 
+# `Ceriotti and Markland, Nat. Rev. Chem. (2018) <http://doi.org/10.1038/s41570-017-0109>`_
+# but we keep it simple here.
 
-print("   " + ET.tostring(xmlroot.find("ffsocket"), encoding="unicode"))
+print(" " + ET.tostring(xmlroot.find(".//initialize"), encoding="unicode")[:23])
 
+# %%
+# Centroid bias
+# ~~~~~~~~~~~~~
 #
+# Another detail worth discussing is that the metadynamics bias
+# is computed exclusively on the *centroid*, the mean position of
+# the ring-polymer beads. This is an extreme form of 
+# `ring polymer contraction <Markland and Manolopoulos, J. Chem. Phys. (2008) <http://doi.org/10.1063/1.2953308>`_
+# that avoids computing for each replica the slowly-varying 
+# parts of the potential, but is not applied for computational
+# savings. When performing a quantum free-energy calculation it
+# is important to distinguish between the free-energy computed
+# as the logarithm of the probability of observing a given 
+# configuration (that depends on the distribution of the 
+# replicas) and the free-energy taken as a mean to estimate
+# and reaction  rates :math:`k` in a transition-state theory 
+# fashion :math:`k\propto e^{-\Delta E^\ddagger/kT}`, 
+# where the energy barrier :math:`\Delta E^\ddagger`
+# is better estimated from the distribution of the centroid.
+# See e.g. 
+# `Habershon et al., Annu. Rev. Phys. Chem. (2013) <http://doi.org/10.1146/annurev-physchem-040412-110122>`_
+# for a discussion of the subtleties involved in estimating
+# transition rates. 
+# In practice, performing this contraction step is very easy
+# in `i-PI`, because for each `<force>` section - including 
+# that corresponding to the bias - it is possible to specify 
+# a different number of replicas. The configurations will
+# be automatically computed by Fourier interpolation.
+
+print("         " + ET.tostring(xmlroot.find(".//bias"), encoding="unicode"))
+
+# %%
+# Running the calculation
+# ~~~~~~~~~~~~~~~~~~~~~~~
+#
+# The other changes are purely cosmetic, and the calculation
+# can be launched very easily, using several drivers to parallelize
+# the calculation over the beads (although this kind of calculations
+# is not limited by the evaluation of the forces).
+
+# don't rerun if the outputs already exist
+if not os.path.exists("meta-pimd.out"):
+    ipi_process = subprocess.Popen(["i-pi", "data/input-pimd.xml"])
+    time.sleep(2)  # wait for i-PI to start
+    driver_process = [
+        subprocess.Popen(["i-pi-driver", "-u", "-a", "zundel", "-m", "zundel"], cwd="data/")
+        for i in range(4)
+    ]
+
 # %%
 #
+# If you run this in a notebook, you can go ahead and start loading
+# output files _before_ i-PI has finished running by skipping this cell
+
+# don't rerun if the outputs already exist
+if not os.path.exists("meta-pimd.out"):
+    ipi_process.wait()
+    for process in driver_process:
+        process.wait()
+    
+# %%
+# Analysis of the simulation
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+output_data, output_desc = ipi.read_output("meta-pimd.out")
+colvar_data = ipi.read_trajectory("meta-pimd.colvar_0", format="extras")[
+    "doo,dc,mtd.bias"
+    ]
+pimd_traj_data = [ipi.read_trajectory(f"meta-pimd.pos_{i}.xyz") for i in range(8)]
+
+# combines the PI beads and sets up the visualization options
+traj_pimd = chemiscope.ase_merge_pi_frames(pimd_traj_data)
+traj_pimd["shapes"]["paths"]["parameters"]["global"]["radius"] = 0.05
+traj_pimd["properties"]=dict(
+        d_OO=10 * colvar_data[:, 0],  # nm to Å
+        delta_coord=colvar_data[:, 1],
+        bias=27.211386 * output_data["ensemble_bias"],  # Ha to eV
+        time=2.4188843e-05 * output_data["time"],
+    )
+traj_pimd["settings"]=chemiscope.quick_settings(
+        x="d_OO", y="delta_coord", z="bias", color="time", trajectory=True,
+        structure_settings=dict(
+        bonds=False,
+        atoms=False,
+        keepOrientation=True,
+        unitCell=False,
+        shape=["paths",]    
+    )
+    )
+traj_pimd["settings"]["target"]="structure"
+
+# %%
+ ##
+print(traj_pimd.keys())
+print(traj_pimd["properties"].keys())
+
+# %%
+#
+# Visualize the trajectory. Note the similar behavior as for the classical 
+# trajectory, and the delocalization of the protons
+
+chemiscope.show(**traj_pimd)
+
+
+#%%
+# Free energy plots
+# ~~~~~~~~~~~~~~~~~
+#
+# The free energy profiles relative to :math:`\Delta C_\mathrm{H}`
+# and :math:`d_\mathrm{OO}` can be computed exactly as for the
+# classical trajectory, using the `sum_hills` module.  
+
+with open("data/plumed-pimd.dat", "r") as file:
+    subprocess.run(
+        [
+            "plumed",
+            "sum_hills",
+            "--hills",
+            "HILLS-pimd",
+            "--min",
+            "0.21,-1",
+            "--max",
+            "0.31,1",
+            "--bin",
+            "100,100",
+            "--outfile",
+            "FES-pimd",
+            "--stride",
+            "100",
+            "--mintozero",
+        ],
+        stdin=file,
+        text=True,
+    )
+
+# rearrange data and converts to Å and eV
+data = np.loadtxt("FES-pimd0.dat", comments="#")[:, :3]
+xyz_pi_0 = np.array([10, 1, 0.01036427])[:, np.newaxis, np.newaxis] * data.T.reshape(
+    3, 101, 101
+)
+data = np.loadtxt("FES-pimd2.dat", comments="#")[:, :3]
+xyz_pi_2 = np.array([10, 1, 0.01036427])[:, np.newaxis, np.newaxis] * data.T.reshape(
+    3, 101, 101
+)
+data = np.loadtxt("FES-pimd5.dat", comments="#")[:, :3]
+xyz_pi_5 = np.array([10, 1, 0.01036427])[:, np.newaxis, np.newaxis] * data.T.reshape(
+    3, 101, 101
+)
+
+fig, ax = plt.subplots(
+    1, 3, figsize=(8, 3), sharex=True, sharey=True, constrained_layout=True
+)
+
+cf_0 = ax[0].contourf(*xyz_pi_0)
+cf_1 = ax[1].contourf(*xyz_pi_2)
+cf_2 = ax[2].contourf(*xyz_pi_5)
+fig.colorbar(cf_2, ax=ax, orientation="vertical", label=r"$F$ / eV")
+ax[0].set_ylabel(r"$\Delta C_\mathrm{H}$")
+ax[0].set_xlabel(r"$d_\mathrm{OO}$ / Å")
+ax[1].set_xlabel(r"$d_\mathrm{OO}$ / Å")
+ax[2].set_xlabel(r"$d_\mathrm{OO}$ / Å")
+ax[0].set_title(r"$t=0.8$ ps")
+ax[1].set_title(r"$t=2.5$ ps")
+ax[2].set_title(r"$t=5.0$ ps")
+
+# %%
+# Quantum nuclear effects
+# .......................
+# 
+# The effect of nuclear quantization on the free-energy
+# is relatively small, despite the large delocalization of the
+# protons in the ring polymer calculation. Looking more 
+# carefully at the two distributions, one can notice that 
+# in the high-:math:`d_\mathrm{OO}` region there is higher
+# delocalisation of the proton. 
+
+fig, ax = plt.subplots(
+    1, 1, figsize=(4, 3), sharex=True, sharey=True, constrained_layout=True
+)
+
+levels = np.linspace(0,0.5,6)
+cp1=ax.contour(*xyz_5, colors='b', levels=levels)
+cp2=ax.contour(*xyz_pi_5, colors='r', levels=levels)
+ax.set_ylabel(r"$\Delta C_\mathrm{H}$")
+ax.set_xlabel(r"$d_\mathrm{OO}$ / Å")
+ax.legend(
+    handles=[plt.Line2D([0],[0],color="b", label="MD"),
+     plt.Line2D([0],[0],color="r", label="PIMD")]
+)
+
+# %%
+# 
+# To get a clear signal, we need better-converged calculations; 
+# the `data/` folder contains inputs for these "high quality" runs,
+# and free-energies obtained from them. 
+# The results confirm the lowering of the free-energy barrier for
+# the :math:`\mathrm{H_3O^+ + H_2O} \rightarrow \mathrm{H_2O + H_3O^+}` 
+# transition.
+
+data = np.loadtxt("FES-md_hiq", comments="#")[:, :3]
+xyz_md_hiq = np.array([10, 1, 0.01036427])[:, np.newaxis, np.newaxis] * data.T.reshape(
+    3, 101, 101
+)
+data = np.loadtxt("FES-pimd_hiq", comments="#")[:, :3]
+xyz_pi_hiq = np.array([10, 1, 0.01036427])[:, np.newaxis, np.newaxis] * data.T.reshape(
+    3, 101, 101
+)
+
+xyz_md_hiq[2] -= xyz_md_hiq[2].min()
+xyz_pi_hiq[2] -= xyz_pi_hiq[2].min()
+
+fig, ax = plt.subplots(
+    1, 1, figsize=(4, 3), sharex=True, sharey=True, constrained_layout=True
+)
+
+levels = np.linspace(0,0.5,6)
+cp1=ax.contour(*xyz_md_hiq, colors='b', levels=levels)
+cp2=ax.contour(*xyz_pi_hiq, colors='r', levels=levels)
+ax.set_ylabel(r"$\Delta C_\mathrm{H}$")
+ax.set_xlabel(r"$d_\mathrm{OO}$ / Å")
+ax.legend(
+    handles=[plt.Line2D([0],[0],color="b", label="MD"),
+     plt.Line2D([0],[0],color="r", label="PIMD")]
+)
+
+# %%
+# 
+# The lowering of the barrier for proton hopping is clearly
+# seen by taking 1-D slices of the free energy
+
+fig, ax = plt.subplots(
+    1, 1, figsize=(4, 3), sharex=True, sharey=True, constrained_layout=True
+)
+
+ax.plot(xyz_md_hiq[1,:,50],xyz_md_hiq[2,:,50], 'b', label=r"MD, $d_\mathrm{OO}=2.6 $Å")
+ax.plot(xyz_pi_hiq[1,:,50],xyz_pi_hiq[2,:,50], 'r', label=r"PIMD, $d_\mathrm{OO}=2.6 $Å")
+ax.plot(xyz_md_hiq[1,:,60],xyz_md_hiq[2,:,60], 'b--', label=r"MD, $d_\mathrm{OO}=2.7 $Å")
+ax.plot(xyz_pi_hiq[1,:,60],xyz_pi_hiq[2,:,60], 'r--', label=r"PIMD, $d_\mathrm{OO}=2.7 $Å")
+ax.set_ylim(0.08,0.6)
+ax.legend(ncols=2, loc="upper right", fontsize=9)
+ax.set_ylabel(r"$F$ / eV")
+ax.set_xlabel(r"$\Delta C_\mathrm{H}$")
+
+# %%

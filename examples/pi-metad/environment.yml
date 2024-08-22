@@ -11,7 +11,7 @@ dependencies:
   - py-plumed  
   - pip:
     - ase==3.22.1
-    - chemiscope>=0.7
+    - chemiscope
     - git+https://github.com/i-pi/i-pi.git@driver_utils#egg=ipi
     - matplotlib
     - skmatter
