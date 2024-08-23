@@ -4,25 +4,25 @@ Path integral metadynamics
 
 :Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm/>`_
 
-This example shows how to run a free-energy sampling calculation that 
+This example shows how to run a free-energy sampling calculation that
 combines path integral molecular dynamics to model nuclear quantum effects
-and metadynamics to accelerate sampling of the high-free-energy regions. 
+and metadynamics to accelerate sampling of the high-free-energy regions.
 
-The rather complicated setup combines `i-PI <http://ipi-code.org>`_ 
+The rather complicated setup combines `i-PI <http://ipi-code.org>`_
 to perform path integral
 MD, the built-in driver to compute energy and forces for the Zundel
 :math:`\mathrm{H_5O_2^+}` cation, and `PLUMED <http://plumed.org/>`_ to perform metadynamics.
 If you want to see an example in a more realistic scenario, you can look
 at `this paper <http://doi.org/10.1021/acs.jctc.0c00362>`_, in which this
 methodology is used to simulate the decomposition of methanesulphonic
-acid in a solution of phenol and hydrogen peroxide. 
+acid in a solution of phenol and hydrogen peroxide.
 
-Note also that, in order to keep the execution time of this example as 
-low as possible, several parameters are set to values that would not be 
-suitable for an accurate, converged simulation. 
-They will be highlighted and more reasonable values will be provided. 
+Note also that, in order to keep the execution time of this example as
+low as possible, several parameters are set to values that would not be
+suitable for an accurate, converged simulation.
+They will be highlighted and more reasonable values will be provided.
 "High-quality" runs can also be realized substituting the input files
-used in this example with those labeled with the ``_hiq`` suffix, that 
+used in this example with those labeled with the ``_hiq`` suffix, that
 are also present in the ``data/`` folder.
 """
 
@@ -318,7 +318,8 @@ ax.legend()
 def moving_average(arr, window_size):
     # Create a window of the specified size with equal weights
     window = np.ones(window_size) / window_size
-    # Use the 'valid' mode to only return elements where the window fully overlaps with the data
+    # Use the 'valid' mode to only return elements where the window fully
+    # overlaps with the data
     return np.convolve(arr, window, mode="valid")
 
 
