@@ -77,7 +77,7 @@ def get_example_files():
 # We want to mimic
 # git ls-files --other examples
 def get_example_other_files(fd):
-    folder = os.getcwd() + "/" + fd
+    folder = os.path.join(os.getcwd(), fd)
     # Get the list of ignored files
     # Get the list of all not tracked files
     tracked_files_command = ["git", "ls-files", "--other", folder]
@@ -85,7 +85,7 @@ def get_example_other_files(fd):
         tracked_files_command, cwd=folder, text=True
     )
 
-    return [folder + "/" + file for file in tracked_files_output.splitlines()]
+    return [os.path.join(folder, file) for file in tracked_files_output.splitlines()]
 
 
 def should_reinstall_dependencies(session, **metadata):
@@ -276,13 +276,19 @@ def format(session):
 def clean_build(session):
     """Remove temporary files and building folders"""
 
-    # remove building folders
-    for i in ["docs/src/examples/", "docs/build"]:
+    # remove building folders and the nox cache
+    for i in ["docs/src/examples/", "docs/build", ".nox"]:
         if os.path.isdir(i):
             shutil.rmtree(i)
-    # remove temp files if any
-    for ifile in get_example_other_files("examples") + get_example_other_files("docs/"):
+
+
+@nox.session
+def clean_examples(session):
+
+    # remove all untracked files from examples
+    for ifile in get_example_other_files("examples"):
         os.remove(ifile)
+
     flist = glob.glob("examples/*")
     # Remove empty folders
     for fl in flist:
