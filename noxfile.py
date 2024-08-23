@@ -305,6 +305,8 @@ def format(session):
     session.run("black", *LINT_FILES)
     session.run("blackdoc", *LINT_FILES)
     session.run("isort", *LINT_FILES)
+    for file in LINT_FILES:
+        remove_trailing_whitespace(file)
 
 
 @nox.session
@@ -329,5 +331,3 @@ def clean_examples(session):
     for fl in flist:
         if 0 == len(glob.glob(fl + "/*")):
             os.rmdir(fl)
-    for file in LINT_FILES:
-        remove_trailing_whitespace(file)
