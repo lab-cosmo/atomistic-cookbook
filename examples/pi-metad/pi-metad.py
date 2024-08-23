@@ -11,7 +11,8 @@ and metadynamics to accelerate sampling of the high-free-energy regions.
 The rather complicated setup combines `i-PI <http://ipi-code.org>`_
 to perform path integral
 MD, the built-in driver to compute energy and forces for the Zundel
-:math:`\mathrm{H_5O_2^+}` cation, and `PLUMED <http://plumed.org/>`_ to perform metadynamics.
+:math:`\mathrm{H_5O_2^+}` cation, and `PLUMED <http://plumed.org/>`_
+to perform metadynamics.
 If you want to see an example in a more realistic scenario, you can look
 at `this paper <http://doi.org/10.1021/acs.jctc.0c00362>`_, in which this
 methodology is used to simulate the decomposition of methanesulphonic
@@ -39,6 +40,7 @@ import chemiscope
 import ipi
 import matplotlib.pyplot as plt
 import numpy as np
+
 
 # %%
 # Metadynamics for the Zundel cation
@@ -179,7 +181,8 @@ print("  " + ET.tostring(xmlroot.find("smotion"), encoding="unicode"))
 # the repulsive Gaussians. The `BIASFACTOR` keyword specifies
 # that the height of the hills will be progressively reduced
 # according to the "well-tempered metadynamics" protocol, see
-# `Barducci et al., Phys. Rev. Lett. (2008) <http://doi.org/10.1103/PhysRevLett.100.020603>`_
+# `Barducci et al., Phys. Rev. Lett. (2008)
+# <http://doi.org/10.1103/PhysRevLett.100.020603>`_
 # A repulsive static bias (`UPPER_WALLS`) prevents complete dissociation of the
 # cation by limiting the range of the O-O distance.
 
@@ -366,7 +369,8 @@ ax.legend()
 # Even though more sophisticated strategies exist that provide explicit
 # weighting factors to estimate the unbiased Boltzmann distribution
 # (see e.g.
-# `Giberti et al., JCTC 2020 <http://doi.org/10.1021/acs.jctc.9b00907>`_),
+# `Giberti et al., JCTC 2020
+# <http://doi.org/10.1021/acs.jctc.9b00907>`_),
 # this simple approach is good enough for this example, and can be
 # realized as a post-processing step using the ``plumed sum_hills`` module,
 # that also applies a (simple) correction to the negative bias that
@@ -375,7 +379,8 @@ ax.legend()
 #
 # .. code-block:: bash
 #
-#    plumed sum_hills --hills HILLS-md --min 0.21,-1 --max 0.31,1 --bin 100,100 --outfile FES-md --stride 100 --mintozero < data/plumed-md.dat
+#    plumed sum_hills --hills HILLS-md --min 0.21,-1 --max 0.31,1 --bin 100,100 \
+#           --outfile FES-md --stride 100 --mintozero < data/plumed-md.dat
 #
 # The ``--stride`` option generates a list of files showing the estimates
 # of :math:`F` at different times along the trajectory.
@@ -441,7 +446,8 @@ ax[2].set_title(r"$t=5.0$ ps")
 # Biasing a path integral calculation
 # -----------------------------------
 #
-# You can see `this recipe <http://lab-cosmo.github.io/atomistic-cookbook/examples/path-integrals>`_
+# You can see `this recipe
+# <http://lab-cosmo.github.io/atomistic-cookbook/examples/path-integrals>`_
 # for a brief introduction to path integral simulations with `i-PI`.
 # From a practical perspective, very little needs to change with respect
 # to the classical case.
@@ -454,7 +460,8 @@ xmlroot = ET.parse("data/input-pimd.xml").getroot()
 # quantum statistics at 300 K (a more typical value would be
 # around 32). There are methods to reduce the number of replicas
 # needed for convergence, see e.g.
-# `Ceriotti and Markland, Nat. Rev. Chem. (2018) <http://doi.org/10.1038/s41570-017-0109>`_
+# `Ceriotti and Markland, Nat. Rev. Chem. (2018)
+# <http://doi.org/10.1038/s41570-017-0109>`_
 # but we keep it simple here.
 
 print(" " + ET.tostring(xmlroot.find(".//initialize"), encoding="unicode")[:23])
@@ -466,7 +473,9 @@ print(" " + ET.tostring(xmlroot.find(".//initialize"), encoding="unicode")[:23])
 # Another detail worth discussing is that the metadynamics bias
 # is computed exclusively on the *centroid*, the mean position of
 # the ring-polymer beads. This is an extreme form of
-# `ring polymer contraction <Markland and Manolopoulos, J. Chem. Phys. (2008) <http://doi.org/10.1063/1.2953308>`_
+# ring polymer contraction
+# `(Markland and Manolopoulos, J. Chem. Phys. (2008)
+# <http://doi.org/10.1063/1.2953308>`_
 # that avoids computing for each replica the slowly-varying
 # parts of the potential, but is not applied for computational
 # savings. When performing a quantum free-energy calculation it
@@ -479,7 +488,8 @@ print(" " + ET.tostring(xmlroot.find(".//initialize"), encoding="unicode")[:23])
 # where the energy barrier :math:`\Delta E^\ddagger`
 # is better estimated from the distribution of the centroid.
 # See e.g.
-# `Habershon et al., Annu. Rev. Phys. Chem. (2013) <http://doi.org/10.1146/annurev-physchem-040412-110122>`_
+# `Habershon et al., Annu. Rev. Phys. Chem. (2013)
+# <http://doi.org/10.1146/annurev-physchem-040412-110122>`_
 # for a discussion of the subtleties involved in estimating
 # transition rates.
 # In practice, performing this contraction step is very easy
@@ -697,13 +707,6 @@ ax.legend(
 #
 # The lowering of the barrier for proton hopping is clearly
 # seen by taking 1D slices of the free energy at different O-O separations.
-# This model system is representative of the behavior of protons
-# along a hydrogen bond in different conditions, where the environment
-# determines the typical O-O separation, and whether the proton is shared
-# (as in high pressure ice X) or preferentially attached to one of the two
-# molecules. Zero-point energy (and to a lesser extent tunneling)
-# increases the delocalization, and reduces the barrier for an excess
-# proton to hop between water molecues.
 
 fig, ax = plt.subplots(
     1, 1, figsize=(4, 3), sharex=True, sharey=True, constrained_layout=True
@@ -736,3 +739,10 @@ ax.set_ylabel(r"$F$ / eV")
 ax.set_xlabel(r"$\Delta C_\mathrm{H}$")
 
 # %%
+# This model system is representative of the behavior of protons
+# along a hydrogen bond in different conditions, where the environment
+# determines the typical O-O separation, and whether the proton is shared
+# (as in high pressure ice X) or preferentially attached to one of the two
+# molecules. Zero-point energy (and to a lesser extent tunneling)
+# increases the delocalization, and reduces the barrier for an excess
+# proton to hop between water molecues.
