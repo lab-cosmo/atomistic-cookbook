@@ -634,12 +634,12 @@ ax[1].set_title(r"$t=2.5$ ps")
 ax[2].set_title(r"$t=5.0$ ps")
 
 # %%
-# Quantum nuclear effects
-# .......................
+# Assessing quantum nuclear effects
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The effect of nuclear quantization on the free-energy
+# The effect of nuclear quantization on the centroid free-energy
 # is relatively small, despite the large delocalization of the
-# protons in the ring polymer calculation. Looking more
+# protons in the PIMD calculation. Looking more
 # carefully at the two distributions, one can notice that
 # in the high-:math:`d_\mathrm{OO}` region there is higher
 # delocalisation of the proton.
@@ -669,17 +669,14 @@ ax.legend(
 # the :math:`\mathrm{H_3O^+ + H_2O} \rightarrow \mathrm{H_2O + H_3O^+}`
 # transition.
 
-data = np.loadtxt("FES-md_hiq", comments="#")[:, :3]
+data = np.loadtxt("data/FES-md_hiq", comments="#")[:, :3]
 xyz_md_hiq = np.array([10, 1, 0.01036427])[:, np.newaxis, np.newaxis] * data.T.reshape(
     3, 101, 101
 )
-data = np.loadtxt("FES-pimd_hiq", comments="#")[:, :3]
+data = np.loadtxt("data/FES-pimd_hiq", comments="#")[:, :3]
 xyz_pi_hiq = np.array([10, 1, 0.01036427])[:, np.newaxis, np.newaxis] * data.T.reshape(
     3, 101, 101
 )
-
-xyz_md_hiq[2] -= xyz_md_hiq[2].min()
-xyz_pi_hiq[2] -= xyz_pi_hiq[2].min()
 
 fig, ax = plt.subplots(
     1, 1, figsize=(4, 3), sharex=True, sharey=True, constrained_layout=True
@@ -700,7 +697,14 @@ ax.legend(
 # %%
 #
 # The lowering of the barrier for proton hopping is clearly
-# seen by taking 1-D slices of the free energy
+# seen by taking 1D slices of the free energy at different O-O separations.
+# This model system is representative of the behavior of protons
+# along a hydrogen bond in different conditions, where the environment
+# determines the typical O-O separation, and whether the proton is shared
+# (as in high pressure ice X) or preferentially attached to one of the two
+# molecules. Zero-point energy (and to a lesser extent tunneling)
+# increases the delocalization, and reduces the barrier for an excess
+# proton to hop between water molecues.
 
 fig, ax = plt.subplots(
     1, 1, figsize=(4, 3), sharex=True, sharey=True, constrained_layout=True
