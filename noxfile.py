@@ -35,7 +35,7 @@ def get_lint_files():
         "generate-gallery.py",
         "noxfile.py",
         "docs/src/conf.py",
-        "developer",
+        "developer/get_examples.py",
     ]
     return LINT_FILES + get_example_files()
 
@@ -61,7 +61,7 @@ def filter_files(tracked_files):
 # We want to mimic
 # git ls-files examples
 def get_example_files():
-    folder = os.getcwd() + "/examples"
+    folder = os.path.join(os.getcwd(), "examples")
     # Get the list of ignored files
     # Get the list of all tracked files
     tracked_files_command = ["git", "ls-files", folder]
@@ -71,7 +71,7 @@ def get_example_files():
     # Filter the tracked files to exclude ignored ones
     filtered_files = filter_files(tracked_files_output)
 
-    return [folder + "/" + file for file in filtered_files]
+    return [os.path.join(folder, file) for file in filtered_files]
 
 
 def should_reinstall_dependencies(session, **metadata):
@@ -270,6 +270,14 @@ def lint(session):
     )
 
 
+def remove_trailing_whitespace(file_path):
+    with open(file_path, "r+") as file:
+        lines = [line.rstrip() for line in file]
+        file.seek(0)
+        file.writelines(line + "\n" for line in lines)
+        file.truncate()
+
+
 @nox.session
 def format(session):
     """Automatically format all files"""
@@ -283,3 +291,5 @@ def format(session):
     session.run("black", *LINT_FILES)
     session.run("blackdoc", *LINT_FILES)
     session.run("isort", *LINT_FILES)
+    for file in LINT_FILES:
+        remove_trailing_whitespace(file)
