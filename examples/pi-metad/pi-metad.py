@@ -210,6 +210,7 @@ print(plumed_dat)
 #
 # The same can be achieved from Python using ``subprocess.Popen``
 
+ipi_process = None
 if not os.path.exists("meta-md.out"):
     # don't rerun if the outputs already exist
     ipi_process = subprocess.Popen(["i-pi", "data/input-md.xml"])
@@ -225,7 +226,7 @@ if not os.path.exists("meta-md.out"):
 # If you run this in a notebook, you can go ahead and start loading
 # output files *before* i-PI has finished running by skipping this cell
 
-if not os.path.exists("meta-md.out"):
+if ipi_process is not None:
     ipi_process.wait()
     for process in driver_process:
         process.wait()
@@ -510,6 +511,7 @@ print("         " + ET.tostring(xmlroot.find(".//bias"), encoding="unicode"))
 # is not limited by the evaluation of the forces).
 
 # don't rerun if the outputs already exist
+ipi_process = None
 if not os.path.exists("meta-pimd.out"):
     ipi_process = subprocess.Popen(["i-pi", "data/input-pimd.xml"])
     time.sleep(2)  # wait for i-PI to start
@@ -526,7 +528,7 @@ if not os.path.exists("meta-pimd.out"):
 # output files _before_ i-PI has finished running by skipping this cell
 
 # don't rerun if the outputs already exist
-if not os.path.exists("meta-pimd.out"):
+if ipi_process is not None:
     ipi_process.wait()
     for process in driver_process:
         process.wait()
