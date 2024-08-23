@@ -33,6 +33,7 @@ class PseudoSphinxApp:
         # feel free to add more if sphinx-gallery uses more options in the future
         self.config = AttrDict()
         self.config.html_static_path = []
+        self.config.templates_path = []
         self.config.source_suffix = [".rst"]
         self.config.default_role = ""
         self.config.sphinx_gallery_conf = {
@@ -40,7 +41,7 @@ class PseudoSphinxApp:
             "examples_dirs": os.path.join(HERE, example),
             "gallery_dirs": gallery_dir,
             "min_reported_time": 60,
-            "copyfile_regex": r".*\.(sh|xyz|cp2k|yml|png)",
+            "copyfile_regex": r".*\.(sh|xyz|cp2k|yml|png|zip)",
             "matplotlib_animations": True,
             "within_subsection_order": "FileNameSortKey",
             "image_scrapers": ("matplotlib", ChemiscopeScraper()),

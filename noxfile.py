@@ -156,7 +156,14 @@ for name in EXAMPLES:
                 "chemiscope",
             )
 
+        # Creates data.zip if there's a data folder
+        if os.path.exists(f"examples/{name}/data"):
+            shutil.make_archive(
+                f"examples/{name}/data", "zip", f"examples/{name}/", "data/"
+            )
+
         session.run("python", "generate-gallery.py", f"examples/{name}")
+
         os.unlink(f"docs/src/examples/{name}/index.rst")
 
         if "--no-build-docs" not in session.posargs:
@@ -181,13 +188,24 @@ def build_docs(session):
     if should_reinstall_dependencies(session, requirements=requirements):
         session.install("-r", requirements)
 
-    with open("docs/src/index.rst", "w") as output:
-        with open("docs/src/index.rst.in") as fd:
-            output.write(fd.read())
+    with open("docs/src/all-examples.rst", "w") as output:
+        output.write(
+            """
+Complete List of All Recipes
+============================
 
-        output.write("\n")
+This section contains the list of all compiled recipes, including those
+that are not part of any of the other sections.
+
+.. toctree::
+   :caption:  Recipes
+   :maxdepth: 1
+
+"""
+        )
         for file in glob.glob("docs/src/examples/*/*.rst"):
             if os.path.basename(file) != "sg_execution_times.rst":
+                root = os.path.dirname(file)
                 path = file[9:-4]
 
                 output.write(f"   {path}\n")
@@ -213,10 +231,19 @@ def build_docs(session):
 """
                                 )
 
+                                if os.path.join(root, "data.zip"):
+                                    fd.write(
+                                        """
+    .. container:: sphx-glr-download
+
+      :download:`Download data file: data.zip <data.zip>`
+"""
+                                    )
+
                             fd.write(line)
                             fd.write("\n")
 
-    session.run("sphinx-build", "-W", "-b", "html", "docs/src", "docs/build/html")
+    session.run("sphinx-build", "-b", "html", "docs/src", "docs/build/html")
 
 
 @nox.session

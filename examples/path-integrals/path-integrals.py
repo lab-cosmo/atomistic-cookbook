@@ -68,7 +68,7 @@ import numpy as np
 # An i-PI calculation is specified by an XML file.
 
 # Open and read the XML file
-with open("input_pimd.xml", "r") as file:
+with open("data/input_pimd.xml", "r") as file:
     xml_content = file.read()
 print(xml_content)
 
@@ -88,10 +88,10 @@ print(xml_content)
 #
 # .. code-block:: bash
 #
-#    i-pi input_pimd.xml > log &
+#    i-pi data/input_pimd.xml > log &
 #    sleep 2
-#    lmp -in in.lmp &
-#    lmp -in in.lmp &
+#    lmp -in data/in.lmp &
+#    lmp -in data/in.lmp &
 #
 # Note how ``i-PI`` and ``LAMMPS`` are completely independent, and
 # therefore need a separate set of input files. The client-side communication
@@ -100,9 +100,9 @@ print(xml_content)
 #
 # We can launch the external processes from a Python script as follows
 
-ipi_process = subprocess.Popen(["i-pi", "input_pimd.xml"])
+ipi_process = subprocess.Popen(["i-pi", "data/input_pimd.xml"])
 time.sleep(2)  # wait for i-PI to start
-lmp_process = [subprocess.Popen(["lmp", "-in", "in.lmp"]) for i in range(2)]
+lmp_process = [subprocess.Popen(["lmp", "-in", "data/in.lmp"]) for i in range(2)]
 
 # %%
 # If you run this in a notebook, you can go ahead and start loading
@@ -119,8 +119,9 @@ lmp_process[1].wait()
 # Note that i-PI prints a separate trajectory for each bead, as structural properties
 # can be computed averaging over the configurations of any of the beads.
 
+# drops first frame where all atoms overlap
 output_data, output_desc = ipi.read_output("simulation.out")
-traj_data = [ipi.read_trajectory(f"simulation.pos_{i}.xyz") for i in range(8)]
+traj_data = [ipi.read_trajectory(f"simulation.pos_{i}.xyz")[1:] for i in range(8)]
 
 
 # %%
@@ -215,9 +216,9 @@ chemiscope.show(**traj_pimd, mode="structure")
 # `the GLE4MD website <https://tinyurl.com/4y2e45jx>`_
 #
 
-ipi_process = subprocess.Popen(["i-pi", "input_piglet.xml"])
+ipi_process = subprocess.Popen(["i-pi", "data/input_piglet.xml"])
 time.sleep(2)  # wait for i-PI to start
-lmp_process = [subprocess.Popen(["lmp", "-in", "in.lmp"]) for i in range(2)]
+lmp_process = [subprocess.Popen(["lmp", "-in", "data/in.lmp"]) for i in range(2)]
 
 ipi_process.wait()
 lmp_process[0].wait()
@@ -228,8 +229,9 @@ lmp_process[1].wait()
 # PIMD one, because it is closer to the converged value (try to run a PIMD trajectory
 # with 64 beads for comparison)
 
+# drops first frame
 output_gle, desc_gle = ipi.read_output("simulation_piglet.out")
-traj_gle = [ipi.read_trajectory(f"simulation_piglet.pos_{i}.xyz") for i in range(8)]
+traj_gle = [ipi.read_trajectory(f"simulation_piglet.pos_{i}.xyz")[1:] for i in range(8)]
 
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(
@@ -287,8 +289,8 @@ ax.legend()
 # them over the last 10 frames and combining them with the centroid configuration
 # from the last frame in the trajectory.
 
-kinetic_cv = ipi.read_trajectory("simulation_piglet.kin.xyz")
-kinetic_od = ipi.read_trajectory("simulation_piglet.kod.xyz")
+kinetic_cv = ipi.read_trajectory("simulation_piglet.kin.xyz")[1:]
+kinetic_od = ipi.read_trajectory("simulation_piglet.kod.xyz")[1:]
 kinetic_tens = np.hstack(
     [
         np.asarray([k.positions for k in kinetic_cv[-10:]]).mean(axis=0),

@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 
 
@@ -12,16 +13,12 @@ extensions = [
 templates_path = ["_templates"]
 exclude_patterns = ["_build"]
 
-project = "cosmo-software-cookbook"
+project = "atomistic-cookbook"
 copyright = (
     "BSD 3-Clause License, "
     f"Copyright (c) {datetime.now().date().year}, "
-    "COSMO software cookbook team"
+    "Atomistic cookbook team"
 )
-
-htmlhelp_basename = "COSMO software-cookbook"
-html_theme = "furo"
-
 
 intersphinx_mapping = {
     "ase": ("https://wiki.fysik.dtu.dk/ase/", None),
@@ -32,3 +29,16 @@ intersphinx_mapping = {
     "rascaline": ("https://luthaf.fr/rascaline/latest/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
 }
+
+html_js_files = [
+    (  # plausible.io tracking
+        "https://plausible.io/js/script.js",
+        {"data-domain": "lab-cosmo.github.io/atomistic-cookbook", "defer": "defer"},
+    ),
+]
+
+htmlhelp_basename = "Atomistic cookbook"
+html_theme = "furo"
+html_static_path = [os.path.join("..", "_static")]
+html_favicon = "../_static/cookbook-icon.png"
+html_logo = "../_static/cookbook-icon.svg"
