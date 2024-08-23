@@ -10,11 +10,13 @@ and metadynamics to accelerate sampling of the high-free-energy regions.
 
 The rather complicated setup combines `i-PI <http://ipi-code.org>`_
 to perform path integral
-MD, the built-in driver to compute energy and forces for the Zundel
+MD, its built-in driver to compute energy and forces for the Zundel
 :math:`\mathrm{H_5O_2^+}` cation, and `PLUMED <http://plumed.org/>`_
 to perform metadynamics.
-If you want to see an example in a more realistic scenario, you can look
-at `this paper <http://doi.org/10.1021/acs.jctc.0c00362>`_, in which this
+If you want to see an example in a more realistic scenario, you can look at 
+`this paper (Rossi et al., JCTC (2020))
+<http://doi.org/10.1021/acs.jctc.0c00362>`_, 
+in which this
 methodology is used to simulate the decomposition of methanesulphonic
 acid in a solution of phenol and hydrogen peroxide.
 
@@ -24,7 +26,7 @@ suitable for an accurate, converged simulation.
 They will be highlighted and more reasonable values will be provided.
 "High-quality" runs can also be realized substituting the input files
 used in this example with those labeled with the ``_hiq`` suffix, that
-are also present in the ``data/`` folder.
+are also provided in the ``data/`` folder.
 """
 
 # %%
@@ -105,8 +107,8 @@ chemiscope.show(frames=zundel, mode="structure")
 
 
 # %%
-# Install the Python driver
-# ~~~~~~~~~~~~~~~~~~~~~~~~~
+# Installing the Python driver
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # i-PI comes with a FORTRAN driver, which however has to be installed
 # from source. We use a utility function to compile it. Note that this requires
@@ -148,19 +150,22 @@ print("      " + ET.tostring(xmlroot.find(".//motion"), encoding="unicode"))
 # PLUMED 2.10, that allows extracting internal variables
 # from plumed and integrate them into the outputs of
 # i-PI.
-#
+
+print("   " + ET.tostring(xmlroot.find("ffplumed"), encoding="unicode"))
+
+# %%
 # The `<ensemble>` section contains a `<bias>` key that
 # specifies that energy and forces from PLUMED should be
 # treated as a bias (so that e.g. are not included in the
 # potential, even though they're used to propagate the
 # trajectory).
-#
+
+print("      " + ET.tostring(xmlroot.find(".//ensemble"), encoding="unicode"))
+
 # The `<smotion>` section contains a `<metad>` class that
-# instructs to call the PLUMED action that adds hills
+# instructs i-PI to call the PLUMED action that adds hills
 # along the trajectory.
 
-print("   " + ET.tostring(xmlroot.find("ffplumed"), encoding="unicode"))
-print("      " + ET.tostring(xmlroot.find(".//ensemble"), encoding="unicode"))
 print("  " + ET.tostring(xmlroot.find("smotion"), encoding="unicode"))
 
 
@@ -176,13 +181,14 @@ print("  " + ET.tostring(xmlroot.find("smotion"), encoding="unicode"))
 # the coordination of the two oxygens `co1` and `co2`,
 # and the difference between the two, `dc`.
 # The `METAD` action specifies the CVs to be used, the pace of
-# hill depositon (which is way too frequent, but suitable for this
-# example), the width along the two CVs and the initial height of
-# the repulsive Gaussians. The `BIASFACTOR` keyword specifies
+# hill depositon (which is way too frequent here, but suitable for 
+# this example), the width along the two CVs and the initial 
+# height of the repulsive Gaussians (which are both too large to 
+# guarantee high resolution in CV and energy). The `BIASFACTOR` keyword specifies
 # that the height of the hills will be progressively reduced
 # according to the "well-tempered metadynamics" protocol, see
 # `Barducci et al., Phys. Rev. Lett. (2008)
-# <http://doi.org/10.1103/PhysRevLett.100.020603>`_
+# <http://doi.org/10.1103/PhysRevLett.100.020603>`_.
 # A repulsive static bias (`UPPER_WALLS`) prevents complete dissociation of the
 # cation by limiting the range of the O-O distance.
 
@@ -197,10 +203,10 @@ print(plumed_dat)
 # Now we can launch the actual calculations. On the the command line,
 # this requires launching i-PI first, and then the built-in driver,
 # specifying the appropriate communication mode, and the `zundel` potential.
-# `PLUMED` is called from within i-PI as a library, so there is no need to
+# PLUMED is called from within i-PI as a library, so there is no need to
 # launch a separate process. Note that the Zundel potential requires some data
-# files, with a hard-coded location, which is why the driver should be run from
-# within the ``data/`` folder.
+# files, with a hard-coded location in the current working directory, 
+# which is why the driver should be run from within the ``data/`` folder.
 #
 # .. code-block:: bash
 #
@@ -305,7 +311,7 @@ ax.plot(
 
 ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"energy / eV")
-ax.legend()
+ax.legend(loc="upper left", ncols=1)
 
 # %%
 #
@@ -313,8 +319,8 @@ ax.legend()
 # lead to deviations from the quasi-equilibrium sampling that is necessary
 # to recover the correct properties of the rare event. It is not easy
 # to verify this condition, but one simple diagnostics that can highlight
-# problems is looking at the kinetic temperature of different portions of the
-# system, computing a moving average to have a clearer signal.
+# the most evident problems is looking at the kinetic temperature of different 
+# portions of the system, computing a moving average to have a clearer signal.
 
 
 def moving_average(arr, window_size):
@@ -348,14 +354,19 @@ ax.plot(
 
 ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"temperature / K")
-ax.legend()
+ax.legend(loc="upper left", ncols=2)
 
 # %%
 # It is clear that the very high rate of biasing used in this demonstrative
 # example leads to a temperature that is consistently higher than the target,
-# with spikes up to 380 K and different temperatures for O and H atoms
+# with spikes up to 380 K and O and H atoms reaching different temperatures
 # (i.e. equipartition is broken). While this does not affect the qualitative
 # nature of the results, these parameters are unsuitable for a production run.
+# NB: especially for small systems, the instantaneous kinetic temperature
+# can deviate by a large amount from the target temperature: only the mean 
+# value has actual meaning. However, a kinetic temperature that is consistently
+# above the target value indicates that the thermostat cannot dissipate 
+# efficiently the energy due to the growing bias. 
 
 # %%
 # Free energy profiles
@@ -383,7 +394,7 @@ ax.legend()
 #    plumed sum_hills --hills HILLS-md --min 0.21,-1 --max 0.31,1 --bin 100,100 \
 #           --outfile FES-md --stride 100 --mintozero < data/plumed-md.dat
 #
-# The ``--stride`` option generates a list of files showing the estimates
+# The ``--stride`` option generates a series of files showing the estimates
 # of :math:`F` at different times along the trajectory.
 
 with open("data/plumed-md.dat", "r") as file:
@@ -536,6 +547,14 @@ if ipi_process is not None:
 # %%
 # Analysis of the simulation
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# A path integral simulation evolves multiple configurations at the same
+# time, forming a `ring polymer`. Each replica provides a sample of the 
+# quantum mechanical configuration distribution of the atoms. To provide 
+# an overall visualization of the path integral dynamics, we load all the 
+# replicas and combine them using a utility function from the 
+# `chemiscope` library.`
+
 
 output_data, output_desc = ipi.read_output("meta-pimd.out")
 colvar_data = ipi.read_trajectory("meta-pimd.colvar_0", format="extras")[
@@ -569,11 +588,6 @@ traj_pimd["settings"] = chemiscope.quick_settings(
     ),
 )
 traj_pimd["settings"]["target"] = "structure"
-
-# %%
-##
-print(traj_pimd.keys())
-print(traj_pimd["properties"].keys())
 
 # %%
 #
@@ -631,6 +645,11 @@ xyz_pi_5 = np.array([10, 1, 0.01036427])[:, np.newaxis, np.newaxis] * data.T.res
 fig, ax = plt.subplots(
     1, 3, figsize=(8, 3), sharex=True, sharey=True, constrained_layout=True
 )
+
+# %%
+# Just as for a classical run, the metadynamics bias progressively
+# pushes the centroid (and the beads that are distributed around it)
+# to sample a wider portion of the collective-variable space.
 
 cf_0 = ax[0].contourf(*xyz_pi_0)
 cf_1 = ax[1].contourf(*xyz_pi_2)

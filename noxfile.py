@@ -222,7 +222,7 @@ that are not part of any of the other sections.
                                         """
     .. container:: sphx-glr-download
 
-      :download:`Download data file: data.zip <data.zip>`
+      :download:`Download data files: data.zip <data.zip>`
 """
                                     )
 
