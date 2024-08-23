@@ -13,9 +13,9 @@ to perform path integral
 MD, its built-in driver to compute energy and forces for the Zundel
 :math:`\mathrm{H_5O_2^+}` cation, and `PLUMED <http://plumed.org/>`_
 to perform metadynamics.
-If you want to see an example in a more realistic scenario, you can look at 
+If you want to see an example in a more realistic scenario, you can look at
 `this paper (Rossi et al., JCTC (2020))
-<http://doi.org/10.1021/acs.jctc.0c00362>`_, 
+<http://doi.org/10.1021/acs.jctc.0c00362>`_,
 in which this
 methodology is used to simulate the decomposition of methanesulphonic
 acid in a solution of phenol and hydrogen peroxide.
@@ -181,9 +181,9 @@ print("  " + ET.tostring(xmlroot.find("smotion"), encoding="unicode"))
 # the coordination of the two oxygens `co1` and `co2`,
 # and the difference between the two, `dc`.
 # The `METAD` action specifies the CVs to be used, the pace of
-# hill depositon (which is way too frequent here, but suitable for 
-# this example), the width along the two CVs and the initial 
-# height of the repulsive Gaussians (which are both too large to 
+# hill depositon (which is way too frequent here, but suitable for
+# this example), the width along the two CVs and the initial
+# height of the repulsive Gaussians (which are both too large to
 # guarantee high resolution in CV and energy). The `BIASFACTOR` keyword specifies
 # that the height of the hills will be progressively reduced
 # according to the "well-tempered metadynamics" protocol, see
@@ -205,7 +205,7 @@ print(plumed_dat)
 # specifying the appropriate communication mode, and the `zundel` potential.
 # PLUMED is called from within i-PI as a library, so there is no need to
 # launch a separate process. Note that the Zundel potential requires some data
-# files, with a hard-coded location in the current working directory, 
+# files, with a hard-coded location in the current working directory,
 # which is why the driver should be run from within the ``data/`` folder.
 #
 # .. code-block:: bash
@@ -319,7 +319,7 @@ ax.legend(loc="upper left", ncols=1)
 # lead to deviations from the quasi-equilibrium sampling that is necessary
 # to recover the correct properties of the rare event. It is not easy
 # to verify this condition, but one simple diagnostics that can highlight
-# the most evident problems is looking at the kinetic temperature of different 
+# the most evident problems is looking at the kinetic temperature of different
 # portions of the system, computing a moving average to have a clearer signal.
 
 
@@ -363,10 +363,10 @@ ax.legend(loc="upper left", ncols=2)
 # (i.e. equipartition is broken). While this does not affect the qualitative
 # nature of the results, these parameters are unsuitable for a production run.
 # NB: especially for small systems, the instantaneous kinetic temperature
-# can deviate by a large amount from the target temperature: only the mean 
+# can deviate by a large amount from the target temperature: only the mean
 # value has actual meaning. However, a kinetic temperature that is consistently
-# above the target value indicates that the thermostat cannot dissipate 
-# efficiently the energy due to the growing bias. 
+# above the target value indicates that the thermostat cannot dissipate
+# efficiently the energy due to the growing bias.
 
 # %%
 # Free energy profiles
@@ -549,10 +549,10 @@ if ipi_process is not None:
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # A path integral simulation evolves multiple configurations at the same
-# time, forming a `ring polymer`. Each replica provides a sample of the 
-# quantum mechanical configuration distribution of the atoms. To provide 
-# an overall visualization of the path integral dynamics, we load all the 
-# replicas and combine them using a utility function from the 
+# time, forming a `ring polymer`. Each replica provides a sample of the
+# quantum mechanical configuration distribution of the atoms. To provide
+# an overall visualization of the path integral dynamics, we load all the
+# replicas and combine them using a utility function from the
 # `chemiscope` library.`
 
 

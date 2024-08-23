@@ -115,6 +115,9 @@ lmp_process[1].wait()
 
 
 # %%
+# Analyzing the simulation
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+#
 # After the simulation has run, you can visualize and post-process the trajectory data.
 # Note that i-PI prints a separate trajectory for each bead, as structural properties
 # can be computed averaging over the configurations of any of the beads.

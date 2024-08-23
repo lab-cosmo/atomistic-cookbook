@@ -1,4 +1,4 @@
-Statistical Sampling and Dynamics
+Statistical sampling and dynamics
 =================================
 
 This section contains recipes that compute thermodynamic averages by sampling,
