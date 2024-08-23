@@ -1,4 +1,4 @@
-"""
+r"""
 Path integral metadynamics
 ==========================
 
@@ -39,8 +39,6 @@ import chemiscope
 import ipi
 import matplotlib.pyplot as plt
 import numpy as np
-from ipi import read_output, read_trajectory
-
 
 # %%
 # Metadynamics for the Zundel cation
@@ -242,7 +240,7 @@ output_data, output_desc = ipi.read_output("meta-md.out")
 colvar_data = ipi.read_trajectory("meta-md.colvar_0", format="extras")[
     "doo,dc,mtd.bias"
 ]
-traj_data = ipi.read_trajectory(f"meta-md.pos_0.xyz")
+traj_data = ipi.read_trajectory("meta-md.pos_0.xyz")
 
 # %%
 # then, assemble a visualization
