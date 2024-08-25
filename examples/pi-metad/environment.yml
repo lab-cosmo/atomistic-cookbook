@@ -15,3 +15,6 @@ dependencies:
     - git+https://github.com/i-pi/i-pi.git@driver_utils#egg=ipi
     - matplotlib
     - skmatter
+variables:
+  PYTHONPATH: 
+  PLUMED_KERNEL:

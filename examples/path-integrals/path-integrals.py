@@ -106,7 +106,7 @@ lmp_process = [subprocess.Popen(["lmp", "-in", "data/in.lmp"]) for i in range(2)
 
 # %%
 # If you run this in a notebook, you can go ahead and start loading
-# output files _before_ i-PI and lammps have finished running, by
+# output files *before* i-PI and lammps have finished running, by
 # skipping this cell
 
 ipi_process.wait()
