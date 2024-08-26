@@ -10,7 +10,7 @@
    <total_steps>2000000</total_steps>
    <output prefix="meta-pimd_hiq">
       <trajectory stride="2000" filename="pos" cell_units="angstrom">positions{angstrom}</trajectory>
-      <trajectory stride="20" filename="xc" format="xyz">x_centroid{angstrom}</trajectory>
+      <trajectory stride="200" filename="xc" format="xyz">x_centroid{angstrom}</trajectory>
       <trajectory stride="20" filename="colvar" bead="0" extra_type="doo,dc,mtd.bias"> extras_bias </trajectory>
       <properties stride="20"> [ step, time, conserved, temperature{kelvin}, kinetic_cv, 
             potential, temperature{kelvin}(H), temperature{kelvin}(O), ensemble_bias ] </properties>

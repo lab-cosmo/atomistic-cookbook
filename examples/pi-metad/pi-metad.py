@@ -699,11 +699,15 @@ ax.legend(
 # the :math:`\mathrm{H_3O^+ + H_2O} \rightarrow \mathrm{H_2O + H_3O^+}`
 # transition.
 
-data = np.loadtxt("data/FES-md_hiq", comments="#")[:, :3]
+import bz2
+
+with bz2.open("data/FES-md_hiq.bz2", 'rt') as f:
+    data = np.loadtxt(f, comments="#")[:, :3]
 xyz_md_hiq = np.array([10, 1, 0.01036427])[:, np.newaxis, np.newaxis] * data.T.reshape(
     3, 101, 101
 )
-data = np.loadtxt("data/FES-pimd_hiq", comments="#")[:, :3]
+with bz2.open("data/FES-pimd_hiq.bz2", 'rt') as f:
+    data = np.loadtxt(f, comments="#")[:, :3]
 xyz_pi_hiq = np.array([10, 1, 0.01036427])[:, np.newaxis, np.newaxis] * data.T.reshape(
     3, 101, 101
 )
