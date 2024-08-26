@@ -31,6 +31,7 @@ are also provided in the ``data/`` folder.
 
 # %%
 
+import bz2
 import os
 import subprocess
 import time
@@ -698,8 +699,6 @@ ax.legend(
 # The results confirm the lowering of the free-energy barrier for
 # the :math:`\mathrm{H_3O^+ + H_2O} \rightarrow \mathrm{H_2O + H_3O^+}`
 # transition.
-
-import bz2
 
 with bz2.open("data/FES-md_hiq.bz2", "rt") as f:
     data = np.loadtxt(f, comments="#")[:, :3]
