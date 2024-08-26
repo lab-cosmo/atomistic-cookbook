@@ -642,14 +642,14 @@ xyz_pi_5 = np.array([10, 1, 0.01036427])[:, np.newaxis, np.newaxis] * data.T.res
     3, 101, 101
 )
 
-fig, ax = plt.subplots(
-    1, 3, figsize=(8, 3), sharex=True, sharey=True, constrained_layout=True
-)
-
 # %%
 # Just as for a classical run, the metadynamics bias progressively
 # pushes the centroid (and the beads that are distributed around it)
 # to sample a wider portion of the collective-variable space.
+
+fig, ax = plt.subplots(
+    1, 3, figsize=(8, 3), sharex=True, sharey=True, constrained_layout=True
+)
 
 cf_0 = ax[0].contourf(*xyz_pi_0)
 cf_1 = ax[1].contourf(*xyz_pi_2)
