@@ -106,7 +106,7 @@ lmp_process = [subprocess.Popen(["lmp", "-in", "data/in.lmp"]) for i in range(2)
 
 # %%
 # If you run this in a notebook, you can go ahead and start loading
-# output files _before_ i-PI and lammps have finished running, by
+# output files *before* i-PI and lammps have finished running, by
 # skipping this cell
 
 ipi_process.wait()
@@ -115,6 +115,9 @@ lmp_process[1].wait()
 
 
 # %%
+# Analyzing the simulation
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+#
 # After the simulation has run, you can visualize and post-process the trajectory data.
 # Note that i-PI prints a separate trajectory for each bead, as structural properties
 # can be computed averaging over the configurations of any of the beads.
@@ -233,7 +236,7 @@ lmp_process[1].wait()
 output_gle, desc_gle = ipi.read_output("simulation_piglet.out")
 traj_gle = [ipi.read_trajectory(f"simulation_piglet.pos_{i}.xyz")[1:] for i in range(8)]
 
-fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(
     output_data["time"],
     output_data["potential"] - output_data["potential"][0],

@@ -1,4 +1,4 @@
-Machine Learning Models
+Machine learning models
 =======================
 
 This section contains recipes that concern the training of 

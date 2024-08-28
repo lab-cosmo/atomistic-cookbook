@@ -177,7 +177,7 @@ def build_docs(session):
     with open("docs/src/all-examples.rst", "w") as output:
         output.write(
             """
-Complete List of All Recipes
+Complete list of all recipes
 ============================
 
 This section contains the list of all compiled recipes, including those
@@ -217,12 +217,12 @@ that are not part of any of the other sections.
 """
                                 )
 
-                                if os.path.join(root, "data.zip"):
+                                if os.path.exists(os.path.join(root, "data.zip")):
                                     fd.write(
                                         """
     .. container:: sphx-glr-download
 
-      :download:`Download data file: data.zip <data.zip>`
+      :download:`Download data files: data.zip <data.zip>`
 """
                                     )
 
