@@ -53,7 +53,7 @@ import numpy as np
 # that are too infrequent to be observed over the time scale (ns-µs) accessible to
 # molecular dynamics simulations. You can read one of the many excellent reviews
 # on metadynamics (see e.g.
-# `Bussi and Branduardi (2015) <https://doi.org/10.1002/9781118889886.ch1>`_)
+# `Bussi and Branduardi (2015) <https://doi.org/10.1002/9781118889886.ch1>`_).
 # In short, during a metadynamics simulation an adaptive biasing potential is
 # built as a superimposition of Gaussians centered over configurations that have
 # been previously visited by the trajectory. This discourages the system from remaining
