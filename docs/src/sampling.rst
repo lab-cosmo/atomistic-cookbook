@@ -1,4 +1,4 @@
-Statistical Sampling and Dynamics
+Statistical sampling and dynamics
 =================================
 
 This section contains recipes that compute thermodynamic averages by sampling,
@@ -9,5 +9,6 @@ set of configurations of an atomistic system.
    :caption: Recipes
    :maxdepth: 1
    
-   examples/batch-cp2k/reference-trajectory
    examples/path-integrals/path-integrals
+   examples/pi-metad/pi-metad
+   examples/batch-cp2k/reference-trajectory
