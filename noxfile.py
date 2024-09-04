@@ -11,7 +11,7 @@ import nox
 
 ROOT = os.path.realpath(os.path.dirname(__file__))
 
-sys.path.append(ROOT)
+sys.path.insert(0, ROOT)
 from developer.get_examples import get_examples  # noqa: E402
 
 
