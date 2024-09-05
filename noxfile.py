@@ -326,6 +326,6 @@ def clean_examples(session):
 
     flist = glob.glob("examples/*")
     # Remove empty folders
-    for fl in flist:
-        if 0 == len(glob.glob(fl + "/*")):
-            os.rmdir(fl)
+    for path in flist:
+        if len(glob.glob(os.path.join(path, "*"))) == 0:
+            os.rmdir(path)
