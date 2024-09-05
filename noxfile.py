@@ -74,8 +74,6 @@ def get_example_files():
     return [os.path.join(folder, file) for file in filtered_files]
 
 
-# We want to mimic
-# git ls-files --other examples
 def get_example_other_files(fd):
     folder = os.path.join(os.getcwd(), fd)
     # Get the list of ignored files
