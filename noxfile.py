@@ -77,7 +77,6 @@ def get_example_files():
 def get_example_other_files(fd):
     folder = os.path.join(os.getcwd(), fd)
     # Get the list of ignored files
-    # Get the list of all not tracked files
     tracked_files_command = ["git", "ls-files", "--other", folder]
     tracked_files_output = subprocess.check_output(
         tracked_files_command, cwd=folder, text=True
@@ -309,18 +308,18 @@ def format(session):
 
 @nox.session
 def clean_build(session):
-    """Remove temporary files and building folders"""
+    """Remove temporary files and building folders."""
 
-    # remove building folders and the nox cache
-    for i in ["docs/src/examples/", "docs/build", ".nox"]:
+    # remove build folders
+    for i in ["docs/src/examples/", "docs/build"]:
         if os.path.isdir(i):
             shutil.rmtree(i)
 
 
 @nox.session
 def clean_examples(session):
+    """Remove all untracked files from the example folders."""
 
-    # remove all untracked files from examples
     for ifile in get_example_other_files("examples"):
         os.remove(ifile)
 
