@@ -74,6 +74,17 @@ def get_example_files():
     return [os.path.join(folder, file) for file in filtered_files]
 
 
+def get_example_other_files(fd):
+    folder = os.path.join(os.getcwd(), fd)
+    # Get the list of ignored files
+    tracked_files_command = ["git", "ls-files", "--other", folder]
+    tracked_files_output = subprocess.check_output(
+        tracked_files_command, cwd=folder, text=True
+    )
+
+    return [os.path.join(folder, file) for file in tracked_files_output.splitlines()]
+
+
 def should_reinstall_dependencies(session, **metadata):
     """
     Returns a bool indicating whether the dependencies should be re-installed in the
@@ -293,3 +304,27 @@ def format(session):
     session.run("isort", *LINT_FILES)
     for file in LINT_FILES:
         remove_trailing_whitespace(file)
+
+
+@nox.session
+def clean_build(session):
+    """Remove temporary files and building folders."""
+
+    # remove build folders
+    for i in ["docs/src/examples/", "docs/build"]:
+        if os.path.isdir(i):
+            shutil.rmtree(i)
+
+
+@nox.session
+def clean_examples(session):
+    """Remove all untracked files from the example folders."""
+
+    for ifile in get_example_other_files("examples"):
+        os.remove(ifile)
+
+    flist = glob.glob("examples/*")
+    # Remove empty folders
+    for path in flist:
+        if len(glob.glob(os.path.join(path, "*"))) == 0:
+            os.rmdir(path)
