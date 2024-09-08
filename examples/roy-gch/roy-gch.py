@@ -53,9 +53,9 @@ iothers = np.where(structype != "known")[0]
 # -------------------
 #
 # The Directional Convex Hull routines can be used to compute a
-# conventional density-energy hull (see 
-# `Hautier (2014) 
-# <http://doi.org/10.1007/128_2013_486>`_ for a pedagogic 
+# conventional density-energy hull (see
+# `Hautier (2014)
+# <http://doi.org/10.1007/128_2013_486>`_ for a pedagogic
 # introduction to the convex hull construction in the context
 # of atomistic simulations).
 

@@ -54,7 +54,7 @@ import numpy as np
 # molecular dynamics simulations. You can read one of the many excellent reviews
 # on metadynamics (see e.g.
 # `Bussi and Branduardi (2015) <https://doi.org/10.1002/9781118889886.ch1>`_),
-# or follow a 
+# or follow a
 # `lecture from the PLUMED masterclass
 # <https://www.plumed-tutorials.org/lessons/21/004/data/NAVIGATION.html>`_.
 # In short, during a metadynamics simulation an adaptive biasing potential is
