@@ -12,7 +12,7 @@ import nox
 ROOT = os.path.realpath(os.path.dirname(__file__))
 
 sys.path.insert(0, ROOT)
-from developer.get_examples import get_examples  # noqa: E402
+from src.get_examples import get_examples  # noqa: E402
 
 
 # global nox options
@@ -31,11 +31,11 @@ EXAMPLES = get_examples()
 # Files that need to be linted & formatted
 def get_lint_files():
     LINT_FILES = [
-        "ipynb-to-gallery.py",
-        "generate-gallery.py",
+        "src/ipynb-to-gallery.py",
+        "src/generate-gallery.py",
         "noxfile.py",
         "docs/src/conf.py",
-        "developer/get_examples.py",
+        "src/get_examples.py",
     ]
     return LINT_FILES + get_example_files()
 
@@ -159,7 +159,7 @@ for name in EXAMPLES:
                 f"examples/{name}/data", "zip", f"examples/{name}/", "data/"
             )
 
-        session.run("python", "generate-gallery.py", f"examples/{name}")
+        session.run("python", "src/generate-gallery.py", f"examples/{name}")
 
         os.unlink(f"docs/src/examples/{name}/index.rst")
 
