@@ -12,10 +12,10 @@ These are then used with simple dimensionality reduction algorithms
 description of the dataset, that is then visualized using
 ``chemiscope``.
 
-This example uses the dataset from 
+This example uses the dataset from
 `Imbalzano (2021) <http://doi.org/10.1103/PhysRevMaterials.5.063804>`_
 and the principal covariate regression scheme as implemented in
-`Helfrecht (2020) <http://doi.org/10.1088/2632-2153/aba9ef>`_. 
+`Helfrecht (2020) <http://doi.org/10.1088/2632-2153/aba9ef>`_.
 """
 
 import os

@@ -7,7 +7,7 @@ import sphinx_gallery.gen_gallery
 from chemiscope.sphinx import ChemiscopeScraper
 
 
-HERE = os.path.realpath(os.path.join(os.path.dirname(__file__),'../'))
+HERE = os.path.realpath(os.path.join(os.path.dirname(__file__), "../"))
 
 
 class AttrDict(dict):

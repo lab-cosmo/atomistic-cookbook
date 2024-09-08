@@ -14,12 +14,12 @@ and uses the directional convex hull function from
 `scikit-matter <https://github.com/lab-cosmo/scikit-matter>`__
 to make the figure.
 
-The GCH construction aims at determining structures, among a collection of 
+The GCH construction aims at determining structures, among a collection of
 candidate configurations, that are stable or have the potential of being stabilized
 by appropriate thermodynamic boundary conditions (pressure, doping, external fields,
-...). It does so by using microscopic descriptors to determine the diversity of 
+...). It does so by using microscopic descriptors to determine the diversity of
 structures, and assumes that configurations that are stable relative to other
-configurations with similar descriptors are those that could be made 
+configurations with similar descriptors are those that could be made
 "locally" stable by suitable synthesis conditions.
 """
 
