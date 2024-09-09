@@ -49,13 +49,13 @@ torch.set_default_dtype(torch.float64)
 
 # %%
 # Step 0: Get Data and Prepare Data Set
-# =====================================
+# -------------------------------------
 #
 
 
 # %%
 # Download Data
-# -------------
+# ~~~~~~~~~~~~~
 #
 
 filename = "data.zip"
@@ -75,7 +75,7 @@ with zipfile.ZipFile("data.zip", "r") as zip_ref:
 
 # %%
 # Load structures and DFT data
-# ----------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 
 # %%
@@ -144,7 +144,7 @@ ani = FuncAnimation(fig, update, frames=len(images), interval=20, blit=True)
 
 # %%
 # Instantiate machine learning data set
-# -------------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 
 
@@ -233,7 +233,7 @@ mldata.items.fock_blocks
 # %%
 # Step 1: Build a machine learning model for the electronic Hamiltonian of
 # graphene in a minimal basis
-# ====================================================================================================
+# --------------------------------------------------------------------------------
 #
 
 
@@ -319,7 +319,7 @@ with warnings.catch_warnings():
 
 # %%
 # Set up the training loop
-# ------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~
 #
 
 
@@ -360,7 +360,7 @@ trainer.fit(model, data_module)
 
 # %%
 # Evaluate model accuracy
-# =======================
+# -----------------------
 #
 
 
@@ -449,7 +449,7 @@ ax.set_ylabel("Predicted eigenvalues (eV)")
 
 # %%
 # Graphene band structure
-# -----------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~
 #
 
 
