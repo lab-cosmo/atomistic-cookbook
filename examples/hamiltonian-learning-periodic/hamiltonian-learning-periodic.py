@@ -15,43 +15,36 @@ Periodic Hamiltonian learning Tutorial
 # First, import the necessary packages
 #
 
-import warnings
-
-warnings.filterwarnings("ignore")
-
 import os
+import warnings
 import zipfile
-import requests
-
-import numpy as np
-
-import torch
-
-torch.set_default_dtype(torch.float64)
-
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 
 import lightning.pytorch as pl
-from lightning.pytorch.loggers import TensorBoardLogger
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
+import numpy as np
+import requests
+import torch
 from lightning.pytorch.callbacks import EarlyStopping
-
-from mlelec.data.qmdataset import QMDataset
-from mlelec.data.mldataset import MLDataset
+from matplotlib.animation import FuncAnimation
+from mlelec.callbacks.logging import LoggingCallback
 from mlelec.data.derived_properties import compute_eigenvalues
-
-from mlelec.utils.pbc_utils import blocks_to_matrix
-
+from mlelec.data.mldataset import MLDataset
+from mlelec.data.qmdataset import QMDataset
 from mlelec.models.equivariant_nonlinear_lightning import (
     LitEquivariantNonlinearModel,
     MLDatasetDataModule,
     MSELoss,
 )
-
-from mlelec.callbacks.logging import LoggingCallback
-from mlelec.callbacks.progress_bar import ProgressBar
-
+from mlelec.models.equivariant_nonlinear_model import EquivariantNonLinearity
+from mlelec.utils.pbc_utils import blocks_to_matrix
 from mlelec.utils.plot_utils import plot_bands_frame
+from mlelec.utils.twocenter_utils import map_targetkeys_to_featkeys_integrated
+from torchviz import make_dot
+
+
+warnings.filterwarnings("ignore")
+torch.set_default_dtype(torch.float64)
 
 
 # %%
@@ -67,7 +60,10 @@ from mlelec.utils.plot_utils import plot_bands_frame
 
 filename = "data.zip"
 if not os.path.exists(filename):
-    url = "https://github.com/curiosity54/mlelec/raw/tutorial_periodic/examples/periodic_tutorial/data.zip"
+    url = (
+        "https://github.com/curiosity54/mlelec/raw/"
+        "tutorial_periodic/examples/periodic_tutorial/data.zip"
+    )
     response = requests.get(url)
     response.raise_for_status()
     with open(filename, "wb") as f:
@@ -83,7 +79,8 @@ with zipfile.ZipFile("data.zip", "r") as zip_ref:
 #
 
 # %%
-# The DFT calculations are done on a minimal STO-3G basis. The $n$, $l$, $m$ quantum numbers for species C are given below.
+# The DFT calculations are done on a minimal STO-3G basis. The $n$, $l$, $m$
+# quantum numbers for species C are given below.
 #
 
 basis = "sto-3g"
@@ -123,7 +120,6 @@ qmdata = QMDataset.from_file(
 # of the graphene unit cell in a minimal STO-3G basis.
 #
 
-from matplotlib.animation import FuncAnimation
 
 image_files = sorted(
     [
@@ -235,7 +231,8 @@ mldata.items.fock_blocks
 
 
 # %%
-# Step 1: Build a machine learning model for the electronic Hamiltonian of graphene in a minimal basis
+# Step 1: Build a machine learning model for the electronic Hamiltonian of
+# graphene in a minimal basis
 # ====================================================================================================
 #
 
@@ -253,7 +250,8 @@ model = LitEquivariantNonlinearModel(
     nlayers=1,
     # The number of neurons in each hidden layer
     nhidden=64,
-    # What nonlinear activation function to apply to the invariant hidden features
+    # What nonlinear activation function to apply to the invariant hidden
+    # features
     activation="SiLU",
     # Type of optimizer
     optimizer="adam",
@@ -275,8 +273,6 @@ model = LitEquivariantNonlinearModel(
 # Here we visualize the models’ graphs using ``torchviz``
 #
 
-from torchviz import make_dot
-from mlelec.utils.twocenter_utils import map_targetkeys_to_featkeys_integrated
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
@@ -309,7 +305,6 @@ plt.axis("off")
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
-    from mlelec.models.equivariant_nonlinear_model import EquivariantNonLinearity
 
     m = EquivariantNonLinearity(torch.nn.SiLU(), layersize=10)
     y = m.forward(torch.randn(3, 3, 10))
@@ -449,7 +444,8 @@ ax.set_xlabel("Target eigenvalues (eV)")
 ax.set_ylabel("Predicted eigenvalues (eV)")
 
 # %%
-# The core-state are more difficult to align compared to higher-energy states. Longer trainings are needed to accurately capture their energies.
+# The core-state are more difficult to align compared to higher-energy states.
+# Longer trainings are needed to accurately capture their energies.
 
 # %%
 # Graphene band structure
@@ -492,4 +488,5 @@ ax.legend(
 fig.tight_layout()
 
 # %%
-# Even with a poorly converged model, the band structure is quite accurate, especially for occupied states.
+# Even with a poorly converged model, the band structure is quite accurate,
+# especially for occupied states.
