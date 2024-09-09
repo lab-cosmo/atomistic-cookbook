@@ -25,5 +25,6 @@ dependencies:
       - xitorch
       - keras_core
       - tensorboard
+      - graphviz
       - torchviz
       - mlelec @ git+https://github.com/curiosity54/mlelec.git@tutorial_periodic#egg=mlelec
