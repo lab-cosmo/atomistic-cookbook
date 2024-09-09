@@ -7,7 +7,7 @@ import sphinx_gallery.gen_gallery
 from chemiscope.sphinx import ChemiscopeScraper
 
 
-HERE = os.path.realpath(os.path.join(os.path.dirname(__file__), "../"))
+ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__), "../"))
 
 
 class AttrDict(dict):
@@ -24,7 +24,7 @@ class PseudoSphinxApp:
 
     def __init__(self, example):
         gallery_dir = os.path.join(
-            HERE, "docs", "src", "examples", os.path.basename(example)
+            ROOT, "docs", "src", "examples", os.path.basename(example)
         )
         if os.path.exists(gallery_dir):
             shutil.rmtree(gallery_dir)
@@ -38,7 +38,7 @@ class PseudoSphinxApp:
         self.config.default_role = ""
         self.config.sphinx_gallery_conf = {
             "filename_pattern": ".*",
-            "examples_dirs": os.path.join(HERE, example),
+            "examples_dirs": os.path.join(ROOT, example),
             "gallery_dirs": gallery_dir,
             "min_reported_time": 60,
             "copyfile_regex": r".*\.(sh|xyz|cp2k|yml|png|zip)",
@@ -48,7 +48,7 @@ class PseudoSphinxApp:
         }
 
         self.builder = AttrDict()
-        self.builder.srcdir = os.path.join(HERE, "docs", "src")
+        self.builder.srcdir = os.path.join(ROOT, "docs", "src")
         self.builder.outdir = ""
         self.builder.name = os.path.basename(example)
 
