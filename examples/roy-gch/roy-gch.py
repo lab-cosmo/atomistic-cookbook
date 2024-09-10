@@ -13,6 +13,14 @@ It uses features computed with `rascaline <https://github.com/lab-cosmo/rascalin
 and uses the directional convex hull function from
 `scikit-matter <https://github.com/lab-cosmo/scikit-matter>`__
 to make the figure.
+
+The GCH construction aims at determining structures, among a collection of
+candidate configurations, that are stable or have the potential of being stabilized
+by appropriate thermodynamic boundary conditions (pressure, doping, external fields,
+...). It does so by using microscopic descriptors to determine the diversity of
+structures, and assumes that configurations that are stable relative to other
+configurations with similar descriptors are those that could be made
+"locally" stable by suitable synthesis conditions.
 """
 
 import chemiscope
@@ -45,7 +53,11 @@ iothers = np.where(structype != "known")[0]
 # -------------------
 #
 # The Directional Convex Hull routines can be used to compute a
-# conventional density-energy hull
+# conventional density-energy hull (see
+# `Hautier (2014)
+# <http://doi.org/10.1007/128_2013_486>`_ for a pedagogic
+# introduction to the convex hull construction in the context
+# of atomistic simulations).
 
 dch_builder = DirectionalConvexHull(low_dim_idx=[0])
 dch_builder.fit(density.reshape(-1, 1), energy)

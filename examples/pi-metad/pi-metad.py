@@ -49,11 +49,14 @@ import numpy as np
 # Metadynamics for the Zundel cation
 # ----------------------------------
 #
-# Metadynamics is a metnod to accelerate sampling of rare events - microscopic processes
+# Metadynamics is a method to accelerate sampling of rare events - microscopic processes
 # that are too infrequent to be observed over the time scale (ns-µs) accessible to
 # molecular dynamics simulations. You can read one of the many excellent reviews
 # on metadynamics (see e.g.
-# `Bussi and Branduardi (2015) <https://doi.org/10.1002/9781118889886.ch1>`_).
+# `Bussi and Branduardi (2015) <https://doi.org/10.1002/9781118889886.ch1>`_),
+# or follow a
+# `lecture from the PLUMED masterclass
+# <https://www.plumed-tutorials.org/lessons/21/004/data/NAVIGATION.html>`_.
 # In short, during a metadynamics simulation an adaptive biasing potential is
 # built as a superimposition of Gaussians centered over configurations that have
 # been previously visited by the trajectory. This discourages the system from remaining
@@ -233,6 +236,7 @@ if not os.path.exists("meta-md.out"):
 # If you run this in a notebook, you can go ahead and start loading
 # output files *before* i-PI has finished running by skipping this cell
 
+# wait for simulations to finish
 if ipi_process is not None:
     ipi_process.wait()
     for process in driver_process:
@@ -495,8 +499,8 @@ print(" " + ET.tostring(xmlroot.find(".//initialize"), encoding="unicode")[:23])
 # is important to distinguish between the free-energy computed
 # as the logarithm of the probability of observing a given
 # configuration (that depends on the distribution of the
-# replicas) and the free-energy taken as a mean to estimate
-# and reaction  rates :math:`k` in a transition-state theory
+# replicas) and the free-energy taken as a tool to estimate
+# reaction  rates :math:`k` in a transition-state theory
 # fashion :math:`k\propto e^{-\Delta E^\ddagger/kT}`,
 # where the energy barrier :math:`\Delta E^\ddagger`
 # is better estimated from the distribution of the centroid.
@@ -519,7 +523,7 @@ print("         " + ET.tostring(xmlroot.find(".//bias"), encoding="unicode"))
 #
 # The other changes are purely cosmetic, and the calculation
 # can be launched very easily, using several drivers to parallelize
-# the calculation over the beads (although this kind of calculations
+# the energy evaluation over the beads (although this kind of calculations
 # is not limited by the evaluation of the forces).
 
 # don't rerun if the outputs already exist
@@ -539,7 +543,7 @@ if not os.path.exists("meta-pimd.out"):
 # If you run this in a notebook, you can go ahead and start loading
 # output files _before_ i-PI has finished running by skipping this cell
 
-# don't rerun if the outputs already exist
+# wait for simulations to finish
 if ipi_process is not None:
     ipi_process.wait()
     for process in driver_process:
