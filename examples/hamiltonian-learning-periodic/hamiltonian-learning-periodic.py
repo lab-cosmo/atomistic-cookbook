@@ -2,14 +2,14 @@
 Periodic Hamiltonian learning Tutorial
 ======================================
 
-:Authors: Paolo Pegolo `@ppegolo <https://github.com/ppegolo>`_
+:Authors: Paolo Pegolo `@ppegolo <https://github.com/ppegolo>`__,
+          Jigyasa Nigam `@curiosity54 <https://github.com/curiosity54>`__
+
+This tutorial explains how to train a machine learning model for the
+electronic Hamiltonian of a periodic system. Even though we focus on
+periodic systems, the code and techniques presented here can be directly
+transferred to molecules.
 """
-
-# %%
-# This tutorial explains how to train a machine learning model for the
-# electronic Hamiltonian of a periodic system.
-#
-
 
 # %%
 # First, import the necessary packages
@@ -19,28 +19,21 @@ import os
 import warnings
 import zipfile
 
-import lightning.pytorch as pl
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import numpy as np
 import requests
 import torch
-from lightning.pytorch.callbacks import EarlyStopping
 from matplotlib.animation import FuncAnimation
-from mlelec.callbacks.logging import LoggingCallback
 from mlelec.data.derived_properties import compute_eigenvalues
 from mlelec.data.mldataset import MLDataset
 from mlelec.data.qmdataset import QMDataset
 from mlelec.models.equivariant_nonlinear_lightning import (
     LitEquivariantNonlinearModel,
-    MLDatasetDataModule,
     MSELoss,
 )
-from mlelec.models.equivariant_nonlinear_model import EquivariantNonLinearity
 from mlelec.utils.pbc_utils import blocks_to_matrix
 from mlelec.utils.plot_utils import plot_bands_frame
-from mlelec.utils.twocenter_utils import map_targetkeys_to_featkeys_integrated
-from torchviz import make_dot
 
 
 warnings.filterwarnings("ignore")
@@ -48,14 +41,85 @@ torch.set_default_dtype(torch.float64)
 
 
 # %%
-# Step 0: Get Data and Prepare Data Set
-# -------------------------------------
+# Get Data and Prepare Data Set
+# -----------------------------
 #
 
 
 # %%
-# Download Data
-# ~~~~~~~~~~~~~
+# In this tutorial, we will refer to the following dataset of graphene
+# structures (—– containing … structures, unit cell comprising of … atoms.
+# The reference calculations to obtain the electronic Hamiltonian were
+# done using … (software), PBE functional, kpoint grid . —- )
+#
+
+
+# %%
+# Obtain structures and DFT data
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+
+
+# %%
+# If you have computational resources, you can run the DFT calculations
+# needed to produce the data set. To do so, uncomment and run the
+# following `block of cells <#set-up-and-run-dft-calculations>`__. If
+# that’s not the case, you can `download precomputed
+# data <#download-precomputed-data>`__ and pass to the machine learning
+# part of the notebook.
+#
+
+
+# %%
+# Set up and run DFT calculations
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+
+
+# %%
+# For the sake of time and resources, the following code cells are
+# commented.
+#
+# If you run this notebook locally, or you want to run the calculations
+# for a different physical system, uncomment them and adapt them to your
+# specific case.
+#
+# You need to start from a set of atomistic structures (e.g., in `XYZ
+# format <https://en.wikipedia.org/wiki/XYZ_file_format>`__. A simple
+# (often too simplistic) approach to quickly obtain several structures is
+# to rattle a single structure by additing random noise to the atomic
+# positions and/or to the unit cell parameters.
+#
+# A better way of generating the dataset would be through molecular
+# dynamics simulations run at different thermodynamic conditions.
+#
+
+
+# %%
+# Rattle the original structures according to normal distribution
+#
+
+#
+
+
+# %%
+# Prepare the input files for DFT calculations. Here we’ll use CP2K (ADD
+# LINK).
+#
+
+#
+
+
+# %%
+# Run the calculations
+#
+
+#
+
+
+# %%
+# Download precomputed data
+# ^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 
 filename = "data.zip"
@@ -74,13 +138,31 @@ with zipfile.ZipFile("data.zip", "r") as zip_ref:
 
 
 # %%
-# Load structures and DFT data
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Using this code, it is also possible to compute the reference dataset
+# such as the one above, an example is provided below.
+#
+# —- Maybe we add a cell to show how to call a calculator —-?
 #
 
+
 # %%
-# The DFT calculations are done on a minimal STO-3G basis. The $n$, $l$, $m$
-# quantum numbers for species C are given below.
+# Store the DFT data
+# ^^^^^^^^^^^^^^^^^^
+#
+
+
+# %%
+# The DFT calculations for the dataset above were performed using a
+# **minimal** STO-3G basis. The basis set is specified for each species
+# using three quantum numbers, :math:`n`, :math:`l`, :math:`m`. :math:`n`
+# is usually a natural number relating to the **radial** extent or
+# resolution whereas :math:`l` and :math:`m` specify the **angular
+# components** determining the shape of the orbital and its orientation in
+# space. For example, :math:`1s` orbitals correspond to :math:`n=2`,
+# :math:`l=0` and :math:`m=0`, while a :math:`3p_x` orbital corresponds to
+# :math:`n=3`, :math:`l=1` and :math:`m=1`. For the STO-3G basis-set,
+# these quantum numbers for Carbon (identified by its atomic number) are
+# given as follows.
 #
 
 basis = "sto-3g"
@@ -88,38 +170,175 @@ orbitals = {
     "sto-3g": {6: [[1, 0, 0], [2, 0, 0], [2, 1, -1], [2, 1, 0], [2, 1, 1]]},
 }
 
+
 # %%
-# DFT data is stored in a `QMDataset` instance.
+# We instantiate the ``QMDataset`` class that holds all the relevant data
+# obtained from a quantum-mechanical (in this case, DFT) calculation. In
+# particular, this instance will hold the **frames** which will form the
+# train and test structures, along with the corresponding **Hamiltonian**
+# (used interchangeably with Fock) and **overlap** matrices in the basis
+# specified above, and the :math:`k`-point grid that was used for the
+# calculation.
+#
+# —– Should be explain what dimension means ? —–
+#
+# Note that we are currently specifying these matrices in **real-space**,
+# :math:`H(\mathbf{T})` , such that the element
+# :math:`\langle i nlm| H(\mathbf{T})| i' n'l'm'\rangle` indicates the
+# interaction between orbital :math:`nlm` on atom :math:`i` in the
+# undisplaced cell (equivalently, translated by
+# :math:`\mathbf{T}=\mathbf{0}`) and :math:`n'l'm'` on atom :math:`i'` in
+# a periodic copy of cell translated by :math:`\mathbf{T}`.
+#
+# Alternatively, we can provide the matrices in **reciprocal** (or
+# Fourier, :math:`k`) space. These are related to the real-space matrices
+# by a *Bloch* sum,
+#
+# .. math::  H(\mathbf{k}) = \sum_{\mathbf{T}} e^{i\mathbf{k}\cdot\mathbf{T}} H(\mathbf{T}),
+#
+# where, :math:`\mathbf{T}` denotes a lattice translation vector and
+# :math:`H(\mathbf{T})` is the corresponding real-space matrix.
+#
+# In the case the input matrices are in reciprocal space, there should be
+# one matrix per :math:`k`-point in the grid.
 #
 
 qmdata = QMDataset.from_file(
+    # File containing the atomistic structures
     frames_path="data/C2.xyz",
+    # File containing the Hamiltonian (of Fock) matrices
     fock_realspace_path="data/graphene_fock.npy",
+    # File containing the overlap matrices
     overlap_realspace_path="data/graphene_ovlp.npy",
+    # File containing the k-point grids used for the DFT calculations
     kmesh_path="data/kmesh.dat",
+    # Physical dimensionality of the system. Graphene is a 2D material
     dimension=2,
+    # Device where to run the calculations
+    # (can be 'cpu' or 'cuda', if GPUs are available)
     device="cpu",
+    # Name of the basis set used for the calculations
     orbs_name=basis,
+    # List of quantum numbers associated with the basis set orbitals
     orbs=orbitals[basis],
 )
 
 
 # %%
-# Visualize the equivariant structure of the Hamiltonians
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Quantities stored in ``QMDataset`` can be accessed as attributes,
+# e.g. ``qmdata.fock_realspace`` is a list (one element per structure) of
+# dictionaries labeled by the indices of the unit cell real-space
+# translations containing ``torch.Tensor``\ s.
+#
+
+structure_idx = 0
+realspace_translation = 0, 0, 0
+print(
+    f"The real-space Hamiltonian matrix for structure {structure_idx} labeled by translation T={realspace_translation} is:"
+)
+print(f"{qmdata.fock_realspace[structure_idx][realspace_translation]}")
+
+
+# %%
+# Machine learning data set
+# ~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 
 
 # %%
-# Under a global rotation of the atomic system, the Hamiltonian matrix
-# elements rotate according to the equivariant character of the involved
-# orbitals.
-#
-# Here is an animation of a trajectory along a Lissajous curve in 3D
-# space, alongside a colormap representing the Hamiltonian matrix elements
-# of the graphene unit cell in a minimal STO-3G basis.
+# Symmetries of the Hamiltonian matrix
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 
+
+# %%
+# The data stored in ``QMDataset`` can be transformed into a format that
+# is optimal for machine learning modeling by leveraging the underlying
+# **physical symmetries** that characterize the atomistic structure, the
+# basis set, and their associated matrices.
+#
+# The Hamiltonian matrix is a complex learning target, indexed by two
+# atoms and the orbitals centered on them. Each :math:`H(\mathbf{k})` is a
+# **Hermitian** matrix, while in real space, periodicity introduces a
+# **symmetry over translation pairs** such that
+# :math:`H(-\mathbf{T}) = H(\mathbf{T})^\dagger`, where the dagger,
+# :math:`\dagger`, denotes Hermitian conjugation.
+#
+# To address the symmetries associated with swapping atomic indices or
+# orbital labels, we divide the matrix into **blocks labeled by pairs of
+# atom types**.
+#
+# -  ``block_type = 0``, or **on-site** blocks, consist of elements
+#    corresponding to the interaction of orbitals on the same atom,
+#    :math:`i = i'`.
+#
+# -  ``block_type = 2``, or **cross-species** blocks, consist of elements
+#    corresponding to orbitals centered on atoms of distinct species.
+#    Since the two atoms can be distinguished, they can be consistently
+#    arranged in a predetermined order.
+#
+# -  ``block_type = 1, -1``, or **same-species** blocks, consist of
+#    elements corresponding to orbitals centered on distinct atoms of the
+#    same species. As these atoms are indistinguishable and cannot be
+#    ordered definitively, the pair must be symmetrized for permutations.
+#    We construct symmetric and antisymmetric combinations
+#    :math:`\langle i nlm| H(\mathbf{T})| i' n'l'm'\rangle \pm \langle i' nlm| H(\mathbf{-T})| i nlm\rangle`
+#    that correspond to ``block_type`` :math:`+1` and :math:`-1`,
+#    respectively.
+#
+
+
+# %%
+# Equivariant structure of the Hamiltonians
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+
+
+# %%
+# Even though the Hamiltonian operator under consideration is invariant,
+# **its representation transforms under the action of structural rotations
+# and inversions** due to the choice of the basis functions. Each of the
+# blocks has elements of the form
+# :math:`\langle i nlm| H | i' n'l'm'\rangle`, which are in an
+# **uncoupled** representation and transform as a product of (real)
+# spherical harmonics, :math:`Y_l^m \otimes Y_{l'}^{m'}`.
+#
+# This product can be decomposed into a direct sum of irreducible
+# representations (irreps) of :math:`\mathrm{SO(3)}`,
+#
+# .. math:: \lambda \mu: \lambda \in [|l_1 - l_2|, l_1+l_2], \mu \in [-\lambda, \lambda],
+#
+# which express the Hamiltonian blocks in terms of contributions that
+# rotate independently and can be modeled using a feature that
+# geometrically describes the pair of atoms under consideration and shares
+# the same symmetry.
+#
+# The resulting irreps form a **coupled** representation, each of which
+# transforms as a spherical harmonic :math:`Y^\mu_\lambda` under
+# :math:`\mathrm{SO(3)}` rotations, but may exhibit more complex behavior
+# under inversions. For example, spherical harmonics transform under
+# inversion, :math:`\hat{i}`, as polar tensors:
+#
+# .. math:: \hat{i}Y^\mu_\lambda = (-1)^\lambda Y^\mu_\lambda.
+#
+# Some of the coupled basis terms instead transform as pseudotensors,
+#
+# .. math:: \hat{i} H_{nl, n'l', \lambda}^\mu = (-1)^{\lambda+1}H_{nl, n'l', \lambda}^\mu.
+#
+# For more details about the block decomposition, please refer to `Nigam
+# et al., J. Chem. Phys. 156, 014115
+# (2022) <https://pubs.aip.org/aip/jcp/article/156/1/014115/2839817>`__.
+#
+# The following is an animation of a trajectory along a `Lissajous
+# curve <https://en.wikipedia.org/wiki/Lissajous_curve>`__ in 3D space,
+# alongside a colormap representing the values of the real-space
+# Hamiltonian matrix elements of the graphene unit cell in a minimal
+# STO-3G basis. From the animation, it is evident how invariant elements,
+# such as those associated with interactions between :math:`s` orbitals,
+# do not change under structural rotations. On the other hand,
+# interactions allowing for equivariant components, such as the
+# :math:`s`-:math:`p` block, change under rotations.
+#
 
 image_files = sorted(
     [
@@ -130,8 +349,8 @@ image_files = sorted(
 )
 images = [mpimg.imread(img) for img in image_files]
 fig, ax = plt.subplots()
-img_display = ax.imshow(images[0])  # Initialize with the first image
-ax.axis("off")  # Turn off axis
+img_display = ax.imshow(images[0])
+ax.axis("off")
 
 
 def update(frame):
@@ -139,26 +358,61 @@ def update(frame):
     return [img_display]
 
 
-# Create the animation using FuncAnimation
 ani = FuncAnimation(fig, update, frames=len(images), interval=20, blit=True)
 
+
 # %%
-# Instantiate machine learning data set
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Mapping geometric features to Hamiltonian targets
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 
 
 # %%
-# Define the hyperparameters for the ACDC descriptors. There are hypers
-# for the single-center (SC) :math:`\lambda`-SOAP and two-center (TC)
+# Each Hamiltonian block obtained from the procedure `described
+# above <#symmetries-of-the-hamiltonian-matrix>`__ can be modeled using
+# symmetrized features,
+# :math:`|\overline{\rho_{ii'}^{\otimes \nu}; \lambda\mu }\rangle`.
+#
+# Elements of ``block_type=0`` are indexed by a single atom and are best
+# described by a symmetrized atom-centered density correlation
+# (`ACDC <https://pubs.aip.org/aip/jcp/article/150/15/154110/76251/Atom-density-representations-for-machine-learning>`__),
+# :math:`|\overline{\rho_{i}^{\otimes \nu}; \sigma; \lambda\mu }\rangle`,
+# where :math:`\nu` refers to the correlation (body)-order, and—just as
+# for the blocks—:math:`\lambda \mu` indicate the :math:`\mathrm{SO(3)}`
+# irrep to which the feature is symmetrized. The symbol :math:`\sigma`
+# denotes the inversion parity.
+#
+# For other blocks, such as ``block_type=2``, which explicitly reference
+# two atoms, we use
+# `two-center <https://pubs.aip.org/aip/jcp/article/156/1/014115/2839817>`__
+# ACDCs, :math:`|\overline{\rho_{ii'}^{\otimes \nu}; \lambda\mu }\rangle`.
+#
+# For ``block_type=1, -1``, we ensure equivariance with respect to atom
+# index permutation by constructing symmetric and antisymmetric pair
+# features:
+# :math:`|\overline{\rho_{ii'}^{\otimes \nu}; \lambda\mu }\rangle \pm |\overline{\rho_{i'i}^{\otimes \nu}; \lambda\mu }\rangle`.
+#
+
+
+# %%
+# The features are discretized on a basis of radial functions and
+# spherical harmonics, and their performance may depend on the
+# **resolution** of the functions included in the model. There are
+# additional hyperparameters, such as the **cutoff** radius, which
+# controls the extent of the atomic environment, and Gaussian widths. In
+# the following, we allow for flexibility in discretizing the
+# atom-centered and two-centered ACDCs by defining the hyperparameters for
+# the single-center (SC) :math:`\lambda`-SOAP and two-center (TC) ACDC
 # descriptors.
 #
-
-
-# %%
 # The single and two-center descriptors have very similar hyperparameters,
-# except for the cutoff radius, which is larger for the two-center one, in
-# order to explicitly include far away pairs of atoms.
+# except for the cutoff radius, which is larger for the two-center
+# descriptors to explicitly include distant pairs of atoms.
+#
+# Note that the descriptors of pairs of atoms separated by distances
+# greater than the cutoff radius are identically zero. Thus, any model
+# based on these descriptors would predict an identically zero value for
+# these pairs.
 #
 
 SC_HYPERS = {
@@ -184,7 +438,9 @@ TC_HYPERS = {
 
 # %%
 # We then use the above defined hyperparameters to compute the descriptor
-# and initialize a ``MLDataset`` instance.
+# and initialize a ``MLDataset`` instance, which contains, among other
+# things, the Hamiltonian block decomposition and the geometric features
+# described above.
 #
 # In addition to computing the descriptors, ``MLDataset`` takes the data
 # stored in the ``QMDataset`` instance and puts it in a form required to
@@ -193,25 +449,43 @@ TC_HYPERS = {
 
 
 # %%
-# ``item_names`` contains the names of the quantities we want to compute
-# to target in the ML model training or to be able to access later.
+# The ``item_names`` argument is a list of names of the quantities we want
+# to compute and target in the ML model training, or that we want to be
+# able to access later.
 #
-# ``fock_blocks`` is a ``metatensor.Tensormap`` containing the coupled
-# blocks the Hamiltonian matrices have been divided into.
+# For example, ``fock_blocks`` is a
+# ```metatensor.Tensormap`` <https://docs.metatensor.org/latest/core/reference/python/tensor.html>`__
+# containing the Hamiltonian coupled blocks. We also want to access the
+# overlap matrices in :math:`k`-space (``overlap_kspace``) to be able to
+# compute the Hamiltonian eigenvalues in the :math:`k`-grid.
 #
 
 mldata = MLDataset(
+    # A QMDataset instance
     qmdata,
+    # The names of the quantities to compute/initialize for the training
     item_names=["fock_blocks", "overlap_kspace"],
+    # Hypers for the SC descriptors
     hypers_atom=SC_HYPERS,
+    # Hypers for the TC descriptors
     hypers_pair=TC_HYPERS,
+    # Cutoff for the angular quantum number to use in the Clebsh-Gordan iterations
     lcut=4,
+    # Fraction of structures in the training set
     train_frac=0.7,
+    # Fraction of structures in the validation set
     val_frac=0.2,
+    # Fraction of structures in the test set
     test_frac=0.1,
+    # Whether to shuffle or not the structure indices before splitting the data set
     shuffle=True,
-    model_basis=orbitals["sto-3g"],
 )
+
+
+# %%
+# The matrix decomposition into blocks and the calculations of geometric
+# features is performed by the ``MLDataset`` class.
+#
 
 
 # %%
@@ -223,104 +497,183 @@ mldata.features
 
 
 # %%
-# ``mldata.items`` can then be accessed as elements of a ``namedtuple``,
-# e.g.:
+# ``mldata.items`` is a ``namedtuple`` containing the quantities defined
+# in ``item_names``. e.g.:
 #
 
+print("The TensorMap containing the Hamiltonian coupled blocks is")
 mldata.items.fock_blocks
 
+structure_idx = 0
+k_idx = 0
+print(f"The overlap matrix for structure {structure_idx} at the {k_idx}-th k-point is")
+mldata.items.overlap_kspace[structure_idx][k_idx]
+
 
 # %%
-# Step 1: Build a machine learning model for the electronic Hamiltonian of
-# graphene in a minimal basis
-# --------------------------------------------------------------------------------
+# Build a machine learning model for the electronic Hamiltonian of graphene
+# -------------------------------------------------------------------------
 #
 
 
 # %%
-# Instantiate a ``pytorch_lightning`` data module from the ``MLDataset``
-# instance
+# For the sake of simplicity and time, the following cells define and
+# train a linear model targeting the Hamiltonian coupled blocks. The
+# weights are optimized via Ridge regression as implemented in
+# `scikit-learn <https://scikit-learn.org/stable/>`__.
+#
+# In case the data set is more complex than the simple example provided
+# here, or in case a more flexible model is required, one might decide to
+# train a more general neural network via gradient descent, instead of
+# solving a linear problem. The following cells outline how to do it using
+# ``mlelec``.
 #
 
-data_module = MLDatasetDataModule(mldata, batch_size=16, num_workers=0)
+
+# %%
+# Model’s architecture
+# ~~~~~~~~~~~~~~~~~~~~
+#
+
+
+# %%
+# The model consists of several submodels, one for each Hamiltonian
+# coupled block. Each submodel is a `multilayer
+# perceptron <https://en.wikipedia.org/wiki/Multilayer_perceptron>`__
+# (MLP) that maps the corresponding set of geometric features to the
+# Hamiltonian coupled block. Nonlinearities are applied to the invariants
+# constructed from each equivariant feature block using the
+# ``EquivariantNonlinearity`` module.
+#
+
+
+# %%
+# The architecture of ``EquivariantNonlinearity`` can be visualized with
+# ``torchviz`` with the following snippet:
+#
+# ::
+#
+#    import torch
+#    from mlelec.models.equivariant_nonlinear_model import EquivariantNonLinearity
+#    from torchviz import make_dot
+#    m = EquivariantNonLinearity(torch.nn.SiLU(), layersize = 10)
+#    y = m.forward(torch.randn(3,3,10))
+#    dot = make_dot(y, dict(m.named_parameters()))
+#    dot.graph_attr.update(size='150,150')
+#    dot
+#    dot.render("data/equivariantnonlinear", format="png") # this command will overwrite the image already present in data.zip
+#
+
+
+# %%
+# .. figure:: equivariantnonlinear.png
+#    :alt: Graph representing the architecture of EquivariantNonLinearity
+#    :width: 300px
+#
+#    Graph representing the architecture of EquivariantNonLinearity
+#
+
+
+# %%
+# The global architecture of the MLP, implemented in ``simpleMLP``, can be
+# visualized with
+#
+# ::
+#
+#    import torch
+#    from mlelec.models.equivariant_nonlinear_model import simpleMLP
+#    from torchviz import make_dot
+#    mlp = simpleMLP(
+#        nin=10,
+#        nout=1,
+#        nhidden=1,
+#        nlayers=1,
+#        bias=True,
+#        activation='SiLU',
+#        apply_layer_norm=True
+#        )
+#    y = mlp.forward(torch.randn(1,1,10))
+#    dot = make_dot(y, dict(mlp.named_parameters()))
+#    dot.graph_attr.update(size='150,150')
+#    dot
+#    dot.render("data/simpleMLP", format="png") # this command will overwrite the image already present in data.zip
+#
+
+
+# %%
+# .. figure:: simpleMLP.png
+#    :alt: Graph representing the architecture of simpleMLP
+#    :width: 600px
+#
+#    Graph representing the architecture of simpleMLP
+#
+
+
+# %%
+# Model initialization
+# ~~~~~~~~~~~~~~~~~~~~
+#
+
+
+# %%
+# The training loop is handled by `PyTorch
+# Lightning <https://lightning.ai/docs/pytorch/stable/>`__, hence the name
+# ``LitEquivariantNonlinearModel`` for the wrapper to
+# ``EquivariantNonlinearModel``. Initializing
+# ``LitEquivariantNonlinearModel`` requires a ``MLDataset`` instance, and
+# the information about the model’s architecture, the optimizer, and the
+# learning rate (LR) scheduler.
+#
+# To initialize a linear model, we ask the architecture to have no hidden
+# layers with ``nlayers=0``. We pass ``init_from_ridge`` to initialize the
+# weigths and biases from Ridge regression. Then, in case we want to
+# further optimize the weights through gradient descent, we define the
+# optimizer to be
+# ```LBFGS`` <https://en.wikipedia.org/wiki/Limited-memory_BFGS>`__, which
+# is more robust and works well with linear models. For more general
+# architectures, LBFGS might become too slow, and passing
+# ``optimizer='Adam'`` might be more convenient.
+#
 
 model = LitEquivariantNonlinearModel(
-    mldata=mldata,
-    # The number of hidden layers
-    nlayers=1,
-    # The number of neurons in each hidden layer
-    nhidden=64,
-    # What nonlinear activation function to apply to the invariant hidden
-    # features
-    activation="SiLU",
-    # Type of optimizer
-    optimizer="adam",
-    # Initial learning rate for the optimizer
-    learning_rate=1e-3,
-    # learning rate scheduler settings
+    mldata=mldata,  # a MLDataset instance
+    nlayers=0,  # The number of hidden layers
+    nhidden=64,  # The number of neurons in each hidden layer
+    init_from_ridge=True,  # If True, initialize the weights and biases of the
+    # purely linear model from Ridge regression
+    optimizer="LBFGS",  # Type of optimizer. Adam is likely better for
+    # a more general neural network
+    # activation="SiLU", # The nonlinear activation function
+    learning_rate=1e-3,  # Initial learning rate (LR)
     lr_scheduler_patience=10,
     lr_scheduler_factor=0.7,
     lr_scheduler_min_lr=1e-6,
-    # Use the mean square error as loss function
-    loss_fn=MSELoss(),
+    loss_fn=MSELoss(),  # Use the mean square error as loss function
 )
 
 
 # %%
-# This is what the architecture of one of the submodels we use for each
-# Hamiltonian block looks like.
+# Evaluating the cell above already pre-trains the model with Ridge
+# weights. In case this is not enough, or you want to try with more
+# general architectures, modify the previous cell and run the following
+# cells to set up a gradient descent training loop.
 #
-# Here we visualize the models’ graphs using ``torchviz``
-#
-
-
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    dots = {}
-    for k in model.model.model.in_keys:
-        submodel = model.model.model.get_module(k)
-        descriptor = map_targetkeys_to_featkeys_integrated(mldata.features, k).values
-        output = submodel.forward(descriptor)
-        dots[tuple(k.values.tolist())] = make_dot(
-            output, dict(submodel.named_parameters())
-        )
-        dots[tuple(k.values.tolist())].graph_attr.update(size="150,150")
-
-
-# %%
-# The first submodel
-#
-
-list(dots.values())[0].render("graph_output", format="png")
-img = mpimg.imread("graph_output.png")
-plt.figure(figsize=(10, 20))
-plt.imshow(img)
-plt.axis("off")
-
-
-# %%
-# We apply nonlinear activation to invariants obtained from the
-# equivariant blocks
-#
-
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-
-    m = EquivariantNonLinearity(torch.nn.SiLU(), layersize=10)
-    y = m.forward(torch.randn(3, 3, 10))
-    dot = make_dot(y, dict(m.named_parameters()))
-    dot.graph_attr.update(size="150,150")
-    dot.render("graph_output", format="png")
-    img = mpimg.imread("graph_output.png")
-    plt.figure(figsize=(6, 10))
-    plt.imshow(img)
-    plt.axis("off")
 
 
 # %%
 # Set up the training loop
-# ~~~~~~~~~~~~~~~~~~~~~~~~
+# ^^^^^^^^^^^^^^^^^^^^^^^^
 #
+
+
+# %%
+# Import additional modules not required in the rest of the tutorial
+#
+
+# import lightning.pytorch as pl
+# from lightning.pytorch.callbacks import EarlyStopping
+# from mlelec.callbacks.logging import LoggingCallback
+# from mlelec.models.equivariant_nonlinear_lightning import MLDatasetDataModule
 
 
 # %%
@@ -328,7 +681,7 @@ with warnings.catch_warnings():
 # training and validation losses.
 #
 
-logger_callback = LoggingCallback(log_every_n_epochs=5)
+# logger_callback = LoggingCallback(log_every_n_epochs=5)
 
 
 # %%
@@ -336,32 +689,31 @@ logger_callback = LoggingCallback(log_every_n_epochs=5)
 # validation loss function stops decreasing.
 #
 
-early_stopping = EarlyStopping(
-    monitor="val_loss", min_delta=1e-3, patience=10, verbose=False, mode="min"
-)
+# early_stopping = EarlyStopping(
+#     monitor="val_loss", min_delta=1e-3, patience=10, verbose=False, mode="min"
+# )
 
 
 # %%
 # We define a ``lighting.pytorch.Trainer`` instance to handle the training
-# loop. We train for 200 epochs
+# loop. We train for 200 epochs.
+#
+# Note that PyTorch Lightning requires the definition of a data module to
+# instantiate DataLoaders to be used during the training.
 #
 
-trainer = pl.Trainer(
-    max_epochs=100,
-    accelerator="cpu",
-    check_val_every_n_epoch=10,
-    callbacks=[early_stopping, logger_callback],
-    logger=False,
-    enable_checkpointing=False,
-)
+# data_module = MLDatasetDataModule(mldata, batch_size=16, num_workers=0)
 
-trainer.fit(model, data_module)
+# trainer = pl.Trainer(
+#     max_epochs=200,
+#     accelerator="cpu",
+#     check_val_every_n_epoch=10,
+#     callbacks=[early_stopping, logger_callback],
+#     logger=False,
+#     enable_checkpointing=False,
+# )
 
-
-# %%
-# Evaluate model accuracy
-# -----------------------
-#
+# trainer.fit(model, data_module)
 
 
 # %%
@@ -369,28 +721,48 @@ trainer.fit(model, data_module)
 # set of structures
 #
 
-trainer.test(model, data_module)
+# trainer.test(model, data_module)
 
 
 # %%
-# We can compute the predicted Hamiltonians from the trained model
+# Model’s accuracy in reproducing derived properties
+# --------------------------------------------------
+#
+
+
+# %%
+# The Hamiltonian coupled blocks predicted by the ML model can be accessed
+# from ``model.forward()``
 #
 
 predicted_blocks = model.forward(mldata.features)
 
 
 # %%
-# And convert the coupled blocks to Hamiltonian matrices
+# The real-space blocks can be transformed to Hamiltonian matrices via the
+# ``mlelec.utils.pbc_utils.blocks_to_matrix`` function. The resulting
+# real-space Hamiltonians can be Fourier transformed to give the
+# :math:`k`-space ones.
 #
 
-frames_dict = {A: qmdata.structures[A] for A in range(len(qmdata))}
-HT = blocks_to_matrix(predicted_blocks, orbitals["sto-3g"], frames_dict, detach=True)
+HT = blocks_to_matrix(
+    predicted_blocks,
+    orbitals["sto-3g"],
+    {A: qmdata.structures[A] for A in range(len(qmdata))},
+    detach=True,
+)
 Hk = qmdata.bloch_sum(HT, is_tensor=True)
 
 
 # %%
-# We can then compute the eigenvalues to assess the model accuracy in
-# predicting the band structure
+# Kohn-Sham eigenvalues
+# ~~~~~~~~~~~~~~~~~~~~~
+#
+
+
+# %%
+# We can then compute the eigenvalues on the :math:`k`-grid used for the
+# calculation to assess the model accuracy in predicting band energies.
 #
 
 target_eigenvalues = compute_eigenvalues(qmdata.fock_kspace, qmdata.overlap_kspace)
@@ -443,9 +815,6 @@ ax.legend()
 ax.set_xlabel("Target eigenvalues (eV)")
 ax.set_ylabel("Predicted eigenvalues (eV)")
 
-# %%
-# The core-state are more difficult to align compared to higher-energy states.
-# Longer trainings are needed to accurately capture their energies.
 
 # %%
 # Graphene band structure
@@ -486,7 +855,3 @@ ax.legend(
     bbox_to_anchor=(1, 0.5),
 )
 fig.tight_layout()
-
-# %%
-# Even with a poorly converged model, the band structure is quite accurate,
-# especially for occupied states.
