@@ -19,7 +19,7 @@ jobs:
 
       - id: collectExamples
         run: |
-          echo examplesjson=$(./developer/get_examples.py) >> $GITHUB_OUTPUT
+          echo examplesjson=$(./src/get_examples.py) >> $GITHUB_OUTPUT
 
   generate-example:
     needs: setup
