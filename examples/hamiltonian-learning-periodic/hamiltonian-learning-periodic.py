@@ -47,10 +47,13 @@ torch.set_default_dtype(torch.float64)
 
 
 # %%
-# In this tutorial, we will refer to the following dataset of graphene
-# structures (—– containing … structures, unit cell comprising of … atoms.
-# The reference calculations to obtain the electronic Hamiltonian were
-# done using … (software), PBE functional, kpoint grid . —- )
+# The data set contains 35 distorted graphene unit cells containing 2
+# atoms. The reference density functional theory (DFT) calculations are
+# performed with `CP2K <https://www.cp2k.org/>`__ using a minimal
+# `STO-3G <https://en.wikipedia.org/wiki/STO-nG_basis_sets>`__ basis and
+# the `PBE <https://doi.org/10.1103/PhysRevLett.77.3865>`__ functional.
+# The Kohn-Sham equations are solved on a Monkhorst-Pack grid of
+# :math:`15\times 15\times 1` points in the Brillouin zone of the crystal.
 #
 
 
@@ -62,64 +65,204 @@ torch.set_default_dtype(torch.float64)
 
 # %%
 # If you have computational resources, you can run the DFT calculations
-# needed to produce the data set. To do so, uncomment and run the
-# following `block of cells <#set-up-and-run-dft-calculations>`__. If
-# that’s not the case, you can `download precomputed
-# data <#download-precomputed-data>`__ and pass to the machine learning
-# part of the notebook.
+# needed to produce the data set. `This other
+# tutorial <https://tinyurl.com/cp2krun>`__ in the atomistic cookbook can
+# help you set up the CP2K calculations for this data set, using the
+# :download:`reftraj_hamiltonian.cp2k` file provided here. To do the same
+# for another data set, adapt the reftraj file.
+#
+# We will provide here some the functions in the `batch-cp2k
+# tutorial <https://tinyurl.com/cp2krun>`__ that need to be adapted to the
+# current data set.
 #
 
 
 # %%
-# Set up and run DFT calculations
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# Import all the modules from `batch-cp2k
+# tutorial <https://tinyurl.com/cp2krun>`__ and run the cell to install
+# CP2K. Run also the cells up to the one defining ``write_cp2k_in``.
+#
+# The following cell defines a slighly modified version of that functions,
+# allowing for non-orthorombic cells, and accounting for the reftraj file
+# name change.
 #
 
 
 # %%
-# For the sake of time and resources, the following code cells are
-# commented.
+# .. code:: python
 #
-# If you run this notebook locally, or you want to run the calculations
-# for a different physical system, uncomment them and adapt them to your
-# specific case.
+#    def write_cp2k_in(
+#        fname: str,
+#        project_name: str,
+#        last_snapshot: int,
+#        cell_a: List[float],
+#        cell_b: List[float],
+#        cell_c: List[float],
+#    ) -> None:
+#        """Writes a cp2k input file from a template.
 #
-# You need to start from a set of atomistic structures (e.g., in `XYZ
-# format <https://en.wikipedia.org/wiki/XYZ_file_format>`__. A simple
-# (often too simplistic) approach to quickly obtain several structures is
-# to rattle a single structure by additing random noise to the atomic
-# positions and/or to the unit cell parameters.
+#        Importantly, it writes the location of the basis set definitions,
+#        determined from the path of the system CP2K install to the input file.
+#        """
 #
-# A better way of generating the dataset would be through molecular
-# dynamics simulations run at different thermodynamic conditions.
+#        cp2k_in = open("reftraj_hamiltonian.cp2k", "r").read()
 #
-
-
-# %%
-# Rattle the original structures according to normal distribution
+#        cp2k_in = cp2k_in.replace("//PROJECT//", project_name)
+#        cp2k_in = cp2k_in.replace("//LAST_SNAPSHOT//", str(last_snapshot))
+#        cp2k_in = cp2k_in.replace("//CELL_A//", " ".join([f"{c:.6f}" for c in cell_a]))
+#        cp2k_in = cp2k_in.replace("//CELL_B//", " ".join([f"{c:.6f}" for c in cell_b]))
+#        cp2k_in = cp2k_in.replace("//CELL_C//", " ".join([f"{c:.6f}" for c in cell_c]))
 #
-
-#
-
-
-# %%
-# Prepare the input files for DFT calculations. Here we’ll use CP2K (ADD
-# LINK).
-#
-
+#        with open(fname, "w") as f:
+#            f.write(cp2k_in)
 #
 
 
 # %%
-# Run the calculations
+# Unlike the `batch-cp2k tutorial <https://tinyurl.com/cp2krun>`__, the
+# current data set includes a single stoichiometry, :math:`\mathrm{C_2}`.
+# Therefore, you can run this cell to set the calculation scripts up.
 #
 
+
+# %%
+# .. code:: python
+#
+#    project_name = 'graphene'
+#    frames = ase_read('C2.xyz', index=':')
+#    os.makedirs(project_name, exist_ok=True)
+#    os.makedirs(f"{project_name}/FOCK", exist_ok=True)
+#    os.makedirs(f"{project_name}/OVER", exist_ok=True)
+#
+#    write_cp2k_in(
+#            f"{project_name}/in.cp2k",
+#            project_name=project_name,
+#            last_snapshot=len(frames),
+#            cell_a=frames[0].cell.array[0],
+#            cell_b=frames[0].cell.array[1],
+#            cell_c=frames[0].cell.array[2],
+#        )
+#
+#    ase_write(f"{project_name}/init.xyz", frames[0])
+#    write_reftraj(f"{project_name}/reftraj.xyz", frames)
+#    write_cellfile(f"{project_name}/reftraj.cell", frames)
+#
+
+
+# %%
+# The CP2K calculations can be simply run using:
+#
+
+
+# %%
+# .. code:: python
+#
+#    subprocess.run((
+#        f"cp2k.ssmp -i {project_name}/in.cp2k "
+#        "> {project_name}/out.cp2k"
+#        ),
+#        shell=True)
+#
+
+
+# %%
+# Once the calculations are done, we can parse the results with:
+#
+
+
+# %%
+# .. code:: python
+#
+#    from scipy.sparse import csr_matrix
+#
+#    nao = 10
+#    ifr = 1
+#    fock = []
+#    over = []
+#    with open(f"{project_name}/out.cp2k", "r") as outfile:
+#        T_lists = []  # List to hold all T_list instances
+#        while True:
+#            line = outfile.readline()
+#            if not line:
+#                break
+#            if line.strip().split()[:3] != ["KS", "CSR", "write|"]:
+#                continue
+#            else:
+#                nT = int(line.strip().split()[3])
+#                outfile.readline()  # Skip the next line if necessary
+#                T_list = []  # Initialize a new T_list for this block
+#                for _ in range(nT):
+#                    line = outfile.readline()
+#                    if not line:
+#                        break
+#                    T_list.append([np.int32(j) for j in line.strip().split()[1:4]])
+#                T_list = np.array(T_list)
+#                T_lists.append(T_list)  # Append the T_list to T_lists
+#                fock_ = {}
+#                over_ = {}
+#                for iT, T in enumerate(
+#                    T_list
+#                ):  # Loop through the translations and load matrices
+#                    T = T.tolist()
+#                    r, c, data = np.loadtxt(
+#                        (
+#                            f"{project_name}/FOCK/{project_name}"
+#                            f"-KS_SPIN_1_R_{iT+1}-1_{ifr}.csr"
+#                        ),
+#                        unpack=True,
+#                    )
+#                    r = np.int32(r - 1)
+#                    c = np.int32(c - 1)
+#                    fock_[tuple(T)] = csr_matrix(
+#                        (data, (r, c)), shape=(nao, nao)
+#                    ).toarray()
+#
+#                    r, c, data = np.loadtxt(
+#                        (
+#                            f"{project_name}/OVER/{project_name}"
+#                            f"-S_SPIN_1_R_{iT+1}-1_{ifr}.csr"
+#                        ),
+#                        unpack=True,
+#                    )
+#                    r = np.int32(r - 1)
+#                    c = np.int32(c - 1)
+#                    over_[tuple(T)] = csr_matrix(
+#                        (data, (r, c)), shape=(nao, nao)
+#                    ).toarray()
+#                fock.append(fock_)
+#                over.append(over_)
+#                ifr += 1
+#
+
+
+# %%
+# You can now save the matrices to ``.npy`` files, and a file with the
+# k-grids used in the calculations.
+#
+
+
+# %%
+# .. code:: python
+#
+#    os.makedirs("data", exist_ok=True)
+#    # Save the Hamiltonians
+#    np.save("data/graphene_fock.npy", fock)
+#    # Save the overlaps
+#    np.save("data/graphene_ovlp.npy", over)
+#    # Write a file with the k-grids, one line per structure
+#    np.savetxt('data/kmesh.dat', [[15,15,1]]*len(frames), fmt='%d')
 #
 
 
 # %%
 # Download precomputed data
 # ^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+
+
+# %%
+# For the sake of simplicity, you can also download precomputed data and
+# run just the machine learning part of the notebook using these data.
 #
 
 filename = "data.zip"
@@ -135,14 +278,6 @@ if not os.path.exists(filename):
 
 with zipfile.ZipFile("data.zip", "r") as zip_ref:
     zip_ref.extractall("./")
-
-
-# %%
-# Using this code, it is also possible to compute the reference dataset
-# such as the one above, an example is provided below.
-#
-# —- Maybe we add a cell to show how to call a calculator —-?
-#
 
 
 # %%
@@ -180,8 +315,6 @@ orbitals = {
 # specified above, and the :math:`k`-point grid that was used for the
 # calculation.
 #
-# —– Should be explain what dimension means ? —–
-#
 # Note that we are currently specifying these matrices in **real-space**,
 # :math:`H(\mathbf{T})` , such that the element
 # :math:`\langle i nlm| H(\mathbf{T})| i' n'l'm'\rangle` indicates the
@@ -194,7 +327,7 @@ orbitals = {
 # Fourier, :math:`k`) space. These are related to the real-space matrices
 # by a *Bloch* sum,
 #
-# .. math::  H(\mathbf{k}) = \sum_{\mathbf{T}} e^{i\mathbf{k}\cdot\mathbf{T}} H(\mathbf{T}),
+# .. math:: H(\mathbf{k})=\sum_{\mathbf{T}}e^{i\mathbf{k}\cdot\mathbf{T}}H(\mathbf{T}),
 #
 # where, :math:`\mathbf{T}` denotes a lattice translation vector and
 # :math:`H(\mathbf{T})` is the corresponding real-space matrix.
@@ -205,7 +338,7 @@ orbitals = {
 
 qmdata = QMDataset.from_file(
     # File containing the atomistic structures
-    frames_path="data/C2.xyz",
+    frames_path="C2.xyz",
     # File containing the Hamiltonian (of Fock) matrices
     fock_realspace_path="data/graphene_fock.npy",
     # File containing the overlap matrices
@@ -233,9 +366,8 @@ qmdata = QMDataset.from_file(
 
 structure_idx = 0
 realspace_translation = 0, 0, 0
-print(
-    f"The real-space Hamiltonian matrix for structure {structure_idx} labeled by translation T={realspace_translation} is:"
-)
+print(f"The real-space Hamiltonian matrix for structure {structure_idx} labeled by")
+print(f"translation T={realspace_translation} is:")
 print(f"{qmdata.fock_realspace[structure_idx][realspace_translation]}")
 
 
@@ -282,7 +414,9 @@ print(f"{qmdata.fock_realspace[structure_idx][realspace_translation]}")
 #    same species. As these atoms are indistinguishable and cannot be
 #    ordered definitively, the pair must be symmetrized for permutations.
 #    We construct symmetric and antisymmetric combinations
-#    :math:`\langle i nlm| H(\mathbf{T})| i' n'l'm'\rangle \pm \langle i' nlm| H(\mathbf{-T})| i nlm\rangle`
+#    :math:`(\langle inlm|H(\mathbf{T})|i'n'l'm'\rangle\pm\
+#    \langle i'nlm|H(\mathbf{-T})|inlm\rangle
+#    `)
 #    that correspond to ``block_type`` :math:`+1` and :math:`-1`,
 #    respectively.
 #
@@ -306,7 +440,7 @@ print(f"{qmdata.fock_realspace[structure_idx][realspace_translation]}")
 # This product can be decomposed into a direct sum of irreducible
 # representations (irreps) of :math:`\mathrm{SO(3)}`,
 #
-# .. math:: \lambda \mu: \lambda \in [|l_1 - l_2|, l_1+l_2], \mu \in [-\lambda, \lambda],
+# .. math:: \lambda \mu:\lambda \in [|l_1-l_2|,l_1+l_2],\mu \in [-\lambda,\lambda],
 #
 # which express the Hamiltonian blocks in terms of contributions that
 # rotate independently and can be modeled using a feature that
@@ -323,7 +457,7 @@ print(f"{qmdata.fock_realspace[structure_idx][realspace_translation]}")
 #
 # Some of the coupled basis terms instead transform as pseudotensors,
 #
-# .. math:: \hat{i} H_{nl, n'l', \lambda}^\mu = (-1)^{\lambda+1}H_{nl, n'l', \lambda}^\mu.
+# .. math:: \hat{i}H_{nl,n'l',\lambda}^\mu=(-1)^{\lambda+1}H_{nl,n'l',\lambda}^\mu.
 #
 # For more details about the block decomposition, please refer to `Nigam
 # et al., J. Chem. Phys. 156, 014115
@@ -375,7 +509,7 @@ ani = FuncAnimation(fig, update, frames=len(images), interval=20, blit=True)
 #
 # Elements of ``block_type=0`` are indexed by a single atom and are best
 # described by a symmetrized atom-centered density correlation
-# (`ACDC <https://pubs.aip.org/aip/jcp/article/150/15/154110/76251/Atom-density-representations-for-machine-learning>`__),
+# (`ACDC <https://doi.org/10.1063/1.5090481>`__),
 # :math:`|\overline{\rho_{i}^{\otimes \nu}; \sigma; \lambda\mu }\rangle`,
 # where :math:`\nu` refers to the correlation (body)-order, and—just as
 # for the blocks—:math:`\lambda \mu` indicate the :math:`\mathrm{SO(3)}`
@@ -383,14 +517,16 @@ ani = FuncAnimation(fig, update, frames=len(images), interval=20, blit=True)
 # denotes the inversion parity.
 #
 # For other blocks, such as ``block_type=2``, which explicitly reference
-# two atoms, we use
-# `two-center <https://pubs.aip.org/aip/jcp/article/156/1/014115/2839817>`__
+# two atoms, we use `two-center <https://doi.org/10.1063/5.0072784>`__
 # ACDCs, :math:`|\overline{\rho_{ii'}^{\otimes \nu}; \lambda\mu }\rangle`.
 #
 # For ``block_type=1, -1``, we ensure equivariance with respect to atom
 # index permutation by constructing symmetric and antisymmetric pair
 # features:
-# :math:`|\overline{\rho_{ii'}^{\otimes \nu}; \lambda\mu }\rangle \pm |\overline{\rho_{i'i}^{\otimes \nu}; \lambda\mu }\rangle`.
+# :math:`(
+# |\overline{\rho_{ii'}^{\otimes \nu};\lambda\mu }\rangle\pm\
+# |\overline{\rho_{i'i}^{\otimes \nu};\lambda\mu }\rangle
+# )`.
 #
 
 
@@ -454,10 +590,10 @@ TC_HYPERS = {
 # able to access later.
 #
 # For example, ``fock_blocks`` is a
-# ```metatensor.Tensormap`` <https://docs.metatensor.org/latest/core/reference/python/tensor.html>`__
-# containing the Hamiltonian coupled blocks. We also want to access the
-# overlap matrices in :math:`k`-space (``overlap_kspace``) to be able to
-# compute the Hamiltonian eigenvalues in the :math:`k`-grid.
+# `metatensor.Tensormap <https://tinyurl.com/tenmap>`__ containing the
+# Hamiltonian coupled blocks. We also want to access the overlap matrices
+# in :math:`k`-space (``overlap_kspace``) to be able to compute the
+# Hamiltonian eigenvalues in the :math:`k`-grid.
 #
 
 mldata = MLDataset(
@@ -551,7 +687,7 @@ mldata.items.overlap_kspace[structure_idx][k_idx]
 # The architecture of ``EquivariantNonlinearity`` can be visualized with
 # ``torchviz`` with the following snippet:
 #
-# ::
+# .. code:: python
 #
 #    import torch
 #    from mlelec.models.equivariant_nonlinear_model import EquivariantNonLinearity
@@ -561,7 +697,7 @@ mldata.items.overlap_kspace[structure_idx][k_idx]
 #    dot = make_dot(y, dict(m.named_parameters()))
 #    dot.graph_attr.update(size='150,150')
 #    dot
-#    dot.render("data/equivariantnonlinear", format="png") # this command will overwrite the image already present in data.zip
+#    dot.render("data/equivariantnonlinear", format="png")
 #
 
 
@@ -578,7 +714,7 @@ mldata.items.overlap_kspace[structure_idx][k_idx]
 # The global architecture of the MLP, implemented in ``simpleMLP``, can be
 # visualized with
 #
-# ::
+# .. code:: python
 #
 #    import torch
 #    from mlelec.models.equivariant_nonlinear_model import simpleMLP
@@ -596,7 +732,7 @@ mldata.items.overlap_kspace[structure_idx][k_idx]
 #    dot = make_dot(y, dict(mlp.named_parameters()))
 #    dot.graph_attr.update(size='150,150')
 #    dot
-#    dot.render("data/simpleMLP", format="png") # this command will overwrite the image already present in data.zip
+#    dot.render("data/simpleMLP", format="png")
 #
 
 
@@ -629,8 +765,8 @@ mldata.items.overlap_kspace[structure_idx][k_idx]
 # weigths and biases from Ridge regression. Then, in case we want to
 # further optimize the weights through gradient descent, we define the
 # optimizer to be
-# ```LBFGS`` <https://en.wikipedia.org/wiki/Limited-memory_BFGS>`__, which
-# is more robust and works well with linear models. For more general
+# `LBFGS <https://en.wikipedia.org/wiki/Limited-memory_BFGS>`__, which is
+# more robust and works well with linear models. For more general
 # architectures, LBFGS might become too slow, and passing
 # ``optimizer='Adam'`` might be more convenient.
 #
@@ -670,10 +806,15 @@ model = LitEquivariantNonlinearModel(
 # Import additional modules not required in the rest of the tutorial
 #
 
-# import lightning.pytorch as pl
-# from lightning.pytorch.callbacks import EarlyStopping
-# from mlelec.callbacks.logging import LoggingCallback
-# from mlelec.models.equivariant_nonlinear_lightning import MLDatasetDataModule
+
+# %%
+# .. code:: python
+#
+#    import lightning.pytorch as pl
+#    from lightning.pytorch.callbacks import EarlyStopping
+#    from mlelec.callbacks.logging import LoggingCallback
+#    from mlelec.models.equivariant_nonlinear_lightning import MLDatasetDataModule
+#
 
 
 # %%
@@ -681,7 +822,12 @@ model = LitEquivariantNonlinearModel(
 # training and validation losses.
 #
 
-# logger_callback = LoggingCallback(log_every_n_epochs=5)
+
+# %%
+# .. code:: python
+#
+#    logger_callback = LoggingCallback(log_every_n_epochs=5)
+#
 
 
 # %%
@@ -689,9 +835,14 @@ model = LitEquivariantNonlinearModel(
 # validation loss function stops decreasing.
 #
 
-# early_stopping = EarlyStopping(
-#     monitor="val_loss", min_delta=1e-3, patience=10, verbose=False, mode="min"
-# )
+
+# %%
+# .. code:: python
+#
+#    early_stopping = EarlyStopping(
+#        monitor="val_loss", min_delta=1e-3, patience=10, verbose=False, mode="min"
+#    )
+#
 
 
 # %%
@@ -702,18 +853,23 @@ model = LitEquivariantNonlinearModel(
 # instantiate DataLoaders to be used during the training.
 #
 
-# data_module = MLDatasetDataModule(mldata, batch_size=16, num_workers=0)
 
-# trainer = pl.Trainer(
-#     max_epochs=200,
-#     accelerator="cpu",
-#     check_val_every_n_epoch=10,
-#     callbacks=[early_stopping, logger_callback],
-#     logger=False,
-#     enable_checkpointing=False,
-# )
-
-# trainer.fit(model, data_module)
+# %%
+# .. code:: python
+#
+#    data_module = MLDatasetDataModule(mldata, batch_size=16, num_workers=0)
+#
+#    trainer = pl.Trainer(
+#        max_epochs=200,
+#        accelerator="cpu",
+#        check_val_every_n_epoch=10,
+#        callbacks=[early_stopping, logger_callback],
+#        logger=False,
+#        enable_checkpointing=False,
+#    )
+#
+#    trainer.fit(model, data_module)
+#
 
 
 # %%
@@ -721,7 +877,12 @@ model = LitEquivariantNonlinearModel(
 # set of structures
 #
 
-# trainer.test(model, data_module)
+
+# %%
+# .. code:: python
+#
+#    trainer.test(model, data_module)
+#
 
 
 # %%
