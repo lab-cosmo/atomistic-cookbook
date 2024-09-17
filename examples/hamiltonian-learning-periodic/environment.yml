@@ -5,13 +5,8 @@ dependencies:
   - pip
   - graphviz
   - pyscf=2.3.0
-
-  # Pip dependencies
+  - rust>=1.65
   - pip:
-      - torch
-      - numpy
-      - scipy
-      - jupyter
       - ase==3.22.1
       - pyscfad @ git+https://github.com/fishjojo/pyscfad.git@ml#egg=pyscfad
       - seekpath
