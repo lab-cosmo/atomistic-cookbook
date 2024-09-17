@@ -200,76 +200,6 @@ traj_pimd["settings"]["structure"][0].update(
 
 chemiscope.show(**traj_pimd, mode="structure")
 
-# %%
-# Accelerating PIMD with a PIGLET thermostat
-# ------------------------------------------
-#
-# The simulations in the previous sections are very far from converged -- typically
-# one would need approximately 32 replicas to converge a simulation of
-# room-temperature water. To address this problem we will use a method based on
-# generalized Langevin equations, called
-# `PIGLET <http://doi.org/10.1103/PhysRevLett.109.100604>`_
-#
-# The input file is ``input_piglet.xml``, that only differs by the definition of
-# the thermostat, that uses a ``nm_gle`` mode in which each normal mode
-# of the ring polymer is attached to a different colored-noise Generalized Langevin
-# equation. This makes it possible to converge exactly the simulation results with
-# a small number of replicas, and to accelerate greatly convergence for realistic
-# systems such as this. The thermostat parameters can be generated on
-# `the GLE4MD website <https://tinyurl.com/4y2e45jx>`_
-#
-
-ipi_process = subprocess.Popen(["i-pi", "data/input_piglet.xml"])
-time.sleep(2)  # wait for i-PI to start
-lmp_process = [subprocess.Popen(["lmp", "-in", "data/in.lmp"]) for i in range(2)]
-
-ipi_process.wait()
-lmp_process[0].wait()
-lmp_process[1].wait()
-
-# %%
-# The mean potential energy from the PIGLET trajectory is higher than that for the
-# PIMD one, because it is closer to the converged value (try to run a PIMD trajectory
-# with 64 beads for comparison)
-
-# drops first frame
-output_gle, desc_gle = ipi.read_output("simulation_piglet.out")
-traj_gle = [ipi.read_trajectory(f"simulation_piglet.pos_{i}.xyz")[1:] for i in range(8)]
-
-fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-ax.plot(
-    output_data["time"],
-    output_data["potential"] - output_data["potential"][0],
-    "b--",
-    label="PIMD",
-)
-ax.plot(
-    output_gle["time"],
-    output_gle["potential"] - output_gle["potential"][0],
-    "b-",
-    label="PIGLET",
-)
-ax.set_xlabel(r"$t$ / ps")
-ax.set_ylabel(r"energy / eV")
-ax.legend()
-
-# %%
-# However, you should be somewhat careful: PIGLET converges *some* but not all the
-# correlations within a path. For instance, it is designed to converge the
-# centroid-virial estimator for the kinetic energy, but not the thermodynamic
-# estimator. For the same reason, don't try to look at equilibration in terms of
-# the mean temperature: it won't match the target value, because PIGLET uses a
-# Langevin equation that breaks the classical fluctuation-dissipation theorem, and
-# generates a steady-state distribution that mimics quantum fluctuations.
-
-fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-ax.plot(output_data["time"], output_data["kinetic_cv"], "b--", label="PIMD, $K_{CV}$")
-ax.plot(output_gle["time"], output_gle["kinetic_cv"], "b", label="PIGLET, $K_{CV}$")
-ax.plot(output_data["time"], output_data["kinetic_td"], "r--", label="PIMD, $K_{TD}$")
-ax.plot(output_gle["time"], output_gle["kinetic_td"], "r", label="PIGLET, $K_{TD}$")
-ax.set_xlabel(r"$t$ / ps")
-ax.set_ylabel(r"energy / eV")
-ax.legend()
 
 # %%
 # Kinetic energy tensors
@@ -292,8 +222,8 @@ ax.legend()
 # them over the last 10 frames and combining them with the centroid configuration
 # from the last frame in the trajectory.
 
-kinetic_cv = ipi.read_trajectory("simulation_piglet.kin.xyz")[1:]
-kinetic_od = ipi.read_trajectory("simulation_piglet.kod.xyz")[1:]
+kinetic_cv = ipi.read_trajectory("simulation.kin.xyz")[1:]
+kinetic_od = ipi.read_trajectory("simulation.kod.xyz")[1:]
 kinetic_tens = np.hstack(
     [
         np.asarray([k.positions for k in kinetic_cv[-10:]]).mean(axis=0),
@@ -301,8 +231,8 @@ kinetic_tens = np.hstack(
     ]
 )
 
-centroid = traj_gle[-1][-1].copy()
-centroid.positions = np.asarray([t[-1].positions for t in traj_gle]).mean(axis=0)
+centroid = traj_pimd[-1][-1].copy()
+centroid.positions = np.asarray([t[-1].positions for t in traj_pimd]).mean(axis=0)
 centroid.arrays["kinetic_cv"] = kinetic_tens
 
 # %%
