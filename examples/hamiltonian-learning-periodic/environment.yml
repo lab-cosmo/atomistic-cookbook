@@ -4,6 +4,7 @@ dependencies:
   - python>=3.11
   - pip
   - graphviz
+  - pyscf=2.3.0
 
   # Pip dependencies
   - pip:
@@ -12,8 +13,6 @@ dependencies:
       - scipy
       - jupyter
       - ase==3.22.1
-      - --prefer-binary
-      - pyscf==2.3.0
       - pyscfad @ git+https://github.com/fishjojo/pyscfad.git@ml#egg=pyscfad
       - seekpath
       - metatensor
