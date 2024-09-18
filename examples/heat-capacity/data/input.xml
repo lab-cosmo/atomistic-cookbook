@@ -1,6 +1,6 @@
 <simulation verbosity='medium' safe_stride='100'>
   <output prefix='simulation'>
-    <properties stride='1' filename='out'>  [ step, time{picosecond}, conserved{electronvolt}, temperature{kelvin}, kinetic_cv{electronvolt}, potential{electronvolt}, pressure_cv{megapascal}, kinetic_td{electronvolt} ] </properties>
+    <properties stride='1' filename='out'>  [ step, time{picosecond}, conserved{electronvolt}, temperature{kelvin}, kinetic_cv{electronvolt}, potential{electronvolt}, scaledcoords ] </properties>
     <trajectory filename='pos' stride='20'> positions </trajectory>
     <trajectory filename='kin' stride='20'> kinetic_cv </trajectory>
     <trajectory filename='kod' stride='20'> kinetic_od </trajectory>

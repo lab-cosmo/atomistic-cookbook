@@ -14,7 +14,6 @@ model <http://doi.org/10.1063/1.3167790>`_.
 import subprocess
 import time
 
-import chemiscope
 import ipi
 import matplotlib.pyplot as plt
 import numpy as np
@@ -68,7 +67,7 @@ import numpy as np
 # An i-PI calculation is specified by an XML file.
 
 # Open and read the XML file
-with open("data/input_pimd.xml", "r") as file:
+with open("data/input.xml", "r") as file:
     xml_content = file.read()
 print(xml_content)
 
@@ -88,7 +87,7 @@ print(xml_content)
 #
 # .. code-block:: bash
 #
-#    i-pi data/input_pimd.xml > log &
+#    i-pi data/input.xml > log &
 #    sleep 2
 #    lmp -in data/in.lmp &
 #    lmp -in data/in.lmp &
@@ -100,7 +99,7 @@ print(xml_content)
 #
 # We can launch the external processes from a Python script as follows
 
-ipi_process = subprocess.Popen(["i-pi", "data/input_pimd.xml"])
+ipi_process = subprocess.Popen(["i-pi", "data/input.xml"])
 time.sleep(2)  # wait for i-PI to start
 lmp_process = [subprocess.Popen(["lmp", "-in", "data/in.lmp"]) for i in range(2)]
 
@@ -152,107 +151,33 @@ ax.set_ylabel(r"energy / eV")
 ax.legend()
 
 # %%
-# While the potential energy is simply the mean over the beads of the
-# energy of individual replicas, computing the kinetic energy requires
-# averaging special quantities that involve also the correlations between beads.
-# Here we compare two of these *estimators*: the 'thermodynamic' estimator becomes
-# statistically inefficient when increasing the number of beads, whereas the
-# 'centroid virial' estimator remains well-behaved. Note how quickly these estimators
-# equilibrate to roughly their stationary value, much faster than the equilibration
-# of the potential energy above. This is thanks to the ``pile_g`` thermostat
-# (see `DOI:10.1063/1.3489925 <http://doi.org/10.1063/1.3489925>`_) that is
-# optimally coupled to the normal modes of the ring polymer.
+# Comment
+
+scaledcoords_energy = np.loadtxt("simulation.out")[:, 6]
 
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(
     output_data["time"],
-    output_data["kinetic_cv"],
-    "b-",
-    label="Centroid virial, $K_{CV}$",
-)
-ax.plot(
-    output_data["time"],
-    output_data["kinetic_td"],
-    "r-",
-    label="Thermodynamic, $K_{TD}$",
+    scaledcoords_energy,
+    "b",
+    label="Total energy$",
 )
 ax.set_xlabel(r"$t$ / ps")
-ax.set_ylabel(r"energy / eV")
+ax.set_ylabel(r"$E / a.u.$")
 ax.legend()
 
 # %%
-# You can also visualize the (very short) trajectory in a way that highlights the
-# fast spreading out of the beads of the ring polymer. ``chemiscope`` provides a
-# utility function to interleave the trajectories of the beads, forming a trajectory
-# that shows the connecttions between the replicas of each atom. Each atom and its
-# connections are color-coded.
+# Comment
 
-traj_pimd = chemiscope.ase_merge_pi_frames(traj_data)
-# we also tweak the visualization options, and then show the viewer
-traj_pimd["shapes"]["paths"]["parameters"]["global"]["radius"] = 0.05
-traj_pimd["settings"]["structure"][0].update(
-    dict(
-        atoms=False,
-        keepOrientation=True,
-        color={"property": "bead_id", "palette": "hsv (periodic)"},
-    )
+scaledcoords_Cv = np.loadtxt("simulation.out")[:, 7]
+
+fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+ax.plot(
+    output_data["time"],
+    scaledcoords_Cv,
+    "b",
+    label=f"Constant-volume heat capacity (mean={scaledcoords_Cv.mean()})$",
 )
-
-chemiscope.show(**traj_pimd, mode="structure")
-
-
-# %%
-# Kinetic energy tensors
-# ~~~~~~~~~~~~~~~~~~~~~~
-#
-# While we're at it, let's do something more complicated (and instructive).
-# Classically, the momentum distribution of any atom is isotropic, so the
-# kinetic energy tensor (KET) :math:`\mathbf{p}\mathbf{p}^T/2m` is a constant
-# times the identity matrix. Quantum mechanically, the kinetic energy tensor
-# has more structure, that reflects the higher kinetic energy of particles
-# along directions with stiff bonds. We can compute a moving average of the
-# centroid virial estimator of the KET, and plot it to show the direction
-# of anisotropy. Note that there are some subtleties connected with the
-# evaluation of the moving average, see e.g.
-# `DOI:10.1103/PhysRevLett.109.100604 <http://doi.org/10.1103/PhysRevLett.109.100604>`_
-
-# %%
-# We first need to postprocess the components of the kinetic energy tensors
-# (that i-PI prints out separating the diagonal and off-diagonal bits), averaging
-# them over the last 10 frames and combining them with the centroid configuration
-# from the last frame in the trajectory.
-
-kinetic_cv = ipi.read_trajectory("simulation.kin.xyz")[1:]
-kinetic_od = ipi.read_trajectory("simulation.kod.xyz")[1:]
-kinetic_tens = np.hstack(
-    [
-        np.asarray([k.positions for k in kinetic_cv[-10:]]).mean(axis=0),
-        np.asarray([k.positions for k in kinetic_od[-10:]]).mean(axis=0),
-    ]
-)
-
-centroid = traj_pimd[-1][-1].copy()
-centroid.positions = np.asarray([t[-1].positions for t in traj_pimd]).mean(axis=0)
-centroid.arrays["kinetic_cv"] = kinetic_tens
-
-# %%
-# We can then view these in ``chemiscope``, setting the proper parameters to
-# visualize the ellipsoids associated with the KET. Note that some KETs have
-# negative eigenvalues, because we are averaging over a few frames, which is
-# insufficient to converge the estimator fully.
-
-ellipsoids = chemiscope.ase_tensors_to_ellipsoids(
-    [centroid], "kinetic_cv", scale=15, force_positive=True
-)
-
-chemiscope.show(
-    [centroid],
-    shapes={"kinetic_cv": ellipsoids},
-    mode="structure",
-    settings=chemiscope.quick_settings(
-        structure_settings={
-            "shape": ["kinetic_cv"],
-            "unitCell": True,
-        }
-    ),
-)
+ax.set_xlabel(r"$t$ / ps")
+ax.set_ylabel(r"$C_{V} / a.u.$")
+ax.legend()
