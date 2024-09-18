@@ -1,6 +1,6 @@
 """
-Path integral molecular dynamics
-================================
+Quantum heat capacity of water
+==============================
 
 :Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm/>`_
 
@@ -21,8 +21,8 @@ import numpy as np
 
 
 # %%
-# Quantum heat capacity of water
-# ------------------------------
+# A non-trivial estimator
+# -----------------------
 #
 # As introduced in the ``path-integrals`` example, path-integral estimators
 # for observables that depend on momenta are generally not trivial to compute.
@@ -89,6 +89,7 @@ ax.plot(
 ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"energy / eV")
 ax.legend()
+plt.show()
 
 # %%
 # We will now plot the values of the energy and heat capacity estimators
@@ -102,14 +103,15 @@ ax.legend()
 #
 # First the energy:
 
-eps_v = np.loadtxt("simulation.out")[:, 6]
-eps_v_prime = np.loadtxt("simulation.out")[:, 7]
+eps_v = np.loadtxt("simulation.out")[20:, 6]
+eps_v_prime = np.loadtxt("simulation.out")[20:, 7]
+# discarding the first 20 steps which are highly non-equilibrated
 
 energy_estimator = eps_v  # from the paper
 
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(
-    output_data["time"],
+    output_data["time"][20:],
     energy_estimator,
     "b",
     label="Total energy$",
@@ -117,6 +119,7 @@ ax.plot(
 ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"$E / a.u.$")
 ax.legend()
+plt.show()
 
 # %%
 # And, finally, the heat capacity:

@@ -1,7 +1,7 @@
-Running, analizing and visualizing a path integral MD simulation
-================================================================
+Heat capacity of water from path integral molecular dynamics
+============================================================
 
-This example shows how to run a path integral molecular dynamics 
-simulation using ``i-PI``, analyze the output and visualize the 
-trajectory in ``chemiscope``. It uses `LAMMPS <http://lammps.org>`_
-as the driver to simulate the q-TIP4P/f water model. 
+This example shows how to calculate the constant-volume heat
+capacity from a path integral molecular dynamics simulation 
+using ``i-PI``. `LAMMPS <http://lammps.org>`_ is used
+as the driver for the evaluation of the q-TIP4P/f water model.
