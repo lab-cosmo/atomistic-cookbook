@@ -12,3 +12,4 @@ set of configurations of an atomistic system.
    examples/path-integrals/path-integrals
    examples/pi-metad/pi-metad
    examples/batch-cp2k/reference-trajectory
+   examples/heat-capacity/heat-capacity
