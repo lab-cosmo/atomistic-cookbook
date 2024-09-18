@@ -6,7 +6,7 @@ Path integral molecular dynamics
 
 This example shows how to estimate the heat capacity of liquid water
 from a path integral molecular dynamics simulation. The dynamics are
-run with `i-PI <http://ipi-code.org>`_, and 
+run with `i-PI <http://ipi-code.org>`_, and
 `LAMMPS <http://lammps.org>`_ is used
 as the driver to simulate the `q-TIP4P/f water
 model <http://doi.org/10.1063/1.3167790>`_.
@@ -121,12 +121,12 @@ ax.legend()
 # %%
 # And, finally, the heat capacity:
 
-# everything is in atomic units
+# i-PI scaledcoords outputs are in atomic units (see docs)
 kB = 3.16681e-6  # Boltzmann constant in atomic units
 T = 298.0  # temperature in K, as defined in the input file
 beta = 1.0 / (kB * T)
 
-heat_capacity = kB * (beta ** 2) * (
-    np.mean(eps_v ** 2) - np.mean(eps_v) ** 2 - np.mean(eps_v_prime)
+heat_capacity = (
+    kB * (beta**2) * (np.mean(eps_v**2) - np.mean(eps_v) ** 2 - np.mean(eps_v_prime))
 )
-print(f"Heat capacity: {(heat_capacity/kB):.2f} kB")
+print(f"Heat capacity: {heat_capacity:.2f} a.u.")
