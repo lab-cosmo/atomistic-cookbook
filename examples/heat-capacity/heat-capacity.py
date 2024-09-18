@@ -37,10 +37,10 @@ import numpy as np
 #
 # This follows the same steps as the ``path-integrals`` example. One important
 # difference is that we will request the ``scaledcoords`` output, which
-# contains the estimators for the total energy and heat capacity as defined
-# in this `paper <https://arxiv.org/abs/physics/0505109>`_. In order to do this,
-# the ``scaledcoords`` output is added to the relevant section of the ``i-PI``
-# input XML file.
+# contains estimators that can be used to calculate the total energy and
+# heat capacity as defined in this `paper <https://arxiv.org/abs/physics/0505109>`_.
+# In order to do this, the ``scaledcoords`` output is added to the relevant section
+# of the ``i-PI`` input XML file.
 
 # Open and read the XML file
 with open("data/input.xml", "r") as file:
@@ -92,15 +92,25 @@ ax.legend()
 
 # %%
 # We will now plot the values of the energy and heat capacity estimators
-# as a function of time.
+# as a function of time. As described in the ``i-PI``
+# <documentation https://ipi-code.org/i-pi/output-tags.html>,
+# the two quantities returned by the ``scaledcoords`` output are ``eps_v``
+# and ``eps_v'``, defined in the aforementioned
+# `paper <https://arxiv.org/abs/physics/0505109>`_. The same paper contains
+# the formulas to calculate the total energy and heat capacity from these
+# estimators.
+#
 # First the energy:
 
-scaledcoords_energy = np.loadtxt("simulation.out")[:, 6]
+eps_v = np.loadtxt("simulation.out")[:, 6]
+eps_v_prime = np.loadtxt("simulation.out")[:, 7]
+
+energy_estimator = eps_v  # from the paper
 
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(
     output_data["time"],
-    scaledcoords_energy,
+    energy_estimator,
     "b",
     label="Total energy$",
 )
@@ -111,15 +121,12 @@ ax.legend()
 # %%
 # And, finally, the heat capacity:
 
-scaledcoords_Cv = np.loadtxt("simulation.out")[:, 7]
+# everything is in atomic units
+kB = 3.16681e-6  # Boltzmann constant in atomic units
+T = 298.0  # temperature in K, as defined in the input file
+beta = 1.0 / (kB * T)
 
-fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-ax.plot(
-    output_data["time"],
-    scaledcoords_Cv,
-    "b",
-    label=f"Constant-volume heat capacity (mean={scaledcoords_Cv.mean()})$",
+heat_capacity = kB * (beta ** 2) * (
+    np.mean(eps_v ** 2) - np.mean(eps_v) ** 2 - np.mean(eps_v_prime)
 )
-ax.set_xlabel(r"$t$ / ps")
-ax.set_ylabel(r"$C_{V} / a.u.$")
-ax.legend()
+print(f"Heat capacity: {(heat_capacity/kB):.2f} kB")
