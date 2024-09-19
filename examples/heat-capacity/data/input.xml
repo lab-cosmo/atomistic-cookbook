@@ -1,6 +1,6 @@
 <simulation verbosity='medium' safe_stride='100'>
   <output prefix='simulation'>
-    <properties stride='1' filename='out'>  [ step, time{picosecond}, conserved{electronvolt}, temperature{kelvin}, kinetic_cv{electronvolt}, potential{electronvolt}, scaledcoords ] </properties>
+      <properties stride='1' filename='out'>  [ step, time{picosecond}, conserved{electronvolt}, temperature{kelvin}, kinetic_cv{electronvolt}, potential{electronvolt}, scaledcoords(fd_delta=-1e-7) ] </properties>
   </output>
   <total_steps> 200 </total_steps>
   <prng>
