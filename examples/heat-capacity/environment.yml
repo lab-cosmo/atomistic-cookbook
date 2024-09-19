@@ -7,6 +7,6 @@ dependencies:
   - pip:
     - ase==3.22.1
     - chemiscope>=0.7
-    - ipi  
+    - git+https://github.com/i-pi/i-pi.git@heat-capacity-clean  
     - matplotlib
     - skmatter
