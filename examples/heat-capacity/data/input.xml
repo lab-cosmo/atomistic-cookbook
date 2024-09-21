@@ -2,7 +2,7 @@
   <output prefix='simulation'>
       <properties stride='2' filename='out'>  [ step, time{picosecond}, conserved{electronvolt}, temperature{kelvin}, kinetic_cv{electronvolt}, potential{electronvolt}, scaledcoords(fd_delta=5e-3) ] </properties>
   </output>
-  <total_steps> 1000 </total_steps>
+  <total_steps> 5000 </total_steps>
   <prng>
     <seed> 32342 </seed>
   </prng>
