@@ -101,6 +101,7 @@ fig, ax = plt.subplots(1, 1, figsize=(6, 4))
 ax.plot(energy / natoms, atom_energy / natoms, "b.")
 ax.set_xlabel("Energy / (eV/atom)")
 ax.set_ylabel("Atomic e. / (eV/atom)")
+plt.show()
 print(f"RMSE / (eV/atom): {np.sqrt(np.mean((cohesive_peratom)**2))}")
 
 
@@ -172,6 +173,7 @@ ax.set_xlabel("PCA[1]")
 ax.set_ylabel("PCA[2]")
 cbar = fig.colorbar(scatter, ax=ax)
 cbar.set_label("energy / eV/at.")
+plt.show()
 
 # computes PCovR map
 pcovr = PCovR(n_components=4)
@@ -183,6 +185,7 @@ ax.set_xlabel("PCovR[1]")
 ax.set_ylabel("PCovR[2]")
 cbar = fig.colorbar(scatter, ax=ax)
 cbar.set_label("energy / (eV/at.)")
+plt.show()
 
 
 ######################################################################
