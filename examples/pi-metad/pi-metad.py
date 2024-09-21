@@ -317,6 +317,7 @@ ax.plot(
 ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"energy / eV")
 ax.legend(loc="upper left", ncols=1)
+plt.show()
 
 # %%
 #
@@ -360,6 +361,7 @@ ax.plot(
 ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"temperature / K")
 ax.legend(loc="upper left", ncols=2)
+plt.show()
 
 # %%
 # It is clear that the very high rate of biasing used in this demonstrative
@@ -458,6 +460,7 @@ ax[2].set_xlabel(r"$d_\mathrm{OO}$ / Å")
 ax[0].set_title(r"$t=0.8$ ps")
 ax[1].set_title(r"$t=2.5$ ps")
 ax[2].set_title(r"$t=5.0$ ps")
+plt.show()
 
 # %%
 # Biasing a path integral calculation
@@ -667,6 +670,7 @@ ax[2].set_xlabel(r"$d_\mathrm{OO}$ / Å")
 ax[0].set_title(r"$t=0.8$ ps")
 ax[1].set_title(r"$t=2.5$ ps")
 ax[2].set_title(r"$t=5.0$ ps")
+plt.show()
 
 # %%
 # Assessing quantum nuclear effects
@@ -694,6 +698,7 @@ ax.legend(
         plt.Line2D([0], [0], color="r", label="PIMD"),
     ]
 )
+plt.show()
 
 # %%
 #
@@ -730,6 +735,7 @@ ax.legend(
         plt.Line2D([0], [0], color="r", label="PIMD"),
     ]
 )
+plt.show()
 
 # %%
 #
@@ -765,6 +771,7 @@ ax.set_ylim(0.08, 0.6)
 ax.legend(ncols=2, loc="upper right", fontsize=9)
 ax.set_ylabel(r"$F$ / eV")
 ax.set_xlabel(r"$\Delta C_\mathrm{H}$")
+plt.show()
 
 # %%
 # This model system is representative of the behavior of protons

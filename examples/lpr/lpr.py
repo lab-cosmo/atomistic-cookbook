@@ -206,6 +206,7 @@ ax.set_xlabel("PC1")
 ax.set_ylabel("PC2")
 fig.colorbar(im, ax=ax, label="LPR")
 ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
+plt.show()
 
 # %%
 # In the PCA map, where each point corresponds to an
@@ -253,6 +254,7 @@ ax.set_xlabel("PC1")
 ax.set_ylabel("PC2")
 fig.colorbar(im, ax=ax, label=r"LPR$_{\mathrm{new}}$ / LPR$_{\mathrm{old}}$")
 ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
+plt.show()
 
 # %%
 # It is apparent that while the LPR stays more or less consistent for the

@@ -150,6 +150,7 @@ ax.plot(
 ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"energy / eV")
 ax.legend()
+plt.show()
 
 # %%
 # While the potential energy is simply the mean over the beads of the
@@ -179,6 +180,7 @@ ax.plot(
 ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"energy / eV")
 ax.legend()
+plt.show()
 
 # %%
 # You can also visualize the (very short) trajectory in a way that highlights the
@@ -252,6 +254,7 @@ ax.plot(
 ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"energy / eV")
 ax.legend()
+plt.show()
 
 # %%
 # However, you should be somewhat careful: PIGLET converges *some* but not all the
@@ -270,6 +273,7 @@ ax.plot(output_gle["time"], output_gle["kinetic_td"], "r", label="PIGLET, $K_{TD
 ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"energy / eV")
 ax.legend()
+plt.show()
 
 # %%
 # Kinetic energy tensors

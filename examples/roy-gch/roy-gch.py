@@ -90,6 +90,7 @@ ssel = sel[np.argsort(density[sel])]
 ax.plot(density[ssel], energy[ssel], "k--")
 ax.set_xlabel("density / g/cm$^3$")
 ax.set_ylabel("energy / kJ/mol")
+plt.show()
 
 print(
     f"Mean hull energy for 'known' stable structures {dch_dist[iknown].mean()} kJ/mol"
@@ -194,6 +195,7 @@ ax.set_xlabel("PCA[1]")
 ax.set_ylabel("PCA[2]")
 cbar = fig.colorbar(scatter, ax=ax)
 cbar.set_label("energy / kJ/mol")
+plt.show()
 
 
 # %%
@@ -221,6 +223,7 @@ ax.set_xlabel("PCA[1]")
 ax.set_ylabel("PCA[2]")
 ax.set_zlabel("energy / kJ/mol\n \n", labelpad=11)
 ax.view_init(25, 110)
+plt.show()
 
 
 # %%
