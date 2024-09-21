@@ -464,7 +464,7 @@ ax[2].set_title(r"$t=5.0$ ps")
 # -----------------------------------
 #
 # You can see `this recipe
-# <http://lab-cosmo.github.io/atomistic-cookbook/examples/path-integrals>`_
+# <http://lab-cosmo.github.io/atomistic-cookbook/examples/latest/path-integrals>`_
 # for a brief introduction to path integral simulations with `i-PI`.
 # From a practical perspective, very little needs to change with respect
 # to the classical case.
