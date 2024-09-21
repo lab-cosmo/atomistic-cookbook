@@ -36,13 +36,17 @@ import numpy as np
 # ----------------------------
 #
 # This follows the same steps as the ``path-integrals`` example. One important
-# difference is that we will request the ``scaledcoords`` output, which
+# difference is that we will request the ``scaledcoords`` output to the relevant
+# section of the ``i-PI`` input XML file, which
 # contains estimators that can be used to calculate the total energy and
 # heat capacity as defined in this `paper <https://arxiv.org/abs/physics/0505109>`_.
-# In order to do this, the ``scaledcoords`` output is added to the relevant section
-# of the ``i-PI`` input XML file.
+#
+# The input file is shown below. It should be noted that the ``scaledcoords``
+# is given a finite differences displacement as a parameter. This is necessary
+# as the estimators require higher order derivatives of the potential energy,
+# which are calculated using finite differences.
 
-# Open and read the XML file
+# Open and show the XML file
 with open("data/input.xml", "r") as file:
     xml_content = file.read()
 print(xml_content)
@@ -90,30 +94,53 @@ plt.close()
 # <documentation https://ipi-code.org/i-pi/output-tags.html>,
 # the two quantities returned by the ``scaledcoords`` output are ``eps_v``
 # and ``eps_v'``, defined in the aforementioned
-# `paper <https://arxiv.org/abs/physics/0505109>`_. The same paper contains
-# the formulas to calculate the total energy and heat capacity from these
-# estimators.
+# `paper <https://arxiv.org/abs/physics/0505109>`_.
 #
-# First the energy:
+# These estimators (:math:`\eps_v` and :math:`\eps_v'`) are derived in the
+# "scaled coordinates" formalism, which is a useful trick to avoid the
+# growth of the error in the instantaneous values of the estimators with
+# the number of beads used in the path integral simulation.
+#
+# The same paper contains the formulas to calculate the total energy and
+# heat capacity from these estimators:
+#
+# .. math::
+#   E = \langle \eps_v \rangle
+#   C_V = k_B \beta^2 \left( \langle \eps_v^2 \rangle - \langle
+#       \eps_v \rangle^2 - \langle \eps_v' \rangle \right)
+#
+# First the energy, whose estimator will be compared to the total energy
+# calculated as the sum of the potential and kinetic energy estimators.
+# Since the kinetic energy is itself calculated from a scaled-coordinates
+# estimator (the "centroid virial" estimator), the two total energies are
+# the same.
 
-eps_v = np.loadtxt("simulation.out")[100:, 6]
-eps_v_prime = np.loadtxt("simulation.out")[100:, 7]
-# discarding the first 100 steps which are highly non-equilibrated
+eps_v = np.loadtxt("simulation.out")[:, 5]
+eps_v_prime = np.loadtxt("simulation.out")[:, 6]
 
-energy_estimator = eps_v  # from the paper
+energy_estimator = eps_v  # first formula
 
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(
-    output_data["time"][100:],
-    energy_estimator,
-    "b",
-    label="Total energy$",
+    output_data["time"],
+    energy_estimator - energy_estimator[0],
+    label="Total energy (scaled coordinates estimator)",
+)
+ax.plot(
+    output_data["time"][:],
+    (
+        output_data["potential"]
+        - output_data["potential"][0]
+        + output_data["kinetic_cv"]
+        - output_data["kinetic_cv"][0]
+    ),
+    label="Total energy (potential + kinetic)",
 )
 ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"$E / a.u.$")
 ax.legend()
 plt.show()
-plt.close()
+
 
 # %%
 # And, finally, the heat capacity:
@@ -123,7 +150,7 @@ kB = 3.16681e-6  # Boltzmann constant in atomic units
 T = 298.0  # temperature in K, as defined in the input file
 beta = 1.0 / (kB * T)
 
-heat_capacity = (
+heat_capacity = (  # second formula
     kB * (beta**2) * (np.mean(eps_v**2) - np.mean(eps_v) ** 2 - np.mean(eps_v_prime))
 )
 heat_capacity_per_molecule = heat_capacity / 32  # 32 molecules in the simulation
