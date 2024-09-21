@@ -3,7 +3,7 @@ atom_style	full
 
 pair_style      lj/cut/tip4p/long 1 2 1 1 0.278072379 17.001
 # high-pppm precision and shift to get meaningful fd estimates
-kspace_style	pppm/tip4p 1e-6
+kspace_style	pppm/tip4p 1e-5
 pair_modify     shift yes
 bond_style      class2
 angle_style     harmonic
