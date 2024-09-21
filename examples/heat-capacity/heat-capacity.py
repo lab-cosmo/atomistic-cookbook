@@ -289,8 +289,87 @@ print(
 #
 # In a realistic simulation, up to a few 100s of picoseconds might be needed to reduce
 # the sampling error to a small value (1-2% of the heat capacity). For water at room
-# temperature, you will need 32 beads at the very least (8 were used in this example).
+# temperature, you will need 64 beads at the very least (8 were used in this example).
 # It is more difficult to give a general rule for the system size: (quantum) energy
 # fluctuations are usually localized, but to guarantee accurate sampling of the
 # liquid structure, a few hundred water molecules would be a reasonable guess
 # (32 were used in this example).
+
+
+# %%
+# Heat capacity from fourth-order path integrals
+# ----------------------------------------------
+# This is just a stub for now, running the simulation and parsing the output.
+# One of the difficulties in computing quantum heat capacities is that the convergence
+# with number of path integral replicas is very slow. Among the possible approaches to
+# address this problem ...
+
+
+# %%
+# We launch the i-PI and LAMMPS processes, exactly as in the
+# ``path-integrals`` example.
+
+# don't rerun if the outputs already exist
+ipi_process = None
+if not os.path.exists("water-cv-sc.out"):
+    ipi_process = subprocess.Popen(["i-pi", "data/input-sc.xml"])
+    time.sleep(2)  # wait for i-PI to start
+    lmp_process = [subprocess.Popen(["lmp", "-in", "data/in.lmp"]) for i in range(2)]
+
+# %%
+# Skip this cell if you want to run in the background
+if ipi_process is not None:
+    ipi_process.wait()
+    lmp_process[0].wait()
+    lmp_process[1].wait()
+
+# %%
+# Post-processing
+
+output_data, output_desc = ipi.read_output("water-cv-sc.out")
+
+kinetic_sc = output_data["kinetic_opsc"]
+potential_sc = output_data["potential_opsc"]
+
+kinetic_td = output_data["kinetic_tdsc"]
+potential_td = output_data["potential_tdsc"]
+
+eps_v_sc = output_data["sc_scaledcoords(fd_delta=5e-3)"][:, 0]
+eps_v_prime_sc = output_data["sc_scaledcoords(fd_delta=5e-3)"][:, 1]
+
+eps_v_scop = output_data["sc_op_scaledcoords(fd_delta=5e-3)"][:, 0]
+eps_v_prime_scop = output_data["sc_op_scaledcoords(fd_delta=5e-3)"][:, 1]
+
+print("Energy stats")
+print("TD ", (kinetic_td + potential_td)[skip:].mean())
+print("SC ", (kinetic_sc + potential_sc)[skip:].mean())
+print("scaled TD ", (eps_v_sc)[skip:].mean())
+print("scaled SC ", (eps_v_scop)[skip:].mean())
+
+# i-PI scaledcoords outputs are in atomic units (see docs)
+kB = 3.16681e-6  # Boltzmann constant in atomic units
+T = 298.0  # temperature in K, as defined in the input file
+beta = 1.0 / (kB * T)
+
+heat_capacity_sc = (  # second formula
+    kB
+    * (beta**2)
+    * (
+        np.mean(eps_v_sc[skip:] ** 2)
+        - np.mean(eps_v_sc[skip:]) ** 2
+        - np.mean(eps_v_prime_sc[skip:])
+    )
+)
+
+heat_capacity_scop = (  # second formula
+    kB
+    * (beta**2)
+    * (
+        np.mean(eps_v_scop[skip:] ** 2)
+        - np.mean(eps_v_scop[skip:]) ** 2
+        + np.mean(eps_v_prime_scop[skip:])
+    )
+)
+
+print(f"Heat capacity SC (per water molecule):    {(heat_capacity_sc/32/kB):.2f} kB")
+print(f"Heat capacity SC-OP (per water molecule): {(heat_capacity_scop/32/kB):.2f} kB")

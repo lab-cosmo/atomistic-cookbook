@@ -1,0 +1,38 @@
+<simulation verbosity='medium' safe_stride='100'>
+  <output prefix='water-cv-sc'>
+      <properties stride='2' filename='out'>  i
+          [ step, time{picosecond}, conserved, temperature, 
+            kinetic_opsc, potential_opsc, 
+            kinetic_tdsc, potential_tdsc,
+            sc_scaledcoords(fd_delta=5e-3), 
+            sc_op_scaledcoords(fd_delta=5e-3) ] </properties>
+  </output>
+  <total_steps> 200000 </total_steps>
+  <prng>
+    <seed> 32342 </seed>
+  </prng>
+  <ffsocket name='lmpserial' mode='unix' pbc='false'>
+      <address>h2o-lammps</address> <latency> 1e-4 </latency>
+  </ffsocket>
+  <system>
+    <initialize nbeads='32'>
+      <file mode='pdb' units='angstrom'> data/water_32.pdb </file>
+      <velocities mode='thermal' units='kelvin'> 298 </velocities>
+    </initialize>
+    <forces>
+      <force forcefield='lmpserial' fd_epsilon='1e-3'> lmpserial </force>
+    </forces>
+    <ensemble>
+      <temperature units='kelvin'>298</temperature>
+    </ensemble>
+    <motion mode='dynamics'>
+      <dynamics mode='sc'>
+        <thermostat mode='pile_g'>
+          <tau units="femtosecond"> 5.0 </tau>     
+        </thermostat>
+        <timestep units='femtosecond'> 1.0 </timestep>
+        <nmts> [4] </nmts>
+      </dynamics>
+    </motion>
+  </system>
+</simulation>
