@@ -848,6 +848,7 @@ plt.yscale(value="log")
 plt.xlabel("Epochs")
 plt.ylabel("RMSE")
 plt.title("Train Loss vs Epoch")
+plt.show()
 # %%
 # Lets plot the val loss histories to compare their learning behaviour
 #
@@ -861,6 +862,7 @@ plt.yscale(value="log")
 plt.xlabel("Epochs")
 plt.ylabel("RMSE")
 plt.title("Validation Loss vs Epoch")
+plt.show()
 
 
 # %%
@@ -918,6 +920,7 @@ for i in total_edos_H[train_index]:
 plt.title("Energy Reference - Average Hartree Potential")
 plt.xlabel("Energy [eV]")
 plt.ylabel("DOS")
+plt.show()
 print("The DOSes, despite looking similar, are offset along the energy axis")
 
 # %%
@@ -927,6 +930,7 @@ for i in total_edos_Ef[train_index]:
 plt.title("Energy Reference - Fermi Level")
 plt.xlabel("Energy [eV]")
 plt.ylabel("DOS")
+plt.show()
 
 print("It is better aligned but still quite some offset")
 # %%
@@ -943,6 +947,7 @@ for i in total_edos_align:
 plt.title("Energy Reference - Optimized")
 plt.xlabel("Energy [eV]")
 plt.ylabel("DOS")
+plt.show()
 print("The DOS alignment is better under the optimized energy reference")
 print("The difference will increase with more training epochs")
 # %%
