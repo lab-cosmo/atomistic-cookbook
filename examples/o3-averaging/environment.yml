@@ -1,0 +1,14 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - gfortran
+  - make
+  - git
+  - lammps
+  - pip:
+    - ase==3.22.1
+    - chemiscope
+    - git+https://github.com/lab-cosmo/i-pi.git@feat/equivator#egg=ipi
+    - matplotlib
