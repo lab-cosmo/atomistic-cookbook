@@ -7,9 +7,10 @@ dependencies:
   - pyscf=2.3.0
   - rust>=1.65
   - pip:
-      - ase==3.22.1
       - pyscfad @ git+https://github.com/fishjojo/pyscfad.git@ml#egg=pyscfad
+      - ase==3.22.1
       - seekpath
+      - requests
       - metatensor
       - metatensor-core
       - metatensor-learn

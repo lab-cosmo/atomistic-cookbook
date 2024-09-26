@@ -68,7 +68,7 @@ torch.set_default_dtype(torch.float64)
 # needed to produce the data set. `This other
 # tutorial <https://tinyurl.com/cp2krun>`__ in the atomistic cookbook can
 # help you set up the CP2K calculations for this data set, using the
-# :download:`reftraj_hamiltonian.cp2k` file provided here. To do the same
+# :download:reftraj_hamiltonian.cp2k file provided here. To do the same
 # for another data set, adapt the reftraj file.
 #
 # We will provide here some the functions in the `batch-cp2k
@@ -414,9 +414,10 @@ print(f"{qmdata.fock_realspace[structure_idx][realspace_translation]}")
 #    same species. As these atoms are indistinguishable and cannot be
 #    ordered definitively, the pair must be symmetrized for permutations.
 #    We construct symmetric and antisymmetric combinations
-#    :math:`(\langle inlm|H(\mathbf{T})|i'n'l'm'\rangle\pm\
+#    :math:`(
+#    \langle inlm|H(\mathbf{T})|i'n'l'm'\rangle\pm\
 #    \langle i'nlm|H(\mathbf{-T})|inlm\rangle
-#    `)
+#    )`
 #    that correspond to ``block_type`` :math:`+1` and :math:`-1`,
 #    respectively.
 #
@@ -493,6 +494,14 @@ def update(frame):
 
 
 ani = FuncAnimation(fig, update, frames=len(images), interval=20, blit=True)
+
+
+# %%
+# .. code:: python
+#
+#    from IPython.display import HTML
+#    HTML(ani.to_jshtml())
+#
 
 
 # %%
@@ -634,11 +643,16 @@ mldata.features
 
 # %%
 # ``mldata.items`` is a ``namedtuple`` containing the quantities defined
-# in ``item_names``. e.g.:
+# in ``item_names``. e.g. the coupled Hamiltonian blocks:
 #
 
 print("The TensorMap containing the Hamiltonian coupled blocks is")
 mldata.items.fock_blocks
+
+
+# %%
+# Or the overlap matrices:
+#
 
 structure_idx = 0
 k_idx = 0
@@ -696,8 +710,8 @@ mldata.items.overlap_kspace[structure_idx][k_idx]
 #    y = m.forward(torch.randn(3,3,10))
 #    dot = make_dot(y, dict(m.named_parameters()))
 #    dot.graph_attr.update(size='150,150')
-#    dot
 #    dot.render("data/equivariantnonlinear", format="png")
+#    dot
 #
 
 
@@ -731,8 +745,8 @@ mldata.items.overlap_kspace[structure_idx][k_idx]
 #    y = mlp.forward(torch.randn(1,1,10))
 #    dot = make_dot(y, dict(mlp.named_parameters()))
 #    dot.graph_attr.update(size='150,150')
-#    dot
 #    dot.render("data/simpleMLP", format="png")
+#    dot
 #
 
 
