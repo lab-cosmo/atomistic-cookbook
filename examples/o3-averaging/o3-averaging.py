@@ -11,6 +11,7 @@ DESCRIPTION
 
 # %%
 
+import bz2
 import os
 import subprocess
 import time
@@ -24,6 +25,8 @@ import ipi
 
 # import matplotlib.pyplot as plt
 # import numpy as np
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 # %%
