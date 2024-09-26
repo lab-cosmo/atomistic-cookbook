@@ -2,16 +2,15 @@ r"""
 Rotational averaging of non-equivariant models
 ==========================
 
-:Authors: 
-Marcel Langer `@sirmarcel <https://github.com/sirmarcel/>`_; 
-Michele Ceriotti `@ceriottm <https://github.com/ceriottm/>`_ 
+:Authors:
+Marcel Langer `@sirmarcel <https://github.com/sirmarcel/>`_;
+Michele Ceriotti `@ceriottm <https://github.com/ceriottm/>`_
 
 DESCRIPTION
 """
 
 # %%
 
-import bz2
 import os
 import subprocess
 import time
@@ -21,8 +20,10 @@ import ase
 import ase.io
 import chemiscope
 import ipi
-import matplotlib.pyplot as plt
-import numpy as np
+
+
+# import matplotlib.pyplot as plt
+# import numpy as np
 
 
 # %%
@@ -77,9 +78,7 @@ if ipi_process is not None:
 #
 # Discuss how molecules get oriented
 
-traj_data = ipi.read_trajectory(
-    "water-noo3.pos_0.extxyz", format="ase", dimension="length"
-)
+traj_data = ase.io.read("water-noo3.pos_0.extxyz", ":")
 
 # %%
 # then, assemble a visualization
