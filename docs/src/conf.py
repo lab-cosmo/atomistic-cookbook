@@ -42,3 +42,4 @@ html_theme = "furo"
 html_static_path = [os.path.join("..", "_static")]
 html_favicon = "../_static/cookbook-icon.png"
 html_logo = "../_static/cookbook-icon.svg"
+html_extra_path = ['google4ae5e3529d19a84c.html']
