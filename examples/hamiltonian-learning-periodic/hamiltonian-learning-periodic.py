@@ -68,8 +68,8 @@ torch.set_default_dtype(torch.float64)
 # needed to produce the data set. `This other
 # tutorial <https://tinyurl.com/cp2krun>`__ in the atomistic cookbook can
 # help you set up the CP2K calculations for this data set, using the
-# :download:reftraj_hamiltonian.cp2k file provided here. To do the same
-# for another data set, adapt the reftraj file.
+# ``reftraj_hamiltonian.cp2k`` file that can be dowloaded in the ``data.zip``
+# file. To do the same for another data set, adapt the reftraj file.
 #
 # We will provide here some the functions in the `batch-cp2k
 # tutorial <https://tinyurl.com/cp2krun>`__ that need to be adapted to the
@@ -105,7 +105,7 @@ torch.set_default_dtype(torch.float64)
 #        determined from the path of the system CP2K install to the input file.
 #        """
 #
-#        cp2k_in = open("reftraj_hamiltonian.cp2k", "r").read()
+#        cp2k_in = open("data/reftraj_hamiltonian.cp2k", "r").read()
 #
 #        cp2k_in = cp2k_in.replace("//PROJECT//", project_name)
 #        cp2k_in = cp2k_in.replace("//LAST_SNAPSHOT//", str(last_snapshot))
@@ -129,7 +129,7 @@ torch.set_default_dtype(torch.float64)
 # .. code:: python
 #
 #    project_name = 'graphene'
-#    frames = ase_read('C2.xyz', index=':')
+#    frames = ase_read('data/C2.xyz', index=':')
 #    os.makedirs(project_name, exist_ok=True)
 #    os.makedirs(f"{project_name}/FOCK", exist_ok=True)
 #    os.makedirs(f"{project_name}/OVER", exist_ok=True)
@@ -244,13 +244,12 @@ torch.set_default_dtype(torch.float64)
 # %%
 # .. code:: python
 #
-#    os.makedirs("data", exist_ok=True)
 #    # Save the Hamiltonians
-#    np.save("data/graphene_fock.npy", fock)
+#    np.save("graphene_fock.npy", fock)
 #    # Save the overlaps
-#    np.save("data/graphene_ovlp.npy", over)
+#    np.save("graphene_ovlp.npy", over)
 #    # Write a file with the k-grids, one line per structure
-#    np.savetxt('data/kmesh.dat', [[15,15,1]]*len(frames), fmt='%d')
+#    np.savetxt("kmesh.dat", [[15,15,1]]*len(frames), fmt='%d')
 #
 
 
@@ -265,24 +264,26 @@ torch.set_default_dtype(torch.float64)
 # run just the machine learning part of the notebook using these data.
 #
 
-filename = "data.zip"
+filename = "precomputed.zip"
 if not os.path.exists(filename):
     url = (
         "https://github.com/curiosity54/mlelec/raw/"
-        "tutorial_periodic/examples/periodic_tutorial/data.zip"
+        "tutorial_periodic/examples/periodic_tutorial/precomputed.zip"
     )
     response = requests.get(url)
     response.raise_for_status()
     with open(filename, "wb") as f:
         f.write(response.content)
 
-with zipfile.ZipFile("data.zip", "r") as zip_ref:
+with zipfile.ZipFile(filename, "r") as zip_ref:
+    # TODO - this is just to strip data/, later we can update the reference file and
+    # simplify this to
     zip_ref.extractall("./")
 
 
 # %%
-# Store the DFT data
-# ^^^^^^^^^^^^^^^^^^
+# Creating a ``QMDataset`` storing the DFT data
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 
 
@@ -323,6 +324,8 @@ orbitals = {
 # :math:`\mathbf{T}=\mathbf{0}`) and :math:`n'l'm'` on atom :math:`i'` in
 # a periodic copy of cell translated by :math:`\mathbf{T}`.
 #
+# ** maybe add a figure to explain better the definition of the periodic Hamiltonian **
+#
 # Alternatively, we can provide the matrices in **reciprocal** (or
 # Fourier, :math:`k`) space. These are related to the real-space matrices
 # by a *Bloch* sum,
@@ -338,13 +341,13 @@ orbitals = {
 
 qmdata = QMDataset.from_file(
     # File containing the atomistic structures
-    frames_path="C2.xyz",
+    frames_path="data/C2.xyz",
     # File containing the Hamiltonian (of Fock) matrices
-    fock_realspace_path="data/graphene_fock.npy",
+    fock_realspace_path="graphene_fock.npy",
     # File containing the overlap matrices
-    overlap_realspace_path="data/graphene_ovlp.npy",
+    overlap_realspace_path="graphene_ovlp.npy",
     # File containing the k-point grids used for the DFT calculations
-    kmesh_path="data/kmesh.dat",
+    kmesh_path="kmesh.dat",
     # Physical dimensionality of the system. Graphene is a 2D material
     dimension=2,
     # Device where to run the calculations
@@ -1030,3 +1033,5 @@ ax.legend(
     bbox_to_anchor=(1, 0.5),
 )
 fig.tight_layout()
+
+# %%
