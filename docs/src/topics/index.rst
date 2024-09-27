@@ -1,0 +1,15 @@
+Recipes grouped by topic
+========================
+
+You can navigate through the various recipes grouped
+in thematic areas, including classes of simulation problems
+and of modeling techniques. Recipes may be listed in 
+more than one area, when relevant.
+
+.. toctree::
+    :caption: Table of Contents
+    :maxdepth: 1
+
+    sampling
+    analysis
+    ml-models

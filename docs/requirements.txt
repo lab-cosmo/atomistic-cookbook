@@ -1,5 +1,7 @@
+docutils
 sphinx
 sphinx-sitemap
+sphinx-design
 sphinx-gallery
 sphinx-toggleprompt
 furo
