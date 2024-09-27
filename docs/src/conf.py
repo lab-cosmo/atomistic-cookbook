@@ -4,6 +4,7 @@ from datetime import datetime
 
 # Add any Sphinx extension module names here, as strings.
 extensions = [
+    "sphinx_sitemap",
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "sphinx_gallery.load_style",
@@ -21,8 +22,8 @@ copyright = (
 )
 
 intersphinx_mapping = {
-    "ase": ("https://wiki.fysik.dtu.dk/ase/", None),
-    "metatensor": ("https://lab-cosmo.github.io/metatensor/latest/", None),
+    #    "ase": ("https://wiki.fysik.dtu.dk/ase/", None),
+    "metatensor": ("https://docs.metatensor.org/latest/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
     "python": ("https://docs.python.org/3", None),
@@ -37,9 +38,12 @@ html_js_files = [
     ),
 ]
 
+
 htmlhelp_basename = "Atomistic cookbook"
 html_theme = "furo"
 html_static_path = [os.path.join("..", "_static")]
 html_favicon = "../_static/cookbook-icon.png"
 html_logo = "../_static/cookbook-icon.svg"
-html_extra_path = ['google4ae5e3529d19a84c.html']
+html_baseurl = "https://lab-cosmo.github.io/atomistic-cookbook/latest/"
+sitemap_url_scheme = "{link}"
+html_extra_path = ["google4ae5e3529d19a84c.html"]
