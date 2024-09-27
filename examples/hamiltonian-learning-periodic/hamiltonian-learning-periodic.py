@@ -480,8 +480,8 @@ print(f"{qmdata.fock_realspace[structure_idx][realspace_translation]}")
 
 image_files = sorted(
     [
-        f"data/frames/{f}"
-        for f in os.listdir("./data/frames")
+        f"frames/{f}"
+        for f in os.listdir("./frames")
         if f.startswith("rot_") and f.endswith(".png")
     ]
 )
