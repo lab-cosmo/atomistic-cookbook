@@ -103,9 +103,12 @@ def get_example_metadata(rst_file):
     with open(rst_file, "r") as file:
         rst_content = file.read()
     settings_overrides = {
-        "report_level": 5,  # Set the threshold for reporting messages to 'CRITICAL' (level 5)
-        "halt_level": 6,  # Set the threshold for halting the processing to 'Severe' or higher
-        "warning_stream": None,  # Suppress warning output
+        # Set the threshold for reporting messages to 'CRITICAL' (level 5)
+        "report_level": 5,
+        # Set the threshold for halting the processing to 'Severe' or higher
+        "halt_level": 6,
+        # Suppress warning output
+        "warning_stream": None,
     }
     doctree = publish_doctree(rst_content, settings_overrides=settings_overrides)
     rst_title = None
@@ -373,7 +376,7 @@ that are not part of any of the other sections.
 
 """
         )
-        for file, metadata in sorted(
+        for _, metadata in sorted(
             all_examples_rst.items(), key=(lambda kw: kw[1]["title"])
         ):
             output.write(f"   {metadata["ref"]}\n")
