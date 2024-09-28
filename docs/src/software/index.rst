@@ -7,7 +7,6 @@ they use. They may give you ideas on how to use them
 in your own atomistic cooking. 
 
 .. toctree::
-    :caption: Table of Contents
     :maxdepth: 1
 
     i-pi

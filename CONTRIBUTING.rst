@@ -1,9 +1,12 @@
 Contributing
 ============
 
+.. marker-contrib-start
+
 Contributions are welcome, and they are greatly appreciated! Every little bit
-helps, and credit will always be given. You can contribute in the ways listed
-below.
+helps, and credit will always be given. To ensure that your contributions
+fit within the scope and the general style of the cookbook, please read
+the guidelines below.
 
 Requirements for new contributions
 ----------------------------------
@@ -11,9 +14,11 @@ Requirements for new contributions
 All code included in this repository is executed in each pull request. This
 ensures that the code in this repository stays executable for a longer time
 frame. Because of that we do not want to have examples with heavy calculations
-that take more than 30 to 1 min seconds to execute. If you feel unsure if a
-contribution is suitable, feel free to contact one of the `support`_ person
-beforehand.
+that require more than a couple of minutes to execute. 
+If you feel unsure if a
+contribution is suitable, feel free to open an issue on the 
+`github repository <https://github.com/lab-cosmo/atomistic-cookbook>`_
+to discuss your ideas.
 
 Adding a new examples
 ---------------------
@@ -95,16 +100,22 @@ You can also build all examples (warning, this will take quite some time) with:
 
 .. _nox: https://nox.thea.codes/
 
-Known issues
-------------
+Chemiscope widgets
+------------------
 
-Chemiscope widgets are not currently integrated into our sphinx gallery.
+If you want to visualize one or more structures, or an interactive 
+plot, in your example, you can use a `chemiscope <http://chemiscope.org>`_
+widget. To get some ideas on how the widgets can be used to better
+explain the recipes, you can start looking at the 
+:ref:`examples from the cookbook <chemiscope>`.
+
+.. marker-contrib-end
 
 Support
 -------
 
 If you still have problems adding your example to the repository, please feel
-free to contact one of the people
+free to contact one of the developers, e.g.
 
 `@agoscinski (Alexander Goscinski) <alexander.goscinski@epfl.ch>`_
 
