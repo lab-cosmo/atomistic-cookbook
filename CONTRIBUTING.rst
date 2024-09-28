@@ -1,9 +1,12 @@
 Contributing
 ============
 
+.. marker-contrib-start
+
 Contributions are welcome, and they are greatly appreciated! Every little bit
-helps, and credit will always be given. You can contribute in the ways listed
-below.
+helps, and credit will always be given. To ensure that your contributions
+fit within the scope and the general style of the cookbook, please read
+the guidelines below.
 
 Requirements for new contributions
 ----------------------------------
@@ -11,9 +14,10 @@ Requirements for new contributions
 All code included in this repository is executed in each pull request. This
 ensures that the code in this repository stays executable for a longer time
 frame. Because of that we do not want to have examples with heavy calculations
-that take more than 30 to 1 min seconds to execute. If you feel unsure if a
-contribution is suitable, feel free to contact one of the `support`_ person
-beforehand.
+that require more than a couple of minutes to execute.
+If you are unsure whether a contribution is suitable, or if you want to
+discuss how to structure your recipe, feel free to open an issue on the
+`github repository <https://github.com/lab-cosmo/atomistic-cookbook>`_.
 
 Adding a new examples
 ---------------------
@@ -52,14 +56,14 @@ files. If your example needs such data files, there are a few options available:
 Converting a Jupyter notebook to a sphinx-gallery compatible Python script
 --------------------------------------------------------------------------
 
-Often it is more convenient to work in a Jupyter notebook and convert in later
+It is often more convenient to work in a Jupyter notebook and convert it
 to sphinx-gallery example. To convert your Jupyter notebook you can use the
-`ipynb-to-gallery.py <ipynb_to_gallery.py>`_ file that is root folder of the
-repository
+`ipynb-to-gallery.py <ipynb_to_gallery.py>`_ script, in the ``src`` folder of
+the repository
 
 .. code-block:: bash
 
-    python ipynb-to-gallery.py <notebook.ipynb>
+    python src/ipynb-to-gallery.py <notebook.ipynb>
 
 Running your example and visualizing the HTML
 ---------------------------------------------
@@ -75,13 +79,29 @@ you can use the following commands:
     # execute the example and render it to HTML
     nox -e <example-name>
 
-    # check the code formatting
+    # build web pages for the examples that have been already run
+    nox -e build_docs
+
+To visualize the generated cookbook open ``docs/build/html/index.html``
+in a web browser. If there are dynamical elements that have to be loaded,
+it might be better to serve the website using a HTTP server, e.g.
+running
+
+.. code-block:: bash
+
+   python -m http.server PORT_NUMBER
+
+from within the ``docs/build/html/`` folder. The website will be served
+on ``localhost:PORT_NUMBER``.
+
+Before committing your recipe, you should check that it complies
+with the coding style, which you can check automatically using
+
+.. code-block:: bash
+
     nox -e lint
 
-To visualize the generated cookbook open ``docs/build/html/index.html`` in a web
-browser.
-
-If there are formatting errors you can try to fix them automatically with:
+Most (but not all) formatting errors can be fixed automatically with:
 
 .. code-block:: bash
 
@@ -95,16 +115,22 @@ You can also build all examples (warning, this will take quite some time) with:
 
 .. _nox: https://nox.thea.codes/
 
-Known issues
-------------
+Chemiscope widgets
+------------------
 
-Chemiscope widgets are not currently integrated into our sphinx gallery.
+If you want to visualize one or more structures, or an interactive
+plot, in your example, you can use a `chemiscope <http://chemiscope.org>`_
+widget. To get some ideas on how the widgets can be used to better
+explain the recipes, you can start looking at the
+:ref:`examples from the cookbook <chemiscope>`.
+
+.. marker-contrib-end
 
 Support
 -------
 
 If you still have problems adding your example to the repository, please feel
-free to contact one of the people
+free to contact one of the developers, e.g.
 
 `@agoscinski (Alexander Goscinski) <alexander.goscinski@epfl.ch>`_
 

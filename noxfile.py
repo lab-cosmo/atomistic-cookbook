@@ -7,6 +7,8 @@ import subprocess
 import sys
 
 import nox
+from docutils.core import publish_doctree
+from docutils.nodes import paragraph, title
 
 
 ROOT = os.path.realpath(os.path.dirname(__file__))
@@ -83,6 +85,108 @@ def get_example_other_files(fd):
     )
 
     return [os.path.join(folder, file) for file in tracked_files_output.splitlines()]
+
+
+def get_example_metadata(rst_file):
+    metadata = {}
+    # Path to the generated RST file (stripping docs/src/)
+    gallery_dir, example_file = os.path.split(rst_file)
+    gallery_dir = os.path.join(*(gallery_dir.split(os.sep)[2:]))
+    example_name, _ = os.path.splitext(example_file)
+
+    # Path to the thumbnail image
+    thumbnail_file = os.path.join(
+        gallery_dir, "images/thumb", f"sphx_glr_{example_name}_thumb.png"
+    )
+
+    # Parse the RST file
+    with open(rst_file, "r") as file:
+        rst_content = file.read()
+    settings_overrides = {
+        # Set the threshold for reporting messages to 'CRITICAL' (level 5)
+        "report_level": 5,
+        # Set the threshold for halting the processing to 'Severe' or higher
+        "halt_level": 6,
+        # Suppress warning output
+        "warning_stream": None,
+    }
+    doctree = publish_doctree(rst_content, settings_overrides=settings_overrides)
+    rst_title = None
+    rst_description = None
+
+    # Traverse the document tree
+    for node in doctree:
+        if isinstance(node, title) and rst_title is None:
+            rst_title = node.astext()
+        if isinstance(node, paragraph) and rst_description is None:
+            rst_description = node.astext().replace("\n", " ")
+        if rst_title and rst_description:  # break when done
+            break
+
+    metadata["title"] = rst_title or ""
+    metadata["description"] = rst_description or ""
+    metadata["thumbnail"] = thumbnail_file
+    metadata["ref"] = os.path.join(gallery_dir, example_name)
+
+    return metadata
+
+
+def build_gallery_section(template):
+    """Builds the .rst for a section based on its template (.tmp) file.
+
+    Each .tmp file contains an RST header, and is concluded by a :list:
+    directive that contains the doc names of the examples that should be
+    included in that section (relative to the root), e.g.
+
+    - examples/lpr/lpr
+    """
+
+    rst_file, _ = os.path.splitext(template)
+    rst_file += ".rst"
+    rst_output = ""
+    section_examples = []
+    with open(template, "r") as fd:
+        for line in fd:
+            if line.strip()[:2] == "- ":
+                section_examples.append(line.strip(" -\n"))
+            else:
+                rst_output += line
+
+    with open(rst_file, "w") as fd:
+        fd.write(rst_output)
+
+        # gallery thumbnails
+        fd.write(
+            """
+
+.. grid:: 1 2 2 3
+    :gutter: 1 1 2 3
+"""
+        )
+        # sort by title
+        for example in section_examples:
+            file = os.path.join("docs", "src", f"{example}.rst")
+            if not os.path.exists(file):
+                continue
+            metadata = get_example_metadata(file)
+            thumbnail = os.path.join("../", *metadata["thumbnail"].split(os.sep))
+
+            # generates a thumbnail link
+            fd.write(
+                f"""
+    .. grid-item::
+        .. card:: {metadata["title"]}
+            :link: ../{metadata["ref"]}
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: {thumbnail}
+                :alt: {metadata["description"]}
+                :class: gallery-img
+
+                """
+            )
 
 
 def should_reinstall_dependencies(session, **metadata):
@@ -181,64 +285,105 @@ def docs(session):
 def build_docs(session):
     """Assemble the documentation into a website, assuming pre-generated examples"""
 
+    # install build dependencies
     requirements = "docs/requirements.txt"
     if should_reinstall_dependencies(session, requirements=requirements):
         session.install("-r", requirements)
 
+    # list all examples
+    all_examples_rst = {}
+    for file in glob.glob("docs/src/examples/*/*.rst"):
+        if os.path.basename(file) != "sg_execution_times.rst":
+            all_examples_rst[file] = get_example_metadata(file)
+
+    # generate global list
     with open("docs/src/all-examples.rst", "w") as output:
         output.write(
             """
-Complete list of all recipes
-============================
+List of all recipes
+===================
 
 This section contains the list of all compiled recipes, including those
 that are not part of any of the other sections.
 
-.. toctree::
-   :caption:  Recipes
-   :maxdepth: 1
 
+.. grid:: 1 2 2 3
+    :gutter: 1 1 2 3
 """
         )
-        for file in glob.glob("docs/src/examples/*/*.rst"):
-            if os.path.basename(file) != "sg_execution_times.rst":
-                root = os.path.dirname(file)
-                path = file[9:-4]
+        # sort by title
+        for file, metadata in sorted(
+            all_examples_rst.items(), key=(lambda kw: kw[1]["title"])
+        ):
+            root = os.path.dirname(file)
+            # output.write(f"   {path}\n")
+            # generates a thumbnail link
+            output.write(
+                f"""
+    .. grid-item::
+        .. card:: {metadata["title"]}
+            :link: {metadata["ref"]}
+            :link-type: doc
+            :text-align: center
+            :shadow: md
 
-                output.write(f"   {path}\n")
+            .. image:: {metadata["thumbnail"]}
+                :alt: {metadata["description"]}
+                :class: gallery-img
 
-                # TODO: Explain
-                with open(file) as fd:
-                    content = fd.read()
+                """
+            )
 
-                if "Download Conda environment file" in content:
-                    # do not add the download link twice
-                    pass
-                else:
-                    lines = content.split("\n")
-                    with open(file, "w") as fd:
-                        for line in lines:
-                            if "sphx-glr-download-jupyter" in line:
-                                # add the new download link before
-                                fd.write(
-                                    """
+            # inject custom links into the gallery file
+            with open(file) as fd:
+                content = fd.read()
+
+            if "Download Conda environment file" in content:
+                # do not add the download link twice
+                pass
+            else:
+                lines = content.split("\n")
+                with open(file, "w") as fd:
+                    for line in lines:
+                        if "sphx-glr-download-jupyter" in line:
+                            # add the new download link before
+                            fd.write(
+                                """
     .. container:: sphx-glr-download
 
       :download:`Download Conda environment file: environment.yml <environment.yml>`
 """
-                                )
+                            )
 
-                                if os.path.exists(os.path.join(root, "data.zip")):
-                                    fd.write(
-                                        """
+                            if os.path.exists(os.path.join(root, "data.zip")):
+                                fd.write(
+                                    """
     .. container:: sphx-glr-download
 
       :download:`Download data files: data.zip <data.zip>`
 """
-                                    )
+                                )
 
-                            fd.write(line)
-                            fd.write("\n")
+                        fd.write(line)
+                        fd.write("\n")
+
+        output.write(
+            """
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :titlesonly:
+
+"""
+        )
+        for _, metadata in sorted(
+            all_examples_rst.items(), key=(lambda kw: kw[1]["title"])
+        ):
+            output.write(f"   {metadata['ref']}\n")
+
+    # generates section files
+    for section in glob.glob("docs/src/*/*.sec"):
+        build_gallery_section(section)
 
     session.run("sphinx-build", "-b", "html", "docs/src", "docs/build/html")
 

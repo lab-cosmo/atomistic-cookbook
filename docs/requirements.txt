@@ -1,6 +1,8 @@
 sphinx
 sphinx-sitemap
+sphinx-design
 sphinx-gallery
 sphinx-toggleprompt
+docutils
 furo
 chemiscope>=0.7

@@ -1,0 +1,20 @@
+.. _chemiscope:
+
+chemiscope
+==========
+
+Chemiscope is a tool for interactive exploration of databases of 
+materials and molecules, correlating local and global structural 
+representations with the properties of the systems.
+Chemiscope files can be viewed 
+`online <https://chemiscope.org/>`_, generated using a
+`python library <https://pypi.org/project/chemiscope/>`_ and
+used inside jupyter notebooks or sphinx documentations, which
+is how it's used in the cookbook examples. 
+You can check the `documentation <https://chemiscope.org/docs/>`_ and the 
+`github repository <https://github.com/lab-cosmo/chemiscope>`_.
+
+- examples/roy-gch/roy-gch
+- examples/gaas-map/gaas-map
+- examples/pi-metad/pi-metad
+- examples/path-integrals/path-integrals

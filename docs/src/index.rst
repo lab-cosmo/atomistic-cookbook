@@ -1,10 +1,9 @@
-Atomistic Cookbook
-==================
+The Atomistic Cookbook
+======================
 
 .. include:: ../../README.rst
    :start-after: marker-intro-start
    :end-before: marker-intro-end
-
 
 Each example provides an ``environment.yml`` file that you can download and
 then use with conda to create a new environment with all the required dependencies.
@@ -17,11 +16,18 @@ then use with conda to create a new environment with all the required dependenci
    # when you want to use the environment
    conda env activate --name <environment-name>
 
+Additional data needed for each example is usually either downloaded 
+dynamically, or can be found in a ``data`` folder for each example, 
+or downloaded as a ``data.zip`` file at the end of each recipe in
+the website.
+
+Table of contents
+~~~~~~~~~~~~~~~~~
+
 .. toctree::
-   :caption: Table of Contents
    :maxdepth: 1
    
-   analysis
-   sampling
-   ml-models
+   contributing
+   topics/index
+   software/index
    all-examples
