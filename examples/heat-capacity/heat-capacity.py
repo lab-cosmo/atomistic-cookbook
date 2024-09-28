@@ -3,8 +3,8 @@ Quantum heat capacity of water
 ==============================
 
 :Authors:
-Filippo Bigi `@frostedoyster <https://github.com/frostedoyster/>`_;
-Michele Ceriotti `@ceriottm <https://github.com/ceriottm/>`_
+    Filippo Bigi `@frostedoyster <https://github.com/frostedoyster/>`_;
+    Michele Ceriotti `@ceriottm <https://github.com/ceriottm/>`_
 
 This example shows how to estimate the heat capacity of liquid water
 from a path integral molecular dynamics simulation. The dynamics are

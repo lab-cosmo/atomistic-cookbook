@@ -2,7 +2,7 @@
 LPR analysis for amorphous silicon dataset
 ==========================================
 
-:Authors: Sanggyu "Raymond" Chong `@SanggyuChong <https://github.com/sanggyuChong/>`_,
+:Authors: Sanggyu "Raymond" Chong `@SanggyuChong <https://github.com/sanggyuChong/>`_;
           Federico Grasselli `@fgrassel <https://github.com/fgrassel/>`_
 
 In this tutorial, we calculate the SOAP descriptors of an amorphous
