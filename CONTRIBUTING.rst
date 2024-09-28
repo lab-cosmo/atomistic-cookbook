@@ -15,7 +15,7 @@ All code included in this repository is executed in each pull request. This
 ensures that the code in this repository stays executable for a longer time
 frame. Because of that we do not want to have examples with heavy calculations
 that require more than a couple of minutes to execute.
-If you are unsure whether a contribution is suitable, or if you want to 
+If you are unsure whether a contribution is suitable, or if you want to
 discuss how to structure your recipe, feel free to open an issue on the
 `github repository <https://github.com/lab-cosmo/atomistic-cookbook>`_.
 
@@ -58,7 +58,7 @@ Converting a Jupyter notebook to a sphinx-gallery compatible Python script
 
 It is often more convenient to work in a Jupyter notebook and convert it
 to sphinx-gallery example. To convert your Jupyter notebook you can use the
-`ipynb-to-gallery.py <ipynb_to_gallery.py>`_ script, in the ``src`` folder of 
+`ipynb-to-gallery.py <ipynb_to_gallery.py>`_ script, in the ``src`` folder of
 the repository
 
 .. code-block:: bash
@@ -82,16 +82,17 @@ you can use the following commands:
     # build web pages for the examples that have been already run
     nox -e build_docs
 
-To visualize the generated cookbook open ``docs/build/html/index.html`` 
+To visualize the generated cookbook open ``docs/build/html/index.html``
 in a web browser. If there are dynamical elements that have to be loaded,
-it might be better to serve the website using a HTTP server, e.g. 
+it might be better to serve the website using a HTTP server, e.g.
 running
 
 .. code-block:: bash
-   
+
    python -m http.server PORT_NUMBER
 
-from within the ``docs/build/html/`` folder.
+from within the ``docs/build/html/`` folder. The website will be served
+on ``localhost:PORT_NUMBER``.
 
 Before committing your recipe, you should check that it complies
 with the coding style, which you can check automatically using
