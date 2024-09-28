@@ -379,7 +379,7 @@ that are not part of any of the other sections.
         for _, metadata in sorted(
             all_examples_rst.items(), key=(lambda kw: kw[1]["title"])
         ):
-            output.write(f"   {metadata["ref"]}\n")
+            output.write(f"   {metadata['ref']}\n")
 
     # generates section files
     for section in glob.glob("docs/src/*/*.sec"):
