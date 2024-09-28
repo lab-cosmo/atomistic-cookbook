@@ -397,6 +397,7 @@ def lint(session):
         session.install("flake8", "flake8-bugbear", "flake8-sphinx-links")
         session.install("isort")
         session.install("sphinx-lint")
+        session.install("docutils")
 
     # Get files
     LINT_FILES = get_lint_files()
