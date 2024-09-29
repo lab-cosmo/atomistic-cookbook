@@ -33,6 +33,7 @@ from sklearn.linear_model import RidgeCV
 from skmatter.decomposition import PCovR
 from skmatter.preprocessing import StandardFlexibleScaler
 
+# sphinx_gallery_thumbnail_number = 2
 
 ######################################################################
 # First, we load the structures, extracting some of the properties for
