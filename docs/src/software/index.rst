@@ -15,4 +15,4 @@ in your own atomistic cooking.
     scikit-matter
     cp2k
     lammps
-    PLUMED
+    plumed
