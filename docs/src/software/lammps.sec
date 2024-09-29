@@ -1,0 +1,13 @@
+LAMMPS
+======
+
+LAMMPS is a classical molecular dynamics (MD) code, with a 
+focus on materials simulations. It includes a wealth of interatomic
+potentials, and of basic and advanced molecular simulations
+techniques, and is highly parallelized using an efficient
+domain decomposition scheme.
+Learn more about LAMMPS on its 
+`homepage <https://www.lammps.org>`_.
+
+- examples/path-integrals/path-integrals
+- examples/heat-capacity/heat-capacity
