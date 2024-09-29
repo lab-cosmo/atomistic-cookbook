@@ -23,6 +23,7 @@ configurations with similar descriptors are those that could be made
 "locally" stable by suitable synthesis conditions.
 """
 
+# sphinx_gallery_thumbnail_number = 3
 import chemiscope
 import matplotlib.tri
 import numpy as np
