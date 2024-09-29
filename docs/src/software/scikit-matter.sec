@@ -1,0 +1,16 @@
+scikit-matter
+=============
+
+scikit-matter is a toolbox of methods developed in the computational chemical 
+and materials science community, following the scikit-learn API and coding 
+guidelines to promote usability and interoperability with existing workflows.
+You can get the latest version from its
+`github repository <https://github.com/scikit-learn-contrib/scikit-matter>`_
+and learn how to use it from its
+`documentation <https://scikit-matter.readthedocs.io/en/latest/>`_.
+
+- examples/sample-selection/sample-selection
+- examples/roy-gch/roy-gch
+- examples/lpr/lpr
+- examples/gaas-map/gaas-map
+

@@ -1,0 +1,12 @@
+Nuclear quantum effects
+=======================
+
+Most atomistic simulations treat nuclei as classical particles,
+that sample a Boltzmann distribuion. This approximation breaks
+down for light nuclei (hydrogen above all) and high-frequency 
+vibrations, requiring more sophisticated statistical sampling
+to compute accurate statistical and dynamical properties.
+
+- examples/path-integrals/path-integrals
+- examples/pi-metad/pi-metad
+- examples/heat-capacity/heat-capacity

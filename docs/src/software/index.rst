@@ -13,3 +13,6 @@ in your own atomistic cooking.
     chemiscope
     rascaline
     scikit-matter
+    cp2k
+    lammps
+    PLUMED

@@ -1,0 +1,15 @@
+PLUMED
+======
+
+PLUMED is an open-source, community-developed library that provides 
+a wide range of different methods, which include enhanced-sampling 
+algorithms, free-energy methods, tools to analyze the vast amounts 
+of data produced by molecular dynamics (MD) simulations.
+These techniques can be used in combination with a large toolbox of 
+collective variables that describe complex processes in physics, 
+chemistry, material science, and biology.
+Documentation, examples and installation instructions for the various
+packages are discussed on the
+`PLUMED website <http://plumed.org>`_.
+
+- examples/pi-metad/pi-metad
