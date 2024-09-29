@@ -12,3 +12,4 @@ more than one area, when relevant.
     sampling
     analysis
     ml-models
+    nqes
