@@ -8,3 +8,4 @@ optimize the model architecture or data.
 - examples/dos-align/dos-align
 - examples/lode-linear/lode-linear
 - examples/sample-selection/sample-selection
+- examples/o3-averaging/o3-averaging
