@@ -278,8 +278,8 @@ with zipfile.ZipFile(filename, "r") as zip_ref:
 
 
 # %%
-# Creating a ``QMDataset`` storing the DFT data
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# Create a ``QMDataset`` storing the DFT data
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 
 
@@ -291,8 +291,8 @@ with zipfile.ZipFile(filename, "r") as zip_ref:
 # resolution whereas :math:`l` and :math:`m` specify the **angular
 # components** determining the shape of the orbital and its orientation in
 # space. For example, :math:`1s` orbitals correspond to :math:`n=2`,
-# :math:`l=0` and :math:`m=0`, while a :math:`3p_x` orbital corresponds to
-# :math:`n=3`, :math:`l=1` and :math:`m=1`. For the STO-3G basis-set,
+# :math:`l=0` and :math:`m=0`, while a :math:`2p_z` orbital corresponds to
+# :math:`n=2`, :math:`l=1` and :math:`m=1`. For the STO-3G basis-set,
 # these quantum numbers for Carbon (identified by its atomic number) are
 # given as follows.
 #
@@ -336,7 +336,7 @@ orbitals = {
 #    :math:`\mathbf{t}=(1,0,0)` and :math:`\mathbf{t}=(0,1,0)`,
 #    respectively. The Hamiltonian matrix element between the :math:`1s`
 #    orbital on atom :math:`i` in the central unit cell and the
-#    :math:`2p_x` orbital on atom :math:`i'` in the
+#    :math:`2p_z` orbital on atom :math:`i'` in the
 #    :math:`\mathbf{t}=(1,0,0)` cell is schematically represented.
 #
 
@@ -355,6 +355,10 @@ orbitals = {
 # In the case the input matrices are in reciprocal space, there should be
 # one matrix per :math:`k`-point in the grid.
 #
+
+# %%
+# Now it is time to instantiate ``QMDataset`` from the files containing structures,
+# Hamiltonians and overlap matrices, and :math:`k`-point mesh.
 
 qmdata = QMDataset.from_file(
     # File containing the atomistic structures
@@ -381,7 +385,7 @@ qmdata = QMDataset.from_file(
 # Quantities stored in ``QMDataset`` can be accessed as attributes,
 # e.g. ``qmdata.fock_realspace`` is a list (one element per structure) of
 # dictionaries labeled by the indices of the unit cell real-space
-# translations containing ``torch.Tensor``\ s.
+# translations containing ``torch.Tensor``s.
 #
 
 structure_idx = 0
@@ -620,6 +624,7 @@ TC_HYPERS = {
 # in :math:`k`-space (``overlap_kspace``) to be able to compute the
 # Hamiltonian eigenvalues in the :math:`k`-grid.
 #
+
 
 mldata = MLDataset(
     # A QMDataset instance
@@ -911,7 +916,7 @@ fig.tight_layout()
 #    y = m.forward(torch.randn(3,3,10))
 #    dot = make_dot(y, dict(m.named_parameters()))
 #    dot.graph_attr.update(size='150,150')
-#    dot.render("data/equivariantnonlinear", format="png")
+#    dot.render("equivariantnonlinear", format="png")
 #    dot
 #
 
@@ -946,7 +951,7 @@ fig.tight_layout()
 #    y = mlp.forward(torch.randn(1,1,10))
 #    dot = make_dot(y, dict(mlp.named_parameters()))
 #    dot.graph_attr.update(size='150,150')
-#    dot.render("data/simpleMLP", format="png")
+#    dot.render("simpleMLP", format="png")
 #    dot
 #
 
