@@ -1,6 +1,6 @@
 """
-Periodic Hamiltonian learning Tutorial
-======================================
+Periodic Hamiltonian learning
+=============================
 
 :Authors: Paolo Pegolo `@ppegolo <https://github.com/ppegolo>`__,
           Jigyasa Nigam `@curiosity54 <https://github.com/curiosity54>`__

@@ -1,3 +1,3 @@
-Periodic Hamiltonian Learning Tutorial
-======================================
+Periodic Hamiltonian Learning
+=============================
 
