@@ -28,10 +28,7 @@ from matplotlib.animation import FuncAnimation
 from mlelec.data.derived_properties import compute_eigenvalues
 from mlelec.data.mldataset import MLDataset
 from mlelec.data.qmdataset import QMDataset
-from mlelec.models.equivariant_nonlinear_lightning import (
-    LitEquivariantNonlinearModel,
-    MSELoss,
-)
+from mlelec.models.equivariant_lightning import LitEquivariantModel, MSELoss
 from mlelec.utils.pbc_utils import blocks_to_matrix
 from mlelec.utils.plot_utils import plot_bands_frame
 
@@ -68,8 +65,8 @@ torch.set_default_dtype(torch.float64)
 # needed to produce the data set. `This other
 # tutorial <https://tinyurl.com/cp2krun>`__ in the atomistic cookbook can
 # help you set up the CP2K calculations for this data set, using the
-# ``reftraj_hamiltonian.cp2k`` file that can be dowloaded in the ``data.zip``
-# file. To do the same for another data set, adapt the reftraj file.
+# ``reftraj_hamiltonian.cp2k`` file provided in ``data/``. To do the same
+# for another data set, adapt the reftraj file.
 #
 # We will provide here some the functions in the `batch-cp2k
 # tutorial <https://tinyurl.com/cp2krun>`__ that need to be adapted to the
@@ -105,7 +102,7 @@ torch.set_default_dtype(torch.float64)
 #        determined from the path of the system CP2K install to the input file.
 #        """
 #
-#        cp2k_in = open("data/reftraj_hamiltonian.cp2k", "r").read()
+#        cp2k_in = open("reftraj_hamiltonian.cp2k", "r").read()
 #
 #        cp2k_in = cp2k_in.replace("//PROJECT//", project_name)
 #        cp2k_in = cp2k_in.replace("//LAST_SNAPSHOT//", str(last_snapshot))
@@ -129,7 +126,7 @@ torch.set_default_dtype(torch.float64)
 # .. code:: python
 #
 #    project_name = 'graphene'
-#    frames = ase_read('data/C2.xyz', index=':')
+#    frames = ase_read('C2.xyz', index=':')
 #    os.makedirs(project_name, exist_ok=True)
 #    os.makedirs(f"{project_name}/FOCK", exist_ok=True)
 #    os.makedirs(f"{project_name}/OVER", exist_ok=True)
@@ -244,12 +241,13 @@ torch.set_default_dtype(torch.float64)
 # %%
 # .. code:: python
 #
+#    os.makedirs("data", exist_ok=True)
 #    # Save the Hamiltonians
-#    np.save("graphene_fock.npy", fock)
+#    np.save("data/graphene_fock.npy", fock)
 #    # Save the overlaps
-#    np.save("graphene_ovlp.npy", over)
+#    np.save("data/graphene_ovlp.npy", over)
 #    # Write a file with the k-grids, one line per structure
-#    np.savetxt("kmesh.dat", [[15,15,1]]*len(frames), fmt='%d')
+#    np.savetxt('data/kmesh.dat', [[15,15,1]]*len(frames), fmt='%d')
 #
 
 
@@ -276,8 +274,6 @@ if not os.path.exists(filename):
         f.write(response.content)
 
 with zipfile.ZipFile(filename, "r") as zip_ref:
-    # TODO - this is just to strip data/, later we can update the reference file and
-    # simplify this to
     zip_ref.extractall("./")
 
 
@@ -317,23 +313,44 @@ orbitals = {
 # calculation.
 #
 # Note that we are currently specifying these matrices in **real-space**,
-# :math:`H(\mathbf{T})` , such that the element
-# :math:`\langle i nlm| H(\mathbf{T})| i' n'l'm'\rangle` indicates the
-# interaction between orbital :math:`nlm` on atom :math:`i` in the
-# undisplaced cell (equivalently, translated by
-# :math:`\mathbf{T}=\mathbf{0}`) and :math:`n'l'm'` on atom :math:`i'` in
-# a periodic copy of cell translated by :math:`\mathbf{T}`.
+# :math:`\mathbf{H}(\mathbf{t})` , such that the element
+# :math:`\langle \mathbf{0} i nlm| \hat{H}| \mathbf{t} i' n'l'm'\rangle`
+# indicates the interaction between orbital :math:`nlm` on atom :math:`i`
+# in the undisplaced cell (denoted by the null lattice translation,
+# :math:`\mathbf{t}=\mathbf{0}`) and orbital :math:`n'l'm'` on atom
+# :math:`i'` in a periodic copy of the unit cell translated by
+# :math:`\mathbf{t}`. A short-hand notation for
+# :math:`\langle \mathbf{0} i nlm| \hat{H}| \mathbf{t} i' n'l'm'\rangle`
+# is :math:`H_{\small\substack{i,nlm\\i',n'l'm'}}(\mathbf{t})`
 #
-# ** maybe add a figure to explain better the definition of the periodic Hamiltonian **
+
+# %%
+# .. figure:: graphene_lattice.png
+#    :alt: Representation of a graphene unit cell and some replicas.
+#    :width: 600px
 #
+#    Representation of a graphene unit cell and its
+#    :math:`3 \times 3 \times 1` replicas in real space. The central cell
+#    is denoted by :math:`\mathbf{t}=(0,0,0)`, while the cells translated
+#    by a single lattice vector along directions 1 and 2 are denoted by
+#    :math:`\mathbf{t}=(1,0,0)` and :math:`\mathbf{t}=(0,1,0)`,
+#    respectively. The Hamiltonian matrix element between the :math:`1s`
+#    orbital on atom :math:`i` in the central unit cell and the
+#    :math:`2p_x` orbital on atom :math:`i'` in the
+#    :math:`\mathbf{t}=(1,0,0)` cell is schematically represented.
+#
+
+
+# %%
 # Alternatively, we can provide the matrices in **reciprocal** (or
 # Fourier, :math:`k`) space. These are related to the real-space matrices
 # by a *Bloch* sum,
 #
-# .. math:: H(\mathbf{k})=\sum_{\mathbf{T}}e^{i\mathbf{k}\cdot\mathbf{T}}H(\mathbf{T}),
+# .. math::
 #
-# where, :math:`\mathbf{T}` denotes a lattice translation vector and
-# :math:`H(\mathbf{T})` is the corresponding real-space matrix.
+#   \mathbf{H}(\mathbf{k})=\sum_{\mathbf{t}}\
+#   e^{i\mathbf{k}\cdot\mathbf{t}} \mathbf{H}(\mathbf{t}).
+#
 #
 # In the case the input matrices are in reciprocal space, there should be
 # one matrix per :math:`k`-point in the grid.
@@ -393,11 +410,11 @@ print(f"{qmdata.fock_realspace[structure_idx][realspace_translation]}")
 # basis set, and their associated matrices.
 #
 # The Hamiltonian matrix is a complex learning target, indexed by two
-# atoms and the orbitals centered on them. Each :math:`H(\mathbf{k})` is a
-# **Hermitian** matrix, while in real space, periodicity introduces a
-# **symmetry over translation pairs** such that
-# :math:`H(-\mathbf{T}) = H(\mathbf{T})^\dagger`, where the dagger,
-# :math:`\dagger`, denotes Hermitian conjugation.
+# atoms and the orbitals centered on them. Each
+# :math:`\mathbf{H}(\mathbf{k})` is a **Hermitian** matrix, while in real
+# space, periodicity introduces a **symmetry over translation pairs** such
+# that :math:`\mathbf{H}(-\mathbf{t}) = \mathbf{H}(\mathbf{t})^\dagger`,
+# where the dagger, :math:`\dagger`, denotes Hermitian conjugation.
 #
 # To address the symmetries associated with swapping atomic indices or
 # orbital labels, we divide the matrix into **blocks labeled by pairs of
@@ -417,10 +434,8 @@ print(f"{qmdata.fock_realspace[structure_idx][realspace_translation]}")
 #    same species. As these atoms are indistinguishable and cannot be
 #    ordered definitively, the pair must be symmetrized for permutations.
 #    We construct symmetric and antisymmetric combinations
-#    :math:`(
-#    \langle inlm|H(\mathbf{T})|i'n'l'm'\rangle\pm\
-#    \langle i'nlm|H(\mathbf{-T})|inlm\rangle
-#    )`
+#    :math:`(\mathbf{H}_{\small\substack{i,nlm\\i',n'l'm'}}(\mathbf{t})\pm\
+#    \mathbf{H}_{\small\substack{i',nlm\\i,n'l'm'}}(\mathbf{-t}))`
 #    that correspond to ``block_type`` :math:`+1` and :math:`-1`,
 #    respectively.
 #
@@ -437,9 +452,9 @@ print(f"{qmdata.fock_realspace[structure_idx][realspace_translation]}")
 # **its representation transforms under the action of structural rotations
 # and inversions** due to the choice of the basis functions. Each of the
 # blocks has elements of the form
-# :math:`\langle i nlm| H | i' n'l'm'\rangle`, which are in an
-# **uncoupled** representation and transform as a product of (real)
-# spherical harmonics, :math:`Y_l^m \otimes Y_{l'}^{m'}`.
+# :math:`\langle\mathbf{0}inlm|\hat{H}|\mathbf{t}i'n'l'm'\rangle`, which
+# are in an **uncoupled** representation and transform as a product of
+# (real) spherical harmonics, :math:`Y_l^m \otimes Y_{l'}^{m'}`.
 #
 # This product can be decomposed into a direct sum of irreducible
 # representations (irreps) of :math:`\mathrm{SO(3)}`,
@@ -461,10 +476,11 @@ print(f"{qmdata.fock_realspace[structure_idx][realspace_translation]}")
 #
 # Some of the coupled basis terms instead transform as pseudotensors,
 #
-# .. math:: \hat{i}H_{nl,n'l',\lambda}^\mu=(-1)^{\lambda+1}H_{nl,n'l',\lambda}^\mu.
+# .. math:: \hat{i}H_{ii'}^{\lambda\mu}=(-1)^{\lambda+1}H_{ii'}^{\lambda\mu}
 #
-# For more details about the block decomposition, please refer to `Nigam
-# et al., J. Chem. Phys. 156, 014115
+# where the notation for Hamiltonian matrix elements in the coupled
+# representaion has been introduced. For more details about the block
+# decomposition, please refer to `Nigam et al., J. Chem. Phys. 156, 014115
 # (2022) <https://pubs.aip.org/aip/jcp/article/156/1/014115/2839817>`__.
 #
 # The following is an animation of a trajectory along a `Lissajous
@@ -516,12 +532,11 @@ ani = FuncAnimation(fig, update, frames=len(images), interval=20, blit=True)
 # %%
 # Each Hamiltonian block obtained from the procedure `described
 # above <#symmetries-of-the-hamiltonian-matrix>`__ can be modeled using
-# symmetrized features,
-# :math:`|\overline{\rho_{ii'}^{\otimes \nu}; \lambda\mu }\rangle`.
+# symmetrized features.
 #
 # Elements of ``block_type=0`` are indexed by a single atom and are best
 # described by a symmetrized atom-centered density correlation
-# (`ACDC <https://doi.org/10.1063/1.5090481>`__),
+# (`ACDC <https://doi.org/10.1063/1.5090481>`__), denoted by
 # :math:`|\overline{\rho_{i}^{\otimes \nu}; \sigma; \lambda\mu }\rangle`,
 # where :math:`\nu` refers to the correlation (body)-order, and—just as
 # for the blocks—:math:`\lambda \mu` indicate the :math:`\mathrm{SO(3)}`
@@ -535,10 +550,8 @@ ani = FuncAnimation(fig, update, frames=len(images), interval=20, blit=True)
 # For ``block_type=1, -1``, we ensure equivariance with respect to atom
 # index permutation by constructing symmetric and antisymmetric pair
 # features:
-# :math:`(
-# |\overline{\rho_{ii'}^{\otimes \nu};\lambda\mu }\rangle\pm\
-# |\overline{\rho_{i'i}^{\otimes \nu};\lambda\mu }\rangle
-# )`.
+# :math:`(|\overline{\rho_{ii'}^{\otimes \nu};\lambda\mu }\rangle\pm\
+# |\overline{\rho_{i'i}^{\otimes \nu};\lambda\mu }\rangle)`.
 #
 
 
@@ -670,133 +683,63 @@ mldata.items.overlap_kspace[structure_idx][k_idx]
 
 
 # %%
-# For the sake of simplicity and time, the following cells define and
-# train a linear model targeting the Hamiltonian coupled blocks. The
-# weights are optimized via Ridge regression as implemented in
-# `scikit-learn <https://scikit-learn.org/stable/>`__.
-#
-# In case the data set is more complex than the simple example provided
-# here, or in case a more flexible model is required, one might decide to
-# train a more general neural network via gradient descent, instead of
-# solving a linear problem. The following cells outline how to do it using
-# ``mlelec``.
+# Linear model
+# ~~~~~~~~~~~~
 #
 
 
 # %%
-# Model’s architecture
-# ~~~~~~~~~~~~~~~~~~~~
+# In simple cases, such as the present one, it is convenient to start with
+# a linear model that directly maps the geometric descriptors to the
+# target coupled blocks. This can be achieved using `Ridge regression
+# <https://scikit-learn.org/1.5/modules/generated/sklearn.linear_model.Ridge.html>`__
+# as implemented in `scikit-learn <https://scikit-learn.org/stable/>`__.
+#
+# The linear regression model is expressed as
+#
+# .. math::
+#
+#
+#    H_{ii',\mathbf{Q}}^{\lambda\mu}(\mathbf{t}) = \
+#    \sum_\mathbf{q} w_{\mathbf{q}}^{\mathbf{Q},\lambda} \
+#    (\rho_{ii'}^{\otimes \nu}(\mathbf{t}))_{\mathbf{q}}^{\lambda\mu},
+#
+# where a shorthand notation for the features has been introduced. Here,
+# :math:`\mathbf{Q}` includes all labels indicating the involved orbitals,
+# atomic species, and permutation symmetry, while :math:`\mathbf{q}`
+# represents the feature dimension. The quantities
+# :math:`w_{\mathbf{q}}^{\mathbf{Q},\lambda}` are the model’s weights.
+# Note that different weights are associated with different values of
+# :math:`\mathbf{Q}` and :math:`\lambda`, but not with specific atom pairs
+# or the translation vector, whose dependence arises only through the
+# descriptors.
 #
 
 
 # %%
-# The model consists of several submodels, one for each Hamiltonian
-# coupled block. Each submodel is a `multilayer
-# perceptron <https://en.wikipedia.org/wiki/Multilayer_perceptron>`__
-# (MLP) that maps the corresponding set of geometric features to the
-# Hamiltonian coupled block. Nonlinearities are applied to the invariants
-# constructed from each equivariant feature block using the
-# ``EquivariantNonlinearity`` module.
+# In ``mlelec``, a linear model can be trained through the
+# ``LitEquivariantModel`` class, which accepts an ``init_from_ridge``
+# keyword. When set to ``True``, this initializes the weights of a more
+# general ``torch.nn.Module`` with the weights provided by Ridge
+# regression.
 #
 
 
 # %%
-# The architecture of ``EquivariantNonlinearity`` can be visualized with
-# ``torchviz`` with the following snippet:
-#
-# .. code:: python
-#
-#    import torch
-#    from mlelec.models.equivariant_nonlinear_model import EquivariantNonLinearity
-#    from torchviz import make_dot
-#    m = EquivariantNonLinearity(torch.nn.SiLU(), layersize = 10)
-#    y = m.forward(torch.randn(3,3,10))
-#    dot = make_dot(y, dict(m.named_parameters()))
-#    dot.graph_attr.update(size='150,150')
-#    dot.render("data/equivariantnonlinear", format="png")
-#    dot
+# We will pass other keyword arguments to ``LitEquivariantModel``, to be
+# able to further train the weights on top to the initial Ridge
+# regression.
 #
 
-
-# %%
-# .. figure:: equivariantnonlinear.png
-#    :alt: Graph representing the architecture of EquivariantNonLinearity
-#    :width: 300px
-#
-#    Graph representing the architecture of EquivariantNonLinearity
-#
-
-
-# %%
-# The global architecture of the MLP, implemented in ``simpleMLP``, can be
-# visualized with
-#
-# .. code:: python
-#
-#    import torch
-#    from mlelec.models.equivariant_nonlinear_model import simpleMLP
-#    from torchviz import make_dot
-#    mlp = simpleMLP(
-#        nin=10,
-#        nout=1,
-#        nhidden=1,
-#        nlayers=1,
-#        bias=True,
-#        activation='SiLU',
-#        apply_layer_norm=True
-#        )
-#    y = mlp.forward(torch.randn(1,1,10))
-#    dot = make_dot(y, dict(mlp.named_parameters()))
-#    dot.graph_attr.update(size='150,150')
-#    dot.render("data/simpleMLP", format="png")
-#    dot
-#
-
-
-# %%
-# .. figure:: simpleMLP.png
-#    :alt: Graph representing the architecture of simpleMLP
-#    :width: 600px
-#
-#    Graph representing the architecture of simpleMLP
-#
-
-
-# %%
-# Model initialization
-# ~~~~~~~~~~~~~~~~~~~~
-#
-
-
-# %%
-# The training loop is handled by `PyTorch
-# Lightning <https://lightning.ai/docs/pytorch/stable/>`__, hence the name
-# ``LitEquivariantNonlinearModel`` for the wrapper to
-# ``EquivariantNonlinearModel``. Initializing
-# ``LitEquivariantNonlinearModel`` requires a ``MLDataset`` instance, and
-# the information about the model’s architecture, the optimizer, and the
-# learning rate (LR) scheduler.
-#
-# To initialize a linear model, we ask the architecture to have no hidden
-# layers with ``nlayers=0``. We pass ``init_from_ridge`` to initialize the
-# weigths and biases from Ridge regression. Then, in case we want to
-# further optimize the weights through gradient descent, we define the
-# optimizer to be
-# `LBFGS <https://en.wikipedia.org/wiki/Limited-memory_BFGS>`__, which is
-# more robust and works well with linear models. For more general
-# architectures, LBFGS might become too slow, and passing
-# ``optimizer='Adam'`` might be more convenient.
-#
-
-model = LitEquivariantNonlinearModel(
+model = LitEquivariantModel(
     mldata=mldata,  # a MLDataset instance
     nlayers=0,  # The number of hidden layers
-    nhidden=64,  # The number of neurons in each hidden layer
+    nhidden=1,  # The number of neurons in each hidden layer
     init_from_ridge=True,  # If True, initialize the weights and biases of the
     # purely linear model from Ridge regression
     optimizer="LBFGS",  # Type of optimizer. Adam is likely better for
     # a more general neural network
-    # activation="SiLU", # The nonlinear activation function
+    activation="SiLU",  # The nonlinear activation function
     learning_rate=1e-3,  # Initial learning rate (LR)
     lr_scheduler_patience=10,
     lr_scheduler_factor=0.7,
@@ -806,105 +749,8 @@ model = LitEquivariantNonlinearModel(
 
 
 # %%
-# Evaluating the cell above already pre-trains the model with Ridge
-# weights. In case this is not enough, or you want to try with more
-# general architectures, modify the previous cell and run the following
-# cells to set up a gradient descent training loop.
-#
-
-
-# %%
-# Set up the training loop
-# ^^^^^^^^^^^^^^^^^^^^^^^^
-#
-
-
-# %%
-# Import additional modules not required in the rest of the tutorial
-#
-
-
-# %%
-# .. code:: python
-#
-#    import lightning.pytorch as pl
-#    from lightning.pytorch.callbacks import EarlyStopping
-#    from mlelec.callbacks.logging import LoggingCallback
-#    from mlelec.models.equivariant_nonlinear_lightning import MLDatasetDataModule
-#
-
-
-# %%
-# We set up a callback for logging training information such as the
-# training and validation losses.
-#
-
-
-# %%
-# .. code:: python
-#
-#    logger_callback = LoggingCallback(log_every_n_epochs=5)
-#
-
-
-# %%
-# We set up an early stopping criterion to stop the training when the
-# validation loss function stops decreasing.
-#
-
-
-# %%
-# .. code:: python
-#
-#    early_stopping = EarlyStopping(
-#        monitor="val_loss", min_delta=1e-3, patience=10, verbose=False, mode="min"
-#    )
-#
-
-
-# %%
-# We define a ``lighting.pytorch.Trainer`` instance to handle the training
-# loop. We train for 200 epochs.
-#
-# Note that PyTorch Lightning requires the definition of a data module to
-# instantiate DataLoaders to be used during the training.
-#
-
-
-# %%
-# .. code:: python
-#
-#    data_module = MLDatasetDataModule(mldata, batch_size=16, num_workers=0)
-#
-#    trainer = pl.Trainer(
-#        max_epochs=200,
-#        accelerator="cpu",
-#        check_val_every_n_epoch=10,
-#        callbacks=[early_stopping, logger_callback],
-#        logger=False,
-#        enable_checkpointing=False,
-#    )
-#
-#    trainer.fit(model, data_module)
-#
-
-
-# %%
-# We compute the test set loss to assess the model accuracy on an unseen
-# set of structures
-#
-
-
-# %%
-# .. code:: python
-#
-#    trainer.test(model, data_module)
-#
-
-
-# %%
 # Model’s accuracy in reproducing derived properties
-# --------------------------------------------------
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 
 
@@ -934,7 +780,7 @@ Hk = qmdata.bloch_sum(HT, is_tensor=True)
 
 # %%
 # Kohn-Sham eigenvalues
-# ~~~~~~~~~~~~~~~~~~~~~
+# '''''''''''''''''''''
 #
 
 
@@ -996,7 +842,7 @@ ax.set_ylabel("Predicted eigenvalues (eV)")
 
 # %%
 # Graphene band structure
-# ~~~~~~~~~~~~~~~~~~~~~~~
+# '''''''''''''''''''''''
 #
 
 
@@ -1034,4 +880,180 @@ ax.legend(
 )
 fig.tight_layout()
 
+
 # %%
+# Adding nonlinearities
+# ~~~~~~~~~~~~~~~~~~~~~
+#
+
+
+# %%
+# The model consists of several submodels, one for each Hamiltonian
+# coupled block. Each submodel can be extended to a `multilayer
+# perceptron <https://en.wikipedia.org/wiki/Multilayer_perceptron>`__
+# (MLP) that maps the corresponding set of geometric features to the
+# Hamiltonian coupled block. Nonlinearities are applied to the invariants
+# constructed from each equivariant feature block using the
+# ``EquivariantNonlinearity`` module.
+#
+
+
+# %%
+# The architecture of ``EquivariantNonlinearity`` can be visualized with
+# ``torchviz`` with the following snippet:
+#
+# .. code:: python
+#
+#    import torch
+#    from mlelec.models.equivariant_model import EquivariantNonLinearity
+#    from torchviz import make_dot
+#    m = EquivariantNonLinearity(torch.nn.SiLU(), layersize = 10)
+#    y = m.forward(torch.randn(3,3,10))
+#    dot = make_dot(y, dict(m.named_parameters()))
+#    dot.graph_attr.update(size='150,150')
+#    dot.render("data/equivariantnonlinear", format="png")
+#    dot
+#
+
+
+# %%
+# .. figure:: equivariantnonlinear.png
+#    :alt: Graph representing the architecture of EquivariantNonLinearity
+#    :width: 300px
+#
+#    Graph representing the architecture of EquivariantNonLinearity
+#
+
+
+# %%
+# The global architecture of the MLP, implemented in ``simpleMLP``, can be
+# visualized with
+#
+# .. code:: python
+#
+#    import torch
+#    from mlelec.models.equivariant_model import simpleMLP
+#    from torchviz import make_dot
+#    mlp = simpleMLP(
+#        nin=10,
+#        nout=1,
+#        nhidden=1,
+#        nlayers=1,
+#        bias=True,
+#        activation='SiLU',
+#        apply_layer_norm=True
+#        )
+#    y = mlp.forward(torch.randn(1,1,10))
+#    dot = make_dot(y, dict(mlp.named_parameters()))
+#    dot.graph_attr.update(size='150,150')
+#    dot.render("data/simpleMLP", format="png")
+#    dot
+#
+
+
+# %%
+# .. figure:: simpleMLP.png
+#    :alt: Graph representing the architecture of simpleMLP
+#    :width: 600px
+#
+#    Graph representing the architecture of simpleMLP
+#
+
+
+# %%
+# Set up the training loop for stochastic gradient descent
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+
+
+# %%
+# Import additional modules needed to monitor the training.
+#
+
+
+# %%
+# .. code:: python
+#
+#    import lightning.pytorch as pl
+#    from lightning.pytorch.callbacks import EarlyStopping
+#    from mlelec.callbacks.logging import LoggingCallback
+#    from mlelec.models.equivariant_lightning import MLDatasetDataModule
+#
+
+
+# %%
+# We set up a callback for logging training information such as the
+# training and validation losses.
+#
+
+
+# %%
+# .. code:: python
+#
+#    logger_callback = LoggingCallback(log_every_n_epochs=5)
+#
+
+
+# %%
+# We set up an early stopping criterion to stop the training when the
+# validation loss function stops decreasing.
+#
+
+
+# %%
+# .. code:: python
+#
+#    early_stopping = EarlyStopping(
+#        monitor="val_loss", min_delta=1e-3, patience=10, verbose=False, mode="min"
+#    )
+#
+
+
+# %%
+# We define a ``lighting.pytorch.Trainer`` instance to handle the training
+# loop. For example, we can train the Ridge weights for 50 epochs using
+# the `LBFGS <https://en.wikipedia.org/wiki/Limited-memory_BFGS>`__
+# optimizer.
+#
+# Note that PyTorch Lightning requires the definition of a data module to
+# instantiate DataLoaders to be used during the training.
+#
+
+
+# %%
+# .. code:: python
+#
+#    data_module = MLDatasetDataModule(mldata, batch_size=16, num_workers=0)
+#
+#    trainer = pl.Trainer(
+#        max_epochs=50,
+#        accelerator="cpu",
+#        check_val_every_n_epoch=10,
+#        callbacks=[early_stopping, logger_callback],
+#        logger=False,
+#        enable_checkpointing=False,
+#    )
+#
+#    trainer.fit(model, data_module)
+#
+
+
+# %%
+# We compute the test set loss to assess the model accuracy on an unseen
+# set of structures
+#
+
+
+# %%
+# .. code:: python
+#
+#    trainer.test(model, data_module)
+#
+
+
+# %%
+# In this case, Ridge regression already provides good accuracy, so
+# further optimizing the weights offers limited improvement. However, for
+# more complex datasets, the benefits of additional optimization can be
+# significant.
+#
