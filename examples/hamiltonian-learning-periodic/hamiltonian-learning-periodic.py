@@ -36,6 +36,8 @@ from mlelec.utils.plot_utils import plot_bands_frame
 warnings.filterwarnings("ignore")
 torch.set_default_dtype(torch.float64)
 
+# sphinx_gallery_thumbnail_number = 3
+
 
 # %%
 # Get Data and Prepare Data Set
@@ -385,7 +387,7 @@ qmdata = QMDataset.from_file(
 # Quantities stored in ``QMDataset`` can be accessed as attributes,
 # e.g. ``qmdata.fock_realspace`` is a list (one element per structure) of
 # dictionaries labeled by the indices of the unit cell real-space
-# translations containing ``torch.Tensor``s.
+# translations containing ``torch.Tensor``.
 #
 
 structure_idx = 0
@@ -1016,7 +1018,7 @@ fig.tight_layout()
 
 # %%
 # We define a ``lighting.pytorch.Trainer`` instance to handle the training
-# loop. For example, we can train the Ridge weights for 50 epochs using
+# loop. For example, we can further optimize the weights for 50 epochs using
 # the `LBFGS <https://en.wikipedia.org/wiki/Limited-memory_BFGS>`__
 # optimizer.
 #
