@@ -3,7 +3,7 @@ Atomistic Cookbook
 
 The source code for the Atomistic Cookbook is maintained
 as a GitHub pages site.
-The home page is accessible at https://atomistic-cookbook.org
+The home page is accessible at https://atomistic-cookbook.org/
 
 .. marker-intro-start
 
