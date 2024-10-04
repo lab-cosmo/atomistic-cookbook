@@ -34,8 +34,8 @@ intersphinx_mapping = {
 
 html_js_files = [
     (  # plausible.io tracking
-        "https://plausible.io/js/script.js",
-        {"data-domain": "lab-cosmo.github.io/atomistic-cookbook", "defer": "defer"},
+        "https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js",
+        {"data-domain": "atomistic-cookbook.org", "defer": "defer"},
     ),
 ]
 
