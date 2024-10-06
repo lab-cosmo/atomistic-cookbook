@@ -8,3 +8,4 @@ data.
 - examples/dos-align/dos-align
 - examples/lode-linear/lode-linear
 - examples/sample-selection/sample-selection
+- examples/periodic-hamiltonian/periodic-hamiltonian

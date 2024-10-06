@@ -1,0 +1,109 @@
+&GLOBAL
+    PROJECT //PROJECT//
+    RUN_TYPE MD
+    PRINT_LEVEL MEDIUM
+    FFTW_PLAN_TYPE MEASURE
+&END GLOBAL
+
+&MOTION
+    &PRINT
+        &CELL
+            &EACH
+                MD 1
+            &END EACH
+        &END CELL
+        &FORCES
+            &EACH
+                MD 1
+            &END EACH
+        &END FORCES
+    &END PRINT
+    &MD
+        ENSEMBLE REFTRAJ
+        &REFTRAJ  ! Loads an external trajectory file and performs analysis on the loaded snapshots.
+            EVAL ENERGY_FORCES
+            CELL_FILE_NAME reftraj.cell
+            TRAJ_FILE_NAME reftraj.xyz
+            FIRST_SNAPSHOT 1
+            VARIABLE_VOLUME TRUE
+            LAST_SNAPSHOT //LAST_SNAPSHOT//
+        &END REFTRAJ
+    &END MD
+&END MOTION
+
+&FORCE_EVAL
+    METHOD Quickstep
+    &DFT
+        &MGRID
+            NGRIDS 5
+            CUTOFF 200
+            REL_CUTOFF 70
+        &END MGRID
+        UKS F
+        BASIS_SET_FILE_NAME   ../BASIS_STO3G
+        POTENTIAL_FILE_NAME   ../POTENTIAL
+
+        &QS
+            METHOD GAPW
+            EXTRAPOLATION USE_GUESS
+            EPS_DEFAULT 1.0E-12
+        &END QS
+        &SCF
+            SCF_GUESS ATOMIC
+            EPS_SCF 1.0E-8
+            MAX_SCF 300
+            ADDED_MOS -1
+            &DIAGONALIZATION
+                ALGORITHM STANDARD
+            &END DIAGONALIZATION
+            &SMEAR  ON
+                METHOD FERMI_DIRAC
+                ELECTRONIC_TEMPERATURE [K] 300
+            &END SMEAR
+
+            &MIXING
+                METHOD BROYDEN_MIXING
+                ALPHA 0.4
+                BETA 0.5
+                NBROYDEN 8
+            &END MIXING
+
+        &END SCF
+        &XC
+            &XC_FUNCTIONAL PBE
+            &END XC_FUNCTIONAL
+        &END XC
+        &KPOINTS
+            SCHEME MONKHORST-PACK 15 15 1
+            WAVEFUNCTIONS COMPLEX
+        &END KPOINTS
+        &PRINT
+            &KS_CSR_WRITE
+                REAL_SPACE
+                FILENAME ./FOCK/
+            &END KS_CSR_WRITE
+            &S_CSR_WRITE
+                REAL_SPACE
+                FILENAME ./OVER/
+            &END S_CSR_WRITE
+        &END PRINT
+    &END DFT
+
+    &SUBSYS
+        &CELL
+            A //CELL_A//
+            B //CELL_B//
+            C //CELL_C//
+            PERIODIC XYZ
+        &END CELL
+        &TOPOLOGY
+            COORD_FILE_NAME init.xyz
+            COORD_FILE_FORMAT XYZ
+        &END TOPOLOGY
+        &KIND C
+            ELEMENT C
+            BASIS_SET ORB STO-3G
+            POTENTIAL ALL
+        &END KIND
+    &END SUBSYS
+&END FORCE_EVAL
