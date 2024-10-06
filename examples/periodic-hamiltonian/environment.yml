@@ -1,0 +1,26 @@
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.11
+  - pip
+  - graphviz
+  - pyscf=2.3.0
+  - rust>=1.65
+  - pip:
+      - pyscfad @ git+https://github.com/fishjojo/pyscfad.git@ml#egg=pyscfad
+      - ase==3.22.1
+      - seekpath
+      - requests
+      - metatensor
+      - metatensor-core
+      - metatensor-learn
+      - metatensor-operations
+      - metatensor-torch
+      - --extra-index-url https://download.pytorch.org/whl/cpu 
+      - rascaline-torch @ git+https://github.com/luthaf/rascaline#subdirectory=python/rascaline-torch
+      - lightning
+      - xitorch
+      - keras_core
+      - tensorboard
+      - torchviz
+      - mlelec @ git+https://github.com/curiosity54/mlelec.git@tutorial_periodic#egg=mlelec

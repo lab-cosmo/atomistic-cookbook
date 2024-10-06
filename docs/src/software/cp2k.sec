@@ -7,3 +7,4 @@ material, crystal, and biological systems. Learn more about it on its `homepage
 <https://cp2k.org>`_.
 
 - examples/batch-cp2k/reference-trajectory
+- examples/periodic-hamiltonian/periodic-hamiltonian
