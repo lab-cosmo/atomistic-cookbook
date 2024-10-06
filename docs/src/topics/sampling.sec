@@ -2,7 +2,7 @@ Statistical sampling and dynamics
 =================================
 
 This section contains recipes that compute thermodynamic averages by sampling,
-evaluates dynamical properties, or otherwise computes the properties of a 
+evaluates dynamical properties, or otherwise computes the properties of a
 set of configurations of an atomistic system.
 
 - examples/path-integrals/path-integrals

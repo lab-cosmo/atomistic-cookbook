@@ -1,10 +1,9 @@
 cp2k
 ====
 
-CP2K is a quantum chemistry and solid state physics software package 
-that can perform atomistic simulations of solid state, liquid, 
-molecular, periodic, material, crystal, and biological systems.
-Learn more about it on its 
-`homepage <https://cp2k.org>`_.
+CP2K is a quantum chemistry and solid state physics software package that can
+perform atomistic simulations of solid state, liquid, molecular, periodic,
+material, crystal, and biological systems. Learn more about it on its `homepage
+<https://cp2k.org>`_.
 
 - examples/batch-cp2k/reference-trajectory

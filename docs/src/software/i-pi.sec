@@ -1,13 +1,12 @@
 i-PI
 ====
 
-i-PI is a universal force engine interface written in Python, 
-designed to be used together with an ab-initio, machine-learned, 
-or force-field based evaluation of the interactions between the 
-atoms. You can see learn more about it on the
-`ipi-code website <http://ipi-code.org>`_, the
-`documentation pages <http://ipi-code.org/i-pi>`_ or
-`the github repository <https://github.com/i-pi/i-pi>`_.
+i-PI is a universal force engine interface written in Python, designed to be
+used together with an ab-initio, machine-learned, or force-field based
+evaluation of the interactions between the atoms. You can see learn more about
+it on the `ipi-code website <http://ipi-code.org>`_, the `documentation pages
+<http://ipi-code.org/i-pi>`_ or `the github repository
+<https://github.com/i-pi/i-pi>`_.
 
 
 - examples/path-integrals/path-integrals
