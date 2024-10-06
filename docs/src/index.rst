@@ -5,8 +5,15 @@ The Atomistic Cookbook
    :start-after: marker-intro-start
    :end-before: marker-intro-end
 
-Each example provides an ``environment.yml`` file that you can download and
-then use with conda to create a new environment with all the required dependencies.
+Downloading and running the recipes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Each recipe can be viewed online as an interactive HTML page, but 
+can also be downloaded as a stand-alone ``.py`` script of 
+``.ipynb`` Jupyter notebook. 
+To simplify setting up an environment that contains all the dependencies
+needed for each recipe, you can also download an ``environment.yml`` file 
+that you can use with conda to create a custom environment to run the example.
 
 .. code-block:: bash
 
@@ -31,3 +38,13 @@ Table of contents
    software/index
    all-examples
    contributing
+   
+Recipe of the day
+~~~~~~~~~~~~~~~~~
+
+Want to try something new? Each day, one of the recipes in the cookbook
+is highlighted on the front page. There is one to suit everyone's taste!
+
+.. raw:: html
+
+    <div id="daily-thumbnail"></div>
