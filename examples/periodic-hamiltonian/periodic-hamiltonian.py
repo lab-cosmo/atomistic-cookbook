@@ -60,32 +60,36 @@ torch.set_default_dtype(torch.float64)
 # Obtain structures and DFT data
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-
+# Generating training structures requires running a suitable DFT code, 
+# and converting the output data in a format that can be processed by
+# the ML library ``mlelec``. Given that it takes some time to run even
+# these small calculations, we provide pre-computed data, but you can 
+# also find instructions on how to generate data from scratch. 
 
 # %%
+# Run your own cp2k calculations
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
 # If you have computational resources, you can run the DFT calculations
 # needed to produce the data set. `This other
 # tutorial <https://tinyurl.com/cp2krun>`__ in the atomistic cookbook can
 # help you set up the CP2K calculations for this data set, using the
 # ``reftraj_hamiltonian.cp2k`` file provided in ``data/``. To do the same
 # for another data set, adapt the reftraj file.
-#
-# We will provide here some the functions in the `batch-cp2k
+# We will provide here some of the functions in the `batch-cp2k
 # tutorial <https://tinyurl.com/cp2krun>`__ that need to be adapted to the
-# current data set.
-#
+# current data set. Note however you will have to modify these and combine 
+# them with other tutorials to actually generate the data.
 
 
 # %%
-# Import all the modules from `batch-cp2k
+# Start by importing all the modules from the `batch-cp2k
 # tutorial <https://tinyurl.com/cp2krun>`__ and run the cell to install
 # CP2K. Run also the cells up to the one defining ``write_cp2k_in``.
-#
-# The following cell defines a slighly modified version of that functions,
-# allowing for non-orthorombic cells, and accounting for the reftraj file
+# The following code snippet defines a slighly modified version of that function,
+# allowing for non-orthorombic supercell, and accounting for the reftraj file
 # name change.
 #
-
 
 # %%
 # .. code:: python
@@ -122,7 +126,6 @@ torch.set_default_dtype(torch.float64)
 # current data set includes a single stoichiometry, :math:`\mathrm{C_2}`.
 # Therefore, you can run this cell to set the calculation scripts up.
 #
-
 
 # %%
 # .. code:: python
@@ -280,18 +283,15 @@ with zipfile.ZipFile(filename, "r") as zip_ref:
 
 
 # %%
-# Create a ``QMDataset`` storing the DFT data
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# Periodic Hamiltonians in real and reciprocal space
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-
-
-# %%
 # The DFT calculations for the dataset above were performed using a
-# **minimal** STO-3G basis. The basis set is specified for each species
+# *minimal* STO-3G basis. The basis set is specified for each species
 # using three quantum numbers, :math:`n`, :math:`l`, :math:`m`. :math:`n`
-# is usually a natural number relating to the **radial** extent or
-# resolution whereas :math:`l` and :math:`m` specify the **angular
-# components** determining the shape of the orbital and its orientation in
+# is usually a natural number relating to the *radial* extent or
+# resolution whereas :math:`l` and :math:`m` specify the *angular
+# components* determining the shape of the orbital and its orientation in
 # space. For example, :math:`1s` orbitals correspond to :math:`n=2`,
 # :math:`l=0` and :math:`m=0`, while a :math:`2p_z` orbital corresponds to
 # :math:`n=2`, :math:`l=1` and :math:`m=1`. For the STO-3G basis-set,
@@ -306,15 +306,13 @@ orbitals = {
 
 
 # %%
-# We instantiate the ``QMDataset`` class that holds all the relevant data
-# obtained from a quantum-mechanical (in this case, DFT) calculation. In
-# particular, this instance will hold the **frames** which will form the
-# train and test structures, along with the corresponding **Hamiltonian**
-# (used interchangeably with Fock) and **overlap** matrices in the basis
-# specified above, and the :math:`k`-point grid that was used for the
+# For each *frame* which of either train and test structures, the QM data
+# comprises the configuration, along with the corresponding *overlap* and
+# *Hamiltonian* (used interchangeably with *Fock*) matrices in the basis
+# specified above, as well as the :math:`k`-point grid that was used for the
 # calculation.
 #
-# Note that we are currently specifying these matrices in **real-space**,
+# Note that we are currently specifying these matrices in *real-space*,
 # :math:`\mathbf{H}(\mathbf{t})` , such that the element
 # :math:`\langle \mathbf{0} i nlm| \hat{H}| \mathbf{t} i' n'l'm'\rangle`
 # indicates the interaction between orbital :math:`nlm` on atom :math:`i`
@@ -344,9 +342,9 @@ orbitals = {
 
 
 # %%
-# Alternatively, we can provide the matrices in **reciprocal** (or
+# Alternatively, we can provide the matrices in *reciprocal* (or
 # Fourier, :math:`k`) space. These are related to the real-space matrices
-# by a *Bloch* sum,
+# by a *Bloch sum*,
 #
 # .. math::
 #
@@ -359,7 +357,11 @@ orbitals = {
 #
 
 # %%
-# Now it is time to instantiate ``QMDataset`` from the files containing structures,
+# A ``QMDataset`` to store the DFT data
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# The ``QMDataset`` class holds all the relevant data
+# obtained from a quantum-mechanical (in this case, DFT) calculation,
+# combining information from the files containing structures,
 # Hamiltonians and overlap matrices, and :math:`k`-point mesh.
 
 qmdata = QMDataset.from_file(
@@ -412,30 +414,30 @@ print(f"{qmdata.fock_realspace[structure_idx][realspace_translation]}")
 # %%
 # The data stored in ``QMDataset`` can be transformed into a format that
 # is optimal for machine learning modeling by leveraging the underlying
-# **physical symmetries** that characterize the atomistic structure, the
+# *physical symmetries* that characterize the atomistic structure, the
 # basis set, and their associated matrices.
 #
 # The Hamiltonian matrix is a complex learning target, indexed by two
 # atoms and the orbitals centered on them. Each
-# :math:`\mathbf{H}(\mathbf{k})` is a **Hermitian** matrix, while in real
-# space, periodicity introduces a **symmetry over translation pairs** such
+# :math:`\mathbf{H}(\mathbf{k})` is a *Hermitian* matrix, while in real
+# space, periodicity introduces a *symmetry over translation pairs* such
 # that :math:`\mathbf{H}(-\mathbf{t}) = \mathbf{H}(\mathbf{t})^\dagger`,
 # where the dagger, :math:`\dagger`, denotes Hermitian conjugation.
 #
 # To address the symmetries associated with swapping atomic indices or
-# orbital labels, we divide the matrix into **blocks labeled by pairs of
-# atom types**.
+# orbital labels, we divide the matrix into *blocks labeled by pairs of
+# atom types*.
 #
-# -  ``block_type = 0``, or **on-site** blocks, consist of elements
+# -  ``block_type = 0``, or *on-site* blocks, consist of elements
 #    corresponding to the interaction of orbitals on the same atom,
 #    :math:`i = i'`.
 #
-# -  ``block_type = 2``, or **cross-species** blocks, consist of elements
+# -  ``block_type = 2``, or *cross-species* blocks, consist of elements
 #    corresponding to orbitals centered on atoms of distinct species.
 #    Since the two atoms can be distinguished, they can be consistently
 #    arranged in a predetermined order.
 #
-# -  ``block_type = 1, -1``, or **same-species** blocks, consist of
+# -  ``block_type = 1, -1``, or *same-species* blocks, consist of
 #    elements corresponding to orbitals centered on distinct atoms of the
 #    same species. As these atoms are indistinguishable and cannot be
 #    ordered definitively, the pair must be symmetrized for permutations.
@@ -455,11 +457,11 @@ print(f"{qmdata.fock_realspace[structure_idx][realspace_translation]}")
 
 # %%
 # Even though the Hamiltonian operator under consideration is invariant,
-# **its representation transforms under the action of structural rotations
-# and inversions** due to the choice of the basis functions. Each of the
+# *its representation transforms under the action of structural rotations
+# and inversions* due to the choice of the basis functions. Each of the
 # blocks has elements of the form
 # :math:`\langle\mathbf{0}inlm|\hat{H}|\mathbf{t}i'n'l'm'\rangle`, which
-# are in an **uncoupled** representation and transform as a product of
+# are in an *uncoupled* representation and transform as a product of
 # (real) spherical harmonics, :math:`Y_l^m \otimes Y_{l'}^{m'}`.
 #
 # This product can be decomposed into a direct sum of irreducible
@@ -470,9 +472,11 @@ print(f"{qmdata.fock_realspace[structure_idx][realspace_translation]}")
 # which express the Hamiltonian blocks in terms of contributions that
 # rotate independently and can be modeled using a feature that
 # geometrically describes the pair of atoms under consideration and shares
-# the same symmetry.
+# the same symmetry. We use the notation 
+# :math:`H_{ii';nn'll'}^{\lambda\mu}` to indicate the elements of the 
+# Hamiltonian in this coupled basis.
 #
-# The resulting irreps form a **coupled** representation, each of which
+# The resulting irreps form a *coupled* representation, each of which
 # transforms as a spherical harmonic :math:`Y^\mu_\lambda` under
 # :math:`\mathrm{SO(3)}` rotations, but may exhibit more complex behavior
 # under inversions. For example, spherical harmonics transform under
@@ -480,12 +484,13 @@ print(f"{qmdata.fock_realspace[structure_idx][realspace_translation]}")
 #
 # .. math:: \hat{i}Y^\mu_\lambda = (-1)^\lambda Y^\mu_\lambda.
 #
-# Some of the coupled basis terms instead transform as pseudotensors,
+# Some of the coupled basis terms transform like :math:`Y^\mu_\lambda`,
+# while others instead transform as pseudotensors,
 #
-# .. math:: \hat{i}H_{ii'}^{\lambda\mu}=(-1)^{\lambda+1}H_{ii'}^{\lambda\mu}
+# .. math:: \hat{i}H^{\lambda\mu}=(-1)^{\lambda+1}H^{\lambda\mu}
 #
-# where the notation for Hamiltonian matrix elements in the coupled
-# representaion has been introduced. For more details about the block
+# where we omit for simplicity the indices that are not directly associated
+# with inversion and rotation symmetry. For more details about the block
 # decomposition, please refer to `Nigam et al., J. Chem. Phys. 156, 014115
 # (2022) <https://pubs.aip.org/aip/jcp/article/156/1/014115/2839817>`__.
 #
@@ -564,8 +569,8 @@ ani = FuncAnimation(fig, update, frames=len(images), interval=20, blit=True)
 # %%
 # The features are discretized on a basis of radial functions and
 # spherical harmonics, and their performance may depend on the
-# **resolution** of the functions included in the model. There are
-# additional hyperparameters, such as the **cutoff** radius, which
+# *resolution* of the functions included in the model. There are
+# additional hyperparameters, such as the *cutoff* radius, which
 # controls the extent of the atomic environment, and Gaussian widths. In
 # the following, we allow for flexibility in discretizing the
 # atom-centered and two-centered ACDCs by defining the hyperparameters for
@@ -684,8 +689,8 @@ mldata.items.overlap_kspace[structure_idx][k_idx]
 
 
 # %%
-# Build a machine learning model for the electronic Hamiltonian of graphene
-# -------------------------------------------------------------------------
+# A machine learning model for the electronic Hamiltonian of graphene
+# -------------------------------------------------------------------
 #
 
 
@@ -693,9 +698,6 @@ mldata.items.overlap_kspace[structure_idx][k_idx]
 # Linear model
 # ~~~~~~~~~~~~
 #
-
-
-# %%
 # In simple cases, such as the present one, it is convenient to start with
 # a linear model that directly maps the geometric descriptors to the
 # target coupled blocks. This can be achieved using `Ridge regression
@@ -890,19 +892,22 @@ fig.tight_layout()
 
 # %%
 # Adding nonlinearities
-# ~~~~~~~~~~~~~~~~~~~~~
+# ---------------------
 #
 
 
 # %%
-# The model consists of several submodels, one for each Hamiltonian
+# The model used above consists of several submodels, one for each Hamiltonian
 # coupled block. Each submodel can be extended to a `multilayer
 # perceptron <https://en.wikipedia.org/wiki/Multilayer_perceptron>`__
 # (MLP) that maps the corresponding set of geometric features to the
 # Hamiltonian coupled block. Nonlinearities are applied to the invariants
 # constructed from each equivariant feature block using the
-# ``EquivariantNonlinearity`` module.
-#
+# ``EquivariantNonlinearity`` module. This section outlines the process to
+# modify the model to introduce non-linear terms. Given that the time 
+# to train and evaluate the model would then increase, this section 
+# includes snippets of code, but is not a complete implementation and
+# is not executed when running this example.
 
 
 # %%
