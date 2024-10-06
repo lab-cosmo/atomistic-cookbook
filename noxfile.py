@@ -385,9 +385,7 @@ that are not part of any of the other sections.
     examples_data_js_path = os.path.join("docs", "_static", "all-examples-data.js")
     # Prepare the examples data for JavaScript
     examples_data = []
-    for file, metadata in sorted(
-        all_examples_rst.items(), key=lambda kw: kw[1]["title"]
-    ):
+    for _, metadata in sorted(all_examples_rst.items(), key=lambda kw: kw[1]["title"]):
         # Adjust the thumbnail and ref paths to be relative to the root
         metadata["thumbnail"] = "/_images/" + os.path.split(metadata["thumbnail"])[-1]
         metadata["ref"] = "/" + metadata["ref"] + ".html"
