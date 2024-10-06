@@ -5,6 +5,7 @@ from datetime import datetime
 # Add any Sphinx extension module names here, as strings.
 extensions = [
     "sphinx_sitemap",
+    "sphinx_design",
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "sphinx_gallery.load_style",
@@ -36,6 +37,8 @@ html_js_files = [
         "https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js",  # noqa: E501
         {"data-domain": "atomistic-cookbook.org", "defer": "defer"},
     ),
+    "all-examples-data.js",  # data for the recipe-of-the-day
+    "daily-recipe.js",  # loader for the recipe-of-the-day
 ]
 
 

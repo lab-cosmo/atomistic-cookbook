@@ -316,7 +316,7 @@ that are not part of any of the other sections.
             all_examples_rst.items(), key=(lambda kw: kw[1]["title"])
         ):
             root = os.path.dirname(file)
-            # output.write(f"   {path}\n")
+
             # generates a thumbnail link
             output.write(
                 f"""
@@ -380,6 +380,25 @@ that are not part of any of the other sections.
             all_examples_rst.items(), key=(lambda kw: kw[1]["title"])
         ):
             output.write(f"   {metadata['ref']}\n")
+
+    # saves also example data as a json
+    examples_data_js_path = os.path.join("docs", "_static", "all-examples-data.js")
+    # Prepare the examples data for JavaScript
+    examples_data = []
+    for file, metadata in sorted(
+        all_examples_rst.items(), key=lambda kw: kw[1]["title"]
+    ):
+        # Adjust the thumbnail and ref paths to be relative to the root
+        metadata["thumbnail"] = "/_images/" + os.path.split(metadata["thumbnail"])[-1]
+        metadata["ref"] = "/" + metadata["ref"] + ".html"
+        examples_data.append(metadata)
+
+    # Write the data to examples_data.json in the _static directory
+    os.makedirs(os.path.dirname(examples_data_js_path), exist_ok=True)
+    with open(examples_data_js_path, "w") as fd:
+        fd.write("var examplesData = ")
+        json.dump(examples_data, fd)
+        fd.write(";")
 
     # generates section files
     for section in glob.glob("docs/src/*/*.sec"):
