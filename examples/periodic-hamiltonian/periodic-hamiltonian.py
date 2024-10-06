@@ -60,11 +60,11 @@ torch.set_default_dtype(torch.float64)
 # Obtain structures and DFT data
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# Generating training structures requires running a suitable DFT code, 
+# Generating training structures requires running a suitable DFT code,
 # and converting the output data in a format that can be processed by
 # the ML library ``mlelec``. Given that it takes some time to run even
-# these small calculations, we provide pre-computed data, but you can 
-# also find instructions on how to generate data from scratch. 
+# these small calculations, we provide pre-computed data, but you can
+# also find instructions on how to generate data from scratch.
 
 # %%
 # Run your own cp2k calculations
@@ -78,7 +78,7 @@ torch.set_default_dtype(torch.float64)
 # for another data set, adapt the reftraj file.
 # We will provide here some of the functions in the `batch-cp2k
 # tutorial <https://tinyurl.com/cp2krun>`__ that need to be adapted to the
-# current data set. Note however you will have to modify these and combine 
+# current data set. Note however you will have to modify these and combine
 # them with other tutorials to actually generate the data.
 
 
@@ -472,8 +472,8 @@ print(f"{qmdata.fock_realspace[structure_idx][realspace_translation]}")
 # which express the Hamiltonian blocks in terms of contributions that
 # rotate independently and can be modeled using a feature that
 # geometrically describes the pair of atoms under consideration and shares
-# the same symmetry. We use the notation 
-# :math:`H_{ii';nn'll'}^{\lambda\mu}` to indicate the elements of the 
+# the same symmetry. We use the notation
+# :math:`H_{ii';nn'll'}^{\lambda\mu}` to indicate the elements of the
 # Hamiltonian in this coupled basis.
 #
 # The resulting irreps form a *coupled* representation, each of which
@@ -904,8 +904,8 @@ fig.tight_layout()
 # Hamiltonian coupled block. Nonlinearities are applied to the invariants
 # constructed from each equivariant feature block using the
 # ``EquivariantNonlinearity`` module. This section outlines the process to
-# modify the model to introduce non-linear terms. Given that the time 
-# to train and evaluate the model would then increase, this section 
+# modify the model to introduce non-linear terms. Given that the time
+# to train and evaluate the model would then increase, this section
 # includes snippets of code, but is not a complete implementation and
 # is not executed when running this example.
 
