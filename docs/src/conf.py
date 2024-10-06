@@ -5,7 +5,6 @@ from datetime import datetime
 # Add any Sphinx extension module names here, as strings.
 extensions = [
     "sphinx_sitemap",
-    "sphinx_design",
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "sphinx_gallery.load_style",
@@ -34,8 +33,8 @@ intersphinx_mapping = {
 
 html_js_files = [
     (  # plausible.io tracking
-        "https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js",
-        {"data-domain": "atomistic-cookbook.org", "defer": "defer"},
+        "https://plausible.io/js/script.js",
+        {"data-domain": "lab-cosmo.github.io/atomistic-cookbook", "defer": "defer"},
     ),
 ]
 
@@ -46,6 +45,6 @@ html_static_path = [os.path.join("..", "_static")]
 html_favicon = "../_static/cookbook-icon.png"
 html_logo = "../_static/cookbook-icon.svg"
 html_title = "The Atomistic Cookbook"
-html_baseurl = "https://atomistic-cookbook.org/latest/"
+html_baseurl = "https://lab-cosmo.github.io/atomistic-cookbook/latest/"
 sitemap_url_scheme = "{link}"
-html_extra_path = ["google4ae5e3529d19a84c.html", "robots.txt"]
+html_extra_path = ["google4ae5e3529d19a84c.html"]
