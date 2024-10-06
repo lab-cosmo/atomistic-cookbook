@@ -5,7 +5,6 @@ from datetime import datetime
 # Add any Sphinx extension module names here, as strings.
 extensions = [
     "sphinx_sitemap",
-    "sphinx_design",
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "sphinx_gallery.load_style",
