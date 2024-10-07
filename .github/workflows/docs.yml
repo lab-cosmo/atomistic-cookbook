@@ -92,7 +92,7 @@ jobs:
               mv ../docs/build/html $TAG
           else # deploys directly to the root of the website
               rm -rf *
-              mv ../docs/build/html
+              mv ../docs/build/html/* .
           fi
 
       - name: deploy to gh-pages
