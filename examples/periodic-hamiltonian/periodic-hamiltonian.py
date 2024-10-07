@@ -294,7 +294,7 @@ with zipfile.ZipFile(filename, "r") as zip_ref:
 # components* determining the shape of the orbital and its orientation in
 # space. For example, :math:`1s` orbitals correspond to :math:`n=1`,
 # :math:`l=0` and :math:`m=0`, while a :math:`2p_z` orbital corresponds to
-# :math:`n=2`, :math:`l=1` and :math:`m=1`. For the STO-3G basis-set,
+# :math:`n=2`, :math:`l=1` and :math:`m=0`. For the STO-3G basis-set,
 # these quantum numbers for Carbon (identified by its atomic number) are
 # given as follows.
 #
