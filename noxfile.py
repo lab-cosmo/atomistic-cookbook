@@ -386,9 +386,9 @@ that are not part of any of the other sections.
     # Prepare the examples data for JavaScript
     examples_data = []
     for _, metadata in sorted(all_examples_rst.items(), key=lambda kw: kw[1]["title"]):
-        # Adjust the thumbnail and ref paths to be relative to the root
-        metadata["thumbnail"] = "/_images/" + os.path.split(metadata["thumbnail"])[-1]
-        metadata["ref"] = "/" + metadata["ref"] + ".html"
+        # use relative paths so it works both locally and when deployed
+        metadata["thumbnail"] = "_images/" + os.path.split(metadata["thumbnail"])[-1]
+        metadata["ref"] = metadata["ref"] + ".html"
         examples_data.append(metadata)
 
     # Write the data to examples_data.json in the _static directory
