@@ -44,10 +44,14 @@ html_js_files = [
 
 htmlhelp_basename = "The Atomistic Cookbook"
 html_theme = "furo"
-html_static_path = [os.path.join("..", "_static")]
-html_favicon = "../_static/cookbook-icon.png"
-html_logo = "../_static/cookbook-icon.svg"
+html_static_path = ["_static"]
+html_favicon = "_static/cookbook-icon.png"
+html_logo = "_static/cookbook-icon.svg"
 html_title = "The Atomistic Cookbook"
-html_baseurl = "https://atomistic-cookbook.org/latest/"
+
+# sitemap/SEO settings
+html_baseurl = "https://atomistic-cookbook.org/"
+version = ""
+relsease = ""
 sitemap_url_scheme = "{link}"
 html_extra_path = ["google4ae5e3529d19a84c.html", "robots.txt"]
