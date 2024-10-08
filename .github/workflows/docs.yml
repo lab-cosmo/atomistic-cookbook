@@ -86,14 +86,9 @@ jobs:
           rm -rf gh-pages/.git
           cd gh-pages
 
-          REF_KIND=$(echo $GITHUB_REF | cut -d / -f2)
-          if [[ "$REF_KIND" == "tags" ]]; then
-              TAG=${GITHUB_REF#refs/tags/}
-              mv ../docs/build/html $TAG
-          else
-              rm -rf latest
-              mv ../docs/build/html latest
-          fi
+          # deploys directly to the root of the website
+          rm -rf *
+          mv ../docs/build/html/* .
 
       - name: deploy to gh-pages
         if: github.event_name == 'push'

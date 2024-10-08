@@ -382,7 +382,9 @@ that are not part of any of the other sections.
             output.write(f"   {metadata['ref']}\n")
 
     # saves also example data as a json
-    examples_data_js_path = os.path.join("docs", "_static", "all-examples-data.js")
+    examples_data_js_path = os.path.join(
+        "docs", "src", "_static", "all-examples-data.js"
+    )
     # Prepare the examples data for JavaScript
     examples_data = []
     for _, metadata in sorted(all_examples_rst.items(), key=lambda kw: kw[1]["title"]):
