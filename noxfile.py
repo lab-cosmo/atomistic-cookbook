@@ -5,7 +5,6 @@ import os
 import shutil
 import subprocess
 import sys
-import xml.etree.ElementTree as ET
 
 import nox
 from docutils.core import publish_doctree
@@ -188,50 +187,6 @@ def build_gallery_section(template):
 
                 """
             )
-
-
-def post_build_docs_tweaks():
-    """
-    Couple of small fixes (mostly SEO) after having
-    built the docs.
-    """
-
-    # adds custom urls to the sitemap
-    sitemap_file = "docs/build/html/sitemap.xml"
-    custom_urls = [
-        {"loc": "https://atomistic-cookbook.org/", "priority": 2.0},
-    ]
-
-    ET.register_namespace("", "http://www.sitemaps.org/schemas/sitemap/0.9")
-    tree = ET.parse(sitemap_file)
-    root = tree.getroot()
-
-    for url in custom_urls:
-        url_element = ET.SubElement(root, "url")
-        loc_element = ET.SubElement(url_element, "loc")
-        loc_element.text = url["loc"]
-        if "priority" in url:
-            priority_element = ET.SubElement(url_element, "priority")
-            priority_element.text = str(url["priority"])
-
-    tree.write(sitemap_file)
-
-    # changes the canonical name of the main page
-    file_path = "docs/build/html/index.html"
-    with open(file_path, "r", encoding="utf-8") as f:
-        content = f.read()
-
-    # Replace the canonical URL (if it exists) with the desired URL
-    new_content = content.replace(
-        '<link rel="canonical" href="https://atomistic-cookbook.org/index.html" />',
-        '<link rel="canonical" href="https://atomistic-cookbook.org/" />',
-    )
-
-    # Write the modified content back to index.html
-    with open(file_path, "w", encoding="utf-8") as f:
-        f.write(new_content)
-
-    print(f"Canonical URL modified in {file_path}")
 
 
 def should_reinstall_dependencies(session, **metadata):
@@ -450,7 +405,6 @@ that are not part of any of the other sections.
         build_gallery_section(section)
 
     session.run("sphinx-build", "-b", "html", "docs/src", "docs/build/html")
-    post_build_docs_tweaks()
 
 
 @nox.session
