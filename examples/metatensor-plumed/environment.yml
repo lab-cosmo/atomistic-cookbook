@@ -1,0 +1,15 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - plumed
+  - py-plumed
+  - pip:
+    - ase
+    - numpy
+    - chemiscope
+    - metatensor[torch]
+    - rascaline-torch @ git+https://github.com/Luthaf/rascaline@b14477f#subdirectory=python/rascaline-torch
+variables:
+  PLUMED_KERNEL:
