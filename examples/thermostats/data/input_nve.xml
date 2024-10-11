@@ -1,0 +1,31 @@
+<simulation verbosity='medium' safe_stride='100'>
+  <output prefix='simulation_nve'>
+    <properties stride='1' filename='out'>  [ step, time{picosecond}, conserved{electronvolt}, temperature{kelvin}, kinetic_md{electronvolt}, potential{electronvolt} ] </properties>
+    <trajectory filename='pos' stride='10'> positions </trajectory>
+    <trajectory filename='vel' stride='1'> velocities </trajectory>
+  </output>
+  <total_steps> 1000 </total_steps>
+  <prng>
+    <seed> 32342 </seed>
+  </prng>
+  <ffsocket name='lmpserial' mode='unix' pbc='false'>
+      <address>h2o-lammps</address> <latency> 1e-4 </latency>
+  </ffsocket>
+  <system>
+    <initialize nbeads='1'>
+      <file mode='pdb' units='angstrom'> data/water_32.pdb </file>
+      <velocities mode='thermal' units='kelvin'> 300 </velocities>
+    </initialize>
+    <forces>
+      <force forcefield='lmpserial'> lmpserial </force>
+    </forces>
+    <ensemble>
+      <temperature units='kelvin'>300</temperature>
+    </ensemble>
+    <motion mode='dynamics'>
+      <dynamics mode='nve'>
+        <timestep units='femtosecond'> 1.0 </timestep>
+      </dynamics>
+    </motion>
+  </system>
+</simulation>

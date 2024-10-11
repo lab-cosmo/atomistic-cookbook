@@ -70,7 +70,7 @@ def post_build_tweaks(app, exception):
 
     # adds custom urls to the sitemap
     custom_urls = [
-        {"loc": "https://atomistic-cookbook.org", "priority": 2.0},
+        {"loc": "https://atomistic-cookbook.org", "priority": 1.0},
     ]
 
     sitemap_file = os.path.join(build_folder, "sitemap.xml")
