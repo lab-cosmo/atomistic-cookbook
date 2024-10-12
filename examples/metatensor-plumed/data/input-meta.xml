@@ -1,0 +1,51 @@
+<simulation safe_stride='10' verbosity='medium'>
+    <ffsocket mode='unix' name='driver'>
+         <latency>  1.00000000e-04</latency> <address>lj-driver</address>
+   </ffsocket>
+   <ffplumed name="plumed">
+         <file mode="xyz">data/lj38.xyz</file>
+         <plumeddat> data/plumed.dat </plumeddat>
+         <plumed_extras> [cv1, cv2, mtd.bias ] </plumed_extras>
+   </ffplumed>
+   <total_steps>5000</total_steps>
+   <output prefix="meta-md">
+      <trajectory stride="10" filename="pos" cell_units="atomic_unit">positions{atomic_unit}</trajectory>
+      <trajectory stride="10" filename="colvar" bead="0" extra_type="cv1,cv2,mtd.bias"> extras_bias </trajectory>
+      <properties stride="10"> 
+      [ step, time, conserved, temperature, kinetic_md, potential, ensemble_bias ] 
+      </properties>
+   </output>
+   <prng>
+      <seed>18885</seed>
+   </prng>
+   <system>
+      <forces> 
+          <force forcefield="driver"></force>
+      </forces>
+      <initialize nbeads="1">
+        <file mode="xyz">data/lj38.xyz</file>
+        <masses mode="manual"> [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]</masses>
+        <cell>
+         [   100, 0, 0, 0, 100, 0, 0, 0, 100  ]
+        </cell>
+      </initialize>
+      <ensemble>
+         <temperature units="atomic_unit"> 0.30 </temperature>
+         <bias>
+            <force forcefield="plumed"/>
+         </bias>
+      </ensemble>
+      <motion mode="dynamics">
+        <fixcom> False </fixcom>
+        <dynamics mode="nvt">
+         <timestep units="atomic_unit"> 0.02 </timestep>
+         <thermostat mode="langevin">
+              <tau units="atomic_unit"> 10 </tau>         
+         </thermostat>
+        </dynamics>
+      </motion>
+  </system>
+  <smotion mode="metad">
+     <metad> <metaff> [ plumed ] </metaff> </metad>
+  </smotion>
+</simulation>
