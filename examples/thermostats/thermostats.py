@@ -19,13 +19,16 @@ thermostatting.
 import subprocess
 import time
 import os
+import xml.etree.ElementTree as ET
 
 import chemiscope
 import ipi
+from ipi.utils.tools.acf_xyz import compute_acf_xyz
 import matplotlib.pyplot as plt
 import numpy as np
 
-
+# %%
+%matplotlib widget
 
 # %%
 # Constant-temperature sampling of (thermo)dynamics
@@ -172,7 +175,20 @@ fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(
     output_data["time"],
     output_data["temperature"],
+    "k-",
+    label="All atoms"
+)
+ax.plot(
+    output_data["time"],
+    output_data["temperature(O)"],
     "r-",
+    label="O atoms",
+)
+ax.plot(
+    output_data["time"],
+    output_data["temperature(H)"],
+    "c-",
+    label="H atoms",
 )
 ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"$\tilde{T}$ / K")
@@ -181,46 +197,312 @@ plt.show()
 
 
 # %%
-# 
+# DRAFT - compute v-v acf 
+acf_nve = compute_acf_xyz("simulation_nve.vel_0.xyz",
+                      maximum_lag=300, length_zeropadding=2000,
+                      spectral_windowing="cosine-blackman", 
+                      timestep=1, time_units="femtosecond",
+                      skip=100)
+
+# %%
+# DRAFT - plot ACF, comment on shape of peaks (very short trajectory!)
+# and what they mean (omega->0 ~ diffusion)
+
+ha2cm1 = 219474.63
+fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+ax.plot(
+    acf_nve[3][:1000]*ha2cm1, 
+    acf_nve[4][:1000]*1e5,
+    "r-",
+)
+ax.set_xlabel(r"$\omega$ / cm$^{-1}$")
+ax.set_ylabel(r"$c_{vv}$ / arb. units")
+ax.legend()
+plt.show()
+
+# %%
+# Langevin thermostatting
+# -----------------------
+# DRAFT - intro to Langevin, equations, etc
+
+xmlroot = ET.parse("data/input_higamma.xml").getroot()
+
+# %%
+# The `<ffsocket>` block describe the way communication will occur with the
+# driver code
+
+print("      " + ET.tostring(xmlroot.find(".//dynamics"), encoding="unicode"))
+
+# %%
 
 
-f= """ # 
-# While the potential energy is simply the mean over the beads of the
-# energy of individual replicas, computing the kinetic energy requires
-# averaging special quantities that involve also the correlations between beads.
-# Here we compare two of these *estimators*: the 'thermodynamic' estimator becomes
-# statistically inefficient when increasing the number of beads, whereas the
-# 'centroid virial' estimator remains well-behaved. Note how quickly these estimators
-# equilibrate to roughly their stationary value, much faster than the equilibration
-# of the potential energy above. This is thanks to the ``pile_g`` thermostat
-# (see `DOI:10.1063/1.3489925 <http://doi.org/10.1063/1.3489925>`_) that is
-# optimally coupled to the normal modes of the ring polymer.
+ipi_process = None
+if not os.path.exists("simulation_higamma.out"):
+    ipi_process = subprocess.Popen(["i-pi", "data/input_higamma.xml"])
+    time.sleep(4)  # wait for i-PI to start
+    lmp_process = [subprocess.Popen(["lmp", "-in", "data/in.lmp"]) for i in range(1)]
+
+# %%
+# If you run this in a notebook, you can go ahead and start loading
+# output files *before* i-PI and lammps have finished running, by
+# skipping this cell
+
+if ipi_process is not None:
+    ipi_process.wait()
+    lmp_process[0].wait()
+
+# %%   
+
+output_data, output_desc = ipi.read_output("simulation_higamma.out")
+traj_data = ipi.read_trajectory(f"simulation_higamma.pos_0.xyz")
+
+# %% DRAFT
+# Temperature  - now this is 100% on top of the target, and 
+# O and H are perfectly equipartitioned
 
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(
     output_data["time"],
-    output_data["kinetic_cv"],
-    "b-",
-    label="Centroid virial, $K_{CV}$",
+    output_data["temperature"],
+    "k-",
+    label="All atoms"
 )
 ax.plot(
     output_data["time"],
-    output_data["kinetic_td"],
+    output_data["temperature(O)"],
     "r-",
-    label="Thermodynamic, $K_{TD}$",
+    label="O atoms",
+)
+ax.plot(
+    output_data["time"],
+    output_data["temperature(H)"],
+    "c-",
+    label="H atoms",
 )
 ax.set_xlabel(r"$t$ / ps")
-ax.set_ylabel(r"energy / eV")
+ax.set_ylabel(r"$\tilde{T}$ / K")
 ax.legend()
 plt.show()
-"""
+
 
 # %%
-# You can also visualize the (very short) trajectory in a way that highlights the
-# fast spreading out of the beads of the ring polymer. ``chemiscope`` provides a
-# utility function to interleave the trajectories of the beads, forming a trajectory
-# that shows the connecttions between the replicas of each atom. Each atom and its
-# connections are color-coded.
+# DRAFT - compute v-v acf 
+acf_higamma = compute_acf_xyz("simulation_higamma.vel_0.xyz",
+                      maximum_lag=300, length_zeropadding=2000,
+                      spectral_windowing="cosine-blackman", 
+                      timestep=1, time_units="femtosecond",
+                      skip=100)
 
-chemiscope.show(traj_data, mode="structure")
+# %%
+# DRAFT - plot ACF, comment on peak broadening, and
+# the reduction of the diffusion coefficient
 
+fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+ax.plot(
+    acf_nve[3][:1000]*ha2cm1, 
+    acf_nve[4][:1000]*1e5,
+    "r-",
+    label="NVE",
+)
+ax.plot(
+    acf_higamma[3][:1000]*ha2cm1, 
+    acf_higamma[4][:1000]*1e5,
+    "b-",
+    label=r"Langevin, $\tau=10$fs",
+)
+ax.set_xlabel(r"$\omega$ / cm$^{-1}$")
+ax.set_ylabel(r"$c_{vv}$ / arb. units")
+ax.legend()
+plt.show()
+
+# %%
+# R-L purification
+# ~~~~~~~~~~~~~~~~
+# maybe include the R-L purification (requires moving 
+# it to tools)
+
+# %%
+# Global thermostats: stochastic velocity rescaling
+# -------------------------------------------------
+
+# %%
+# The `<ffsocket>` block describe the way communication will occur with the
+# driver code
+
+xmlroot = ET.parse("data/input_svr.xml").getroot()
+print("        " + ET.tostring(xmlroot.find(".//thermostat"), encoding="unicode"))
+
+# %%
+
+
+ipi_process = None
+if not os.path.exists("simulation_svr.out"):
+    ipi_process = subprocess.Popen(["i-pi", "data/input_svr.xml"])
+    time.sleep(4)  # wait for i-PI to start
+    lmp_process = [subprocess.Popen(["lmp", "-in", "data/in.lmp"]) for i in range(1)]
+
+# %%
+# If you run this in a notebook, you can go ahead and start loading
+# output files *before* i-PI and lammps have finished running, by
+# skipping this cell
+
+if ipi_process is not None:
+    ipi_process.wait()
+    lmp_process[0].wait()
+
+# %%   
+
+output_data, output_desc = ipi.read_output("simulation_svr.out")
+traj_data = ipi.read_trajectory(f"simulation_svr.pos_0.xyz")
+
+# %% DRAFT
+# Temperature  - now this is 100% on top of the target, and 
+# O and H are perfectly equipartitioned
+
+fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+ax.plot(
+    output_data["time"],
+    output_data["temperature"],
+    "k-",
+    label="All atoms"
+)
+ax.plot(
+    output_data["time"],
+    output_data["temperature(O)"],
+    "r-",
+    label="O atoms",
+)
+ax.plot(
+    output_data["time"],
+    output_data["temperature(H)"],
+    "c-",
+    label="H atoms",
+)
+ax.set_xlabel(r"$t$ / ps")
+ax.set_ylabel(r"$\tilde{T}$ / K")
+ax.legend()
+plt.show()
+
+
+# %%
+# DRAFT - compute v-v acf 
+acf_svr = compute_acf_xyz("simulation_svr.vel_0.xyz",
+                      maximum_lag=300, length_zeropadding=2000,
+                      spectral_windowing="cosine-blackman", 
+                      timestep=1, time_units="femtosecond",
+                      skip=100)
+
+# %%
+# DRAFT - plot ACF, note this is too short, and statistically equivalent
+
+fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+ax.plot(
+    acf_nve[3][:1000]*ha2cm1, 
+    acf_nve[4][:1000]*1e5,
+    "r-",
+    label="NVE",
+)
+ax.plot(
+    acf_svr[3][:1000]*ha2cm1, 
+    acf_svr[4][:1000]*1e5,
+    "b-",
+    label=r"SVR, $\tau=10$fs",
+)
+ax.set_xlabel(r"$\omega$ / cm$^{-1}$")
+ax.set_ylabel(r"$c_{vv}$ / arb. units")
+ax.legend()
+plt.show()
+
+# %%
+# Generalized Langevin Equation thermostat
+# ----------------------------------------
+
+# %%
+# The `<ffsocket>` block describe the way communication will occur with the
+# driver code
+
+xmlroot = ET.parse("data/input_gle.xml").getroot()
+print("  " + ET.tostring(xmlroot.find(".//thermostat"), encoding="unicode"))
+
+# %%
+
+
+ipi_process = None
+if not os.path.exists("simulation_svr.out"):
+    ipi_process = subprocess.Popen(["i-pi", "data/input_svr.xml"])
+    time.sleep(4)  # wait for i-PI to start
+    lmp_process = [subprocess.Popen(["lmp", "-in", "data/in.lmp"]) for i in range(1)]
+
+# %%
+# If you run this in a notebook, you can go ahead and start loading
+# output files *before* i-PI and lammps have finished running, by
+# skipping this cell
+
+if ipi_process is not None:
+    ipi_process.wait()
+    lmp_process[0].wait()
+
+# %%   
+
+output_data, output_desc = ipi.read_output("simulation_svr.out")
+traj_data = ipi.read_trajectory(f"simulation_svr.pos_0.xyz")
+
+# %% DRAFT
+# Temperature  - now this is 100% on top of the target, and 
+# O and H are perfectly equipartitioned
+
+fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+ax.plot(
+    output_data["time"],
+    output_data["temperature"],
+    "k-",
+    label="All atoms"
+)
+ax.plot(
+    output_data["time"],
+    output_data["temperature(O)"],
+    "r-",
+    label="O atoms",
+)
+ax.plot(
+    output_data["time"],
+    output_data["temperature(H)"],
+    "c-",
+    label="H atoms",
+)
+ax.set_xlabel(r"$t$ / ps")
+ax.set_ylabel(r"$\tilde{T}$ / K")
+ax.legend()
+plt.show()
+
+
+# %%
+# DRAFT - compute v-v acf 
+acf_svr = compute_acf_xyz("simulation_svr.vel_0.xyz",
+                      maximum_lag=300, length_zeropadding=2000,
+                      spectral_windowing="cosine-blackman", 
+                      timestep=1, time_units="femtosecond",
+                      skip=100)
+
+# %%
+# DRAFT - plot ACF, note this is too short, and statistically equivalent
+
+fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+ax.plot(
+    acf_nve[3][:1000]*ha2cm1, 
+    acf_nve[4][:1000]*1e5,
+    "r-",
+    label="NVE",
+)
+ax.plot(
+    acf_svr[3][:1000]*ha2cm1, 
+    acf_svr[4][:1000]*1e5,
+    "b-",
+    label=r"SVR, $\tau=10$fs",
+)
+ax.set_xlabel(r"$\omega$ / cm$^{-1}$")
+ax.set_ylabel(r"$c_{vv}$ / arb. units")
+ax.legend()
+plt.show()
+
+# %%

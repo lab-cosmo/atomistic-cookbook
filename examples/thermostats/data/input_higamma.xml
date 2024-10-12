@@ -1,5 +1,5 @@
 <simulation verbosity='medium' safe_stride='100'>
-  <output prefix='simulation_nve'>
+  <output prefix='simulation_higamma'>
       <properties stride='1' filename='out'>  
       [ step, time{picosecond}, conserved{electronvolt}, 
       temperature{kelvin}, kinetic_md{electronvolt}, potential{electronvolt}, 
@@ -26,8 +26,11 @@
       <temperature units='kelvin'>300</temperature>
     </ensemble>
     <motion mode='dynamics'>
-      <dynamics mode='nve'>
+      <dynamics mode='nvt'>
         <timestep units='femtosecond'> 1.0 </timestep>
+        <thermostat mode='langevin'>
+          <tau units='femtosecond'> 10 </tau>
+        </thermostat>
       </dynamics>
     </motion>
   </system>

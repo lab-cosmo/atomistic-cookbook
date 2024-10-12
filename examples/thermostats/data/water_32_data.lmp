@@ -8,9 +8,9 @@ LAMMPS Description
            1  bond types
            1  angle types
  
-         -19 19.38859 xlo xhi
-         -10 19.38859 ylo yhi
-         -19 19.38859 zlo zhi
+       -9.694295 9.694295 xlo xhi
+       -9.694295 9.694295 ylo yhi
+       -9.694295 9.694295 zlo zhi
  
 Masses
  
