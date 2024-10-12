@@ -8,7 +8,7 @@ TODO: introduction
 """
 
 import os
-os.environ["PLUMED_KERNEL"] = "PLEASE SET THIS!"
+os.environ["PLUMED_KERNEL"] = os.path.join(os.environ["HOME"],"lavoro/source/plumed-conda-metatensor/src/lib/libplumedKernel.so")
 
 
 from typing import Dict, List, Optional
@@ -90,9 +90,9 @@ class CollectiveVariable(torch.nn.Module):
 
         self.max_angular = max(angular_list)
         # initialize and store the rascaline calculator inside the class
-        self.soap = rascaline.torch.SphericalExpansion(
+        self.spex = rascaline.torch.SphericalExpansion(
             cutoff=cutoff,
-            max_radial=6,
+            max_radial=4,
             max_angular=self.max_angular,
             atomic_gaussian_width=0.3,
             radial_basis={"Gto": {}},
@@ -111,11 +111,11 @@ class CollectiveVariable(torch.nn.Module):
     ) -> Dict[str, mts.TensorMap]:
 
         # execute the same code as above
-        soap = self.soap(
+        spex = self.spex(
             systems, selected_samples=selected_atoms, selected_keys=self.selected_keys
         )
 
-        if len(soap) == 0:
+        if len(spex) == 0:
             # PLUMED will first call the model with 0 atoms to get the size of the
             # output, so we need to handle this case first
             keys = mts.Labels("_", torch.tensor([[0]]))
@@ -126,23 +126,24 @@ class CollectiveVariable(torch.nn.Module):
                 properties=self.selected_keys,
             )
             return {"features": mts.TensorMap(keys, [block])}
+        
+        spex = mts.remove_dimension(spex, axis="keys", name="o3_sigma")
+        spex = spex.keys_to_properties("neighbor_type")
+        spex = spex.keys_to_samples("center_type")
 
-        soap = mts.remove_dimension(soap, axis="keys", name="o3_sigma")
-        soap = soap.keys_to_properties("neighbor_type")
-        soap = soap.keys_to_samples("center_type")
+        spex = mts.sum_over_samples(spex, sample_names=["atom", "center_type"])
 
-        soap = mts.sum_over_samples(soap, sample_names=["atom", "center_type"])
         blocks: List[mts.TensorBlock] = []
-        for block in soap.blocks():
+        for block in spex.blocks():
             new_block = mts.TensorBlock(
-                block.values.sum(dim=(1, 2)).reshape(-1, 1),
+                (block.values**2).sum(dim=(1, 2)).reshape(-1, 1),
                 samples=block.samples,
                 components=[],
                 properties=mts.Labels("n", torch.tensor([[0]])),
             )
             blocks.append(new_block)
 
-        summed_q = mts.TensorMap(soap.keys, blocks)
+        summed_q = mts.TensorMap(spex.keys, blocks)
         summed_q = summed_q.keys_to_properties("o3_lambda")
 
         # This model has a single output, named "features". This can be used by multiple
@@ -160,7 +161,7 @@ class CollectiveVariable(torch.nn.Module):
 # See [TODO link] for more information about exporting metatensor models.
 
 # initialize the model
-cutoff = 3.5
+cutoff = 1.3
 module = CollectiveVariable(cutoff, angular_list=[4, 6])
 
 # metatdata about the model itself
@@ -216,17 +217,24 @@ setup = [
     "cv2: SELECT_COMPONENTS ARG=cv COMPONENTS=2",
     # run metadynamics with this collective variable
     """
-    METAD
+    mtd: METAD
         ARG=cv1,cv2
         HEIGHT=0.05
         PACE=50
         SIGMA=1,2.5
-        GRID_MIN=-5,-40
-        GRID_MAX=15,10
+        GRID_MIN=-20,-40
+        GRID_MAX=20,40
         GRID_BIN=500,500
         BIASFACTOR=5
         FILE=HILLS
     """,
+    # prints out trajectory
+    """    
+    PRINT ARG=cv.*,mtd.* STRIDE=10 FILE=COLVAR
+    """,
+    """
+    FLUSH STRIDE=1
+    """
 ]
 
 atoms.calc = ase.calculators.plumed.Plumed(
