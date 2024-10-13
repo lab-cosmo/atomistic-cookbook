@@ -12,17 +12,14 @@ pair_coeff  1  1  0.000295147 5.96946
 
 neighbor	2.0 bin
 
-timestep	0.02
-
-#thermo_style   multi
 thermo     100
 
 velocity all create 300.0 2345187
 
-fix 1 all nve
-fix 3 all gle 6 300 300 31415 data/smart.A
+fix 1 all gle 6 300 300 31415 data/smart.A
 
-dump		1 all xyz 25 dump.xyz
+timestep	1.0
+dump		1 all xyz 100 dump.xyz
 
 run		10000
 
