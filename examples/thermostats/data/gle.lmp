@@ -19,7 +19,13 @@ velocity all create 300.0 2345187
 fix 1 all gle 6 300 300 31415 data/smart.A
 
 timestep	1.0
-dump		1 all xyz 100 dump.xyz
+dump		1 all xyz 100 lammps_pos.xyz
+dump        2 all custom 1 lammps_vel.xyz type vx vy vz
+dump_modify 2 first yes
+dump_modify 2 header no
+variable natoms equal count(all)
+variable comment string "Timestep: "
+fix header all print 1 "${natoms}\n${comment}" file lammps_vel.xyz screen no append yes
 
-run		10000
+run		1000
 
