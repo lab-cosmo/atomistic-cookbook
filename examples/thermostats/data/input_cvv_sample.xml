@@ -1,13 +1,12 @@
 <simulation verbosity='medium' safe_stride='100'>
-  <output prefix='simulation_gle'>
+  <output prefix='sample_nvt'>
       <properties stride='1' filename='out'>  
       [ step, time{picosecond}, conserved{electronvolt}, 
       temperature{kelvin}, kinetic_md{electronvolt}, potential{electronvolt}, 
-      temperature(H){kelvin}, temperature(O){kelvin} ] </properties>
-    <trajectory filename='pos' stride='10'> positions </trajectory>
-    <trajectory filename='vel' stride='1'> velocities </trajectory>
+              temperature(H){kelvin}, temperature(O){kelvin} ] </properties>
+      <checkpoint filename='chk' stride='2000' overwrite='False'/>
   </output>
-  <total_steps> 2000 </total_steps>
+  <total_steps> 20000 </total_steps>
   <prng>
     <seed> 32342 </seed>
   </prng>

@@ -1,5 +1,5 @@
-<simulation verbosity='medium' safe_stride='100'>
-  <output prefix='simulation_higamma'>
+<simulation verbosity='medium' safe_stride='100' threading="True">
+  <output prefix='traj'>
       <properties stride='1' filename='out'>  
       [ step, time{picosecond}, conserved{electronvolt}, 
       temperature{kelvin}, kinetic_md{electronvolt}, potential{electronvolt}, 
@@ -14,10 +14,20 @@
   <ffsocket name='lmpserial' mode='unix' pbc='false'>
       <address>h2o-lammps</address> <latency> 1e-4 </latency>
   </ffsocket>
-  <system>
+  <system_template>
+  <labels> ['ITRAJ'] </labels>
+  <instance> [1] </instance>
+  <instance> [2] </instance>
+  <instance> [3] </instance>
+  <instance> [4] </instance>
+  <instance> [5] </instance>
+  <instance> [6] </instance>
+  <instance> [7] </instance>
+  <instance> [8 ] </instance>
+  <template>
+  <system prefix='traj-ITRAJ'>
     <initialize nbeads='1'>
-      <file mode='pdb' units='angstrom'> data/water_32.pdb </file>
-      <velocities mode='thermal' units='kelvin'> 300 </velocities>
+      <file mode='chk'> sample_nvt.chk_ITRAJ </file>
     </initialize>
     <forces>
       <force forcefield='lmpserial'> lmpserial </force>
@@ -26,12 +36,13 @@
       <temperature units='kelvin'>300</temperature>
     </ensemble>
     <motion mode='dynamics'>
-      <dynamics mode='nvt'>
+      <dynamics mode='nve'>
+        <!-- this is still too long to be accurate but we use it
+        to be consistent with the setup in the example. -->
         <timestep units='femtosecond'> 1.0 </timestep>
-        <thermostat mode='langevin'>
-          <tau units='femtosecond'> 10 </tau>
-        </thermostat>
       </dynamics>
     </motion>
   </system>
+  </template>
+  </system_template>
 </simulation>

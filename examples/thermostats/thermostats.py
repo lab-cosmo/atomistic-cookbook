@@ -9,10 +9,17 @@ molecular dynamics simulations, and provide  a guide to choose the
 most appropriate thermostat for the simulation at hand.
 
 As for other examples in the cookbook, a small simulation of liquid
-water is used as an archetypal example. This
+water is used as an archetypal example. Molecular dynamics, sampling,
+and constant-temperature simulations are discussed in much detail in
+the book "Understanding Molecular Simulations" by Daan Frenkel and Berend Smit.
+This
 `seminal paper by H.C.Andersen <https://doi.org/10.1063/1.439486>`_
 provides a good historical introduction to the problem of
-thermostatting.
+thermostatting, and this
+`PhD thesis
+<https://www.research-collection.ethz.ch/handle/20.500.11850/152344>`_
+provides a more detailed background to several of the techniques
+discussed in this recipe.
 """
 
 import os
@@ -72,12 +79,23 @@ from ipi.utils.tools.gle import get_gle_matrices, gle_frequency_kernel, isra_dec
 #
 # We begin running a constant-energy calculation, that
 # we will use to illustrate the metrics that can be applied to
-# assess the performance of a thermostatting scheme.
+# assess the performance of a thermostatting scheme. If it is the
+# first time you see an ``i-PI`` input, you may want to look at
+# this file while checking the
+# `input reference <https://docs.ipi-code.org/input-tags.html>`_.
 
 # Open and read the XML file
 with open("data/input_nve.xml", "r") as file:
     xml_content = file.read()
 print(xml_content)
+
+# %%
+# The part of the input that describes the molecular dynamics integrator
+# is the ``motion`` class. For this run, it specifies and *NVE* ensemble, and
+# a ``timestep`` of 1 fs for the integrator.
+
+xmlroot = ET.parse("data/input_nve.xml").getroot()
+print("    " + ET.tostring(xmlroot.find(".//motion"), encoding="unicode"))
 
 # %%
 # Note that this -- and other runs in this example -- are too short to
@@ -99,8 +117,7 @@ print(xml_content)
 #    lmp -in data/in.lmp &
 #
 # To launch the external processes from a Python script
-# qw proeed as follows
-
+# proceed as follows:
 
 ipi_process = None
 if not os.path.exists("simulation_nve.out"):
@@ -122,7 +139,9 @@ if ipi_process is not None:
 # Analyzing the simulation
 # ~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# After the simulation is finished, we can look at the outputs
+# After the simulation is finished, we can look at the outputs.
+# The outputs include the trajectory of positions, the velocities
+# and a number of energetic observables
 
 output_data, output_desc = ipi.read_output("simulation_nve.out")
 traj_data = ipi.read_trajectory(f"simulation_nve.pos_0.xyz")
@@ -144,7 +163,9 @@ chemiscope.show(
 # Potential and kinetic energy fluctuate, but the total energy is
 # (almost) constant, the small fluctuations being due to integration
 # errors, that are quite large with the long time step used for this
-# example.
+# example. If you run with smaller ``<timestep>`` values, you should
+# see that the energy conservation condition is fulfilled with higher
+# accuracy.
 
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(
@@ -157,7 +178,7 @@ ax.plot(
     output_data["time"],
     output_data["kinetic_md"],
     "r-",
-    label="Centroid virial, $K_{CV}$",
+    label="Kinetic, $K$",
 )
 ax.plot(
     output_data["time"],
@@ -170,9 +191,20 @@ ax.set_ylabel(r"energy / eV")
 ax.legend()
 plt.show()
 
-# %% DRAFT
-# Temperature  - comment on how this is off the target,
-# but explain it's just the kinetic energy and doesn't mean much here
+# %%
+# I a classical MD simulation, based on the momentum :math:`\mathbf{p}`
+# of each atom, it is possible to evaluate its *kinetic temperature estimator*
+# :math:`T=\langle \mathbf{p}^2/m \rangle /3k_B` the average is to be intended
+# over a converged trajectory. Keep in mind that
+#
+# 1. The *instantaneous* value of this estimator is meaningless
+# 2. It is only well-defined in a constant-temperature simulation, so here
+#    it only gives a sense of whether atomic momenta are close to what one
+#    would expect at 300 K.
+#
+# With these caveat in mind, we can observe that the simulation has higher
+# velocities than expected at 300 K, and that there is no equipartition, the
+# O atoms having on average a higher energy than the H atoms.
 
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(output_data["time"], output_data["temperature"], "k-", label="All atoms")
@@ -193,12 +225,20 @@ ax.set_ylabel(r"$\tilde{T}$ / K")
 ax.legend()
 plt.show()
 
-
 # %%
-# DRAFT - compute v-v acf
+# In order to investigate the dynamics more carefully, we
+# can compute the velocity-velocity autocorrelation function
+# :math:`c_{vv}(t)=\sum_i \langle \mathbf{v}_i(t) \cdot \mathbf{v}_i(0) \rangle`.
+# We use a utility function that reads the outputs of ``i-PI``
+# and computes both the autocorrelation function and its Fourier
+# transform.
+# :math:`c_{vv}(t)` contains information on the time scale and amplitude
+# of molecular motion, and is closely related to the vibrational density
+# of states and to spectroscopic observables such as IR and Raman spectra.
+
 acf_nve = compute_acf_xyz(
     "simulation_nve.vel_0.xyz",
-    maximum_lag=300,
+    maximum_lag=600,
     length_zeropadding=2000,
     spectral_windowing="cosine-blackman",
     timestep=1,
@@ -206,37 +246,99 @@ acf_nve = compute_acf_xyz(
     skip=100,
 )
 
-# %%
-# DRAFT - plot ACF, comment on shape of peaks (very short trajectory!)
-# and what they mean (omega->0 ~ diffusion)
-
-ha2cm1 = 219474.63
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-ax.loglog(
-    acf_nve[3][:800] * ha2cm1,
-    acf_nve[4][:800] * 1e5,
+ax.plot(
+    acf_nve[0][:1200] * 2.4188843e-05,  # atomic time to ps
+    acf_nve[1][:1200] * 1e5,
     "r-",
 )
-ax.set_xlabel(r"$\omega$ / cm$^{-1}$")
+ax.set_xlabel(r"$t$ / ps$")
 ax.set_ylabel(r"$c_{vv}$ / arb. units")
+ax.legend()
+plt.show()
+
+# %%
+# The power spectrum (that can be computed as the Fourier transform of
+# :math:`c_{vv}`, reveals the frequencies of stretching, bending and libration
+# modes of water; the :math:`\omega\rightarrow 0` limit is proportional
+# to the diffusion coefficient.
+# We also load the results from a reference calculation (average of 8
+# trajectories initiated from NVT-equilibrated samples, shown as the
+# confidence interval).
+# The differences are due to the short trajectory, and to the fact that the
+# NVE trajectory is not equilibrated at 300 K.
+
+ha2cm1 = 219474.63
+
+# Loads reference trajectory
+acf_ref = np.loadtxt("data/traj-all_facf.data")
+
+fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+
+ax.fill_between(
+    acf_ref[:1200, 0] * ha2cm1,
+    (acf_ref[:1200, 1] - acf_ref[:1200, 2]) * 1e5,
+    (acf_ref[:1200, 1] + acf_ref[:1200, 2]) * 1e5,
+    color="gray",
+    label="reference",
+)
+
+ax.loglog(acf_nve[3][:1200] * ha2cm1, acf_nve[4][:1200] * 1e5, "r-", label="NVE")
+ax.set_xlabel(r"$\omega$ / cm$^{-1}$")
+ax.set_ylabel(r"$\hat{c}_{vv}$ / arb. units")
 ax.legend()
 plt.show()
 
 # %%
 # Langevin thermostatting
 # -----------------------
-# DRAFT - intro to Langevin, equations, etc
-
-xmlroot = ET.parse("data/input_higamma.xml").getroot()
+#
+# In order to perform a simulations that samples configurations
+# consistent with a Boltzmann distribution :math:`e^{-V(x)/k_B T}`
+# one needs to modify the equations of motion. There are many
+# different approaches to do this, some of which lead to deterministic
+# dynamics; the two more widely used deterministic thermostats
+# are the
+# `Berendsen thermostat <https://doi.org/10.1063/1.448118>`_
+# which does not sample the Boltzmann distribution exactly and
+# should never be used given the many more rigorous alternatives,
+# and the Nosé-Hoover thermostat, that requires a
+# `"chain" implementation <https://doi.org/10.1063/1.463940>`_
+# to be ergodic, which amounts essentially to a complicated way
+# to generate poor-quality pseudo-random numbers.
+#
+# Given the limitations of deterministic thermostats, in this
+# recipe we focus on stochastic thermostats, that model the
+# coupling to the chaotic dynamics of an external bath through
+# explicit random numbers. Langevin dynamics amounts to adding
+# to Hamiltonian, for each degree of freedom, a term of the form
+#
+# .. math::
+#
+#    \dot{p} =  -\gamma p + \sqrt{2\gamma m k_B T} \, \xi(t)
+#
+# where :math:`\gamma` is a friction coefficient, and :math:`\xi`
+# uncorrelated random numbers that mimic collisions with the bath
+# particles. The friction can be seen as the inverse of a
+# characteristic *coupling time scale*
+# :math:`\tau=1/\gamma` that describes how strongly the bath
+# interacts with the system.
 
 # %%
-# The `<ffsocket>` block describe the way communication will occur with the
-# driver code
+# Setting up a thermostat in ``i-PI``
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# In order to set up a thermostat in ``i-PI``, one simply needs
+# to adjust the ``<dynamics>`` block, to perform ``nvt`` dynamics
+# and include an appropriate ``<thermostat>`` section.
+# Here we use a very-strongly coupled Langevin thermostat,
+# with :math:`\tau=10~fs`.
 
+xmlroot = ET.parse("data/input_higamma.xml").getroot()
 print("      " + ET.tostring(xmlroot.find(".//dynamics"), encoding="unicode"))
 
 # %%
-
+# ``i-PI`` and ``lammps`` are launched as above ...
 
 ipi_process = None
 if not os.path.exists("simulation_higamma.out"):
@@ -245,22 +347,23 @@ if not os.path.exists("simulation_higamma.out"):
     lmp_process = [subprocess.Popen(["lmp", "-in", "data/in.lmp"]) for i in range(1)]
 
 # %%
-# If you run this in a notebook, you can go ahead and start loading
-# output files *before* i-PI and lammps have finished running, by
-# skipping this cell
+# ... and you should probably wait until they're done, will be fast.
 
 if ipi_process is not None:
     ipi_process.wait()
     lmp_process[0].wait()
 
 # %%
+# Analysis of the trajectory
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# The temperature converges very quickly to the target value
+# (fluctuations are to be expected, given that as discussed above
+# the temperature estimator is just the instantaneous kinetic energy,
+# that is not constant). There is also equipartition between O and H.
 
 output_data, output_desc = ipi.read_output("simulation_higamma.out")
 traj_data = ipi.read_trajectory(f"simulation_higamma.pos_0.xyz")
-
-# %% DRAFT
-# Temperature  - now this is 100% on top of the target, and
-# O and H are perfectly equipartitioned
 
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(output_data["time"], output_data["temperature"], "k-", label="All atoms")
@@ -283,10 +386,27 @@ plt.show()
 
 
 # %%
-# DRAFT - compute v-v acf
+# The velocity-velocity correlation function
+# shows how much this thermostat affects the
+# system dynamics The high-frequency peaks,
+# corresponding to stretches and bending, are
+# greatly broadened, and the :math:`\omega\rightarrow 0`
+# limit of :math:`\hat{c}_{vv}`, corresponding to the
+# diffusion coefficient, is reduced by almost a factor of 5.
+# This last observation highlights that a too-aggressive
+# thermostat is not only disrupting the dynamics:
+# it also slows down diffusion through phase space,
+# making the dynamics less efficient at sampling slow,
+# collective motions. We shall see further down various
+# methods to counteract this effect, but in general one shold
+# use s weaker coupling, that improves the sampling of configuration
+# space even though it slows down the convergence of the
+# kinetic energy.
+
+# compute the v-v acf
 acf_higamma = compute_acf_xyz(
     "simulation_higamma.vel_0.xyz",
-    maximum_lag=300,
+    maximum_lag=600,
     length_zeropadding=2000,
     spectral_windowing="cosine-blackman",
     timestep=1,
@@ -294,30 +414,30 @@ acf_higamma = compute_acf_xyz(
     skip=100,
 )
 
-# %%
-# DRAFT - plot ACF, comment on peak broadening, and
-# the reduction of the diffusion coefficient
-
+# and plot
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-ax.loglog(
-    acf_nve[3][:800] * ha2cm1,
-    acf_nve[4][:800] * 1e5,
-    "r-",
-    label="NVE",
+ax.fill_between(
+    acf_ref[:1200, 0] * ha2cm1,
+    (acf_ref[:1200, 1] - acf_ref[:1200, 2]) * 1e5,
+    (acf_ref[:1200, 1] + acf_ref[:1200, 2]) * 1e5,
+    color="gray",
+    label="reference",
 )
 ax.loglog(
-    acf_higamma[3][:800] * ha2cm1,
-    acf_higamma[4][:800] * 1e5,
+    acf_higamma[3][:1200] * ha2cm1,
+    acf_higamma[4][:1200] * 1e5,
     "b-",
     label=r"Langevin, $\tau=10$fs",
 )
 ax.set_xlabel(r"$\omega$ / cm$^{-1}$")
-ax.set_ylabel(r"$c_{vv}$ / arb. units")
+ax.set_ylabel(r"$\hat{c}_{vv}$ / arb. units")
 ax.legend()
 plt.show()
+
 # %%
 # Global thermostats: stochastic velocity rescaling
 # -------------------------------------------------
+# TODO work in progress....
 
 # %%
 # The `<ffsocket>` block describe the way communication will occur with the
@@ -377,7 +497,7 @@ plt.show()
 # DRAFT - compute v-v acf
 acf_svr = compute_acf_xyz(
     "simulation_svr.vel_0.xyz",
-    maximum_lag=300,
+    maximum_lag=600,
     length_zeropadding=2000,
     spectral_windowing="cosine-blackman",
     timestep=1,
@@ -390,19 +510,19 @@ acf_svr = compute_acf_xyz(
 
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.loglog(
-    acf_nve[3][:800] * ha2cm1,
-    acf_nve[4][:800] * 1e5,
+    acf_nve[3][:1200] * ha2cm1,
+    acf_nve[4][:1200] * 1e5,
     "r-",
     label="NVE",
 )
 ax.loglog(
-    acf_svr[3][:800] * ha2cm1,
-    acf_svr[4][:800] * 1e5,
+    acf_svr[3][:1200] * ha2cm1,
+    acf_svr[4][:1200] * 1e5,
     "b-",
     label=r"SVR, $\tau=10$fs",
 )
 ax.set_xlabel(r"$\omega$ / cm$^{-1}$")
-ax.set_ylabel(r"$c_{vv}$ / arb. units")
+ax.set_ylabel(r"$\hat{c}_{vv}$ / arb. units")
 ax.legend()
 plt.show()
 
@@ -468,7 +588,7 @@ plt.show()
 # DRAFT - compute v-v acf
 acf_gle = compute_acf_xyz(
     "simulation_gle.vel_0.xyz",
-    maximum_lag=300,
+    maximum_lag=600,
     length_zeropadding=2000,
     spectral_windowing="cosine-blackman",
     timestep=1,
@@ -481,19 +601,19 @@ acf_gle = compute_acf_xyz(
 
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.loglog(
-    acf_nve[3][:800] * ha2cm1,
-    acf_nve[4][:800] * 1e5,
+    acf_nve[3][:1200] * ha2cm1,
+    acf_nve[4][:1200] * 1e5,
     "r-",
     label="NVE",
 )
 ax.loglog(
-    acf_gle[3][:800] * ha2cm1,
-    acf_gle[4][:800] * 1e5,
+    acf_gle[3][:1200] * ha2cm1,
+    acf_gle[4][:1200] * 1e5,
     "b-",
     label=r"GLE",
 )
 ax.set_xlabel(r"$\omega$ / cm$^{-1}$")
-ax.set_ylabel(r"$c_{vv}$ / arb. units")
+ax.set_ylabel(r"$\hat{c}_{vv}$ / arb. units")
 ax.legend()
 plt.show()
 
@@ -507,7 +627,7 @@ acf_gle[3]
 # maybe include the R-L purification (requires moving
 # it to tools)
 
-n_omega = 800
+n_omega = 1200
 Ap, Cp, Dp = get_gle_matrices("data/input_gle.xml")
 gle_kernel = gle_frequency_kernel(acf_gle[3][:n_omega], Ap, Dp)
 
@@ -521,25 +641,25 @@ isra_acf, history, errors, laplace = isra_deconvolute(
 # %%
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.loglog(
-    acf_nve[3][:800] * ha2cm1,
-    acf_nve[4][:800] * 1e5,
+    acf_nve[3][:1200] * ha2cm1,
+    acf_nve[4][:1200] * 1e5,
     "r-",
     label="NVE",
 )
 ax.loglog(
-    acf_gle[3][:800] * ha2cm1,
-    acf_gle[4][:800] * 1e5,
+    acf_gle[3][:1200] * ha2cm1,
+    acf_gle[4][:1200] * 1e5,
     "b-",
     label=r"GLE",
 )
 ax.loglog(
-    acf_gle[3][:800] * ha2cm1,
+    acf_gle[3][:1200] * ha2cm1,
     isra_acf * 1e5,
     "r--",
     label=r"GLE$\rightarrow$ NVE",
 )
 ax.set_xlabel(r"$\omega$ / cm$^{-1}$")
-ax.set_ylabel(r"$c_{vv}$ / arb. units")
+ax.set_ylabel(r"$\hat{c}_{vv}$ / arb. units")
 ax.legend()
 plt.show()
 
@@ -548,33 +668,33 @@ plt.show()
 # demonstrate the iterations of ISRE
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.loglog(
-    acf_nve[3][:800] * ha2cm1,
-    acf_nve[4][:800] * 1e5,
+    acf_nve[3][:1200] * ha2cm1,
+    acf_nve[4][:1200] * 1e5,
     "r-",
     label="NVE",
 )
 ax.loglog(
-    acf_gle[3][:800] * ha2cm1,
-    acf_gle[4][:800] * 1e5,
+    acf_gle[3][:1200] * ha2cm1,
+    acf_gle[4][:1200] * 1e5,
     "b-",
     label=r"GLE",
 )
 ax.loglog(
-    acf_gle[3][:800] * ha2cm1,
+    acf_gle[3][:1200] * ha2cm1,
     history[0] * 1e5,
     ":",
     color="#4000FF",
     label=r"iter[0]",
 )
 ax.loglog(
-    acf_gle[3][:800] * ha2cm1,
+    acf_gle[3][:1200] * ha2cm1,
     history[4] * 1e5,
     ":",
     color="#A000A0",
     label=r"iter[4]",
 )
 ax.loglog(
-    acf_gle[3][:800] * ha2cm1,
+    acf_gle[3][:1200] * ha2cm1,
     history[8] * 1e5,
     ":",
     color="#FF0040",
@@ -582,7 +702,7 @@ ax.loglog(
 )
 
 ax.set_xlabel(r"$\omega$ / cm$^{-1}$")
-ax.set_ylabel(r"$c_{vv}$ / arb. units")
+ax.set_ylabel(r"$\hat{c}_{vv}$ / arb. units")
 ax.legend()
 plt.show()
 

@@ -7,7 +7,7 @@
     <trajectory filename='pos' stride='10'> positions </trajectory>
     <trajectory filename='vel' stride='1'> velocities </trajectory>
   </output>
-  <total_steps> 1000 </total_steps>
+  <total_steps> 2000 </total_steps>
   <prng>
     <seed> 32342 </seed>
   </prng>
