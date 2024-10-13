@@ -144,7 +144,7 @@ if ipi_process is not None:
 # and a number of energetic observables
 
 output_data, output_desc = ipi.read_output("simulation_nve.out")
-traj_data = ipi.read_trajectory(f"simulation_nve.pos_0.xyz")
+traj_data = ipi.read_trajectory("simulation_nve.pos_0.xyz")
 
 # %%
 # The trajectory shows mostly local vibrations on this short time scale,
@@ -363,7 +363,7 @@ if ipi_process is not None:
 # that is not constant). There is also equipartition between O and H.
 
 output_data, output_desc = ipi.read_output("simulation_higamma.out")
-traj_data = ipi.read_trajectory(f"simulation_higamma.pos_0.xyz")
+traj_data = ipi.read_trajectory("simulation_higamma.pos_0.xyz")
 
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(output_data["time"], output_data["temperature"], "k-", label="All atoms")
@@ -467,7 +467,7 @@ if ipi_process is not None:
 # %%
 
 output_data, output_desc = ipi.read_output("simulation_svr.out")
-traj_data = ipi.read_trajectory(f"simulation_svr.pos_0.xyz")
+traj_data = ipi.read_trajectory("simulation_svr.pos_0.xyz")
 
 # %% DRAFT
 # Temperature  - now this is 100% on top of the target, and
@@ -509,11 +509,12 @@ acf_svr = compute_acf_xyz(
 # DRAFT - plot ACF, note this is too short, and statistically equivalent
 
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-ax.loglog(
-    acf_nve[3][:1200] * ha2cm1,
-    acf_nve[4][:1200] * 1e5,
-    "r-",
-    label="NVE",
+ax.fill_between(
+    acf_ref[:1200, 0] * ha2cm1,
+    (acf_ref[:1200, 1] - acf_ref[:1200, 2]) * 1e5,
+    (acf_ref[:1200, 1] + acf_ref[:1200, 2]) * 1e5,
+    color="gray",
+    label="reference",
 )
 ax.loglog(
     acf_svr[3][:1200] * ha2cm1,
@@ -558,7 +559,7 @@ if ipi_process is not None:
 # %%
 
 output_data, output_desc = ipi.read_output("simulation_gle.out")
-traj_data = ipi.read_trajectory(f"simulation_gle.pos_0.xyz")
+traj_data = ipi.read_trajectory("simulation_gle.pos_0.xyz")
 
 # %% DRAFT
 # Temperature  - now this is 100% on top of the target, and
@@ -600,11 +601,12 @@ acf_gle = compute_acf_xyz(
 # DRAFT - plot ACF, note this is too short, and statistically equivalent
 
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-ax.loglog(
-    acf_nve[3][:1200] * ha2cm1,
-    acf_nve[4][:1200] * 1e5,
-    "r-",
-    label="NVE",
+ax.fill_between(
+    acf_ref[:1200, 0] * ha2cm1,
+    (acf_ref[:1200, 1] - acf_ref[:1200, 2]) * 1e5,
+    (acf_ref[:1200, 1] + acf_ref[:1200, 2]) * 1e5,
+    color="gray",
+    label="reference",
 )
 ax.loglog(
     acf_gle[3][:1200] * ha2cm1,
@@ -640,11 +642,12 @@ isra_acf, history, errors, laplace = isra_deconvolute(
 
 # %%
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-ax.loglog(
-    acf_nve[3][:1200] * ha2cm1,
-    acf_nve[4][:1200] * 1e5,
-    "r-",
-    label="NVE",
+ax.fill_between(
+    acf_ref[:1200, 0] * ha2cm1,
+    (acf_ref[:1200, 1] - acf_ref[:1200, 2]) * 1e5,
+    (acf_ref[:1200, 1] + acf_ref[:1200, 2]) * 1e5,
+    color="gray",
+    label="reference",
 )
 ax.loglog(
     acf_gle[3][:1200] * ha2cm1,
@@ -667,11 +670,12 @@ plt.show()
 # %%
 # demonstrate the iterations of ISRE
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-ax.loglog(
-    acf_nve[3][:1200] * ha2cm1,
-    acf_nve[4][:1200] * 1e5,
-    "r-",
-    label="NVE",
+ax.fill_between(
+    acf_ref[:1200, 0] * ha2cm1,
+    (acf_ref[:1200, 1] - acf_ref[:1200, 2]) * 1e5,
+    (acf_ref[:1200, 1] + acf_ref[:1200, 2]) * 1e5,
+    color="gray",
+    label="reference",
 )
 ax.loglog(
     acf_gle[3][:1200] * ha2cm1,
