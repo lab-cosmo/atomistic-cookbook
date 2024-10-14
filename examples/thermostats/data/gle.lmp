@@ -12,20 +12,19 @@ pair_coeff  1  1  0.000295147 5.96946
 
 neighbor	2.0 bin
 
-thermo     100
-
 velocity all create 300.0 2345187
 
+timestep	1.0
 fix 1 all gle 6 300 300 31415 data/smart.A
 
-timestep	1.0
 dump		1 all xyz 100 lammps_pos.xyz
-dump        2 all custom 1 lammps_vel.xyz type vx vy vz
-dump_modify 2 first yes
-dump_modify 2 header no
-variable natoms equal count(all)
-variable comment string "Timestep: "
-fix header all print 1 "${natoms}\n${comment}" file lammps_vel.xyz screen no append yes
+thermo     100
+thermo_style custom step temp press pe etotal
+variable T equal temp
+variable P equal press
+variable PE equal pe
+variable ETOTAL equal etotal
+fix thermo_out all ave/time 10 1 10 v_T v_P v_PE v_ETOTAL file lammps_out.dat
 
-run		1000
+run		10000
 

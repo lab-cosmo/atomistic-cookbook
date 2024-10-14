@@ -31,6 +31,7 @@ import xml.etree.ElementTree as ET
 
 import chemiscope
 import ipi
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from ipi.utils.tools.acf_xyz import compute_acf_xyz
@@ -127,7 +128,7 @@ if not os.path.exists("simulation_nve.out"):
 
 # %%
 # If you run this in a notebook, you can go ahead and start loading
-# output files *before* i-PI and lammps have finished running, by
+# output files *before* i-PI and LAMMPS have finished running, by
 # skipping this cell
 
 if ipi_process is not None:
@@ -167,7 +168,7 @@ chemiscope.show(
 # see that the energy conservation condition is fulfilled with higher
 # accuracy.
 
-fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(
     output_data["time"],
     output_data["potential"] - output_data["potential"][0],
@@ -206,7 +207,7 @@ plt.show()
 # velocities than expected at 300 K, and that there is no equipartition, the
 # O atoms having on average a higher energy than the H atoms.
 
-fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(
     output_data["time"],
     output_data["temperature(O)"],
@@ -246,7 +247,7 @@ acf_nve = compute_acf_xyz(
     skip=100,
 )
 
-fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(
     acf_nve[0][:1200] * 2.4188843e-05,  # atomic time to ps
     acf_nve[1][:1200] * 1e5,
@@ -273,7 +274,7 @@ ha2cm1 = 219474.63
 # Loads reference trajectory
 acf_ref = np.loadtxt("data/traj-all_facf.data")
 
-fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 
 ax.fill_between(
     acf_ref[:1200, 0] * ha2cm1,
@@ -338,7 +339,7 @@ xmlroot = ET.parse("data/input_higamma.xml").getroot()
 print("      " + ET.tostring(xmlroot.find(".//dynamics"), encoding="unicode"))
 
 # %%
-# ``i-PI`` and ``lammps`` are launched as above ...
+# ``i-PI`` and ``LAMMPS`` are launched as above ...
 
 ipi_process = None
 if not os.path.exists("simulation_higamma.out"):
@@ -365,7 +366,7 @@ if ipi_process is not None:
 output_data, output_desc = ipi.read_output("simulation_higamma.out")
 traj_data = ipi.read_trajectory("simulation_higamma.pos_0.xyz")
 
-fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(
     output_data["time"],
     output_data["temperature(O)"],
@@ -418,7 +419,7 @@ acf_higamma = compute_acf_xyz(
 )
 
 # and plot
-fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.fill_between(
     acf_ref[:1200, 0] * ha2cm1,
     (acf_ref[:1200, 1] - acf_ref[:1200, 2]) * 1e5,
@@ -451,7 +452,11 @@ plt.show()
 # that acts by rescaling the total momentum vector, adding a
 # suitably distributed random noise term.
 
+
 # %%
+# Setting up a thermostat in ``i-PI``
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
 # Stochastic velocity rescaling is implemented in ``i-PI``
 # can be selected by setting ``mode="svr"``,  and has a
 # ``tau`` parameter that corresponds to the time scale of the
@@ -495,7 +500,7 @@ if ipi_process is not None:
 output_data, output_desc = ipi.read_output("simulation_svr.out")
 traj_data = ipi.read_trajectory("simulation_svr.pos_0.xyz")
 
-fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(
     output_data["time"],
     output_data["temperature(O)"],
@@ -538,7 +543,7 @@ acf_svr = compute_acf_xyz(
     skip=100,
 )
 
-fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.fill_between(
     acf_ref[:1200, 0] * ha2cm1,
     (acf_ref[:1200, 1] - acf_ref[:1200, 2]) * 1e5,
@@ -560,16 +565,57 @@ plt.show()
 # %%
 # Generalized Langevin Equation thermostat
 # ----------------------------------------
+#
+# The issue with a Langevin thermostat is that, for a given coupling
+# time :math:`\tau`, only molecular motions with a comparable time scale
+# are sampled efficiently: faster modes are *underdamped*, and slower modes
+# are *overdamped*, cf. the slowing down of diffusive behavior.
+#
+# A possible solution to this problem is using a
+# *Generalized Langevin Equation (GLE)* thermostat. A GLE
+# thermostat uses a matrix generalization of the Langevin term,
+# in which the physical momentum is supplemented by a few fictitious
+# momenta :math:`\mathbf{s}`, i.e.
+#
+# .. math:
+#
+#    (\dot{p},\dot\mathbf{s}) = -\mathbf{A}_p (p,\mathbf{s})+\mathbf{B}_p (\xi,\boldsymbol{\xi})
+#
+# Here :math:`\mathbf{A}_p` is the *drift matrix* and  :math:`\mathbf{B}_p` is a diffusion matrix
+# which, for canonical sampling, is determined by the target temperature and the
+# drift matrix through a fluctuation-dissipation relation.
+# The key idea is that :math:`\mathbf{A}_p` provides a lot of flexibility in defining
+# the behavior of the GLE, that can be tuned to achieve near-optimal sampling
+# for every degree of freedom (effectively acting as if the coupling constant was
+# tuned separately for slow and fast molecular motions).
+# The general idea and the practical implementation are discussed in
+# `(Ceriotti et al. JCTC (2010)) <http://doi.org/10.1021/ct900563s>`_
+# which also discusses other applications of the same principle, including
+# performing simulations with a non-equilibrium *quantum thermostat* that mimics the quantum
+# the quantum mechanical behavior of light nuclei.
 
 # %%
-# The `<ffsocket>` block describe the way communication will occur with the
-# driver code
+# Setting up a thermostat in ``i-PI``
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# A GLE thermostat can be activated using ``mode="gle"``.
+# The drift matrix used here has been generated from the
+# `GLE4MD website <http://gle4md.org>`_, using parameters that
+# aim for the most efficient sampling possible with the short
+# simulation time (2 ps). The `online generator
+# <https://gle4md.org/index.html?page=matrix&kind=smart&tslow=1&utslow=ps&smrange=6-2&outmode=ipi&aunits=ps>`_
+# can be tuned to provide the best possible sampling for the system
+# of interest, the most important parameter being the slowest time scale
+# that one is interested in sampling (typically a fraction of the total
+# simulation time). The range of frequencies that is optimized can then
+# be tuned so as to reach, roughly, the maximum frequency present in the
+# system.
 
 xmlroot = ET.parse("data/input_gle.xml").getroot()
 print("  " + ET.tostring(xmlroot.find(".//thermostat"), encoding="unicode"))
 
 # %%
-
+# We launch ``i-PI`` as usual ...
 
 ipi_process = None
 if not os.path.exists("simulation_gle.out"):
@@ -578,24 +624,25 @@ if not os.path.exists("simulation_gle.out"):
     lmp_process = [subprocess.Popen(["lmp", "-in", "data/in.lmp"]) for i in range(1)]
 
 # %%
-# If you run this in a notebook, you can go ahead and start loading
-# output files *before* i-PI and lammps have finished running, by
-# skipping this cell
+# ... and wait for simulations to finish.
 
 if ipi_process is not None:
     ipi_process.wait()
     lmp_process[0].wait()
 
 # %%
-
+# Analysis of the trajectory
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# The kinetic temperature equilibrates quickly to the target value.
+# Since the GLE is a local thermostat, targeting each degree of freedom
+# separately, equipartition is also reached quickly. Sampling is less
+# fast than with an aggressive Langevin thermostat, because the GLE targets
+# each vibrational frequency separately, to minimize the impact on diffusion.
 output_data, output_desc = ipi.read_output("simulation_gle.out")
 traj_data = ipi.read_trajectory("simulation_gle.pos_0.xyz")
 
-# %% DRAFT
-# Temperature  - now this is 100% on top of the target, and
-# O and H are perfectly equipartitioned
-
-fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.plot(
     output_data["time"],
     output_data["temperature(O)"],
@@ -616,7 +663,15 @@ plt.show()
 
 
 # %%
-# DRAFT - compute v-v acf
+# :math:`\hat{c}_{vv}` reflects the adaptive behavior of the GLE.
+# The fast modes are damped aggressively, leading to a large
+# broadening of the high frequency peaks, but librations and diffusive
+# models are much less dampened than in the high-coupling Langevin case.
+# An optimal-coupling GLE is a safe choice to sample any system, from
+# molecular liquids to harmonic crystals, although a stochastic velocity
+# rescaling is preferable if one is interested in preserving the natural
+# dynamics.
+
 acf_gle = compute_acf_xyz(
     "simulation_gle.vel_0.xyz",
     maximum_lag=600,
@@ -627,10 +682,7 @@ acf_gle = compute_acf_xyz(
     skip=100,
 )
 
-# %%
-# DRAFT - plot ACF, note this is too short, and statistically equivalent
-
-fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.fill_between(
     acf_ref[:1200, 0] * ha2cm1,
     (acf_ref[:1200, 1] - acf_ref[:1200, 2]) * 1e5,
@@ -649,64 +701,64 @@ ax.set_ylabel(r"$\hat{c}_{vv}$ / arb. units")
 ax.legend()
 plt.show()
 
-
-# %%
-len(acf_gle[3])
-acf_gle[3]
 # %%
 # R-L purification
 # ~~~~~~~~~~~~~~~~
-# maybe include the R-L purification (requires moving
-# it to tools)
+#
+# What if you also want to extract dynamical information from a GLE
+# (or Langevin) trajectory? It is actually possible to post-process the
+# power spectrum, performing a deconvolution based on the amount of
+# disturbance introduced by the GLE, that can be predicted analytically
+# in the harmonic limit.
+# The idea, discussed in `(Rossi et al., JCP (2018))
+# <http://doi.org/10.1063/1.499053610.1063/1.4990536>`_
+# is that if :math:`\hat{y}(\omega)` is the "natural" NVE power
+# spectrum, and :math:`k_{\mathrm{GLE}}(\omega_0, \omega)` is the power
+# spectrum predicted for a harmonic oscillator of frequency :math:`\omega_0`,
+# then the spectrum from the GLE dynamics will be approximately
+#
+# .. math:
+#
+#    \hat{y}_{\mathrm{GLE}}(\omega) = \int \mathrm{d}\omega'
+#    k_{\mathrm{GLE}}(\omega', \omega) \hat{y}(\omega')
+#
+# The kernel can be computed analytically for all frequencies that
+# are relevant for the power spectrum, based on the GLE parameters
+# extracted from the input of ``i-PI``.
 
 n_omega = 1200
 Ap, Cp, Dp = get_gle_matrices("data/input_gle.xml")
 gle_kernel = gle_frequency_kernel(acf_gle[3][:n_omega], Ap, Dp)
 
+
+lomega = acf_gle[3][:n_omega] * ha2cm1
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+levels = np.logspace(np.log10(gle_kernel.min()), np.log10(gle_kernel.max()), num=50)
+contour = ax.contourf(lomega, lomega, gle_kernel, norm=mpl.colors.LogNorm())
+ax.set_xscale("log")
+ax.set_yscale("log")
+ax.set_xlabel(r"$\omega_0$ / cm$^{-1}$")
+ax.set_ylabel(r"$\omega$ / cm$^{-1}$")
+ax.set_xlim(10, 5000)
+ax.set_ylim(10, 5000)
+cbar = fig.colorbar(contour, ticks=[1e1, 1e3, 1e5, 1e7])
+
 # %%
-#
+# The deconvolution is based on the Iterative Image Space
+# Reconstruction Algorithm, which preserves the positive-definiteness
+# of the spectrum and is less prone to enhancing noise than
+# other deconvolution algorithms.
 
 isra_acf, history, errors, laplace = isra_deconvolute(
-    acf_gle[3][:n_omega], acf_gle[4][:n_omega], gle_kernel, 10, 1
+    acf_gle[3][:n_omega], acf_gle[4][:n_omega], gle_kernel, 64, 4
 )
 
 # %%
-fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-ax.fill_between(
-    acf_ref[:1200, 0] * ha2cm1,
-    (acf_ref[:1200, 1] - acf_ref[:1200, 2]) * 1e5,
-    (acf_ref[:1200, 1] + acf_ref[:1200, 2]) * 1e5,
-    color="gray",
-    label="reference",
-)
-ax.loglog(
-    acf_gle[3][:1200] * ha2cm1,
-    acf_gle[4][:1200] * 1e5,
-    "b-",
-    label=r"GLE",
-)
-ax.loglog(
-    acf_gle[3][:1200] * ha2cm1,
-    isra_acf * 1e5,
-    "r--",
-    label=r"GLE$\rightarrow$ NVE",
-)
-ax.set_xlabel(r"$\omega$ / cm$^{-1}$")
-ax.set_ylabel(r"$\hat{c}_{vv}$ / arb. units")
-ax.legend()
-plt.show()
+# Still, successive iterations sharpen the spectrum but introduce
+# higher and higher levles of noise, particularly on the low-frequency
+# end of the spectrum so one has to choose when to stop.
 
-
-# %%
-# demonstrate the iterations of ISRE
-fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-ax.fill_between(
-    acf_ref[:1200, 0] * ha2cm1,
-    (acf_ref[:1200, 1] - acf_ref[:1200, 2]) * 1e5,
-    (acf_ref[:1200, 1] + acf_ref[:1200, 2]) * 1e5,
-    color="gray",
-    label="reference",
-)
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.loglog(
     acf_gle[3][:1200] * ha2cm1,
     acf_gle[4][:1200] * 1e5,
@@ -717,24 +769,63 @@ ax.loglog(
     acf_gle[3][:1200] * ha2cm1,
     history[0] * 1e5,
     ":",
-    color="#4000FF",
-    label=r"iter[0]",
+    color="#4000D0",
+    label=r"iter[1]",
+)
+ax.loglog(
+    acf_gle[3][:1200] * ha2cm1,
+    history[2] * 1e5,
+    ":",
+    color="#A000A0",
+    label=r"iter[9]",
 )
 ax.loglog(
     acf_gle[3][:1200] * ha2cm1,
     history[4] * 1e5,
     ":",
-    color="#A000A0",
-    label=r"iter[4]",
+    color="#D00040",
+    label=r"iter[17]",
 )
 ax.loglog(
     acf_gle[3][:1200] * ha2cm1,
-    history[8] * 1e5,
+    history[12] * 1e5,
     ":",
-    color="#FF0040",
-    label=r"iter[8]",
+    color="#FF0000",
+    label=r"iter[49]",
 )
 
+ax.set_xlabel(r"$\omega$ / cm$^{-1}$")
+ax.set_ylabel(r"$\hat{c}_{vv}$ / arb. units")
+ax.legend()
+plt.show()
+
+# %%
+# Especially in the high-frequency region, the deconvolution
+# algorithm succees in recovering the underlying NVE dynamics,
+# which can be useful whenever one wants to optimize statistical
+# efficiency while still being able to estimate dynamical
+# properties.
+
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+ax.fill_between(
+    acf_ref[:1200, 0] * ha2cm1,
+    (acf_ref[:1200, 1] - acf_ref[:1200, 2]) * 1e5,
+    (acf_ref[:1200, 1] + acf_ref[:1200, 2]) * 1e5,
+    color="gray",
+    label="reference",
+)
+ax.loglog(
+    acf_gle[3][:1200] * ha2cm1,
+    acf_gle[4][:1200] * 1e5,
+    "b-",
+    label=r"GLE",
+)
+ax.loglog(
+    acf_gle[3][:1200] * ha2cm1,
+    history[2] * 1e5,
+    "r-",
+    label=r"GLE$\rightarrow$ NVE (iter[5])",
+)
 ax.set_xlabel(r"$\omega$ / cm$^{-1}$")
 ax.set_ylabel(r"$\hat{c}_{vv}$ / arb. units")
 ax.legend()
@@ -743,4 +834,9 @@ plt.show()
 
 # %%
 # Running with LAMMPS
-# -------------------
+# ~~~~~~~~~~~~~~~~~~~
+#
+# GLE thermostats (as well as conventional Langevin, and
+# stochastic velocity rescaling) are also implemented natively
+# in ``LAMMPS``.
+#
