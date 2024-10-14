@@ -580,13 +580,14 @@ plt.show()
 # in which the physical momentum is supplemented by a few fictitious
 # momenta :math:`\mathbf{s}`, i.e.
 #
-# .. math:
+# .. math::
 #
-#    (\dot{p},\dot\mathbf{s}) = -\mathbf{A}_p (p,\mathbf{s})+\mathbf{B}_p (\xi,\boldsymbol{\xi})
+#    (\dot{p},\dot\mathbf{s}) = -\mathbf{A}_p (p,\mathbf{s})+
+#                \mathbf{B}_p (\xi,\boldsymbol{\xi})
 #
-# Here :math:`\mathbf{A}_p` is the *drift matrix* and  :math:`\mathbf{B}_p` is a diffusion matrix
-# which, for canonical sampling, is determined by the target temperature and the
-# drift matrix through a fluctuation-dissipation relation.
+# Here :math:`\mathbf{A}_p` is the *drift matrix* and  :math:`\mathbf{B}_p`
+# is a diffusion matrix which, for canonical sampling, is determined by the target
+# temperature and the drift matrix through a fluctuation-dissipation relation.
 # The key idea is that :math:`\mathbf{A}_p` provides a lot of flexibility in defining
 # the behavior of the GLE, that can be tuned to achieve near-optimal sampling
 # for every degree of freedom (effectively acting as if the coupling constant was
@@ -594,8 +595,8 @@ plt.show()
 # The general idea and the practical implementation are discussed in
 # `(Ceriotti et al. JCTC (2010)) <http://doi.org/10.1021/ct900563s>`_
 # which also discusses other applications of the same principle, including
-# performing simulations with a non-equilibrium *quantum thermostat* that mimics the quantum
-# the quantum mechanical behavior of light nuclei.
+# performing simulations with a non-equilibrium *quantum thermostat* that
+# mimics the quantum the quantum mechanical behavior of light nuclei.
 
 # %%
 # Setting up a thermostat in ``i-PI``
@@ -851,6 +852,11 @@ plt.show()
 # .. code-block:: text
 #
 #   fix 1 all gle 6 300 300 31415 data/smart.A
+#
+# The drift matrix can be obtained from the same website, simply
+# asking to output the matrix in raw format, choosing units consistent
+# with the ``LAMMPS`` settings,  e.g. for this `optimal sampling setup
+# <https://gle4md.org/index.html?page=matrix&kind=smart&tslow=1&utslow=ps&smrange=6-2&outmode=raw&aunits=fs>`_
 #
 
 # %%
