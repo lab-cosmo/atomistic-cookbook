@@ -528,7 +528,7 @@ plt.show()
 # essentially indistinguishable from the reference, computed
 # with an ensemble of NVE trajectories starting from canonical
 # samples. In fact, the small discrepancies are mostly due to
-# incomplete convergence of the averages in thi short trajectory.
+# incomplete convergence of the averages in the short trajectory.
 #
 # This highlights the advantages of a global thermostat, that
 # does not disrupt the natural diffusion in configuration space,
