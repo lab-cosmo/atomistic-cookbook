@@ -132,9 +132,9 @@ def get_example_metadata(rst_file):
 
 
 def build_gallery_section(template):
-    """Builds the .rst for a section based on its template (.tmp) file.
+    """Builds the .rst for a section based on its template (.sec) file.
 
-    Each .tmp file contains an RST header, and is concluded by a :list:
+    Each .sec file contains an RST header, and is concluded by a :list:
     directive that contains the doc names of the examples that should be
     included in that section (relative to the root), e.g.
 
