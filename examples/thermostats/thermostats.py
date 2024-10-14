@@ -255,7 +255,6 @@ ax.plot(
 )
 ax.set_xlabel(r"$t$ / ps$")
 ax.set_ylabel(r"$c_{vv}$ / arb. units")
-ax.legend()
 plt.show()
 
 # %%
