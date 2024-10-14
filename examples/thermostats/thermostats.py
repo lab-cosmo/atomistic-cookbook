@@ -840,3 +840,52 @@ plt.show()
 # stochastic velocity rescaling) are also implemented natively
 # in ``LAMMPS``.
 #
+# An example of ``LAMMPS`` input containing a GLE thermostat can
+# be found in ``data/gle.lmp``. See also the
+# `documentation of the ``fix gle`` command
+# <https://docs.lammps.org/fix_gle.html>`_
+#
+# .. code-block:: text
+#
+#   fix 1 all gle 6 300 300 31415 data/smart.A
+#
+
+# %%
+# We can run ``LAMMPS`` from the command line
+#
+# .. code-block:: bash
+#
+#    lmp -in data/gle.lmp &
+#
+# or from Python
+
+lmp_process = None
+if not os.path.exists("lammps_out.dat"):
+    lmp_process = subprocess.Popen(["lmp", "-in", "data/gle.lmp"])
+
+# %%
+# ... and wait
+#
+
+if lmp_process is not None:
+    lmp_process.wait()
+
+# %%
+# The simulation is much faster (for such a small system and
+# small potential the overhead of ``i-PI``'s client-server mechanism
+# is substantial) and leads to similar results for the kinetic temperature
+#
+
+traj_data = np.loadtxt("lammps_out.dat")
+
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+ax.plot(
+    traj_data[:, 0] * 1e-3,
+    traj_data[:, 1],
+    "k-",
+    label="All atoms",
+)
+ax.set_xlabel(r"$t$ / ps")
+ax.set_ylabel(r"$\tilde{T}$ / K")
+ax.legend()
+plt.show()

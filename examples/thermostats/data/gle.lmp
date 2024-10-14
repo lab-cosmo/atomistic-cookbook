@@ -14,9 +14,6 @@ neighbor	2.0 bin
 
 velocity all create 300.0 2345187
 
-timestep	1.0
-fix 1 all gle 6 300 300 31415 data/smart.A
-
 dump		1 all xyz 100 lammps_pos.xyz
 thermo     100
 thermo_style custom step temp press pe etotal
@@ -24,7 +21,9 @@ variable T equal temp
 variable P equal press
 variable PE equal pe
 variable ETOTAL equal etotal
-fix thermo_out all ave/time 10 1 10 v_T v_P v_PE v_ETOTAL file lammps_out.dat
+fix thermo_out all ave/time 10 1 10 v_T v_PE v_ETOTAL v_P file lammps_out.dat
 
+timestep	1.0
+fix 1 all gle 6 300 300 31415 data/smart.A
 run		10000
 
