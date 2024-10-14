@@ -497,8 +497,8 @@ if ipi_process is not None:
 # different degrees of freedom.
 # Liquid water is a very ergodic system, in which all degrees of
 # freedom are strongly coupled, so this is not a major issue. However
-# care must be taken when modeling a quasi-harmonic crystal (e.g. 
-# diamond, a metal, or an inorganic crystal), or a molecular system 
+# care must be taken when modeling a quasi-harmonic crystal (e.g.
+# diamond, a metal, or an inorganic crystal), or a molecular system
 # in which the coupling between molecules is weaker (e.g. methane,
 # or another apolar compound).
 
