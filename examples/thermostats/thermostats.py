@@ -70,7 +70,7 @@ from ipi.utils.tools.gle import get_gle_matrices, gle_frequency_kernel, isra_dec
 # ~~~~~~~~~~~~~~~~~~~
 #
 # We use `i-PI <http://ipi-code.org>`_ together with a ``LAMMPS`` driver to run
-# all the simulations in this recipe. The two codees need to be ran separately,
+# all the simulations in this recipe. The two codes need to be run separately,
 # and communicate atomic positions, energy and forces through a socket interface.
 #
 # The LAMMPS input defines the parameters of the
