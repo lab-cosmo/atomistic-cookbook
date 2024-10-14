@@ -207,7 +207,6 @@ plt.show()
 # O atoms having on average a higher energy than the H atoms.
 
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-ax.plot(output_data["time"], output_data["temperature"], "k-", label="All atoms")
 ax.plot(
     output_data["time"],
     output_data["temperature(O)"],
@@ -220,6 +219,7 @@ ax.plot(
     "c-",
     label="H atoms",
 )
+ax.plot(output_data["time"], output_data["temperature"], "k-", label="All atoms")
 ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"$\tilde{T}$ / K")
 ax.legend()
@@ -366,7 +366,6 @@ output_data, output_desc = ipi.read_output("simulation_higamma.out")
 traj_data = ipi.read_trajectory("simulation_higamma.pos_0.xyz")
 
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-ax.plot(output_data["time"], output_data["temperature"], "k-", label="All atoms")
 ax.plot(
     output_data["time"],
     output_data["temperature(O)"],
@@ -379,6 +378,7 @@ ax.plot(
     "c-",
     label="H atoms",
 )
+ax.plot(output_data["time"], output_data["temperature"], "k-", label="All atoms")
 ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"$\tilde{T}$ / K")
 ax.legend()
@@ -386,9 +386,8 @@ plt.show()
 
 
 # %%
-# The velocity-velocity correlation function
-# shows how much this thermostat affects the
-# system dynamics The high-frequency peaks,
+# The velocity-velocity correlation function shows how much
+# this thermostat affects the system dynamics The high-frequency peaks,
 # corresponding to stretches and bending, are
 # greatly broadened, and the :math:`\omega\rightarrow 0`
 # limit of :math:`\hat{c}_{vv}`, corresponding to the
@@ -398,10 +397,14 @@ plt.show()
 # it also slows down diffusion through phase space,
 # making the dynamics less efficient at sampling slow,
 # collective motions. We shall see further down various
-# methods to counteract this effect, but in general one shold
-# use s weaker coupling, that improves the sampling of configuration
+# methods to counteract this effect, but in general one should
+# use a weaker coupling, that improves the sampling of configuration
 # space even though it slows down the convergence of the
-# kinetic energy.
+# kinetic energy. If you want a thermostat that equilibrates
+# aggressively the temperature while disturbing less the diffusive
+# modes, you may try the *fast-forward Langevin* thermostat
+# `(Hijazi et al., JCP (2018)) <https://doi.org/10.1063/1.5029833>`_
+# that can be activated with the option ``mode="ffl"``.
 
 # compute the v-v acf
 acf_higamma = compute_acf_xyz(
@@ -437,17 +440,28 @@ plt.show()
 # %%
 # Global thermostats: stochastic velocity rescaling
 # -------------------------------------------------
-# TODO work in progress....
+#
+# An alternative approach to sample the canonical Boltzmann
+# distribution while introducing fewer disturbances to the system
+# dynamics is to use a *global* thermostat, i.e. a scheme that
+# targets the *total* kinetic energy of the system, rather than that
+# of individual degrees of freedom.
+# We recommend the "stochastic velocity rescaling" thermostat
+# `(Bussi, Donadio, Parrinello, JCP (2007)) <https://doi.org/10.1063/1.2408420>`_
+# that acts by rescaling the total momentum vector, adding a
+# suitably distributed random noise term.
 
 # %%
-# The `<ffsocket>` block describe the way communication will occur with the
-# driver code
+# Stochastic velocity rescaling is implemented in ``i-PI``
+# can be selected by setting ``mode="svr"``,  and has a
+# ``tau`` parameter that corresponds to the time scale of the
+# coupling.
 
 xmlroot = ET.parse("data/input_svr.xml").getroot()
 print("        " + ET.tostring(xmlroot.find(".//thermostat"), encoding="unicode"))
 
 # %%
-
+# We run a simulation with the usual set up ...
 
 ipi_process = None
 if not os.path.exists("simulation_svr.out"):
@@ -456,25 +470,32 @@ if not os.path.exists("simulation_svr.out"):
     lmp_process = [subprocess.Popen(["lmp", "-in", "data/in.lmp"]) for i in range(1)]
 
 # %%
-# If you run this in a notebook, you can go ahead and start loading
-# output files *before* i-PI and lammps have finished running, by
-# skipping this cell
+# ... and wait for it to finish.
 
 if ipi_process is not None:
     ipi_process.wait()
     lmp_process[0].wait()
 
 # %%
+# Analysis of the trajectory
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# The kinetic temperature of the  trajectory equilibrates very
+# rapidly to the target value. However, it takes a bit longer
+# (approximately 0.5 ps) to reach equipartition between O and H
+# atoms. This is an important shortcoming of global thermostats:
+# since they only target the total kinetic energy, they must rely
+# on internal energy redistribution to reach equilibrium between
+# different degrees of freedom.
+# Liquid water is a very ergodic system, in which all degrees of
+# freedom are strongly coupled, so this is not a major issue. However
+# care must be taken when modeling a quasi-harmonic crystal, or a
+# molecular system in which the coupling between molecules is weaker.
 
 output_data, output_desc = ipi.read_output("simulation_svr.out")
 traj_data = ipi.read_trajectory("simulation_svr.pos_0.xyz")
 
-# %% DRAFT
-# Temperature  - now this is 100% on top of the target, and
-# O and H are perfectly equipartitioned
-
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-ax.plot(output_data["time"], output_data["temperature"], "k-", label="All atoms")
 ax.plot(
     output_data["time"],
     output_data["temperature(O)"],
@@ -487,6 +508,7 @@ ax.plot(
     "c-",
     label="H atoms",
 )
+ax.plot(output_data["time"], output_data["temperature"], "k-", label="All atoms")
 ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"$\tilde{T}$ / K")
 ax.legend()
@@ -494,7 +516,18 @@ plt.show()
 
 
 # %%
-# DRAFT - compute v-v acf
+# The velocity-velocity autocorrelation function is
+# essentially indistinguishable from the reference, computed
+# with an ensemble of NVE trajectories starting from canonical
+# samples. In fact, the small discrepancies are mostly due to
+# incomplete convergence of the averages in thi short trajectory.
+#
+# This highlights the advantages of a global thermostat, that
+# does not disrupt the natural diffusion in configuration space,
+# and can often be used to compute dynamical, time-dependent
+# observables out of a single trajectory -- which is far more
+# practical than performing a collection of NVE trajectories.
+
 acf_svr = compute_acf_xyz(
     "simulation_svr.vel_0.xyz",
     maximum_lag=600,
@@ -504,9 +537,6 @@ acf_svr = compute_acf_xyz(
     time_units="femtosecond",
     skip=100,
 )
-
-# %%
-# DRAFT - plot ACF, note this is too short, and statistically equivalent
 
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.fill_between(
@@ -566,7 +596,6 @@ traj_data = ipi.read_trajectory("simulation_gle.pos_0.xyz")
 # O and H are perfectly equipartitioned
 
 fix, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-ax.plot(output_data["time"], output_data["temperature"], "k-", label="All atoms")
 ax.plot(
     output_data["time"],
     output_data["temperature(O)"],
@@ -579,6 +608,7 @@ ax.plot(
     "c-",
     label="H atoms",
 )
+ax.plot(output_data["time"], output_data["temperature"], "k-", label="All atoms")
 ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"$\tilde{T}$ / K")
 ax.legend()
