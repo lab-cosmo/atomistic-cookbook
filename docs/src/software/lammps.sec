@@ -7,5 +7,6 @@ advanced molecular simulations techniques, and is highly parallelized using an
 efficient domain decomposition scheme. Learn more about LAMMPS on its `homepage
 <https://www.lammps.org>`_.
 
+- examples/thermostatting/thermostatting
 - examples/path-integrals/path-integrals
 - examples/heat-capacity/heat-capacity

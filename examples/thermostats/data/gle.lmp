@@ -1,0 +1,29 @@
+units		electron
+atom_style	full
+
+pair_style      lj/cut/tip4p/long 1 2 1 1 0.278072379 17.007
+bond_style      class2 
+angle_style     harmonic
+kspace_style	pppm/tip4p 0.0001
+
+read_data	data/water_32_data.lmp
+pair_coeff  * * 0 0
+pair_coeff  1  1  0.000295147 5.96946
+
+neighbor	2.0 bin
+
+velocity all create 300.0 2345187
+
+dump		1 all xyz 100 lammps_pos.xyz
+thermo     100
+thermo_style custom step temp press pe etotal
+variable T equal temp
+variable P equal press
+variable PE equal pe
+variable ETOTAL equal etotal
+fix thermo_out all ave/time 10 1 10 v_T v_PE v_ETOTAL v_P file lammps_out.dat
+
+timestep	1.0
+fix 1 all gle 6 300 300 31415 data/smart.A
+run		10000
+
