@@ -5,7 +5,7 @@ Constant-temperature MD and thermostats
 :Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm/>`_
 
 This recipe gives a practical introduction to finite-temperature
-molecular dynamics simulations, and provide  a guide to choose the
+molecular dynamics simulations, and provides a guide to choose the
 most appropriate thermostat for the simulation at hand.
 
 As for other examples in the cookbook, a small simulation of liquid
@@ -48,11 +48,11 @@ from ipi.utils.tools.gle import get_gle_matrices, gle_frequency_kernel, isra_dec
 # the relatively small supercells that are often used in simulations.
 #
 # The goal of a constant-temperature MD simulation is to compute efficiently thermal
-# averages of the form :math`\langle A(q,p)\rangle>\beta`, where the average
+# averages of the form :math:`\langle A(q,p)\rangle_\beta`, where the average
 # of the observable :math:`A(q,p)` is
 # evaluated over the Boltzmann distribution at inverse temperature
 # :math:`\beta=1/k_\mathrm{B}T`,
-# :math:`P(q,p)=Q^{-1} \exp(-\beta(p^2/2m + V(q)))`.
+# :math:`P(q,p)=Q^{-1} \exp(-\beta(p^2/2m + V(q)))`
 # In all these scenarios, optimizing the simulation involves reducing as much as
 # possible the *autocorrelation time* of the observable.
 #
@@ -82,7 +82,7 @@ from ipi.utils.tools.gle import get_gle_matrices, gle_frequency_kernel, isra_dec
 # we will use to illustrate the metrics that can be applied to
 # assess the performance of a thermostatting scheme. If it is the
 # first time you see an ``i-PI`` input, you may want to look at
-# this file while checking the
+# the input file side-by-sidewith the
 # `input reference <https://docs.ipi-code.org/input-tags.html>`_.
 
 # Open and read the XML file
@@ -92,7 +92,7 @@ print(xml_content)
 
 # %%
 # The part of the input that describes the molecular dynamics integrator
-# is the ``motion`` class. For this run, it specifies and *NVE* ensemble, and
+# is the ``motion`` class. For this run, it specifies an *NVE* ensemble, and
 # a ``timestep`` of 1 fs for the integrator.
 
 xmlroot = ET.parse("data/input_nve.xml").getroot()
@@ -100,7 +100,7 @@ print("    " + ET.tostring(xmlroot.find(".//motion"), encoding="unicode"))
 
 # %%
 # Note that this -- and other runs in this example -- are too short to
-# provide quantitative results, and you may wat to increase the
+# provide quantitative results, and you may want to increase the
 # ``<total_steps>`` parameter so that the simulation runs for at least
 # a few tens of ps. The time step of 1 fs is also at the limit of what
 # is acceptable for running simulations of water. 0.5 fs would be a
@@ -108,7 +108,7 @@ print("    " + ET.tostring(xmlroot.find(".//motion"), encoding="unicode"))
 
 
 # %%
-# To launch i-PI and LAMMPS from the command line you can jus
+# To launch i-PI and LAMMPS from the command line you can just
 # execute the following commands
 #
 # .. code-block:: bash
@@ -193,17 +193,17 @@ ax.legend()
 plt.show()
 
 # %%
-# I a classical MD simulation, based on the momentum :math:`\mathbf{p}`
-# of each atom, it is possible to evaluate its *kinetic temperature estimator*
-# :math:`T=\langle \mathbf{p}^2/m \rangle /3k_B` the average is to be intended
-# over a converged trajectory. Keep in mind that
+# In a classical MD simulation, based on the momentum :math:`\mathbf{p}`
+# of each atom, it is possible to evaluate its *kinetic temperature
+# estimator* :math:`T=\langle \mathbf{p}^2/m \rangle /3k_B` the average is to
+# be intended over a converged trajectory. Keep in mind that
 #
 # 1. The *instantaneous* value of this estimator is meaningless
 # 2. It is only well-defined in a constant-temperature simulation, so here
 #    it only gives a sense of whether atomic momenta are close to what one
 #    would expect at 300 K.
 #
-# With these caveat in mind, we can observe that the simulation has higher
+# With these caveats in mind, we can observe that the simulation has higher
 # velocities than expected at 300 K, and that there is no equipartition, the
 # O atoms having on average a higher energy than the H atoms.
 
@@ -223,12 +223,11 @@ ax.plot(
 ax.plot(output_data["time"], output_data["temperature"], "k-", label="All atoms")
 ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"$\tilde{T}$ / K")
-ax.legend()
 plt.show()
 
 # %%
 # In order to investigate the dynamics more carefully, we
-# can compute the velocity-velocity autocorrelation function
+# compute the velocity-velocity autocorrelation function
 # :math:`c_{vv}(t)=\sum_i \langle \mathbf{v}_i(t) \cdot \mathbf{v}_i(0) \rangle`.
 # We use a utility function that reads the outputs of ``i-PI``
 # and computes both the autocorrelation function and its Fourier
@@ -260,12 +259,13 @@ plt.show()
 
 # %%
 # The power spectrum (that can be computed as the Fourier transform of
-# :math:`c_{vv}`, reveals the frequencies of stretching, bending and libration
+# :math:`c_{vv}`) reveals the frequencies of stretching, bending and libration
 # modes of water; the :math:`\omega\rightarrow 0` limit is proportional
 # to the diffusion coefficient.
 # We also load the results from a reference calculation (average of 8
 # trajectories initiated from NVT-equilibrated samples, shown as the
-# confidence interval).
+# confidence interval). You can see how to run these reference calculations
+# from the script ``data/run_traj.sh``.
 # The differences are due to the short trajectory, and to the fact that the
 # NVE trajectory is not equilibrated at 300 K.
 
@@ -312,13 +312,15 @@ plt.show()
 # recipe we focus on stochastic thermostats, that model the
 # coupling to the chaotic dynamics of an external bath through
 # explicit random numbers. Langevin dynamics amounts to adding
-# to Hamiltonian, for each degree of freedom, a term of the form
+# to Hamilton's equations of motion, for each degree of freedom,
+# a term of the form
 #
 # .. math::
 #
 #    \dot{p} =  -\gamma p + \sqrt{2\gamma m k_B T} \, \xi(t)
 #
-# where :math:`\gamma` is a friction coefficient, and :math:`\xi`
+# where :math:`
+# \gamma` is a friction coefficient, and :math:`\xi`
 # uncorrelated random numbers that mimic collisions with the bath
 # particles. The friction can be seen as the inverse of a
 # characteristic *coupling time scale*
@@ -348,7 +350,8 @@ if not os.path.exists("simulation_higamma.out"):
     lmp_process = [subprocess.Popen(["lmp", "-in", "data/in.lmp"]) for i in range(1)]
 
 # %%
-# ... and you should probably wait until they're done, will be fast.
+# ... and you should probably wait until they're done,
+# it'll take less than a minute.
 
 if ipi_process is not None:
     ipi_process.wait()
@@ -388,7 +391,7 @@ plt.show()
 
 # %%
 # The velocity-velocity correlation function shows how much
-# this thermostat affects the system dynamics The high-frequency peaks,
+# this thermostat affects the system dynamics. The high-frequency peaks,
 # corresponding to stretches and bending, are
 # greatly broadened, and the :math:`\omega\rightarrow 0`
 # limit of :math:`\hat{c}_{vv}`, corresponding to the
@@ -666,7 +669,7 @@ plt.show()
 # :math:`\hat{c}_{vv}` reflects the adaptive behavior of the GLE.
 # The fast modes are damped aggressively, leading to a large
 # broadening of the high frequency peaks, but librations and diffusive
-# models are much less dampened than in the high-coupling Langevin case.
+# modes are much less dampened than in the high-coupling Langevin case.
 # An optimal-coupling GLE is a safe choice to sample any system, from
 # molecular liquids to harmonic crystals, although a stochastic velocity
 # rescaling is preferable if one is interested in preserving the natural
@@ -717,7 +720,7 @@ plt.show()
 # spectrum predicted for a harmonic oscillator of frequency :math:`\omega_0`,
 # then the spectrum from the GLE dynamics will be approximately
 #
-# .. math:
+# .. math::
 #
 #    \hat{y}_{\mathrm{GLE}}(\omega) = \int \mathrm{d}\omega'
 #    k_{\mathrm{GLE}}(\omega', \omega) \hat{y}(\omega')
@@ -746,17 +749,17 @@ cbar = fig.colorbar(contour, ticks=[1e1, 1e3, 1e5, 1e7])
 # %%
 # The deconvolution is based on the Iterative Image Space
 # Reconstruction Algorithm, which preserves the positive-definiteness
-# of the spectrum and is less prone to enhancing noise than
-# other deconvolution algorithms.
+# of the spectrum
 
 isra_acf, history, errors, laplace = isra_deconvolute(
     acf_gle[3][:n_omega], acf_gle[4][:n_omega], gle_kernel, 64, 4
 )
 
 # %%
-# Still, successive iterations sharpen the spectrum but introduce
-# higher and higher levles of noise, particularly on the low-frequency
-# end of the spectrum so one has to choose when to stop.
+# Even though the ISRA algorithm is less prone to enhancing noise than
+# other deconvolution algorithms, successive iterations sharpen the spectrum
+# but introduce higher and higher levles of noise, particularly on the
+# low-frequency end of the spectrum so one has to choose when to stop.
 
 fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.loglog(
@@ -842,7 +845,7 @@ plt.show()
 #
 # An example of ``LAMMPS`` input containing a GLE thermostat can
 # be found in ``data/gle.lmp``. See also the
-# `documentation of the ``fix gle`` command
+# `documentation of the fix gle command
 # <https://docs.lammps.org/fix_gle.html>`_
 #
 # .. code-block:: text
@@ -872,7 +875,7 @@ if lmp_process is not None:
 
 # %%
 # The simulation is much faster (for such a small system and
-# small potential the overhead of ``i-PI``'s client-server mechanism
+# cheap potential the overhead of ``i-PI``'s client-server mechanism
 # is substantial) and leads to similar results for the kinetic temperature
 #
 
