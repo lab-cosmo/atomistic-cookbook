@@ -223,6 +223,7 @@ ax.plot(
 ax.plot(output_data["time"], output_data["temperature"], "k-", label="All atoms")
 ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"$\tilde{T}$ / K")
+ax.legend()
 plt.show()
 
 # %%
