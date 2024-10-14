@@ -1,4 +1,4 @@
-Thermostattin molecular dynamics simulations, a primer
+Thermostatting molecular dynamics simulations, a primer
 ======================================================
 
 This example provides some practical guidelines to set up and 

@@ -8,7 +8,7 @@ it on the `ipi-code website <http://ipi-code.org>`_, the `documentation pages
 <http://ipi-code.org/i-pi>`_ or `the github repository
 <https://github.com/i-pi/i-pi>`_.
 
-
+- examples/thermostatting/thermostatting
 - examples/path-integrals/path-integrals
 - examples/pi-metad/pi-metad
 - examples/heat-capacity/heat-capacity
