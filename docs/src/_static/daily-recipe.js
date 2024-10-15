@@ -19,9 +19,9 @@
     html += '    <div class="card" style="text-align: center; box-shadow: md;">';
     html += '      <a href="' + example.ref + '" class="doc">';
     html += '        <h3 class="card-title">' + example.title + '</h3>';
-    html += '        <img src="' + example.thumbnail + '" alt="' + example.description + '" class="gallery-img">';
+    html += '        <img src="' + example.thumbnail + '" alt="' + example.html + '" class="gallery-img">';
     html += '      </a>';
-    html += '      <p>' + example.description + "</p>";
+    html += '    ' + example.html;
     html += '    </div>';
     html += '  </div>';
     html += '</div>';

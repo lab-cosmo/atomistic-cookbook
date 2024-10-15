@@ -7,7 +7,7 @@ import subprocess
 import sys
 
 import nox
-from docutils.core import publish_doctree
+from docutils.core import publish_doctree, publish_parts
 from docutils.nodes import paragraph, title
 
 
@@ -87,6 +87,69 @@ def get_example_other_files(fd):
     return [os.path.join(folder, file) for file in tracked_files_output.splitlines()]
 
 
+def should_reinstall_dependencies(session, **metadata):
+    """
+    Returns a bool indicating whether the dependencies should be re-installed in the
+    venv.
+
+    This works by hashing everything in metadata, and storing the hash in the session
+    virtualenv. If the hash changes, we'll have to re-install!
+    """
+
+    to_hash = {}
+    for key, value in metadata.items():
+        if os.path.exists(value):
+            with open(value) as fd:
+                to_hash[key] = fd.read()
+        else:
+            to_hash[key] = value
+
+    to_hash = json.dumps(to_hash).encode("utf8")
+    sha1 = hashlib.sha1(to_hash).hexdigest()
+    sha1_path = os.path.join(session.virtualenv.location, "metadata.sha1")
+
+    if session.virtualenv._reused:
+        if os.path.exists(sha1_path):
+            with open(sha1_path) as fd:
+                should_reinstall = fd.read().strip() != sha1
+        else:
+            should_reinstall = True
+    else:
+        should_reinstall = True
+
+    with open(sha1_path, "w") as fd:
+        fd.write(sha1)
+
+    if should_reinstall:
+        session.debug("updating environment since the dependencies changed")
+
+    return should_reinstall
+
+
+def rst_to_html(rst_text):
+    """
+    Convert a reStructuredText (RST) string to HTML.
+
+    Parameters:
+        rst_text (str): The RST content to convert.
+
+    Returns:
+        str: The resulting HTML string.
+    """
+    settings_overrides = {
+        "initial_header_level": 2,
+        "report_level": 5,  # Suppress warnings
+        "syntax_highlight": "short",
+        "math_output": "mathjax",
+    }
+
+    parts = publish_parts(
+        source=rst_text, writer_name="html5", settings_overrides=settings_overrides
+    )
+
+    return parts["fragment"]
+
+
 def get_example_metadata(rst_file):
     metadata = {}
     # Path to the generated RST file (stripping docs/src/)
@@ -113,6 +176,7 @@ def get_example_metadata(rst_file):
     doctree = publish_doctree(rst_content, settings_overrides=settings_overrides)
     rst_title = None
     rst_description = None
+    html_description = None
 
     # Traverse the document tree
     for node in doctree:
@@ -120,11 +184,13 @@ def get_example_metadata(rst_file):
             rst_title = node.astext()
         if isinstance(node, paragraph) and rst_description is None:
             rst_description = node.astext().replace("\n", " ")
+            html_description = rst_to_html(rst_description)
         if rst_title and rst_description:  # break when done
             break
 
     metadata["title"] = rst_title or ""
     metadata["description"] = rst_description or ""
+    metadata["html"] = html_description or ""
     metadata["thumbnail"] = thumbnail_file
     metadata["ref"] = os.path.join(gallery_dir, example_name)
 
@@ -187,45 +253,6 @@ def build_gallery_section(template):
 
                 """
             )
-
-
-def should_reinstall_dependencies(session, **metadata):
-    """
-    Returns a bool indicating whether the dependencies should be re-installed in the
-    venv.
-
-    This works by hashing everything in metadata, and storing the hash in the session
-    virtualenv. If the hash changes, we'll have to re-install!
-    """
-
-    to_hash = {}
-    for key, value in metadata.items():
-        if os.path.exists(value):
-            with open(value) as fd:
-                to_hash[key] = fd.read()
-        else:
-            to_hash[key] = value
-
-    to_hash = json.dumps(to_hash).encode("utf8")
-    sha1 = hashlib.sha1(to_hash).hexdigest()
-    sha1_path = os.path.join(session.virtualenv.location, "metadata.sha1")
-
-    if session.virtualenv._reused:
-        if os.path.exists(sha1_path):
-            with open(sha1_path) as fd:
-                should_reinstall = fd.read().strip() != sha1
-        else:
-            should_reinstall = True
-    else:
-        should_reinstall = True
-
-    with open(sha1_path, "w") as fd:
-        fd.write(sha1)
-
-    if should_reinstall:
-        session.debug("updating environment since the dependencies changed")
-
-    return should_reinstall
 
 
 # ==================================================================================== #
