@@ -16,6 +16,9 @@ can also be downloaded as a stand-alone ``.py`` script, or a
 To simplify setting up an environment that contains all the dependencies
 needed for each recipe, you can also download an ``environment.yml`` file 
 that you can use with conda to create a custom environment to run the example.
+If you have never used conda before, you may want to read this
+`beginners guide 
+<https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html>`_.
 
 .. code-block:: bash
 
@@ -25,10 +28,12 @@ that you can use with conda to create a custom environment to run the example.
    # when you want to use the environment
    conda env activate --name <environment-name>
 
-Additional data needed for each example is usually either downloaded
-dynamically, or can be found in a ``data`` folder for each example,
-or downloaded as a ``data.zip`` file at the end of each recipe in
-the website.
+You can then execute the script from the command line, or open the
+notebook in Jupyter lab.  Additional data needed for each example is usually 
+either downloaded dynamically, or can be found in a ``data`` folder for each 
+example, or downloaded as a ``data.zip`` file at the end of each recipe in
+the website. In the latter case, don't forget to unzip the file in the 
+same folder as the ``.py`` or ``.ipynb`` files for the example. 
 
 .. marker-install-end
 

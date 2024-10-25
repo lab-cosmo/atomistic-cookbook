@@ -21,9 +21,10 @@ of several tools.
 You can view the recipes online, compiled as webpages containing explanations,
 code snippets, plots and interactive viewers based on 
 `chemiscope <https://chemiscope.org>`_. However, it is also possible (and 
-hopefully simple) to download scripts, and environments, to run the recipe
-on your computer, and that you can use as a starting point to adapt them  
-to your own use case.
+hopefully simple) to download scripts, and `conda environments 
+<https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html>`_, 
+to run the recipe on your computer, and that you can use as a starting point to 
+adapt them to your own use case.
 
 .. marker-intro-end
 
