@@ -584,8 +584,9 @@ plt.show()
 #
 # .. math::
 #
-#    (\dot{p},\dot{\mathbf{s}}) = -\mathbf{A}_p (p,\mathbf{s})+
-#                \mathbf{B}_p (\xi,\boldsymbol{\xi})
+#    (\dot{p},\dot{\mathbf{s}}) = -\mathbf{A}_p (p,\mathbf{s}) +
+#    \mathbf{B}_p (\xi,\boldsymbol{\xi})
+
 #
 # Here :math:`\mathbf{A}_p` is the *drift matrix* and  :math:`\mathbf{B}_p`
 # is a diffusion matrix which, for canonical sampling, is determined by the target
