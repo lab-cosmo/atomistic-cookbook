@@ -1,13 +1,13 @@
 Atomistic Cookbook
 ==================
 
-The source code for the Atomistic Cookbook is maintained
-as a GitHub pages site.
-The home page is accessible at https://atomistic-cookbook.org
+This repository contains the source code for the Atomistic Cookbook,
+that is automatically compiled and deployed as a GitHub pages site,
+accessible at https://atomistic-cookbook.org
 
 .. marker-intro-start
 
-This cookbook contains recipes for atomic-scale modelling for materials and
+The cookbook contains recipes for atomic-scale modelling for materials and
 molecules, with a particular focus on machine learning and statistical
 sampling methods.
 Most of the examples rely heavily on software developed by the laboratory of
@@ -18,9 +18,16 @@ Rather than focusing on the usage of a specific package, this cookbook provides
 concrete examples of the solution of modeling problems, often using a combination
 of several tools.
 
+You can view the recipes online, compiled as webpages containing explanations,
+code snippets, plots and interactive viewers based on 
+`chemiscope <https://chemiscope.org>`_. However, it is also possible (and 
+hopefully simple) to download scripts, and environments, to run the recipe
+on your computer, and that you can use as a starting point to adapt them  
+to your own use case.
+
 .. marker-intro-end
 
-Contributors
+Contributing
 ------------
 
 If you want contribute an example, recipe or tutorial that combines multiple software
