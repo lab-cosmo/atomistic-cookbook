@@ -40,7 +40,7 @@ class PseudoSphinxApp:
             "filename_pattern": ".*",
             "examples_dirs": os.path.join(ROOT, example),
             "gallery_dirs": gallery_dir,
-            "min_reported_time": 60,
+            "write_computation_times": False,
             "copyfile_regex": r".*\.(sh|xyz|cp2k|yml|png|zip)",
             "matplotlib_animations": True,
             "within_subsection_order": "FileNameSortKey",

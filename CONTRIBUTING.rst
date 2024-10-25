@@ -132,8 +132,6 @@ Support
 If you still have problems adding your example to the repository, please feel
 free to contact one of the developers, e.g.
 
-`@agoscinski (Alexander Goscinski) <alexander.goscinski@epfl.ch>`_
-
 `@davidetisi (Davide Tisi) <davide.tisi@epfl.ch>`_
 
 Code of Conduct

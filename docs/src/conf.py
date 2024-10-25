@@ -45,6 +45,9 @@ html_js_files = [
 
 htmlhelp_basename = "The Atomistic Cookbook"
 html_theme = "furo"
+html_theme_options = {
+    "top_of_page_buttons": [],
+}
 html_static_path = ["_static"]
 html_favicon = "_static/cookbook-icon.png"
 html_logo = "_static/cookbook-icon.svg"
