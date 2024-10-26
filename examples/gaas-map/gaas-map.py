@@ -6,7 +6,7 @@ PCA/PCovR Visualization of a training dataset for a potential
           Giulio Imbalzano
 
 This example uses ``rascaline`` and ``metatensor`` to compute
-structural properties for the structures in a training dataset 
+structural properties for the structures in a training dataset
 for a ML potential.
 These are then used with simple dimensionality reduction algorithms
 (implemented in ``sklearn`` and ``skmatter``) to obtain a simplified

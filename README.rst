@@ -23,7 +23,7 @@ code snippets, plots and interactive viewers based on
 `chemiscope <https://chemiscope.org>`_. However, it is also possible (and
 hopefully simple) to download scripts, and `conda environments
 <https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html>`_,
-to run the recipe on your computer. You can use these as a starting point and 
+to run the recipe on your computer. You can use these as a starting point and
 a template that can be easily adapted to your own use case.
 
 .. marker-intro-end
