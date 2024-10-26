@@ -1,6 +1,6 @@
 """
-LODE Tutorial
-=============
+Long-distance Equivariants: a tutorial
+======================================
 
 :Authors: Philip Loche `@PicoCentauri <https://github.com/PicoCentauri/>`_,
           Kevin Huguenin-Dumittan `@kvhuguenin <https://github.com/kvhuguenin>`_

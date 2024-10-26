@@ -1,12 +1,13 @@
 r"""
-PCA/PCovR Visualization for the rattled GaAs training dataset
+PCA/PCovR Visualization of a training dataset for a potential
 =============================================================
 
 :Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm/>`_,
           Giulio Imbalzano
 
 This example uses ``rascaline`` and ``metatensor`` to compute
-structural properties for the structures in a training for a ML model.
+structural properties for the structures in a training dataset 
+for a ML potential.
 These are then used with simple dimensionality reduction algorithms
 (implemented in ``sklearn`` and ``skmatter``) to obtain a simplified
 description of the dataset, that is then visualized using

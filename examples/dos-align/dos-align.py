@@ -1,6 +1,6 @@
 """
-Training the DOS with different Energy References
-==============================================================================
+A ML model for the electron density of states
+=============================================
 :Authors: How Wei Bin `@HowWeiBin <https://github.com/HowWeiBin/>`_
 
 This tutorial would go through the entire machine learning framework for the electronic
@@ -11,9 +11,7 @@ optimized during training. A total of three energy reference will be used, the a
 Hartree potential, the Fermi level, and an optimized energy reference starting from
 the Fermi level energy reference. The performance of each model is then compared.
 
-
-
-Firstly, lets begin by importing the necessary packages and helper functions
+First, lets begin by importing the necessary packages and helper functions
 """
 
 # %%
