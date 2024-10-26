@@ -1,3 +1,10 @@
+.. meta::
+   :description: Computational recipes for modeling matter at the atomic scale. 
+     Interactive guides that you can also run locally and use as templates for
+     your own simulations.
+   :keywords: Atomistic simulations, statistical mechanics, machine learning,
+     molecular dynamics, quantum chemistry, materials modeling
+
 The Atomistic Cookbook
 ======================
 
