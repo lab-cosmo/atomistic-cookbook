@@ -1,6 +1,6 @@
 """
-LPR analysis for amorphous silicon dataset
-==========================================
+Local Prediction Rigidity analysis
+==================================
 
 :Authors: Sanggyu "Raymond" Chong `@SanggyuChong <https://github.com/sanggyuChong/>`_;
           Federico Grasselli `@fgrassel <https://github.com/fgrassel/>`_

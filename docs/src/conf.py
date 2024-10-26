@@ -99,7 +99,55 @@ def post_build_tweaks(app, exception):
     # Replace the canonical URL (if it exists) with the desired URL
     new_content = content.replace(
         '<link rel="canonical" href="https://atomistic-cookbook.org/index.html" />',
-        '<link rel="canonical" href="https://atomistic-cookbook.org" />',
+        r"""
+    <link rel="canonical" href="https://atomistic-cookbook.org" />
+    <!-- Structured Data Markup -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "The Atomistic Cookbook",
+      "url": "https://atomistic-cookbook.org",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://atomistic-cookbook.org/search.html?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://atomistic-cookbook.org/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Recipes by Topic",
+          "item": "https://atomistic-cookbook.org/topics/index.html"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Recipes by Software Used",
+          "item": "https://atomistic-cookbook.org/software/index.html"
+        },
+        {
+          "@type": "ListItem",
+          "position": 4,
+          "name": "All recipes",
+          "item": "https://atomistic-cookbook.org/all-examples.html"
+        }
+      ]
+    }
+    </script>
+        """,
     )
 
     # Write the modified content back to index.html
