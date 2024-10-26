@@ -20,11 +20,73 @@ import ase
 import ase.io
 import chemiscope
 import ipi
+import numpy as np
+from ipi.utils.mathtools import (
+    get_rotation_quadrature_lebedev,
+    get_rotation_quadrature_legendre,
+)
 
 
 # import matplotlib.pyplot as plt
 # import numpy as np
 
+# %%
+# show rotations
+
+# Gets quadrature grid (regular spacing in alpha,
+# lebedev grids for beta, gamma)
+quad_grid = get_rotation_quadrature_lebedev(3)
+quad = {
+    "rotation_matrices": np.array([q[0] for q in quad_grid]),
+    "weights": np.array([q[1] for q in quad_grid]),
+    "angles": np.array([q[2] for q in quad_grid]),
+}
+
+# Display the rotations of an atom with a "force" vector
+# The "reference atom" is marked as an O, and its copies as H
+vs = [
+    np.asarray([[2, 0, 0], [2, 1, 0]]),
+    np.asarray([[0, 2, 0], [0, 2, 1]]),
+    np.asarray([[0, 0, 2], [1, 0, 2]]),
+]
+
+frames = []
+for v in vs:
+    rl = v @ quad["rotation_matrices"]
+    ats = ase.Atoms("O" + ("H" * (len(rl) - 1)), positions=rl[:, 0])
+    ats.arrays["forces"] = rl[:, 1] - rl[:, 0]
+    ats.arrays["weight"] = quad["weights"]
+    ats.arrays["alpha"] = quad["angles"][:, 0]
+    ats.arrays["beta"] = quad["angles"][:, 1]
+    ats.arrays["gamma"] = quad["angles"][:, 2]
+    frames.append(ats)
+
+# Display with chemiscope. Three frames for three
+# initial positions. You can also color by grid weight
+# and by Euler angles
+
+chemiscope.show(
+    frames=frames,
+    mode="structure",
+    shapes={"forces": chemiscope.ase_vectors_to_arrows(frames)},
+    properties=chemiscope.extract_properties(frames),
+    settings={
+        "structure": [
+            dict(
+                bonds=False,
+                atoms=True,
+                shape="forces",
+                environments={"activated": False},
+                color={
+                    "property": "element",
+                    "transform": "linear",
+                    "palette": "viridis",
+                },
+            ),
+        ]
+    },
+    environments=chemiscope.all_atomic_environments(frames),
+)
 
 # %%
 # Show the problem
