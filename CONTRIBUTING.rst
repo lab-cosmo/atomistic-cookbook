@@ -11,13 +11,15 @@ the guidelines below.
 Requirements for new contributions
 ----------------------------------
 
-All code included in this repository is executed in each pull request. This
-ensures that the code in this repository stays executable for a longer time
+All code included in the `cookbook repository
+<https://github.com/lab-cosmo/atomistic-cookbook>`_
+is executed in each pull request. This
+ensures that the code in remains compatible and executable for a longer time
 frame. Because of that we do not want to have examples with heavy calculations
 that require more than a couple of minutes to execute.
 If you are unsure whether a contribution is suitable, or if you want to
-discuss how to structure your recipe, feel free to open an issue on the
-`github repository <https://github.com/lab-cosmo/atomistic-cookbook>`_.
+discuss how to structure your recipe, feel free to 
+`open an issue <https://github.com/lab-cosmo/atomistic-cookbook/issues>`_.
 
 Adding a new recipe
 -------------------
