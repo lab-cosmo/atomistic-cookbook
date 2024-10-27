@@ -48,6 +48,7 @@ html_theme = "furo"
 html_theme_options = {
     "top_of_page_buttons": [],
 }
+html_use_index = False
 html_static_path = ["_static"]
 html_favicon = "_static/cookbook-icon.png"
 html_logo = "_static/cookbook-icon.svg"
@@ -56,7 +57,7 @@ html_title = "The Atomistic Cookbook"
 # sitemap/SEO settings
 html_baseurl = "https://atomistic-cookbook.org/"
 version = ""
-relsease = ""
+release = ""
 sitemap_url_scheme = "{link}"
 html_extra_path = ["google4ae5e3529d19a84c.html", "robots.txt"]
 
