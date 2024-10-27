@@ -1,11 +1,11 @@
 The Atomistic Cookbook
 ======================
 
-<p align="center">
-  <img src="./docs/src/_static/cookbook-icon.svg"
-  alt="A cookbook with a cover showing a water molecule and mathematical symbols"
-  width="50%">
-</p>
+.. image:: ./docs/src/_static/cookbook-icon.svg
+   :alt: A cookbook with a cover showing a water molecule and mathematical symbols
+   :align: center
+   :width: 50%
+
 
 This repository contains the source code for the Atomistic Cookbook,
 a collection of software recipes to perform computer simulations of
