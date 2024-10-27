@@ -18,7 +18,7 @@ ensures that the code in remains compatible and executable for a longer time
 frame. Because of that we do not want to have examples with heavy calculations
 that require more than a couple of minutes to execute.
 If you are unsure whether a contribution is suitable, or if you want to
-discuss how to structure your recipe, feel free to 
+discuss how to structure your recipe, feel free to
 `open an issue <https://github.com/lab-cosmo/atomistic-cookbook/issues>`_.
 
 Adding a new recipe
