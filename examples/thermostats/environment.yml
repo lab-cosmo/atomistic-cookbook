@@ -3,11 +3,10 @@ channels:
 dependencies:
   - python=3.11
   - pip
-  - gfortran
-  - make
+  - lammps  
   - pip:
     - ase==3.22.1
     - chemiscope>=0.7
-    - git+https://github.com/i-pi/i-pi.git@main#egg=ipi
+    - git+https://github.com/i-pi/i-pi.git@main
     - matplotlib
     - skmatter

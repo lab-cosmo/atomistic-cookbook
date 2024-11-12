@@ -13,19 +13,23 @@ energy from the fast-varying (and hopefully cheaper) ones.
 The first is named `multiple time stepping`, and is a well-established technique
 to avoid evaluating the slowly-varying components at every time step of a MD simulation.
 It was first introduced in `LAMMPS <https://lammps.org>`_.
-`M. Tuckerman, B. J. Berne, and G. J. Martyna, JCP 97(3), 1990 (1992) <https://doi.org/10.1063/1.463137>`_
+`M. Tuckerman, B. J. Berne, and G. J. Martyna,
+JCP 97(3), 1990 (1992) <https://doi.org/10.1063/1.463137>`_
 and can be applied to classical simulations,
 typically to avoid the evaluation of long-range electrostatics in classical potentials.
 
 The second is named `ring polymer contraction`, first introduced in
-`T. E. Markland and D. E. Manolopoulos, JCP 129(2), 024105 (2008) <https://doi.org/10.1063/1.2953308>`_
+`T. E. Markland and D. E. Manolopoulos, JCP 129(2),
+024105 (2008) <https://doi.org/10.1063/1.2953308>`_
 can be seen as performing a similar simplification `in imaginary time`,
 evaluating the expensive part of the potential on a smaller number of PI replicas.
 
 The techniques can be combined, which reduces even further the computational effort.
 This dual approach, which was introduced in
-`V. Kapil, J. VandeVondele, and M. Ceriotti, JCP 144(5), 054111 (2016) <(https://doi.org/10.1063/1.4941091>`_
-and `O. Marsalek and T. E. Markland, JCP 144(5), (2016) <https://doi.org/10.1063/1.4941093>`_,
+`V. Kapil, J. VandeVondele, and M. Ceriotti, JCP 144(5),
+054111 (2016) <(https://doi.org/10.1063/1.4941091>`_
+and `O. Marsalek and T. E. Markland, JCP 144(5),
+(2016) <https://doi.org/10.1063/1.4941093>`_,
 is the one that we will discuss here, allowing us to showcase two advanced features of i-PI.
 It is worth stressing that MTS and/or RPC can be used very conveniently together with
 machine-learning potentials
@@ -33,19 +37,44 @@ machine-learning potentials
 for an early application).
 """
 
-import warnings
 import subprocess
 import time
+import warnings
 
 import ase
 import ase.io
 import chemiscope
+import ipi
 import ipi.utils.parsing as pimdmooc
 import matplotlib.pyplot as plt
 import numpy as np
 
 
 # pimdmooc.add_ipi_paths()
+
+
+# %%
+# some utility functions that will be usefull
+def correlate(x, y, xbar=None, ybar=None, normalize=True):
+    """Computes the correlation function of two quantities.
+    It can be given the exact averages as parameters."""
+    if xbar is None:
+        xbar = x.mean()
+    if ybar is None:
+        ybar = y.mean()
+
+    cf = np.correlate(x - xbar, y - ybar, mode="same")
+    return cf[len(x) // 2 :] / (((x - xbar) * (y - ybar)).sum() if normalize else 1)
+
+
+def autocorrelate(x, xbar=None, normalize=True):
+    """Computes the autocorrelation function of a trajectory.
+    It can be given the exact average as a parameter"""
+
+    if xbar is None:
+        xbar = x.mean()
+    acf = np.correlate(x - xbar, x - xbar, mode="same")
+    return acf[len(x) // 2 :] / (((x - xbar) * (x - xbar)).sum() if normalize else 1)
 
 
 # %%
@@ -188,6 +217,19 @@ print(lines[23], end="")
 # .
 
 # %%
+# Installing the Python driver
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# i-PI comes with a FORTRAN driver, which however has to be installed
+# from source. We use a utility function to compile it. Note that this requires
+# a functioning build system with `gfortran` and `make`.
+
+ipi.install_driver()
+
+# %%
+# Launch i-PI simulation
+# ~~~~~~~~~~~~~~~~~~~~~~
+#
 # We are going to launch i-PI from here, and put it in background and detach the processes from the
 # jupyter instance, so we can continue with the notebook.
 # On the the command line, this amounts to launching
@@ -207,3 +249,50 @@ lmp_process = [
     subprocess.Popen(["i-pi-driver", "-u", "-a", "qtip4pf", "-m", "qtip4pf", "-v"])
     for i in range(4)
 ]
+
+# %%
+# Multiple time stepping
+# ----------------------
+#
+# Let's now run a classical MD simulation, with and without multiple time stepping.
+# We use very conservative parameters and a weak thermostat, to be able to see the
+# difference in time scales between the full and short-range parts of the potential.
+# Let's first run a classical MD for reference. The input file is `data/h2o_md.xml`,
+# nothing exciting to see there.
+# The bash command this time would be:
+# .. code-block:: bash
+#
+#    PYTHONUNBUFFERED=1 i-pi data/h2o_md.xml &> log.md &
+#    sleep 5
+#    i-pi-driver -u -a qtip4pf-md -m qtip4pf -v &> log.driver.$i &
+#
+
+ipi_process = subprocess.Popen(["i-pi", "data/h2o_md.xml"])
+time.sleep(5)  # wait for i-PI to start
+lmp_process = subprocess.Popen(
+    ["i-pi-driver", "-u", "-a", "qtip4pf-md", "-m", "qtip4pf", "-v"]
+)
+
+# %%
+# Let's have a look at `h2o_mts.xml`, that provides the parameters
+# of the MTS calculation. We define two `ffsocket` sections:
+# one will be used with the `qtip4pf` driver and the other with `qtip4pf-sr`.
+# Note the different names of the sockets (that have to match the `-a`
+# option in the invocation of the driver) and the internal labels that
+# will be referred to in the `<forces>` section.
+
+with open("data/h2o_mts.xml", "r") as file:
+    lines = file.readlines()
+
+for line in lines[7:13]:
+    print(line, end="")
+
+# %%
+# Each `<force>` block contains a `<mts_weights>` section.
+# This provides a list of weights that determine which force
+# components are active at each level of the MTS hierarchy.
+# These weights indicate that the smooth part (full minus short-range)
+# is active in the outer loop, and the short-range part is active in the inner
+# loop. Note that the implementation is smart enough to re-use the short-range
+# potential computed in the inner loop, multiplying it with a weight of $-1$ to
+# compute :math:`V_\mathrm{lr}=V-V_\mathrm{sr}`.
