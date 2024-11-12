@@ -246,10 +246,20 @@ ipi.install_driver()
 ipi_process = subprocess.Popen(["i-pi", "data/h2o_pimd.xml"])
 time.sleep(5)  # wait for i-PI to start
 lmp_process = [
-    subprocess.Popen(["i-pi-driver", "-u", "-a", "qtip4pf", "-m", "qtip4pf", "-v"])
+    subprocess.Popen(["i-pi-driver", "-u", "-a", "qtip4pf", "-m", "qtip4pf"])
     for i in range(4)
 ]
 
+# %%
+# If you run this in a notebook, you can go ahead and start loading
+# output files *before* i-PI and the driver have finished running, by
+# skipping this cell
+
+ipi_process.wait()
+lmp_process[0].wait()
+lmp_process[1].wait()
+lmp_process[2].wait()
+lmp_process[3].wait()
 # %%
 # Multiple time stepping
 # ----------------------
@@ -260,6 +270,7 @@ lmp_process = [
 # Let's first run a classical MD for reference. The input file is `data/h2o_md.xml`,
 # nothing exciting to see there.
 # The bash command this time would be:
+#
 # .. code-block:: bash
 #
 #    PYTHONUNBUFFERED=1 i-pi data/h2o_md.xml &> log.md &
@@ -270,9 +281,16 @@ lmp_process = [
 ipi_process = subprocess.Popen(["i-pi", "data/h2o_md.xml"])
 time.sleep(5)  # wait for i-PI to start
 lmp_process = subprocess.Popen(
-    ["i-pi-driver", "-u", "-a", "qtip4pf-md", "-m", "qtip4pf", "-v"]
+    ["i-pi-driver", "-u", "-a", "qtip4pf-md", "-m", "qtip4pf"]
 )
 
+# %%
+# If you run this in a notebook, you can go ahead and start loading
+# output files *before* i-PI and the driver have finished running, by
+# skipping this cell
+
+ipi_process.wait()
+lmp_process.wait()
 # %%
 # Let's have a look at `h2o_mts.xml`, that provides the parameters
 # of the MTS calculation. We define two `ffsocket` sections:
@@ -294,5 +312,89 @@ for line in lines[7:13]:
 # These weights indicate that the smooth part (full minus short-range)
 # is active in the outer loop, and the short-range part is active in the inner
 # loop. Note that the implementation is smart enough to re-use the short-range
-# potential computed in the inner loop, multiplying it with a weight of $-1$ to
+# potential computed in the inner loop, multiplying it with a weight of -1 to
 # compute :math:`V_\mathrm{lr}=V-V_\mathrm{sr}`.
+
+for line in lines[18:26]:
+    print(line, end="")
+
+# %%
+# It remains to specify the MTS setup. We use an outer time step of 2 fs
+# (four times the typical time step for room temperature water)
+# and a splitting with `M=4`, so the fast forces are computed every 0.5 fs.
+
+for line in lines[31:33]:
+    print(line, end="")
+
+# %%
+# One final detail, is that we print out the two components of the potential.
+# This is achieved adding `pot_component{units}(idx)` to the `<properties>` field.
+# The index corresponds to the order by which the `<force>`
+# components are specified in the `<forces>` list. 
+# NB: the time step in i-PI is the outer time step,
+# so it is not possible to access directly the value of
+# the potential for intermediate inner steps
+
+for line in lines[2]:
+    print(line, end="")
+
+# %%
+# Let's get the simulation going. Notice that we need two drivers,
+# computing the short and full potentials,
+# connected to the proper `<ffsocket>` on the i-PI side
+# The correct `bash` command are:
+#
+# .. code-block:: bash
+#
+#    PYTHONUNBUFFERED=1 i-pi data/h2o_mts.xml &> log.mts &
+#    sleep 5
+#    i-pi-driver -u -a qtip4pf-mts-full -m qtip4pf  &> log.driver.full &
+#    i-pi-driver -u -a qtip4pf-mts-sr -m qtip4pf-sr &> log.driver.sr &
+#    wait
+#
+
+ipi_process = subprocess.Popen(["i-pi", "data/h2o_mts.xml"])
+time.sleep(5)  # wait for i-PI to start
+lmp_process0 = subprocess.Popen(
+    ["i-pi-driver", "-u", "-a", "qtip4pf-mts-full", "-m", "qtip4pf"]
+)
+lmp_process1 = subprocess.Popen(
+    ["i-pi-driver", "-u", "-a", "qtip4pf-mts-sr", "-m", "qtip4pf"]
+)
+
+# %%
+# If you run this in a notebook, you can go ahead and start loading
+# output files *before* i-PI and the drivers have finished running, by
+# skipping this cell
+
+ipi_process.wait()
+lmp_process0.wait()
+lmp_process1.wait()
+
+# %%
+# Analysis of results
+# -------------------
+#
+# Load the trajectories (might have to wait a few minutes for them to be over)
+#
+
+md_output, md_desc  = pimdmooc.read_output('md.out')
+mts_output, mts_desc = pimdmooc.read_output('mts.out')
+
+# %%
+# We can start looking at the behavior of the two components of the potential.
+# Even though this is hardly the best slow/fast mode splitting (usually one also
+# includes the Lennard-Jones and short-range Coulomb components in :math:`V_\mathrm{sr}`)
+# it is clear that the intra-molecular potential varies much faster than the non-bonded components.
+# Running the whole simulation with a 2 fs time step would lead to major instabilities in the trajectory.
+#
+
+fig, ax = plt.subplots(1,1,constrained_layout=True, figsize=(5,2.5))
+ax.plot(mts_output["time"], mts_output["pot_component"]-mts_output["pot_component+"]-
+        ( mts_output["pot_component"]-mts_output["pot_component+"])[50], 'b-', label=r"$V_\mathrm{lr}$")
+ax.plot(mts_output["time"], mts_output["pot_component+"]-mts_output["pot_component+"][50], 'r-', label=r"$V_\mathrm{sr}$")
+ax.set_xlabel("t / ps")
+ax.set_ylabel("U / eV")
+ax.set_xlim(0.1,0.5)
+ax.set_ylim(-5,5)
+ax.legend()
