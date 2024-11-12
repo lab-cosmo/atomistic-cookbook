@@ -455,7 +455,7 @@ ax[1].legend()
 # - one will be used with the `qtip4pf` driver and the other with `qtip4pf-sr`.
 
 # Open and read the XML file
-with open("data/h2o_rpx-mts.xml", "r") as file:
+with open("data/h2o_rpc-mts.xml", "r") as file:
     lines = file.readlines()
 
 for line in lines[7:13]:
