@@ -30,10 +30,12 @@ This dual approach, which was introduced in
 054111 (2016) <(https://doi.org/10.1063/1.4941091>`_
 and `O. Marsalek and T. E. Markland, JCP 144(5),
 (2016) <https://doi.org/10.1063/1.4941093>`_,
-is the one that we will discuss here, allowing us to showcase two advanced features of i-PI.
+is the one that we will discuss here, allowing us
+to showcase two advanced features of i-PI.
 It is worth stressing that MTS and/or RPC can be used very conveniently together with
 machine-learning potentials
-(see e.g. `V. Kapil, J. Behler, and M. Ceriotti, JCP 145(23), 234103 (2016 <https://doi.org/10.1063/1.4971438>`_
+(see e.g. `V. Kapil, J. Behler, and M. Ceriotti, JCP 145(23),
+234103 (2016 <https://doi.org/10.1063/1.4971438>`_
 for an early application).
 """
 
@@ -41,8 +43,6 @@ import subprocess
 import time
 import warnings
 
-import ase
-import ase.io
 import chemiscope
 import ipi
 import ipi.utils.parsing as pimdmooc
@@ -129,7 +129,8 @@ def autocorrelate(x, xbar=None, normalize=True):
 #
 # For a detailed discussion on how thermostatting aids
 # in this context, see:
-# `J. A. Morrone, T. E. Markland, M. Ceriotti, and B. J. Berne, JCP 134(1), 14103 (2011) <https://doi.org/10.1063/1.3518369>`_
+# `J. A. Morrone, T. E. Markland, M. Ceriotti, and B. J. Berne,
+# JCP 134(1), 14103 (2011) <https://doi.org/10.1063/1.3518369>`_
 
 # %%
 # The idea behind ring-polymer contraction is very similar:
@@ -150,7 +151,8 @@ def autocorrelate(x, xbar=None, normalize=True):
 #    V(\mathbf{q}) = \sum_{k=1}^P V_\mathrm{sr}(\mathbf{q}^{(k)}) + \frac{P}{P'}
 #      \sum_{k=1}^{P'} V_\mathrm{lr}(\tilde{\mathbf{q}}^{(k)})
 #
-# where :math:`P` and :math:`P'` indicate the full and contracted discretizations of the path.
+# where :math:`P` and :math:`P'` indicate the full
+# and contracted discretizations of the path.
 
 # %%
 # A reference calculation using PIGLET
@@ -158,18 +160,22 @@ def autocorrelate(x, xbar=None, normalize=True):
 #
 # First, let's run a reference calculation without RPC or MTS.
 # These calculations will be done for the q-TIP4P/f water model,
-# `S. Habershon, T. E. Markland, and D. E. Manolopoulos, JCP 131(2), 24501 (2009) <https://doi.org/10.1063/1.3167790>`_
+# `S. Habershon, T. E. Markland, and D. E. Manolopoulos, JCP 131(2),
+# 24501 (2009) <https://doi.org/10.1063/1.3167790>`_
 # , that contains a Morse-potential anharmonic intra-molecular potential,
 # and an inter-molecular potential based on a Lennard-Jones term and a 4-point
 # electrostatic model (the venerable TIP4P idea).
-# It is fitted to reproduce experimental properties of water `when performing PIMD calculations`
+# It is fitted to reproduce experimental properties of water
+# `when performing PIMD calculations`
 # and it captures nicely several subtle effects while being cheap and easy-to-implement.
 # Easy enough to have it in the built-in driver distributed with i-PI.
 # The input for this run is `h2o_pimd.xml`, and we will use the
 # `-m qtip4pf` option of `i-pi-driver` to compute the appropriate potential.
-# The simulation involves a respectable box containing 216 water molecules, and is run with
+# The simulation involves a respectable box containing
+# 216 water molecules, and is run with
 # 8 beads and a `PIGLET` thermostat (cf.
-# `M. Ceriotti and D. E. Manolopoulos, Phys. Rev. Lett. 109(10), 100604 (2012) <https://doi.org/10.1103/PhysRevLett.109.100604>`_
+# `M. Ceriotti and D. E. Manolopoulos, Phys. Rev. Lett. 109(10), 100604
+# (2012) <https://doi.org/10.1103/PhysRevLett.109.100604>`_
 # . For simplicity, we use the constant-volume `NVT` ensemble, but you can easily
 # modify the input to perform constant-pressure simulations.
 #
@@ -213,7 +219,8 @@ print(lines[23], end="")
 
 # %%
 # The `<thermostat>` section contains PIGLET parameters generated using the
-# `GLE4MD website <https://gle4md.org/index.html?page=matrix&kind=piglet&centroid=kh_8-4&cw0=4000&ucw0=cm1&nbeads=8&temp=300&utemp=k&parset=20_8_t&outmode=ipi&aunits=ps&cunits=k>`_
+# `GLE4MD website
+# <https://gle4md.org>`_
 # .
 
 # %%
@@ -230,7 +237,8 @@ ipi.install_driver()
 # Launch i-PI simulation
 # ~~~~~~~~~~~~~~~~~~~~~~
 #
-# We are going to launch i-PI from here, and put it in background and detach the processes from the
+# We are going to launch i-PI from here, and put it in background
+# and detach the processes from the
 # jupyter instance, so we can continue with the notebook.
 # On the the command line, this amounts to launching
 #
@@ -260,6 +268,7 @@ lmp_process[0].wait()
 lmp_process[1].wait()
 lmp_process[2].wait()
 lmp_process[3].wait()
+
 # %%
 # Multiple time stepping
 # ----------------------
@@ -330,7 +339,7 @@ for line in lines[31:33]:
 # One final detail, is that we print out the two components of the potential.
 # This is achieved adding `pot_component{units}(idx)` to the `<properties>` field.
 # The index corresponds to the order by which the `<force>`
-# components are specified in the `<forces>` list. 
+# components are specified in the `<forces>` list.
 # NB: the time step in i-PI is the outer time step,
 # so it is not possible to access directly the value of
 # the potential for intermediate inner steps
@@ -359,7 +368,7 @@ lmp_process0 = subprocess.Popen(
     ["i-pi-driver", "-u", "-a", "qtip4pf-mts-full", "-m", "qtip4pf"]
 )
 lmp_process1 = subprocess.Popen(
-    ["i-pi-driver", "-u", "-a", "qtip4pf-mts-sr", "-m", "qtip4pf"]
+    ["i-pi-driver", "-u", "-a", "qtip4pf-mts-sr", "-m", "qtip4pf-sr"]
 )
 
 # %%
@@ -378,23 +387,285 @@ lmp_process1.wait()
 # Load the trajectories (might have to wait a few minutes for them to be over)
 #
 
-md_output, md_desc  = pimdmooc.read_output('md.out')
-mts_output, mts_desc = pimdmooc.read_output('mts.out')
+md_output, md_desc = pimdmooc.read_output("md.out")
+mts_output, mts_desc = pimdmooc.read_output("mts.out")
 
 # %%
 # We can start looking at the behavior of the two components of the potential.
 # Even though this is hardly the best slow/fast mode splitting (usually one also
-# includes the Lennard-Jones and short-range Coulomb components in :math:`V_\mathrm{sr}`)
-# it is clear that the intra-molecular potential varies much faster than the non-bonded components.
-# Running the whole simulation with a 2 fs time step would lead to major instabilities in the trajectory.
+# includes the Lennard-Jones and short-range
+# Coulomb components in :math:`V_\mathrm{sr}`)
+# it is clear that the intra-molecular potential varies much faster than
+# the non-bonded components.
+# Running the whole simulation with a 2 fs time step would lead to major
+# instabilities in the trajectory.
 #
 
-fig, ax = plt.subplots(1,1,constrained_layout=True, figsize=(5,2.5))
-ax.plot(mts_output["time"], mts_output["pot_component"]-mts_output["pot_component+"]-
-        ( mts_output["pot_component"]-mts_output["pot_component+"])[50], 'b-', label=r"$V_\mathrm{lr}$")
-ax.plot(mts_output["time"], mts_output["pot_component+"]-mts_output["pot_component+"][50], 'r-', label=r"$V_\mathrm{sr}$")
+fig, ax = plt.subplots(1, 1, constrained_layout=True, figsize=(5, 2.5))
+ax.plot(
+    mts_output["time"],
+    mts_output["pot_component(0)"]
+    - mts_output["pot_component(1)"]
+    - (mts_output["pot_component(0)"] - mts_output["pot_component(1)"])[50],
+    "b-",
+    label=r"$V_\mathrm{lr}$",
+)
+ax.plot(
+    mts_output["time"],
+    mts_output["pot_component(1)"] - mts_output["pot_component(1)"][50],
+    "r-",
+    label=r"$V_\mathrm{sr}$",
+)
 ax.set_xlabel("t / ps")
 ax.set_ylabel("U / eV")
-ax.set_xlim(0.1,0.5)
-ax.set_ylim(-5,5)
+ax.set_xlim(0.1, 0.5)
+ax.set_ylim(-5, 5)
 ax.legend()
+
+# %%
+# The equilibration is slow due to the weak thermostat, but the two
+# trajectories both equilibrate to 300 K. The difference in potential
+# energy is not significant, because of the slow convergence of
+# the potential energy in liquid water.
+
+fig, ax = plt.subplots(1, 2, constrained_layout=True, figsize=(8, 3))
+ax[1].plot(mts_output["time"], mts_output["potential"], "b-", label="MTS")
+ax[1].plot(md_output["time"], md_output["potential"], "c,", label="MD")
+ax[1].set_xlabel("t / ps")
+ax[1].set_ylabel("U / eV")
+ax[0].plot(mts_output["time"], mts_output["temperature"], "r-", label="MTS")
+ax[0].plot(md_output["time"], md_output["temperature"], "m,", label="MD")
+ax[0].set_xlabel("t / ps")
+ax[0].set_ylabel("T / K")
+ax[0].legend()
+ax[1].legend()
+
+# %%
+# RPC/MTS simulation
+# ------------------
+#
+# Now let's get to the full beast. The input for the RCP/MTS simulation is
+# `h2o_rpc-mts.xml`. The setup is rather subtle,
+# because we will use the F90 driver that implements the full
+# q-TIP4P/f potential (with `-m qtip4pf`) and the intra-molecular part
+# (with `-m qtip4pf-sr`). This means that we will have to compute
+# the slowly-varying part as :math:`V_\mathrm{full}-V_\mathrm{sr}`.
+# Let's look at the key sections in the input file. Much as for the
+# MTS setup, the simulation includes two `ffsocket` sections
+# - one will be used with the `qtip4pf` driver and the other with `qtip4pf-sr`.
+
+# Open and read the XML file
+with open("data/h2o_rpx-mts.xml", "r") as file:
+    lines = file.readlines()
+
+for line in lines[7:13]:
+    print(line, end="")
+
+# %%
+# The `<forces>` section is where the magic happens.
+# There are three components here.
+# The first computes a full `qtip4pf` potential,
+# and is computed on a contraction to 2 beads, as
+# indicated by the `nbeads='2'` attribute.
+# A second component is also evaluated on a
+# contracted ring polymer, and is used to subtract
+# the short-range component to leave the (smoother) long-range part.
+# This is achieved linking to the `qtip4pf-sr` forcefield,
+# and using the attribute `weight='-1'` to subtract the
+# term from the total potential.
+# Finally, there is another `qtip4pf-sr` component,
+# that is evaluated on the full `nbeads='8'` ring polymer.
+# The result is a RPC setup in which the smooth
+# (Lennard-Jones + Coulomb) part of the potential
+# is contracted on 2 replicas, and the fast part is
+# computed on 8 replicas, which (thanks to the use of
+# a PIGLET thermostat) is enough to achieve a good
+# degree of convergence for water at 300 K.
+#
+# Each `<force>` block also contains a `<mts_weights>` section,
+# which is different from that used for the MTS simulation, because
+# we now have a separate force component to subtract from the full
+# potential, which is computed on the contracted ring polymer.
+#
+
+for line in lines[18:29]:
+    print(line, end="")
+
+# %%
+# It remains to specify the MTS setup. In this case,
+# we use an outer time step of 1 fs (twice the typical
+# time step for room temperature water) and a splitting
+# with `M=2`, so the fast forces are computed every 0.5
+# fs. Compared to the classical MTS setup, we need a
+# finer-grained integration because of the ring-polymer
+# dynamics and because of the use of PIGLET, that requires
+# a short time step to integrate accurately the Generalized
+# Langevin equation. Still, even this splitting reduces by a
+# factor of 2 the evaluations of the long-range potential.
+#
+
+for line in lines[34:36]:
+    print(line, end="")
+
+# %%
+# Finally, we are ready to run! We launch i-PI, and then
+# execute two instances of the full potential
+# (using `-m qtip4pf` and the correct socket address)
+# and four instances of the short-range component,
+# that is evaluated on the full ring polymer.
+# This will take some time...
+# The correct `bash` commands are:
+#
+# .. code-block:: bash
+#
+#    PYTHONUNBUFFERED=1 i-pi h2o_rpc-mts.xml &> log.rpc-mts &
+#    sleep 5
+#    for i in `seq 1 2`; do
+#       i-pi-driver -u -a qtip4pf-full -m qtip4pf -v &> log.driver-full.$i &
+#    done
+#    for i in `seq 1 4`; do
+#       i-pi-driver -u -a qtip4pf-sr -m qtip4pf-sr -v &> log.driver-sr.$i &
+#    done
+#    wait
+#
+
+ipi_process = subprocess.Popen(["i-pi", "data/h2o_rpc-mts.xml"])
+time.sleep(5)  # wait for i-PI to start
+lmp_process0 = [
+    subprocess.Popen(["i-pi-driver", "-u", "-a", "qtip4pf-full", "-m", "qtip4pf"])
+    for i in range(2)
+]
+lmp_process1 = [
+    subprocess.Popen(["i-pi-driver", "-u", "-a", "qtip4pf-sr", "-m", "qtip4pf-sr"])
+    for i in range(4)
+]
+
+# %%
+# If you run this in a notebook, you can go ahead and start loading
+# output files *before* i-PI and the drivers have finished running, by
+# skipping this cell
+
+ipi_process.wait()
+lmp_process0[0].wait()
+lmp_process0[1].wait()
+lmp_process1[0].wait()
+lmp_process1[1].wait()
+lmp_process1[2].wait()
+lmp_process1[3].wait()
+
+# %%
+# Analysis of results
+# -------------------
+#
+# Let's read the results from the reference and RPC/MTS
+# simulations and analyze them
+#
+
+pimd_output, pimd_desc = pimdmooc.read_output("pimd.out")
+rpcmts_output, rpcmts_desc = pimdmooc.read_output("rpc-mts.out")
+
+# %%
+# Let's start looking at the long-range/contracted and short-range components
+# of the potential. Here the long-range part is the sum of the first two components
+# of the potential, since the second enters with a negative weight.
+# We don't see a clear time-scale separation here, because of the very
+# aggressive PIGLET thermostat, that adds noise on top of the physical dynamics.
+# This is not a major issue, because it only affects the dynamics of the momenta,
+# but it means we cannot easily check for time scale separation
+# when using advanced thermostatting schemes.
+#
+
+fig, ax = plt.subplots(1, 1, constrained_layout=True, figsize=(5, 2.5))
+ax.plot(
+    rpcmts_output["time"],
+    (rpcmts_output["pot_component(0)"] + rpcmts_output["pot_component(1)"])
+    - (rpcmts_output["pot_component(0)"] + rpcmts_output["pot_component(1)"])[10],
+    "b-",
+    label="V / Å$^3$",
+)
+ax.plot(
+    rpcmts_output["time"],
+    rpcmts_output["pot_component(2)"] - rpcmts_output["pot_component(2)"][10],
+    "r-",
+    label="V / Å$^3$",
+)
+ax.set_xlabel("t / ps")
+ax.set_ylabel("U / eV")
+ax.set_xlim(0, 1.5)
+ax.set_ylim(-5, 5)
+
+# %%
+# Simulations reach equilibrium faster than for the (weakly thermostatted)
+# classical simulation, and even though the agreement between PIMD and the
+# RPC+MTS run is not perfect, it is very good,
+# in comparison with the major discrepancy between classical and quantum averages.
+#
+
+fig, ax = plt.subplots(1, 2, constrained_layout=True, figsize=(8, 3))
+ax[0].plot(md_output["time"], md_output["potential"], "b-", label="MD")
+ax[0].plot(pimd_output["time"], pimd_output["potential"], "r-", label="PIMD")
+ax[0].plot(rpcmts_output["time"], rpcmts_output["potential"], "m,", label="RPC-MTS")
+ax[0].set_xlabel("t / ps")
+ax[0].set_ylabel("U / eV")
+ax[1].plot(md_output["time"], md_output["kinetic_md"], "b-", label="MD")
+ax[1].plot(pimd_output["time"], pimd_output["kinetic_cv"], "r-", label="PIMD")
+ax[1].plot(rpcmts_output["time"], rpcmts_output["kinetic_cv"], "m,", label="RPC-MTS")
+ax[1].set_xlabel("t / ps")
+ax[1].set_ylabel("K / eV")
+ax[0].legend()
+
+# %%
+# RPC+MTS simulations generate
+# a distribution of structures at the highest path integral
+# resolution, and can be used to compute all sorts of
+# structural properties.
+#
+
+# loads structures, discarding unused atom properties
+warnings.filterwarnings("ignore", ".*residuenumbers array.*")
+pi_frames = [pimdmooc.read_ipi_xyz("rpc-mts.pos_" + str(i) + ".xyz") for i in range(8)]
+frames = []
+for idx_f in range(len(pi_frames[0])):
+    f = pi_frames[0][idx_f]
+    for k in range(1, 8):
+        f += pi_frames[k][idx_f]
+    f.info = {}
+    f.arrays = {"positions": f.positions, "numbers": f.numbers}
+    frames.append(f)
+
+
+chemiscope.show(
+    frames=frames,
+    properties={
+        "t": {
+            "values": rpcmts_output["time"][::25],
+            "units": "ps",
+            "target": "structure",
+        },
+        "U": {
+            "values": rpcmts_output["potential"][::25],
+            "units": "eV",
+            "target": "structure",
+        },
+        "K": {
+            "values": rpcmts_output["kinetic_cv"][::25],
+            "units": r"Å",
+            "target": "structure",
+        },
+    },
+    settings={
+        "structure": [
+            {
+                "bonds": False,
+                "keepOrientation": True,
+                "unitCell": True,
+                "playbackDelay": 20,
+            }
+        ],
+        "map": {
+            "x": {"max": 5, "min": 0, "property": "t", "scale": "linear"},
+            "y": {"max": 3500, "min": 2800, "property": "K", "scale": "linear"},
+            "color": {"property": "U"},
+        },
+    },
+)
