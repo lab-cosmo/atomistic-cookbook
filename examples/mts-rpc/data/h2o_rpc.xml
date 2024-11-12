@@ -4,7 +4,7 @@
     <trajectory filename='pos' stride='100' format='xyz' cell_units='angstrom'> positions{angstrom} </trajectory>
     <checkpoint filename='checkpoint' stride='1000' overwrite='True'/>
   </output>
-  <total_steps> 10000 </total_steps>
+  <total_steps> 2000 </total_steps>
   <ffsocket mode='unix' name='qtip4pf' pbc='false'>
       <address>qtip4pf-full</address>
   </ffsocket>
