@@ -2,7 +2,7 @@
 Multiple time stepping and ring-polymer contraction
 ===================================================
 
-:Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm>` and
+:Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm>`_ and
            Davide Tisi `@DavideTisi <https://github.com/DavideTisi>`_
 
 This notebook provides an introduction to two closely-related techniques,
@@ -623,7 +623,9 @@ ax[0].legend()
 
 # loads structures, discarding unused atom properties
 warnings.filterwarnings("ignore", ".*residuenumbers array.*")
-pi_frames = [pimdmooc.read_ipi_xyz("rpc-mts.pos_" + str(i) + ".xyz") for i in range(8)]
+pi_frames = [
+    pimdmooc.read_trajectory("rpc-mts.pos_" + str(i) + ".xyz") for i in range(8)
+]
 frames = []
 for idx_f in range(len(pi_frames[0])):
     f = pi_frames[0][idx_f]
