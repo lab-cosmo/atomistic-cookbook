@@ -2,7 +2,7 @@
 Multiple time stepping and ring-polymer contraction
 ===================================================
 
-:Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm>` and 
+:Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm>` and
            Davide Tisi `@DavideTisi <https://github.com/DavideTisi>`_
 
 This notebook provides an introduction to two closely-related techniques,
@@ -15,12 +15,12 @@ to avoid evaluating the slowly-varying components at every time step of a MD sim
 It was first introduced in `LAMMPS <https://lammps.org>`_.
 `M. Tuckerman, B. J. Berne, and G. J. Martyna, JCP 97(3), 1990 (1992) <https://doi.org/10.1063/1.463137>`_
 and can be applied to classical simulations,
-typically to avoid the evaluation of long-range electrostatics in classical potentials. 
+typically to avoid the evaluation of long-range electrostatics in classical potentials.
 
-The second is named `ring polymer contraction`, first introduced in 
+The second is named `ring polymer contraction`, first introduced in
 `T. E. Markland and D. E. Manolopoulos, JCP 129(2), 024105 (2008) <https://doi.org/10.1063/1.2953308>`_
 can be seen as performing a similar simplification `in imaginary time`,
-evaluating the expensive part of the potential on a smaller number of PI replicas. 
+evaluating the expensive part of the potential on a smaller number of PI replicas.
 
 The techniques can be combined, which reduces even further the computational effort.
 This dual approach, which was introduced in
@@ -29,17 +29,21 @@ and `O. Marsalek and T. E. Markland, JCP 144(5), (2016) <https://doi.org/10.1063
 is the one that we will discuss here, allowing us to showcase two advanced features of i-PI.
 It is worth stressing that MTS and/or RPC can be used very conveniently together with
 machine-learning potentials
-(see e.g. `V. Kapil, J. Behler, and M. Ceriotti, JCP 145(23), 234103 (2016 <https://doi.org/10.1063/1.4971438>`_ 
-for an early application). 
+(see e.g. `V. Kapil, J. Behler, and M. Ceriotti, JCP 145(23), 234103 (2016 <https://doi.org/10.1063/1.4971438>`_
+for an early application).
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
-import ase, ase.io
-import chemiscope
-
-import ipi.utils.parsing as pimdmooc
 import warnings
+import subprocess
+import time
+
+import ase
+import ase.io
+import chemiscope
+import ipi.utils.parsing as pimdmooc
+import matplotlib.pyplot as plt
+import numpy as np
+
 
 # pimdmooc.add_ipi_paths()
 
@@ -47,6 +51,7 @@ import warnings
 # %%
 # Multiple time stepping in real and imaginary time
 # -------------------------------------------------
+#
 # The core underlying assumption in these techniques is that the potential
 # can be decomposed into a short-range/fast-varying/computationally-cheap
 # part :math:`V_\mathrm{sr}` and a long-range/slow-varying/computationally-expensive
@@ -121,3 +126,84 @@ import warnings
 # %%
 # A reference calculation using PIGLET
 # ------------------------------------
+#
+# First, let's run a reference calculation without RPC or MTS.
+# These calculations will be done for the q-TIP4P/f water model,
+# `S. Habershon, T. E. Markland, and D. E. Manolopoulos, JCP 131(2), 24501 (2009) <https://doi.org/10.1063/1.3167790>`_
+# , that contains a Morse-potential anharmonic intra-molecular potential,
+# and an inter-molecular potential based on a Lennard-Jones term and a 4-point
+# electrostatic model (the venerable TIP4P idea).
+# It is fitted to reproduce experimental properties of water `when performing PIMD calculations`
+# and it captures nicely several subtle effects while being cheap and easy-to-implement.
+# Easy enough to have it in the built-in driver distributed with i-PI.
+# The input for this run is `h2o_pimd.xml`, and we will use the
+# `-m qtip4pf` option of `i-pi-driver` to compute the appropriate potential.
+# The simulation involves a respectable box containing 216 water molecules, and is run with
+# 8 beads and a `PIGLET` thermostat (cf.
+# `M. Ceriotti and D. E. Manolopoulos, Phys. Rev. Lett. 109(10), 100604 (2012) <https://doi.org/10.1103/PhysRevLett.109.100604>`_
+# . For simplicity, we use the constant-volume `NVT` ensemble, but you can easily
+# modify the input to perform constant-pressure simulations.
+#
+# The important parts of the simulation
+# - which we will modify to run a RPC/MTS simulation -
+# are the definition of the forcefield socket
+#
+
+# Open and read the XML file
+with open("data/h2o_pimd.xml", "r") as file:
+    lines = file.readlines()
+
+for line in lines[7:10]:
+    print(line, end="")
+
+# %%
+#
+# The important parts of the simulation
+# - which we will modify to run a RPC/MTS simulation -
+# are the definition of the forcefield socket,
+# with the corresponding force definition
+
+
+for line in lines[7:10]:
+    print(line, end="")
+
+print("\n[...]\n")
+
+for line in lines[15:18]:
+    print(line, end="")
+
+# %%
+# ... the definition of the number of beads
+
+print(lines[11], end="")
+
+# %%
+# ... and the time step
+
+print(lines[23], end="")
+
+# %%
+# The `<thermostat>` section contains PIGLET parameters generated using the
+# `GLE4MD website <https://gle4md.org/index.html?page=matrix&kind=piglet&centroid=kh_8-4&cw0=4000&ucw0=cm1&nbeads=8&temp=300&utemp=k&parset=20_8_t&outmode=ipi&aunits=ps&cunits=k>`_
+# .
+
+# %%
+# We are going to launch i-PI from here, and put it in background and detach the processes from the
+# jupyter instance, so we can continue with the notebook.
+# On the the command line, this amounts to launching
+#
+# .. code-block:: bash
+#
+#    PYTHONUNBUFFERED=1 i-pi data/h2o_pimd.xml &> log.pimd &
+#    sleep 5
+#    for i in `seq 1 4`; do
+#        i-pi-driver -u -a qtip4pf -m qtip4pf -v &> log.driver.$i &
+#    done
+#
+
+ipi_process = subprocess.Popen(["i-pi", "data/h2o_pimd.xml"])
+time.sleep(5)  # wait for i-PI to start
+lmp_process = [
+    subprocess.Popen(["i-pi-driver", "-u", "-a", "qtip4pf", "-m", "qtip4pf", "-v"])
+    for i in range(4)
+]
