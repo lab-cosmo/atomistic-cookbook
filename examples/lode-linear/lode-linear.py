@@ -284,14 +284,14 @@ grouped_labels = [samples_train, samples_test]
 # That we use as input to the :py:func:`metatensor.split()` function
 
 X_sr_train, X_sr_test = metatensor.split(
-    X_sr, axis="samples", grouped_labels=grouped_labels
+    X_sr, axis="samples", selections=grouped_labels
 )
 
 X_lr_train, X_lr_test = metatensor.split(
-    X_lr, axis="samples", grouped_labels=grouped_labels
+    X_lr, axis="samples", selections=grouped_labels
 )
 
-y_train, y_test = metatensor.split(y, axis="samples", grouped_labels=grouped_labels)
+y_train, y_test = metatensor.split(y, axis="samples", selections=grouped_labels)
 
 
 # %%
