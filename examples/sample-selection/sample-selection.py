@@ -313,7 +313,7 @@ feat_fps = feature_selection.FPS(n_to_select=n_features, initialize="random").fi
 atom_soap_single_block_fps = metatensor.slice(
     atom_soap_single_block,
     axis="properties",
-    labels=feat_fps.support.block(0).properties,
+    selection=feat_fps.support.block(0).properties,
 )
 
 print(
