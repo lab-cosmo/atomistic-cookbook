@@ -1,0 +1,27 @@
+<simulation mode='static' verbosity='high'>
+  <output prefix='harm'>
+    <properties stride='10' filename='out'>  [ step, potential ] </properties>
+  </output>
+  <total_steps> 5000 </total_steps>
+  <prng>
+    <seed> 32342 </seed>
+  </prng>
+  <ffsocket name='lmp' mode='unix' pbc='true'>
+    <address> vib </address>
+  </ffsocket>
+  <system>
+    <initialize nbeads='1'>
+      <file mode='ase'> init_harm.xyz </file>
+    </initialize>
+    <forces>
+      <force forcefield='lmp'> </force>
+    </forces>
+    <motion mode='vibrations'>
+      <vibrations mode='fd'>
+        <pos_shift> 0.001 </pos_shift>
+        <prefix> phonons </prefix>
+        <asr> none </asr>
+      </vibrations>
+    </motion>
+  </system>
+</simulation>
