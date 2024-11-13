@@ -291,7 +291,7 @@ ipi_process.wait()
 driver_process.wait()
 
 # %%
-# The Hessian can be recovered from the `harm.phonons.hess`file. 
+# The Hessian can be recovered from the `harm.phonons.hess` file. 
 # You can use the snippet below to plot the harmonic approximation
 # to the PES
 #
@@ -368,4 +368,42 @@ F = -7.53132797e-05 + quantum_harmonic_free_energy(W2s**0.5, 300)
 print ('Exact Quantum free energy: %15.8f [a.u.]'% (F))
 print ('Exact Quantum free energy: %15.8f [eV]'% (F * 27.211386))
 print ('Exact Quantum free energy: %15.8f [kJ/mol]' % (F * 2625.4996))
+
+# %%
+# 
+# Harmonic to anharmonic
+# ----------------------
+#
+# Calculating free energies beyond the harmonic approximation is non-trivial.
+# There exist a familty of methods that can  solve the vibrational Schroedinger
+# Equation by approximating the anharmonic component of the PES, yielding an amharmonic
+# free energy. While highly effective for low-dimensional or mildly anharmonic systems,
+# the method of resort for *numerically-exact amharmonic free energies* of solid and clusters
+# is the thermodynamic integration method combined with the path-integral method 
+# ( for applications see Refs.
+# `M. Rossi et al, PRL (2016) <https://doi.org/10.1103/PhysRevLett.117.115702>`_,
+# `V. Kapil et al, JCTC (2019) <https://doi.org/10.1021/acs.jctc.9b00596>`_,
+# `V. Kapil et al, PNAS (2022) <https://doi.org/10.1073/pnas.2111769119>`_).
+#  
+#
+# The central idea is to reversibly change the potential from harmonic to anharmonic
+# by defining a :math:`\lambda`-dependent Hamiltonian 
+#
+# .. math::
+#    \hat{H}(\lambda) = \hat{T} + \lambda
+#    \hat{V}^{\text{harm}}  + (1 - \lambda) \hat{V}
+#
+# The  the anharmonic free energy is calculated as the reversible work done
+# along the fictitious path in :math:`\lambda`-space
+#
+# .. math::
+#     F = F^{\text{harm}} + \left< \hat{V} -
+#     \hat{V}^{\text{harm}} \right>_{\lambda}
+#
+#
+# where :math:`\left< \hat{O} \right>_{\lambda}` 
+# is the path-integral estimator for a positon dependent operator 
+# for :math:`\hat{H}(\lambda)`.
+
+
 
