@@ -263,7 +263,7 @@ chemiscope.show(
 # The initial configuration for this calculation should correspond to an
 # opitimized position. You can obtain this from the last frame of the geop trajectory. 
 
-ase.io.write('init_harm.xyz',geop_traj,format='extxyz')
+ase.io.write('init_harm.xyz',geop_traj[-1],format='extxyz')
 
 # %%
 # The `bash` command for this would be
@@ -404,6 +404,64 @@ print ('Exact Quantum free energy: %15.8f [kJ/mol]' % (F * 2625.4996))
 # where :math:`\left< \hat{O} \right>_{\lambda}` 
 # is the path-integral estimator for a positon dependent operator 
 # for :math:`\hat{H}(\lambda)`.
+
+# %%
+#
+# Step 3: Harmonic to anharmonic thermodynamic integration
+# --------------------------------------------------------
+#
+# A full quantum thermodynamic integration calculation requires
+# knowledge of the harmonic reference. Luckily we have just performed these
+# calculations! 
+#
+
+# %%
+# Classical Statistical Mechanics
+# -------------------------------
+#
+# Let's first compute the anharmonic free energy difference within the classical approximation.
+# 
+# To create the input file for I-PI we need to defines a "mixed"
+# :math:`\lambda`-dependent Hamiltonian. Let's see the new most important parts. 
+#
+# This i-PI calculation includes two "forcefield classes" 
+#
+# .. code-block:: xml
+# 
+#    <!-->  defines the anharmonic PES <-->
+#    <ffsocket name='driver' mode='unix' matching='any' pbc='false'>
+#        <address> f0 </address>
+#        <latency> 1e-3 </latency>
+#    </ffsocket>
+# 
+# a standard socket 
+# 
+# and 
+# 
+# .. code-block:: xml
+#
+#    <!-->  defines the harmonic PES <-->
+#    <ffdebye name='debye'>
+#            <hessian shape='(3,3)' mode='file'> HESSIAN-FILE </hessian>
+#            <x_reference mode='file'> X-REF-FILE <!--> relative path to a file containing the optimized positon vector <-->   </x_reference>
+#            <v_reference> V-REF <!-->  the value of the PES at its local minimum <-->   </v_reference>
+#    </ffdebye>
+# 
+# an intrinsic harmonic forcefield that builds the harmonic potential.
+# This requires :math:`q_0`, :math:`V(q_0)` and the full Hessian. 
+# `HESSIAN-FILE` is `harm.phonons.hess` which is the file containing the
+# full hessian.
+# X-REF-FILE is a file with the optimized positon vector  
+# 
+
+with open('ref.data','w') as xref:
+    for pos in geop_traj[-1].positions:
+        xref.write(f'{pos[0]}  {pos[1]}  {pos[2]} \n')
+
+# V-REF can be obtained from the potential energy in `harm.out`
+
+V-ref = np.readtxt('harm.out')
+print(V-ref)
 
 
 
