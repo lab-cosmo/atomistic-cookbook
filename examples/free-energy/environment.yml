@@ -11,6 +11,7 @@ dependencies:
   - py-plumed  
   - pip:
     - ase==3.22.1
+    - chemiscope
     - git+https://github.com/i-pi/i-pi.git@main#egg=ipi
     - matplotlib
 variables:
