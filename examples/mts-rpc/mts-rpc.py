@@ -45,13 +45,8 @@ import warnings
 
 import chemiscope
 import ipi
-import ipi.utils.parsing as pimdmooc
 import matplotlib.pyplot as plt
 import numpy as np
-
-
-# pimdmooc.add_ipi_paths()
-
 
 # %%
 # some utility functions that will be usefull
@@ -387,8 +382,8 @@ lmp_process1.wait()
 # Load the trajectories (might have to wait a few minutes for them to be over)
 #
 
-md_output, md_desc = pimdmooc.read_output("md.out")
-mts_output, mts_desc = pimdmooc.read_output("mts.out")
+md_output, md_desc = ipi.read_output("md.out")
+mts_output, mts_desc = ipi.read_output("mts.out")
 
 # %%
 # We can start looking at the behavior of the two components of the potential.
@@ -561,8 +556,8 @@ lmp_process1[3].wait()
 # simulations and analyze them
 #
 
-pimd_output, pimd_desc = pimdmooc.read_output("pimd.out")
-rpcmts_output, rpcmts_desc = pimdmooc.read_output("rpc-mts.out")
+pimd_output, pimd_desc = ipi.read_output("pimd.out")
+rpcmts_output, rpcmts_desc = ipi.read_output("rpc-mts.out")
 
 # %%
 # Let's start looking at the long-range/contracted and short-range components
@@ -624,7 +619,7 @@ ax[0].legend()
 # loads structures, discarding unused atom properties
 warnings.filterwarnings("ignore", ".*residuenumbers array.*")
 pi_frames = [
-    pimdmooc.read_trajectory("rpc-mts.pos_" + str(i) + ".xyz") for i in range(8)
+    ipi.read_trajectory("rpc-mts.pos_" + str(i) + ".xyz") for i in range(8)
 ]
 frames = []
 for idx_f in range(len(pi_frames[0])):
