@@ -48,6 +48,7 @@ import ipi
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 # %%
 # some utility functions that will be usefull
 def correlate(x, y, xbar=None, ybar=None, normalize=True):
@@ -618,9 +619,7 @@ ax[0].legend()
 
 # loads structures, discarding unused atom properties
 warnings.filterwarnings("ignore", ".*residuenumbers array.*")
-pi_frames = [
-    ipi.read_trajectory("rpc-mts.pos_" + str(i) + ".xyz") for i in range(8)
-]
+pi_frames = [ipi.read_trajectory("rpc-mts.pos_" + str(i) + ".xyz") for i in range(8)]
 frames = []
 for idx_f in range(len(pi_frames[0])):
     f = pi_frames[0][idx_f]
