@@ -17,7 +17,7 @@ dependencies:
       - metatensor-operations
       - metatensor-torch
       - --extra-index-url https://download.pytorch.org/whl/cpu 
-      - rascaline-torch @ git+https://github.com/luthaf/rascaline#subdirectory=python/rascaline-torch
+      - rascaline-torch @ git+https://github.com/luthaf/rascaline@fe18eccd72402baa48f6a74aa0f3d2e1b277dd52#subdirectory=python/rascaline-torch
       - lightning
       - xitorch
       - keras_core
