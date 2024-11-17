@@ -1,0 +1,38 @@
+<!-- safe_stride is the frequency at which i-PI makes internal snapshots for restarting -->
+<simulation verbosity='medium' threading='false' safe_stride='10'>
+    <ffsocket name='lmpserial' mode='unix' pbc='false'>
+      <address>h2o-lammps</address> <latency> 1e-4 </latency>
+    </ffsocket>
+   <ffrotations name='driver-noo3' mode='unix' pbc='false'>
+       <address>h2o-noo3</address>
+       <grid_order> 3 </grid_order>
+       <grid_mode> legendre </grid_mode>
+       <inversion> True </inversion>
+   </ffrotations>
+   <total_steps>10000</total_steps>
+   <output prefix='nve-mol'>
+      <trajectory stride='20' filename='pos' format='xyz'> positions </trajectory>
+      <properties stride='20'> [ step, time, conserved, temperature{kelvin}, kinetic_md, potential, pressure_md ] </properties>
+   </output>
+   <prng>
+      <seed>32123</seed>
+   </prng>
+   <system>
+      <forces> 
+          <force forcefield='lmpserial'></force>
+          <force forcefield='driver-noo3' weight="1.0"/>
+      </forces>
+      <initialize nbeads='1'>
+        <file mode='ase'> init-mol.xyz </file>
+      </initialize>
+      <ensemble>
+         <temperature units='kelvin'> 300 </temperature>
+      </ensemble>
+      <motion mode='dynamics'>
+        <fixcom> True </fixcom>
+        <dynamics mode='nve'>
+            <timestep units='femtosecond'> 0.5 </timestep>
+        </dynamics>
+      </motion>
+  </system>
+</simulation>

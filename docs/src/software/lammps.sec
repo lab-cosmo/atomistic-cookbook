@@ -10,3 +10,4 @@ efficient domain decomposition scheme. Learn more about LAMMPS on its `homepage
 - examples/thermostats/thermostats
 - examples/path-integrals/path-integrals
 - examples/heat-capacity/heat-capacity
+- examples/o3-averaging/o3-averaging

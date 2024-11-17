@@ -1,0 +1,26 @@
+<simulation verbosity='medium' safe_stride='100'>
+  <output prefix='water-noo3'>
+      <properties filename='out' stride='1'>  
+         [ step, time{picosecond}, conserved, potential, kinetic_cv, 
+           scaledcoords(fd_delta=5e-3) ] 
+      </properties>
+  </output>
+  <ffsocket name='lmpserial' mode='unix' pbc='false'>
+      <address>h2o-lammps</address> <latency> 1e-4 </latency>
+  </ffsocket>
+  <ffrotations name='noo3' mode='unix' pbc='false'>
+      <address>h2o-noo3</address> <latency> 1e-4 </latency>
+  </ffrotations>
+  <system>
+    <initialize nbeads='1'>
+      <file mode='ase' units='angstrom'> init-mol.xyz </file>
+    </initialize>
+    <forces>
+      <force forcefield='lmpserial'/>
+      <force forcefield='noo3'/>
+    </forces>
+    <motion mode='replay'>
+      <file mode='ase'> replay.xyz </file>
+    </motion>
+  </system>
+</simulation>

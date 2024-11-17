@@ -1,0 +1,41 @@
+<simulation verbosity='medium' safe_stride='100'>
+  <output prefix='water-noo3'>
+      <properties filename='out' stride='4'>  
+         [ step, time{picosecond}, conserved, potential, kinetic_cv, 
+           scaledcoords(fd_delta=5e-3) ] 
+      </properties>
+      <trajectory filename='noo3_pots' stride='2' extra_type="o3grid_pots"> extras_component_raw(1) </trajectory>  
+      <trajectory filename='pos' stride='20' format='ase'> positions </trajectory>
+  </output>
+  <total_steps> 2000 </total_steps>
+  <prng>
+    <seed> 32342 </seed>
+  </prng>
+  <ffsocket name='lmpserial' mode='unix' pbc='false'>
+      <address>h2o-lammps</address> <latency> 1e-4 </latency>
+  </ffsocket>
+  <ffrotations name='noo3' mode='unix' pbc='false'>
+      <address>h2o-noo3</address> <latency> 1e-4 </latency>
+  </ffrotations>
+  <system>
+    <initialize nbeads='1'>
+      <file mode='pdb' units='angstrom'> data/water_32.pdb </file>
+      <velocities mode='thermal' units='kelvin'> 300 </velocities>
+    </initialize>
+    <forces>
+      <force forcefield='lmpserial'/>
+      <force forcefield='noo3'/>
+    </forces>
+    <ensemble>
+      <temperature units='kelvin'>300</temperature>
+    </ensemble>
+    <motion mode='dynamics'>
+      <dynamics mode='nvt'>
+        <thermostat mode='langevin'>
+          <tau units="femtosecond"> 100.0 </tau>     
+        </thermostat>
+        <timestep units='femtosecond'> 0.5 </timestep>
+      </dynamics>
+    </motion>
+  </system>
+</simulation>
