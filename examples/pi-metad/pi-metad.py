@@ -2,7 +2,8 @@ r"""
 Path integral metadynamics
 ==========================
 
-:Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm/>`_
+:Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm/>`_,
+          Guillaume Fraux `@luthaf <https://github.com/luthaf/>`_
 
 This example shows how to run a free-energy sampling calculation that
 combines path integral molecular dynamics to model nuclear quantum effects
