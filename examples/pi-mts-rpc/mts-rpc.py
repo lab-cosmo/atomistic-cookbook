@@ -415,7 +415,7 @@ ax.plot(
 ax.set_xlabel("t / ps")
 ax.set_ylabel("U / eV")
 ax.set_xlim(0.1, 0.5)
-ax.set_ylim(-5, 5)
+ax.set_ylim(-1, 1)
 ax.legend()
 
 # %%
@@ -588,7 +588,8 @@ ax.plot(
 ax.set_xlabel("t / ps")
 ax.set_ylabel("U / eV")
 ax.set_xlim(0, 1.5)
-ax.set_ylim(-5, 5)
+ax.set_ylim(-1, 1)
+ax.legend()
 
 # %%
 # Simulations reach equilibrium faster than for the (weakly thermostatted)
@@ -645,7 +646,7 @@ chemiscope.show(
         },
         "K": {
             "values": rpcmts_output["kinetic_cv"][::25],
-            "units": r"Å",
+            "units": "eV",
             "target": "structure",
         },
     },
@@ -659,8 +660,8 @@ chemiscope.show(
             }
         ],
         "map": {
-            "x": {"max": 5, "min": 0, "property": "t", "scale": "linear"},
-            "y": {"max": 3500, "min": 2800, "property": "K", "scale": "linear"},
+            "x": {"property": "t", "scale": "linear"},
+            "y": {"property": "K", "scale": "linear"},
             "color": {"property": "U"},
         },
     },
