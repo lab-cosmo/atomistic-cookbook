@@ -12,19 +12,22 @@ energy from the fast-varying (and hopefully cheaper) ones.
 
 The first is named `multiple time stepping`, and is a well-established technique
 to avoid evaluating the slowly-varying components at every time step of a MD simulation.
-It was first introduced in `LAMMPS <https://lammps.org>`_.
+It was first introduced in
 `M. Tuckerman, B. J. Berne, and G. J. Martyna,
 JCP 97(3), 1990 (1992) <https://doi.org/10.1063/1.463137>`_
 and can be applied to classical simulations,
-typically to avoid the evaluation of long-range electrostatics in classical potentials.
+typically to avoid the evaluation of long-range electrostatics in classical
+empirical potentials.
 
-The second is named `ring polymer contraction`, first introduced in
+The second, named `ring polymer contraction`, was first introduced in
 `T. E. Markland and D. E. Manolopoulos, JCP 129(2),
-024105 (2008) <https://doi.org/10.1063/1.2953308>`_
+024105 (2008) <https://doi.org/10.1063/1.2953308>`_ and
 can be seen as performing a similar simplification `in imaginary time`,
-evaluating the expensive part of the potential on a smaller number of PI replicas.
+evaluating the expensive part of the potential on a smaller number
+of PI replicas.
 
-The techniques can be combined, which reduces even further the computational effort.
+The techniques can be combined, which reduces even further the
+computational effort.
 This dual approach, which was introduced in
 `V. Kapil, J. VandeVondele, and M. Ceriotti, JCP 144(5),
 054111 (2016) <(https://doi.org/10.1063/1.4941091>`_
@@ -32,13 +35,15 @@ and `O. Marsalek and T. E. Markland, JCP 144(5),
 (2016) <https://doi.org/10.1063/1.4941093>`_,
 is the one that we will discuss here, allowing us
 to showcase two advanced features of i-PI.
-It is worth stressing that MTS and/or RPC can be used very conveniently together with
-machine-learning potentials
+
+It is worth stressing that MTS and/or RPC can also be used very conveniently
+together with machine-learning potentials
 (see e.g. `V. Kapil, J. Behler, and M. Ceriotti, JCP 145(23),
 234103 (2016 <https://doi.org/10.1063/1.4971438>`_
 for an early application).
 """
 
+import os
 import subprocess
 import time
 import warnings
@@ -87,7 +92,7 @@ def autocorrelate(x, xbar=None, normalize=True):
 #
 # .. figure:: pimd-mts-pots.png
 #    :align: center
-#    :width: 600px
+#    :width: 500px
 #
 #    A smooth and rough potential components combine to form the total potential
 #    energy function used in a simulation.
@@ -100,7 +105,7 @@ def autocorrelate(x, xbar=None, normalize=True):
 #
 # .. figure:: pimd-mts-integrator.png
 #    :align: center
-#    :width: 600px
+#    :width: 500px
 #
 #    Schematic representation of the application of slow and fast
 #    forces in a multiple time step molecular dynamics algorithm
@@ -135,7 +140,7 @@ def autocorrelate(x, xbar=None, normalize=True):
 #
 # .. image:: pimd-mts-rpc.png
 #    :align: center
-#    :width: 600px
+#    :width: 500px
 #
 # As shown in the right-hand panel above, ring-polymer contraction
 # is realized by computing a Fourier interpolation of the bead positions,
@@ -247,23 +252,24 @@ ipi.install_driver()
 #    done
 #
 
-ipi_process = subprocess.Popen(["i-pi", "data/h2o_pimd.xml"])
-time.sleep(5)  # wait for i-PI to start
-lmp_process = [
-    subprocess.Popen(["i-pi-driver", "-u", "-a", "qtip4pf", "-m", "qtip4pf"])
-    for i in range(4)
-]
+ipi_process = None
+if not os.path.exists("pimd.out"):
+    ipi_process = subprocess.Popen(["i-pi", "data/h2o_pimd.xml"])
+    time.sleep(5)  # wait for i-PI to start
+    lmp_process = [
+        subprocess.Popen(["i-pi-driver", "-u", "-a", "qtip4pf", "-m", "qtip4pf"])
+        for i in range(4)
+    ]
 
 # %%
 # If you run this in a notebook, you can go ahead and start loading
 # output files *before* i-PI and the driver have finished running, by
 # skipping this cell
 
-ipi_process.wait()
-lmp_process[0].wait()
-lmp_process[1].wait()
-lmp_process[2].wait()
-lmp_process[3].wait()
+if ipi_process is not None:
+    ipi_process.wait()
+    for i in range(4):
+        lmp_process[i].wait()
 
 # %%
 # Multiple time stepping
@@ -283,19 +289,23 @@ lmp_process[3].wait()
 #    i-pi-driver -u -a qtip4pf-md -m qtip4pf -v &> log.driver.$i &
 #
 
-ipi_process = subprocess.Popen(["i-pi", "data/h2o_md.xml"])
-time.sleep(5)  # wait for i-PI to start
-lmp_process = subprocess.Popen(
-    ["i-pi-driver", "-u", "-a", "qtip4pf-md", "-m", "qtip4pf"]
-)
+ipi_process = None
+if not os.path.exists("md.out"):
+    ipi_process = subprocess.Popen(["i-pi", "data/h2o_md.xml"])
+    time.sleep(5)  # wait for i-PI to start
+    lmp_process = subprocess.Popen(
+        ["i-pi-driver", "-u", "-a", "qtip4pf-md", "-m", "qtip4pf"]
+    )
 
 # %%
 # If you run this in a notebook, you can go ahead and start loading
 # output files *before* i-PI and the driver have finished running, by
 # skipping this cell
 
-ipi_process.wait()
-lmp_process.wait()
+if ipi_process is not None:
+    ipi_process.wait()
+    lmp_process.wait()
+
 # %%
 # Let's have a look at `h2o_mts.xml`, that provides the parameters
 # of the MTS calculation. We define two `ffsocket` sections:
@@ -358,23 +368,26 @@ for line in lines[2]:
 #    wait
 #
 
-ipi_process = subprocess.Popen(["i-pi", "data/h2o_mts.xml"])
-time.sleep(5)  # wait for i-PI to start
-lmp_process0 = subprocess.Popen(
-    ["i-pi-driver", "-u", "-a", "qtip4pf-mts-full", "-m", "qtip4pf"]
-)
-lmp_process1 = subprocess.Popen(
-    ["i-pi-driver", "-u", "-a", "qtip4pf-mts-sr", "-m", "qtip4pf-sr"]
-)
+ipi_process = None
+if not os.path.exists("mts.out"):
+    ipi_process = subprocess.Popen(["i-pi", "data/h2o_mts.xml"])
+    time.sleep(5)  # wait for i-PI to start
+    lmp_process0 = subprocess.Popen(
+        ["i-pi-driver", "-u", "-a", "qtip4pf-mts-full", "-m", "qtip4pf"]
+    )
+    lmp_process1 = subprocess.Popen(
+        ["i-pi-driver", "-u", "-a", "qtip4pf-mts-sr", "-m", "qtip4pf-sr"]
+    )
 
 # %%
 # If you run this in a notebook, you can go ahead and start loading
 # output files *before* i-PI and the drivers have finished running, by
 # skipping this cell
 
-ipi_process.wait()
-lmp_process0.wait()
-lmp_process1.wait()
+if ipi_process is not None:
+    ipi_process.wait()
+    lmp_process0.wait()
+    lmp_process1.wait()
 
 # %%
 # Analysis of results
@@ -525,29 +538,30 @@ for line in lines[34:36]:
 #    wait
 #
 
-ipi_process = subprocess.Popen(["i-pi", "data/h2o_rpc-mts.xml"])
-time.sleep(5)  # wait for i-PI to start
-lmp_process0 = [
-    subprocess.Popen(["i-pi-driver", "-u", "-a", "qtip4pf-full", "-m", "qtip4pf"])
-    for i in range(2)
-]
-lmp_process1 = [
-    subprocess.Popen(["i-pi-driver", "-u", "-a", "qtip4pf-sr", "-m", "qtip4pf-sr"])
-    for i in range(4)
-]
+ipi_process = None
+if not os.path.exists("rpc-mts.out"):
+    ipi_process = subprocess.Popen(["i-pi", "data/h2o_rpc-mts.xml"])
+    time.sleep(5)  # wait for i-PI to start
+    lmp_process0 = [
+        subprocess.Popen(["i-pi-driver", "-u", "-a", "qtip4pf-full", "-m", "qtip4pf"])
+        for i in range(2)
+    ]
+    lmp_process1 = [
+        subprocess.Popen(["i-pi-driver", "-u", "-a", "qtip4pf-sr", "-m", "qtip4pf-sr"])
+        for i in range(4)
+    ]
 
 # %%
 # If you run this in a notebook, you can go ahead and start loading
 # output files *before* i-PI and the drivers have finished running, by
 # skipping this cell
 
-ipi_process.wait()
-lmp_process0[0].wait()
-lmp_process0[1].wait()
-lmp_process1[0].wait()
-lmp_process1[1].wait()
-lmp_process1[2].wait()
-lmp_process1[3].wait()
+if ipi_process is not None:
+    ipi_process.wait()
+    lmp_process0[0].wait()
+    lmp_process0[1].wait()
+    for i in range(4):
+        lmp_process1[i].wait()
 
 # %%
 # Analysis of results
