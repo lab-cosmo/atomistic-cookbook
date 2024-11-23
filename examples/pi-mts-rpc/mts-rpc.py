@@ -86,7 +86,7 @@ def autocorrelate(x, xbar=None, normalize=True):
 # can be decomposed into a short-range/fast-varying/computationally-cheap
 # part :math:`V_\mathrm{sr}` and a long-range/slow-varying/computationally-expensive
 # part :math:`V_\mathrm{lr}`.  This is usually written as
-# :math:`V=V_\mathrm{sr} +V_\mathrm{lr}`, although in many cases $V_\mathrm{sr}$
+# :math:`V=V_\mathrm{sr} +V_\mathrm{lr}`, although in many cases :math:`V_\mathrm{sr}`
 # is a cheap approximation of the potential, and :math:`V_\mathrm{lr}`
 # is taken to be the difference between this potential and the full one.
 #
@@ -127,7 +127,6 @@ def autocorrelate(x, xbar=None, normalize=True):
 # This approach can (and usually is) complemented by aggressive
 # thermostatting, which helps stabilize the dynamics in the
 # limit of large :math:`M`.
-#
 # For a detailed discussion on how thermostatting aids
 # in this context, see:
 # `J. A. Morrone, T. E. Markland, M. Ceriotti, and B. J. Berne,
@@ -172,12 +171,15 @@ def autocorrelate(x, xbar=None, normalize=True):
 # Easy enough to have it in the built-in driver distributed with i-PI.
 # The input for this run is `h2o_pimd.xml`, and we will use the
 # `-m qtip4pf` option of `i-pi-driver` to compute the appropriate potential.
-# The simulation involves a respectable box containing
-# 216 water molecules, and is run with
-# 8 beads and a `PIGLET` thermostat (cf.
+# To make simulations run quickly, we use a small box containing only 32
+# water molecules, and use a `PIGLET` thermostat that yields converged
+# quantum properties with only 8 beads (cf.
 # `M. Ceriotti and D. E. Manolopoulos, Phys. Rev. Lett. 109(10), 100604
-# (2012) <https://doi.org/10.1103/PhysRevLett.109.100604>`_
-# . For simplicity, we use the constant-volume `NVT` ensemble, but you can easily
+# (2012) <https://doi.org/10.1103/PhysRevLett.109.100604>`_,
+# and also this `introduction to path integral simulations
+# <https://atomistic-cookbook.org/examples/path-integrals/path-integrals.html#accelerating-pimd-with-a-piglet-thermostat>`_
+# which introduces PIGLET).
+# # For simplicity, we use the constant-volume `NVT` ensemble, but you can easily
 # modify the input to perform constant-pressure simulations.
 #
 # The important parts of the simulation
@@ -251,6 +253,8 @@ ipi.install_driver()
 #        i-pi-driver -u -a qtip4pf -m qtip4pf -v &> log.driver.$i &
 #    done
 #
+# From a Python script, one can launch both i-PI and the driver
+# using the ``subprocess`` module:
 
 ipi_process = None
 if not os.path.exists("pimd.out"):
@@ -288,6 +292,7 @@ if ipi_process is not None:
 #    sleep 5
 #    i-pi-driver -u -a qtip4pf-md -m qtip4pf -v &> log.driver.$i &
 #
+# From Python:
 
 ipi_process = None
 if not os.path.exists("md.out"):
@@ -367,6 +372,8 @@ for line in lines[2]:
 #    i-pi-driver -u -a qtip4pf-mts-sr -m qtip4pf-sr &> log.driver.sr &
 #    wait
 #
+# that involve launching both short-range and full potential models.
+# Similarly, in Python:
 
 ipi_process = None
 if not os.path.exists("mts.out"):
@@ -591,18 +598,18 @@ ax.plot(
     (rpcmts_output["pot_component(0)"] + rpcmts_output["pot_component(1)"])
     - (rpcmts_output["pot_component(0)"] + rpcmts_output["pot_component(1)"])[10],
     "b-",
-    label="V / Å$^3$",
+    label=r"V_{\mathrm{sr}}",
 )
 ax.plot(
     rpcmts_output["time"],
     rpcmts_output["pot_component(2)"] - rpcmts_output["pot_component(2)"][10],
     "r-",
-    label="V / Å$^3$",
+    label=r"V_{\mathrm{lr}}",
 )
 ax.set_xlabel("t / ps")
 ax.set_ylabel("U / eV")
 ax.set_xlim(0, 1.5)
-ax.set_ylim(-1, 1)
+ax.set_ylim(-2, 2)
 ax.legend()
 
 # %%
