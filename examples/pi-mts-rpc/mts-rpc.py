@@ -62,7 +62,7 @@ import numpy as np
 
 
 if hasattr(__import__("builtins"), "get_ipython"):
-    get_ipython().run_line_magic("matplotlib", "inline")
+    get_ipython().run_line_magic("matplotlib", "inline")  # noqa: F821
 
 # sphinx_gallery_thumbnail_number = 2
 
@@ -129,7 +129,7 @@ if hasattr(__import__("builtins"), "get_ipython"):
 #    :align: center
 #    :width: 500px
 #
-# As shown in the right-hand panel above, ring-polymer contraction
+# As shown in the figure below, ring-polymer contraction
 # is realized by computing a Fourier interpolation of the bead positions,
 # :math:`\tilde{\mathbf{q}}^{(k)}`, and then evaluating the total potential
 # that enters the ring-polymer Hamiltonian as
@@ -141,6 +141,13 @@ if hasattr(__import__("builtins"), "get_ipython"):
 #
 # where :math:`P` and :math:`P'` indicate the full
 # and contracted discretizations of the path.
+#
+# .. image:: rpc-4.png
+#    :align: center
+#    :width: 350px
+#
+#    An example of the successive degrees of contraction of a ring polymer
+#    containing 16 beads (gray), interpolated down to 8 and 4.
 
 # %%
 # A reference calculation using PIGLET
