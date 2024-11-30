@@ -2,15 +2,17 @@
 Multiple time stepping and ring-polymer contraction
 ===================================================
 
-:Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm>`_ and
-           Davide Tisi `@DavideTisi <https://github.com/DavideTisi>`_
+:Authors: Davide Tisi `@DavideTisi <https://github.com/DavideTisi>`_ and
+    Michele Ceriotti `@ceriottm <https://github.com/ceriottm>`_
 
-This notebook provides an introduction to two closely-related techniques,
+
+This notebook provides an introduction to multiple time stepping and
+ring polymer contraction, two closely-related techniques,
 that are geared towards reducing the cost of calculations by separating
 slowly-varying (and computationally-expensive) components of the potential
 energy from the fast-varying (and hopefully cheaper) ones.
 
-The first is named `multiple time stepping`, and is a well-established technique
+The first, `multiple time stepping` or MTS, is a well-established technique
 to avoid evaluating the slowly-varying components at every time step of a MD simulation.
 It was first introduced in
 `M. Tuckerman, B. J. Berne, and G. J. Martyna,
@@ -27,20 +29,25 @@ evaluating the expensive part of the potential on a smaller number
 of PI replicas.
 
 The techniques can be combined, which reduces even further the
-computational effort.
-This dual approach, which was introduced in
+computational effort, which is the case we demonstrate in this
+notebook. This dual approach was introduced in
 `V. Kapil, J. VandeVondele, and M. Ceriotti, JCP 144(5),
 054111 (2016) <(https://doi.org/10.1063/1.4941091>`_
 and `O. Marsalek and T. E. Markland, JCP 144(5),
-(2016) <https://doi.org/10.1063/1.4941093>`_,
-is the one that we will discuss here, allowing us
-to showcase two advanced features of i-PI.
-
+(2016) <https://doi.org/10.1063/1.4941093>`_.
 It is worth stressing that MTS and/or RPC can also be used very conveniently
 together with machine-learning potentials
 (see e.g. `V. Kapil, J. Behler, and M. Ceriotti, JCP 145(23),
-234103 (2016 <https://doi.org/10.1063/1.4971438>`_
-for an early application).
+234103 (2016 <https://doi.org/10.1063/1.4971438>`_ or
+`K. Rossi et al., JCTC 16(8), 5139 (2020)
+<http://doi.org/10.1021/acs.jctc.0c00362>`_
+for early applications).
+
+If you need an introduction to path integral simulations,
+or to the use of `i-PI <http://ipi-code.org>`_, which is the
+software which will be used to perform simulations, you can see
+`this introductory recipe
+<https://atomistic-cookbook.org/examples/path-integrals/path-integrals.html>`_.
 """
 
 import os
@@ -54,8 +61,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-# %%
-# some utility functions that will be usefull
+# some utility functions that will be useful for analysis
 def correlate(x, y, xbar=None, ybar=None, normalize=True):
     """Computes the correlation function of two quantities.
     It can be given the exact averages as parameters."""
@@ -98,17 +104,10 @@ def autocorrelate(x, xbar=None, normalize=True):
 #    energy function used in a simulation.
 
 # %%
-# way this is realized in practice is by splitting the propagation of
+# The way this is realized in practice is by splitting the propagation of
 # Hamilton's equations into an inner loop that uses the fast/cheap force,
 # and an outer loop that applies the slow force, using a larger time step
 # (and therefore giving a larger "kick").
-#
-# .. figure:: pimd-mts-integrator.png
-#    :align: center
-#    :width: 500px
-#
-#    Schematic representation of the application of slow and fast
-#    forces in a multiple time step molecular dynamics algorithm
 #
 # .. math::
 #
@@ -123,6 +122,13 @@ def autocorrelate(x, xbar=None, normalize=True):
 #   \right\} M\ \mathrm{times}\\
 #   &p \leftarrow p + f_\mathrm{lr} \, dt/2 \\
 #   \end{split}
+#
+# .. figure:: pimd-mts-integrator.png
+#    :align: center
+#    :width: 500px
+#
+#    Schematic representation of the application of slow and fast
+#    forces in a multiple time step molecular dynamics algorithm
 #
 # This approach can (and usually is) complemented by aggressive
 # thermostatting, which helps stabilize the dynamics in the
@@ -159,16 +165,15 @@ def autocorrelate(x, xbar=None, normalize=True):
 # ------------------------------------
 #
 # First, let's run a reference calculation without RPC or MTS.
-# These calculations will be done for the q-TIP4P/f water model,
-# `S. Habershon, T. E. Markland, and D. E. Manolopoulos, JCP 131(2),
-# 24501 (2009) <https://doi.org/10.1063/1.3167790>`_
-# , that contains a Morse-potential anharmonic intra-molecular potential,
+# These calculations will be performed using the q-TIP4P/f water model
+# (`S. Habershon, T. E. Markland, and D. E. Manolopoulos, JCP 131(2),
+# 24501 (2009) <https://doi.org/10.1063/1.3167790>`_)
+# that contains a Morse-potential anharmonic intra-molecular potential,
 # and an inter-molecular potential based on a Lennard-Jones term and a 4-point
 # electrostatic model (the venerable TIP4P idea).
 # It is fitted to reproduce experimental properties of water
 # `when performing PIMD calculations`
 # and it captures nicely several subtle effects while being cheap and easy-to-implement.
-# Easy enough to have it in the built-in driver distributed with i-PI.
 # The input for this run is `h2o_pimd.xml`, and we will use the
 # `-m qtip4pf` option of `i-pi-driver` to compute the appropriate potential.
 # To make simulations run quickly, we use a small box containing only 32
@@ -176,10 +181,9 @@ def autocorrelate(x, xbar=None, normalize=True):
 # quantum properties with only 8 beads (cf.
 # `M. Ceriotti and D. E. Manolopoulos, Phys. Rev. Lett. 109(10), 100604
 # (2012) <https://doi.org/10.1103/PhysRevLett.109.100604>`_,
-# and also this `introduction to path integral simulations
-# <https://atomistic-cookbook.org/examples/path-integrals/path-integrals.html#accelerating-pimd-with-a-piglet-thermostat>`_
-# which introduces PIGLET).
-# # For simplicity, we use the constant-volume `NVT` ensemble, but you can easily
+# and also this `introduction to the PIGLET method
+# <https://atomistic-cookbook.org/examples/path-integrals/path-integrals.html#accelerating-pimd-with-a-piglet-thermostat>`_).
+# For simplicity, we use the constant-volume `NVT` ensemble, but you can easily
 # modify the input to perform constant-pressure simulations.
 #
 # The important parts of the simulation
@@ -237,8 +241,8 @@ print(lines[23], end="")
 ipi.install_driver()
 
 # %%
-# Launch i-PI simulation
-# ~~~~~~~~~~~~~~~~~~~~~~
+# Launch the i-PI simulation
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # We are going to launch i-PI from here, and put it in background
 # and detach the processes from the
@@ -595,20 +599,20 @@ rpcmts_output, rpcmts_desc = ipi.read_output("rpc-mts.out")
 fig, ax = plt.subplots(1, 1, constrained_layout=True, figsize=(5, 2.5))
 ax.plot(
     rpcmts_output["time"],
-    (rpcmts_output["pot_component(0)"] + rpcmts_output["pot_component(1)"])
-    - (rpcmts_output["pot_component(0)"] + rpcmts_output["pot_component(1)"])[10],
+    (rpcmts_output["pot_component(0)"] - rpcmts_output["pot_component(1)"])
+    - (rpcmts_output["pot_component(0)"] - rpcmts_output["pot_component(1)"])[10],
     "b-",
-    label=r"V_{\mathrm{sr}}",
+    label=r"$V_{\mathrm{lr}}$",
 )
 ax.plot(
     rpcmts_output["time"],
     rpcmts_output["pot_component(2)"] - rpcmts_output["pot_component(2)"][10],
     "r-",
-    label=r"V_{\mathrm{lr}}",
+    label=r"$V_{\mathrm{sr}}$",
 )
 ax.set_xlabel("t / ps")
 ax.set_ylabel("U / eV")
-ax.set_xlim(0, 1.5)
+ax.set_xlim(1.0, 1.5)
 ax.set_ylim(-2, 2)
 ax.legend()
 
