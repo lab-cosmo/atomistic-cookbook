@@ -9,4 +9,4 @@ statistical sampling to compute accurate statistical and dynamical properties.
 - examples/path-integrals/path-integrals
 - examples/pi-metad/pi-metad
 - examples/heat-capacity/heat-capacity
-- examples/mts-rpc/mts-rpc
+- examples/pi-mts-rpc/mts-rpc

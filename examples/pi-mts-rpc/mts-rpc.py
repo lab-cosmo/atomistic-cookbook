@@ -61,28 +61,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-# some utility functions that will be useful for analysis
-def correlate(x, y, xbar=None, ybar=None, normalize=True):
-    """Computes the correlation function of two quantities.
-    It can be given the exact averages as parameters."""
-    if xbar is None:
-        xbar = x.mean()
-    if ybar is None:
-        ybar = y.mean()
+if hasattr(__import__("builtins"), "get_ipython"):
+    get_ipython().run_line_magic("matplotlib", "inline")
 
-    cf = np.correlate(x - xbar, y - ybar, mode="same")
-    return cf[len(x) // 2 :] / (((x - xbar) * (y - ybar)).sum() if normalize else 1)
-
-
-def autocorrelate(x, xbar=None, normalize=True):
-    """Computes the autocorrelation function of a trajectory.
-    It can be given the exact average as a parameter"""
-
-    if xbar is None:
-        xbar = x.mean()
-    acf = np.correlate(x - xbar, x - xbar, mode="same")
-    return acf[len(x) // 2 :] / (((x - xbar) * (x - xbar)).sum() if normalize else 1)
-
+# sphinx_gallery_thumbnail_number = 2
 
 # %%
 # Multiple time stepping in real and imaginary time
@@ -402,20 +384,20 @@ if ipi_process is not None:
 
 # %%
 # Analysis of results
-# -------------------
+# ~~~~~~~~~~~~~~~~~~~
 #
-# Load the trajectories (might have to wait a few minutes for them to be over)
-#
+# After having finished to run all simulation (might take a few minutes)
+# we can load the outputs
 
 md_output, md_desc = ipi.read_output("md.out")
 mts_output, mts_desc = ipi.read_output("mts.out")
 
 # %%
 # We can start looking at the behavior of the two components of the potential.
-# Even though this is hardly the best slow/fast mode splitting (usually one also
-# includes the Lennard-Jones and short-range
-# Coulomb components in :math:`V_\mathrm{sr}`)
-# it is clear that the intra-molecular potential varies much faster than
+# Even though this is hardly the best slow/fast mode splitting (usually
+# one also includes the Lennard-Jones and short-range Coulomb components
+# in :math:`V_\mathrm{sr}`)
+# it is clear that the intra-molecular potential varies faster than
 # the non-bonded components.
 # Running the whole simulation with a 2 fs time step would lead to major
 # instabilities in the trajectory.
@@ -436,11 +418,50 @@ ax.plot(
     "r-",
     label=r"$V_\mathrm{sr}$",
 )
-ax.set_xlabel("t / ps")
-ax.set_ylabel("U / eV")
-ax.set_xlim(0.1, 0.5)
+ax.set_xlabel(r"$t$ / ps")
+ax.set_ylabel(r"$U$ / eV")
+ax.set_xlim(0.1, 0.3)
 ax.set_ylim(-1, 1)
 ax.legend()
+
+# %%
+# This can be made clearer by computing the autocorrelation function,
+# and seeing that the long-range term is that showing a slow decay, while
+# the short-range one decays quickly to zero, rapidly oscillating
+
+
+# a simple wrapper to np.correlate to evaluate the autocorrelation function
+def autocorrelate(x, xbar=None, normalize=True):
+    """Computes the autocorrelation function of a trajectory.
+    It can be given the exact average as a parameter"""
+
+    if xbar is None:
+        xbar = x.mean()
+    acf = np.correlate(x - xbar, x - xbar, mode="same")
+    return acf[len(x) // 2 :] / (((x - xbar) * (x - xbar)).sum() if normalize else 1)
+
+
+acf_vsr = autocorrelate(mts_output["pot_component(1)"][50:])
+acf_vlr = autocorrelate(
+    (mts_output["pot_component(0)"] - mts_output["pot_component(1)"])[50:]
+)
+
+fig, ax = plt.subplots(1, 1, constrained_layout=True, figsize=(5, 2.5))
+ax.plot(
+    mts_output["time"][: len(acf_vsr)],
+    acf_vsr,
+    "r-",
+    label=r"$V_\mathrm{sr}$",
+)
+ax.plot(
+    mts_output["time"][: len(acf_vlr)],
+    acf_vlr,
+    "b-",
+    label=r"$V_\mathrm{lr}$",
+)
+ax.legend()
+ax.set_xlabel(r"$t$ / ps")
+ax.set_ylabel(r"$c_{VV}$")
 
 # %%
 # The equilibration is slow due to the weak thermostat, but the two
@@ -450,11 +471,11 @@ ax.legend()
 
 fig, ax = plt.subplots(1, 2, constrained_layout=True, figsize=(8, 3))
 ax[1].plot(mts_output["time"], mts_output["potential"], "b-", label="MTS")
-ax[1].plot(md_output["time"], md_output["potential"], "c,", label="MD")
+ax[1].plot(md_output["time"], md_output["potential"], "c.", label="MD")
 ax[1].set_xlabel("t / ps")
 ax[1].set_ylabel("U / eV")
 ax[0].plot(mts_output["time"], mts_output["temperature"], "r-", label="MTS")
-ax[0].plot(md_output["time"], md_output["temperature"], "m,", label="MD")
+ax[0].plot(md_output["time"], md_output["temperature"], "m.", label="MD")
 ax[0].set_xlabel("t / ps")
 ax[0].set_ylabel("T / K")
 ax[0].legend()
@@ -576,7 +597,7 @@ if ipi_process is not None:
 
 # %%
 # Analysis of results
-# -------------------
+# ~~~~~~~~~~~~~~~~~~~
 #
 # Let's read the results from the reference and RPC/MTS
 # simulations and analyze them
@@ -626,12 +647,12 @@ ax.legend()
 fig, ax = plt.subplots(1, 2, constrained_layout=True, figsize=(8, 3))
 ax[0].plot(md_output["time"], md_output["potential"], "b-", label="MD")
 ax[0].plot(pimd_output["time"], pimd_output["potential"], "r-", label="PIMD")
-ax[0].plot(rpcmts_output["time"], rpcmts_output["potential"], "m,", label="RPC-MTS")
+ax[0].plot(rpcmts_output["time"], rpcmts_output["potential"], "m.", label="RPC-MTS")
 ax[0].set_xlabel("t / ps")
 ax[0].set_ylabel("U / eV")
 ax[1].plot(md_output["time"], md_output["kinetic_md"], "b-", label="MD")
 ax[1].plot(pimd_output["time"], pimd_output["kinetic_cv"], "r-", label="PIMD")
-ax[1].plot(rpcmts_output["time"], rpcmts_output["kinetic_cv"], "m,", label="RPC-MTS")
+ax[1].plot(rpcmts_output["time"], rpcmts_output["kinetic_cv"], "m.", label="RPC-MTS")
 ax[1].set_xlabel("t / ps")
 ax[1].set_ylabel("K / eV")
 ax[0].legend()
@@ -675,19 +696,14 @@ chemiscope.show(
             "target": "structure",
         },
     },
-    settings={
-        "structure": [
-            {
-                "bonds": False,
-                "keepOrientation": True,
-                "unitCell": True,
-                "playbackDelay": 20,
-            }
-        ],
-        "map": {
-            "x": {"property": "t", "scale": "linear"},
-            "y": {"property": "K", "scale": "linear"},
-            "color": {"property": "U"},
+    settings=chemiscope.quick_settings(
+        x="t",
+        y="K",
+        color="U",
+        structure_settings={
+            "bonds": False,
+            "unitCell": True,
         },
-    },
+        trajectory=True,
+    ),
 )
