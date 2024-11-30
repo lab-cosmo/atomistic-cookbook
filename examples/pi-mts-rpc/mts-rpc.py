@@ -142,12 +142,13 @@ if hasattr(__import__("builtins"), "get_ipython"):
 # where :math:`P` and :math:`P'` indicate the full
 # and contracted discretizations of the path.
 #
-# .. image:: rpc-4.png
+# .. figure:: rpc-4.png
 #    :align: center
 #    :width: 350px
 #
 #    An example of the successive degrees of contraction of a ring polymer
 #    containing 16 beads (gray), interpolated down to 8 and 4.
+#
 
 # %%
 # A reference calculation using PIGLET
