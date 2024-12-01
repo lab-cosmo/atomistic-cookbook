@@ -1,0 +1,3 @@
+User-agent: *
+
+Sitemap: https://lab-cosmo.github.io/atomistic-cookbook/latest/sitemap.xml

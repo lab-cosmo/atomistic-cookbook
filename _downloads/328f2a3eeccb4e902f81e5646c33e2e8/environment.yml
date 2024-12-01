@@ -1,0 +1,14 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - rust >=1.65
+  - pip:
+    - ase==3.22.1
+    - chemiscope>=0.7
+    - matplotlib
+    - metatensor
+    - rascaline @ git+https://github.com/Luthaf/rascaline@ca957642f512e141c7570e987aadc05c7ac71983
+    - skmatter
+    - equisolve @ git+https://github.com/lab-cosmo/equisolve.git@c858bedef4b2799eb445e4c92535ee387224089a
