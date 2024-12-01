@@ -4,7 +4,7 @@
     <trajectory filename='pos' stride='100' format='xyz' cell_units='angstrom'> positions{angstrom} </trajectory>
     <checkpoint filename='checkpoint' stride='1000' overwrite='True'/>
   </output>
-  <total_steps> 10000 </total_steps>
+  <total_steps> 20000 </total_steps>
   <ffsocket mode='unix' name='qtip4pf' pbc='false'>
       <address>qtip4pf-md</address>
   </ffsocket>  
@@ -23,7 +23,7 @@
       <dynamics mode='nvt'>
           <timestep units='femtosecond'> 0.5 </timestep>
           <thermostat mode="svr">
-             <tau units="femtosecond"> 400 </tau>
+             <tau units="femtosecond"> 500 </tau>
           </thermostat>
       </dynamics>
     </motion>
