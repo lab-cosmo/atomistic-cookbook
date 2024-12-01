@@ -663,6 +663,7 @@ ax[1].plot(pimd_output["time"], pimd_output["kinetic_cv"], "r-", label="PIMD")
 ax[1].plot(rpcmts_output["time"], rpcmts_output["kinetic_cv"], "m.", label="RPC-MTS")
 ax[1].set_xlabel("t / ps")
 ax[1].set_ylabel("K / eV")
+ax.set_xlim(0.0, 5.0)
 ax[0].legend()
 
 # %%
