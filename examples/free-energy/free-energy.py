@@ -332,6 +332,8 @@ plt.ylabel(r"$y$ [a.u.]")
 plt.contour(X, Y, PES(X, Y, 0), levels=contour_levels)
 plt.show()
 
+# %%
+
 plt.title(r"$V^{\mathrm{harm}}(x,y,0)$")
 plt.xlabel(r"$x$ [a.u.]")
 plt.ylabel(r"$y$ [a.u.]")
