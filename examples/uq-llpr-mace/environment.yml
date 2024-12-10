@@ -1,0 +1,12 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+    - ase==3.22.1
+    - matplotlib
+    - torch
+    - git+https://github.com/SanggyuChong/mace.git@LLPR_loss_based
+    - scipy
+    - numpy
