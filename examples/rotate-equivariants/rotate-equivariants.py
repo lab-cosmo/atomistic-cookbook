@@ -11,7 +11,7 @@ using the ``scipy`` and ``quaternionic`` libraries. The equivariant properties f
 this example are computed by the ``featomic`` library.
 """
 
-# %% 
+# %%
 # Import the necessary packages for this recipe
 
 import ase.build
@@ -44,7 +44,7 @@ from scipy.spatial.transform import Rotation
 #     + $y \longleftrightarrow -1$
 #     + $z \longleftrightarrow 0$
 #     + $x \longleftrightarrow 1$
-#   which then is represented by y-z-x convention. 
+#   which then is represented by y-z-x convention.
 #
 # - If the only difference between two quaternions is their sign, they represent the
 #   same rotation. When this happens, we can just check their scalar product: if it
@@ -55,12 +55,14 @@ from scipy.spatial.transform import Rotation
 # Utility functions
 # -----------------
 # We define a couple of utility functions to obtain orthogonal matrices that represent
-# rotations in the 3D space. Here we use the `scipy.spatial.transform.Rotation` class 
-# to generate random orthogonal matrices with determinant equal to 1. This is done by 
+# rotations in the 3D space. Here we use the `scipy.spatial.transform.Rotation` class
+# to generate random orthogonal matrices with determinant equal to 1. This is done by
 # means of the function
+
 
 def get_random_rotation():
     return Rotation.random()
+
 
 # and we can test that the generated matrices are indeed orthogonal by
 rotation = get_random_rotation().as_matrix()
@@ -70,6 +72,7 @@ print(f"The determinant is: {np.linalg.det(rotation):.3f}")
 # Now we can define the function that generates the transformation matrix from the
 # standard (complex) spherical harmonics to the real spherical harmonics. This function
 # is given by the following code:
+
 
 def complex_to_real_spherical_harmonics_transform(ell: int):
     # Generates the transformation matrix from complex spherical harmonics
@@ -99,18 +102,20 @@ def complex_to_real_spherical_harmonics_transform(ell: int):
 
     return U
 
+
 # This matrix must be unitary, as can be easily checked by direct evaluation
 for ell in range(5):
     U = complex_to_real_spherical_harmonics_transform(ell)
     if np.allclose(U @ U.T.conj(), np.eye(2 * ell + 1)):
-        print(f'For l = {ell}, the U matrix is unitary')
+        print(f"For l = {ell}, the U matrix is unitary")
 
-# This is a necesseary condition when we have a transformation matrix that leads to a 
+# This is a necesseary condition when we have a transformation matrix that leads to a
 # change of basis (in this case from the complex to the real representation of spherical
-# harmonics). 
+# harmonics).
 # Finally, in order to address the difference in convention betqween the scipy and the
 # quaternionic libraries, we define the following function which allows to convert from
 # the former to the latter:
+
 
 def scipy_quaternion_to_quaternionic(q_scipy):
     # This function convert a quaternion obtained from the scipy library to the format
@@ -121,20 +126,21 @@ def scipy_quaternion_to_quaternionic(q_scipy):
     q_quaternion = np.array([qw, qx, qy, qz])
     return q_quaternion
 
-# As a last utility function, we define the utility function to convert from rotation 
+
+# As a last utility function, we define the utility function to convert from rotation
 # written in the y-z-x convention to rotations in the x-y-z convention.
 def rotation_matrix_conversion_order(rotation_matrix):
-    '''
-    This function is used to convert a rotation matrix from the format (y, z, x) 
-    to (x, y, z). 
-    
+    """
+    This function is used to convert a rotation matrix from the format (y, z, x)
+    to (x, y, z).
+
     Note: 'xyz' is the format used by scipy.spatial.transform.Rotation
     while 'yzx' is the format used by the spherical harmonics.
-    '''
-    converted_matrix = rotation_matrix[[2,0,1], :]
-    converted_matrix = converted_matrix[:, [2,0,1]]
+    """
+    converted_matrix = rotation_matrix[[2, 0, 1], :]
+    converted_matrix = converted_matrix[:, [2, 0, 1]]
     return converted_matrix
-    
+
 
 # %%
 # Generating equivariants
@@ -145,7 +151,7 @@ def rotation_matrix_conversion_order(rotation_matrix):
 # We first generate the structure of a water molecule...
 structure = ase.build.molecule("H2O")
 
-# ...and set the hyperparameters as required by ``featomic`` 
+# ...and set the hyperparameters as required by ``featomic``
 hypers = {
     "cutoff": {
         "radius": 5.0,
@@ -193,7 +199,7 @@ print(equivariants)
 n_rotations = 100
 rotations = [get_random_rotation() for _ in range(n_rotations)]
 
-# This list containts the rotation matrices that we will use to rotate both the 
+# This list containts the rotation matrices that we will use to rotate both the
 # atomic positions and to generate the Wigner D matrices to rotate also the associated
 # equavariants.
 #
@@ -207,16 +213,17 @@ for rotated_structure, rotation in zip(rotated_structures, rotations):
         rotated_structure.positions @ np.array(rotation.as_matrix()).T
     )
 
+
 # %%
 # To rotate the equivariants, we need to generate the Wigner D matrices with the right
 # angular momentum. We can do this by using the following function, which takes as input
 # our set and rotation and the L channel characterizing the representation. The function
 # returns a list of Wigner D matrices, one for each rotation. Moreover, since we want
-# a real representation, we will use the formula 
+# a real representation, we will use the formula
 # $ R_{mm'}^{l} = \sum_{m_1m_2} U^{l*}_{mm_1}D_{m_1m_2}^{l} (U^T)^l_{m_2m'} $
-# where $U^l$ is the transformation matrix from the complex to the real spherical 
+# where $U^l$ is the transformation matrix from the complex to the real spherical
 # defined above, D^l is the complex Wigner D-matrix and $R^l$ is its real counterpart.
-# Putting all together, the function is 
+# Putting all together, the function is
 def WignerD_calculator(rotations, L):
 
     # We initialize the Wigner calculator from the quaternionic library...
@@ -255,12 +262,13 @@ def WignerD_calculator(rotations, L):
         )
         # ...and check that we do not have imaginary contributions
         assert np.allclose(wigner_D_matrix.imag, 0.0)  # check that the matrix is real
-        
+
         # We can now store the real part of the evaluated matrix and return the final
-        #list
+        # list
         wigner_D_matrices.append(wigner_D_matrix.real)
-    
+
     return wigner_D_matrices
+
 
 # To do a simple test of the function, we can generate the Wigner D matrices for the
 # case L = 1 and check that they are, indeed, the same as the function generating the
@@ -268,7 +276,7 @@ def WignerD_calculator(rotations, L):
 # the utility function ``rotation_matrix_conversion_order``.
 
 # Initiaize the L for the comparison with the rotation matrices
-L = 1 
+L = 1
 # Generate the Wigner D matrices
 wigner_D_matrices = WignerD_calculator(rotations, L)
 # Change convention to match the one of the rotation matrices
@@ -276,11 +284,11 @@ wigner_D_matrices = [rotation_matrix_conversion_order(w) for w in wigner_D_matri
 
 # Check that the Wigner D matrices are the same as the rotation matrices
 for w, rotation in zip(wigner_D_matrices, rotations):
-    assert np.allclose(w, rotation.as_matrix()) 
-print('All the Wigner D matrices are the same as the rotation matrix for l=1.')
+    assert np.allclose(w, rotation.as_matrix())
+print("All the Wigner D matrices are the same as the rotation matrix for l=1.")
 
 # %%
-# We can now apply the rotations to the equivariants. Since we are interested in the 
+# We can now apply the rotations to the equivariants. Since we are interested in the
 # L = 2 case, we first evaluate the Wigner D matrices as above...
 L = 2
 wigner_D_matrices = WignerD_calculator(rotations, L)
@@ -311,7 +319,7 @@ for idx, _ in enumerate(rotations):
         )
     )
 # Having constructed the list of TensorMaps, the only exercise left is to check that the
-# rotations is correct. 
+# rotations is correct.
 
 # %%
 # Check the correctness of the rotation
