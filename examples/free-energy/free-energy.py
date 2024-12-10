@@ -20,7 +20,6 @@ import time
 import ase.io
 import chemiscope
 import ipi
-import ipi.utils.parsing as pimdmooc
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -110,7 +109,8 @@ plt.show()
 # The harmonic approximation to the PES is essentially
 # a truncated Taylor series expansion to second
 # order around one of its minima.
-# :math:`V^{\text{harm}} = V(q_0) + \frac{2}{2} \left.\frac{\partial^2 V}{\partial q^2}\right|_{q_0} (q - q_0)^2`
+# :math:`V^{\text{harm}} = V(q_0) +
+# \frac{1}{2} \left.\frac{\partial^2 V}{\partial q^2}\right|_{q_0} (q - q_0)^2`
 # where :math:`q = (x,y,z)`
 # is a position vector and :math:`q_0 = \text{arg min}_{q} V` is
 # the position where the PES has a local minimum.
@@ -150,7 +150,7 @@ plt.show()
 # simply move towards a local minimum of the PES. There are
 # many algorithms for locally optimizing high-dimensional functions;
 # here we use the robust
-# `BFGS <https://en.wikipedia.org/wiki/Broyden%E2%80%93Fletcher%E2%80%93Goldfarb%E2%80%93Shanno_algorithm>`_
+# `BFGS` (Broyden-Fletcher-Goldfarb-Shanno) quasi-Newton
 # method. The tolerances set thershold values for changes in the energy,
 # positions and forces, that are sufficient to deem an optimization converged.
 #
@@ -252,8 +252,10 @@ chemiscope.show(
 #      - \epsilon} \right)
 #
 # At every step instead of performing "dynamics", we will displace a degree of
-# freedom along :math:`\pm \epsilon` and estimate one row of the Hessian. `pos_shift` sets
-# the value of :math:`\epsilon` while `asr` zeros out the blocks of the Hessian due to continuous
+# freedom along :math:`\pm \epsilon` and estimate one row of the Hessian.
+# `pos_shift` sets
+# the value of :math:`\epsilon` while `asr` zeros out the blocks
+# of the Hessian due to continuous
 # symmetries (translations or rotations for solids or clusters). In this example,
 # we set this option to `none` as our system doesn't possess any continuous symmetries.
 #
@@ -396,9 +398,11 @@ print("Exact Quantum free energy: %15.8f [kJ/mol]" % (F * 2625.4996))
 #
 # Calculating free energies beyond the harmonic approximation is non-trivial.
 # There exist a familty of methods that can  solve the vibrational Schroedinger
-# Equation by approximating the anharmonic component of the PES, yielding an amharmonic
+# Equation by approximating the anharmonic component of
+# the PES, yielding an amharmonic
 # free energy. While highly effective for low-dimensional or mildly anharmonic systems,
-# the method of resort for *numerically-exact amharmonic free energies* of solid and clusters
+# the method of resort for *numerically-exact amharmonicfree energies*
+# of solid and clusters
 # is the thermodynamic integration method combined with the path-integral method
 # ( for applications see Refs.
 # `M. Rossi et al, PRL (2016) <https://doi.org/10.1103/PhysRevLett.117.115702>`_,
@@ -439,7 +443,8 @@ print("Exact Quantum free energy: %15.8f [kJ/mol]" % (F * 2625.4996))
 # Classical Statistical Mechanics
 # -------------------------------
 #
-# Let's first compute the anharmonic free energy difference within the classical approximation.
+# Let's first compute the anharmonic free
+# energy difference within the classical approximation.
 #
 # To create the input file for I-PI we need to defines a "mixed"
 # :math:`\lambda`-dependent Hamiltonian. Let's see the new most important parts.
@@ -463,8 +468,12 @@ print("Exact Quantum free energy: %15.8f [kJ/mol]" % (F * 2625.4996))
 #    <!-->  defines the harmonic PES <-->
 #    <ffdebye name='debye'>
 #            <hessian shape='(3,3)' mode='file'> HESSIAN_FILE </hessian>
-#            <x_reference mode='file'> X_REF_FILE <!--> relative path to a file containing the optimized positon vector <-->   </x_reference>
-#            <v_reference> V_REF <!-->  the value of the PES at its local minimum <-->   </v_reference>
+#            <x_reference mode='file'> X_REF_FILE
+#        <!--> relative path to a file containing the optimized positon vector <-->
+#            </x_reference>
+#            <v_reference> V_REF
+#        <!-->  the value of the PES at its local minimum <-->
+#            </v_reference>
 #    </ffdebye>
 #
 # an intrinsic harmonic forcefield that builds the harmonic potential.
@@ -494,10 +503,10 @@ print(V_REF)
 #
 # .. code-block:: xml
 #
-#     <forces>
-#         <force forcefield='debye' weight=''> </force>  <!-->  set this to lambda <-->
-#         <force forcefield='driver' weight=''> </force> <!-->  set this to 1 - lambda <-->
-#     </forces>
+#   <forces>
+#      <force forcefield='debye' weight=''> </force>  <!-->  set this to lambda <-->
+#      <force forcefield='driver' weight=''> </force> <!-->  set this to 1 - lambda <-->
+#   </forces>
 #
 # You can print out the harmonic and the anharmonic
 # components as a <property> in the output class
@@ -521,9 +530,14 @@ for idx, i in enumerate(["0.0", "0.2", "0.4", "0.6", "0.8", "1.0"]):
     with open(f"cti/input_{i}.xml", "w") as f:
         strfile = """<simulation verbosity='low'>
    <output prefix='cti_{i}'>
-      <properties filename='out' stride='10' flush='10'> [ step, time{{picosecond}}, conserved, temperature{{kelvin}}, kinetic_cv, potential, pressure_cv, volume, ensemble_temperature ] </properties>
-      <properties filename='pots' stride='10' flush='10'> [ pot_component_raw(0), pot_component_raw(1) ] </properties>
-      <trajectory filename='pos1' stride='10' bead='0' flush='10'> positions </trajectory>
+      <properties filename='out' stride='10' flush='10'> [ step, time{{picosecond}},
+      conserved, temperature{{kelvin}}, kinetic_cv, potential, pressure_cv,
+      volume, ensemble_temperature ] </properties>
+      <properties filename='pots' stride='10' flush='10'>
+      [ pot_component_raw(0), pot_component_raw(1) ] </properties>
+      <trajectory filename='pos1' stride='10' bead='0' flush='10'>
+        positions
+      </trajectory>
       <trajectory filename='xc' stride='10' flush='10'> x_centroid </trajectory>
       <checkpoint stride='4000'/>
    </output>
@@ -534,13 +548,13 @@ for idx, i in enumerate(["0.0", "0.2", "0.4", "0.6", "0.8", "1.0"]):
        <latency> 1e-3 </latency>
    </ffsocket>
    <ffdebye name='debye'>
-	   <hessian shape='(3,3)' mode='file'> {HESSIAN_FILE} </hessian>
-	   <x_reference mode='file'> {X_REF_FILE} </x_reference>
-	   <v_reference> {V_REF}  </v_reference>
+       <hessian shape='(3,3)' mode='file'> {HESSIAN_FILE} </hessian>
+       <x_reference mode='file'> {X_REF_FILE} </x_reference>
+       <v_reference> {V_REF}  </v_reference>
    </ffdebye>
    <system>
       <initialize nbeads='1'>
-	 <file mode='xyz'> ./cti/init.xyz </file>
+      <file mode='xyz'> ./cti/init.xyz </file>
          <velocities mode='thermal' units='kelvin'> 300 </velocities>
       </initialize>
       <forces>
@@ -548,7 +562,7 @@ for idx, i in enumerate(["0.0", "0.2", "0.4", "0.6", "0.8", "1.0"]):
          <force forcefield='driver' weight='{im1:2.1f}'> </force>
       </forces>
       <motion mode='dynamics'>
-	 <fixcom> False </fixcom>
+      <fixcom> False </fixcom>
          <dynamics mode='nvt'>
             <timestep units='femtosecond'> 1.00 </timestep>
             <thermostat mode='pile_l'>
@@ -584,7 +598,7 @@ for idx, i in enumerate(["0.0", "0.2", "0.4", "0.6", "0.8", "1.0"]):
 #
 #    wait 5
 #
-#    for x in {0..10..2}; do
+#    for x in {0..10}; do
 #       i-pi-driver -u -h f${x} -m doublewell_1D &
 #    done
 #
@@ -613,7 +627,7 @@ du_list = []
 duerr_list = []
 
 dir_list = ["0.0", "0.2", "0.4", "0.6", "0.8", "1.0"]
-l_list = [float(l) for l in dir_list]
+l_list = [float(lst) for lst in dir_list]
 
 for i in dir_list:
 
@@ -702,9 +716,14 @@ for idx, i in enumerate(["0.0", "0.2", "0.4", "0.6", "0.8", "1.0"]):
     with open(f"qti/input_{i}.xml", "w") as f:
         strfile = """<simulation verbosity='low'>
    <output prefix='qti_{i}'>
-      <properties filename='out' stride='10' flush='10'> [ step, time{{picosecond}}, conserved, temperature{{kelvin}}, kinetic_cv, potential, pressure_cv, volume, ensemble_temperature ] </properties>
-      <properties filename='pots' stride='10' flush='10'> [ pot_component_raw(0), pot_component_raw(1) ] </properties>
-      <trajectory filename='pos1' stride='10' bead='0' flush='10'> positions </trajectory>
+      <properties filename='out' stride='10' flush='10'> [ step, time{{picosecond}},
+      conserved, temperature{{kelvin}}, kinetic_cv, potential,
+      pressure_cv, volume, ensemble_temperature ] </properties>
+      <properties filename='pots' stride='10' flush='10'>
+      [ pot_component_raw(0), pot_component_raw(1) ] </properties>
+      <trajectory filename='pos1' stride='10' bead='0' flush='10'>
+         positions
+      </trajectory>
       <trajectory filename='xc' stride='10' flush='10'> x_centroid </trajectory>
       <checkpoint stride='4000'/>
    </output>
@@ -715,13 +734,13 @@ for idx, i in enumerate(["0.0", "0.2", "0.4", "0.6", "0.8", "1.0"]):
        <latency> 1e-3 </latency>
    </ffsocket>
    <ffdebye name='debye'>
-	   <hessian shape='(3,3)' mode='file'> {HESSIAN_FILE} </hessian>
-	   <x_reference mode='file'> {X_REF_FILE} </x_reference>
-	   <v_reference> {V_REF}  </v_reference>
+       <hessian shape='(3,3)' mode='file'> {HESSIAN_FILE} </hessian>
+       <x_reference mode='file'> {X_REF_FILE} </x_reference>
+       <v_reference> {V_REF}  </v_reference>
    </ffdebye>
    <system>
       <initialize nbeads='32'>
-	 <file mode='xyz'> ./qti/init.xyz </file>
+      <file mode='xyz'> ./qti/init.xyz </file>
          <velocities mode='thermal' units='kelvin'> 300 </velocities>
       </initialize>
       <forces>
@@ -729,7 +748,7 @@ for idx, i in enumerate(["0.0", "0.2", "0.4", "0.6", "0.8", "1.0"]):
          <force forcefield='driver' weight='{im1:2.1f}'> </force>
       </forces>
       <motion mode='dynamics'>
-	 <fixcom> False </fixcom>
+      <fixcom> False </fixcom>
          <dynamics mode='nvt'>
             <timestep units='femtosecond'> 1.00 </timestep>
             <thermostat mode='pile_l'>
@@ -781,7 +800,7 @@ Q_du_list = []
 Q_duerr_list = []
 
 Q_dir_list = ["0.0", "0.2", "0.4", "0.6", "0.8", "1.0"]
-Q_l_list = [float(l) for l in Q_dir_list]
+Q_l_list = [float(lst) for lst in Q_dir_list]
 
 for i in Q_dir_list:
     filename = f"qti_{i}.pots"
