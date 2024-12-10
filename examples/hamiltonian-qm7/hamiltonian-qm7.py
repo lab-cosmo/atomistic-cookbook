@@ -2,13 +2,7 @@
 Hamiltonian learning
 =============================
 
-:Authors: Paolo Pegolo `@ppegolo <https://github.com/ppegolo>`__,
-          Jigyasa Nigam `@curiosity54 <https://github.com/curiosity54>`__
-
-This tutorial explains how to train a machine learning model for the
-electronic Hamiltonian of a periodic system. Even though we focus on
-periodic systems, the code and techniques presented here can be directly
-transferred to molecules.
+This tutorial explains how to train a machine learning model for the a molecular system. 
 """
 
 # %%
