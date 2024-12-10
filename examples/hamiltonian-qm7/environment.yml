@@ -11,6 +11,7 @@ dependencies:
       - ase==3.22.1
       - seekpath
       - requests
+      - ipython
       - metatensor==0.2.0
       - metatensor-core==0.1.4
       - metatensor-learn==0.2.1

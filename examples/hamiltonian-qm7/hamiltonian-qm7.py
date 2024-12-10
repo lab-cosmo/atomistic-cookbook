@@ -26,9 +26,9 @@ from tqdm import tqdm
 import mlelec.metrics as mlmetrics
 from mlelec.data.dataset import MoleculeDataset, get_dataloader
 from mlelec.features.acdc import compute_features_for_target
-from src.mlelec.data.dataset import MLDataset
-from src.mlelec.models.linear import LinearTargetModel
-from src.mlelec.utils.dipole_utils import compute_batch_polarisability, instantiate_mf
+from mlelec.data.dataset import MLDataset
+from mlelec.models.linear import LinearTargetModel
+from mlelec.utils.dipole_utils import compute_batch_polarisability, instantiate_mf
 
 torch.set_default_dtype(torch.float64)
 
@@ -68,7 +68,6 @@ ORTHOGONAL = True  # set to 'FALSE' if working in the non-orthogonal basis
 FOLDER_NAME = "FPS/ML_orthogonal_eva"
 NOISE = False
 
-
 # %%
 # Create folders and save parameters
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -102,7 +101,6 @@ save_parameters(
     DEVICE=DEVICE,
     ORTHOGONAL=ORTHOGONAL,
     FOLDER_NAME=FOLDER_NAME,
-    NOISE=NOISE,
 )
 
 
@@ -182,15 +180,15 @@ start_time_pred_lbfgs = time.time()
 
 molecule_data = MoleculeDataset(
     mol_name="qm7",
-    use_precomputed=True,
+    use_precomputed=False,
     path="data",
     aux_path="data/qm7/sto-3g",
     frame_slice=slice(0, NUM_FRAMES),
     device=DEVICE,
     aux=["overlap", "orbitals"],
-    lb_aux=["overlap", "orbitals"],
+#    lb_aux=["overlap", "orbitals"],
     target=["fock", "dipole_moment", "polarisability"],
-    lb_target=["fock", "dipole_moment", "polarisability"],
+#    lb_target=["fock", "dipole_moment", "polarisability"],
 )
 
 ml_data = MLDataset(
@@ -227,7 +225,6 @@ hypers_pair = {
     "center_atom_weight": 1,
     "radial_basis": {"Gto": {}},
     "cutoff_function": {"ShiftedCosine": {"width": 0.1}},
-    #"radial_scaling": {"Willatt2018": {"scale": 2.0, "rate": 1.0, "exponent": 4}},
 }
 
 features = metatensor.load("qm7_1000_feats_cutoff.npz")
@@ -269,15 +266,15 @@ pred_fock = model.forward(
     add_noise=NOISE,
 )
 
-ref_polar_lb = molecule_data.lb_target["polarisability"]
-ref_dip_lb = molecule_data.lb_target["dipole_moment"]
+#ref_polar_lb = molecule_data.lb_target["polarisability"]
+#ref_dip_lb = molecule_data.lb_target["dipole_moment"]
 
-ref_eva_lb = []
-for i in range(len(molecule_data.lb_target["fock"])):
-    f = molecule_data.lb_target["fock"][i]
-    s = molecule_data.lb_aux_data["overlap"][i]
-    eig = scipy.linalg.eigvalsh(f, s)
-    ref_eva_lb.append(torch.from_numpy(eig))
+#ref_eva_lb = []
+#for i in range(len(molecule_data.lb_target["fock"])):
+#    f = molecule_data.lb_target["fock"][i]
+#    s = molecule_data.lb_aux_data["overlap"][i]
+#    eig = scipy.linalg.eigvalsh(f, s)
+#    ref_eva_lb.append(torch.from_numpy(eig))
 
 ref_polar = molecule_data.target["polarisability"]
 ref_dip = molecule_data.target["dipole_moment"]
@@ -345,10 +342,10 @@ for epoch in range(NUM_EPOCHS):
         pred = model(
             data["input"], return_type="tensor", batch_indices=[i.item() for i in idx]
         )
-        train_polar_ref = ref_polar_lb[[i.item() for i in idx]]
-        train_dip_ref = ref_dip_lb[[i.item() for i in idx]]
+        train_polar_ref = ref_polar[[i.item() for i in idx]]
+        train_dip_ref = ref_dip[[i.item() for i in idx]]
         train_eva_ref = [
-            ref_eva_lb[i][: ml_data.target.tensor[i].shape[0]] for i in idx
+            ref_eva[i][: ml_data.target.tensor[i].shape[0]] for i in idx
         ]
 
         loss, loss_eva, loss_dipole, loss_polar = loss_fn_combined(
@@ -406,8 +403,8 @@ for epoch in range(NUM_EPOCHS):
                 batch_indices=[i.item() for i in idx],
             )
 
-            val_polar_ref = ref_polar_lb[[i.item() for i in idx]]
-            val_dip_ref = ref_dip_lb[[i.item() for i in idx]]
+            val_polar_ref = ref_polar[[i.item() for i in idx]]
+            val_dip_ref = ref_dip[[i.item() for i in idx]]
             val_eva_ref = [
                 ref_eva_lb[i][: ml_data.target.tensor[i].shape[0]] for i in idx
             ]
