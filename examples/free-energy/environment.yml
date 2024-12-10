@@ -8,9 +8,9 @@ dependencies:
   - make
   - git
   - plumed
-  - py-plumed  
   - pip:
     - ase==3.22.1
+    - pyfftw
     - chemiscope
     - git+https://github.com/i-pi/i-pi.git@main#egg=ipi
     - matplotlib
