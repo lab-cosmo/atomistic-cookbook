@@ -220,8 +220,11 @@ for rotated_structure, rotation in zip(rotated_structures, rotations):
 # our set and rotation and the L channel characterizing the representation. The function
 # returns a list of Wigner D matrices, one for each rotation. Moreover, since we want
 # a real representation, we will use the formula
+#
 # .. math::
+#
 #   R_{mm'}^{l} = \sum_{m_1m_2} U^{l*}_{mm_1}D_{m_1m_2}^{l} (U^T)^l_{m_2m'}
+#
 # where :math:`U^l` is the transformation matrix from the complex to the real spherical
 # defined above, :math:`D^l` is the complex Wigner D-matrix and :math:`R^l` is
 # its real counterpart.
