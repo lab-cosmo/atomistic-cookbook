@@ -41,9 +41,9 @@ from scipy.spatial.transform import Rotation
 #   angular momentum, we will use a -1, 0, 1 convention, that makes the Wigner
 #   D-matrices more readable. When used in the context of real spherical harmonics, the
 #   identification is realized by the following scheme:
-#     + $y \longleftrightarrow -1$
-#     + $z \longleftrightarrow 0$
-#     + $x \longleftrightarrow 1$
+#     + :math:`y \longleftrightarrow -1`
+#     + :math:`z \longleftrightarrow 0`
+#     + :math:`x \longleftrightarrow 1`
 #   which then is represented by y-z-x convention.
 #
 # - If the only difference between two quaternions is their sign, they represent the
@@ -220,9 +220,11 @@ for rotated_structure, rotation in zip(rotated_structures, rotations):
 # our set and rotation and the L channel characterizing the representation. The function
 # returns a list of Wigner D matrices, one for each rotation. Moreover, since we want
 # a real representation, we will use the formula
-# $ R_{mm'}^{l} = \sum_{m_1m_2} U^{l*}_{mm_1}D_{m_1m_2}^{l} (U^T)^l_{m_2m'} $
-# where $U^l$ is the transformation matrix from the complex to the real spherical
-# defined above, D^l is the complex Wigner D-matrix and $R^l$ is its real counterpart.
+# .. math::
+#   R_{mm'}^{l} = \sum_{m_1m_2} U^{l*}_{mm_1}D_{m_1m_2}^{l} (U^T)^l_{m_2m'}
+# where :math:`U^l` is the transformation matrix from the complex to the real spherical
+# defined above, :math:`D^l` is the complex Wigner D-matrix and :math:`R^l` is
+# its real counterpart.
 # Putting all together, the function is
 def WignerD_calculator(rotations, L):
 
