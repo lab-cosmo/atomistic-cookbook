@@ -10,24 +10,16 @@ This tutorial explains how to train a machine learning model for the a molecular
 #
 
 import os
-#import time
 
-#import ase
 import matplotlib.pyplot as plt
-#import metatensor
 import numpy as np
 import scipy
 import torch
-#from ase.units import Hartree
 from IPython.utils import io
-#from metatensor import Labels
-#from tqdm import tqdm
 
 import mlelec.metrics as mlmetrics
 from mlelec.data.dataset import MLDataset, MoleculeDataset, get_dataloader
 from mlelec.features.acdc import compute_features_for_target
-#from mlelec.data.dataset import MLDataset
-#from mlelec.models.linear import LinearTargetModel, drop_zero_blocks
 from mlelec.models.linear import LinearTargetModel
 from mlelec.targets import drop_zero_blocks
 from mlelec.train import Trainer
@@ -51,11 +43,11 @@ torch.set_default_dtype(torch.float64)
 #
 
 # Set the parameters for the dataset
+torch.manual_seed(42)
 
-
-NUM_FRAMES = 10
+NUM_FRAMES = 20
 BATCH_SIZE = 5 #50
-NUM_EPOCHS = 10
+NUM_EPOCHS = 1000
 SHUFFLE_SEED = 0
 TRAIN_FRAC = 0.7
 TEST_FRAC = 0.1
@@ -63,11 +55,11 @@ VALIDATION_FRAC = 0.2
 EARLY_STOP_CRITERION = 20
 VERBOSE=10
 DUMP_HIST=50
-LR = 5e-4
+LR = 5e-3 #5e-4
 VAL_INTERVAL = 1
-W_EVA = 1e4
-W_DIP = 1e3
-W_POL = 1e2
+W_EVA = 1000 #1e4
+W_DIP = 0.1 #1e3
+W_POL = 0.1 #1e2
 DEVICE = "cpu"
 
 ORTHOGONAL = True  # set to 'FALSE' if working in the non-orthogonal basis
@@ -127,7 +119,6 @@ molecule_data = MoleculeDataset(
     target=["fock", "dipole_moment", "polarisability"],
     lb_target=["fock", "dipole_moment", "polarisability"],
 )
-print('Dataset read')
 
 ml_data = MLDataset(
     molecule_data=molecule_data,
@@ -137,7 +128,6 @@ ml_data = MLDataset(
     shuffle_seed=SHUFFLE_SEED,
     orthogonal=ORTHOGONAL,
 )
-print('MLDataset read')
 
 ml_data._split_indices(
     train_frac=TRAIN_FRAC, val_frac=VALIDATION_FRAC, test_frac=TEST_FRAC
@@ -171,13 +161,6 @@ ml_data._set_features(features)
 train_dl, val_dl, test_dl = get_dataloader(
     ml_data, model_return="blocks", batch_size=BATCH_SIZE
 )
-
-#ml_data.target_train=drop_zero_blocks(ml_data.target_train)
-#ml_data.target_val=drop_zero_blocks(ml_data.target_val)
-#ml_data.target_test=drop_zero_blocks(ml_data.target_test)
-#ml_data.feat_train=drop_zero_blocks(ml_data.feat_train)
-#ml_data.feat_val=drop_zero_blocks(ml_data.feat_val)
-#ml_data.feat_test=drop_zero_blocks(ml_data.feat_test)
 
 ml_data.target_train, ml_data.target_val, ml_data.target_test = drop_zero_blocks(
     ml_data.target_train, ml_data.target_val, ml_data.target_test
@@ -243,7 +226,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
     optimizer,
     factor=0.5,
-    patience=20,
+    patience=10,
 )
 
 # Initialize trainer
@@ -281,8 +264,7 @@ history = trainer.fit(
 
 np.save(f"{FOLDER_NAME}/model_output/loss_stats.npy", history)
 
-plot_losses(history)
-plt.savefig(f"{FOLDER_NAME}/loss_vs_epoch.pdf", bbox_inches="tight")
+plot_losses(history, save=True, savename=f"{FOLDER_NAME}/loss_vs_epoch.pdf")
 
 
 
