@@ -2,7 +2,7 @@
 Hamiltonian learning
 =============================
 
-This tutorial explains how to train a machine learning model for the a molecular system. 
+This tutorial explains how to train a machine learning model for the a molecular system.
 """
 
 # %%
@@ -11,20 +11,19 @@ This tutorial explains how to train a machine learning model for the a molecular
 
 import os
 
-import matplotlib.pyplot as plt
+import mlelec.metrics as mlmetrics
 import numpy as np
 import scipy
 import torch
 from IPython.utils import io
-
-import mlelec.metrics as mlmetrics
 from mlelec.data.dataset import MLDataset, MoleculeDataset, get_dataloader
 from mlelec.features.acdc import compute_features_for_target
 from mlelec.models.linear import LinearTargetModel
 from mlelec.targets import drop_zero_blocks
 from mlelec.train import Trainer
 from mlelec.utils.plot_utils import plot_losses
-from mlelec.utils.property_utils import compute_batch_polarisability, instantiate_mf
+from mlelec.utils.property_utils import instantiate_mf
+
 
 torch.set_default_dtype(torch.float64)
 
@@ -45,21 +44,21 @@ torch.set_default_dtype(torch.float64)
 # Set the parameters for the dataset
 torch.manual_seed(42)
 
-NUM_FRAMES = 20
-BATCH_SIZE = 5 #50
+NUM_FRAMES = 100
+BATCH_SIZE = 5  # 50
 NUM_EPOCHS = 1000
 SHUFFLE_SEED = 0
 TRAIN_FRAC = 0.7
 TEST_FRAC = 0.1
 VALIDATION_FRAC = 0.2
 EARLY_STOP_CRITERION = 20
-VERBOSE=10
-DUMP_HIST=50
-LR = 5e-3 #5e-4
+VERBOSE = 10
+DUMP_HIST = 50
+LR = 5e-3  # 5e-4
 VAL_INTERVAL = 1
-W_EVA = 1000 #1e4
-W_DIP = 0.1 #1e3
-W_POL = 0.1 #1e2
+W_EVA = 1000  # 1e4
+W_DIP = 0.1  # 1e3
+W_POL = 0.1  # 1e2
 DEVICE = "cpu"
 
 ORTHOGONAL = True  # set to 'FALSE' if working in the non-orthogonal basis
@@ -100,7 +99,6 @@ save_parameters(
     ORTHOGONAL=ORTHOGONAL,
     FOLDER_NAME=FOLDER_NAME,
 )
-
 
 
 # %%
@@ -221,7 +219,7 @@ with io.capture_output() as captured:
     )
 
 
-loss_fn = getattr(mlmetrics, "mse_per_atom")
+loss_fn = mlmetrics.mse_per_atom  
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
     optimizer,
@@ -265,6 +263,3 @@ history = trainer.fit(
 np.save(f"{FOLDER_NAME}/model_output/loss_stats.npy", history)
 
 plot_losses(history, save=True, savename=f"{FOLDER_NAME}/loss_vs_epoch.pdf")
-
-
-
