@@ -4,7 +4,7 @@ Sample and Feature Selection with FPS and CUR
 
 :Authors: Davide Tisi `@DavideTisi <https://github.com/DavideTisi>`_
 
-In this tutorial we generate descriptors using featomic, then select a subset
+In this tutorial we generate descriptors using rascaline, then select a subset
 of structures using both the farthest-point sampling (FPS) and CUR algorithms
 implemented in scikit-matter. Finally, we also generate a selection of
 the most important features using the same techniques.
@@ -19,8 +19,8 @@ import chemiscope
 import metatensor
 import numpy as np
 from equisolve.numpy import feature_selection, sample_selection
-from featomic import SoapPowerSpectrum
 from matplotlib import pyplot as plt
+from rascaline import SoapPowerSpectrum
 from sklearn.decomposition import PCA
 from skmatter import feature_selection as skfeat_selection
 
@@ -37,25 +37,22 @@ n_frames = 500
 frames = ase.io.read("input-fps.xyz", f":{n_frames}", format="extxyz")
 
 # %%
-# Compute SOAP descriptors using featomic
+# Compute SOAP descriptors using rascaline
 # ----------------------------------------
 #
-# First, define the featomic hyperparameters used to compute SOAP.
+# First, define the rascaline hyperparameters used to compute SOAP.
 
 
-# featomic hyperparameters
+# rascaline hyperparameters
 hypers = {
-    "cutoff": {"radius": 6.0, "smoothing": {"type": "ShiftedCosine", "width": 0.5}},
-    "density": {
-        "type": "Gaussian",
-        "width": 0.3,
-        "scaling": {"type": "Willatt2018", "exponent": 4, "rate": 1, "scale": 3.5},
-    },
-    "basis": {
-        "type": "TensorProduct",
-        "max_angular": 6,
-        "radial": {"type": "Gto", "max_radial": 7},
-    },
+    "cutoff": 6.0,
+    "max_radial": 8,
+    "max_angular": 6,
+    "atomic_gaussian_width": 0.3,
+    "cutoff_function": {"ShiftedCosine": {"width": 0.5}},
+    "radial_basis": {"Gto": {"accuracy": 1e-6}},
+    "radial_scaling": {"Willatt2018": {"exponent": 4, "rate": 1, "scale": 3.5}},
+    "center_atom_weight": 1.0,
 }
 
 # Generate a SOAP power spectrum
@@ -64,13 +61,13 @@ rho2i = calculator.compute(frames)
 
 
 # Makes a dense block
-atom_soap = rho2i.keys_to_properties(["neighbor_1_type", "neighbor_2_type"])
+atom_soap = rho2i.keys_to_properties(["species_neighbor_1", "species_neighbor_2"])
 
-atom_soap_single_block = atom_soap.keys_to_samples(keys_to_move=["center_type"])
+atom_soap_single_block = atom_soap.keys_to_samples(keys_to_move=["species_center"])
 
 # Sum over atomic centers to compute structure features
 struct_soap = metatensor.sum_over_samples(
-    atom_soap_single_block, sample_names=["atom", "center_type"]
+    atom_soap_single_block, sample_names=["center", "species_center"]
 )
 
 
@@ -122,13 +119,13 @@ selector_atomic_fps = sample_selection.FPS(n_to_select=n_envs, initialize="rando
 # Print the selected envs for each block
 print("atomic envs selected with FPS:\n")
 for key, block in selector_atomic_fps.support.items():
-    print("center_type:", key, "\n(struct_idx, atom_idx)\n", block.samples.values)
+    print("species_center:", key, "\n(struct_idx, atom_idx)\n", block.samples.values)
 
 selector_atomic_cur = sample_selection.CUR(n_to_select=n_envs).fit(atom_soap)
 # Print the selected envs for each block
 print("atomic envs selected with CUR:\n")
 for key, block in selector_atomic_cur.support.items():
-    print("center_type:", key, "\n(struct_idx, atom_idx)\n", block.samples.values)
+    print("species_center:", key, "\n(struct_idx, atom_idx)\n", block.samples.values)
 
 
 # %%
@@ -137,7 +134,7 @@ for key, block in selector_atomic_cur.support.items():
 #
 # One can also select from a combined pool of atomic environments and
 # structures, instead of selecting an equal number of atomic environments for
-# each chemical species. In this case, we can move the 'center_type' key to samples
+# each chemical species. In this case, we can move the 'species_center' key to samples
 # such that our descriptor is a TensorMap consisting of a single block. Upon
 # sample selection, the most diverse atomic environments will be selected,
 # regardless of their chemical species.
@@ -158,7 +155,7 @@ selector_atomic_fps = sample_selection.FPS(n_to_select=n_envs, initialize="rando
     atom_soap_single_block
 )
 print(
-    "atomic envs selected with FPS: \n (struct_idx, atom_idx, center_type) \n",
+    "atomic envs selected with FPS: \n (struct_idx, atom_idx, species_center) \n",
     selector_atomic_fps.support.block(0).samples.values,
 )
 
