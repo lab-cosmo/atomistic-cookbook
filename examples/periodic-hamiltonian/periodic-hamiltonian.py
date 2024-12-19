@@ -16,9 +16,6 @@ transferred to molecules.
 #
 
 import os
-
-os.environ["PYSCFAD_BACKEND"] = "torch"
-
 import warnings
 import zipfile
 
