@@ -24,3 +24,5 @@ dependencies:
       - tensorboard
       - torchviz
       - mlelec @ git+https://github.com/curiosity54/mlelec.git@tutorial_periodic#egg=mlelec
+variables:
+  PYSCFAD_BACKEND: torch
