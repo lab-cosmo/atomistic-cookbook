@@ -350,7 +350,7 @@ for s in rotated_structures:
 
 # We can now check that the rotated equivariants are the same as the reference ones
 for re1, re2 in zip(rotated_equivariants, rotated_equivariants_reference):
-    assert np.allclose(re1.block().values, re2.block().values)
+    assert metatensor.allclose(re1, re2)
 print("All the rotated equivariants are the same as the reference ones!")
 
 # Which shows that our rotation are indeed correct!
