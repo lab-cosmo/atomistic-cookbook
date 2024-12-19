@@ -15,3 +15,4 @@ version from the `github repository <https://github.com/Luthaf/rascaline>`_
 - examples/roy-gch/roy-gch
 - examples/sample-selection/sample-selection
 - examples/periodic-hamiltonian/periodic-hamiltonian
+- examples/rotate-equivariants/rotate-equivariants
