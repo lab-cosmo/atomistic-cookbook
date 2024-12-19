@@ -30,11 +30,12 @@ torch.set_default_dtype(torch.float64)
 # sphinx_gallery_thumbnail_number = 3
 
 
+
 # %%
 # Get Data and Prepare Data Set
 # -----------------------------
 #
-
+# We use here as an example a set of 100 ethane structures. For all structures, we ran pyscf calculations with the minimal basis set STO-3G and def2-TZVP. We stored the output hamiltonian, dipole moments, polarisability and overlap matrices in hickle format. The first three will be used as target in the following learning exercise.
 
 # %%
 # Set parameters for training
@@ -44,9 +45,9 @@ torch.set_default_dtype(torch.float64)
 # Set the parameters for the dataset
 torch.manual_seed(42)
 
-NUM_FRAMES = 100
-BATCH_SIZE = 5  # 50
-NUM_EPOCHS = 1000
+NUM_FRAMES = 100 #
+BATCH_SIZE = 4  # 50
+NUM_EPOCHS = 100
 SHUFFLE_SEED = 0
 TRAIN_FRAC = 0.7
 TEST_FRAC = 0.1
@@ -58,7 +59,7 @@ LR = 5e-3  # 5e-4
 VAL_INTERVAL = 1
 W_EVA = 1000  # 1e4
 W_DIP = 0.1  # 1e3
-W_POL = 0.1  # 1e2
+W_POL = 0.01  # 1e2
 DEVICE = "cpu"
 
 ORTHOGONAL = True  # set to 'FALSE' if working in the non-orthogonal basis
@@ -102,8 +103,8 @@ save_parameters(
 
 
 # %%
-# define functions
-# -----------------------------
+# Create Datasets
+# ---------------
 #
 molecule_data = MoleculeDataset(
     mol_name="ethane",
@@ -131,6 +132,11 @@ ml_data._split_indices(
     train_frac=TRAIN_FRAC, val_frac=VALIDATION_FRAC, test_frac=TEST_FRAC
 )
 
+# %%
+# Compute Features
+# ----------------
+#
+
 hypers = {
     "cutoff": 3.0,
     "max_radial": 6,
@@ -155,6 +161,12 @@ features = compute_features_for_target(
     ml_data, device=DEVICE, hypers=hypers, hypers_pair=hypers_pair
 )
 ml_data._set_features(features)
+
+
+# %%
+# Prepare training
+# ----------------
+#
 
 train_dl, val_dl, test_dl = get_dataloader(
     ml_data, model_return="blocks", batch_size=BATCH_SIZE
@@ -218,13 +230,17 @@ with io.capture_output() as captured:
         batch_indices=list(range(len(ml_data.structures))),
     )
 
+# %%
+# Training parameters and training
+# --------------------------------
+#
 
 loss_fn = mlmetrics.mse_per_atom
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
     optimizer,
     factor=0.5,
-    patience=10,
+    patience=3,#20,
 )
 
 # Initialize trainer
@@ -260,6 +276,64 @@ history = trainer.fit(
     **fit_args,
 )
 
+# %%
+# Plot loss
+# ---------
+#
+
+
 np.save(f"{FOLDER_NAME}/model_output/loss_stats.npy", history)
 
 plot_losses(history, save=True, savename=f"{FOLDER_NAME}/loss_vs_epoch.pdf")
+
+
+#Pairity plot
+
+import matplotlib.pyplot as plt
+#plt.plot(np.array([i.detach().numpy() for i in pred]).flatten(),np.array([molecule_data.target['fock'][i] for i in test_dl.dataset.test_idx]).flatten())
+#pred=model(ml_data.feat_test)
+
+from mlelec.utils.property_utils import compute_batch_polarisability
+
+for data in test_dl:
+    idx = data["idx"]
+
+    # Forward pass
+    pred = model(
+        data["input"],
+        return_type="tensor",
+        batch_indices=[i.item() for i in idx],
+    )
+    pred_dipole, pred_polar, pred_eigval = compute_batch_polarisability(
+        ml_data, pred, idx, all_mfs, ORTHOGONAL
+    )
+
+    test_eva_ref = [ref_eva[j][: pred[i].shape[0]] for i, j in enumerate(idx)]
+
+
+
+eva_test=[]
+eva_test_pred=[]
+
+for j,i in enumerate(test_dl.dataset.test_idx):
+     f = molecule_data.target["fock"][i]
+     s = molecule_data.aux_data["overlap"][i]
+     eig = scipy.linalg.eigvalsh(f, s)
+     eva_test.append(torch.from_numpy(eig))
+
+     f_pred = model(ml_data.feat_test)[j].detach()
+     eig_pred = scipy.linalg.eigvalsh(f_pred, s)
+     eva_test_pred.append(torch.from_numpy(eig_pred))
+
+print('testrev',eva_test)
+print('testpred',eva_test_pred)
+
+plt.loglog([np.amin(eva_test_pred), np.amax(eva_test_pred)],[np.amin(eva_test_pred), np.amax(eva_test_pred)], 'k')
+plt.loglog(np.array(eva_test).flatten(), np.array(eva_test_pred).flatten(), 'o')
+plt.xlabel('Eigenvalue$_{ DFT}$')
+plt.ylabel('Eigenvalue$_{ ML}$')
+
+plt.show()
+
+
+
