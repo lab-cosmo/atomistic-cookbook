@@ -11,18 +11,23 @@ This tutorial explains how to train a machine learning model for the a molecular
 
 import os
 
-import mlelec.metrics as mlmetrics
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy
 import torch
 from IPython.utils import io
-from mlelec.data.dataset import MLDataset, MoleculeDataset, get_dataloader
 from mlelec.features.acdc import compute_features_for_target
-from mlelec.models.linear import LinearTargetModel
 from mlelec.targets import drop_zero_blocks
-from mlelec.train import Trainer
 from mlelec.utils.plot_utils import plot_losses
-from mlelec.utils.property_utils import instantiate_mf
+
+
+os.environ["PYSCFAD_BACKEND"] = "torch"
+import mlelec.metrics as mlmetrics  # noqa: E402
+from mlelec.data.dataset import MLDataset, MoleculeDataset, get_dataloader  # noqa: E402
+from mlelec.models.linear import LinearTargetModel  # noqa: E402
+from mlelec.train import Trainer  # noqa: E402
+from mlelec.utils.property_utils import compute_batch_polarisability  # noqa: E402
+from mlelec.utils.property_utils import instantiate_mf  # noqa: E402
 
 
 torch.set_default_dtype(torch.float64)
@@ -30,12 +35,16 @@ torch.set_default_dtype(torch.float64)
 # sphinx_gallery_thumbnail_number = 3
 
 
-
 # %%
 # Get Data and Prepare Data Set
 # -----------------------------
 #
-# We use here as an example a set of 100 ethane structures. For all structures, we ran pyscf calculations with the minimal basis set STO-3G and def2-TZVP. We stored the output hamiltonian, dipole moments, polarisability and overlap matrices in hickle format. The first three will be used as target in the following learning exercise.
+# We use here as an example a set of 100 ethane structures.
+# For all structures, we ran pyscf calculations with the minimal
+# basis set STO-3G and def2-TZVP.
+# We stored the output hamiltonian, dipole moments, polarisability
+# and overlap matrices in hickle format.
+# The first three will be used as target in the following learning exercise.
 
 # %%
 # Set parameters for training
@@ -45,7 +54,7 @@ torch.set_default_dtype(torch.float64)
 # Set the parameters for the dataset
 torch.manual_seed(42)
 
-NUM_FRAMES = 100 #
+NUM_FRAMES = 100  #
 BATCH_SIZE = 4  # 50
 NUM_EPOCHS = 100
 SHUFFLE_SEED = 0
@@ -240,7 +249,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
     optimizer,
     factor=0.5,
-    patience=3,#20,
+    patience=3,  # 20,
 )
 
 # Initialize trainer
@@ -287,13 +296,8 @@ np.save(f"{FOLDER_NAME}/model_output/loss_stats.npy", history)
 plot_losses(history, save=True, savename=f"{FOLDER_NAME}/loss_vs_epoch.pdf")
 
 
-#Pairity plot
+# Parity plot
 
-import matplotlib.pyplot as plt
-#plt.plot(np.array([i.detach().numpy() for i in pred]).flatten(),np.array([molecule_data.target['fock'][i] for i in test_dl.dataset.test_idx]).flatten())
-#pred=model(ml_data.feat_test)
-
-from mlelec.utils.property_utils import compute_batch_polarisability
 
 for data in test_dl:
     idx = data["idx"]
@@ -311,29 +315,30 @@ for data in test_dl:
     test_eva_ref = [ref_eva[j][: pred[i].shape[0]] for i, j in enumerate(idx)]
 
 
+eva_test = []
+eva_test_pred = []
 
-eva_test=[]
-eva_test_pred=[]
+for j, i in enumerate(test_dl.dataset.test_idx):
+    f = molecule_data.target["fock"][i]
+    s = molecule_data.aux_data["overlap"][i]
+    eig = scipy.linalg.eigvalsh(f, s)
+    eva_test.append(torch.from_numpy(eig))
 
-for j,i in enumerate(test_dl.dataset.test_idx):
-     f = molecule_data.target["fock"][i]
-     s = molecule_data.aux_data["overlap"][i]
-     eig = scipy.linalg.eigvalsh(f, s)
-     eva_test.append(torch.from_numpy(eig))
+    f_pred = model(ml_data.feat_test)[j].detach()
+    eig_pred = scipy.linalg.eigvalsh(f_pred, s)
+    eva_test_pred.append(torch.from_numpy(eig_pred))
 
-     f_pred = model(ml_data.feat_test)[j].detach()
-     eig_pred = scipy.linalg.eigvalsh(f_pred, s)
-     eva_test_pred.append(torch.from_numpy(eig_pred))
+# print("testrev", eva_test)
+# print("testpred", eva_test_pred)
 
-print('testrev',eva_test)
-print('testpred',eva_test_pred)
-
-plt.loglog([np.amin(eva_test_pred), np.amax(eva_test_pred)],[np.amin(eva_test_pred), np.amax(eva_test_pred)], 'k')
-plt.loglog(np.array(eva_test).flatten(), np.array(eva_test_pred).flatten(), 'o')
-plt.xlabel('Eigenvalue$_{ DFT}$')
-plt.ylabel('Eigenvalue$_{ ML}$')
+plt.loglog(
+    [np.amin(eva_test_pred), np.amax(eva_test_pred)],
+    [np.amin(eva_test_pred), np.amax(eva_test_pred)],
+    "k",
+)
+plt.loglog(np.array(eva_test).flatten(), np.array(eva_test_pred).flatten(), "o")
+plt.xlabel("Eigenvalue$_{ DFT}$")
+plt.ylabel("Eigenvalue$_{ ML}$")
+plt.savefig(f"{FOLDER_NAME}/parity_eva.pdf")
 
 plt.show()
-
-
-
