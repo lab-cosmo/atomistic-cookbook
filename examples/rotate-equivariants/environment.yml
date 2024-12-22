@@ -6,4 +6,4 @@ dependencies:
   - pip:
     - ase==3.22.1
     - spherical
-    - git+https://github.com/Luthaf/featomic.git@main
+    - featomic
