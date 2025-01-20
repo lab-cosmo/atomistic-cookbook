@@ -8,6 +8,7 @@ dependencies:
     - ase==3.22.1
     - chemiscope>=0.7
     - matplotlib
+    - scipy <= 1.14.9
     - metatensor
     - rascaline @ git+https://github.com/Luthaf/rascaline@ca957642f512e141c7570e987aadc05c7ac71983
     - scikit-learn==1.4.0
