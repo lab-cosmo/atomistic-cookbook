@@ -1,8 +1,10 @@
+setuptools
 sphinx
 sphinx-sitemap
 sphinx-design
 sphinx-gallery
 sphinx-toggleprompt
+sphinxcontrib-details-directive
 docutils
 furo
 chemiscope>=0.7
