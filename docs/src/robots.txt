@@ -1,3 +1,5 @@
 User-agent: *
 
-Sitemap: https://lab-cosmo.github.io/atomistic-cookbook/latest/sitemap.xml
+Sitemap: https://atomistic-cookbook.org/sitemap.xml
+
+Disallow: /latest/
