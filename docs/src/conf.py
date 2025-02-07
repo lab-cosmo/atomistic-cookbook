@@ -160,3 +160,4 @@ def post_build_tweaks(app, exception):
 
 def setup(app):
     app.connect("build-finished", post_build_tweaks)
+    app.add_css_file("cookbook.css")
