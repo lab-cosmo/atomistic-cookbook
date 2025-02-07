@@ -25,12 +25,18 @@ import numpy as np
 import requests
 import torch
 from matplotlib.animation import FuncAnimation
-from mlelec.data.derived_properties import compute_eigenvalues
-from mlelec.data.mldataset import MLDataset
 from mlelec.data.qmdataset import QMDataset
-from mlelec.models.equivariant_lightning import LitEquivariantModel, MSELoss
 from mlelec.utils.pbc_utils import blocks_to_matrix
 from mlelec.utils.plot_utils import plot_bands_frame
+
+
+os.environ["PYSCFAD_BACKEND"] = "torch"
+from mlelec.data.derived_properties import compute_eigenvalues  # noqa: E402
+from mlelec.data.mldataset import MLDataset  # noqa: E402
+from mlelec.models.equivariant_lightning import (  # noqa: E402
+    LitEquivariantModel,
+    MSELoss,
+)
 
 
 warnings.filterwarnings("ignore")
