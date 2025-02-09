@@ -53,7 +53,8 @@ lr_wavelength = 0.5 * smearing  # Wavelength for long-range interactions.
 params = {"lr_wavelength": lr_wavelength}
 
 # %%
-# Build the neighbor list
+# Build the neighbor list.
+# ~~~~~~~~~~~~~~~~~~~~~~~~
 # The neighbor list is used to identify interacting pairs within the cutoff distance.
 nl = NeighborList(cutoff=cutoff, full_list=False)
 
@@ -129,6 +130,7 @@ def loss(charge_dict: Dict[str, torch.Tensor]) -> torch.Tensor:
 
 # %%
 # Fit charge model
+# ~~~~~~~~~~~~~~~~~
 
 # %%
 # Set initial values for the potential
@@ -148,8 +150,8 @@ q_Cl.requires_grad = True
 charge_dict = {"Na": q_Na, "Cl": q_Cl}
 
 # %%
-# Learning loop
-# Optimize charges to minimize the loss function
+# Learning loop:
+# optimize charges to minimize the loss function
 optimizer = torch.optim.Adam([q_Na, q_Cl], lr=0.01)
 
 q_Na_timeseries = []
@@ -181,6 +183,7 @@ for step in range(int(1e4)):
 
 # %%
 # Fit kernel model
+# ~~~~~~~~~~~~~~~~
 # The second phase involves optimizing the weights of the combined potential kernels.
 
 # %%
@@ -197,8 +200,8 @@ calculator = EwaldCalculator(potential=potential, **params, prefactor=prefactor)
 calculator.to(device=device, dtype=dtype)
 
 # %%
-# Kernel optimization loop
-# Optimize kernel weights to minimize the loss function
+# Kernel optimization loop:
+# optimize kernel weights to minimize the loss function
 optimizer = torch.optim.Adam(calculator.parameters(), lr=0.01)
 
 weights_timeseries = []
