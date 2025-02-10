@@ -158,7 +158,7 @@ q_Na_timeseries = []
 q_Cl_timeseries = []
 loss_timeseries = []
 
-for step in range(int(1e3)):
+for step in range(1000):
     optimizer.zero_grad()
 
     charge_dict = {"Na": q_Na, "Cl": q_Cl}
@@ -207,7 +207,7 @@ optimizer = torch.optim.Adam(calculator.parameters(), lr=0.1)
 weights_timeseries = []
 loss_timeseries = []
 
-for step in range(1e3):
+for step in range(1000):
     optimizer.zero_grad()
 
     # Fix charges to their ideal values for this phase
