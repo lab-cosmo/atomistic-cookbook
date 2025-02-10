@@ -53,7 +53,7 @@ lr_wavelength = 0.5 * smearing  # Wavelength for long-range interactions.
 params = {"lr_wavelength": lr_wavelength}
 
 # %%
-# Build the neighbor list.
+# Build the neighbor list
 # ~~~~~~~~~~~~~~~~~~~~~~~~
 # The neighbor list is used to identify interacting pairs within the cutoff distance.
 nl = NeighborList(cutoff=cutoff, full_list=False)
@@ -262,7 +262,7 @@ def plot_results(fname=None, show_snapshot=True):
     """
     fig, ax = plt.subplots(
         2,
-        sharex=False,
+        sharex=True,
         layout="constrained",
         dpi=200,
     )
@@ -277,10 +277,9 @@ def plot_results(fname=None, show_snapshot=True):
     ax[0].plot(np.array(q_Cl_timeseries), c=palette[1], label=r"Cl")
 
     ax[0].set_ylim(-1.3, 1.3)
-    ax[0].set_xlim(1, 2000)
     ax[0].axhline(1, ls="dotted", c=palette[0])
     ax[0].axhline(-1, ls="dotted", c=palette[1])
-    ax[0].legend(frameon=True, edgecolor="None", ncol=2)
+    ax[0].legend()
     ax[0].set_ylabel(r"Charge / e")
 
     # Plot kernel weight learning
@@ -297,8 +296,7 @@ def plot_results(fname=None, show_snapshot=True):
     for a in ax:
         a.set_xscale("log")
 
-    ax[0].set_xlabel("Charge learning epoch")
-    ax[1].set_xlabel("Kernel learning epoch")
+    ax[1].set_xlabel("Learning epoch")
 
     fig.align_labels()
 
@@ -310,3 +308,5 @@ def plot_results(fname=None, show_snapshot=True):
 
 # Call the plot function to visualize results
 plot_results("toy_model_learning.pdf", show_snapshot=True)
+
+# %%
