@@ -152,13 +152,13 @@ charge_dict = {"Na": q_Na, "Cl": q_Cl}
 # %%
 # Learning loop:
 # optimize charges to minimize the loss function
-optimizer = torch.optim.Adam([q_Na, q_Cl], lr=0.01)
+optimizer = torch.optim.Adam([q_Na, q_Cl], lr=0.1)
 
 q_Na_timeseries = []
 q_Cl_timeseries = []
 loss_timeseries = []
 
-for step in range(int(1e4)):
+for step in range(int(1e3)):
     optimizer.zero_grad()
 
     charge_dict = {"Na": q_Na, "Cl": q_Cl}
@@ -202,12 +202,12 @@ calculator.to(device=device, dtype=dtype)
 # %%
 # Kernel optimization loop:
 # optimize kernel weights to minimize the loss function
-optimizer = torch.optim.Adam(calculator.parameters(), lr=0.01)
+optimizer = torch.optim.Adam(calculator.parameters(), lr=0.1)
 
 weights_timeseries = []
 loss_timeseries = []
 
-for step in range(2000):
+for step in range(1e3):
     optimizer.zero_grad()
 
     # Fix charges to their ideal values for this phase
