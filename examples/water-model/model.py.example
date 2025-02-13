@@ -276,14 +276,14 @@ class WaterModel(torch.nn.Module):
         # select pairs within the same molecule
         mol_mask = (i // 3) == (j // 3)
 
-        bond_mask = mol_mask & (species[i] == 8)
+        bond_mask = mol_mask & (species[i] == 8) & (species[j] == 1)
         bond_neighbor_indices = neighbor_indices[bond_mask]
         bond_neighbor_distances = neighbor_distances[bond_mask]
-
+        
         cell_dimensions = torch.linalg.norm(system.cell, dim=1)
         min_dimension = float(torch.min(cell_dimensions))
         half_cell = min_dimension / 2.0
-
+        
         if torch.any(bond_neighbor_distances > half_cell):
             raise ValueError(
                 "Bond distances are larger than half of the cell size. "
