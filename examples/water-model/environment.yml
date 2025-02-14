@@ -1,0 +1,12 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+    - ase
+    - chemiscope>=0.7
+    - metatensor-torch
+    - metatensor-operations
+    - matplotlib
+    - torch-pme<0.3
