@@ -42,13 +42,19 @@ from metatensor.torch.atomistic import (
     ModelEvaluationOptions,
     ModelMetadata,
     ModelOutput,
+    NeighborListOptions,
+    System,
+    load_atomistic_model
 )
+
+from vesin.torch.metatensor import NeighborList
+from metatensor.torch import Labels, TensorBlock, TensorMap
 
 # Integration with ASE calculator for metatensor atomistic models
 from metatensor.torch.atomistic.ase_calculator import MetatensorCalculator
 
 
-get_ipython().run_line_magic('matplotlib', 'inline')
+# get_ipython().run_line_magic('matplotlib', 'inline')
 
 # %%
 #
@@ -124,8 +130,8 @@ bond_potential = bond_energy(
 
 plt.title("Bond Potential Between Oxygen and Hydrogen")
 plt.plot(bond_distances, bond_potential)
-plt.xlabel("Distance [Å]")
-plt.ylabel("Bond Potential [kcal/mol]")
+plt.xlabel("Distance / Å ")
+plt.ylabel("Bond Potential / (kcal/mol)")
 
 plt.show()
 
@@ -163,10 +169,10 @@ angle_potential = bend_energy(
     equilibrium_angle=HOH_equilibrium_angle,
 )
 
-plt.title("Harmonic Angle Potential in Water Molecule")
+plt.title("Harmonic Angular Potential for a Water Molecule")
 plt.plot(angle_distances, angle_potential)
-plt.xlabel("Angle [degrees]")
-plt.ylabel("Harmonic Angle Potential [kcal/mol]")
+plt.xlabel("Angle / degrees")
+plt.ylabel("Harmonic Angular Potential / (kcal/mol)")
 plt.show()
 
 # %%
@@ -234,8 +240,8 @@ plt.axhline(0, color="black", linestyle="--")
 plt.axhline(-O_epsilon, color="red", linestyle=":", label="Oxygen ε")
 plt.axvline(O_sigma, color="black", linestyle=":", label="Oxygen σ")
 plt.plot(lj_distances, lj_potential)
-plt.xlabel("Distance [Å]")
-plt.ylabel("Lennard-Jones Potential [kcal/mol]")
+plt.xlabel("Distance / Å")
+plt.ylabel("Lennard-Jones Potential / (kcal/mol)")
 plt.legend()
 
 plt.show()
@@ -308,10 +314,9 @@ p3m_prefactor = torchpme.prefactors.kcalmol_A
 
 p3m_calculator = torchpme.P3MCalculator(
     potential=torchpme.CoulombPotential(p3m_smearing),
-    **p3m_parameters
+    **p3m_parameters,
     prefactor=p3m_prefactor
 )
-
 
 
 # %%
@@ -343,8 +348,8 @@ for i_dist, dist in enumerate(coulomb_distances):
 
 plt.title("Electrostatic Potential Between Two Point Charges")
 plt.plot(coulomb_distances, potential)
-plt.xlabel("Distance [Å]")
-plt.ylabel("Electrostatic Potential [kcal/mol]")
+plt.xlabel("Distance / Å")
+plt.ylabel("Electrostatic Potential / (kcal/mol)")
 plt.show()
 
 # %%
@@ -362,19 +367,21 @@ plt.show()
 
 
 # %%
-# Implementation as a ``torch`` module
-# ------------------------------------
+# Implementation as a Q-TIP4P/f ``torch`` module
+# ----------------------------------------------
+# 
+# In order to implement a Q-TIP4P/f potential in practice,
+# we first build a class that follows the interface of a `metatomic`
+# model. This requires defining the atomic structure in terms of a 
+# :class:`metatensor.torch.atomistic.System` object - a simple container
+# for positions, cell, and atomic types, that can also be enriched
+# with one or more :class:`metatensor.torch.atomistic.NeighborList` objects
+# holding neighbor distance information. This is usually provided 
+# by the code used to perform a simulation, but can be also computed
+# explicitly using ``ase`` or `vesin
+# <https://luthaf.fr/vesin/latest/index.html>`_, as we do here.
 
-from metatensor.torch.atomistic import (
-    MetatensorAtomisticModel,
-    ModelCapabilities,
-    ModelEvaluationOptions,
-    ModelMetadata,
-    ModelOutput,
-    NeighborListOptions,
-    System,
-)
-
+# small water box 
 atoms = ase.io.read("data/water_32.pdb")
 system = System(
     types=torch.from_numpy(atoms.get_atomic_numbers()),
@@ -382,21 +389,32 @@ system = System(
     cell=torch.from_numpy(atoms.cell.array),
     pbc=torch.from_numpy(atoms.pbc),
 )
-nlo = NeighborListOptions(cutoff=6.0, full_list=False, strict=False)
 
-
-from vesin.torch.metatensor import NeighborList
-from metatensor.torch import Labels, TensorBlock, TensorMap
+# define the options for the neighbor list
+nlo = NeighborListOptions(cutoff=7.0, full_list=False, strict=False)
 calculator = NeighborList(nlo, length_unit="Angstrom")
 neighbors = calculator.compute(system)
 system.add_neighbor_list(nlo, neighbors)
 
+
 # %%
-# 
+# Neighbor lists are stored within ``metatensor`` as 
+# :class:`metatensor.TensorBlock` objects, if you're curious
+
 neighbors
 
 # %% 
-#
+# Helper functions for molecular geometry
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# 
+# In order to compute the different terms in the Q-TIP4P/f potential,
+# we need to extract some information on the geometry of the water 
+# molecule. To keep the model class clean, we define a couple of helper
+# functions: a first one, computes O-H covalent bond lengths and angle
+# Note that the assumption is made that coordinates are not folded 
+# (so that O-H distances can be computed as a simple difference, ignoring
+# PBCs) and that atoms of each molecule are stored contiguously, 
+# i.e. O,H,H,O,H,H, ...
 
 def get_bonds_angles(positions: torch.Tensor):
     """ Return the list of bond distances, angles and charge site 
@@ -419,6 +437,16 @@ def get_bonds_angles(positions: torch.Tensor):
     ))
     
     return oh_dist, hoh_angles
+
+# %%
+# A second helper function computes the position of the "M sites", the
+# position of the O charge in a TIP4P-like model. Note that we also 
+# need distances to compute range-separated electrostatics, which we 
+# obtain manipulating the neighbor list that is pre-attached to the 
+# system. Thanks to the fact we rely on ``torch`` autodifferentiation 
+# mechanism, the forces acting on the M sites will be automatically 
+# split between O and H atoms, in a way that is consistent with the
+# definition.
 
 def get_msites(system: System, m_gamma: torch.Tensor, m_charge: torch.Tensor):
     
@@ -448,9 +476,7 @@ def get_msites(system: System, m_gamma: torch.Tensor, m_charge: torch.Tensor):
     for nlo in system.known_neighbor_lists():
         nl = system.get_neighbor_list(nlo)
         i_idx = nl.samples.view(["first_atom"]).values.flatten()
-        j_idx = nl.samples.view(["second_atom"]).values.flatten()
-        print(nl.values.shape,
-              om_displacements[j_idx].shape)
+        j_idx = nl.samples.view(["second_atom"]).values.flatten()        
         m_nl = TensorBlock(
             nl.values + om_displacements[j_idx] - om_displacements[i_idx],
             nl.samples,
@@ -464,14 +490,14 @@ def get_msites(system: System, m_gamma: torch.Tensor, m_charge: torch.Tensor):
     charges[::3] = -m_charge
     charges[1::3] = 0.5*m_charge
     charges[2::3] = 0.5*m_charge
-    
+
     # Create metadata for the charges TensorBlock
     samples = Labels("atom", torch.arange(len(system), device=charges.device).reshape(-1, 1))
     properties = Labels("charge", torch.zeros(1, 1, device=charges.device, dtype=torch.int32))
     data = TensorBlock(
         values=charges, samples=samples, components=[], properties=properties
     )
-    m_system.add_data(name="charges", data=data)    
+    m_system.add_data(data=data, name="charges")    
 
     # intra-molecular distances (for self-energy removal)
     hh_dist = torch.sqrt(((h1_pos-h2_pos)**2).sum(dim=1))
@@ -481,30 +507,29 @@ def get_msites(system: System, m_gamma: torch.Tensor, m_charge: torch.Tensor):
     ])
     return m_system, mh_dist, hh_dist    
 
-
-
 # %%
-mol_data = get_bonds_angles(system.positions)    
-mol_data[-1]
+# The model
+# ^^^^^^^^^
+# Armed with these functions, the definitions of bonded and LJ
+# potentials, and the :class:`torchpme.P3MCalculator` class,
+# we can define with relatively small effort the actual model. 
+# We do not hard-code the specific parameters of the Q-TIP4P/f 
+# potential (so that in principle this class can be used for 
+# classical TIP4P, and - by setting ``m_gamma`` to one - a 
+# three-point water model). 
+#
+# A few points worth noting: (1) we also define a bare Coulomb 
+# potential (that pretty much computes :math:`1/r`) which we need
+# to subtract the molecular "self electrostatic interaction";
+# (2) units are expected to be Å for distances, kcal/mol for energies,
+# and radians for angles; (3) model parameters are registered as 
+# ``buffers``; (4) P3M parameters can also be given, in the format
+# returned by :func:`torchpme.tuning.tune_p3m`.
+#
+# The ``forward`` call is a relatively straightforward combination
+# of all the helper functions defined further up in this file, 
+# and should be relatively easy to follow. 
 
-m_sys = get_msites(system, 0.8, 0.85)
-m_nl = m_sys[0].get_neighbor_list(nlo)
-p3m_calculator = torchpme.metatensor.P3MCalculator(
-                potential=torchpme.CoulombPotential(p3m_smearing),
-                **p3m_parameters
-            )
-
-# %%
-pots = p3m_calculator.forward(m_sys[0], m_nl).block(0).values
-charges = m_sys[0].get_data("charges").values
-
-# %%
-(pots*charges).sum()
-
-# %%
-
-
-# %%
 class QTIP4PfModel(torch.nn.Module):
     def __init__(self, 
                 cutoff: float,
@@ -531,7 +556,7 @@ class QTIP4PfModel(torch.nn.Module):
         self.p3m_calculator = torchpme.metatensor.P3MCalculator(
                 potential=torchpme.CoulombPotential(p3m_smearing),
                 **p3m_parameters,
-                prefactor=torchpme.prefactors.kcalmol_A
+                prefactor=torchpme.prefactors.kcalmol_A # consistent units
             )
         
         self.coulomb = torchpme.CoulombPotential()
@@ -557,6 +582,7 @@ class QTIP4PfModel(torch.nn.Module):
         
 
     def requested_neighbor_lists(self):
+        """ Returns the list of neighbor list options that are needed. """
         return [self.nlo]
 
     def _setup_systems(
@@ -565,7 +591,6 @@ class QTIP4PfModel(torch.nn.Module):
         selected_atoms: Optional[Labels] = None,
     ) -> tuple[System, TensorBlock]:
         
-        """Remove possible ghost atoms."""
         if len(systems) > 1:
             raise ValueError(f"only one system supported, got {len(systems)}")
 
@@ -579,6 +604,7 @@ class QTIP4PfModel(torch.nn.Module):
         outputs: Dict[str, ModelOutput],  # noqa
         selected_atoms: Optional[Labels] = None,
     ) -> Dict[str, TensorMap]:  # noqa
+        
         if list(outputs.keys()) != ["energy"]:
             raise ValueError(
                 f"`outputs` keys ({', '.join(outputs.keys())}) contain unsupported "
@@ -605,16 +631,18 @@ class QTIP4PfModel(torch.nn.Module):
         m_system, mh_dist, hh_dist = get_msites(system, self.m_gamma, self.m_charge)
         potentials = self.p3m_calculator(m_system, neighbors).block(0).values
         charges = m_system.get_data("charges").values
-        print(charges, potentials, charges.sum())
-        energy_coulomb = (potentials*charges).sum()        
+        energy_coulomb = (potentials*charges).sum()
+
+        # this is the intra-molecular Coulomb interactions, that must be removed  
+        # to avoid double-counting
         energy_self = (
             self.coulomb.from_dist(mh_dist).sum()*charges[0] + 
             self.coulomb.from_dist(hh_dist).sum()*charges[1]
         )*charges[1]*torchpme.prefactors.kcalmol_A
 
-        print("energies", e_bond, e_bend, energy_lj, energy_coulomb, energy_self)
-
+        # combines all energy terms
         energy_tot = e_bond + e_bend + energy_lj + energy_coulomb - energy_self
+
         # Rename property label to follow metatensor's covention for an atomistic model
         samples = Labels(
             ["system"], torch.arange(len(systems), device=self.device).reshape(-1, 1)
@@ -631,22 +659,43 @@ class QTIP4PfModel(torch.nn.Module):
             ),
         }
 
+# %%
+# All this class does is take a ``System`` and return its
+# energy (as a :clas:`metatensor.TensorMap``)
+    
+qtip4pf_parameters = dict(
+    cutoff = 7.0,
+    lj_sigma = 3.1589,
+    lj_epsilon = 0.1852,
+    m_gamma=0.73612,
+    m_charge=1.128,
+    oh_bond_eq=0.9419,
+    oh_bond_d=116.09,
+    oh_bond_alpha=2.287,
+    hoh_angle_eq=107.4*np.pi/180,
+    hoh_angle_k=87.85
+)
+model=QTIP4PfModel(**qtip4pf_parameters)
 
+nrg = model.forward([system], {"energy": ""})
+print(f"""
+Energy is {nrg["energy"].block(0).values[0].item()} kcal/mol
+""")
 
 # %%
-
-model=QTIP4PfModel(6.0, 3.1589, 0.1852, 0.73612, 1.128, 0.9419, 116.09, 2.287, 107.4*np.pi /180, 87.85)
-# %%
-nrg = model.forward([system], {"energy":""})
-
-
-# %%
-
-torch.jit.script(model)
+# Build and save a ``MetatensorAtomisticModel``
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# This minimalistic model can be wrapped into a 
+# :class:`metatensor.torch.atomistic.MetatensorAtomisticModel`
+# class, that provides useful helpers to specify the capabilities
+# of the model, and to save it as a ``torchscript`` module.
 
 # %%
-# Wraps the torch model into a metatomic calculator
-
+# Model options include a definition of its units, and a description
+# of the quantities it can compute. 
+# NB: we neeed to specify that the model has infinite interaction range
+# because of the presence of a long-range term that means one cannot 
+# assume that forces decay to zero beyond the cutoff.
 
 energy_unit = "kcal/mol"
 length_unit = "angstrom"
@@ -667,41 +716,139 @@ model_capabilities = ModelCapabilities(
 atomistic_model = MetatensorAtomisticModel(
     model.eval(), ModelMetadata(), model_capabilities
 )
+
 atomistic_model.save("qtip4pf-mta.pt")
-mta_calculator = MetatensorCalculator(atomistic_model)
+
 
 # %%
+# Using the Q-TIP4P/f model
+# -------------------------
+# 
+# The ``torchscript`` model can be reused with any simulation software
+# compatible with the ``metatomic`` API. Here we give a couple of 
+# examples, designed to demonstrate the usage more than to provide
+# realistic use cases.
 
+# %%
+# Geometry optimization with ``ase``
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# We begin with an example based on an 
+# ``ase``-compatible calculator. 
+# To this end, ``metatensor`` provides a compatible
+# :class:`metatensor.torch.atomistic.MetatensorCalculator` 
+# wrapper to a model. Note how the metadata associated with
+# the model are used to convert energy into the units 
+# expected by ``ase`` (eV and Å). 
+
+atomistic_model = load_atomistic_model("qtip4pf-mta.pt")
+mta_calculator = MetatensorCalculator(atomistic_model)
 atoms = ase.io.read("data/water_32.pdb")
 atoms.calc=mta_calculator
 nrg = atoms.get_potential_energy()
-atoms.calc.todict=(lambda : None)
-opt_trj = []
-opt_nrg = []
+
+print(f"""
+Energy is {nrg} eV, corresponding to {nrg*23.060548} kcal/mol
+""")
+
 
 # %%
+# We then use one of the built-in ``ase`` functions to run the 
+# structural relaxation. The relaxation is split into short segments
+# just to be able to visualize the trajectory
+
 from ase.optimize import LBFGS
+
+opt_trj = []
+opt_nrg = []
 # fmax is the threshold on the maximum force component. 
 # optimization will stop when the threshold is reached
-for i in range(100):
+for i in range(20):
     opt_trj.append(atoms.copy())
     opt_nrg.append(atoms.get_potential_energy())
     opt = LBFGS(atoms, restart="lbfgs_restart.json")
-    opt.run(fmax=0.001, steps=3)
+    opt.run(fmax=0.001, steps=5)
+opt.run(fmax=0.001, steps=10)    
+nrg_final = atoms.get_potential_energy()
 
 
-# the optimized geometry is stored in the `structure` object
+# %%
+# Use `chemiscope
+# <http://chemiscope.org>`_ to visualize the geometry 
+# optimization together with the convergence of the energy 
+# to a local minimum.
+
+chemiscope.show(frames=opt_trj, 
+                properties={
+                    "step": 1+np.arange(0,len(opt_trj)),
+                    "energy": opt_nrg-nrg_final,
+                },
+                mode="default", 
+                settings=
+                chemiscope.quick_settings(
+                    map_settings={'x': {'property': 'index', 'scale': 'log'},
+                                  'y': {'property': 'energy', 'scale': 'log'},
+                    },
+                    structure_settings={ 'unitCell': True,},
+                    trajectory=True))
+
+
+# %%
+# Molecular dynamics with ``i-PI``
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+from ipi.utils.scripting import (
+    simulation_xml,
+    forcefield_xml,
+    motion_nvt_xml,
+    InteractiveSimulation,
+)
+
+from ipi.utils.parsing import (
+    read_output, read_trajectory
+)
+
+data = ase.io.read("data/water_32.pdb")
+input_xml = simulation_xml(
+    structures=data,
+    forcefield=forcefield_xml(
+        name="qtip4pf",
+        mode="direct",
+        pes="metatensor",
+        parameters={"model": "qtip4pf-mta.pt", "template": "data/water_32.pdb"},
+    ),
+    motion=motion_nvt_xml(timestep=0.5*ase.units.fs),
+    temperature=300,
+    prefix="qtip4pf-md",
+)
+
 # %%
 
-# %%
-import chemiscope
+sim = InteractiveSimulation(input_xml)
 
-chemiscope.show(frames=opt_trj, mode="structure", settings=
-                chemiscope.quick_settings(trajectory=True))
 # %%
+sim.run(100)
 
-plt.plot(opt_nrg)
 # %%
 
-opt_nrg
+data, info = read_output('qtip4pf-md.out')
+trj = read_trajectory('qtip4pf-md.pos_0.xyz')
+# %%
+plt.plot(data['step'], data['potential'])
+# %%
+len(data['step'])
+# %%
+
+chemiscope.show(frames=trj, 
+                properties={
+                    "step": data['step'][::10],
+                    "potential": data['potential'][::10],
+                },
+                mode="default", 
+                settings=
+                chemiscope.quick_settings(
+                    map_settings={'x': {'property': 'step', 'scale': 'linear'},
+                                  'y': {'property': 'potential', 'scale': 'linear'},
+                    },
+                    structure_settings={ 'unitCell': True,},
+                    trajectory=True))
 # %%
