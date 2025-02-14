@@ -49,8 +49,6 @@ files. If your example needs such data files, there are a few options available:
 - if the data files are small (few 10s of Kb) you may also include them in a
   ``data/`` folder within the example folder. A zip file will be generated that
   can be downloaded from the example page.
-- for a Python file that should not be rendered you can save it with a leading
-  underscore, e.g. ``_my_script.py``.
 
 .. _sphinx-gallery: https://sphinx-gallery.github.io/
 .. _RestructuredText: https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
