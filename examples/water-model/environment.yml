@@ -6,7 +6,8 @@ dependencies:
   - pip:
     - ase
     - chemiscope>=0.7
-    - metatensor-torch
+    - metatensor-torch<0.7
     - metatensor-operations
     - matplotlib
     - torch-pme<0.3
+    - vesin[torch]
