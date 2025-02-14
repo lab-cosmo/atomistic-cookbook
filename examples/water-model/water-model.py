@@ -408,13 +408,13 @@ def get_bonds_angles(positions: torch.Tensor):
     h2_pos = positions[2::3]
 
     oh_dist = torch.concatenate([
-            torch.sqrt(((h1_pos-o_pos)**2).sum(axis=1)),
-            torch.sqrt(((h2_pos-o_pos)**2).sum(axis=1)),
+            torch.sqrt(((h1_pos-o_pos)**2).sum(dim=1)),
+            torch.sqrt(((h2_pos-o_pos)**2).sum(dim=1)),
     ])
     if oh_dist.max() > 2.0: 
         raise ValueError("Unphysical O-H bond length. Check that the molecules are entire, and atoms are listed in the expected OHH order.")
 
-    hoh_angles = torch.arccos(torch.sum( (h1_pos-o_pos)*(h2_pos-o_pos), axis=1 )/(
+    hoh_angles = torch.arccos(torch.sum( (h1_pos-o_pos)*(h2_pos-o_pos), dim=1 )/(
         oh_dist[:len(o_pos)]*oh_dist[len(o_pos):]
     ))
     
@@ -472,12 +472,13 @@ def get_msites(system: System, m_gamma: torch.Tensor, m_charge: torch.Tensor):
     m_system.add_data(name="charges", data=data)    
 
     # intra-molecular distances (for self-energy removal)
-    hh_dist = torch.sqrt(((h1_pos-h2_pos)**2).sum(axis=1))
+    hh_dist = torch.sqrt(((h1_pos-h2_pos)**2).sum(dim=1))
     mh_dist = torch.concatenate([
-            torch.sqrt(((h1_pos-m_pos)**2).sum(axis=1)),
-            torch.sqrt(((h2_pos-m_pos)**2).sum(axis=1)),
+            torch.sqrt(((h1_pos-m_pos)**2).sum(dim=1)),
+            torch.sqrt(((h2_pos-m_pos)**2).sum(dim=1)),
     ])
     return m_system, mh_dist, hh_dist    
+
 
 
 # %%
@@ -610,7 +611,7 @@ class QTIP4PfModel(torch.nn.Module):
 
         print("energies", e_bond, e_bend, energy_lj, energy_coulomb, energy_self)
 
-        energy_tot = e_bond + e_bend + energy_lj + energy_coulomb - energy_self
+        energy_tot = e_bond + e_bend + energy_lj # + energy_coulomb - energy_self
         # Rename property label to follow metatensor's covention for an atomistic model
         samples = Labels(
             ["system"], torch.arange(len(systems), device=self.device).reshape(-1, 1)
@@ -638,8 +639,8 @@ nrg = model.forward([system], {"energy":""})
 
 # %%
 
-
 torch.jit.script(model)
+
 # %%
 # Wraps the torch model into a metatomic calculator
 
@@ -664,19 +665,40 @@ atomistic_model = MetatensorAtomisticModel(
     model.eval(), ModelMetadata(), model_capabilities
 )
 atomistic_model.save("qtip4pf-mta.pt")
-
 mta_calculator = MetatensorCalculator(atomistic_model)
+
 # %%
 
+atoms = ase.io.read("data/water_32.pdb")
 atoms.calc=mta_calculator
 nrg = atoms.get_potential_energy()
+atoms.calc.todict=(lambda : None)
+opt_trj = []
+opt_nrg = []
 
 # %%
 from ase.optimize import LBFGS
-opt = LBFGS(atoms, trajectory="log_file.xyz")
 # fmax is the threshold on the maximum force component. 
 # optimization will stop when the threshold is reached
-opt.run(fmax=0.001) 
+for i in range(100):
+    opt_trj.append(atoms.copy())
+    opt_nrg.append(atoms.get_potential_energy())
+    opt = LBFGS(atoms, restart="lbfgs_restart.json")
+    opt.run(fmax=0.001, steps=3)
+
+
 # the optimized geometry is stored in the `structure` object
-print(atoms.positions, atoms.get_potential_energy())
+# %%
+
+# %%
+import chemiscope
+
+chemiscope.show(frames=opt_trj, mode="structure", settings=
+                chemiscope.quick_settings(trajectory=True))
+# %%
+
+plt.plot(opt_nrg)
+# %%
+
+opt_nrg
 # %%
