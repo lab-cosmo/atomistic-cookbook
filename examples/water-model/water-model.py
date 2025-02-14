@@ -461,8 +461,10 @@ def get_msites(system: System, m_gamma: torch.Tensor, m_charge: torch.Tensor):
 
     # set charges of all atoms (now we bundle O first and H last)
     charges = torch.ones_like(o_pos).reshape(-1,1)
-    charges[:len(o_pos)] = m_charge
-    charges[len(o_pos):] = -0.5*m_charge
+    charges[::3] = -m_charge
+    charges[1::3] = 0.5*m_charge
+    charges[2::3] = 0.5*m_charge
+    
     # Create metadata for the charges TensorBlock
     samples = Labels("atom", torch.arange(len(system), device=charges.device).reshape(-1, 1))
     properties = Labels("charge", torch.zeros(1, 1, device=charges.device, dtype=torch.int32))
@@ -603,15 +605,16 @@ class QTIP4PfModel(torch.nn.Module):
         m_system, mh_dist, hh_dist = get_msites(system, self.m_gamma, self.m_charge)
         potentials = self.p3m_calculator(m_system, neighbors).block(0).values
         charges = m_system.get_data("charges").values
-        energy_coulomb = (potentials*charges).sum()
+        print(charges, potentials, charges.sum())
+        energy_coulomb = (potentials*charges).sum()        
         energy_self = (
-            -self.coulomb.from_dist(mh_dist).sum()*self.m_charge + 
-            self.coulomb.from_dist(hh_dist).sum()*self.m_charge*0.5
-        )*self.m_charge*0.5*torchpme.prefactors.kcalmol_A
+            self.coulomb.from_dist(mh_dist).sum()*charges[0] + 
+            self.coulomb.from_dist(hh_dist).sum()*charges[1]
+        )*charges[1]*torchpme.prefactors.kcalmol_A
 
         print("energies", e_bond, e_bend, energy_lj, energy_coulomb, energy_self)
 
-        energy_tot = e_bond + e_bend + energy_lj # + energy_coulomb - energy_self
+        energy_tot = e_bond + e_bend + energy_lj + energy_coulomb - energy_self
         # Rename property label to follow metatensor's covention for an atomistic model
         samples = Labels(
             ["system"], torch.arange(len(systems), device=self.device).reshape(-1, 1)
