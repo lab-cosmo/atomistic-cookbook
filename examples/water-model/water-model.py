@@ -309,6 +309,7 @@ p3m_prefactor = torchpme.prefactors.kcalmol_A
 p3m_calculator = torchpme.P3MCalculator(
     potential=torchpme.CoulombPotential(p3m_smearing),
     **p3m_parameters
+    prefactor=p3m_prefactor
 )
 
 
@@ -484,13 +485,21 @@ mol_data = get_bonds_angles(system.positions)
 mol_data[-1]
 
 m_sys = get_msites(system, 0.8, 0.85)
+m_nl = m_sys[0].get_neighbor_list(nlo)
 p3m_calculator = torchpme.metatensor.P3MCalculator(
                 potential=torchpme.CoulombPotential(p3m_smearing),
                 **p3m_parameters
             )
 
 # %%
-p3m_calculator.forward(m_sys)
+pots = p3m_calculator.forward(m_sys[0], m_nl).block(0).values
+charges = m_sys[0].get_data("charges").values
+
+# %%
+(pots*charges).sum()
+
+# %%
+
 
 # %%
 class QTIP4PfModel(torch.nn.Module):
@@ -518,12 +527,16 @@ class QTIP4PfModel(torch.nn.Module):
         
         self.p3m_calculator = torchpme.metatensor.P3MCalculator(
                 potential=torchpme.CoulombPotential(p3m_smearing),
-                **p3m_parameters
+                **p3m_parameters,
+                prefactor=torchpme.prefactors.kcalmol_A
             )
+        
+        self.coulomb = torchpme.CoulombPotential()
+
         # We use a half neighborlist and allow to have pairs farther than cutoff
         # (`strict=False`) since this is not problematic for PME and may speed up the
         # computation of the neigbors.
-        self.nl = NeighborListOptions(cutoff=cutoff, full_list=False, strict=False)
+        self.nlo = NeighborListOptions(cutoff=cutoff, full_list=False, strict=False)
 
         # registers model parameters as buffers
         self.dtype = dtype if dtype is not None else torch.get_default_dtype()
@@ -541,7 +554,7 @@ class QTIP4PfModel(torch.nn.Module):
         
 
     def requested_neighbor_lists(self):
-        return [self.nl]
+        return [self.nlo]
 
     def _setup_systems(
         self,
@@ -555,7 +568,7 @@ class QTIP4PfModel(torch.nn.Module):
 
         if selected_atoms is not None:
             raise NotImplementedError("selected_atoms is not implemented")
-        return systems[0], systems[0].get_neighbor_list(self.nl)
+        return systems[0], systems[0].get_neighbor_list(self.nlo)
 
     def forward(
         self,
@@ -572,7 +585,7 @@ class QTIP4PfModel(torch.nn.Module):
         system, neighbors = self._setup_systems(systems, selected_atoms)
 
         # gets information about water molecules, to compute intra-molecular and electrostatic terms
-        d_oh, a_hoh = get_bonds_angles(system)
+        d_oh, a_hoh = get_bonds_angles(system.positions)
 
         # intra-molecular energetics
         e_bond = bond_energy(d_oh, self.oh_bond_d, self.oh_bond_alpha, self.oh_bond_eq).sum()
@@ -587,11 +600,17 @@ class QTIP4PfModel(torch.nn.Module):
         
         # now this is the long-range part - computed over the M-site system
         m_system, mh_dist, hh_dist = get_msites(system, self.m_gamma, self.m_charge)
-        potentials = self.p3m_calculator(m_system)
+        potentials = self.p3m_calculator(m_system, neighbors).block(0).values
+        charges = m_system.get_data("charges").values
+        energy_coulomb = (potentials*charges).sum()
+        energy_self = (
+            -self.coulomb.from_dist(mh_dist).sum()*self.m_charge + 
+            self.coulomb.from_dist(hh_dist).sum()*self.m_charge*0.5
+        )*self.m_charge*0.5*torchpme.prefactors.kcalmol_A
 
-        print("energies", e_bond, e_bend, energy_lj)
+        print("energies", e_bond, e_bend, energy_lj, energy_coulomb, energy_self)
 
-        energy_tot = e_bond + e_bend + energy_lj
+        energy_tot = e_bond + e_bend + energy_lj + energy_coulomb - energy_self
         # Rename property label to follow metatensor's covention for an atomistic model
         samples = Labels(
             ["system"], torch.arange(len(systems), device=self.device).reshape(-1, 1)
@@ -608,8 +627,9 @@ class QTIP4PfModel(torch.nn.Module):
             ),
         }
 
-# %%
 
+
+# %%
 
 model=QTIP4PfModel(6.0, 3.1589, 0.1852, 0.73612, 1.128, 0.9419, 116.09, 2.287, 107.4*np.pi /180, 87.85)
 # %%
@@ -618,5 +638,45 @@ nrg = model.forward([system], {"energy":""})
 
 # %%
 
-nrg['energy'].block(0).values
- # %%
+
+torch.jit.script(model)
+# %%
+# Wraps the torch model into a metatomic calculator
+
+
+energy_unit = "kcal/mol"
+length_unit = "angstrom"
+outputs = {"energy": ModelOutput(quantity="energy", unit=energy_unit, per_atom=False)}
+options = ModelEvaluationOptions(
+    length_unit=length_unit, outputs=outputs, selected_atoms=None
+)
+
+model_capabilities = ModelCapabilities(
+    outputs=outputs,
+    atomic_types=[1, 8],
+    interaction_range=torch.inf,
+    length_unit=length_unit,
+    supported_devices=["cpu", "cuda"],
+    dtype="float32",
+)
+
+atomistic_model = MetatensorAtomisticModel(
+    model.eval(), ModelMetadata(), model_capabilities
+)
+atomistic_model.save("qtip4pf-mta.pt")
+
+mta_calculator = MetatensorCalculator(atomistic_model)
+# %%
+
+atoms.calc=mta_calculator
+nrg = atoms.get_potential_energy()
+
+# %%
+from ase.optimize import LBFGS
+opt = LBFGS(atoms, trajectory="log_file.xyz")
+# fmax is the threshold on the maximum force component. 
+# optimization will stop when the threshold is reached
+opt.run(fmax=0.001) 
+# the optimized geometry is stored in the `structure` object
+print(atoms.positions, atoms.get_potential_energy())
+# %%
