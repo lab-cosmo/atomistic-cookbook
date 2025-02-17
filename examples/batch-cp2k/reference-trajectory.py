@@ -62,7 +62,7 @@ subprocess.run(["echo", "5"], check=True)
 subprocess.run(["ls", "../../.nox/batch-cp2k/"], check=True)
 subprocess.run(["echo", "6"], check=True)
 subprocess.run(["ls", "../../.nox/batch-cp2k/lib"], check=True)
-subprocess.run(["cp", "../../.nox/batch-cp2k/lib/libsymspg.so.2", "../../.nox/batch-cp2k/lib/libsymspg.so.1"], check=True)
+subprocess.run(["ln", "-sf", "../../.nox/batch-cp2k/lib/libsymspg.so.2.5.0", "../../.nox/batch-cp2k/lib/libsymspg.so.1"], check=True)
 
 
 # %%
