@@ -1,0 +1,12 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+    - ase==3.22.1
+    - mpltex
+    - matplotlib
+    - numpy
+    - vesin
+    - torch-pme
