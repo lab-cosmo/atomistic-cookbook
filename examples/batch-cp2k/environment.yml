@@ -6,3 +6,4 @@ dependencies:
   - pip:
     - ase
     - matplotlib
+    - spglib
