@@ -43,7 +43,7 @@ import requests
 
 if platform.system() == "Linux":
     # use conda on Linux
-    subprocess.run(["conda", "install", "cp2k", "-c", "conda-forge", "-y"], check=True)
+    subprocess.run(["conda", "install", "cp2k=2024.2=openblas_nompi_hbd0aaf2_1000", "-c", "conda-forge", "-y"], check=True)
 elif platform.system() == "Darwin":
     # use homebrew on macOS
     subprocess.run(["brew", "install", "cp2k"], check=True)
@@ -62,7 +62,7 @@ else:
 #subprocess.run(["ls", "../../.nox/batch-cp2k/"], check=True)
 #subprocess.run(["echo", "6"], check=True)
 #subprocess.run(["ls", "../../.nox/batch-cp2k/lib"], check=True)
-subprocess.run(["ln", "-s", "libsymspg.so.2.5.0", "../../.nox/batch-cp2k/lib/libsymspg.so.1"], check=True)
+#subprocess.run(["ln", "-s", "libsymspg.so.2.5.0", "../../.nox/batch-cp2k/lib/libsymspg.so.1"], check=True)
 #subprocess.run(["echo", "7"], check=True)
 #subprocess.run(["ls", "-l","../../.nox/batch-cp2k/lib/"], check=False)
 
