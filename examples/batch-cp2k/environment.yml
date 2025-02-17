@@ -3,6 +3,7 @@ channels:
 dependencies:
   - python=3.11
   - pip
+  - libint
   - pip:
     - ase
     - matplotlib
