@@ -50,10 +50,16 @@ elif platform.system() == "Darwin":
 else:
     print("no known way to install cp2k, skipping installation")   
 
+subprocess.run(["echo", "1"], check=True)
 subprocess.run(["ls", "-a", "./"], check=True)
+subprocess.run(["echo", "2"], check=True)
 subprocess.run(["ls", "-a", "../"], check=True)
+subprocess.run(["echo", "3"], check=True)
 subprocess.run(["ls", "-a", "../../"], check=True)
-subprocess.run(["ls", "-d", "../batch-cp2k/lib/*"], check=True)
+subprocess.run(["echo", "4"], check=True)
+subprocess.run(["ls", "-a", "../../.nox/"], check=True)
+subprocess.run(["echo", "5"], check=True)
+subprocess.run(["ls", "../../.nox/batch-cp2k/"], check=True)
 subprocess.run(["cp", "../batch-cp2k/lib/libsymspg.so.2", ".nox/batch-cp2k/lib/libsymspg.so.1"], check=True)
 
 
