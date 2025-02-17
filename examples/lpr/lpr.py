@@ -20,9 +20,9 @@ import tarfile
 import numpy as np
 import requests
 from ase.io import read
+from featomic import SoapPowerSpectrum
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
-from featomic import SoapPowerSpectrum
 from sklearn.decomposition import PCA
 from skmatter.metrics import local_prediction_rigidity as lpr
 
@@ -103,26 +103,14 @@ for frame in frames_defect:
 
 # Hypers dictionary
 hypers = {
-    "cutoff": {
-        "radius": 2.85,
-        "smoothing": {
-            "type": "ShiftedCosine",
-            "width": 0.1
-        }
-    },
-    "density": {
-        "type": "Gaussian",
-        "width": 0.5
-    },
+    "cutoff": {"radius": 2.85, "smoothing": {"type": "ShiftedCosine", "width": 0.1}},
+    "density": {"type": "Gaussian", "width": 0.5},
     "basis": {
         "type": "TensorProduct",
         "max_angular": 12,
-        "radial": {
-            "type": "Gto",
-            "max_radial": 9
-        },
-        "spline_accuracy": 1e-08
-    }
+        "radial": {"type": "Gto", "max_radial": 9},
+        "spline_accuracy": 1e-08,
+    },
 }
 # Define featomic calculator
 calculator = SoapPowerSpectrum(**hypers)
