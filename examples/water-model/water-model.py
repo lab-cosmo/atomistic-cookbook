@@ -403,6 +403,7 @@ system.add_neighbor_list(nlo, neighbors)
 
 neighbors
 
+
 # %% 
 # Helper functions for molecular geometry
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -472,7 +473,7 @@ def get_msites(system: System, m_gamma: torch.Tensor, m_charge: torch.Tensor):
     # larger-than-usual cutoff
     # nb - this is reshaped to match the values in a NL tensorblock
     om_displacements = torch.stack([m_pos-o_pos, torch.zeros_like(h1_pos), torch.zeros_like(h2_pos)], dim=1).reshape(-1, 3, 1)
-
+    
     for nlo in system.known_neighbor_lists():
         nl = system.get_neighbor_list(nlo)
         i_idx = nl.samples.view(["first_atom"]).values.flatten()
@@ -550,7 +551,7 @@ class QTIP4PfModel(torch.nn.Module):
 
         if p3m_options is None:
             # sane defaults, should give a ~1e-4 relative accuracy on forces 
-            p3m_options = (1.4, {'interpolation_nodes': 5, 'mesh_spacing': 1.33}, 0)
+            p3m_options = (1.4, {'interpolation_nodes': 5, 'mesh_spacing': 1.1}, 0)
         p3m_smearing, p3m_parameters, _ = p3m_options
         
         self.p3m_calculator = torchpme.metatensor.P3MCalculator(
@@ -629,10 +630,11 @@ class QTIP4PfModel(torch.nn.Module):
         
         # now this is the long-range part - computed over the M-site system
         m_system, mh_dist, hh_dist = get_msites(system, self.m_gamma, self.m_charge)
-        potentials = self.p3m_calculator(m_system, neighbors).block(0).values
+        m_neighbors = m_system.get_neighbor_list(self.nlo)
+        potentials = self.p3m_calculator(m_system, m_neighbors).block(0).values
         charges = m_system.get_data("charges").values
         energy_coulomb = (potentials*charges).sum()
-
+        
         # this is the intra-molecular Coulomb interactions, that must be removed  
         # to avoid double-counting
         energy_self = (
@@ -640,8 +642,11 @@ class QTIP4PfModel(torch.nn.Module):
             self.coulomb.from_dist(hh_dist).sum()*charges[1]
         )*charges[1]*torchpme.prefactors.kcalmol_A
 
+
         # combines all energy terms
         energy_tot = e_bond + e_bend + energy_lj + energy_coulomb - energy_self
+        
+        # print("energies\n",e_bond, e_bend, energy_lj, energy_coulomb, energy_self)
 
         # Rename property label to follow metatensor's covention for an atomistic model
         samples = Labels(
@@ -785,7 +790,7 @@ chemiscope.show(frames=opt_trj,
                 mode="default", 
                 settings=
                 chemiscope.quick_settings(
-                    map_settings={'x': {'property': 'index', 'scale': 'log'},
+                    map_settings={'x': {'property': 'step', 'scale': 'log'},
                                   'y': {'property': 'energy', 'scale': 'log'},
                     },
                     structure_settings={ 'unitCell': True,},
@@ -819,14 +824,21 @@ input_xml = simulation_xml(
     motion=motion_nvt_xml(timestep=0.5*ase.units.fs),
     temperature=300,
     prefix="qtip4pf-md",
-)
+) 
+
+open("test.xml", "w").write(input_xml)
+print(input_xml)
+
 
 # %%
 
 sim = InteractiveSimulation(input_xml)
 
 # %%
-sim.run(100)
+import time
+start = time.time()
+sim.run(1000)
+print(time.time()-start)
 
 # %%
 
