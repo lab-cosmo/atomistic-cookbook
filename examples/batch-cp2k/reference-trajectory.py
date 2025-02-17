@@ -48,9 +48,10 @@ elif platform.system() == "Darwin":
     # use homebrew on macOS
     subprocess.run(["brew", "install", "cp2k"], check=True)
 else:
-    print("no known way to install cp2k, skipping installation")
+    print("no known way to install cp2k, skipping installation")   
 
-subprocess.run(["cp", "../../.nox/batch-cp2k/lib/libsymspg.so.2", "./../.nox/batch-cp2k/lib/libsymspg.so.1"], check=True)
+subprocess.run(["ls", "../../.nox/batch-cp2k/lib/*"], check=True)
+subprocess.run(["cp", "../../.nox/batch-cp2k/lib/libsymspg.so.2", "../../.nox/batch-cp2k/lib/libsymspg.so.1"], check=True)
 
 
 # %%
