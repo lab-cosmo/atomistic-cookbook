@@ -3,7 +3,7 @@ channels:
 dependencies:
   - python=3.11
   - pip
+  - spglib
   - pip:
     - ase
     - matplotlib
-    - spglib
