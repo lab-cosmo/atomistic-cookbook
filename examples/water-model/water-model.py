@@ -552,6 +552,8 @@ def get_msites(system: System, m_gamma: torch.Tensor, m_charge: torch.Tensor):
 # and should be relatively easy to follow.
 
 
+from time import time
+
 class QTIP4PfModel(torch.nn.Module):
     def __init__(
         self,
@@ -607,6 +609,12 @@ class QTIP4PfModel(torch.nn.Module):
         )
         self.register_buffer("hoh_angle_k", torch.tensor(hoh_angle_k, dtype=self.dtype))
 
+        self.ncalls = 0
+        self.time_intra = 0.0
+        self.time_lj = 0.0
+        self.time_msites = 0.0
+        self.time_pme = 0.0
+
     def requested_neighbor_lists(self):
         """Returns the list of neighbor list options that are needed."""
         return [self.nlo]
@@ -640,6 +648,8 @@ class QTIP4PfModel(torch.nn.Module):
         system, neighbors = self._setup_systems(systems, selected_atoms)
 
         # gets information about water molecules, to compute intra-molecular and electrostatic terms
+        self.ncalls += 1
+        self.time_intra -= time()
         d_oh, a_hoh = get_bonds_angles(system.positions)
 
         # intra-molecular energetics
@@ -647,8 +657,10 @@ class QTIP4PfModel(torch.nn.Module):
             d_oh, self.oh_bond_d, self.oh_bond_alpha, self.oh_bond_eq
         ).sum()
         e_bend = bend_energy(a_hoh, self.hoh_angle_k, self.hoh_angle_eq).sum()
+        self.time_intra += time()
 
         # compute non-bonded LJ energy
+        self.time_lj -= time()
         neighbor_indices = neighbors.samples.view(["first_atom", "second_atom"]).values
         species = system.types
         oo_mask = (species[neighbor_indices[:, 0]] == 8) & (
@@ -658,13 +670,19 @@ class QTIP4PfModel(torch.nn.Module):
         energy_lj = lennard_jones_pair(
             oo_distances, self.lj_sigma, self.lj_epsilon, self.cutoff
         ).sum()
+        self.time_lj -+ time()
 
         # now this is the long-range part - computed over the M-site system
+        self.time_msites -= time()
         m_system, mh_dist, hh_dist = get_msites(system, self.m_gamma, self.m_charge)
         m_neighbors = m_system.get_neighbor_list(self.nlo)
+        self.time_msites += time()
+
+        self.time_pme -= time()
         potentials = self.p3m_calculator(m_system, m_neighbors).block(0).values
         charges = m_system.get_data("charges").values
         energy_coulomb = (potentials * charges).sum()
+        self.time_pme += time()
 
         # this is the intra-molecular Coulomb interactions, that must be removed
         # to avoid double-counting
@@ -876,12 +894,11 @@ print(input_xml)
 sim = InteractiveSimulation(input_xml)
 
 # %%
-import time
 
 
-start = time.time()
+start = time()
 sim.run(1000)
-print(time.time() - start)
+print(time() - start)
 
 # %%
 
