@@ -3,22 +3,20 @@ Atomistic Water Model for Molecular Dynamics
 ============================================
 
 :Authors: Philip Loche `@PicoCentauri <https://github.com/picocentauri>`_
-         Marcel Langer `@sirmarcel <https://github.com/sirmarcel>`_
+          Marcel Langer `@sirmarcel <https://github.com/sirmarcel>`_
 
 In this example, we demonstrate how to construct a `metatensor atomistic model
-<https://docs.metatensor.org/latest/atomistic>`_ for q-TIP4P/F, a flexible four-point water
-model, with parameters optimized for use together with quantum-nuclear-effects-aware
-path integral simulations (cf. `Habershon et al., JCP (2009)
-<http://dx.doi.org/10.1063/1.3167790>`_)
-The model also demonstrates the use of ``torch-pme``, a Torch library for
-long-range interactions, and uses the resulting model to perform demonstrative
-molecular dynamics simulations.
+<https://docs.metatensor.org/latest/atomistic>`_ for q-TIP4P/F, a flexible four-point
+water model, with parameters optimized for use together with
+quantum-nuclear-effects-aware path integral simulations (cf. `Habershon et al., JCP
+(2009) <http://dx.doi.org/10.1063/1.3167790>`_) The model also demonstrates the use of
+``torch-pme``, a Torch library for long-range interactions, and uses the resulting model
+to perform demonstrative molecular dynamics simulations.
 """
 
 # %%
 
-import importlib.machinery
-import importlib.util
+import time
 
 # sphinx_gallery_thumbnail_number = 5
 from typing import Dict, List, Optional
@@ -36,6 +34,14 @@ import torch
 
 # Core libraries
 import torchpme
+from ase.optimize import LBFGS
+from ipi.utils.parsing import read_output, read_trajectory
+from ipi.utils.scripting import (
+    InteractiveSimulation,
+    forcefield_xml,
+    motion_nvt_xml,
+    simulation_xml,
+)
 from metatensor.torch import Labels, TensorBlock, TensorMap
 from metatensor.torch.atomistic import (
     MetatensorAtomisticModel,
@@ -71,9 +77,6 @@ from vesin.torch.metatensor import NeighborList
 # <http://dx.doi.org/10.1021/jp410865y>`_. The fourth point, referred to as ``M``, is
 # implicitly derived from the other atoms of each water molecule.
 #
-#
-
-# %%
 # Intra-molecular interactions
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
@@ -94,7 +97,8 @@ from vesin.torch.metatensor import NeighborList
 #
 # .. math::
 #
-#   V_\mathrm{bond}(r) = D_r[\alpha_r^2(r-r_0)^2-\alpha_r^3(r-r_0)^3+\frac{7}{12}\alpha_r^4(r-r_0)^4]
+#   V_\mathrm{bond}(r) = D_r [\alpha_r^2(r-r_0)^2-\alpha_r^3(r-r_0)^3 +
+#       \frac{7}{12}\alpha_r^4(r-r_0)^4]
 
 
 def bond_energy(
@@ -102,24 +106,24 @@ def bond_energy(
     coefficient_d: torch.Tensor,
     coefficient_alpha: torch.Tensor,
     coefficient_r0: torch.Tensor,
-):
+) -> torch.Tensor:
     """Harmonic potential for bond terms."""
     alpha_dr = (distances - coefficient_r0) * coefficient_alpha
 
-    return coefficient_d * alpha_dr**2 * (1 - alpha_dr + alpha_dr**2 * 7.0 / 12.0)
+    return coefficient_d * alpha_dr**2 * (1 - alpha_dr + alpha_dr**2 * 7 / 12)
 
 
 # %%
 #
-# The parameters reproduce the form of a Morse potential close to the minimum, but avoids the
-# dissociation of the bond, due to the truncation to the quartic term
-# These are the parameters used for q-TIP4P/F
+# The parameters reproduce the form of a Morse potential close to the minimum, but
+# avoids the dissociation of the bond, due to the truncation to the quartic term. These
+# are the parameters used for q-TIP4P/F
 
 OH_Dr = 116.09  # kcal/mol
 OH_r0 = 0.9419  # Å
 OH_alpha = 2.287  # 1/Å
 
-bond_distances = np.linspace(0.5, 1.5, 200)
+bond_distances = np.linspace(0.5, 1.65, 200)
 bond_potential = bond_energy(
     distances=bond_distances,
     coefficient_d=OH_Dr,
@@ -128,9 +132,14 @@ bond_potential = bond_energy(
 )
 
 plt.title("Bond Potential Between Oxygen and Hydrogen")
+
 plt.plot(bond_distances, bond_potential)
+plt.axvline(OH_r0, label="equilibrium distance", color="black", linestyle="--")
+
 plt.xlabel("Distance / Å ")
 plt.ylabel("Bond Potential / (kcal/mol)")
+
+plt.legend()
 
 plt.show()
 
@@ -169,9 +178,20 @@ angle_potential = bend_energy(
 )
 
 plt.title("Harmonic Angular Potential for a Water Molecule")
+
 plt.plot(angle_distances, angle_potential)
+plt.axvline(
+    HOH_equilibrium_angle * 180 / np.pi,
+    label="equilibrium angle",
+    color="black",
+    linestyle=":",
+)
+
 plt.xlabel("Angle / degrees")
 plt.ylabel("Harmonic Angular Potential / (kcal/mol)")
+
+plt.legend()
+
 plt.show()
 
 # %%
@@ -191,14 +211,12 @@ plt.show()
 # distance at which the potential is zero. For water there is only an oxygen-oxygen
 # Lennard-Jones potential. In a typical 4-points water model are no LJ interactions
 # between hydrogen atoms and between hydrogen and oxygen atoms.
-
-
-# %%
 #
 # We implement the Lennard-Jones potential as a function that takes distances, along
 # with the parameters ``sigma``, ``epsilon``, and ``cutoff`` that indicates the distance
-# at which the interaction is assumed to be zero. To ensure that there is no discontinuity
-# an offset is included to shift the curve so it is zero at the cutoff distance.
+# at which the interaction is assumed to be zero. To ensure that there is no
+# discontinuity an offset is included to shift the curve so it is zero at the cutoff
+# distance.
 
 
 def lennard_jones_pair(
@@ -220,12 +238,12 @@ def lennard_jones_pair(
 
 # %%
 #
-# We plot this potential to visualize its behavior, using
-# q-TIP4P/F parameters
+# We plot this potential to visualize its behavior, using q-TIP4P/F parameters. To
+# highlight the offset, we use a cutoof of 5 Å instead of the usual 7 Å.
 
 O_sigma = 3.1589  # Å
 O_epsilon = 0.1852  # kcal/mol
-cutoff = 5.0  #  Å <- cut short, to highlight offset
+cutoff = 5.0  # Å <- cut short, to highlight offset
 
 lj_distances = np.linspace(3, cutoff, 200)
 
@@ -271,14 +289,12 @@ plt.show()
 # developed, such as the Particle-Particle Particle-Mesh (P3M) algorithm. For further
 # details we refer to a paper by `Deserno and Holm
 # <https://aip.scitation.org/doi/10.1063/1.477414>`_.
-
-# %%
+#
 # We use a `Torch` implementation of the P3M method within the ``torch-pme`` package.
 # The core class we use is the :class:`torchpme.P3MCalculator` class - you can read more
 # and see specific examples in the `torchpme documentation
-# <https://lab-cosmo.github.io/torch-pme/latest/>`_
-# As a demonstration we use two charges in a cubic cell, computing the electrostatic energy
-# as a function of distance
+# <https://lab-cosmo.github.io/torch-pme>`_ As a demonstration we use two
+# charges in a cubic cell, computing the electrostatic energy as a function of distance
 
 O_charge = -0.84
 coulomb_distances = torch.linspace(0.5, 9.0, 50)
@@ -375,19 +391,17 @@ plt.show()
 # Implementation as a Q-TIP4P/f ``torch`` module
 # ----------------------------------------------
 #
-# In order to implement a Q-TIP4P/f potential in practice,
-# we first build a class that follows the interface of a `metatomic`
-# model. This requires defining the atomic structure in terms of a
-# :class:`metatensor.torch.atomistic.System` object - a simple container
-# for positions, cell, and atomic types, that can also be enriched
-# with one or more :class:`metatensor.torch.atomistic.NeighborList` objects
-# holding neighbor distance information. This is usually provided
-# by the code used to perform a simulation, but can be also computed
-# explicitly using ``ase`` or `vesin
+# In order to implement a Q-TIP4P/f potential in practice, we first build a class that
+# follows the interface of a `metatomic` model. This requires defining the atomic
+# structure in terms of a :class:`metatensor.torch.atomistic.System` object - a simple
+# container for positions, cell, and atomic types, that can also be enriched with one or
+# more :class:`metatensor.torch.atomistic.NeighborList` objects holding neighbor
+# distance information. This is usually provided by the code used to perform a
+# simulation, but can be also computed explicitly using ``ase`` or `vesin
 # <https://luthaf.fr/vesin/latest/index.html>`_, as we do here.
 
 # small water box
-atoms = ase.io.read("data/water_32.pdb")
+atoms = ase.io.read("water_32.xyz")
 system = System(
     types=torch.from_numpy(atoms.get_atomic_numbers()),
     positions=torch.from_numpy(atoms.positions),
@@ -439,7 +453,8 @@ def get_bonds_angles(positions: torch.Tensor):
     )
     if oh_dist.max() > 2.0:
         raise ValueError(
-            "Unphysical O-H bond length. Check that the molecules are entire, and atoms are listed in the expected OHH order."
+            "Unphysical O-H bond length. Check that the molecules are entire, and "
+            "atoms are listed in the expected OHH order."
         )
 
     hoh_angles = torch.arccos(
@@ -451,14 +466,12 @@ def get_bonds_angles(positions: torch.Tensor):
 
 
 # %%
-# A second helper function computes the position of the "M sites", the
-# position of the O charge in a TIP4P-like model. Note that we also
-# need distances to compute range-separated electrostatics, which we
-# obtain manipulating the neighbor list that is pre-attached to the
-# system. Thanks to the fact we rely on ``torch`` autodifferentiation
-# mechanism, the forces acting on the M sites will be automatically
-# split between O and H atoms, in a way that is consistent with the
-# definition.
+# A second helper function computes the position of the "M sites", the position of the O
+# charge in a TIP4P-like model. Note that we also need distances to compute
+# range-separated electrostatics, which we obtain manipulating the neighbor list that is
+# pre-attached to the system. Thanks to the fact we rely on ``torch``
+# autodifferentiation mechanism, the forces acting on the M sites will be automatically
+# split between O and H atoms, in a way that is consistent with the definition.
 
 
 def get_msites(system: System, m_gamma: torch.Tensor, m_charge: torch.Tensor):
@@ -468,7 +481,8 @@ def get_msites(system: System, m_gamma: torch.Tensor, m_charge: torch.Tensor):
     h1_pos = positions[1::3]
     h2_pos = positions[2::3]
 
-    # NB: this is enough to get the correct forces on the `system` atoms. thanks autodiff!
+    # NB: this is enough to get the correct forces on the `system` atoms. thanks
+    # autodiff!
     m_pos = m_gamma * o_pos + (1 - m_gamma) * 0.5 * (h1_pos + h2_pos)
 
     # creates a new System with the m-sites
@@ -479,14 +493,14 @@ def get_msites(system: System, m_gamma: torch.Tensor, m_charge: torch.Tensor):
         pbc=system.pbc,
     )
 
-    # adjust neighbor lists to point at the m sites rather than O atoms.
-    # this assumes this won't have atoms cross the cutoff, which is
-    # of course only approximately true, so one should use a slighlty
-    # larger-than-usual cutoff
-    # nb - this is reshaped to match the values in a NL tensorblock
+    # adjust neighbor lists to point at the m sites rather than O atoms. this assumes
+    # this won't have atoms cross the cutoff, which is of course only approximately
+    # true, so one should use a slighlty larger-than-usual cutoff nb - this is reshaped
+    # to match the values in a NL tensorblock
     om_displacements = torch.stack(
         [m_pos - o_pos, torch.zeros_like(h1_pos), torch.zeros_like(h2_pos)], dim=1
     ).reshape(-1, 3, 1)
+
     for nlo in system.known_neighbor_lists():
         nl = system.get_neighbor_list(nlo)
         i_idx = nl.samples.view(["first_atom"]).values.flatten()
@@ -531,6 +545,7 @@ def get_msites(system: System, m_gamma: torch.Tensor, m_charge: torch.Tensor):
 # %%
 # The model
 # ^^^^^^^^^
+#
 # Armed with these functions, the definitions of bonded and LJ
 # potentials, and the :class:`torchpme.P3MCalculator` class,
 # we can define with relatively small effort the actual model.
@@ -639,7 +654,8 @@ class QTIP4PfModel(torch.nn.Module):
 
         system, neighbors = self._setup_systems(systems, selected_atoms)
 
-        # gets information about water molecules, to compute intra-molecular and electrostatic terms
+        # gets information about water molecules, to compute intra-molecular and
+        # electrostatic terms
         d_oh, a_hoh = get_bonds_angles(system.positions)
 
         # intra-molecular energetics
@@ -784,7 +800,7 @@ atomistic_model.save("qtip4pf-mta.pt")
 
 atomistic_model = load_atomistic_model("qtip4pf-mta.pt")
 mta_calculator = MetatensorCalculator(atomistic_model)
-atoms = ase.io.read("data/water_32.pdb")
+
 atoms.calc = mta_calculator
 nrg = atoms.get_potential_energy()
 
@@ -800,14 +816,12 @@ Energy is {nrg} eV, corresponding to {nrg*23.060548} kcal/mol
 # structural relaxation. The relaxation is split into short segments
 # just to be able to visualize the trajectory
 
-from ase.optimize import LBFGS
-
 
 opt_trj = []
 opt_nrg = []
 # fmax is the threshold on the maximum force component.
 # optimization will stop when the threshold is reached
-for i in range(20):
+for _ in range(20):
     opt_trj.append(atoms.copy())
     opt_nrg.append(atoms.get_potential_energy())
     opt = LBFGS(atoms, restart="lbfgs_restart.json")
@@ -846,23 +860,14 @@ chemiscope.show(
 # Molecular dynamics with ``i-PI``
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-from ipi.utils.parsing import read_output, read_trajectory
-from ipi.utils.scripting import (
-    InteractiveSimulation,
-    forcefield_xml,
-    motion_nvt_xml,
-    simulation_xml,
-)
-
-
-data = ase.io.read("data/water_32.pdb")
+data = ase.io.read("water_32.xyz")
 input_xml = simulation_xml(
     structures=data,
     forcefield=forcefield_xml(
         name="qtip4pf",
         mode="direct",
         pes="metatensor",
-        parameters={"model": "qtip4pf-mta.pt", "template": "data/water_32.pdb"},
+        parameters={"model": "qtip4pf-mta.pt", "template": "water_32.xyz"},
     ),
     motion=motion_nvt_xml(timestep=0.5 * ase.units.fs),
     temperature=300,
@@ -876,7 +881,6 @@ print(input_xml)
 sim = InteractiveSimulation(input_xml)
 
 # %%
-import time
 
 
 start = time.time()
