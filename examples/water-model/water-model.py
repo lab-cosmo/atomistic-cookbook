@@ -16,7 +16,7 @@ to perform demonstrative molecular dynamics simulations.
 
 # %%
 
-import time
+from time import time
 
 # sphinx_gallery_thumbnail_number = 5
 from typing import Dict, List, Optional
@@ -401,7 +401,7 @@ plt.show()
 # <https://luthaf.fr/vesin/latest/index.html>`_, as we do here.
 
 # small water box
-atoms = ase.io.read("water_32.xyz")
+atoms = ase.io.read("data/water_32.pdb")
 system = System(
     types=torch.from_numpy(atoms.get_atomic_numbers()),
     positions=torch.from_numpy(atoms.positions),
@@ -662,14 +662,9 @@ class QTIP4PfModel(torch.nn.Module):
 
         system, neighbors = self._setup_systems(systems, selected_atoms)
 
-<<<<<<< HEAD
         # gets information about water molecules, to compute intra-molecular and electrostatic terms
         self.ncalls += 1
         self.time_intra -= time()
-=======
-        # gets information about water molecules, to compute intra-molecular and
-        # electrostatic terms
->>>>>>> e8ff77fce900fdeca577c254eb02e866c41d1810
         d_oh, a_hoh = get_bonds_angles(system.positions)
 
         # intra-molecular energetics
