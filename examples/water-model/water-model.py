@@ -649,7 +649,8 @@ class QTIP4PfModel(torch.nn.Module):
 
         system, neighbors = self._setup_systems(systems, selected_atoms)
 
-        # gets information about water molecules, to compute intra-molecular and electrostatic terms
+        # gets information about water molecules, to compute intra-molecular and
+        # electrostatic terms
         d_oh, a_hoh = get_bonds_angles(system.positions)
 
         # intra-molecular energetics
@@ -691,7 +692,9 @@ class QTIP4PfModel(torch.nn.Module):
         # combines all energy terms
         energy_tot = e_bond + e_bend + energy_lj + energy_coulomb - energy_self
 
-        # print("energies\n",(e_bond+e_bend)*0.0015936014, energy_lj*0.0015936014, (energy_coulomb-energy_self)*0.0015936014)
+        # print("energies\n",(e_bond+e_bend)*0.0015936014,
+        #        energy_lj*0.0015936014,
+        #        (energy_coulomb-energy_self)*0.0015936014)
 
         # Rename property label to follow metatensor's covention for an atomistic model
         samples = Labels(
