@@ -6,7 +6,7 @@ Local Prediction Rigidity analysis
           Federico Grasselli `@fgrassel <https://github.com/fgrassel/>`_
 
 In this tutorial, we calculate the SOAP descriptors of an amorphous
-silicon dataset using rascaline, then compute the local prediction
+silicon dataset using featomic, then compute the local prediction
 rigidity (LPR) for the atoms of a "test" set before and after
 modifications to the "training" dataset has been made.
 
@@ -20,9 +20,9 @@ import tarfile
 import numpy as np
 import requests
 from ase.io import read
+from featomic import SoapPowerSpectrum
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
-from rascaline import SoapPowerSpectrum
 from sklearn.decomposition import PCA
 from skmatter.metrics import local_prediction_rigidity as lpr
 
@@ -90,11 +90,11 @@ for frame in frames_defect:
 
 
 # %%
-# Compute SOAP descriptors using rascaline
+# Compute SOAP descriptors using featomic
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # Now, we move on and compute the SOAP descriptors for the refined
-# structures. First, define the rascaline hyperparameters used to
+# structures. First, define the featomic hyperparameters used to
 # compute SOAP. Among the hypers, notice that the cutoff is chosen
 # to be 2.85 Å, and the radial scaling is turned off. These were
 # heuristic choices made to accentuate the difference in the LPR
@@ -103,16 +103,16 @@ for frame in frames_defect:
 
 # Hypers dictionary
 hypers = {
-    "cutoff": 2.85,
-    "max_radial": 10,
-    "max_angular": 12,
-    "atomic_gaussian_width": 0.5,
-    "center_atom_weight": 1.0,
-    "radial_basis": {"Gto": {"spline_accuracy": 1e-8}},
-    "cutoff_function": {"ShiftedCosine": {"width": 0.1}},
-    "radial_scaling": None,
+    "cutoff": {"radius": 2.85, "smoothing": {"type": "ShiftedCosine", "width": 0.1}},
+    "density": {"type": "Gaussian", "width": 0.5},
+    "basis": {
+        "type": "TensorProduct",
+        "max_angular": 12,
+        "radial": {"type": "Gto", "max_radial": 9},
+        "spline_accuracy": 1e-08,
+    },
 }
-# Define rascaline calculator
+# Define featomic calculator
 calculator = SoapPowerSpectrum(**hypers)
 
 # Calculate the SOAP power spectrum
@@ -131,7 +131,7 @@ for frame in refined_defect_frames:
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # Now we move on and compute the SOAP descriptors for the refined
-# structures. First, define the rascaline hyperparameters used to
+# structures. First, define the featomic hyperparameters used to
 # compute SOAP.
 #
 # Notice that the format in which we handle the descriptors is as a
