@@ -14,17 +14,13 @@ quantum-nuclear-effects-aware path integral simulations (cf. `Habershon et al., 
 to perform demonstrative molecular dynamics simulations.
 """
 
-# %%
-
-from time import time
-
 # sphinx_gallery_thumbnail_number = 5
 from typing import Dict, List, Optional
 
+# %%
+import ase.io
+
 # Simulation and visualization tools
-import ase.md
-import ase.md.velocitydistribution
-import ase.visualize.plot
 import chemiscope
 import matplotlib.pyplot as plt
 
@@ -131,17 +127,16 @@ bond_potential = bond_energy(
     coefficient_r0=OH_r0,
 )
 
-plt.title("Bond Potential Between Oxygen and Hydrogen")
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+ax.set_title("Bond Potential Between Oxygen and Hydrogen")
 
-plt.plot(bond_distances, bond_potential)
-plt.axvline(OH_r0, label="equilibrium distance", color="black", linestyle="--")
+ax.plot(bond_distances, bond_potential)
+ax.axvline(OH_r0, label="equilibrium distance", color="black", linestyle="--")
 
-plt.xlabel("Distance / Å ")
-plt.ylabel("Bond Potential / (kcal/mol)")
+ax.set_xlabel("Distance / Å ")
+ax.set_ylabel("Bond Potential / (kcal/mol)")
 
-plt.legend()
-
-plt.show()
+ax.legend()
 
 # %%
 # The harmonic angle potential describe the bending of the HOH angle, and is usually
@@ -177,22 +172,21 @@ angle_potential = bend_energy(
     equilibrium_angle=HOH_equilibrium_angle,
 )
 
-plt.title("Harmonic Angular Potential for a Water Molecule")
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+ax.set_title("Harmonic Angular Potential for a Water Molecule")
 
-plt.plot(angle_distances, angle_potential)
-plt.axvline(
+ax.plot(angle_distances, angle_potential)
+ax.axvline(
     HOH_equilibrium_angle * 180 / np.pi,
     label="equilibrium angle",
     color="black",
     linestyle=":",
 )
 
-plt.xlabel("Angle / degrees")
-plt.ylabel("Harmonic Angular Potential / (kcal/mol)")
+ax.set_xlabel("Angle / degrees")
+ax.set_ylabel("Harmonic Angular Potential / (kcal/mol)")
 
-plt.legend()
-
-plt.show()
+ax.legend()
 
 # %%
 # Lennard-Jones Potential
@@ -252,16 +246,15 @@ lj_potential = lennard_jones_pair(
 )
 
 
-plt.title("Lennard-Jones Potential Between Two Oxygen Atoms")
-plt.axhline(0, color="black", linestyle="--")
-plt.axhline(-O_epsilon, color="red", linestyle=":", label="Oxygen ε")
-plt.axvline(O_sigma, color="black", linestyle=":", label="Oxygen σ")
-plt.plot(lj_distances, lj_potential)
-plt.xlabel("Distance / Å")
-plt.ylabel("Lennard-Jones Potential / (kcal/mol)")
-plt.legend()
-
-plt.show()
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+ax.set_title("Lennard-Jones Potential Between Two Oxygen Atoms")
+ax.axhline(0, color="black", linestyle="--")
+ax.axhline(-O_epsilon, color="red", linestyle=":", label="Oxygen ε")
+ax.axvline(O_sigma, color="black", linestyle=":", label="Oxygen σ")
+ax.plot(lj_distances, lj_potential)
+ax.set_xlabel("Distance / Å")
+ax.set_ylabel("Lennard-Jones Potential / (kcal/mol)")
+ax.legend()
 
 
 # %%
@@ -367,11 +360,12 @@ for i_dist, dist in enumerate(coulomb_distances):
 #
 # We plot the electrostatic potential between two point charges.
 
-plt.title("Electrostatic Potential Between Two Point Charges")
-plt.plot(coulomb_distances, potential)
-plt.xlabel("Distance / Å")
-plt.ylabel("Electrostatic Potential / (kcal/mol)")
-plt.show()
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+
+ax.set_title("Electrostatic Potential Between Two Point Charges")
+ax.plot(coulomb_distances, potential)
+ax.set_xlabel("Distance / Å")
+ax.set_ylabel("Electrostatic Potential / (kcal/mol)")
 
 # %%
 #
@@ -529,6 +523,7 @@ def get_msites(system: System, m_gamma: torch.Tensor, m_charge: torch.Tensor):
     data = TensorBlock(
         values=charges, samples=samples, components=[], properties=properties
     )
+
     m_system.add_data(data=data, name="charges")
 
     # intra-molecular distances (for self-energy removal)
@@ -566,8 +561,6 @@ def get_msites(system: System, m_gamma: torch.Tensor, m_charge: torch.Tensor):
 # of all the helper functions defined further up in this file,
 # and should be relatively easy to follow.
 
-
-from time import time
 
 class QTIP4PfModel(torch.nn.Module):
     def __init__(
@@ -624,12 +617,6 @@ class QTIP4PfModel(torch.nn.Module):
         )
         self.register_buffer("hoh_angle_k", torch.tensor(hoh_angle_k, dtype=self.dtype))
 
-        self.ncalls = 0
-        self.time_intra = 0.0
-        self.time_lj = 0.0
-        self.time_msites = 0.0
-        self.time_pme = 0.0
-
     def requested_neighbor_lists(self):
         """Returns the list of neighbor list options that are needed."""
         return [self.nlo]
@@ -663,8 +650,6 @@ class QTIP4PfModel(torch.nn.Module):
         system, neighbors = self._setup_systems(systems, selected_atoms)
 
         # gets information about water molecules, to compute intra-molecular and electrostatic terms
-        self.ncalls += 1
-        self.time_intra -= time()
         d_oh, a_hoh = get_bonds_angles(system.positions)
 
         # intra-molecular energetics
@@ -672,10 +657,8 @@ class QTIP4PfModel(torch.nn.Module):
             d_oh, self.oh_bond_d, self.oh_bond_alpha, self.oh_bond_eq
         ).sum()
         e_bend = bend_energy(a_hoh, self.hoh_angle_k, self.hoh_angle_eq).sum()
-        self.time_intra += time()
 
         # compute non-bonded LJ energy
-        self.time_lj -= time()
         neighbor_indices = neighbors.samples.view(["first_atom", "second_atom"]).values
         species = system.types
         oo_mask = (species[neighbor_indices[:, 0]] == 8) & (
@@ -685,19 +668,14 @@ class QTIP4PfModel(torch.nn.Module):
         energy_lj = lennard_jones_pair(
             oo_distances, self.lj_sigma, self.lj_epsilon, self.cutoff
         ).sum()
-        self.time_lj -+ time()
 
         # now this is the long-range part - computed over the M-site system
-        self.time_msites -= time()
         m_system, mh_dist, hh_dist = get_msites(system, self.m_gamma, self.m_charge)
         m_neighbors = m_system.get_neighbor_list(self.nlo)
-        self.time_msites += time()
 
-        self.time_pme -= time()
         potentials = self.p3m_calculator(m_system, m_neighbors).block(0).values
         charges = m_system.get_data("charges").values
         energy_coulomb = (potentials * charges).sum()
-        self.time_pme += time()
 
         # this is the intra-molecular Coulomb interactions, that must be removed
         # to avoid double-counting
@@ -713,7 +691,7 @@ class QTIP4PfModel(torch.nn.Module):
         # combines all energy terms
         energy_tot = e_bond + e_bend + energy_lj + energy_coulomb - energy_self
 
-        # print("energies\n",e_bond, e_bend, energy_lj, energy_coulomb, energy_self)
+        # print("energies\n",(e_bond+e_bend)*0.0015936014, energy_lj*0.0015936014, (energy_coulomb-energy_self)*0.0015936014)
 
         # Rename property label to follow metatensor's covention for an atomistic model
         samples = Labels(
@@ -748,7 +726,11 @@ qtip4pf_parameters = dict(
     hoh_angle_eq=107.4 * np.pi / 180,
     hoh_angle_k=87.85,
 )
-model = QTIP4PfModel(**qtip4pf_parameters)
+model = QTIP4PfModel(
+    **qtip4pf_parameters
+    #   uncomment to override default options
+    #    p3m_options = (1.4, {"interpolation_nodes": 5, "mesh_spacing": 1.33}, 0)
+)
 
 nrg = model.forward([system], {"energy": ""})
 print(
@@ -756,6 +738,8 @@ print(
 Energy is {nrg["energy"].block(0).values[0].item()} kcal/mol
 """
 )
+
+# %%
 
 # %%
 # Build and save a ``MetatensorAtomisticModel``
@@ -838,7 +822,7 @@ opt_trj = []
 opt_nrg = []
 # fmax is the threshold on the maximum force component.
 # optimization will stop when the threshold is reached
-for _ in range(20):
+for _ in range(10):
     opt_trj.append(atoms.copy())
     opt_nrg.append(atoms.get_potential_energy())
     opt = LBFGS(atoms, restart="lbfgs_restart.json")
@@ -876,15 +860,27 @@ chemiscope.show(
 # %%
 # Molecular dynamics with ``i-PI``
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# We use `i-PI <http://ipi-code.org>`_ to perform molecular-dynamics
+# simulations of bulk water.  See `this recipe
+# <https://atomistic-cookbook.org/examples/thermostats/thermostats.html>`_
+# for an introduction to constant-temperature MD using i-PI.
+# Here we use a scripting interface (introduced in version 3.1) to run the
+# simulation from Python.
 
-data = ase.io.read("water_32.xyz")
+# %%
+# First, the XML input of the i-PI simulation is created using a few utility functions.
+# This input could also be written to file and used with the command-line version
+# of i-PI.
+
+data = ase.io.read("data/water_32.pdb")
 input_xml = simulation_xml(
     structures=data,
     forcefield=forcefield_xml(
         name="qtip4pf",
         mode="direct",
         pes="metatensor",
-        parameters={"model": "qtip4pf-mta.pt", "template": "water_32.xyz"},
+        parameters={"model": "qtip4pf-mta.pt", "template": "data/water_32.pdb"},
     ),
     motion=motion_nvt_xml(timestep=0.5 * ase.units.fs),
     temperature=300,
@@ -894,36 +890,41 @@ input_xml = simulation_xml(
 print(input_xml)
 
 # %%
+# Then, we create an ``InteractiveSimulation`` object and run a short
+# simulation (purely for demonstrative purposes)
 
 sim = InteractiveSimulation(input_xml)
+sim.run(400)
 
 # %%
-
-
-start = time()
-sim.run(1000)
-print(time() - start)
-
-# %%
+# The simulation generates output files that can be parsed and
+# visualized from Python
 
 data, info = read_output("qtip4pf-md.out")
 trj = read_trajectory("qtip4pf-md.pos_0.xyz")
+
 # %%
-plt.plot(data["step"], data["potential"])
-# %%
-len(data["step"])
+
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+
+ax.plot(data["time"], data["potential"], label="potential")
+ax.plot(data["time"], data["conserved"] - 4, label="conserved")
+ax.set_xlabel("t / ps")
+ax.set_ylabel("energy / ev")
+ax.legend()
+
 # %%
 
 chemiscope.show(
     frames=trj,
     properties={
-        "step": data["step"][::10],
+        "time": data["time"][::10],
         "potential": data["potential"][::10],
     },
     mode="default",
     settings=chemiscope.quick_settings(
         map_settings={
-            "x": {"property": "step", "scale": "linear"},
+            "x": {"property": "time", "scale": "linear"},
             "y": {"property": "potential", "scale": "linear"},
         },
         structure_settings={
@@ -932,4 +933,5 @@ chemiscope.show(
         trajectory=True,
     ),
 )
+
 # %%
