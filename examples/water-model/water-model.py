@@ -14,7 +14,7 @@ quantum-nuclear-effects-aware path integral simulations (cf. `Habershon et al., 
 to perform demonstrative molecular dynamics simulations.
 """
 
-# sphinx_gallery_thumbnail_number = 5
+# sphinx_gallery_thumbnail_number = 3
 from typing import Dict, List, Optional
 
 # %%
