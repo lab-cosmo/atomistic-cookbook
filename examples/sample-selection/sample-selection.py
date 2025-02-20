@@ -3,7 +3,7 @@ Sample and Feature Selection with FPS and CUR
 =============================================
 
 :Authors: Davide Tisi `@DavideTisi <https://github.com/DavideTisi>`_
-          Hanna Tuerk `@HannaTuerk <https://github.com/HannaTuerk>`_
+         and Hanna Tuerk `@HannaTuerk <https://github.com/HannaTuerk>`_
 
 In this tutorial we generate descriptors using featomic, then select a subset
 of structures using both the farthest-point sampling (FPS) and CUR algorithms
