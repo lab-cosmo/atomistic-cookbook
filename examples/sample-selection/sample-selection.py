@@ -3,6 +3,7 @@ Sample and Feature Selection with FPS and CUR
 =============================================
 
 :Authors: Davide Tisi `@DavideTisi <https://github.com/DavideTisi>`_
+          Hanna Tuerk `@HannaTuerk <https://github.com/HannaTuerk>`_
 
 In this tutorial we generate descriptors using featomic, then select a subset
 of structures using both the farthest-point sampling (FPS) and CUR algorithms
@@ -18,12 +19,12 @@ import ase.io
 import chemiscope
 import metatensor
 import numpy as np
-#from equisolve.numpy import feature_selection, sample_selection
 from featomic import SoapPowerSpectrum
 from matplotlib import pyplot as plt
 from sklearn.decomposition import PCA
 from skmatter import feature_selection, sample_selection
 
+#Note that you will need a the specific new version of skmatter (state: Feb. 2025). The link is provided in the environment.yaml file that you can find on github. 
 
 # %%
 # Load molecular data
@@ -111,46 +112,29 @@ print(atom_soap.block(0))
 # Define the number of structures *per block* to select using FPS
 n_envs = 10
 
-
+## FPS sample selection
 for key, block in atom_soap.items():
-
-    ## FPS sample selection
-    #selector_atomic_fps = sample_selection.FPS(n_to_select=n_envs, initialize="random").fit(
-    #    atom_soap.block(key)
-    #)
     sample_fps = sample_selection.FPS(n_to_select=n_envs, initialize="random").fit(
         atom_soap.block(key).values
     )
-    #print(atom_soap.block(key).values)
-
     sample_fps_idxs = sample_fps.selected_idx_
 
-    #print(feat_fps_idxs)
-    # Print the selected envs for each block
+    # Print the selected envs for this block
     print("atomic envs selected with FPS:\n")
-    #for key, block in selector_atomic_fps.support.items():
 
     selected_structures_idx=atom_soap.block(key).samples.values[sample_fps_idxs]
-    #print("center_type:", key, "\n(struct_idx, atom_idx)\n", selected_structures_idx)
     newblock=metatensor.slice_block(block, axis='samples',selection=sample_fps_idxs)    
     print("center_type:", key, "\n(struct_idx, atom_idx)\n", newblock.samples.values)
 
+## CUR sample selection
+for key, block in atom_soap.items():
     sample_cur = sample_selection.CUR(n_to_select=n_envs).fit(
         atom_soap.block(key).values
     )
 
     print("atomic envs selected with CUR:\n")
-    #for key, block in selector_atomic_fps.support.items():
     newblock=metatensor.slice_block(block, axis='samples',selection=sample_cur.selected_idx_)    
     print("center_type:", key, "\n(struct_idx, atom_idx)\n", newblock.samples.values)
-
-
-
-#    selector_atomic_cur = sample_selection.CUR(n_to_select=n_envs).fit(atom_soap)
-#    # Print the selected envs for each block
-#    print("atomic envs selected with CUR:\n")
-#    for key, block in selector_atomic_cur.support.items():
-#        print("center_type:", key, "\n(struct_idx, atom_idx)\n", block.samples.values)
 
 
 # %%
@@ -172,29 +156,20 @@ print("samples in first and only block", atom_soap_single_block[0].samples)
 
 # Using the original SOAP descriptor, move all keys to properties.
 
-
 # Define the number of structures to select using FPS
 n_envs = 10
 
 # FPS sample selection
-#selector_atomic_fps = sample_selection.FPS(n_to_select=n_envs, initialize="random").fit(
-#    atom_soap_single_block
-#)
 sample_fps = sample_selection.FPS(n_to_select=n_envs, initialize="random").fit(
     atom_soap_single_block.block(0).values
 )
 
 sample_fps_idxs = sample_fps.selected_idx_
 selected_structures_idxs=atom_soap_single_block.block(0).samples['system'][sample_fps_idxs]
-#print(atom_soap.block(key).values)
-#newblock=metatensor.slice_block(atom_soap_single_block, axis='samples',selection=feat_fps_idxs)    
-#selected_labels=metatensor.Labels(names=['samples',''], [(selected_structures_idxs[i],) for i in range(len(feat_fps_idxs))])
-#newtm=metatensor.slice(atom_soap_single_block, axis='samples', )
 newblock=metatensor.slice_block(atom_soap_single_block.block(0), axis='samples',selection=sample_fps.selected_idx_)    
 
 print(
     "atomic envs selected with FPS: \n (struct_idx, atom_idx, center_type) \n",
-#    selector_atomic_fps.support.block(0).samples.values,
     newblock.samples.values
 )
 
@@ -226,36 +201,20 @@ print("samples in first block", struct_soap[0].samples)
 n_structures = 10
 
 # FPS structure selection
-#selector_struct_fps = sample_selection.FPS(
-#    n_to_select=n_structures, initialize="random"
-#).fit(struct_soap)
-#struct_fps_idxs = selector_struct_fps.support.block(0).samples.values.flatten()
-
-print(len(struct_soap[0].samples))
-print(len(struct_soap[0].values))
-print(len(struct_soap[0].values[0]))
-
 sample_fps = sample_selection.FPS(n_to_select=n_structures, initialize="random").fit(
     struct_soap.block(0).values
 )
 struct_fps_idxs = sample_fps.selected_idx_
 print("structures selected with FPS:\n", sample_fps.selected_idx_)
-#selected_structures_idxs=atom_soap_single_block.block(0).samples['system'][feat_fps_idxs]
-#newblock=metatensor.slice_block(struct_soap.block(0), axis='samples',selection=feat_fps.selected_idx_)    
 
 
 # CUR structure selection
-#selector_struct_cur = sample_selection.CUR(n_to_select=n_structures).fit(struct_soap)
-#struct_cur_idxs = selector_struct_cur.support.block(0).samples.values.flatten()
-#print("structures selected with CUR:\n", struct_cur_idxs)
 sample_cur = sample_selection.CUR(n_to_select=n_structures).fit(
     struct_soap.block(0).values
 )
 
 struct_cur_idxs = sample_cur.selected_idx_
 print("structures selected with CUR:\n", struct_cur_idxs)
-#newblock=metatensor.slice_block(struct_soap.block(0), axis='samples',selection=feat_cur.selected_idx_)    
-
 
 # Slice structure descriptor along axis 0 to contain only the selected structures
 struct_soap_fps = struct_soap.block(0).values[struct_fps_idxs, :]
@@ -361,7 +320,8 @@ widget
 # Perform feature selection
 # -------------------------
 #
-# Now perform feature selection. In this example we will go back to using the
+# Now perform feature selection to reduce the size of the features. 
+# In this example we will go back to using the
 # descriptor decomposed into atomic environments, as opposed to the one
 # decomposed into structure environments, but only use FPS for brevity.
 print("----Feature selection-----")
@@ -388,9 +348,6 @@ print(
     "atomic descriptor shape after selection ",
     atom_soap_single_block_fps.values.shape,
 )
-
-
-
 
 
 
