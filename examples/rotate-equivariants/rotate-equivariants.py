@@ -16,10 +16,25 @@ this example are computed by the ``featomic`` library.
 
 import ase.build
 import featomic
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
 import metatensor
 import numpy as np
 import spherical
 from scipy.spatial.transform import Rotation
+
+
+# %%
+# Introduction
+# ------------
+# The equivariant properties of atomic structures are properties that transform in a
+# specific way under the action of a group of symmetries. In our case, we are interested
+# in the group of rotations in 3D space.
+
+img = mpimg.imread("rotate-equivariants.png")
+plt.imshow(img)
+plt.axis("off")
+plt.show()
 
 
 # %%
