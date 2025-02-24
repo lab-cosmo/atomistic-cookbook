@@ -256,8 +256,6 @@ plt.xlabel("Distance / Å")
 plt.ylabel("Lennard-Jones Potential / (kcal/mol)")
 plt.legend()
 
-plt.show()
-
 
 # %%
 #
@@ -381,9 +379,7 @@ ax.set_ylabel("Electrostatic Potential / (kcal/mol)")
 #   intramolecular energies are already parametrized by the bond and angle interactions.
 #   Therefore, we first compute the electrostatic energy of all atoms and then subtract
 #   interactions between bonded atoms.
-
-
-# %%
+#
 # Implementation as a Q-TIP4P/f ``torch`` module
 # ----------------------------------------------
 #
@@ -397,7 +393,7 @@ ax.set_ylabel("Electrostatic Potential / (kcal/mol)")
 # <https://luthaf.fr/vesin/latest/index.html>`_, as we do here.
 
 # small water box
-atoms = ase.io.read("water_32.xyz")
+atoms = ase.io.read("data/water_32.xyz")
 system = System(
     types=torch.from_numpy(atoms.get_atomic_numbers()),
     positions=torch.from_numpy(atoms.positions),
@@ -448,7 +444,6 @@ def get_bonds_angles(positions: torch.Tensor):
         ]
     )
 
-    print(oh_dist)
     if oh_dist.max() > 2.0:
         raise ValueError(
             "Unphysical O-H bond length. Check that the molecules are entire, and "
@@ -794,7 +789,7 @@ Energy is {nrg["energy"].block(0).values[0].item()} kcal/mol
 # %%
 # Model options include a definition of its units, and a description of the quantities
 # it can compute.
-# 
+#
 # .. note::
 #
 #   We neeed to specify that the model has ``infinite`` interaction range because of the
@@ -915,14 +910,14 @@ chemiscope.show(
 # This input could also be written to file and used with the command-line version
 # of i-PI.
 
-data = ase.io.read("water_32.xyz")
+data = ase.io.read("data/water_32.xyz")
 input_xml = simulation_xml(
     structures=data,
     forcefield=forcefield_xml(
         name="qtip4pf",
         mode="direct",
         pes="metatensor",
-        parameters={"model": "qtip4pf-mta.pt", "template": "water_32.xyz"},
+        parameters={"model": "qtip4pf-mta.pt", "template": "data/water_32.xyz"},
     ),
     motion=motion_nvt_xml(timestep=0.5 * ase.units.fs),
     temperature=300,
