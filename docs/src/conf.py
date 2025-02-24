@@ -9,7 +9,6 @@ extensions = [
     "sphinx_design",
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
-    "sphinxcontrib.details.directive",
     "sphinx_gallery.load_style",
     "chemiscope.sphinx",
 ]

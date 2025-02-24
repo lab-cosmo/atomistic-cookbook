@@ -15,9 +15,9 @@ to perform demonstrative molecular dynamics simulations.
 """
 
 # sphinx_gallery_thumbnail_number = 3
+# %%
 from typing import Dict, List, Optional
 
-# %%
 import ase.io
 
 # Simulation and visualization tools
@@ -656,7 +656,10 @@ class QTIP4PfModel(torch.nn.Module):
 
         system_final = System(types, positions, system.cell, system.pbc)
 
-        return system_final, system.get_neighbor_list(self.nlo)
+        neighbors = system.get_neighbor_list(self.nlo)
+        system_final.add_neighbor_list(options=self.nlo, neighbors=neighbors)
+
+        return system_final, neighbors
 
     def forward(
         self,
@@ -670,7 +673,7 @@ class QTIP4PfModel(torch.nn.Module):
                 f"`outputs` keys ({', '.join(outputs.keys())}) contain unsupported "
                 "keys. Only 'energy' is supported."
             )
-        
+
         if outputs["energy"].per_atom:
             raise NotImplementedError("per-atom energies are not supported.")
 

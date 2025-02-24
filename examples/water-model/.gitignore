@@ -1,2 +1,5 @@
 *.pt
 RESTART
+*.json
+qtip4pf-md*
+data.zip
