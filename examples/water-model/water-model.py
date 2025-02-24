@@ -246,15 +246,17 @@ lj_potential = lennard_jones_pair(
 )
 
 
-fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-ax.set_title("Lennard-Jones Potential Between Two Oxygen Atoms")
-ax.axhline(0, color="black", linestyle="--")
-ax.axhline(-O_epsilon, color="red", linestyle=":", label="Oxygen ε")
-ax.axvline(O_sigma, color="black", linestyle=":", label="Oxygen σ")
-ax.plot(lj_distances, lj_potential)
-ax.set_xlabel("Distance / Å")
-ax.set_ylabel("Lennard-Jones Potential / (kcal/mol)")
-ax.legend()
+plt.title("Lennard-Jones Potential Between Two Oxygen Atoms")
+plt.axhline(0, color="black", linestyle="--")
+
+plt.axhline(-O_epsilon, color="red", linestyle=":", label="Oxygen ε")
+plt.axvline(O_sigma, color="black", linestyle=":", label="Oxygen σ")
+plt.plot(lj_distances, lj_potential)
+plt.xlabel("Distance / Å")
+plt.ylabel("Lennard-Jones Potential / (kcal/mol)")
+plt.legend()
+
+plt.show()
 
 
 # %%
@@ -524,7 +526,11 @@ def get_msites(system: System, m_gamma: torch.Tensor, m_charge: torch.Tensor):
         values=charges, samples=samples, components=[], properties=properties
     )
 
-    m_system.add_data(data=data, name="charges")
+    tensor = TensorMap(
+        keys=Labels("_", torch.zeros(1, 1, dtype=torch.int32)), blocks=[data]
+    )
+
+    m_system.add_data(name="charges", tensor=tensor)
 
     # intra-molecular distances (for self-energy removal)
     hh_dist = torch.sqrt(((h1_pos - h2_pos) ** 2).sum(dim=1))
@@ -582,8 +588,9 @@ class QTIP4PfModel(torch.nn.Module):
         super().__init__()
 
         if p3m_options is None:
-            # sane defaults, should give a ~1e-4 relative accuracy on forces
+            # should give a ~1e-4 relative accuracy on forces
             p3m_options = (1.4, {"interpolation_nodes": 5, "mesh_spacing": 1.33}, 0)
+
         p3m_smearing, p3m_parameters, _ = p3m_options
 
         self.p3m_calculator = torchpme.metatensor.P3MCalculator(
@@ -591,8 +598,10 @@ class QTIP4PfModel(torch.nn.Module):
             **p3m_parameters,
             prefactor=torchpme.prefactors.kcalmol_A,  # consistent units
         )
+        self.p3m_calculator.to(device=device, dtype=dtype)
 
         self.coulomb = torchpme.CoulombPotential()
+        self.coulomb.to(device=device, dtype=dtype)
 
         # We use a half neighborlist and allow to have pairs farther than cutoff
         # (`strict=False`) since this is not problematic for PME and may speed up the
@@ -626,13 +635,28 @@ class QTIP4PfModel(torch.nn.Module):
         systems: list[System],
         selected_atoms: Optional[Labels] = None,
     ) -> tuple[System, TensorBlock]:
-
+        """Remove possible ghost atoms and add charges to the system."""
         if len(systems) > 1:
             raise ValueError(f"only one system supported, got {len(systems)}")
 
+        system_i = 0
+        system = systems[system_i]
+
+        # select only real atoms and discard ghosts
         if selected_atoms is not None:
-            raise NotImplementedError("selected_atoms is not implemented")
-        return systems[0], systems[0].get_neighbor_list(self.nlo)
+            current_system_mask = selected_atoms.column("system") == system_i
+            current_atoms = selected_atoms.column("atom")
+            current_atoms = current_atoms[current_system_mask].to(torch.long)
+
+            types = system.types[current_atoms]
+            positions = system.positions[current_atoms]
+        else:
+            types = system.types
+            positions = system.positions
+
+        system_final = System(types, positions, system.cell, system.pbc)
+
+        return system_final, system.get_neighbor_list(self.nlo)
 
     def forward(
         self,
@@ -646,6 +670,9 @@ class QTIP4PfModel(torch.nn.Module):
                 f"`outputs` keys ({', '.join(outputs.keys())}) contain unsupported "
                 "keys. Only 'energy' is supported."
             )
+        
+        if outputs["energy"].per_atom:
+            raise NotImplementedError("per-atom energies are not supported.")
 
         system, neighbors = self._setup_systems(systems, selected_atoms)
 
@@ -672,14 +699,15 @@ class QTIP4PfModel(torch.nn.Module):
 
         # now this is the long-range part - computed over the M-site system
         m_system, mh_dist, hh_dist = get_msites(system, self.m_gamma, self.m_charge)
+
         m_neighbors = m_system.get_neighbor_list(self.nlo)
 
         potentials = self.p3m_calculator(m_system, m_neighbors).block(0).values
-        charges = m_system.get_data("charges").values
+        charges = m_system.get_data("charges").block().values
         energy_coulomb = (potentials * charges).sum()
 
-        # this is the intra-molecular Coulomb interactions, that must be removed
-        # to avoid double-counting
+        # this is the intra-molecular Coulomb interactions, that must be removed to meet
+        # the specifications of the force field
         energy_self = (
             (
                 self.coulomb.from_dist(mh_dist).sum() * charges[0]
@@ -714,8 +742,8 @@ class QTIP4PfModel(torch.nn.Module):
 
 
 # %%
-# All this class does is take a ``System`` and return its
-# energy (as a :clas:`metatensor.TensorMap``)
+# All this class does is take a ``System`` and return its energy (as a
+# :clas:`metatensor.TensorMap``)
 
 qtip4pf_parameters = dict(
     cutoff=7.0,
@@ -735,7 +763,12 @@ model = QTIP4PfModel(
     #    p3m_options = (1.4, {"interpolation_nodes": 5, "mesh_spacing": 1.33}, 0)
 )
 
-nrg = model.forward([system], {"energy": ""})
+energy_unit = "kcal/mol"
+length_unit = "angstrom"
+
+outputs = {"energy": ModelOutput(quantity="energy", unit=energy_unit, per_atom=False)}
+
+nrg = model.forward([system], outputs)
 print(
     f"""
 Energy is {nrg["energy"].block(0).values[0].item()} kcal/mol
@@ -759,9 +792,6 @@ Energy is {nrg["energy"].block(0).values[0].item()} kcal/mol
 # because of the presence of a long-range term that means one cannot
 # assume that forces decay to zero beyond the cutoff.
 
-energy_unit = "kcal/mol"
-length_unit = "angstrom"
-outputs = {"energy": ModelOutput(quantity="energy", unit=energy_unit, per_atom=False)}
 options = ModelEvaluationOptions(
     length_unit=length_unit, outputs=outputs, selected_atoms=None
 )
