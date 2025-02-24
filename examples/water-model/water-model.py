@@ -397,7 +397,7 @@ ax.set_ylabel("Electrostatic Potential / (kcal/mol)")
 # <https://luthaf.fr/vesin/latest/index.html>`_, as we do here.
 
 # small water box
-atoms = ase.io.read("data/water_32.pdb")
+atoms = ase.io.read("water_32.xyz")
 system = System(
     types=torch.from_numpy(atoms.get_atomic_numbers()),
     positions=torch.from_numpy(atoms.positions),
@@ -447,6 +447,8 @@ def get_bonds_angles(positions: torch.Tensor):
             torch.sqrt(((h2_pos - o_pos) ** 2).sum(dim=1)),
         ]
     )
+
+    print(oh_dist)
     if oh_dist.max() > 2.0:
         raise ValueError(
             "Unphysical O-H bond length. Check that the molecules are entire, and "
@@ -783,17 +785,21 @@ Energy is {nrg["energy"].block(0).values[0].item()} kcal/mol
 # %%
 # Build and save a ``MetatensorAtomisticModel``
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
 # This minimalistic model can be wrapped into a
-# :class:`metatensor.torch.atomistic.MetatensorAtomisticModel`
-# class, that provides useful helpers to specify the capabilities
-# of the model, and to save it as a ``torchscript`` module.
+# :class:`metatensor.torch.atomistic.MetatensorAtomisticModel` class, that provides
+# useful helpers to specify the capabilities of the model, and to save it as a
+# ``torchscript`` module.
 
 # %%
-# Model options include a definition of its units, and a description
-# of the quantities it can compute.
-# NB: we neeed to specify that the model has infinite interaction range
-# because of the presence of a long-range term that means one cannot
-# assume that forces decay to zero beyond the cutoff.
+# Model options include a definition of its units, and a description of the quantities
+# it can compute.
+# 
+# .. note::
+#
+#   We neeed to specify that the model has ``infinite`` interaction range because of the
+#   presence of a long-range term that means one cannot assume that forces decay to zero
+#   beyond the cutoff.
 
 options = ModelEvaluationOptions(
     length_unit=length_unit, outputs=outputs, selected_atoms=None
@@ -909,14 +915,14 @@ chemiscope.show(
 # This input could also be written to file and used with the command-line version
 # of i-PI.
 
-data = ase.io.read("data/water_32.pdb")
+data = ase.io.read("water_32.xyz")
 input_xml = simulation_xml(
     structures=data,
     forcefield=forcefield_xml(
         name="qtip4pf",
         mode="direct",
         pes="metatensor",
-        parameters={"model": "qtip4pf-mta.pt", "template": "data/water_32.pdb"},
+        parameters={"model": "qtip4pf-mta.pt", "template": "water_32.xyz"},
     ),
     motion=motion_nvt_xml(timestep=0.5 * ase.units.fs),
     temperature=300,
@@ -969,5 +975,3 @@ chemiscope.show(
         trajectory=True,
     ),
 )
-
-# %%
