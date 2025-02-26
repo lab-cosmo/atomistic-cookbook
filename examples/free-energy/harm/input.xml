@@ -2,7 +2,7 @@
   <output prefix='harm'>
     <properties stride='10' filename='out'>  [ step, potential ] </properties>
   </output>
-  <total_steps> 5000 </total_steps>
+  <total_steps> 1000 </total_steps>
   <prng>
     <seed> 32342 </seed>
   </prng>

@@ -3,7 +3,7 @@
     <properties stride='1' filename='out'>  [ step, potential ] </properties>
     <trajectory filename='pos' stride='1'> positions </trajectory>
   </output>
-  <total_steps> 1000 </total_steps>
+  <total_steps> 200 </total_steps>
   <prng>
     <seed> 32342 </seed>
   </prng>
