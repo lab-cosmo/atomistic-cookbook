@@ -246,15 +246,15 @@ lj_potential = lennard_jones_pair(
 )
 
 
-plt.title("Lennard-Jones Potential Between Two Oxygen Atoms")
-plt.axhline(0, color="black", linestyle="--")
-
-plt.axhline(-O_epsilon, color="red", linestyle=":", label="Oxygen ε")
-plt.axvline(O_sigma, color="black", linestyle=":", label="Oxygen σ")
-plt.plot(lj_distances, lj_potential)
-plt.xlabel("Distance / Å")
-plt.ylabel("Lennard-Jones Potential / (kcal/mol)")
-plt.legend()
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+ax.set_title("Lennard-Jones Potential Between Two Oxygen Atoms")
+ax.axhline(0, color="black", linestyle="--")
+ax.axhline(-O_epsilon, color="red", linestyle=":", label="Oxygen ε")
+ax.axvline(O_sigma, color="black", linestyle=":", label="Oxygen σ")
+ax.plot(lj_distances, lj_potential)
+ax.set_xlabel("Distance / Å")
+ax.set_ylabel("Lennard-Jones Potential / (kcal/mol)")
+ax.legend()
 
 
 # %%
@@ -418,21 +418,34 @@ neighbors
 # Helper functions for molecular geometry
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# In order to compute the different terms in the Q-TIP4P/f potential,
-# we need to extract some information on the geometry of the water
-# molecule. To keep the model class clean, we define a couple of helper
-# functions: a first one, computes O-H covalent bond lengths and angle
-# Note that the assumption is made that coordinates are not folded
-# (so that O-H distances can be computed as a simple difference, ignoring
-# PBCs) and that atoms of each molecule are stored contiguously,
-# i.e. O,H,H,O,H,H, ...
+# In order to compute the different terms in the Q-TIP4P/f potential, we need to extract
+# some information on the geometry of the water molecule. To keep the model class clean,
+# we define a helper function that does two things.
+#
+# First, it computes O-H covalent bond lengths and angle Note that the assumption is
+# made that coordinates are not folded (so that O-H distances can be computed as a
+# simple difference, ignoring PBCs) and that atoms of each molecule are stored
+# contiguously, i.e. O,H,H,O,H,H, ...
+#
+# Second, it computes the position of the "M sites", the position of the O charge in a
+# TIP4P-like model. Note that we also need distances to compute range-separated
+# electrostatics, which we obtain manipulating the neighbor list that is pre-attached to
+# the system. Thanks to the fact we rely on ``torch`` autodifferentiation mechanism, the
+# forces acting on the M sites will be automatically split between O and H atoms, in a
+# way that is consistent with the definition.
 
 
-def get_bonds_angles(positions: torch.Tensor):
+def get_molecular_geometry(
+    system: System,
+    nlo: NeighborListOptions,
+    m_gamma: torch.Tensor,
+    m_charge: torch.Tensor,
+):
     """Return the list of bond distances, angles and charge site
     positions for the water molecules. These are assumed not to
     be "folded", and to be listed in the input as OHHOHHOHH."""
 
+    positions = system.positions
     o_pos = positions[::3]
     h1_pos = positions[1::3]
     h2_pos = positions[2::3]
@@ -443,7 +456,6 @@ def get_bonds_angles(positions: torch.Tensor):
             torch.sqrt(((h2_pos - o_pos) ** 2).sum(dim=1)),
         ]
     )
-
     if oh_dist.max() > 2.0:
         raise ValueError(
             "Unphysical O-H bond length. Check that the molecules are entire, and "
@@ -455,27 +467,7 @@ def get_bonds_angles(positions: torch.Tensor):
         / (oh_dist[: len(o_pos)] * oh_dist[len(o_pos) :])
     )
 
-    return oh_dist, hoh_angles
-
-
-# %%
-# A second helper function computes the position of the "M sites", the position of the O
-# charge in a TIP4P-like model. Note that we also need distances to compute
-# range-separated electrostatics, which we obtain manipulating the neighbor list that is
-# pre-attached to the system. Thanks to the fact we rely on ``torch``
-# autodifferentiation mechanism, the forces acting on the M sites will be automatically
-# split between O and H atoms, in a way that is consistent with the definition.
-
-
-def get_msites(system: System, m_gamma: torch.Tensor, m_charge: torch.Tensor):
-
-    positions = system.positions
-    o_pos = positions[::3]
-    h1_pos = positions[1::3]
-    h2_pos = positions[2::3]
-
-    # NB: this is enough to get the correct forces on the `system` atoms. thanks
-    # autodiff!
+    # now get the position of the m-sites
     m_pos = m_gamma * o_pos + (1 - m_gamma) * 0.5 * (h1_pos + h2_pos)
 
     # creates a new System with the m-sites
@@ -494,17 +486,16 @@ def get_msites(system: System, m_gamma: torch.Tensor, m_charge: torch.Tensor):
         [m_pos - o_pos, torch.zeros_like(h1_pos), torch.zeros_like(h2_pos)], dim=1
     ).reshape(-1, 3, 1)
 
-    for nlo in system.known_neighbor_lists():
-        nl = system.get_neighbor_list(nlo)
-        i_idx = nl.samples.view(["first_atom"]).values.flatten()
-        j_idx = nl.samples.view(["second_atom"]).values.flatten()
-        m_nl = TensorBlock(
-            nl.values + om_displacements[j_idx] - om_displacements[i_idx],
-            nl.samples,
-            nl.components,
-            nl.properties,
-        )
-        m_system.add_neighbor_list(nlo, m_nl)
+    nl = system.get_neighbor_list(nlo)
+    i_idx = nl.samples.view(["first_atom"]).values.flatten()
+    j_idx = nl.samples.view(["second_atom"]).values.flatten()
+    m_nl = TensorBlock(
+        nl.values + om_displacements[j_idx] - om_displacements[i_idx],
+        nl.samples,
+        nl.components,
+        nl.properties,
+    )
+    m_system.add_neighbor_list(nlo, m_nl)
 
     # set charges of all atoms (now we bundle O first and H last)
     charges = torch.ones_like(o_pos).reshape(-1, 1)
@@ -529,7 +520,7 @@ def get_msites(system: System, m_gamma: torch.Tensor, m_charge: torch.Tensor):
 
     m_system.add_data(name="charges", tensor=tensor)
 
-    # intra-molecular distances (for self-energy removal)
+    # intra-molecular distances with the M sites (for self-energy removal)
     hh_dist = torch.sqrt(((h1_pos - h2_pos) ** 2).sum(dim=1))
     mh_dist = torch.concatenate(
         [
@@ -537,7 +528,150 @@ def get_msites(system: System, m_gamma: torch.Tensor, m_charge: torch.Tensor):
             torch.sqrt(((h2_pos - m_pos) ** 2).sum(dim=1)),
         ]
     )
-    return m_system, mh_dist, hh_dist
+    return oh_dist, hoh_angles, m_system, mh_dist, hh_dist
+
+
+# %%
+# It is also possible to use this model without making assumptions about
+# the order of the atoms, by using heuristics to identify the covalent bonds
+# as the shortest O-H distances in a simulation. This is necessary when using the
+# model with an external code, that might re-order atoms internally (as is e.g.
+# the case for LAMMPS). The heuristics here may fail in case molecules get too
+# close together, or at very high temperature.
+
+
+def get_molecular_geometry_auto(
+    system: System,
+    nlo: NeighborListOptions,
+    m_gamma: torch.Tensor,
+    m_charge: torch.Tensor,
+):
+    neighbors = system.get_neighbor_list(nlo)
+    species = system.types
+
+    # get neighbor idx and vectors as torch tensors
+    neigh_ij = neighbors.samples.view(["first_atom", "second_atom"]).values
+    neigh_dij = neighbors.values.squeeze()
+
+    # get all OH distances and their sorting order
+    oh_mask = species[neigh_ij[:, 0]] != species[neigh_ij[:, 1]]
+    oh_ij = neigh_ij[oh_mask]
+    oh_dij = neigh_dij[oh_mask]
+    oh_dist = torch.linalg.vector_norm(oh_dij, dim=1).squeeze()
+    oh_sort = torch.argsort(oh_dist)
+
+    # gets the oxygen indices in the bonds, sorted by distance
+    oh_oidx = torch.where(species[oh_ij[:, 0]] == 8, oh_ij[:, 0], oh_ij[:, 1])[oh_sort]
+    # makes sure we always consider bonds in the O->H direction
+    oh_dij = oh_dij * torch.where(species[oh_ij[:, 0]] == 8, 1.0, -1.0).reshape(-1, 1)
+
+    # we assume that the first n_oxygen*2 bonds cover all water molecules.
+    # if not we throw an error
+    o_idx = torch.nonzero(species == 8).squeeze()
+    n_oh = len(o_idx) * 2
+    oh_oidx_sort = torch.argsort(oh_oidx[:n_oh])
+
+    oh_dij_oidx = oh_oidx[oh_oidx_sort]  # indices of the O atoms for each dOH
+    # if each O index appears twice, this should be a vector of zeros
+    twoo_chk = oh_dij_oidx[::2] - oh_dij_oidx[1::2]
+    if (twoo_chk != 0).any():
+        raise RuntimeError("Cannot assign OH bonds to water molecules univocally.")
+
+    # finally, we compute O->H1 and O->H2 for each water molecule
+    oh_dij_sort = oh_dij[oh_sort[:n_oh]][oh_oidx_sort]
+    doh_1 = oh_dij_sort[::2]
+    doh_2 = oh_dij_sort[1::2]
+
+    oh_dist = torch.concatenate(
+        [
+            torch.linalg.vector_norm(doh_1, dim=1),
+            torch.linalg.vector_norm(doh_2, dim=1),
+        ]
+    )
+
+    if oh_dist.max() > 2.0:
+        raise ValueError(
+            "Unphysical O-H bond length. Check that the molecules are entire, and "
+            "atoms are listed in the expected OHH order."
+        )
+
+    hoh_angles = torch.arccos(
+        torch.sum(doh_1 * doh_2, dim=1)
+        / (oh_dist[: len(doh_1)] * oh_dist[len(doh_2) :])
+    )
+
+    # now we use this information to build the M sites
+    # we first put the O->H vectors in the same order as the
+    # positions. This allows us to manipulate all atoms at once later
+    oh1_vecs = torch.zeros_like(system.positions)
+    oh1_vecs[oh_dij_oidx[::2]] = doh_1
+    oh2_vecs = torch.zeros_like(system.positions)
+    oh2_vecs[oh_dij_oidx[1::2]] = doh_2
+
+    # we compute the vectors O->M displacing the O to the M sites
+    om_displacements = (1 - m_gamma) * 0.5 * (oh1_vecs + oh2_vecs)
+
+    # creates a new System with the m-sites
+    m_system = System(
+        types=system.types,
+        positions=system.positions + om_displacements,
+        cell=system.cell,
+        pbc=system.pbc,
+    )
+
+    # adjust neighbor lists to point at the m sites rather than O atoms. this assumes
+    # this won't have atoms cross the cutoff, which is of course only approximately
+    # true, so one should use a slighlty larger-than-usual cutoff nb - this is reshaped
+    # to match the values in a NL tensorblock
+    nl = system.get_neighbor_list(nlo)
+    i_idx = nl.samples.view(["first_atom"]).values.flatten()
+    j_idx = nl.samples.view(["second_atom"]).values.flatten()
+    m_nl = TensorBlock(
+        nl.values
+        + (om_displacements[j_idx] - om_displacements[i_idx]).reshape(-1, 3, 1),
+        nl.samples,
+        nl.components,
+        nl.properties,
+    )
+    m_system.add_neighbor_list(nlo, m_nl)
+
+    # set charges of all atoms
+    charges = (
+        torch.where(species == 8, -m_charge, 0.5 * m_charge)
+        .reshape(-1, 1)
+        .to(dtype=system.positions.dtype, device=system.positions.device)
+    )
+
+    # Create metadata for the charges TensorBlock
+    samples = Labels(
+        "atom", torch.arange(len(system), device=charges.device).reshape(-1, 1)
+    )
+    properties = Labels(
+        "charge", torch.zeros(1, 1, device=charges.device, dtype=torch.int32)
+    )
+    data = TensorBlock(
+        values=charges, samples=samples, components=[], properties=properties
+    )
+
+    tensor = TensorMap(
+        keys=Labels("_", torch.zeros(1, 1, dtype=torch.int32)), blocks=[data]
+    )
+
+    m_system.add_data(name="charges", tensor=tensor)
+
+    # intra-molecular distances with M sites (for self-energy removal)
+    hh_dist = torch.sqrt(((doh_1 - doh_2) ** 2).sum(dim=1))
+    dmh_1 = doh_1 - om_displacements[oh_dij_oidx[::2]]
+    dmh_2 = doh_2 - om_displacements[oh_dij_oidx[1::2]]
+    mh_dist = torch.concatenate(
+        [
+            torch.linalg.vector_norm(dmh_1, dim=1),
+            torch.linalg.vector_norm(dmh_2, dim=1),
+        ]
+    )
+
+    # phew!
+    return oh_dist, hoh_angles, m_system, mh_dist, hh_dist
 
 
 # %%
@@ -608,6 +742,7 @@ class QTIP4PfModel(torch.nn.Module):
         # registers model parameters as buffers
         self.dtype = dtype if dtype is not None else torch.get_default_dtype()
         self.device = device if device is not None else torch.get_default_device()
+        self.auto_topology = False
         self.register_buffer("cutoff", torch.tensor(cutoff, dtype=self.dtype))
         self.register_buffer("lj_sigma", torch.tensor(lj_sigma, dtype=self.dtype))
         self.register_buffer("lj_epsilon", torch.tensor(lj_epsilon, dtype=self.dtype))
@@ -632,7 +767,6 @@ class QTIP4PfModel(torch.nn.Module):
         systems: list[System],
         selected_atoms: Optional[Labels] = None,
     ) -> tuple[System, TensorBlock]:
-        """Remove possible ghost atoms and add charges to the system."""
         if len(systems) > 1:
             raise ValueError(f"only one system supported, got {len(systems)}")
 
@@ -640,23 +774,23 @@ class QTIP4PfModel(torch.nn.Module):
         system = systems[system_i]
 
         # select only real atoms and discard ghosts
+        # (this is to work in codes like LAMMPS that provide a neighbor
+        # list that also includes "domain decomposition" neigbhbors)
         if selected_atoms is not None:
+            self.auto_topology = True  # use heuristics to determine water molecules
             current_system_mask = selected_atoms.column("system") == system_i
             current_atoms = selected_atoms.column("atom")
             current_atoms = current_atoms[current_system_mask].to(torch.long)
 
             types = system.types[current_atoms]
             positions = system.positions[current_atoms]
+            system_clean = System(types, positions, system.cell, system.pbc)
+            for nlo in system.known_neighbor_lists():
+                system_clean.add_neighbor_list(nlo, system.get_neighbor_list(nlo))
         else:
-            types = system.types
-            positions = system.positions
-
-        system_final = System(types, positions, system.cell, system.pbc)
-
-        neighbors = system.get_neighbor_list(self.nlo)
-        system_final.add_neighbor_list(options=self.nlo, neighbors=neighbors)
-
-        return system_final, neighbors
+            self.auto_topology = False  # use heuristics to determine water molecules
+            system_clean = system
+        return system_clean, system.get_neighbor_list(self.nlo)
 
     def forward(
         self,
@@ -676,16 +810,6 @@ class QTIP4PfModel(torch.nn.Module):
 
         system, neighbors = self._setup_systems(systems, selected_atoms)
 
-        # gets information about water molecules, to compute intra-molecular and
-        # electrostatic terms
-        d_oh, a_hoh = get_bonds_angles(system.positions)
-
-        # intra-molecular energetics
-        e_bond = bond_energy(
-            d_oh, self.oh_bond_d, self.oh_bond_alpha, self.oh_bond_eq
-        ).sum()
-        e_bend = bend_energy(a_hoh, self.hoh_angle_k, self.hoh_angle_eq).sum()
-
         # compute non-bonded LJ energy
         neighbor_indices = neighbors.samples.view(["first_atom", "second_atom"]).values
         species = system.types
@@ -697,17 +821,33 @@ class QTIP4PfModel(torch.nn.Module):
             oo_distances, self.lj_sigma, self.lj_epsilon, self.cutoff
         ).sum()
 
-        # now this is the long-range part - computed over the M-site system
-        m_system, mh_dist, hh_dist = get_msites(system, self.m_gamma, self.m_charge)
+        # gets information about water molecules, to compute intra-molecular and
+        # electrostatic terms
+        if self.auto_topology:
+            d_oh, a_hoh, m_system, mh_dist, hh_dist = get_molecular_geometry_auto(
+                system, self.nlo, self.m_gamma, self.m_charge
+            )
+        else:
+            d_oh, a_hoh, m_system, mh_dist, hh_dist = get_molecular_geometry(
+                system, self.nlo, self.m_gamma, self.m_charge
+            )
 
+        # intra-molecular energetics
+        e_bond = bond_energy(
+            d_oh, self.oh_bond_d, self.oh_bond_alpha, self.oh_bond_eq
+        ).sum()
+        e_bend = bend_energy(a_hoh, self.hoh_angle_k, self.hoh_angle_eq).sum()
+
+        # now this is the long-range part - computed over the M-site system
+        # m_system, mh_dist, hh_dist = get_msites(system, self.m_gamma, self.m_charge)
         m_neighbors = m_system.get_neighbor_list(self.nlo)
 
         potentials = self.p3m_calculator(m_system, m_neighbors).block(0).values
         charges = m_system.get_data("charges").block().values
         energy_coulomb = (potentials * charges).sum()
 
-        # this is the intra-molecular Coulomb interactions, that must be removed to meet
-        # the specifications of the force field
+        # this is the intra-molecular Coulomb interactions, that must be removed
+        # to avoid double-counting
         energy_self = (
             (
                 self.coulomb.from_dist(mh_dist).sum() * charges[0]
@@ -720,11 +860,7 @@ class QTIP4PfModel(torch.nn.Module):
         # combines all energy terms
         energy_tot = e_bond + e_bend + energy_lj + energy_coulomb - energy_self
 
-        # print("energies\n",(e_bond+e_bend)*0.0015936014,
-        #        energy_lj*0.0015936014,
-        #        (energy_coulomb-energy_self)*0.0015936014)
-
-        # Rename property label to follow metatensor's covention for an atomistic model
+        # Rename property label to follow metatensor's convention for an atomistic model
         samples = Labels(
             ["system"], torch.arange(len(systems), device=self.device).reshape(-1, 1)
         )
@@ -742,8 +878,8 @@ class QTIP4PfModel(torch.nn.Module):
 
 
 # %%
-# All this class does is take a ``System`` and return its energy (as a
-# :clas:`metatensor.TensorMap``)
+# All this class does is take a ``System`` and return its
+# energy (as a :clas:`metatensor.TensorMap``)
 
 qtip4pf_parameters = dict(
     cutoff=7.0,
@@ -763,38 +899,49 @@ model = QTIP4PfModel(
     #    p3m_options = (1.4, {"interpolation_nodes": 5, "mesh_spacing": 1.33}, 0)
 )
 
+# re-initilize the ``system`` so we also ask for gradients
+system = System(
+    types=torch.from_numpy(atoms.get_atomic_numbers()),
+    positions=torch.from_numpy(atoms.positions).requires_grad_(),
+    cell=torch.from_numpy(atoms.cell.array).requires_grad_(),
+    pbc=torch.from_numpy(atoms.pbc),
+)
+system.add_neighbor_list(nlo, calculator.compute(system))
+
 energy_unit = "kcal/mol"
 length_unit = "angstrom"
 
 outputs = {"energy": ModelOutput(quantity="energy", unit=energy_unit, per_atom=False)}
 
 nrg = model.forward([system], outputs)
+nrg["energy"].block(0).values.backward()
+
 print(
     f"""
 Energy is {nrg["energy"].block(0).values[0].item()} kcal/mol
+
+The forces on the first molecule (in kcal/mol/Å) are
+{system.positions.grad[:3]}
+
+The stress is
+{system.cell.grad}
 """
 )
 
 # %%
-
-# %%
 # Build and save a ``MetatensorAtomisticModel``
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
 # This minimalistic model can be wrapped into a
-# :class:`metatensor.torch.atomistic.MetatensorAtomisticModel` class, that provides
-# useful helpers to specify the capabilities of the model, and to save it as a
-# ``torchscript`` module.
+# :class:`metatensor.torch.atomistic.MetatensorAtomisticModel`
+# class, that provides useful helpers to specify the capabilities
+# of the model, and to save it as a ``torchscript`` module.
 
 # %%
-# Model options include a definition of its units, and a description of the quantities
-# it can compute.
-#
-# .. note::
-#
-#   We neeed to specify that the model has ``infinite`` interaction range because of the
-#   presence of a long-range term that means one cannot assume that forces decay to zero
-#   beyond the cutoff.
+# Model options include a definition of its units, and a description
+# of the quantities it can compute.
+# NB: we neeed to specify that the model has infinite interaction range
+# because of the presence of a long-range term that means one cannot
+# assume that forces decay to zero beyond the cutoff.
 
 options = ModelEvaluationOptions(
     length_unit=length_unit, outputs=outputs, selected_atoms=None
