@@ -6,36 +6,30 @@ Equivariant linear model for polarizability
 
 In this example, we demonstrate how to construct a `metatensor atomistic model
 <https://docs.metatensor.org/latest/atomistic>`_ for the polarizability tensor
-of molecular systems. This example uses the ``featomic`` library to compute 
+of molecular systems. This example uses the ``featomic`` library to compute
 equivariant descriptors, and ``scikit-learn`` to train a linear regression model.
 The model can then be used in an ASE calculator.
 """
 
 # sphinx_gallery_thumbnail_number = 3
 # %%
-from typing import Dict, List, Union, Optional
+from typing import Dict, List, Optional, Union
 
 import ase.io
 
 # Simulation and visualization tools
 import matplotlib.pyplot as plt
+import metatensor.torch as mts
 
 # Model wrapping and execution tools
 import numpy as np
 import torch
-
-# Core libraries
-from sklearn.linear_model import RidgeCV
-
 from featomic.torch import SphericalExpansion
 from featomic.torch.clebsch_gordan import (
     EquivariantPowerSpectrum,
     cartesian_to_spherical,
 )
-
-from metatensor.torch import TensorMap, Labels, TensorBlock
-import metatensor.torch as mts
-from metatensor.torch.learn.nn import EquivariantLinear
+from metatensor.torch import Labels, TensorBlock, TensorMap
 from metatensor.torch.atomistic import (
     MetatensorAtomisticModel,
     ModelCapabilities,
@@ -43,11 +37,17 @@ from metatensor.torch.atomistic import (
     ModelMetadata,
     ModelOutput,
     System,
-    systems_to_torch,
     load_atomistic_model,
+    systems_to_torch,
 )
-
 from metatensor.torch.atomistic.ase_calculator import MetatensorCalculator
+from metatensor.torch.learn.nn import EquivariantLinear
+
+# Core libraries
+from sklearn.linear_model import RidgeCV
+
+
+torch.set_default_dtype(torch.float64)  # FIXME: This is a temporary fix
 
 # %%
 # Polarizability tensor
@@ -124,8 +124,13 @@ spherical_tensormap_train = mts.slice(
     "samples",
     Labels("system", torch.from_numpy(train_idx).reshape(-1, 1)),
 )
-cartesian_tensormap_test = mts.slice(
-    cartesian_tensormap,
+# cartesian_tensormap_test = mts.slice(
+#     cartesian_tensormap,
+#     "samples",
+#     Labels("system", torch.from_numpy(test_idx).reshape(-1, 1)),
+# )
+spherical_tensormap_test = mts.slice(
+    spherical_tensormap,
     "samples",
     Labels("system", torch.from_numpy(test_idx).reshape(-1, 1)),
 )
@@ -153,9 +158,7 @@ class PolarizabilityModel(torch.nn.Module):
         atomic_types: List[int],
         training_systems: List[System],
         training_targets: TensorMap,
-        alphas: Union[float, List[float], np.ndarray, torch.Tensor] = np.logspace(
-            -6, 6, 10
-        ),
+        alphas: Union[float, List[float], np.ndarray, torch.Tensor] = None,
         dtype: torch.dtype = None,
     ) -> None:
 
@@ -167,6 +170,9 @@ class PolarizabilityModel(torch.nn.Module):
         device = torch.device("cpu")
 
         self.hypers = spex_calculator.parameters
+
+        if alphas is None:
+            alphas = np.logspace(-6, 6, 13)
 
         # Check that the atomic types are unique
         assert len(set(atomic_types)) == len(atomic_types)
@@ -434,21 +440,35 @@ systems_test = [
 prediction_test = model(systems_test, outputs)
 
 # %%
-cartesian_tensormap_test[0].values.shape, prediction_test["cookbook::polarizability"][
-    0
-].values.shape
-# %%
 # Let us plot the predicted polarizability tensor against the true polarizability tensor
 # for the test set.
-true_polarizability = cartesian_tensormap_test[0].values.flatten().numpy()
-predicted_polarizability = (
-    prediction_test["cookbook::polarizability"][0].values.flatten().detach().numpy()
+# true_polarizability = cartesian_tensormap_test[0].values.flatten().numpy()
+
+true_polarizability = np.concatenate(
+    [
+        spherical_tensormap_test.block(k).values.flatten().numpy()
+        for k in spherical_tensormap_test.keys
+    ]
+)
+predicted_polarizability = np.concatenate(
+    [
+        prediction_test["cookbook::polarizability"]
+        .block(k)
+        .values.flatten()
+        .detach()
+        .numpy()
+        for k in prediction_test["cookbook::polarizability"].keys
+    ]
 )
 
 fig, ax = plt.subplots()
 ax.set_aspect("equal")
 ax.plot(true_polarizability, predicted_polarizability, ".")
-ax.plot([-20, 140], [-20, 140], "--k")
+ax.plot(
+    [true_polarizability.min(), true_polarizability.max()],
+    [true_polarizability.min(), true_polarizability.max()],
+    "--k",
+)
 ax.set_xlabel("True polarizability (a.u.)")
 ax.set_ylabel("Predicted polarizability (a.u.)")
 ax.set_title("Polarizability prediction")
@@ -483,10 +503,10 @@ atomistic_model = MetatensorAtomisticModel(
 
 
 # %%
-# atomistic_model.save("polarizability_model.pt", collect_extensions="extensions")
-# atomistic_model = load_atomistic_model("polarizability_model.pt")
+atomistic_model.save("polarizability_model.pt", collect_extensions="extensions")
 
-
+# %%
+atomistic_model = load_atomistic_model("polarizability_model.pt")
 mta_calculator = MetatensorCalculator(atomistic_model)
 
 ase_frames = ase.io.read("data/qm7x_reduced_100.xyz", index=":")
@@ -494,7 +514,5 @@ ase_frames = ase.io.read("data/qm7x_reduced_100.xyz", index=":")
 computed_polarizabilities = []
 for frame in ase_frames:
     computed_polarizabilities.append(
-        mta_calculator.run_model(frame)["cookbook::polarizability"]
+        mta_calculator.run_model(frame, outputs)["cookbook::polarizability"]
     )
-
-# %%
