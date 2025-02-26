@@ -13,12 +13,11 @@ The model can then be used in an ASE calculator.
 
 # sphinx_gallery_thumbnail_number = 3
 # %%
-from typing import Dict, List, Optional
+from typing import Dict, List, Union, Optional
 
 import ase.io
 
 # Simulation and visualization tools
-import chemiscope
 import matplotlib.pyplot as plt
 
 # Model wrapping and execution tools
@@ -26,1080 +25,476 @@ import numpy as np
 import torch
 
 # Core libraries
-import metatensor.torch as mts
-from metatensor.torch.learn.nn import EquivariantLinear
+from sklearn.linear_model import RidgeCV
 
 from featomic.torch import SphericalExpansion
 from featomic.torch.clebsch_gordan import (
-    EquivariantPowerSpectrum, 
-    cartesian_to_spherical
-    )
-from sklearn.linear_model import RidgeCV
-from sklearn.selection import train_test_split
-
-
-# Core libraries
-# from ase.optimize import LBFGS
-# from ipi.utils.parsing import read_output, read_trajectory
-# from ipi.utils.scripting import (
-#     InteractiveSimulation,
-#     forcefield_xml,
-#     motion_nvt_xml,
-#     simulation_xml,
-# )
-# from metatensor.torch import Labels, TensorBlock, TensorMap
-# from metatensor.torch.atomistic import (
-#     MetatensorAtomisticModel,
-#     ModelCapabilities,
-#     ModelEvaluationOptions,
-#     ModelMetadata,
-#     ModelOutput,
-#     NeighborListOptions,
-#     System,
-#     load_atomistic_model,
-# )
-
-# # Integration with ASE calculator for metatensor atomistic models
-# from metatensor.torch.atomistic.ase_calculator import MetatensorCalculator
-# from vesin.torch.metatensor import NeighborList
-
-
-# get_ipython().run_line_magic('matplotlib', 'inline')
-
-##
-# - Compute descriptors
-# - Train a linear model
-# - Wrap the model in a metatensor atomistic model
-# - Save the model
-# - Use the model in an ASE calculator
-# - Use the model in a simulation
-# - Compute Raman spectrum ???
-
-dtype = torch.float64
-
-# %%
-# Compute descriptors
-# -------------------
-#
-ase_frames = ase.io.read("data/qm7x_reduced_100.xyz", ":")
-systems = [
-    system.to(dtype=dtype) 
-    for system in mts.atomistic.systems_to_torch(ase_frames)
-    ]
-spex_hypers = {} # TODO
-spex_calculator = SphericalExpansion(**spex_hypers)
-lambda_soap_calculator = EquivariantPowerSpectrum(spex_calculator, dype=dtype)
-
-# Just keep the relevant spherical components. Since the polarizability is a symmetric
-# rank-2 tensor we only need the proper (sigma=1) irreps with lambda=0, 2.
-selected_keys = mts.Labels(["o3_lambda", "o3_sigma"], torch.tensor([[0, 1], [2, 1]]))
-lambda_soap = lambda_soap_calculator(systems, selected_keys=selected_keys, neighbors_to_properties=True)
-
-lambda_soap_just_spherical = lambda_soap.keys_to_samples(["center_type"])
-lambda_soap_per_system = mts.sum_over_samples(
-    lambda_soap_just_spherical, 
-    ["center_type", "atom"],
+    EquivariantPowerSpectrum,
+    cartesian_to_spherical,
 )
 
-# This descriptor is now ready to be used in a linear model. Let's look at the metadata
-print(lambda_soap_per_system.keys)
-print(lambda_soap_per_system[0].samples)
-print(lambda_soap_per_system[0].components)
-print(lambda_soap_per_system[0].properties)
+from metatensor.torch import TensorMap, Labels, TensorBlock
+import metatensor.torch as mts
+from metatensor.torch.learn.nn import EquivariantLinear
+from metatensor.torch.atomistic import (
+    MetatensorAtomisticModel,
+    ModelCapabilities,
+    ModelEvaluationOptions,
+    ModelMetadata,
+    ModelOutput,
+    System,
+    systems_to_torch,
+    load_atomistic_model,
+)
+
+from metatensor.torch.atomistic.ase_calculator import MetatensorCalculator
 
 # %%
-# Set up the linear model
-# -----------------------
+# Polarizability tensor
+# ---------------------
+# The polarizability tensor is a second-rank Cartesian tensor that describes the
+# response of a molecule to an external electric field. It is a symmetric and it can be
+# decomposed into irreducible spherical components. Due to its symmetry, only the
+# components with :math:`\lambda=0` and :math:`\lambda=2` are non-zero. The
+# :math:`\lambda=0` component is a scalar, while the :math:`\lambda=2` component is a
+# symmetric traceless matrix
+
+# %%
+# Equivariant model for polarizability
+# ------------------------------------
+# The polarizability tensor can be predicted using equivariant linear models. In this
+# example, we use the ``featomic`` library to compute equivariant :math:`\lambda`-SOAP
+# descriptors and ``scikit-learn`` to train a linear ridge regression model.
+
+# %%
+# Load the training data
+# ^^^^^^^^^^^^^^^^^^^^^^
+# We load a simple dataset of C5NH7 molecules and their polarizability tensors stored in
+# extended XYZ format. The dataset is split into training and test sets using a 80/20
+# ratio.
+
+ase_frames = ase.io.read("data/qm7x_reduced_100.xyz", index=":")
+n_frames = len(ase_frames)
+train_idx = np.random.choice(n_frames, int(0.8 * n_frames), replace=False)
+test_idx = np.setdiff1d(np.arange(n_frames), train_idx)
+
+# %%
+# Extract the polarizability tensors
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# We extract the polarizability tensors from the extended XYZ file and store them in a
+# :class:`metatensor.torch.TensorMap`. The polarizability tensors are stored as
+# Cartesian tensors. We also convert the Cartesian tensors to irreducible spherical
+# tensors using the :func:`featomic.torch.clebsch_gordan.cartesian_to_spherical`
+# function.
+
+cartesian_polarizability = np.stack(
+    [frame.info["polarizability"].reshape(3, 3) for frame in ase_frames]
+)
+cartesian_tensormap = TensorMap(
+    keys=Labels.single(),
+    blocks=[
+        TensorBlock(
+            samples=Labels.range("system", len(ase_frames)),
+            components=[Labels.range(name, 3) for name in ["xyz_1", "xyz_2"]],
+            properties=Labels(["polarizability"], torch.tensor([[0]])),
+            values=torch.from_numpy(cartesian_polarizability).unsqueeze(-1),
+        )
+    ],
+)
+spherical_tensormap = mts.remove_dimension(
+    cartesian_to_spherical(cartesian_tensormap, components=["xyz_1", "xyz_2"]),
+    "keys",
+    "_",
+)
+
+# %%
+# Now the polarizability is stored in a :class:`metatensor.torch.TensorMap` object
+# labeled by the irreducible spherical components as keys.
+
+print(spherical_tensormap.keys)
+
+# %%
+# Split the dataset
+# ^^^^^^^^^^^^^^^^^
+# We split the dataset into training and test sets according to the indices previously
+# defined.
+
+spherical_tensormap_train = mts.slice(
+    spherical_tensormap,
+    "samples",
+    Labels("system", torch.from_numpy(train_idx).reshape(-1, 1)),
+)
+cartesian_tensormap_test = mts.slice(
+    cartesian_tensormap,
+    "samples",
+    Labels("system", torch.from_numpy(test_idx).reshape(-1, 1)),
+)
+
+# %%
+# Implementation of a ``torch`` module for polarizability
+# -------------------------------------------------------
+# In order to implement a polarizability model compatible with ``metatomic``, we need to
+# we need to define a ``torch.nn.Module`` with a ``forward`` method that takes a list of
+# :class:`metatensor.torch.atomistic.System` and returns a dictionary of
+# :class:`metatensor.torch.TensorMap` objects. The ``forward`` method must be compatible
+# with ``TorchScript``.
+#
+# Here, the :class:`PolarizabilityModel` class is defined. It takes as input a
+# ``SphericalExpansion`` object, a list of atomic types, a list of training systems, a
+# dictionary of training targets, and a list of alphas for the ridge regression. The
+# ``forward`` method computes the descriptors and applies the linear model to predict
+# the polarizability tensor.
+
 
 class PolarizabilityModel(torch.nn.Module):
-    def __init__(spex_calculator, dtype, device, weights):
-        # Maybe pass the weights from the ridge regression? So really just a 
-        # wrapper around the model
+    def __init__(
+        self,
+        spex_calculator: SphericalExpansion,
+        atomic_types: List[int],
+        training_systems: List[System],
+        training_targets: TensorMap,
+        alphas: Union[float, List[float], np.ndarray, torch.Tensor] = np.logspace(
+            -6, 6, 10
+        ),
+        dtype: torch.dtype = None,
+    ) -> None:
+
         super().__init__()
 
-        # Should the hypers be hardcoded, given the weights are?
+        if dtype is None:
+            dtype = torch.float64
+        self.dtype = dtype
+        device = torch.device("cpu")
+
+        self.hypers = spex_calculator.parameters
+
+        # Check that the atomic types are unique
+        assert len(set(atomic_types)) == len(atomic_types)
+        self.atomic_types = atomic_types
 
         # Define lambda soap calculator
         self.lambda_soap_calculator = EquivariantPowerSpectrum(
-            spex_calculator, 
-            dype=dtype
-            )
+            spex_calculator, dtype=self.dtype
+        )
         self.selected_keys = mts.Labels(
-            ["o3_lambda", "o3_sigma"], 
-            torch.tensor([[0, 1], [2, 1]])
-            )
+            ["o3_lambda", "o3_sigma"], torch.tensor([[0, 1], [2, 1]])
+        )
+        self._compute_metadata()
 
-        # Better to use EquivariantLinear from metatensor.learn
+        # Define the linear model that wraps the ridge regression results
+        in_keys = self.metadata.keys
+        in_features = [block.values.shape[-1] for block in self.metadata]
+        out_features = [1 for _ in self.metadata]
+        out_properties = [mts.Labels.single() for _ in self.metadata]
+
         self.linear_model = EquivariantLinear(
-            in_keys=mts.Labels(["o3_lambda", "o3_sigma"], torch.tensor([[0, 1], [2, 1]])),
-            in_features=[],
-            out_features=[1, 1],
-            out_properties=[mts.Labels.single("_"), mts.Labels.single("_")]
-            )
-        self.linear_model_0 = torch.nn.Linear(
-            in_features=[] # TODO, 
-            out_features=[] # TODO
-            )
-        self.linear_model_2 = torch.nn.Linear(
-            in_features=[] # TODO, 
-            out_features=[] # TODO
-            )
-        self.apply_weights(weights)
+            in_keys=in_keys,
+            in_features=in_features,
+            out_features=out_features,
+            out_properties=out_properties,
+            dtype=self.dtype,
+            device=device,
+        )
 
-    def apply_weights(self, weights):
-        # Apply the weights to the linear model
-        # TODO
-        self.linear_model_0.weight = weights[0]
-        self.linear_model_0.bias = weights[1]
-        self.linear_model_2.weight = weights[2]
-        self.linear_model_2.bias = weights[3]
+        self._fit(training_systems, training_targets, alphas)
 
-    def spherical_to_cartesian(self, tensor):
-        pass
+    def _compute_metadata(self):
+        # Create dummy system to get the property dimension
+        dummy_system = systems_to_torch(
+            ase.Atoms(
+                numbers=self.atomic_types,
+                positions=[[i / 4, 0, 0] for i in range(len(self.atomic_types))],
+            )
+        )
 
-    def forward(
-        self,
-        systems: List[System],  # noqa
-        outputs: Dict[str, ModelOutput],  # noqa
-        selected_atoms: Optional[Labels] = None,
-    ) -> Dict[str, TensorMap]:  # noqa
-        
-        # Compute the descriptors
+        self.metadata = self.lambda_soap_calculator.compute_metadata(
+            dummy_system, selected_keys=self.selected_keys, neighbors_to_properties=True
+        ).keys_to_samples("center_type")
+
+    def _fit(self, training_systems, training_targets, alphas):
+
+        lambda_soap = self._compute_descriptor(training_systems)
+
+        ridges: List[RidgeCV] = []
+        for k in lambda_soap.keys:
+            X = lambda_soap.block(k).values
+            y = training_targets.block(k).values
+            n_samples, n_components, n_properties = X.shape
+            X = X.reshape(n_samples * n_components, n_properties)
+            y = y.reshape(n_samples * n_components, -1)
+            ridge = RidgeCV(alphas=alphas, fit_intercept=int(k["o3_lambda"]) == 0)
+            ridge.fit(X, y)
+            ridges.append(ridge)
+
+        self._apply_weights(ridges)
+
+    def _apply_weights(self, ridges: List[RidgeCV]) -> None:
+        with torch.no_grad():
+            for model, ridge in zip(self.linear_model.module_map, ridges):
+                model.weight.copy_(
+                    torch.tensor(ridge.coef_, dtype=self.dtype).unsqueeze(0)
+                )
+                if model.bias is not None:
+                    model.bias.copy_(torch.tensor(ridge.intercept_, dtype=self.dtype))
+
+    def _spherical_to_cartesian(self, spherical_tensor: TensorMap) -> TensorMap:
+        new_block: Dict[int, torch.Tensor] = {}
+
+        eye = torch.eye(3, dtype=self.dtype)
+        sqrt3 = torch.sqrt(torch.tensor(3.0, dtype=self.dtype))
+        block_0 = spherical_tensor[0]
+        block_2 = spherical_tensor[1]
+        system_ids = block_0.samples.values.flatten()
+
+        for i, A in enumerate(system_ids):
+            new_block[int(A)] = -block_0.values[
+                i
+            ].flatten() * eye / sqrt3 + self._matrix_from_l2_components(
+                block_2.values[i].unsqueeze(-1)
+            )
+
+        return TensorMap(
+            keys=Labels.single(),
+            blocks=[
+                TensorBlock(
+                    samples=Labels(
+                        "system",
+                        torch.tensor(
+                            [k for k in new_block.keys()], dtype=torch.int32
+                        ).reshape(-1, 1),
+                    ),
+                    components=[
+                        Labels(
+                            "xyz_1",
+                            torch.tensor([0, 1, 2], dtype=torch.int32).reshape(-1, 1),
+                        ),
+                        Labels(
+                            "xyz_2",
+                            torch.tensor([0, 1, 2], dtype=torch.int32).reshape(-1, 1),
+                        ),
+                    ],
+                    properties=Labels.single(),
+                    values=torch.stack([new_block[A] for A in new_block]).unsqueeze(-1),
+                )
+            ],
+        )
+
+    def _matrix_from_l2_components(self, l2: torch.Tensor) -> torch.Tensor:
+        """
+        Inverts the spherical projection function for a symmetric, traceless 3x3 tensor.
+
+        Given:
+            l2 : array-like of 5 components
+                These are the irreducible spherical components multiplied by sqrt(2),
+                i.e., l2 = sqrt(2) * [t0, t1, t2, t3, t4], where:
+                    t0 = (A[0,1] + A[1,0])/2
+                    t1 = (A[1,2] + A[2,1])/2
+                    t2 = (2*A[2,2] - A[0,0] - A[1,1])/(2*sqrt(3))
+                    t3 = (A[0,2] + A[2,0])/2
+                    t4 = (A[0,0] - A[1,1])/2
+
+        Returns:
+            A : (3,3) numpy array
+                The symmetric, traceless matrix reconstructed from the components.
+        """
+        # Recover the t_i by dividing by sqrt(2)
+        sqrt2 = torch.sqrt(torch.tensor(2.0, dtype=l2.dtype))
+        sqrt3 = torch.sqrt(torch.tensor(3.0, dtype=l2.dtype))
+        l2 = l2 / sqrt2
+
+        # Allocate the 3x3 matrix A
+        A = torch.empty((3, 3), dtype=l2.dtype)
+
+        # Diagonal entries:
+        # Use the traceless condition A[0,0] + A[1,1] + A[2,2] = 0.
+        # Also, from the definitions:
+        #   t4 = (A[0,0] - A[1,1]) / 2
+        #   t2 = (2*A[2,2] - A[0,0] - A[1,1])/(2*sqrt3)
+        #
+        # Solve for A[0,0] and A[1,1]:
+        A[0, 0] = -(sqrt3 * l2[2]) / 3 + l2[4]
+        A[1, 1] = -(sqrt3 * l2[2]) / 3 - l2[4]
+        A[2, 2] = (2 * sqrt3 * l2[2]) / 3  # Since A[2,2] = - (A[0,0] + A[1,1])
+
+        # Off-diagonals:
+        A[0, 1] = l2[0]
+        A[1, 0] = l2[0]
+
+        A[1, 2] = l2[1]
+        A[2, 1] = l2[1]
+
+        A[0, 2] = l2[3]
+        A[2, 0] = l2[3]
+
+        return A
+
+    def _compute_descriptor(self, systems: List[System]) -> TensorMap:
+        # Actually compute lambda-SOAP power spectrum
         lambda_soap = self.lambda_soap_calculator(
-            systems, 
-            selected_keys=self.selected_keys,
-            neighbors_to_properties=True
-            )
-        # Apply the linear model
-        self.linear_model(lambda_soap)
-
-        # Maybe spherical_to_cartesian?
-        pass
-
-# Scalar part
-X = lambda_soap_per_system.block({"o3_lambda": 0, "o3_sigma": 1}).values
-y = polarizability.block({"o3_lambda": 0, "o3_sigma": 1}).values
-n_samples, n_components, n_properties = X.shape
-X = X.reshape(n_samples * n_components, n_properties)
-y = y.reshape(n_samples * n_components)
-
-# lambda=2 part
-X = lambda_soap_per_system.block({"o3_lambda": 2, "o3_sigma": 1}).values
-y = polarizability.block({"o3_lambda": 2, "o3_sigma": 1}).values
-n_samples, n_components, n_properties = X.shape
-X = X.reshape(n_samples * n_components, n_properties)
-y = y.reshape(n_samples * n_components)
-
-# %%
-#
-# The q-TIP4P/F Model
-# -------------------
-#
-# As described above, this example implements a flexible four-point water
-# models. This model uses simple (quasi)-harmonic terms to describe intra-molecular
-# flexibility - with the use of a quartic term being a specific feature used
-# to describe the covalent bond softening for a H-bonded molecule - a Lennard-Jones
-# term describing dispersion and repulsion between O atoms, and an electrostatic
-# potential between partial charges on the H atoms and the oxygen electron density.
-# For a four-point model, the oxygen charge is slightly displaced from the
-# oxygen's position, improving properties like the `dielectric constant
-# <http://dx.doi.org/10.1021/jp410865y>`_. The fourth point, referred to as ``M``, is
-# implicitly derived from the other atoms of each water molecule.
-#
-# Intra-molecular interactions
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
-# The molecular bond potential is usually defined as a harmonic potential
-# of the form
-#
-# .. math::
-#
-#   V_\mathrm{bond}(r) = \frac{k_\mathrm{bond}}{2} (r - r_0)^2
-#
-# Here, :math:`k_\mathrm{bond}` is the force constant and :math:`r_0` is the equilibrium
-# distance. Bonded terms like this require defining a `topology`, i.e. a list of
-# pairs of atoms that are actually bonded to each other.
-#
-# q-TIP4P/F uses a quartic approximation of a Morse potential, that allows
-# describing the anharmonicity of the O-H covalent bond, and how the mean distance
-# changes due to zero-point fluctuations and/or hydrogen bonding.
-#
-# .. math::
-#
-#   V_\mathrm{bond}(r) = D_r [\alpha_r^2(r-r_0)^2-\alpha_r^3(r-r_0)^3 +
-#       \frac{7}{12}\alpha_r^4(r-r_0)^4]
-
-
-def bond_energy(
-    distances: torch.Tensor,
-    coefficient_d: torch.Tensor,
-    coefficient_alpha: torch.Tensor,
-    coefficient_r0: torch.Tensor,
-) -> torch.Tensor:
-    """Harmonic potential for bond terms."""
-    alpha_dr = (distances - coefficient_r0) * coefficient_alpha
-
-    return coefficient_d * alpha_dr**2 * (1 - alpha_dr + alpha_dr**2 * 7 / 12)
-
-
-# %%
-#
-# The parameters reproduce the form of a Morse potential close to the minimum, but
-# avoids the dissociation of the bond, due to the truncation to the quartic term. These
-# are the parameters used for q-TIP4P/F
-
-OH_Dr = 116.09  # kcal/mol
-OH_r0 = 0.9419  # Å
-OH_alpha = 2.287  # 1/Å
-
-bond_distances = np.linspace(0.5, 1.65, 200)
-bond_potential = bond_energy(
-    distances=bond_distances,
-    coefficient_d=OH_Dr,
-    coefficient_alpha=OH_alpha,
-    coefficient_r0=OH_r0,
-)
-
-fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-ax.set_title("Bond Potential Between Oxygen and Hydrogen")
-
-ax.plot(bond_distances, bond_potential)
-ax.axvline(OH_r0, label="equilibrium distance", color="black", linestyle="--")
-
-ax.set_xlabel("Distance / Å ")
-ax.set_ylabel("Bond Potential / (kcal/mol)")
-
-ax.legend()
-
-# %%
-# The harmonic angle potential describe the bending of the HOH angle, and is usually
-# modeled as a (curvilinear) harmonic term, defined based on the angle
-#
-# .. math::
-#
-#   V_\mathrm{angle}(\theta) = \frac{k_\mathrm{angle}}{2} (\theta - \theta_0)^2
-#
-# where :math:`k_\mathrm{angle}` is the force constant and :math:`\theta_0` is the
-# equilibrium angle between the three atoms. We use the following parameters:
-
-
-def bend_energy(
-    angles: torch.Tensor, coefficient: torch.Tensor, equilibrium_angle: torch.Tensor
-):
-    """Harmonic potential for angular terms."""
-    return 0.5 * coefficient * (angles - equilibrium_angle) ** 2
-
-
-# %%
-#
-# We can plot the bend energy as a function of the angle that is,
-# unsurprisingly, parabolic around the equilibrium angle
-
-HOH_angle_coefficient = 87.85  # kcal/mol/rad^2
-HOH_equilibrium_angle = 107.4 * np.pi / 180  # radians
-
-angle_distances = np.linspace(100, 115, 200)
-angle_potential = bend_energy(
-    angles=angle_distances * np.pi / 180,
-    coefficient=HOH_angle_coefficient,
-    equilibrium_angle=HOH_equilibrium_angle,
-)
-
-fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-ax.set_title("Harmonic Angular Potential for a Water Molecule")
-
-ax.plot(angle_distances, angle_potential)
-ax.axvline(
-    HOH_equilibrium_angle * 180 / np.pi,
-    label="equilibrium angle",
-    color="black",
-    linestyle=":",
-)
-
-ax.set_xlabel("Angle / degrees")
-ax.set_ylabel("Harmonic Angular Potential / (kcal/mol)")
-
-ax.legend()
-
-# %%
-# Lennard-Jones Potential
-# ^^^^^^^^^^^^^^^^^^^^^^^
-#
-# The Lennard-Jones (LJ) potential describes the interaction between a pair of neutral
-# atoms or molecules, balancing dispersion forces at longer ranges and repulsive forces
-# at shorter ranges. The LJ potential is defined as:
-#
-# .. math::
-#
-#  V_\mathrm{LJ}(r) = 4 \epsilon \left[ \left( \frac{\sigma}{r} \right)^{12} - \left(
-#  \frac{\sigma}{r} \right)^6 \right]
-#
-# where :math:`\epsilon` is the depth of the potential well and :math:`\sigma` is the
-# distance at which the potential is zero. For water there is only an oxygen-oxygen
-# Lennard-Jones potential. In a typical 4-points water model are no LJ interactions
-# between hydrogen atoms and between hydrogen and oxygen atoms.
-#
-# We implement the Lennard-Jones potential as a function that takes distances, along
-# with the parameters ``sigma``, ``epsilon``, and ``cutoff`` that indicates the distance
-# at which the interaction is assumed to be zero. To ensure that there is no
-# discontinuity an offset is included to shift the curve so it is zero at the cutoff
-# distance.
-
-
-def lennard_jones_pair(
-    distances: torch.Tensor,
-    sigma: torch.Tensor,
-    epsilon: torch.Tensor,
-    cutoff: torch.Tensor,
-):
-    """Shifted Lennard-Jones potential for pair terms."""
-    c6 = (sigma / distances) ** 6
-    c12 = c6**2
-    lj = 4 * epsilon * (c12 - c6)
-
-    sigma_cutoff_6 = (sigma / cutoff) ** 6
-    offset = 4 * epsilon * sigma_cutoff_6 * (sigma_cutoff_6 - 1)
-
-    return lj - offset
-
-
-# %%
-#
-# We plot this potential to visualize its behavior, using q-TIP4P/F parameters. To
-# highlight the offset, we use a cutoof of 5 Å instead of the usual 7 Å.
-
-O_sigma = 3.1589  # Å
-O_epsilon = 0.1852  # kcal/mol
-cutoff = 5.0  # Å <- cut short, to highlight offset
-
-lj_distances = np.linspace(3, cutoff, 200)
-
-lj_potential = lennard_jones_pair(
-    distances=lj_distances, sigma=O_sigma, epsilon=O_epsilon, cutoff=cutoff
-)
-
-
-plt.title("Lennard-Jones Potential Between Two Oxygen Atoms")
-plt.axhline(0, color="black", linestyle="--")
-
-plt.axhline(-O_epsilon, color="red", linestyle=":", label="Oxygen ε")
-plt.axvline(O_sigma, color="black", linestyle=":", label="Oxygen σ")
-plt.plot(lj_distances, lj_potential)
-plt.xlabel("Distance / Å")
-plt.ylabel("Lennard-Jones Potential / (kcal/mol)")
-plt.legend()
-
-
-# %%
-#
-# Electrostatic Potential
-# ^^^^^^^^^^^^^^^^^^^^^^^
-#
-# Since electrostatic interactions are long-ranged it is not fully trivial to compute
-# these in simulations. For periodic systems the Coulomb energy is given by:
-#
-# .. math::
-#
-#  V_\mathrm{Coulomb} = \frac{1}{2} \sum_{i,j} \sideset{}{'}\sum_{\boldsymbol n \in
-#   \mathcal{Z}} \frac{q_i q_j}{\left|\boldsymbol r_{ij} + \boldsymbol{n L}\right|}
-#
-# The sum over :math:`\boldsymbol n` takes into account the periodic images of the
-# charges and the prime indicates that in the case :math:`i=j` the term :math:`n=0` must
-# be omitted. Further :math:`\boldsymbol r_{ij} = \boldsymbol r_i - \boldsymbol r_j` and
-# :math:`\boldsymbol L` is the length of the (cubic)simulation box.
-#
-# Since this sum is conditionally convergent it isn't computable using a direct sum.
-# Instead the Ewald summation, published in 1921, remains a foundational method that
-# effectively defines how to compute the energy and forces of such systems. To further
-# speed the methods, mesh based algorithm suing fast Fourier transformation have been
-# developed, such as the Particle-Particle Particle-Mesh (P3M) algorithm. For further
-# details we refer to a paper by `Deserno and Holm
-# <https://aip.scitation.org/doi/10.1063/1.477414>`_.
-#
-# We use a `Torch` implementation of the P3M method within the ``torch-pme`` package.
-# The core class we use is the :class:`torchpme.P3MCalculator` class - you can read more
-# and see specific examples in the `torchpme documentation
-# <https://lab-cosmo.github.io/torch-pme>`_ As a demonstration we use two
-# charges in a cubic cell, computing the electrostatic energy as a function of distance
-
-O_charge = -0.84
-coulomb_distances = torch.linspace(0.5, 9.0, 50)
-cell = torch.eye(3) * 10.0
-
-
-# %%
-# We also use the parameter-tuning functionality of ``torchpme``,
-# to provide efficient evaluation at the desired level of accuracy.
-# This is achieved calling :func:`torchpme.tuning.tune_p3m` on a
-# template of the target structure
-
-charges = torch.tensor([O_charge, -O_charge]).unsqueeze(-1)
-positions_coul = torch.tensor([[0.0, 0.0, 0.0], [4.0, 0.0, 0.0]])
-neighbor_indices = torch.tensor([[0, 1]])
-neighbor_distances = torch.tensor([4.0])
-
-p3m_smearing, p3m_parameters, _ = torchpme.tuning.tune_p3m(
-    charges,
-    cell,
-    positions_coul,
-    cutoff,
-    neighbor_indices,
-    neighbor_distances,
-    accuracy=1e-4,
-)
-p3m_prefactor = torchpme.prefactors.kcalmol_A
-
-# %%
-#
-# The hydrogen charge is derived from the oxygen charge as :math:`q_H = -q_O/2`. The
-# ``smearing`` and ``mesh_spacing`` parameters are the central parameters for P3M and
-# are crucial to ensure the correct energy calculation. Here, we base these values on
-# the ``cutoff`` distance with will ensures good convergence but not necessarly the
-# fasted evaluation. For a faster evaluation parameters, refer to the ``torch-pme``
-# package and its tuning functions like :func:`torchpme.tuning.tune_p3m`. We now compute
-# the electrostatic energy between two point charges using the P3M algorithm.
-
-p3m_calculator = torchpme.P3MCalculator(
-    potential=torchpme.CoulombPotential(p3m_smearing),
-    **p3m_parameters,
-    prefactor=p3m_prefactor,
-)
-
-
-# %%
-#
-# For the P3M algorithm, we need a neighbor list and distances which we compute
-# "manually". Typically, the neighbors are provided by the simulation engine.
-
-neighbor_indices = torch.tensor([[0, 1]])
-
-potential = torch.zeros_like(coulomb_distances)
-
-for i_dist, dist in enumerate(coulomb_distances):
-    positions_coul = torch.tensor([[0.0, 0.0, 0.0], [dist, 0.0, 0.0]])
-    charges = torch.tensor([O_charge, -O_charge]).unsqueeze(-1)
-
-    neighbor_distances = torch.tensor([dist])
-
-    potential[i_dist] = p3m_calculator.forward(
-        positions=positions_coul,
-        cell=cell,
-        charges=charges,
-        neighbor_indices=neighbor_indices,
-        neighbor_distances=neighbor_distances,
-    )[0]
-
-# %%
-#
-# We plot the electrostatic potential between two point charges.
-
-fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-
-ax.set_title("Electrostatic Potential Between Two Point Charges")
-ax.plot(coulomb_distances, potential)
-ax.set_xlabel("Distance / Å")
-ax.set_ylabel("Electrostatic Potential / (kcal/mol)")
-
-# %%
-#
-# The potential shape may appear unusual due to computations within a periodic box. For
-# small distances, the potential behaves like :math:`1/r`, but it increases again as
-# charges approach across periodic boundaries.
-#
-# .. note::
-#
-#   In most water models, Coulomb interactions within each molecule are excluded, as
-#   intramolecular energies are already parametrized by the bond and angle interactions.
-#   Therefore, we first compute the electrostatic energy of all atoms and then subtract
-#   interactions between bonded atoms.
-#
-# Implementation as a Q-TIP4P/f ``torch`` module
-# ----------------------------------------------
-#
-# In order to implement a Q-TIP4P/f potential in practice, we first build a class that
-# follows the interface of a `metatomic` model. This requires defining the atomic
-# structure in terms of a :class:`metatensor.torch.atomistic.System` object - a simple
-# container for positions, cell, and atomic types, that can also be enriched with one or
-# more :class:`metatensor.torch.atomistic.NeighborList` objects holding neighbor
-# distance information. This is usually provided by the code used to perform a
-# simulation, but can be also computed explicitly using ``ase`` or `vesin
-# <https://luthaf.fr/vesin/latest/index.html>`_, as we do here.
-
-# small water box
-atoms = ase.io.read("data/water_32.xyz")
-system = System(
-    types=torch.from_numpy(atoms.get_atomic_numbers()),
-    positions=torch.from_numpy(atoms.positions),
-    cell=torch.from_numpy(atoms.cell.array),
-    pbc=torch.from_numpy(atoms.pbc),
-)
-
-# define the options for the neighbor list
-nlo = NeighborListOptions(cutoff=7.0, full_list=False, strict=False)
-calculator = NeighborList(nlo, length_unit="Angstrom")
-neighbors = calculator.compute(system)
-system.add_neighbor_list(nlo, neighbors)
-
-
-# %%
-# Neighbor lists are stored within ``metatensor`` as
-# :class:`metatensor.TensorBlock` objects, if you're curious
-
-neighbors
-
-# %%
-# Helper functions for molecular geometry
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
-# In order to compute the different terms in the Q-TIP4P/f potential,
-# we need to extract some information on the geometry of the water
-# molecule. To keep the model class clean, we define a couple of helper
-# functions: a first one, computes O-H covalent bond lengths and angle
-# Note that the assumption is made that coordinates are not folded
-# (so that O-H distances can be computed as a simple difference, ignoring
-# PBCs) and that atoms of each molecule are stored contiguously,
-# i.e. O,H,H,O,H,H, ...
-
-
-def get_bonds_angles(positions: torch.Tensor):
-    """Return the list of bond distances, angles and charge site
-    positions for the water molecules. These are assumed not to
-    be "folded", and to be listed in the input as OHHOHHOHH."""
-
-    o_pos = positions[::3]
-    h1_pos = positions[1::3]
-    h2_pos = positions[2::3]
-
-    oh_dist = torch.concatenate(
-        [
-            torch.sqrt(((h1_pos - o_pos) ** 2).sum(dim=1)),
-            torch.sqrt(((h2_pos - o_pos) ** 2).sum(dim=1)),
-        ]
-    )
-
-    if oh_dist.max() > 2.0:
-        raise ValueError(
-            "Unphysical O-H bond length. Check that the molecules are entire, and "
-            "atoms are listed in the expected OHH order."
+            systems, selected_keys=self.selected_keys, neighbors_to_properties=True
         )
 
-    hoh_angles = torch.arccos(
-        torch.sum((h1_pos - o_pos) * (h2_pos - o_pos), dim=1)
-        / (oh_dist[: len(o_pos)] * oh_dist[len(o_pos) :])
-    )
+        # Move the `center_type` keys to the sample dimension
+        lambda_soap = lambda_soap.keys_to_samples("center_type")
 
-    return oh_dist, hoh_angles
+        # Polarizability is a "per-structure" quantity. We don't need to keep
+        # `center_type` and `atom` in samples, as we only need to predict the
+        # polarizability of the whole structure.
+        # A simple way to do so, is summing the descriptors over the `center_type` and
+        # `atom` sample dimensions.
+        lambda_soap = mts.sum_over_samples(lambda_soap, ["center_type", "atom"])
 
-
-# %%
-# A second helper function computes the position of the "M sites", the position of the O
-# charge in a TIP4P-like model. Note that we also need distances to compute
-# range-separated electrostatics, which we obtain manipulating the neighbor list that is
-# pre-attached to the system. Thanks to the fact we rely on ``torch``
-# autodifferentiation mechanism, the forces acting on the M sites will be automatically
-# split between O and H atoms, in a way that is consistent with the definition.
-
-
-def get_msites(system: System, m_gamma: torch.Tensor, m_charge: torch.Tensor):
-
-    positions = system.positions
-    o_pos = positions[::3]
-    h1_pos = positions[1::3]
-    h2_pos = positions[2::3]
-
-    # NB: this is enough to get the correct forces on the `system` atoms. thanks
-    # autodiff!
-    m_pos = m_gamma * o_pos + (1 - m_gamma) * 0.5 * (h1_pos + h2_pos)
-
-    # creates a new System with the m-sites
-    m_system = System(
-        types=torch.tensor([8, 1, 1] * len(o_pos)),
-        positions=torch.stack([m_pos, h1_pos, h2_pos], dim=1).reshape(-1, 3),
-        cell=system.cell,
-        pbc=system.pbc,
-    )
-
-    # adjust neighbor lists to point at the m sites rather than O atoms. this assumes
-    # this won't have atoms cross the cutoff, which is of course only approximately
-    # true, so one should use a slighlty larger-than-usual cutoff nb - this is reshaped
-    # to match the values in a NL tensorblock
-    om_displacements = torch.stack(
-        [m_pos - o_pos, torch.zeros_like(h1_pos), torch.zeros_like(h2_pos)], dim=1
-    ).reshape(-1, 3, 1)
-
-    for nlo in system.known_neighbor_lists():
-        nl = system.get_neighbor_list(nlo)
-        i_idx = nl.samples.view(["first_atom"]).values.flatten()
-        j_idx = nl.samples.view(["second_atom"]).values.flatten()
-        m_nl = TensorBlock(
-            nl.values + om_displacements[j_idx] - om_displacements[i_idx],
-            nl.samples,
-            nl.components,
-            nl.properties,
-        )
-        m_system.add_neighbor_list(nlo, m_nl)
-
-    # set charges of all atoms (now we bundle O first and H last)
-    charges = torch.ones_like(o_pos).reshape(-1, 1)
-    charges[::3] = -m_charge
-    charges[1::3] = 0.5 * m_charge
-    charges[2::3] = 0.5 * m_charge
-
-    # Create metadata for the charges TensorBlock
-    samples = Labels(
-        "atom", torch.arange(len(system), device=charges.device).reshape(-1, 1)
-    )
-    properties = Labels(
-        "charge", torch.zeros(1, 1, device=charges.device, dtype=torch.int32)
-    )
-    data = TensorBlock(
-        values=charges, samples=samples, components=[], properties=properties
-    )
-
-    tensor = TensorMap(
-        keys=Labels("_", torch.zeros(1, 1, dtype=torch.int32)), blocks=[data]
-    )
-
-    m_system.add_data(name="charges", tensor=tensor)
-
-    # intra-molecular distances (for self-energy removal)
-    hh_dist = torch.sqrt(((h1_pos - h2_pos) ** 2).sum(dim=1))
-    mh_dist = torch.concatenate(
-        [
-            torch.sqrt(((h1_pos - m_pos) ** 2).sum(dim=1)),
-            torch.sqrt(((h2_pos - m_pos) ** 2).sum(dim=1)),
-        ]
-    )
-    return m_system, mh_dist, hh_dist
-
-
-# %%
-# The model
-# ^^^^^^^^^
-#
-# Armed with these functions, the definitions of bonded and LJ
-# potentials, and the :class:`torchpme.P3MCalculator` class,
-# we can define with relatively small effort the actual model.
-# We do not hard-code the specific parameters of the Q-TIP4P/f
-# potential (so that in principle this class can be used for
-# classical TIP4P, and - by setting ``m_gamma`` to one - a
-# three-point water model).
-#
-# A few points worth noting: (1) we also define a bare Coulomb
-# potential (that pretty much computes :math:`1/r`) which we need
-# to subtract the molecular "self electrostatic interaction";
-# (2) units are expected to be Å for distances, kcal/mol for energies,
-# and radians for angles; (3) model parameters are registered as
-# ``buffers``; (4) P3M parameters can also be given, in the format
-# returned by :func:`torchpme.tuning.tune_p3m`.
-#
-# The ``forward`` call is a relatively straightforward combination
-# of all the helper functions defined further up in this file,
-# and should be relatively easy to follow.
-
-
-class QTIP4PfModel(torch.nn.Module):
-    def __init__(
-        self,
-        cutoff: float,
-        lj_sigma: float,
-        lj_epsilon: float,
-        m_gamma: float,
-        m_charge: float,
-        oh_bond_eq: float,
-        oh_bond_d: float,
-        oh_bond_alpha: float,
-        hoh_angle_eq: float,
-        hoh_angle_k: float,
-        p3m_options: Optional[dict] = None,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
-    ):
-        super().__init__()
-
-        if p3m_options is None:
-            # should give a ~1e-4 relative accuracy on forces
-            p3m_options = (1.4, {"interpolation_nodes": 5, "mesh_spacing": 1.33}, 0)
-
-        p3m_smearing, p3m_parameters, _ = p3m_options
-
-        self.p3m_calculator = torchpme.metatensor.P3MCalculator(
-            potential=torchpme.CoulombPotential(p3m_smearing),
-            **p3m_parameters,
-            prefactor=torchpme.prefactors.kcalmol_A,  # consistent units
-        )
-        self.p3m_calculator.to(device=device, dtype=dtype)
-
-        self.coulomb = torchpme.CoulombPotential()
-        self.coulomb.to(device=device, dtype=dtype)
-
-        # We use a half neighborlist and allow to have pairs farther than cutoff
-        # (`strict=False`) since this is not problematic for PME and may speed up the
-        # computation of the neigbors.
-        self.nlo = NeighborListOptions(cutoff=cutoff, full_list=False, strict=False)
-
-        # registers model parameters as buffers
-        self.dtype = dtype if dtype is not None else torch.get_default_dtype()
-        self.device = device if device is not None else torch.get_default_device()
-        self.register_buffer("cutoff", torch.tensor(cutoff, dtype=self.dtype))
-        self.register_buffer("lj_sigma", torch.tensor(lj_sigma, dtype=self.dtype))
-        self.register_buffer("lj_epsilon", torch.tensor(lj_epsilon, dtype=self.dtype))
-        self.register_buffer("m_gamma", torch.tensor(m_gamma, dtype=self.dtype))
-        self.register_buffer("m_charge", torch.tensor(m_charge, dtype=self.dtype))
-        self.register_buffer("oh_bond_eq", torch.tensor(oh_bond_eq, dtype=self.dtype))
-        self.register_buffer("oh_bond_d", torch.tensor(oh_bond_d, dtype=self.dtype))
-        self.register_buffer(
-            "oh_bond_alpha", torch.tensor(oh_bond_alpha, dtype=self.dtype)
-        )
-        self.register_buffer(
-            "hoh_angle_eq", torch.tensor(hoh_angle_eq, dtype=self.dtype)
-        )
-        self.register_buffer("hoh_angle_k", torch.tensor(hoh_angle_k, dtype=self.dtype))
-
-    def requested_neighbor_lists(self):
-        """Returns the list of neighbor list options that are needed."""
-        return [self.nlo]
-
-    def _setup_systems(
-        self,
-        systems: list[System],
-        selected_atoms: Optional[Labels] = None,
-    ) -> tuple[System, TensorBlock]:
-        """Remove possible ghost atoms and add charges to the system."""
-        if len(systems) > 1:
-            raise ValueError(f"only one system supported, got {len(systems)}")
-
-        system_i = 0
-        system = systems[system_i]
-
-        # select only real atoms and discard ghosts
-        if selected_atoms is not None:
-            current_system_mask = selected_atoms.column("system") == system_i
-            current_atoms = selected_atoms.column("atom")
-            current_atoms = current_atoms[current_system_mask].to(torch.long)
-
-            types = system.types[current_atoms]
-            positions = system.positions[current_atoms]
-        else:
-            types = system.types
-            positions = system.positions
-
-        system_final = System(types, positions, system.cell, system.pbc)
-
-        neighbors = system.get_neighbor_list(self.nlo)
-        system_final.add_neighbor_list(options=self.nlo, neighbors=neighbors)
-
-        return system_final, neighbors
+        return lambda_soap
 
     def forward(
         self,
         systems: List[System],  # noqa
         outputs: Dict[str, ModelOutput],  # noqa
-        selected_atoms: Optional[Labels] = None,
+        selected_atoms: Optional[Labels] = None,  # noqa
     ) -> Dict[str, TensorMap]:  # noqa
 
-        if list(outputs.keys()) != ["energy"]:
+        if list(outputs.keys()) != ["cookbook::polarizability"]:
             raise ValueError(
                 f"`outputs` keys ({', '.join(outputs.keys())}) contain unsupported "
-                "keys. Only 'energy' is supported."
+                "keys. Only 'cookbook::polarizability' is supported."
             )
 
-        if outputs["energy"].per_atom:
-            raise NotImplementedError("per-atom energies are not supported.")
+        if outputs["cookbook::polarizability"].per_atom:
+            raise NotImplementedError("per-atom polarizabilities are not supported.")
 
-        system, neighbors = self._setup_systems(systems, selected_atoms)
+        # Compute the descriptors
+        lambda_soap = self._compute_descriptor(systems)
 
-        # gets information about water molecules, to compute intra-molecular and
-        # electrostatic terms
-        d_oh, a_hoh = get_bonds_angles(system.positions)
-
-        # intra-molecular energetics
-        e_bond = bond_energy(
-            d_oh, self.oh_bond_d, self.oh_bond_alpha, self.oh_bond_eq
-        ).sum()
-        e_bend = bend_energy(a_hoh, self.hoh_angle_k, self.hoh_angle_eq).sum()
-
-        # compute non-bonded LJ energy
-        neighbor_indices = neighbors.samples.view(["first_atom", "second_atom"]).values
-        species = system.types
-        oo_mask = (species[neighbor_indices[:, 0]] == 8) & (
-            species[neighbor_indices[:, 1]] == 8
-        )
-        oo_distances = torch.linalg.vector_norm(neighbors.values[oo_mask], dim=1)
-        energy_lj = lennard_jones_pair(
-            oo_distances, self.lj_sigma, self.lj_epsilon, self.cutoff
-        ).sum()
-
-        # now this is the long-range part - computed over the M-site system
-        m_system, mh_dist, hh_dist = get_msites(system, self.m_gamma, self.m_charge)
-
-        m_neighbors = m_system.get_neighbor_list(self.nlo)
-
-        potentials = self.p3m_calculator(m_system, m_neighbors).block(0).values
-        charges = m_system.get_data("charges").block().values
-        energy_coulomb = (potentials * charges).sum()
-
-        # this is the intra-molecular Coulomb interactions, that must be removed to meet
-        # the specifications of the force field
-        energy_self = (
-            (
-                self.coulomb.from_dist(mh_dist).sum() * charges[0]
-                + self.coulomb.from_dist(hh_dist).sum() * charges[1]
-            )
-            * charges[1]
-            * torchpme.prefactors.kcalmol_A
-        )
-
-        # combines all energy terms
-        energy_tot = e_bond + e_bend + energy_lj + energy_coulomb - energy_self
-
-        # print("energies\n",(e_bond+e_bend)*0.0015936014,
-        #        energy_lj*0.0015936014,
-        #        (energy_coulomb-energy_self)*0.0015936014)
-
-        # Rename property label to follow metatensor's covention for an atomistic model
-        samples = Labels(
-            ["system"], torch.arange(len(systems), device=self.device).reshape(-1, 1)
-        )
-        block = TensorBlock(
-            values=torch.sum(energy_tot).reshape(-1, 1),
-            samples=samples,
-            components=torch.jit.annotate(List[Labels], []),
-            properties=Labels(["energy"], torch.tensor([[0]], device=self.device)),
-        )
-        return {
-            "energy": TensorMap(
-                Labels("_", torch.tensor([[0]], device=self.device)), [block]
-            ),
-        }
+        # Apply the linear model
+        prediction = self.linear_model(lambda_soap)
+        # prediction = self._spherical_to_cartesian(prediction) # TODO: Fix this, it
+        # fails at saving due to TorchScript
+        return {"cookbook::polarizability": prediction}
 
 
 # %%
-# All this class does is take a ``System`` and return its energy (as a
-# :clas:`metatensor.TensorMap``)
+# Train the polarizability model
+# ------------------------------
+# We train the polarizability model using the training data. We need to define the
+# hyperparameters for the :class:`featomic.torch.SphericalExpansion` calculator and the
+# atomic types in the dataset. The model is then trained using the training systems and
+# the target polarizability tensors.
 
-qtip4pf_parameters = dict(
-    cutoff=7.0,
-    lj_sigma=3.1589,
-    lj_epsilon=0.1852,
-    m_gamma=0.73612,
-    m_charge=1.1128,
-    oh_bond_eq=0.9419,
-    oh_bond_d=116.09,
-    oh_bond_alpha=2.287,
-    hoh_angle_eq=107.4 * np.pi / 180,
-    hoh_angle_k=87.85,
-)
-model = QTIP4PfModel(
-    **qtip4pf_parameters
-    #   uncomment to override default options
-    #    p3m_options = (1.4, {"interpolation_nodes": 5, "mesh_spacing": 1.33}, 0)
-)
+hypers = {
+    "cutoff": {"radius": 4.5, "smoothing": {"type": "ShiftedCosine", "width": 0.1}},
+    "density": {"type": "Gaussian", "width": 0.3},
+    "basis": {
+        "type": "TensorProduct",
+        "max_angular": 3,
+        "radial": {"type": "Gto", "max_radial": 3},
+    },
+}
+atomic_types = np.unique(
+    np.concatenate([frame.numbers for frame in ase_frames])
+).tolist()
 
-energy_unit = "kcal/mol"
-length_unit = "angstrom"
+spherical_expansion_calculator = SphericalExpansion(**hypers)
 
-outputs = {"energy": ModelOutput(quantity="energy", unit=energy_unit, per_atom=False)}
+# %%
+# Convert ASE frames to :class:`metatensor.atomistic.System` objects.
 
-nrg = model.forward([system], outputs)
-print(
-    f"""
-Energy is {nrg["energy"].block(0).values[0].item()} kcal/mol
-"""
+systems_train = [
+    system.to(dtype=torch.float64)
+    for system in systems_to_torch([ase_frames[i] for i in train_idx])
+]
+
+# %%
+# Instantiate the polarizability model. The ridge regression is performed as
+# initialization of the linear model, and the weights are then used as weights of the
+# :class:`metatensor.learn.nn.EquivariantLinear` model.
+
+model = PolarizabilityModel(
+    spherical_expansion_calculator,
+    atomic_types,
+    systems_train,
+    spherical_tensormap_train,
 )
 
 # %%
+# Evaluate the model
+# ^^^^^^^^^^^^^^^^^^
+# We evaluate the model on the test set to check the performance of the model. The API
+# requires a dictionary of :class:`metatensor.torch.ModelOutput` objects that specify
+# the quantity and unit of the output, and whether it is a ``per_atom`` quantity or not.
+
+outputs = {
+    "cookbook::polarizability": ModelOutput(
+        quantity="polarizability", unit="a.u.", per_atom=False
+    )
+}
+systems_test = [
+    system.to(dtype=torch.float64)
+    for system in systems_to_torch([ase_frames[i] for i in test_idx])
+]
+prediction_test = model(systems_test, outputs)
 
 # %%
-# Build and save a ``MetatensorAtomisticModel``
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
-# This minimalistic model can be wrapped into a
-# :class:`metatensor.torch.atomistic.MetatensorAtomisticModel` class, that provides
-# useful helpers to specify the capabilities of the model, and to save it as a
-# ``torchscript`` module.
+cartesian_tensormap_test[0].values.shape, prediction_test["cookbook::polarizability"][
+    0
+].values.shape
+# %%
+# Let us plot the predicted polarizability tensor against the true polarizability tensor
+# for the test set.
+true_polarizability = cartesian_tensormap_test[0].values.flatten().numpy()
+predicted_polarizability = (
+    prediction_test["cookbook::polarizability"][0].values.flatten().detach().numpy()
+)
+
+fig, ax = plt.subplots()
+ax.set_aspect("equal")
+ax.plot(true_polarizability, predicted_polarizability, ".")
+ax.plot([-20, 140], [-20, 140], "--k")
+ax.set_xlabel("True polarizability (a.u.)")
+ax.set_ylabel("Predicted polarizability (a.u.)")
+ax.set_title("Polarizability prediction")
+plt.show()
 
 # %%
-# Model options include a definition of its units, and a description of the quantities
-# it can compute.
-#
-# .. note::
-#
-#   We neeed to specify that the model has ``infinite`` interaction range because of the
-#   presence of a long-range term that means one cannot assume that forces decay to zero
-#   beyond the cutoff.
+# Wrap the model in a :class:`metatensor.torch.atomistic.MetatensorAtomisticModel`
+# object.
+
+outputs = {
+    "cookbook::polarizability": ModelOutput(
+        quantity="polarizability", unit="a.u.", per_atom=False
+    )
+}
 
 options = ModelEvaluationOptions(
-    length_unit=length_unit, outputs=outputs, selected_atoms=None
+    length_unit="angstrom", outputs=outputs, selected_atoms=None
 )
 
 model_capabilities = ModelCapabilities(
     outputs=outputs,
-    atomic_types=[1, 8],
-    interaction_range=torch.inf,
-    length_unit=length_unit,
-    supported_devices=["cpu", "cuda"],
-    dtype="float32",
+    atomic_types=[1, 6, 7, 16],
+    interaction_range=4.5,
+    length_unit="angstrom",
+    supported_devices=["cpu"],
+    dtype="float64",
 )
 
 atomistic_model = MetatensorAtomisticModel(
     model.eval(), ModelMetadata(), model_capabilities
 )
 
-atomistic_model.save("qtip4pf-mta.pt")
-
 
 # %%
-# Using the Q-TIP4P/f model
-# -------------------------
-#
-# The ``torchscript`` model can be reused with any simulation software
-# compatible with the ``metatomic`` API. Here we give a couple of
-# examples, designed to demonstrate the usage more than to provide
-# realistic use cases.
+# atomistic_model.save("polarizability_model.pt", collect_extensions="extensions")
+# atomistic_model = load_atomistic_model("polarizability_model.pt")
 
-# %%
-# Geometry optimization with ``ase``
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-# We begin with an example based on an
-# ``ase``-compatible calculator.
-# To this end, ``metatensor`` provides a compatible
-# :class:`metatensor.torch.atomistic.MetatensorCalculator`
-# wrapper to a model. Note how the metadata associated with
-# the model are used to convert energy into the units
-# expected by ``ase`` (eV and Å).
 
-atomistic_model = load_atomistic_model("qtip4pf-mta.pt")
 mta_calculator = MetatensorCalculator(atomistic_model)
 
-atoms.calc = mta_calculator
-nrg = atoms.get_potential_energy()
+ase_frames = ase.io.read("data/qm7x_reduced_100.xyz", index=":")
 
-print(
-    f"""
-Energy is {nrg} eV, corresponding to {nrg*23.060548} kcal/mol
-"""
-)
-
+computed_polarizabilities = []
+for frame in ase_frames:
+    computed_polarizabilities.append(
+        mta_calculator.run_model(frame)["cookbook::polarizability"]
+    )
 
 # %%
-# We then use one of the built-in ``ase`` functions to run the
-# structural relaxation. The relaxation is split into short segments
-# just to be able to visualize the trajectory
-
-
-opt_trj = []
-opt_nrg = []
-# fmax is the threshold on the maximum force component.
-# optimization will stop when the threshold is reached
-for _ in range(10):
-    opt_trj.append(atoms.copy())
-    opt_nrg.append(atoms.get_potential_energy())
-    opt = LBFGS(atoms, restart="lbfgs_restart.json")
-    opt.run(fmax=0.001, steps=5)
-opt.run(fmax=0.001, steps=10)
-nrg_final = atoms.get_potential_energy()
-
-
-# %%
-# Use `chemiscope
-# <http://chemiscope.org>`_ to visualize the geometry
-# optimization together with the convergence of the energy
-# to a local minimum.
-
-chemiscope.show(
-    frames=opt_trj,
-    properties={
-        "step": 1 + np.arange(0, len(opt_trj)),
-        "energy": opt_nrg - nrg_final,
-    },
-    mode="default",
-    settings=chemiscope.quick_settings(
-        map_settings={
-            "x": {"property": "step", "scale": "log"},
-            "y": {"property": "energy", "scale": "log"},
-        },
-        structure_settings={
-            "unitCell": True,
-        },
-        trajectory=True,
-    ),
-)
-
-
-# %%
-# Molecular dynamics with ``i-PI``
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
-# We use `i-PI <http://ipi-code.org>`_ to perform molecular-dynamics
-# simulations of bulk water.  See `this recipe
-# <https://atomistic-cookbook.org/examples/thermostats/thermostats.html>`_
-# for an introduction to constant-temperature MD using i-PI.
-# Here we use a scripting interface (introduced in version 3.1) to run the
-# simulation from Python.
-
-# %%
-# First, the XML input of the i-PI simulation is created using a few utility functions.
-# This input could also be written to file and used with the command-line version
-# of i-PI.
-
-data = ase.io.read("data/water_32.xyz")
-input_xml = simulation_xml(
-    structures=data,
-    forcefield=forcefield_xml(
-        name="qtip4pf",
-        mode="direct",
-        pes="metatensor",
-        parameters={"model": "qtip4pf-mta.pt", "template": "data/water_32.xyz"},
-    ),
-    motion=motion_nvt_xml(timestep=0.5 * ase.units.fs),
-    temperature=300,
-    prefix="qtip4pf-md",
-)
-
-print(input_xml)
-
-# %%
-# Then, we create an ``InteractiveSimulation`` object and run a short
-# simulation (purely for demonstrative purposes)
-
-sim = InteractiveSimulation(input_xml)
-sim.run(400)
-
-# %%
-# The simulation generates output files that can be parsed and
-# visualized from Python
-
-data, info = read_output("qtip4pf-md.out")
-trj = read_trajectory("qtip4pf-md.pos_0.xyz")
-
-# %%
-
-fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
-
-ax.plot(data["time"], data["potential"], label="potential")
-ax.plot(data["time"], data["conserved"] - 4, label="conserved")
-ax.set_xlabel("t / ps")
-ax.set_ylabel("energy / ev")
-ax.legend()
-
-# %%
-
-chemiscope.show(
-    frames=trj,
-    properties={
-        "time": data["time"][::10],
-        "potential": data["potential"][::10],
-    },
-    mode="default",
-    settings=chemiscope.quick_settings(
-        map_settings={
-            "x": {"property": "time", "scale": "linear"},
-            "y": {"property": "potential", "scale": "linear"},
-        },
-        structure_settings={
-            "unitCell": True,
-        },
-        trajectory=True,
-    ),
-)
