@@ -3,10 +3,10 @@ Contributing
 
 .. marker-contrib-start
 
-Contributions are welcome, and they are greatly appreciated, even it they 
+Contributions are welcome, and they are greatly appreciated, even it they
 are just reporting bugs in one of the existing recipes. Please use github
-to report errors and submit contributions, as this helps with making your 
-work visible and giving you credit. 
+to report errors and submit contributions, as this helps with making your
+work visible and giving you credit.
 If you intend to submit a new recipe, please read
 the guidelines below to ensure that your contributions
 fit within the scope and the general style of the cookbook.
@@ -53,10 +53,10 @@ files. If your example needs such data files, there are a few options available:
   ``data/`` folder within the example folder. A zip file will be generated that
   can be downloaded from the example page.
 
-Each new recipe will be automatically added to the list of new recipes, but 
-you should also add it to the relevant software and topical sections. To do 
-so, edit the appropriate ``.sec`` file within ``docs/src/software`` and 
-``docs/src/topics``. 
+Each new recipe will be automatically added to the list of new recipes, but
+you should also add it to the relevant software and topical sections. To do
+so, edit the appropriate ``.sec`` file within ``docs/src/software`` and
+``docs/src/topics``.
 
 .. _sphinx-gallery: https://sphinx-gallery.github.io/
 .. _RestructuredText: https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
