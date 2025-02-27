@@ -1079,24 +1079,28 @@ chemiscope.show(
 
 
 # %%
-# Molecular dynamics with ``i-PI``
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# Path integral molecular dynamics with ``i-PI``
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# We use `i-PI <http://ipi-code.org>`_ to perform molecular-dynamics
-# simulations of bulk water.  See `this recipe
+# We use `i-PI <http://ipi-code.org>`_ to perform path integral
+# molecular-dynamics simulations of bulk water.  See `this recipe
 # <https://atomistic-cookbook.org/examples/thermostats/thermostats.html>`_
-# for an introduction to constant-temperature MD using i-PI.
+# for an introduction to constant-temperatur MD using i-PI.
 # Here we use a scripting interface (introduced in version 3.1) to run the
 # simulation from Python.
 
 # %%
 # First, the XML input of the i-PI simulation is created using a few utility functions.
 # This input could also be written to file and used with the command-line version
-# of i-PI.
+# of i-PI. We use the structure twice to generate a path integral with two replicas:
+# this is far from converged, see also `this recipe
+# <https://atomistic-cookbook.org/examples/path-integrals/path-integrals.html>`_
+# if you have never run path integral simulations before
+
 
 data = ase.io.read("data/water_32.xyz")
 input_xml = simulation_xml(
-    structures=data,
+    structures=[data, data],
     forcefield=forcefield_xml(
         name="qtip4pf",
         mode="direct",
@@ -1177,6 +1181,10 @@ for line in lines[:7] + lines[16:]:
 
 
 # %%
-# This specific example runs a short MD trajectory, using a Langevin thermostat
+# This specific example runs a short MD trajectory,
+# using a Langevin thermostat. Given that this is a classical MD
+# trajectory, we use the SPC/Fw model that is fitted to reproduce
+# (some) water properties even with a classical description of the
+# nuclei.
 
 subprocess.check_call(["lmp_serial", "-in", "data/spcfw.in"])
