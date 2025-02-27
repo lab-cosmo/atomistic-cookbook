@@ -2,8 +2,8 @@ units metal  # Angstroms, eV, picoseconds
 atom_style atomic
 read_data data/water_32.data
 
-# loads metatomic QTIP4P/f model
-pair_style metatensor qtip4pf-mta.pt
+# loads metatomic SPC/Fw model
+pair_style metatensor spcfw-mta.pt
 pair_coeff * * 1 8
 
 neighbor 2.0 bin

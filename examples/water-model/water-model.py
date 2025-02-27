@@ -96,20 +96,24 @@ from vesin.torch.metatensor import NeighborList
 #
 # .. math::
 #
-#   V_\mathrm{bond}(r) = D_r [\alpha_r^2(r-r_0)^2-\alpha_r^3(r-r_0)^3 +
-#       \frac{7}{12}\alpha_r^4(r-r_0)^4]
+#   V_\mathrm{bond}(r) = \frac{k_r}{2} [(r-r_0)^2-\alpha_r (r-r_0)^3 +
+#       \frac{7}{12}\alpha_r^2(r-r_0)^4]
+#
+# NB: the harmonic coefficient is related to the coefficients in the original paper
+# by :math:`k_r=2 D_r \alpha_r^2`.
 
 
 def bond_energy(
     distances: torch.Tensor,
-    coefficient_d: torch.Tensor,
+    coefficient_k: torch.Tensor,
     coefficient_alpha: torch.Tensor,
     coefficient_r0: torch.Tensor,
 ) -> torch.Tensor:
     """Harmonic potential for bond terms."""
-    alpha_dr = (distances - coefficient_r0) * coefficient_alpha
+    dr = distances - coefficient_r0
+    alpha_dr = dr * coefficient_alpha
 
-    return coefficient_d * alpha_dr**2 * (1 - alpha_dr + alpha_dr**2 * 7 / 12)
+    return 0.5 * coefficient_k * dr**2 * (1 - alpha_dr + alpha_dr**2 * 7 / 12)
 
 
 # %%
@@ -118,14 +122,14 @@ def bond_energy(
 # avoids the dissociation of the bond, due to the truncation to the quartic term. These
 # are the parameters used for q-TIP4P/F
 
-OH_Dr = 116.09  # kcal/mol
+OH_kr = 116.09 * 2 * 2.287**2  # kcal/mol/Å**2
 OH_r0 = 0.9419  # Å
 OH_alpha = 2.287  # 1/Å
 
 bond_distances = np.linspace(0.5, 1.65, 200)
 bond_potential = bond_energy(
     distances=bond_distances,
-    coefficient_d=OH_Dr,
+    coefficient_k=OH_kr,
     coefficient_alpha=OH_alpha,
     coefficient_r0=OH_r0,
 )
@@ -384,7 +388,7 @@ ax.set_ylabel("Electrostatic Potential / (kcal/mol)")
 #   Therefore, we first compute the electrostatic energy of all atoms and then subtract
 #   interactions between bonded atoms.
 #
-# Implementation as a Q-TIP4P/f ``torch`` module
+# Implementation as a TIP4P/f ``torch`` module
 # ----------------------------------------------
 #
 # In order to implement a Q-TIP4P/f potential in practice, we first build a class that
@@ -712,7 +716,7 @@ class TIP4PModel(torch.nn.Module):
         m_gamma: float,
         m_charge: float,
         oh_bond_eq: float,
-        oh_bond_d: float,
+        oh_bond_k: float,
         oh_bond_alpha: float,
         hoh_angle_eq: float,
         hoh_angle_k: float,
@@ -753,7 +757,7 @@ class TIP4PModel(torch.nn.Module):
         self.register_buffer("m_gamma", torch.tensor(m_gamma, dtype=self.dtype))
         self.register_buffer("m_charge", torch.tensor(m_charge, dtype=self.dtype))
         self.register_buffer("oh_bond_eq", torch.tensor(oh_bond_eq, dtype=self.dtype))
-        self.register_buffer("oh_bond_d", torch.tensor(oh_bond_d, dtype=self.dtype))
+        self.register_buffer("oh_bond_k", torch.tensor(oh_bond_k, dtype=self.dtype))
         self.register_buffer(
             "oh_bond_alpha", torch.tensor(oh_bond_alpha, dtype=self.dtype)
         )
@@ -838,7 +842,7 @@ class TIP4PModel(torch.nn.Module):
 
         # intra-molecular energetics
         e_bond = bond_energy(
-            d_oh, self.oh_bond_d, self.oh_bond_alpha, self.oh_bond_eq
+            d_oh, self.oh_bond_k, self.oh_bond_alpha, self.oh_bond_eq
         ).sum()
         e_bend = bend_energy(a_hoh, self.hoh_angle_k, self.hoh_angle_eq).sum()
 
@@ -892,12 +896,12 @@ qtip4pf_parameters = dict(
     m_gamma=0.73612,
     m_charge=1.1128,
     oh_bond_eq=0.9419,
-    oh_bond_d=116.09,
+    oh_bond_k=2 * 116.09 * 2.287**2,
     oh_bond_alpha=2.287,
     hoh_angle_eq=107.4 * np.pi / 180,
     hoh_angle_k=87.85,
 )
-model = TIP4PModel(
+qtip4pf_model = TIP4PModel(
     **qtip4pf_parameters
     #   uncomment to override default options
     #    p3m_options = (1.4, {"interpolation_nodes": 5, "mesh_spacing": 1.33}, 0)
@@ -917,7 +921,7 @@ length_unit = "angstrom"
 
 outputs = {"energy": ModelOutput(quantity="energy", unit=energy_unit, per_atom=False)}
 
-nrg = model.forward([system], outputs)
+nrg = qtip4pf_model.forward([system], outputs)
 nrg["energy"].block(0).values.backward()
 
 print(
@@ -961,11 +965,39 @@ model_capabilities = ModelCapabilities(
 )
 
 atomistic_model = MetatensorAtomisticModel(
-    model.eval(), ModelMetadata(), model_capabilities
+    qtip4pf_model.eval(), ModelMetadata(), model_capabilities
 )
 
 atomistic_model.save("qtip4pf-mta.pt")
 
+
+# %%
+# Other water models
+# ^^^^^^^^^^^^^^^^^^
+# The `TIP4PModel` class is flexible enough that one can also implement
+# (and export) other 4-point models, or even 3-point models if one sets the
+# `m_gamma` parameter to one. For instance, we can implement the (classical)
+# SPC/Fw model (`Wu et al., JCP (2006) <http://doi.org/10.1063/1.2136877>`_)
+
+spcf_parameters = dict(
+    cutoff=7.0,
+    lj_sigma=3.16549,
+    lj_epsilon=0.155425,
+    m_gamma=1.0,
+    m_charge=0.82,
+    oh_bond_eq=1.012,
+    oh_bond_k=1059.162,
+    oh_bond_alpha=0.0,
+    hoh_angle_eq=113.24 * np.pi / 180,
+    hoh_angle_k=75.90,
+)
+spcf_model = TIP4PModel(**spcf_parameters)
+
+atomistic_model = MetatensorAtomisticModel(
+    spcf_model.eval(), ModelMetadata(), model_capabilities
+)
+
+atomistic_model.save("spcfw-mta.pt")
 
 # %%
 # Using the Q-TIP4P/f model
@@ -1136,7 +1168,7 @@ chemiscope.show(
 # model units to those used in the LAMMPS file, so it is possible to use
 # energies in eV even if the model outputs kcal/mol.
 
-with open("data/qtip4pf.in", "r") as file:
+with open("data/spcfw.in", "r") as file:
     lines = file.readlines()
 
 for line in lines[:7] + lines[16:]:
@@ -1146,4 +1178,4 @@ for line in lines[:7] + lines[16:]:
 # %%
 # This specific example runs a short MD trajectory, using a Langevin thermostat
 
-subprocess.check_call(["lmp_serial", "-in", "data/qtip4pf.in"])
+subprocess.check_call(["lmp_serial", "-in", "data/spcfw.in"])
