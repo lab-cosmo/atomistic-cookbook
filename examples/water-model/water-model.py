@@ -2,8 +2,9 @@
 Atomistic Water Model for Molecular Dynamics
 ============================================
 
-:Authors: Philip Loche `@PicoCentauri <https://github.com/picocentauri>`_
-          Marcel Langer `@sirmarcel <https://github.com/sirmarcel>`_
+:Authors: Philip Loche `@PicoCentauri <https://github.com/picocentauri>`_,
+          Marcel Langer `@sirmarcel <https://github.com/sirmarcel>`_ and 
+          Michele Ceriotti `@ceriottm <https://github.com/ceriottm>`_
 
 In this example, we demonstrate how to construct a `metatensor atomistic model
 <https://docs.metatensor.org/latest/atomistic>`_ for q-TIP4P/F, a flexible four-point
@@ -15,6 +16,7 @@ to perform demonstrative molecular dynamics simulations.
 """
 
 # sphinx_gallery_thumbnail_number = 3
+
 # %%
 import subprocess
 from typing import Dict, List, Optional
@@ -29,7 +31,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-# Core libraries
+# Core atomistic libraries
 import torchpme
 from ase.optimize import LBFGS
 from ipi.utils.parsing import read_output, read_trajectory
@@ -54,7 +56,6 @@ from metatensor.torch.atomistic import (
 # Integration with ASE calculator for metatensor atomistic models
 from metatensor.torch.atomistic.ase_calculator import MetatensorCalculator
 from vesin.torch.metatensor import NeighborList
-
 
 # get_ipython().run_line_magic('matplotlib', 'inline')
 
@@ -1092,8 +1093,8 @@ trj = read_trajectory("qtip4pf-md.pos_0.xyz")
 
 fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 
-ax.plot(data["time"], data["potential"], label="potential")
-ax.plot(data["time"], data["conserved"] - 4, label="conserved")
+ax.plot(data["time"], data["potential"], 'b-', label="potential")
+ax.plot(data["time"], data["conserved"] - 4, 'k-', label="conserved")
 ax.set_xlabel("t / ps")
 ax.set_ylabel("energy / ev")
 ax.legend()
@@ -1124,7 +1125,23 @@ chemiscope.show(
 # Molecular dynamics with ``LAMMPS``
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# We can also use `LAMMPS <https://lammps.org>`_ to perform molecular-dynamics
-# using the metatensor interface.
+# The ``metatomic`` model can also be run with `LAMMPS <https://lammps.org>`_ 
+# and used to perform all kinds of atomistic simulations with it. 
+# This only requires defining a ``pair_metatensor`` potential, and specifying
+# the mapping between LAMMPS atom types and those used in the model.
+#
+# Note also that the ``metatomic`` interface takes care of converting the 
+# model units to those used in the LAMMPS file, so it is possible to use 
+# energies in eV even if the model outputs kcal/mol. 
 
-subprocess.check_call(["lmp", "-in", "data/qtip4pf.in"])
+with open("data/qtip4pf.in", "r") as file:
+    lines = file.readlines()
+
+for line in lines[:7]+lines[16:]:
+    print(line, end="")
+
+
+# %%
+# This specific example runs a short MD trajectory, using a Langevin thermostat
+
+subprocess.check_call(["lmp_serial", "-in", "data/qtip4pf.in"])

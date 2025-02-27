@@ -11,3 +11,4 @@ set of configurations of an atomistic system.
 - examples/batch-cp2k/reference-trajectory
 - examples/heat-capacity/heat-capacity
 - examples/pi-mts-rpc/mts-rpc
+- examples/water-model/water-model
