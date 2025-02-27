@@ -206,8 +206,8 @@ ax.legend()
 #
 # where :math:`\epsilon` is the depth of the potential well and :math:`\sigma` is the
 # distance at which the potential is zero. For water there is only an oxygen-oxygen
-# Lennard-Jones potential. In a typical 4-points water model are no LJ interactions
-# between hydrogen atoms and between hydrogen and oxygen atoms.
+# Lennard-Jones potential. In a typical 4-points water model are only LJ interactions
+# between oxygen atoms.
 #
 # We implement the Lennard-Jones potential as a function that takes distances, along
 # with the parameters ``sigma``, ``epsilon``, and ``cutoff`` that indicates the distance
@@ -265,13 +265,14 @@ ax.legend()
 # Electrostatic Potential
 # ^^^^^^^^^^^^^^^^^^^^^^^
 #
-# Since electrostatic interactions are long-ranged it is not fully trivial to compute
-# these in simulations. For periodic systems the Coulomb energy is given by:
+# The long-ranged nature of electrostatic interactions makes computing them
+# in simulations non-trivial. For periodic systems the Coulomb energy is given by:
 #
 # .. math::
 #
 #  V_\mathrm{Coulomb} = \frac{1}{2} \sum_{i,j} \sideset{}{'}\sum_{\boldsymbol n \in
-#   \mathcal{Z}} \frac{q_i q_j}{\left|\boldsymbol r_{ij} + \boldsymbol{n L}\right|}
+#   \mathcal{Z}} \frac{1}{4\pi\epsilon_0}
+#   \frac{q_i q_j}{\left|\boldsymbol r_{ij} + \boldsymbol{n L}\right|}
 #
 # The sum over :math:`\boldsymbol n` takes into account the periodic images of the
 # charges and the prime indicates that in the case :math:`i=j` the term :math:`n=0` must
@@ -702,7 +703,7 @@ def get_molecular_geometry_auto(
 # and should be relatively easy to follow.
 
 
-class QTIP4PfModel(torch.nn.Module):
+class TIP4PModel(torch.nn.Module):
     def __init__(
         self,
         cutoff: float,
@@ -896,7 +897,7 @@ qtip4pf_parameters = dict(
     hoh_angle_eq=107.4 * np.pi / 180,
     hoh_angle_k=87.85,
 )
-model = QTIP4PfModel(
+model = TIP4PModel(
     **qtip4pf_parameters
     #   uncomment to override default options
     #    p3m_options = (1.4, {"interpolation_nodes": 5, "mesh_spacing": 1.33}, 0)
