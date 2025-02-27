@@ -858,10 +858,11 @@ class TIP4PModel(torch.nn.Module):
         # to avoid double-counting
         energy_self = (
             (
-                self.coulomb.from_dist(mh_dist).sum() * charges[0]
-                + self.coulomb.from_dist(hh_dist).sum() * charges[1]
+                self.coulomb.from_dist(mh_dist).sum() * (-self.m_charge)
+                + self.coulomb.from_dist(hh_dist).sum() * 0.5 * self.m_charge
             )
-            * charges[1]
+            * 0.5
+            * self.m_charge
             * torchpme.prefactors.kcalmol_A
         )
 
