@@ -124,13 +124,8 @@ spherical_tensormap_train = mts.slice(
     "samples",
     Labels("system", torch.from_numpy(train_idx).reshape(-1, 1)),
 )
-# cartesian_tensormap_test = mts.slice(
-#     cartesian_tensormap,
-#     "samples",
-#     Labels("system", torch.from_numpy(test_idx).reshape(-1, 1)),
-# )
-spherical_tensormap_test = mts.slice(
-    spherical_tensormap,
+cartesian_tensormap_test = mts.slice(
+    cartesian_tensormap,
     "samples",
     Labels("system", torch.from_numpy(test_idx).reshape(-1, 1)),
 )
@@ -256,11 +251,11 @@ class PolarizabilityModel(torch.nn.Module):
             new_block[int(A)] = -block_0.values[
                 i
             ].flatten() * eye / sqrt3 + self._matrix_from_l2_components(
-                block_2.values[i].unsqueeze(-1)
+                block_2.values[i].squeeze()
             )
 
         return TensorMap(
-            keys=Labels.single(),
+            keys=Labels(["_"], torch.tensor([[0]], dtype=torch.int32)),
             blocks=[
                 TensorBlock(
                     samples=Labels(
@@ -279,7 +274,7 @@ class PolarizabilityModel(torch.nn.Module):
                             torch.tensor([0, 1, 2], dtype=torch.int32).reshape(-1, 1),
                         ),
                     ],
-                    properties=Labels.single(),
+                    properties=Labels(["_"], torch.tensor([[0]], dtype=torch.int32)),
                     values=torch.stack([new_block[A] for A in new_block]).unsqueeze(-1),
                 )
             ],
@@ -373,7 +368,7 @@ class PolarizabilityModel(torch.nn.Module):
 
         # Apply the linear model
         prediction = self.linear_model(lambda_soap)
-        # prediction = self._spherical_to_cartesian(prediction) # TODO: Fix this, it
+        prediction = self._spherical_to_cartesian(prediction)
         # fails at saving due to TorchScript
         return {"cookbook::polarizability": prediction}
 
@@ -446,8 +441,8 @@ prediction_test = model(systems_test, outputs)
 
 true_polarizability = np.concatenate(
     [
-        spherical_tensormap_test.block(k).values.flatten().numpy()
-        for k in spherical_tensormap_test.keys
+        cartesian_tensormap_test.block(k).values.flatten().numpy()
+        for k in cartesian_tensormap_test.keys
     ]
 )
 predicted_polarizability = np.concatenate(
@@ -503,10 +498,22 @@ atomistic_model = MetatensorAtomisticModel(
 
 
 # %%
+# Save the model
+# ^^^^^^^^^^^^^^
+# The model can be saved to disk using the :func:`metatensor.torch.atomistic.save_atomistic_model`
+# function.
+#
 atomistic_model.save("polarizability_model.pt", collect_extensions="extensions")
 
 # %%
-atomistic_model = load_atomistic_model("polarizability_model.pt")
+# Use the model as an ASE calculator
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# The model can be used as an ASE calculator with the
+# :class:`metatensor.torch.atomistic.MetatensorCalculator` class.
+
+atomistic_model = load_atomistic_model(
+    "polarizability_model.pt", extensions_directory="extensions"
+)
 mta_calculator = MetatensorCalculator(atomistic_model)
 
 ase_frames = ase.io.read("data/qm7x_reduced_100.xyz", index=":")
@@ -516,3 +523,13 @@ for frame in ase_frames:
     computed_polarizabilities.append(
         mta_calculator.run_model(frame, outputs)["cookbook::polarizability"]
     )
+
+# %%
+atomistic_model = load_atomistic_model(
+    "polarizability_model.pt", extensions_directory="extensions"
+)
+mta_calculator = MetatensorCalculator(atomistic_model)
+
+# %%
+mta_calculator.run_model(frame, outputs)
+# %%
