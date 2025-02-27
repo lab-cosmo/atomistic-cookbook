@@ -1,5 +1,7 @@
 *.pt
-RESTART
+*RESTART*
 *.json
-qtip4pf-md*
+*qtip4pf-md*
 data.zip
+dump.xyz
+log.lammps

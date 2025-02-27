@@ -16,6 +16,7 @@ to perform demonstrative molecular dynamics simulations.
 
 # sphinx_gallery_thumbnail_number = 3
 # %%
+import subprocess
 from typing import Dict, List, Optional
 
 import ase.io
@@ -1117,3 +1118,13 @@ chemiscope.show(
         trajectory=True,
     ),
 )
+
+
+# %%
+# Molecular dynamics with ``LAMMPS``
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# We can also use `LAMMPS <https://lammps.org>`_ to perform molecular-dynamics
+# using the metatensor interface.
+
+subprocess.check_call(["lmp", "-in", "data/qtip4pf.in"])
