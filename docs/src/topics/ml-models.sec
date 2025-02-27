@@ -9,3 +9,4 @@ data.
 - examples/lode-linear/lode-linear
 - examples/sample-selection/sample-selection
 - examples/periodic-hamiltonian/periodic-hamiltonian
+- examples/polarizability/polarizability
