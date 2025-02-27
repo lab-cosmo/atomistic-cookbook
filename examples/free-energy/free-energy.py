@@ -541,9 +541,9 @@ for idx, i in enumerate(["0.0", "0.2", "0.4", "0.6", "0.8", "1.0"]):
         positions
       </trajectory>
       <trajectory filename='xc' stride='10' flush='10'> x_centroid </trajectory>
-      <checkpoint stride='4000'/>
+      <checkpoint stride='800'/>
    </output>
-   <total_steps> 10000 </total_steps>
+   <total_steps> 2000 </total_steps>
    <prng><seed>31415</seed></prng>
    <ffsocket name='driver' mode='unix' matching='any' pbc='false'>
        <address> f{idx} </address>
@@ -727,9 +727,9 @@ for idx, i in enumerate(["0.0", "0.2", "0.4", "0.6", "0.8", "1.0"]):
          positions
       </trajectory>
       <trajectory filename='xc' stride='10' flush='10'> x_centroid </trajectory>
-      <checkpoint stride='4000'/>
+      <checkpoint stride='800'/>
    </output>
-   <total_steps> 10000 </total_steps>
+   <total_steps> 2000 </total_steps>
    <prng><seed>31415</seed></prng>
    <ffsocket name='driver' mode='unix' matching='any' pbc='false'>
        <address> f{idx} </address>
