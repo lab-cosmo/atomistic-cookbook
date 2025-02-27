@@ -500,8 +500,8 @@ atomistic_model = MetatensorAtomisticModel(
 # %%
 # Save the model
 # ^^^^^^^^^^^^^^
-# The model can be saved to disk using the :func:`metatensor.torch.atomistic.save_atomistic_model`
-# function.
+# The model can be saved to disk using the
+# :func:`metatensor.torch.atomistic.save_atomistic_model` function.
 #
 atomistic_model.save("polarizability_model.pt", collect_extensions="extensions")
 
