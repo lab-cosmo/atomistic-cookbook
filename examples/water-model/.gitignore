@@ -1,7 +1,9 @@
+*.data
+*.json
 *.pt
 *RESTART*
-*.json
 *qtip4pf-md*
+
 data.zip
-dump.xyz
 log.lammps
+trajectory.xyz

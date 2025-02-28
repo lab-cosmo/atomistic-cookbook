@@ -1,6 +1,6 @@
 units metal  # Angstroms, eV, picoseconds 
 atom_style atomic
-read_data data/water_32.data
+read_data water_32.data
 
 # loads metatomic SPC/Fw model
 pair_style metatensor spcfw-mta.pt
