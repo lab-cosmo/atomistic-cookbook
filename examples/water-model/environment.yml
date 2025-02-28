@@ -1,0 +1,16 @@
+channels:
+  - abmazitov
+  - conda-forge
+dependencies:
+  - python=3.12
+  - lammps-metatensor=*=cpu*nompi*
+  - pip
+  - pip:
+    - ase
+    - chemiscope>=0.7
+    - ipi
+    - metatensor-torch<0.8
+    - metatensor-operations
+    - matplotlib
+    - torch-pme
+    - vesin[torch]
