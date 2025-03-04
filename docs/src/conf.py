@@ -29,8 +29,9 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
     "python": ("https://docs.python.org/3", None),
-    "rascaline": ("https://luthaf.fr/rascaline/latest/", None),
+    "featomic": ("https://metatensor.github.io/featomic/latest/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+    "torchpme": ("https://lab-cosmo.github.io/torch-pme/latest/", None),
 }
 
 html_js_files = [

@@ -15,4 +15,5 @@ in your own atomistic cooking.
     scikit-matter
     cp2k
     lammps
+    metatensor
     plumed
