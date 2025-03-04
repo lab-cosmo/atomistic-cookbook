@@ -54,8 +54,8 @@ torch.set_default_dtype(torch.float64)
 # Set the parameters for the dataset
 torch.manual_seed(42)
 
-NUM_FRAMES = 100  #
-BATCH_SIZE = 4  # 50
+NUM_FRAMES = 20  #
+BATCH_SIZE = 10  # 50
 NUM_EPOCHS = 100
 SHUFFLE_SEED = 0
 TRAIN_FRAC = 0.7
@@ -64,11 +64,11 @@ VALIDATION_FRAC = 0.2
 EARLY_STOP_CRITERION = 20
 VERBOSE = 10
 DUMP_HIST = 50
-LR = 5e-3  # 5e-4
+LR = 1e-3  #5e-3 # 5e-4
 VAL_INTERVAL = 1
-W_EVA = 1000  # 1e4
-W_DIP = 0.1  # 1e3
-W_POL = 0.01  # 1e2
+W_EVA = 1e2 #1000  # 1e4
+W_DIP = 2e1 #0.1  # 1e3
+W_POL = 1 #0.01  # 1e2
 DEVICE = "cpu"
 
 ORTHOGONAL = True  # set to 'FALSE' if working in the non-orthogonal basis
@@ -147,18 +147,18 @@ ml_data._split_indices(
 #
 
 hypers = {
-    "cutoff": 3.0,
-    "max_radial": 6,
-    "max_angular": 4,
+    "cutoff": 1.5, #1.5 #3
+    "max_radial": 4, #4 #6
+    "max_angular": 4, #4
     "atomic_gaussian_width": 0.3,
     "center_atom_weight": 1,
     "radial_basis": {"Gto": {}},
     "cutoff_function": {"ShiftedCosine": {"width": 0.1}},
 }
 hypers_pair = {
-    "cutoff": 5.0,
-    "max_radial": 6,
-    "max_angular": 4,
+    "cutoff": 3.5, #5
+    "max_radial": 6, #6
+    "max_angular": 4, #4
     "atomic_gaussian_width": 0.3,
     "center_atom_weight": 1,
     "radial_basis": {"Gto": {}},
@@ -190,11 +190,11 @@ ml_data.feat_train, ml_data.feat_val, ml_data.feat_test = drop_zero_blocks(
 )
 
 model = LinearTargetModel(
-    dataset=ml_data, nlayers=1, nhidden=16, bias=False, device=DEVICE
+    dataset=ml_data, nlayers=1, nhidden=16, bias=False, device=DEVICE #16
 )
 
 pred_ridges, ridges = model.fit_ridge_analytical(
-    alpha=np.logspace(-8, 3, 12),
+    alpha=np.logspace(-8, 3, 12), 
     cv=3,
     set_bias=False,
 )
@@ -203,6 +203,13 @@ pred_fock = model.forward(
     ml_data.feat_train,
     return_type="tensor",
     batch_indices=ml_data.train_idx,
+    ridge_fit=True,
+    add_noise=NOISE,
+)
+pred_fock_ridge_test = model.forward(
+    ml_data.feat_test,
+    return_type="tensor",
+    batch_indices=ml_data.test_idx,
     ridge_fit=True,
     add_noise=NOISE,
 )
@@ -249,7 +256,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
     optimizer,
     factor=0.5,
-    patience=3,  # 20,
+    patience=20,  # 20,
 )
 
 # Initialize trainer
@@ -288,7 +295,6 @@ history = trainer.fit(
 # %%
 # Plot loss
 # ---------
-#
 
 
 np.save(f"{FOLDER_NAME}/model_output/loss_stats.npy", history)
@@ -317,6 +323,7 @@ for data in test_dl:
 
 eva_test = []
 eva_test_pred = []
+eva_test_pred_ridge = []
 
 for j, i in enumerate(test_dl.dataset.test_idx):
     f = molecule_data.target["fock"][i]
@@ -328,15 +335,28 @@ for j, i in enumerate(test_dl.dataset.test_idx):
     eig_pred = scipy.linalg.eigvalsh(f_pred, s)
     eva_test_pred.append(torch.from_numpy(eig_pred))
 
+
+    eig_pred_ridge=scipy.linalg.eigvalsh(pred_fock_ridge_test[j].detach().numpy(),s)
+    eva_test_pred_ridge.append(torch.from_numpy(eig_pred_ridge))
+    
+
 # print("testrev", eva_test)
 # print("testpred", eva_test_pred)
+a, b = np.polyfit(np.array(eva_test).flatten(),np.array(eva_test_pred).flatten(), 1)
+print('linefit',a,b)
+#plt.plot(np.array(eva_test).flatten(), a*np.array(eva_test).flatten()+b,label='linefit')
+#plt.loglog(np.array(eva_test).flatten(), a*np.array(eva_test).flatten()+b)
 
 plt.loglog(
+#plt.plot(
     [np.amin(eva_test_pred), np.amax(eva_test_pred)],
     [np.amin(eva_test_pred), np.amax(eva_test_pred)],
     "k",
 )
 plt.loglog(np.array(eva_test).flatten(), np.array(eva_test_pred).flatten(), "o")
+#plt.plot(np.array(eva_test).flatten(), np.array(eva_test_pred).flatten(), "o", label='training')
+#plt.plot(np.array(eva_test).flatten(), np.array(eva_test_pred_ridge).flatten(), "o",label='ridge')
+plt.legend()
 plt.xlabel("Eigenvalue$_{ DFT}$")
 plt.ylabel("Eigenvalue$_{ ML}$")
 plt.savefig(f"{FOLDER_NAME}/parity_eva.pdf")
