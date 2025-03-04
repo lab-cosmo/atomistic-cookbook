@@ -30,14 +30,13 @@ from skmatter import feature_selection as skfeat_selection
 # -------------------
 #
 # Load 500 example BTO structures from file, reading them using
-# `ASE <https://wiki.fysik.dtu.dk/ase/>`.
+# `ASE <https://wiki.fysik.dtu.dk/ase/>`_.
+# The data is available as a download in the data.zip file below or in the
+# atomistic-cookbook github.
 
 # Load a subset of `structures <data/input-fps.xyz>` of the example dataset
 n_frames = 500
 frames = ase.io.read("data/input-fps.xyz", f":{n_frames}", format="extxyz")
-
-# The data is available as a download in the data.zip file below or in the
-# atomistic-cookbook github.
 
 # %%
 # Compute SOAP descriptors using featomic
