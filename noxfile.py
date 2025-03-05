@@ -290,12 +290,6 @@ for name in EXAMPLES:
         # Gather list of files before running the example
         example_files = list(example_dir.glob("*"))
 
-        # Creates data.zip if there's a data folder
-        if os.path.exists(f"examples/{name}/data"):
-            shutil.make_archive(
-                f"examples/{name}/data", "zip", f"examples/{name}/", "data/"
-            )
-
         session.run("python", "src/generate-gallery.py", example_dir)
 
         # Path of the generated gallery example.
@@ -389,10 +383,9 @@ that are not part of any of the other sections.
 """
         )
         # sort by title
-        for file, metadata in sorted(
+        for _, metadata in sorted(
             all_examples_rst.items(), key=(lambda kw: kw[1]["title"])
         ):
-            root = os.path.dirname(file)
 
             # generates a thumbnail link
             output.write(
@@ -410,39 +403,6 @@ that are not part of any of the other sections.
 
                 """
             )
-
-            # inject custom links into the gallery file
-            with open(file) as fd:
-                content = fd.read()
-
-            if "Download Conda environment file" in content:
-                # do not add the download link twice
-                pass
-            else:
-                lines = content.split("\n")
-                with open(file, "w") as fd:
-                    for line in lines:
-                        if "sphx-glr-download-jupyter" in line:
-                            # add the new download link before
-                            fd.write(
-                                """
-    .. container:: sphx-glr-download
-
-      :download:`Download Conda environment file: environment.yml <environment.yml>`
-"""
-                            )
-
-                            if os.path.exists(os.path.join(root, "data.zip")):
-                                fd.write(
-                                    """
-    .. container:: sphx-glr-download
-
-      :download:`Download data files: data.zip <data.zip>`
-"""
-                                )
-
-                        fd.write(line)
-                        fd.write("\n")
 
         output.write(
             """
