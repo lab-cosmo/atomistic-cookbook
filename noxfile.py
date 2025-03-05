@@ -5,6 +5,8 @@ import os
 import shutil
 import subprocess
 import sys
+import zipfile
+from pathlib import Path
 
 import nox
 from docutils.core import publish_doctree, publish_parts
@@ -264,7 +266,8 @@ for name in EXAMPLES:
 
     @nox.session(name=name, venv_backend="conda")
     def example(session, name=name):
-        environment_yml = f"examples/{name}/environment.yml"
+        example_dir = Path("examples") / name
+        environment_yml = example_dir / "environment.yml"
         if should_reinstall_dependencies(session, environment_yml=environment_yml):
             session.run(
                 "conda",
@@ -284,13 +287,54 @@ for name in EXAMPLES:
                 "chemiscope",
             )
 
-        # Creates data.zip if there's a data folder
-        if os.path.exists(f"examples/{name}/data"):
-            shutil.make_archive(
-                f"examples/{name}/data", "zip", f"examples/{name}/", "data/"
-            )
+        # Gather list of files before running the example
+        example_files = list(example_dir.glob("*"))
 
-        session.run("python", "src/generate-gallery.py", f"examples/{name}")
+        session.run("python", "src/generate-gallery.py", example_dir)
+
+        # Path of the generated gallery example.
+        docs_example_dir = Path("docs/src/examples") / name
+
+        # Get list of generated notebooks
+        notebooks = [
+            file
+            for file in docs_example_dir.glob("*.ipynb")
+            if not (example_dir / file.name).exists()
+        ]
+        # Get the source python files that generated the notebooks
+        source_py_files = [notebook.with_suffix(".py").name for notebook in notebooks]
+        # Remove them from the list of example files (we don't want to include
+        # them in every zip file)
+        example_files = [
+            file
+            for file in example_files
+            if file.suffix != ".py" or file.name not in source_py_files
+        ]
+
+        # The src/generate-gallery.py script creates a zip file with just the
+        # *.py and *.ipynb files. Downloading this zip file is not very useful
+        # to reproduce the tutorial. Here we overwrite that zip file with one
+        # that also contains the rest of the files present in the example directory
+        # before running the example (including e.g. data and environment.yml).
+        # We create a zip file for each notebook.
+        for py_file, notebook in zip(source_py_files, notebooks):
+
+            with zipfile.ZipFile(
+                docs_example_dir / f"{notebook.stem}.zip", "w"
+            ) as zipf:
+                # Add files from the data dir (if present)
+                for file in example_dir.rglob("data/*"):
+                    zipf.write(file, file.relative_to(example_dir))
+
+                # Add the rest of files in the example dir (with an extra check
+                # to make sure that they are still there)
+                for file in example_files:
+                    if file.is_file():
+                        zipf.write(file, file.relative_to(example_dir))
+
+                # Add the .py and .ipynb files
+                zipf.write(docs_example_dir / py_file, py_file)
+                zipf.write(notebook, notebook.name)
 
         os.unlink(f"docs/src/examples/{name}/index.rst")
 
@@ -339,10 +383,9 @@ that are not part of any of the other sections.
 """
         )
         # sort by title
-        for file, metadata in sorted(
+        for _, metadata in sorted(
             all_examples_rst.items(), key=(lambda kw: kw[1]["title"])
         ):
-            root = os.path.dirname(file)
 
             # generates a thumbnail link
             output.write(
@@ -360,39 +403,6 @@ that are not part of any of the other sections.
 
                 """
             )
-
-            # inject custom links into the gallery file
-            with open(file) as fd:
-                content = fd.read()
-
-            if "Download Conda environment file" in content:
-                # do not add the download link twice
-                pass
-            else:
-                lines = content.split("\n")
-                with open(file, "w") as fd:
-                    for line in lines:
-                        if "sphx-glr-download-jupyter" in line:
-                            # add the new download link before
-                            fd.write(
-                                """
-    .. container:: sphx-glr-download
-
-      :download:`Download Conda environment file: environment.yml <environment.yml>`
-"""
-                            )
-
-                            if os.path.exists(os.path.join(root, "data.zip")):
-                                fd.write(
-                                    """
-    .. container:: sphx-glr-download
-
-      :download:`Download data files: data.zip <data.zip>`
-"""
-                                )
-
-                        fd.write(line)
-                        fd.write("\n")
 
         output.write(
             """
