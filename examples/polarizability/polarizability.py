@@ -131,6 +131,122 @@ cartesian_tensormap_test = mts.slice(
 )
 
 # %%
+# Utility functions
+# -----------------
+# We define a couple of utility functions to convert the spherical polarizability tensor
+# back to a Cartesian tensor.
+
+# %%
+# The first utility function takes the :math:`\lambda=2` spherical components and
+# reconstructs the :math:`3 \times 3`` symmetric traceless matrix.
+
+
+def matrix_from_l2_components(l2: torch.Tensor) -> torch.Tensor:
+    """
+    Inverts the spherical projection function for a symmetric, traceless 3x3 tensor.
+
+    Given:
+        l2 : array-like of 5 components
+            These are the irreducible spherical components multiplied by sqrt(2),
+            i.e., l2 = sqrt(2) * [t0, t1, t2, t3, t4], where:
+                t0 = (A[0,1] + A[1,0])/2
+                t1 = (A[1,2] + A[2,1])/2
+                t2 = (2*A[2,2] - A[0,0] - A[1,1])/(2*sqrt(3))
+                t3 = (A[0,2] + A[2,0])/2
+                t4 = (A[0,0] - A[1,1])/2
+
+    Returns:
+        A : (3,3) numpy array
+            The symmetric, traceless matrix reconstructed from the components.
+    """
+    # Recover the t_i by dividing by sqrt(2)
+    sqrt2 = torch.sqrt(torch.tensor(2.0, dtype=l2.dtype))
+    sqrt3 = torch.sqrt(torch.tensor(3.0, dtype=l2.dtype))
+    l2 = l2 / sqrt2
+
+    # Allocate the 3x3 matrix A
+    A = torch.empty((3, 3), dtype=l2.dtype)
+
+    # Diagonal entries:
+    # Use the traceless condition A[0,0] + A[1,1] + A[2,2] = 0.
+    # Also, from the definitions:
+    #   t4 = (A[0,0] - A[1,1]) / 2
+    #   t2 = (2*A[2,2] - A[0,0] - A[1,1])/(2*sqrt3)
+    #
+    # Solve for A[0,0] and A[1,1]:
+    A[0, 0] = -(sqrt3 * l2[2]) / 3 + l2[4]
+    A[1, 1] = -(sqrt3 * l2[2]) / 3 - l2[4]
+    A[2, 2] = (2 * sqrt3 * l2[2]) / 3  # Since A[2,2] = - (A[0,0] + A[1,1])
+
+    # Off-diagonals:
+    A[0, 1] = l2[0]
+    A[1, 0] = l2[0]
+
+    A[1, 2] = l2[1]
+    A[2, 1] = l2[1]
+
+    A[0, 2] = l2[3]
+    A[2, 0] = l2[3]
+
+    return A
+
+
+# %%
+# The second utility function takes the spherical polarizability tensor and uses the
+# ``matrix_from_l2_components`` function to reconstruct symmetric traceless part of the
+# Cartesian tensor, and then combines it with the scalar part to reconstruct the full
+# Cartesian tensor.
+
+
+def spherical_to_cartesian(spherical_tensor: TensorMap) -> TensorMap:
+
+    dtype = spherical_tensor[0].values.dtype
+
+    new_block: Dict[int, torch.Tensor] = {}
+
+    eye = torch.eye(3, dtype=dtype)
+    sqrt3 = torch.sqrt(torch.tensor(3.0, dtype=dtype))
+    block_0 = spherical_tensor[0]
+    block_2 = spherical_tensor[1]
+    system_ids = block_0.samples.values.flatten()
+
+    for i, A in enumerate(system_ids):
+        new_block[int(A)] = -block_0.values[
+            i
+        ].flatten() * eye / sqrt3 + matrix_from_l2_components(
+            block_2.values[i].squeeze()
+        )
+
+    return TensorMap(
+        keys=Labels(["_"], torch.tensor([[0]], dtype=torch.int32)),
+        blocks=[
+            TensorBlock(
+                samples=Labels(
+                    "system",
+                    torch.tensor(
+                        [k for k in new_block.keys()], dtype=torch.int32
+                    ).reshape(-1, 1),
+                ),
+                components=[
+                    Labels(
+                        "xyz_1",
+                        torch.tensor([0, 1, 2], dtype=torch.int32).reshape(-1, 1),
+                    ),
+                    Labels(
+                        "xyz_2",
+                        torch.tensor([0, 1, 2], dtype=torch.int32).reshape(-1, 1),
+                    ),
+                ],
+                properties=Labels(["_"], torch.tensor([[0]], dtype=torch.int32)),
+                values=torch.stack([new_block[A] for A in new_block])
+                .roll((-1, -1), dims=(1, 2))
+                .unsqueeze(-1),
+            )
+        ],
+    )
+
+
+# %%
 # Implementation of a ``torch`` module for polarizability
 # -------------------------------------------------------
 # In order to implement a polarizability model compatible with ``metatomic``, we need to
@@ -151,8 +267,6 @@ class PolarizabilityModel(torch.nn.Module):
         self,
         spex_calculator: SphericalExpansion,
         atomic_types: List[int],
-        training_systems: List[System],
-        training_targets: TensorMap,
         alphas: Union[float, List[float], np.ndarray, torch.Tensor] = None,
         dtype: torch.dtype = None,
     ) -> None:
@@ -165,9 +279,6 @@ class PolarizabilityModel(torch.nn.Module):
         device = torch.device("cpu")
 
         self.hypers = spex_calculator.parameters
-
-        if alphas is None:
-            alphas = np.logspace(-6, 6, 13)
 
         # Check that the atomic types are unique
         assert len(set(atomic_types)) == len(atomic_types)
@@ -197,22 +308,7 @@ class PolarizabilityModel(torch.nn.Module):
             device=device,
         )
 
-        self._fit(training_systems, training_targets, alphas)
-
-    def _compute_metadata(self):
-        # Create dummy system to get the property dimension
-        dummy_system = systems_to_torch(
-            ase.Atoms(
-                numbers=self.atomic_types,
-                positions=[[i / 4, 0, 0] for i in range(len(self.atomic_types))],
-            )
-        )
-
-        self.metadata = self.lambda_soap_calculator.compute_metadata(
-            dummy_system, selected_keys=self.selected_keys, neighbors_to_properties=True
-        ).keys_to_samples("center_type")
-
-    def _fit(self, training_systems, training_targets, alphas):
+    def fit(self, training_systems, training_targets, alphas):
 
         lambda_soap = self._compute_descriptor(training_systems)
 
@@ -229,6 +325,19 @@ class PolarizabilityModel(torch.nn.Module):
 
         self._apply_weights(ridges)
 
+    def _compute_metadata(self):
+        # Create dummy system to get the property dimension
+        dummy_system = systems_to_torch(
+            ase.Atoms(
+                numbers=self.atomic_types,
+                positions=[[i / 4, 0, 0] for i in range(len(self.atomic_types))],
+            )
+        )
+
+        self.metadata = self.lambda_soap_calculator.compute_metadata(
+            dummy_system, selected_keys=self.selected_keys, neighbors_to_properties=True
+        ).keys_to_samples("center_type")
+
     def _apply_weights(self, ridges: List[RidgeCV]) -> None:
         with torch.no_grad():
             for model, ridge in zip(self.linear_model.module_map, ridges):
@@ -237,97 +346,6 @@ class PolarizabilityModel(torch.nn.Module):
                 )
                 if model.bias is not None:
                     model.bias.copy_(torch.tensor(ridge.intercept_, dtype=self.dtype))
-
-    def _spherical_to_cartesian(self, spherical_tensor: TensorMap) -> TensorMap:
-        new_block: Dict[int, torch.Tensor] = {}
-
-        eye = torch.eye(3, dtype=self.dtype)
-        sqrt3 = torch.sqrt(torch.tensor(3.0, dtype=self.dtype))
-        block_0 = spherical_tensor[0]
-        block_2 = spherical_tensor[1]
-        system_ids = block_0.samples.values.flatten()
-
-        for i, A in enumerate(system_ids):
-            new_block[int(A)] = -block_0.values[
-                i
-            ].flatten() * eye / sqrt3 + self._matrix_from_l2_components(
-                block_2.values[i].squeeze()
-            )
-
-        return TensorMap(
-            keys=Labels(["_"], torch.tensor([[0]], dtype=torch.int32)),
-            blocks=[
-                TensorBlock(
-                    samples=Labels(
-                        "system",
-                        torch.tensor(
-                            [k for k in new_block.keys()], dtype=torch.int32
-                        ).reshape(-1, 1),
-                    ),
-                    components=[
-                        Labels(
-                            "xyz_1",
-                            torch.tensor([0, 1, 2], dtype=torch.int32).reshape(-1, 1),
-                        ),
-                        Labels(
-                            "xyz_2",
-                            torch.tensor([0, 1, 2], dtype=torch.int32).reshape(-1, 1),
-                        ),
-                    ],
-                    properties=Labels(["_"], torch.tensor([[0]], dtype=torch.int32)),
-                    values=torch.stack([new_block[A] for A in new_block]).unsqueeze(-1),
-                )
-            ],
-        )
-
-    def _matrix_from_l2_components(self, l2: torch.Tensor) -> torch.Tensor:
-        """
-        Inverts the spherical projection function for a symmetric, traceless 3x3 tensor.
-
-        Given:
-            l2 : array-like of 5 components
-                These are the irreducible spherical components multiplied by sqrt(2),
-                i.e., l2 = sqrt(2) * [t0, t1, t2, t3, t4], where:
-                    t0 = (A[0,1] + A[1,0])/2
-                    t1 = (A[1,2] + A[2,1])/2
-                    t2 = (2*A[2,2] - A[0,0] - A[1,1])/(2*sqrt(3))
-                    t3 = (A[0,2] + A[2,0])/2
-                    t4 = (A[0,0] - A[1,1])/2
-
-        Returns:
-            A : (3,3) numpy array
-                The symmetric, traceless matrix reconstructed from the components.
-        """
-        # Recover the t_i by dividing by sqrt(2)
-        sqrt2 = torch.sqrt(torch.tensor(2.0, dtype=l2.dtype))
-        sqrt3 = torch.sqrt(torch.tensor(3.0, dtype=l2.dtype))
-        l2 = l2 / sqrt2
-
-        # Allocate the 3x3 matrix A
-        A = torch.empty((3, 3), dtype=l2.dtype)
-
-        # Diagonal entries:
-        # Use the traceless condition A[0,0] + A[1,1] + A[2,2] = 0.
-        # Also, from the definitions:
-        #   t4 = (A[0,0] - A[1,1]) / 2
-        #   t2 = (2*A[2,2] - A[0,0] - A[1,1])/(2*sqrt3)
-        #
-        # Solve for A[0,0] and A[1,1]:
-        A[0, 0] = -(sqrt3 * l2[2]) / 3 + l2[4]
-        A[1, 1] = -(sqrt3 * l2[2]) / 3 - l2[4]
-        A[2, 2] = (2 * sqrt3 * l2[2]) / 3  # Since A[2,2] = - (A[0,0] + A[1,1])
-
-        # Off-diagonals:
-        A[0, 1] = l2[0]
-        A[1, 0] = l2[0]
-
-        A[1, 2] = l2[1]
-        A[2, 1] = l2[1]
-
-        A[0, 2] = l2[3]
-        A[2, 0] = l2[3]
-
-        return A
 
     def _compute_descriptor(self, systems: List[System]) -> TensorMap:
         # Actually compute lambda-SOAP power spectrum
@@ -368,7 +386,7 @@ class PolarizabilityModel(torch.nn.Module):
 
         # Apply the linear model
         prediction = self.linear_model(lambda_soap)
-        prediction = self._spherical_to_cartesian(prediction)
+        prediction = spherical_to_cartesian(prediction)
         # fails at saving due to TorchScript
         return {"cookbook::polarizability": prediction}
 
@@ -412,9 +430,10 @@ systems_train = [
 model = PolarizabilityModel(
     spherical_expansion_calculator,
     atomic_types,
-    systems_train,
-    spherical_tensormap_train,
 )
+
+alphas = np.logspace(-6, 6, 50)
+model.fit(systems_train, spherical_tensormap_train, alphas=alphas)
 
 # %%
 # Evaluate the model
