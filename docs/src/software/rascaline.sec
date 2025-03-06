@@ -16,3 +16,4 @@ version from the `github repository <https://github.com/Luthaf/rascaline>`_
 - examples/sample-selection/sample-selection
 - examples/periodic-hamiltonian/periodic-hamiltonian
 - examples/rotate-equivariants/rotate-equivariants
+- examples/polarizability/polarizability

@@ -1,0 +1,14 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+    - ase
+    - featomic-torch<0.7,>0.6
+    - metatensor-torch<0.8
+    - metatensor-operations
+    - metatensor-learn
+    - matplotlib
+    - torch
+    - scikit-learn
