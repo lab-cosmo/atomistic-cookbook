@@ -9,7 +9,7 @@ This notebook analyzes the structures of 264 polymorphs of ROY, from
 comparing the conventional density-energy convex hull with a Generalized Convex Hull
 (GCH) analysis (see `Anelli et al., Phys. Rev. Materials
 (2018) <https://doi.org/10.1103/PhysRevMaterials.2.103804>`__).
-It uses features computed with `rascaline <https://github.com/lab-cosmo/rascaline>`__
+It uses features computed with `featomic <https://github.com/metatensor/featomic>`__
 and uses the directional convex hull function from
 `scikit-matter <https://github.com/lab-cosmo/scikit-matter>`__
 to make the figure.
@@ -23,10 +23,9 @@ configurations with similar descriptors are those that could be made
 "locally" stable by suitable synthesis conditions.
 """
 
+# sphinx_gallery_thumbnail_number = 3
 import bz2
 
-# %%
-# sphinx_gallery_thumbnail_number = 3
 import chemiscope
 import matplotlib.tri
 import numpy as np
@@ -156,7 +155,7 @@ cs.save("roy_ch.json.gz")
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # A first step is to computes suitable ML descriptors. Here we have used
-# ``rascaline`` to evaluate average SOAP features for the structures.
+# ``featomic`` to evaluate average SOAP features for the structures.
 # If you don't want to install these dependencies for this example you
 # can also use the pre-computed features (that are part of skmatter, see
 # load_roy_dataset), but you can use this as a stub to apply this analysis
