@@ -11,7 +11,7 @@ in your own atomistic cooking.
 
     i-pi
     chemiscope
-    rascaline
+    featomic
     scikit-matter
     cp2k
     lammps
