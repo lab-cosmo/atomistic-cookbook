@@ -3,20 +3,21 @@
      Interactive guides that you can also run locally and use as templates for
      your own simulations.
    :keywords: Atomistic simulations, statistical mechanics, machine learning,
-     molecular dynamics, quantum chemistry, materials modeling
+     molecular dynamics, quantum chemistry, materials modeling, 
+     computational chemistry
 
 The Atomistic Cookbook
 ======================
 
-The cookbook contains recipes for atomic-scale modelling for materials and
+The cookbook contains recipes for atomic-scale modelling of materials and
 molecules, with a particular focus on machine learning and statistical
 sampling methods.
-Most of the examples rely heavily on software developed by the laboratory of
+Many of the examples rely heavily on software developed by the laboratory of
 computational science and modeling (COSMO, see its `github page
 <https://github.com/lab-cosmo>`_) but the cookbook is open for recipes using
 all types of modeling tools and techniques.
 Rather than focusing on the usage of a specific package, this cookbook provides
-concrete examples of the solution of modeling problems, often using a combination
+examples of the solution of concrete modeling problems, often using a combination
 of several tools.
 
 You can view the recipes online, compiled as webpages containing explanations,
