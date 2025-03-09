@@ -181,7 +181,7 @@ ps_lr = metatensor.sum_over_samples(ps_lr, sample_names=sample_names_to_sum)
 # how many atoms of each chemical species are contained in the structures. This is used
 # for energy baselining.
 
-calculator_co = AtomicComposition(per_structure=False)
+calculator_co = AtomicComposition(per_system=False)
 descriptor_co = calculator_co.compute(frames, gradients=["positions"])
 
 co = descriptor_co.keys_to_properties(["center_type"])
