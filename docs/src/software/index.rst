@@ -17,3 +17,4 @@ in your own atomistic cooking.
     lammps
     metatensor
     plumed
+    torch-pme
