@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import requests
 import torch
-from rascaline import SoapPowerSpectrum
+from featomic import SoapPowerSpectrum
 from scipy.interpolate import CubicHermiteSpline, interp1d
 from scipy.optimize import brentq
 from torch.utils.data import BatchSampler, DataLoader, Dataset, RandomSampler
@@ -375,42 +375,37 @@ print("Both spectras look very similar")
 # ------------------------------------------------------------------------------------------
 #
 # We first define the hyperparameters to compute the
-# SOAP power spectrum using rascaline.
+# SOAP power spectrum using featomic.
 
 HYPER_PARAMETERS = {
-    "cutoff": 4.0,
-    "max_radial": 8,
-    "max_angular": 6,
-    "atomic_gaussian_width": 0.45,
-    "center_atom_weight": 1.0,
-    "radial_basis": {"Gto": {}},
-    "cutoff_function": {
-        "Step": {},
+    "cutoff": {"radius": 4.0, "smoothing": {"type": "Step"}},
+    "density": {
+        "type": "Gaussian",
+        "width": 0.45,
+        "scaling": {"type": "Willatt2018", "exponent": 5, "rate": 1, "scale": 3.0},
     },
-    "radial_scaling": {
-        "Willatt2018": {
-            "exponent": 5,
-            "rate": 1,
-            "scale": 3.0,
-        },
+    "basis": {
+        "type": "TensorProduct",
+        "max_angular": 6,
+        "radial": {"type": "Gto", "max_radial": 7},
     },
 }
 
 # %%
 #
-# We feed the Hyperparameters into rascaline to compute the SOAP Power spectrum
+# We feed the Hyperparameters into featomic to compute the SOAP Power spectrum
 
 
 calculator = SoapPowerSpectrum(**HYPER_PARAMETERS)
 R_total_soap = calculator.compute(structures)
 # Transform the tensormap to a single block containing a dense representation
-R_total_soap.keys_to_samples("species_center")
-R_total_soap.keys_to_properties(["species_neighbor_1", "species_neighbor_2"])
+R_total_soap.keys_to_samples("center_type")
+R_total_soap.keys_to_properties(["neighbor_1_type", "neighbor_2_type"])
 
 # Now we extract the data tensor from the single block
 total_atom_soap = []
 for structure_i in range(n_structures):
-    a_i = R_total_soap.block(0).samples["structure"] == structure_i
+    a_i = R_total_soap.block(0).samples["system"] == structure_i
     total_atom_soap.append(torch.tensor(R_total_soap.block(0).values[a_i, :]))
 
 total_soap = torch.stack(total_atom_soap)
