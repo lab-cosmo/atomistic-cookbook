@@ -1,0 +1,13 @@
+torch-pme
+=========
+
+`torch-pme <https://lab-cosmo.github.io/torch-pme/>`_
+provides a modular implementation of classical algorithms
+for the evaluation of long-range interactions (e.g. Ewald,
+particle-mesh Ewald - PME, and P3M). 
+It can be used to build traditional electrostatic models,
+as well as long-range descriptors for machine-learning
+applications.
+
+- examples/water-model/water-model
+- examples/torchpme/torchpme_learning

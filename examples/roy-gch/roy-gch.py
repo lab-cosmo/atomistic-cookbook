@@ -9,7 +9,7 @@ This notebook analyzes the structures of 264 polymorphs of ROY, from
 comparing the conventional density-energy convex hull with a Generalized Convex Hull
 (GCH) analysis (see `Anelli et al., Phys. Rev. Materials
 (2018) <https://doi.org/10.1103/PhysRevMaterials.2.103804>`__).
-It uses features computed with `rascaline <https://github.com/lab-cosmo/rascaline>`__
+It uses features computed with `featomic <https://github.com/metatensor/featomic>`__
 and uses the directional convex hull function from
 `scikit-matter <https://github.com/lab-cosmo/scikit-matter>`__
 to make the figure.
@@ -24,23 +24,26 @@ configurations with similar descriptors are those that could be made
 """
 
 # sphinx_gallery_thumbnail_number = 3
+import bz2
+
 import chemiscope
 import matplotlib.tri
 import numpy as np
+from ase.io import read
+from featomic import SoapPowerSpectrum
 from matplotlib import pyplot as plt
 from metatensor import mean_over_samples
-from rascaline import SoapPowerSpectrum
 from sklearn.decomposition import PCA
-from skmatter.datasets import load_roy_dataset
 from skmatter.sample_selection import DirectionalConvexHull
 
 
 # %%
 # Loads the structures (that also contain properties in the ``info`` field)
 
-roy_data = load_roy_dataset()
 
-structures = roy_data["structures"]
+structures = read(
+    bz2.open("data/beran_roy_structures.xyz.bz2", "rt"), ":", format="extxyz"
+)
 
 density = np.array([s.info["density"] for s in structures])
 energy = np.array([s.info["energy"] for s in structures])
@@ -152,32 +155,33 @@ cs.save("roy_ch.json.gz")
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # A first step is to computes suitable ML descriptors. Here we have used
-# ``rascaline`` to evaluate average SOAP features for the structures.
+# ``featomic`` to evaluate average SOAP features for the structures.
 # If you don't want to install these dependencies for this example you
-# can also use the pre-computed features, but you can use this as a stub
-# to apply this analysis to other chemical systems
+# can also use the pre-computed features (that are part of skmatter, see
+# load_roy_dataset), but you can use this as a stub to apply this analysis
+# to other chemical systems
+
+# from skmatter.datasets import load_roy_dataset
+# features = load_roy_dataset()["features"]
 
 hypers = {
-    "cutoff": 4,
-    "max_radial": 6,
-    "max_angular": 4,
-    "atomic_gaussian_width": 0.7,
-    "cutoff_function": {"ShiftedCosine": {"width": 0.5}},
-    "radial_basis": {"Gto": {"accuracy": 1e-6}},
-    "center_atom_weight": 1.0,
+    "cutoff": {"radius": 4, "smoothing": {"type": "ShiftedCosine", "width": 0.5}},
+    "density": {"type": "Gaussian", "width": 0.7},
+    "basis": {
+        "type": "TensorProduct",
+        "max_angular": 4,
+        "radial": {"type": "Gto", "max_radial": 5},
+    },
 }
 calculator = SoapPowerSpectrum(**hypers)
 rho2i = calculator.compute(structures)
-rho2i = rho2i.keys_to_samples(["species_center"]).keys_to_properties(
-    ["species_neighbor_1", "species_neighbor_2"]
+rho2i = rho2i.keys_to_samples(["center_type"]).keys_to_properties(
+    ["neighbor_1_type", "neighbor_2_type"]
 )
-rho2i_structure = mean_over_samples(rho2i, sample_names=["center", "species_center"])
+rho2i_structure = mean_over_samples(rho2i, sample_names=["atom", "center_type"])
 np.savez("roy_features.npz", feats=rho2i_structure.block(0).values)
 
-
-# features = roy_data["features"]
 features = rho2i_structure.block(0).values
-
 
 # %%
 # PCA projection
@@ -302,3 +306,5 @@ known polymorphs of ROY are on (or very close) to this hull.
 # ... and also load one as an interactive viewer
 
 chemiscope.show_input("roy_gch.json.gz")
+
+# %%
