@@ -12,4 +12,4 @@ dependencies:
     - metatensor
     - featomic
     - scikit-learn<1.6
-    - git+https://github.com/scikit-learn-contrib/scikit-matter
+    - git+https://github.com/scikit-learn-contrib/scikit-matter@722d582f9d88ecefb486dae90e0ca6d835d42024
