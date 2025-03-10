@@ -44,7 +44,6 @@ from featomic.clebsch_gordan import PowerSpectrum
 
 frames = ase.io.read("charge-charge.xyz", ":")
 
-
 # %%
 #
 # Convert target properties to metatensor format
@@ -56,6 +55,26 @@ frames = ase.io.read("charge-charge.xyz", ":")
 # into the appropriate format #justequistorethings
 
 y = ase_to_tensormap(frames, energy="energy", forces="forces")
+
+# %%
+# rename to match new label conventions
+yg = y.block(0).gradient("positions")
+yb = metatensor.TensorBlock(
+    y.block(0).values,
+    y.block(0).samples.rename("structure", "system"),
+    y.block(0).components,
+    y.block(0).properties,
+)
+yb.add_gradient(
+    "positions",
+    metatensor.TensorBlock(
+        yg.values,
+        yg.samples.rename("structure", "system"),
+        [yg.components[0].rename("direction", "xyz")],
+        yg.properties,
+    ),
+)
+y = metatensor.TensorMap(y.keys, [yb])
 
 
 # %%
@@ -267,10 +286,9 @@ idx_test = [i for i, f in enumerate(frames) if f.info["distance"] >= r_cut]
 # For doing the split we define two ``Labels`` instances and combine them in a
 # :py:class:`List`.
 
-samples_train = metatensor.Labels(["structure"], np.reshape(idx_train, (-1, 1)))
-samples_test = metatensor.Labels(["structure"], np.reshape(idx_test, (-1, 1)))
+samples_train = metatensor.Labels(["system"], np.reshape(idx_train, (-1, 1)))
+samples_test = metatensor.Labels(["system"], np.reshape(idx_test, (-1, 1)))
 grouped_labels = [samples_train, samples_test]
-
 
 # %%
 #
@@ -386,3 +404,5 @@ plt.axvline(r_cut, c="red", label=r"$r_\mathrm{train}$")
 plt.legend()
 plt.tight_layout()
 plt.show()
+
+# %%
