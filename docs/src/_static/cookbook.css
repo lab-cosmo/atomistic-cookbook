@@ -2,3 +2,8 @@
 .sidebar-brand-text {
     text-align: center;
 }
+
+/* Hide sphinx gallery download buttons */
+.sphx-glr-download-jupyter, .sphx-glr-download-python{
+    display: none;
+}
