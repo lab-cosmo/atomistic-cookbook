@@ -17,3 +17,4 @@ version from the `github repository <https://github.com/metatensor/featomic>`_
 - examples/sample-selection/sample-selection
 - examples/periodic-hamiltonian/periodic-hamiltonian
 - examples/rotate-equivariants/rotate-equivariants
+- examples/polarizability/polarizability
