@@ -1,0 +1,60 @@
+Machine learning models
+=======================
+
+This section contains recipes that concern the training of machine-learning
+models, or the pre-processing of data to optimize the model architecture or
+data.
+
+
+
+.. grid:: 1 2 2 3
+    :gutter: 1 1 2 3
+
+    .. grid-item::
+        .. card:: A ML model for the electron density of states
+            :link: ../examples/dos-align/dos-align
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/dos-align/images/thumb/sphx_glr_dos-align_thumb.png
+                :alt: This tutorial would go through the entire machine learning framework for the electronic density of states (DOS). It will cover the construction of the DOS and SOAP descriptors from ase Atoms and eigenenergy results. A simple neural network will then be constructed and the model parameters, along with the energy reference will be optimized during training. A total of three energy reference will be used, the average Hartree potential, the Fermi level, and an optimized energy reference starting from the Fermi level energy reference. The performance of each model is then compared.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Long-distance Equivariants: a tutorial
+            :link: ../examples/lode-linear/lode-linear
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/lode-linear/images/thumb/sphx_glr_lode-linear_thumb.png
+                :alt: This tutorial explains how Long range equivariant descriptors can be constructed using featomic and the resulting descriptors be used to construct a linear model with equisolve
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Sample and Feature Selection with FPS and CUR
+            :link: ../examples/sample-selection/sample-selection
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/sample-selection/images/thumb/sphx_glr_sample-selection_thumb.png
+                :alt: In this tutorial we generate descriptors using featomic, then select a subset of structures using both the farthest-point sampling (FPS) and CUR algorithms implemented in scikit-matter. Finally, we also generate a selection of the most important features using the same techniques.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Periodic Hamiltonian learning
+            :link: ../examples/periodic-hamiltonian/periodic-hamiltonian
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/periodic-hamiltonian/images/thumb/sphx_glr_periodic-hamiltonian_thumb.png
+                :alt: This tutorial explains how to train a machine learning model for the electronic Hamiltonian of a periodic system. Even though we focus on periodic systems, the code and techniques presented here can be directly transferred to molecules.
+                :class: gallery-img
+
+                
