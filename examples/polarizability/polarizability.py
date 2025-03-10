@@ -13,7 +13,7 @@ The model can then be used in an ASE calculator.
 
 # sphinx_gallery_thumbnail_number = 3
 # %%
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
 import ase.io
 
@@ -47,7 +47,7 @@ from metatensor.torch.learn.nn import EquivariantLinear
 from sklearn.linear_model import RidgeCV
 
 
-# torch.set_default_dtype(torch.float64)  # FIXME: This is a temporary fix
+torch.set_default_dtype(torch.float64)  # FIXME: This is a temporary fix
 
 # %%
 # Polarizability tensor
