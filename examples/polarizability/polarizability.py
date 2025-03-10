@@ -52,12 +52,11 @@ torch.set_default_dtype(torch.float64)  # FIXME: This is a temporary fix
 # %%
 # Polarizability tensor
 # ---------------------
-# The polarizability tensor is a second-rank Cartesian tensor that describes the
-# response of a molecule to an external electric field. It is a symmetric and it can be
-# decomposed into irreducible spherical components. Due to its symmetry, only the
-# components with :math:`\lambda=0` and :math:`\lambda=2` are non-zero. The
-# :math:`\lambda=0` component is a scalar, while the :math:`\lambda=2` component is a
-# symmetric traceless matrix
+# The polarizability tensor describes the response of a molecule to an external electric
+# field. It is a rank-2 symmetric tensor and it can be decomposed into irreducible
+# spherical components. Due to its symmetry, only the components with :math:`\lambda=0`
+# and :math:`\lambda=2` are non-zero. The :math:`\lambda=0` component is a scalar, while
+# the :math:`\lambda=2` component is a symmetric traceless matrix
 
 # %%
 # Equivariant model for polarizability
@@ -79,8 +78,8 @@ train_idx = np.random.choice(n_frames, int(0.8 * n_frames), replace=False)
 test_idx = np.setdiff1d(np.arange(n_frames), train_idx)
 
 # %%
-# Extract the polarizability tensors
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# Read the polarizability tensors and store them in a :class:`TensorMap`
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 # We extract the polarizability tensors from the extended XYZ file and store them in a
 # :class:`metatensor.torch.TensorMap`. The polarizability tensors are stored as
 # Cartesian tensors. We also convert the Cartesian tensors to irreducible spherical
@@ -457,7 +456,6 @@ prediction_test = model(systems_test, outputs)
 # %%
 # Let us plot the predicted polarizability tensor against the true polarizability tensor
 # for the test set.
-# true_polarizability = cartesian_tensormap_test[0].values.flatten().numpy()
 
 true_polarizability = np.concatenate(
     [
