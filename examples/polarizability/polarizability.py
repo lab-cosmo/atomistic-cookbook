@@ -47,7 +47,7 @@ from metatensor.torch.learn.nn import EquivariantLinear
 from sklearn.linear_model import RidgeCV
 
 
-torch.set_default_dtype(torch.float64)  # FIXME: This is a temporary fix
+# torch.set_default_dtype(torch.float64)  # FIXME: This is a temporary fix
 
 # %%
 # Polarizability tensor
@@ -112,7 +112,6 @@ spherical_tensormap = mts.remove_dimension(
 # labeled by the irreducible spherical components as keys.
 
 print(spherical_tensormap.keys)
-
 # %%
 # Split the dataset
 # ^^^^^^^^^^^^^^^^^
@@ -267,7 +266,6 @@ class PolarizabilityModel(torch.nn.Module):
         self,
         spex_calculator: SphericalExpansion,
         atomic_types: List[int],
-        alphas: Union[float, List[float], np.ndarray, torch.Tensor] = None,
         dtype: torch.dtype = None,
     ) -> None:
 
@@ -308,7 +306,7 @@ class PolarizabilityModel(torch.nn.Module):
             device=device,
         )
 
-    def fit(self, training_systems, training_targets, alphas):
+    def fit(self, training_systems, training_targets, alphas=None):
 
         lambda_soap = self._compute_descriptor(training_systems)
 
@@ -350,7 +348,9 @@ class PolarizabilityModel(torch.nn.Module):
     def _compute_descriptor(self, systems: List[System]) -> TensorMap:
         # Actually compute lambda-SOAP power spectrum
         lambda_soap = self.lambda_soap_calculator(
-            systems, selected_keys=self.selected_keys, neighbors_to_properties=True
+            systems,
+            selected_keys=self.selected_keys,
+            neighbors_to_properties=True,
         )
 
         # Move the `center_type` keys to the sample dimension
@@ -430,6 +430,7 @@ systems_train = [
 model = PolarizabilityModel(
     spherical_expansion_calculator,
     atomic_types,
+    dtype=torch.float64,
 )
 
 alphas = np.logspace(-6, 6, 50)
@@ -515,6 +516,8 @@ atomistic_model = MetatensorAtomisticModel(
     model.eval(), ModelMetadata(), model_capabilities
 )
 
+# %%
+atomistic_model._model_dtype
 
 # %%
 # Save the model
