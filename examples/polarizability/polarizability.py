@@ -81,7 +81,7 @@ ellipsoids = chemiscope.ase_tensors_to_ellipsoids(
     ase_frames, "polarizability", scale=0.15
 )
 ellipsoids["parameters"]["global"]["color"] = "#FF8800"
-chemiscope.show(
+cs = chemiscope.show(
     ase_frames,
     shapes={"alpha": ellipsoids},
     mode="structure",
@@ -89,7 +89,7 @@ chemiscope.show(
         structure_settings={"shape": ["alpha"]}, trajectory=True
     ),
 )
-
+cs
 
 # %%
 # Read the polarizability tensors and store them in a :class:`TensorMap`
@@ -177,7 +177,7 @@ cartesian_tensormap_test = mts.slice(
 
 # %%
 # The first utility function takes the :math:`\lambda=2` spherical components and
-# reconstructs the :math:`3 \times 3`` symmetric traceless matrix.
+# reconstructs the :math:`3 \times 3` symmetric traceless matrix.
 
 
 def matrix_from_l2_components(l2: torch.Tensor) -> torch.Tensor:
@@ -297,8 +297,7 @@ def spherical_to_cartesian(spherical_tensor: TensorMap) -> TensorMap:
 # with ``TorchScript``.
 #
 # Here, the :class:`PolarizabilityModel` class is defined. It takes as input a
-# ``SphericalExpansion`` object, a list of atomic types, a list of training systems, a
-# dictionary of training targets, and a list of alphas for the ridge regression. The
+# ``SphericalExpansion`` object, a list of atomic types, and ``dtype``. The
 # ``forward`` method computes the descriptors and applies the linear model to predict
 # the polarizability tensor.
 
@@ -436,8 +435,7 @@ class PolarizabilityModel(torch.nn.Module):
 # ------------------------------
 # We train the polarizability model using the training data. We need to define the
 # hyperparameters for the :class:`featomic.torch.SphericalExpansion` calculator and the
-# atomic types in the dataset. The model is then trained using the training systems and
-# the target polarizability tensors.
+# atomic types in the dataset to initialize the module.
 
 hypers = {
     "cutoff": {"radius": 4.5, "smoothing": {"type": "ShiftedCosine", "width": 0.1}},
@@ -457,15 +455,9 @@ spherical_expansion_calculator = SphericalExpansion(**hypers)
 # %%
 # Convert ASE frames to :class:`metatensor.atomistic.System` objects.
 
-systems_train = [
-    system.to(dtype=torch.float64)
-    for system in systems_to_torch([ase_frames[i] for i in train_idx])
-]
 
 # %%
-# Instantiate the polarizability model. The ridge regression is performed as
-# with a scikit-learn-style `fit` method, and the weights are then used as
-# weights of the :class:`metatensor.learn.nn.EquivariantLinear` model.
+# Instantiate the polarizability model.
 
 model = PolarizabilityModel(
     spherical_expansion_calculator,
@@ -473,7 +465,22 @@ model = PolarizabilityModel(
     dtype=torch.float64,
 )
 
+# %%
+# The ridge regression is performed as with a ``scikit-learn``-style `fit` method, and
+# the resulting weights are then used to initialize a
+# :class:`metatensor.learn.nn.EquivariantLinear` module.
+# The :func:`PolariabilityModel.fit` method takes the training systems in
+# :class:`metatensor.torch.atomistic.System` format and the training target
+# :class:`metatensor.torch.TensorMap` as input. The `alphas` parameter is used to
+# specify the range of regularization parameters to be tested.
+
+
+systems_train = [
+    system.to(dtype=torch.float64)
+    for system in systems_to_torch([ase_frames[i] for i in train_idx])
+]
 alphas = np.logspace(-6, 6, 50)
+
 model.fit(systems_train, spherical_tensormap_train, alphas=alphas)
 
 # %%
@@ -567,7 +574,7 @@ atomistic_model.save("polarizability_model.pt", collect_extensions="extensions")
 
 # %%
 # Use the model as a metatensor calculator
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 # The model can be used as a calculator with the
 # :class:`metatensor.torch.atomistic.MetatensorCalculator` class.
 
@@ -579,8 +586,13 @@ mta_calculator = MetatensorCalculator(atomistic_model)
 ase_frames = ase.io.read("data/qm7x_reduced_100.xyz", index=":")
 
 # %%
-# compute the polarizabilities and extracts them from the TensorMap
-# output as a numpy array
+# :class:`ase.Atoms` objects do not feature a :func:`get_polarizability` method that we
+# could call to compute the polarizability with our model. The easiest way to compute
+# the polarizability is then to directly use the :func:`MetatensorCalculator.run_model`
+# method, which takes a list of :class:`ase.Atoms` objects and a dictionary of
+# :class:`metatenor.torch.atomistic.ModelOutput` objects as input. The output is a
+# dictionary of :class:`metatensor.torch.TensorMap` objects.
+
 computed_polarizabilities = []
 for frame in ase_frames:
     computed_polarizabilities.append(
