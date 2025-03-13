@@ -7,11 +7,11 @@ The Atomistic Cookbook
    :width: 50%
 
 
-This repository contains the source code for the Atomistic Cookbook,
-a collection of software recipes to perform computer simulations of
-matter at the atomic scale. The content of the cookbook
-is automatically compiled and deployed as a GitHub pages site,
-accessible at https://atomistic-cookbook.org
+This repository contains the source code for a collection of software recipes,
+that combine a multitude of libraries and modeling tools to perform computer
+simulations of matter at the atomic scale. It also contains the infratructure to
+automatically compile and deploy the recipes as a GitHub pages site,
+accessible at `atomistic-cookbook.org <https://atomistic-cookbook.org>`_.
 
 You usually don't need to clone the whole repository if you want to try
 a recipe: the files needed to execute one, as well as the environment
