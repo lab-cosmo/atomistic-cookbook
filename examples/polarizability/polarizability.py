@@ -590,7 +590,7 @@ ase_frames = ase.io.read("data/qm7x_reduced_100.xyz", index=":")
 # could call to compute the polarizability with our model. The easiest way to compute
 # the polarizability is then to directly use the :func:`MetatensorCalculator.run_model`
 # method, which takes a list of :class:`ase.Atoms` objects and a dictionary of
-# :class:`metatenor.torch.atomistic.ModelOutput` objects as input. The output is a
+# :class:`metatensor.torch.atomistic.ModelOutput` objects as input. The output is a
 # dictionary of :class:`metatensor.torch.TensorMap` objects.
 
 computed_polarizabilities = []
