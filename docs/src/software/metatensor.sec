@@ -10,3 +10,4 @@ simulation packages and ``metatrain`` a set of tools to facilitate
 training and evaluating ML models.
 
 - examples/water-model/water-model
+- examples/polarizability/polarizability
