@@ -16,6 +16,7 @@ The model can then be used in an ASE calculator.
 from typing import Dict, List, Optional
 
 import ase.io
+import chemiscope
 
 # Simulation and visualization tools
 import matplotlib.pyplot as plt
@@ -49,42 +50,54 @@ from sklearn.linear_model import RidgeCV
 
 torch.set_default_dtype(torch.float64)  # FIXME: This is a temporary fix
 
+if hasattr(__import__("builtins"), "get_ipython"):
+    get_ipython().run_line_magic("matplotlib", "inline")  # noqa: F821
+
 # %%
 # Polarizability tensor
 # ---------------------
 # The polarizability tensor describes the response of a molecule to an external electric
-# field. It is a rank-2 symmetric tensor and it can be decomposed into irreducible
+# field.
+#
+# .. math::
+#
+#    \alpha_{ij} = \frac{\partial^2 U}{\partial E_i \partial E_j}
+#
+# It is a rank-2 symmetric tensor and it can be decomposed into irreducible
 # spherical components. Due to its symmetry, only the components with :math:`\lambda=0`
 # and :math:`\lambda=2` are non-zero. The :math:`\lambda=0` component is a scalar, while
-# the :math:`\lambda=2` component is a symmetric traceless matrix
-
-# %%
-# Equivariant model for polarizability
-# ------------------------------------
-# The polarizability tensor can be predicted using equivariant linear models. In this
-# example, we use the ``featomic`` library to compute equivariant :math:`\lambda`-SOAP
-# descriptors and ``scikit-learn`` to train a linear ridge regression model.
+# the :math:`\lambda=2` component corresponds to a symmetric traceless matrix
 
 # %%
 # Load the training data
 # ^^^^^^^^^^^^^^^^^^^^^^
-# We load a simple dataset of C5NH7 molecules and their polarizability tensors stored in
-# extended XYZ format. The dataset is split into training and test sets using a 80/20
-# ratio.
+# We load a simple dataset of :math:`\mathrm{C}_5\mathrm{NH}_7` molecules and
+# their polarizability tensors stored in extended XYZ format.
+# We also visualize the polarizability as ellipsoids to demonstrate the
+# anisotropy of this molecular property.
 
 ase_frames = ase.io.read("data/qm7x_reduced_100.xyz", index=":")
-n_frames = len(ase_frames)
-train_idx = np.random.choice(n_frames, int(0.8 * n_frames), replace=False)
-test_idx = np.setdiff1d(np.arange(n_frames), train_idx)
+
+ellipsoids = chemiscope.ase_tensors_to_ellipsoids(
+    ase_frames, "polarizability", scale=0.15
+)
+ellipsoids["parameters"]["global"]["color"] = "#FF8800"
+chemiscope.show(
+    ase_frames,
+    shapes={"alpha": ellipsoids},
+    mode="structure",
+    settings=chemiscope.quick_settings(
+        structure_settings={"shape": ["alpha"]}, trajectory=True
+    ),
+)
+
 
 # %%
 # Read the polarizability tensors and store them in a :class:`TensorMap`
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 # We extract the polarizability tensors from the extended XYZ file and store them in a
 # :class:`metatensor.torch.TensorMap`. The polarizability tensors are stored as
-# Cartesian tensors. We also convert the Cartesian tensors to irreducible spherical
-# tensors using the :func:`featomic.torch.clebsch_gordan.cartesian_to_spherical`
-# function.
+# Cartesian tensors.
 
 cartesian_polarizability = np.stack(
     [frame.info["polarizability"].reshape(3, 3) for frame in ase_frames]
@@ -100,23 +113,41 @@ cartesian_tensormap = TensorMap(
         )
     ],
 )
+
+print(cartesian_tensormap)
+print(cartesian_tensormap.block(0))
+
+# %%
+# We also convert the Cartesian tensors to irreducible spherical
+# tensors using the
+# :func:`featomic.torch.clebsch_gordan.cartesian_to_spherical`
+# function. Now the polarizability is stored in a
+# :class:`metatensor.torch.TensorMap` object
+# that contains two :class:`metatensor.torch.TensorBlock` labeled by
+# the irreducible spherical components as keys.
+
 spherical_tensormap = mts.remove_dimension(
     cartesian_to_spherical(cartesian_tensormap, components=["xyz_1", "xyz_2"]),
     "keys",
     "_",
 )
 
-# %%
-# Now the polarizability is stored in a :class:`metatensor.torch.TensorMap` object
-# labeled by the irreducible spherical components as keys.
+print(spherical_tensormap)
+print(spherical_tensormap.block(0))
+print(spherical_tensormap.block(1))
 
-print(spherical_tensormap.keys)
+
 # %%
 # Split the dataset
 # ^^^^^^^^^^^^^^^^^
-# We split the dataset into training and test sets according to the indices previously
+# The dataset is split into training and test sets using a 80/20
+# ratio. We also visualize the polarizability as ellipsoids to e
+# into training and test sets according to the indices previously
 # defined.
 
+n_frames = len(ase_frames)
+train_idx = np.random.choice(n_frames, int(0.8 * n_frames), replace=False)
+test_idx = np.setdiff1d(np.arange(n_frames), train_idx)
 spherical_tensormap_train = mts.slice(
     spherical_tensormap,
     "samples",
@@ -127,6 +158,17 @@ cartesian_tensormap_test = mts.slice(
     "samples",
     Labels("system", torch.from_numpy(test_idx).reshape(-1, 1)),
 )
+
+
+# %%
+# Equivariant model for polarizability
+# ------------------------------------
+# The polarizability tensor can be predicted using equivariant linear models. In this
+# example, we use the ``featomic`` library to compute equivariant :math:`\lambda`-SOAP
+# descriptors, adapted to the symmetry of the irreducible components of
+# :math:`\boldsymbol{\alpha}` and ``scikit-learn`` to train a symmetry-adapted
+# linear ridge regression model.
+
 
 # %%
 # Utility functions
@@ -236,9 +278,11 @@ def spherical_to_cartesian(spherical_tensor: TensorMap) -> TensorMap:
                     ),
                 ],
                 properties=Labels(["_"], torch.tensor([[0]], dtype=torch.int32)),
-                values=torch.stack([new_block[A] for A in new_block])
-                .roll((-1, -1), dims=(1, 2))
-                .unsqueeze(-1),
+                values=torch.stack(
+                    [new_block[A] for A in new_block]
+                ).unsqueeze(  # .roll((-1, -1), dims=(1, 2))
+                    -1
+                ),
             )
         ],
     )
@@ -338,9 +382,7 @@ class PolarizabilityModel(torch.nn.Module):
     def _apply_weights(self, ridges: List[RidgeCV]) -> None:
         with torch.no_grad():
             for model, ridge in zip(self.linear_model.module_map, ridges):
-                model.weight.copy_(
-                    torch.tensor(ridge.coef_, dtype=self.dtype).unsqueeze(0)
-                )
+                model.weight.copy_(torch.tensor(ridge.coef_, dtype=self.dtype))
                 if model.bias is not None:
                     model.bias.copy_(torch.tensor(ridge.intercept_, dtype=self.dtype))
 
@@ -423,8 +465,8 @@ systems_train = [
 
 # %%
 # Instantiate the polarizability model. The ridge regression is performed as
-# initialization of the linear model, and the weights are then used as weights of the
-# :class:`metatensor.learn.nn.EquivariantLinear` model.
+# with a scikit-learn-style `fit` method, and the weights are then used as
+# weights of the :class:`metatensor.learn.nn.EquivariantLinear` model.
 
 model = PolarizabilityModel(
     spherical_expansion_calculator,
@@ -474,7 +516,7 @@ predicted_polarizability = np.concatenate(
     ]
 )
 
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
 ax.set_aspect("equal")
 ax.plot(true_polarizability, predicted_polarizability, ".")
 ax.plot(
@@ -488,7 +530,10 @@ ax.set_title("Polarizability prediction")
 plt.show()
 
 # %%
-# Wrap the model in a :class:`metatensor.torch.atomistic.MetatensorAtomisticModel`
+# Export the model as a metatomic model
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# Wrap the model in a
+# :class:`metatensor.torch.atomistic.MetatensorAtomisticModel`
 # object.
 
 outputs = {
@@ -514,21 +559,17 @@ atomistic_model = MetatensorAtomisticModel(
     model.eval(), ModelMetadata(), model_capabilities
 )
 
-# %%
-atomistic_model._model_dtype
 
 # %%
-# Save the model
-# ^^^^^^^^^^^^^^
 # The model can be saved to disk using the
 # :func:`metatensor.torch.atomistic.save_atomistic_model` function.
 #
 atomistic_model.save("polarizability_model.pt", collect_extensions="extensions")
 
 # %%
-# Use the model as an ASE calculator
+# Use the model as a metatensor calculator
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-# The model can be used as an ASE calculator with the
+# The model can be used as a calculator with the
 # :class:`metatensor.torch.atomistic.MetatensorCalculator` class.
 
 atomistic_model = load_atomistic_model(
@@ -538,18 +579,32 @@ mta_calculator = MetatensorCalculator(atomistic_model)
 
 ase_frames = ase.io.read("data/qm7x_reduced_100.xyz", index=":")
 
+# %%
+# compute the polarizabilities and extracts them from the TensorMap
+# output as a numpy array
 computed_polarizabilities = []
 for frame in ase_frames:
     computed_polarizabilities.append(
         mta_calculator.run_model(frame, outputs)["cookbook::polarizability"]
+        .block(0)
+        .values.squeeze()
+        .numpy()
     )
+computed_polarizabilities = np.stack(computed_polarizabilities)
 
 # %%
-atomistic_model = load_atomistic_model(
-    "polarizability_model.pt", extensions_directory="extensions"
+# This is essentially the same model as before, wrapped in a stand-alone format
+
+train_mae = np.abs(
+    (cartesian_polarizability - computed_polarizabilities)[train_idx]
+).mean()
+test_mae = np.abs(
+    (cartesian_polarizability - computed_polarizabilities)[test_idx]
+).mean()
+
+print(
+    f"""
+Model train MAE: {train_mae} a.u.
+Model test MAE:  {test_mae} a.u.
+"""
 )
-mta_calculator = MetatensorCalculator(atomistic_model)
-
-# %%
-mta_calculator.run_model(frame, outputs)
-# %%
