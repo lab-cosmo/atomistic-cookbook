@@ -19,3 +19,4 @@ repository <https://github.com/lab-cosmo/chemiscope>`_.
 - examples/thermostats/thermostats
 - examples/pi-mts-rpc/mts-rpc
 - examples/water-model/water-model
+- examples/polarizability/polarizability
