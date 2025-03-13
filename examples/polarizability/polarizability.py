@@ -11,7 +11,6 @@ equivariant descriptors, and ``scikit-learn`` to train a linear regression model
 The model can then be used in an ASE calculator.
 """
 
-# sphinx_gallery_thumbnail_number = 3
 # %%
 from typing import Dict, List, Optional
 
