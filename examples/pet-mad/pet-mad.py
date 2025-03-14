@@ -4,14 +4,19 @@ PET-MAD Example
 
 :Authors: Philip Loche `@PicoCentauri <https://github.com/picocentauri>`_,
 
-This example demonstrates how to use the PET-MAD model with ASE and LAMMPS. We will
-first create a Si crystal and then calculate the energy and forces using the PET-MAD
+This example demonstrates how to use the PET-MAD model with ASE,
+`i-PI <https://ipi-code.org>` and `LAMMPS <https://lammps.org>`_. 
+PET-MAD is a "universal" machine-learning forcefield trained on 
+a dataset that aims to incorporate a very high degree of 
+structural diversity.
+
+We will first create a Si crystal and then calculate the energy and forces using the PET-MAD
 model in ASE. Finally, we will run a molecular dynamics simulation using ASE and LAMMPS.
 """
 
 # %%
 #
-# We start by importing the required libraries.
+# Start by importing the required libraries.
 
 import subprocess
 
@@ -22,17 +27,6 @@ from ase.build import bulk
 from ase.md.langevin import Langevin
 from metatensor.torch.atomistic.ase_calculator import MetatensorCalculator
 from metatrain.utils.io import load_model
-
-
-# %%
-#
-# Initialize the system
-# ^^^^^^^^^^^^^^^^^^^^^
-#
-# Create silicon crystal and rattle structures slightly to create non zero forces.
-
-atoms = bulk("Si", cubic=True, a=5.43, crystalstructure="diamond")
-atoms.rattle(stdev=0.1)
 
 # %%
 #
@@ -47,6 +41,18 @@ mad_huggingface = (
     "https://huggingface.co/lab-cosmo/pet-mad/resolve/main/models/pet-mad-latest.ckpt"
 )
 model = load_model(mad_huggingface).export()
+
+
+# %%
+#
+# Initialize the system
+# ^^^^^^^^^^^^^^^^^^^^^
+#
+# Create silicon crystal and rattle structures slightly to create non zero forces.
+
+atoms = bulk("Si", cubic=True, a=5.43, crystalstructure="diamond")
+atoms.rattle(stdev=0.1)
+
 
 # %%
 #
@@ -78,6 +84,7 @@ print(f"Energy is {energy} eV")
 
 forces = atoms.get_forces()
 print(f"Force on first atom is {forces[0]} eV/Å")
+
 # %%
 #
 # Molecular dynamics with ``ASE``
@@ -164,7 +171,7 @@ model.save("pet-mad-latest.pt", collect_extensions="extensions")
 
 ase.io.write("silicon.data", atoms, format="lammps-data", masses=True)
 
-subprocess.check_call(["lmp_serial", "-in", "data/pet-mad-si.in"])
+# subprocess.check_call(["lmp_serial", "-in", "data/pet-mad-si.in"])
 
 
 # %%
