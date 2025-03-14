@@ -1,5 +1,6 @@
-PET-MAD tutorials
-=================
+PET-MAD tutorial
+================
 
-An example of using and fine-tuning the PET-MAD universal 
-machine-learning potential.
+An example of using the PET-MAD universal machine-learning potential with ASE and
+LAMMPS. 
+
