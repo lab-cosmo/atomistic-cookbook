@@ -1,0 +1,12 @@
+channels:
+  - metatensor
+  - conda-forge
+dependencies:
+  - python=3.13
+  - lammps-metatensor=*=cpu*nompi*
+  - pip
+  - pip:
+    - ase
+    - metatrain[pet]
+    - matplotlib
+
