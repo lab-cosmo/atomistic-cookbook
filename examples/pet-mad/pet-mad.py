@@ -10,8 +10,7 @@ PET-MAD is a "universal" machine-learning forcefield trained on
 a dataset that aims to incorporate a very high degree of 
 structural diversity.
 
-We will first create a Si crystal and then calculate the energy and forces using the PET-MAD
-model in ASE. Finally, we will run a molecular dynamics simulation using ASE and LAMMPS.
+*SHORT OVERVIEW OF PET AND MAD HERE, LINK TO THE ARXIV WHEN AVAILABLE*
 """
 
 # %%
@@ -19,23 +18,30 @@ model in ASE. Finally, we will run a molecular dynamics simulation using ASE and
 # Start by importing the required libraries.
 
 import subprocess
+from copy import deepcopy, copy
 
 import ase.units
 import chemiscope
 import numpy as np
-from ase.build import bulk
-from ase.md.langevin import Langevin
+import matplotlib.pyplot as plt
+
+from ase.optimize import LBFGS
 from metatensor.torch.atomistic.ase_calculator import MetatensorCalculator
 from metatrain.utils.io import load_model
+
+if hasattr(__import__("builtins"), "get_ipython"):
+    get_ipython().run_line_magic("matplotlib", "inline")  # noqa: F821
+
 
 # %%
 #
 # Load the model
 # ^^^^^^^^^^^^^^
 #
-# To start the simulation we first have to load the model. We will use the latest
-# version of the PET-MAD model from the Huggingface model hub and export to be able to
-# make inference with it.
+# To start using PET-MAD, we first have to load the model. We will use the latest
+# version of the model. PET-MAD is distributed as a check-point file, that
+# allows re-training and fine-tuning, and needs to be *exported* to be used in 
+# calculators and to make inference.
 
 mad_huggingface = (
     "https://huggingface.co/lab-cosmo/pet-mad/resolve/main/models/pet-mad-latest.ckpt"
@@ -44,52 +50,181 @@ model = load_model(mad_huggingface).export()
 
 
 # %%
-#
-# Initialize the system
-# ^^^^^^^^^^^^^^^^^^^^^
-#
-# Create silicon crystal and rattle structures slightly to create non zero forces.
+# The model can also be downloaded separately, and loaded
+# from disk by providing the path to the :py:func:`load_model
+# <metatensor.utils.io.load_model>` function.
 
-atoms = bulk("Si", cubic=True, a=5.43, crystalstructure="diamond")
-atoms.rattle(stdev=0.1)
+# %%
+# Inference on the MAD test set
+# =============================
+# 
+# We begin by using the ``ase``-compatible calculator to evaluate
+# energy and forces for a test dataset that contains both hold-out
+# structures from the MAD dataset, and a few structures from popular
+# datasets (MPtrj, Alexandria, OC2020, SPICE, MD22) re-computed with 
+# consistent DFT settings.
+#
+# Load the dataset
+# ^^^^^^^^^^^^^^^^
+#
+# We fetch the dataset, and load only some of the structures, to 
+# speed up the example runtime on CPU. The model can also run (much faster)
+# on GPUs if you have some at hand. 
+
+# TODO: FETCH THESE ONLINE AND REMOVE THE FILE FROM THE REPO
+test_structures = ase.io.read('data/mad-test_1.0.xyz', "::8")
+
+# also extract reference energetics and metadata
+test_energy = []
+test_forces = []
+test_natoms = []
+test_origin = []
+subsets = []
+for s in test_structures:
+    test_energy.append(s.get_potential_energy())
+    test_natoms.append(len(s))
+    test_forces.append(s.get_forces())
+    test_origin.append(s.info["origin"])
+    if not s.info["origin"] in subsets:
+        subsets.append(s.info["origin"])
+test_natoms = np.array(test_natoms)    
+test_origin = np.array(test_origin)    
+test_energy = np.array(test_energy)
+test_forces = np.array(test_forces, dtype=object)
 
 
 # %%
 #
-# To speed the loading process we can also download the model by yourself and load it
-# from disk by providing the path to the :py:func:`load_model
-# <metatensor.utils.io.load_model>` function.
-#
 # Single point energy and forces
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# PET-MAD is compatible with the metatensor atomistic model interface which allows us to
+# PET-MAD is compatible with the metatomic interface which allows us to
 # run it with ASE and many other MD engines. For more details see the `metatensor
 # documentation
 # <https://docs.metatensor.org/latest/atomistic/engines/index.html#atomistic-models-engines>`_.
 #
-# We now wrap model in ASE compatible calculator and calculate energy and forces.
+# We now wrap model in an ASE compatible calculator and calculate energy and forces.
 
 calculator = MetatensorCalculator(model, device="cpu")
 
 # %%
 #
-# Here, we run the computation on the CPU.. If you have a CUDA GPU you can also set
+# Here, we run the computation on the CPU. If you have a CUDA GPU you can also set
 # ``device="cuda"`` to speed up the computation.
 
-atoms.set_calculator(calculator)
+mad_energy = []
+mad_forces = []
+mad_structures = []
+for structure in test_structures:
+    tmp = deepcopy(structure)
+    tmp.calc = copy(calculator) # avoids ovewriting results. thanks ase 3.23!
+    mad_energy.append(tmp.get_potential_energy())
+    mad_forces.append(tmp.get_forces())
+    mad_structures.append(tmp)
 
-energy = atoms.get_potential_energy()
-print(f"Energy is {energy} eV")
+mad_energy = np.array(mad_energy)
+mad_forces = np.array(mad_forces, dtype=object)
 
-forces = atoms.get_forces()
-print(f"Force on first atom is {forces[0]} eV/Å")
+
+# %%
+aa = chemiscope.ase_vectors_to_arrows(mad_structures, "forces", scale=1.0)
+len(aa['parameters']['atom'])
+
+# %%
+# A parity plot with the model predictions
+
+tab10 = plt.get_cmap("tab10")
+fig, ax = plt.subplots(1,2,figsize=(6,3), constrained_layout=True)
+for i, sub in enumerate(subsets):
+    sel = np.where(test_origin==sub)[0]
+    ax[0].plot(
+    mad_energy[sel]/test_natoms[sel], 
+    test_energy[sel]/test_natoms[sel], 
+    '.', c=tab10(i), label=sub)
+    ax[1].plot(
+    np.concatenate(
+        mad_forces[sel]
+    ).flatten(), 
+    np.concatenate(
+    test_forces[sel]
+    ).flatten(),
+    '.', c=tab10(i))
+ax[0].set_xlabel("MAD energy / eV/at.")
+ax[0].set_ylabel("Ref. energy / eV/at.")
+ax[1].set_xlabel("MAD forces / eV/Å")
+ax[1].set_ylabel("Ref. forces / eV/Å")
+fig.legend(loc="upper center", bbox_to_anchor=(0.55, 1.20),ncol=3)
+
+
+# %%
+# Explore the dataset using 
+# `chemiscope <http://chemiscope.org>`_
+
+chemiscope.show(test_structures, mode="default", 
+properties={
+'origin' : test_origin,
+'energy_ref': test_energy/test_natoms,
+'energy_mad': mad_energy/test_natoms,
+'energy_error': np.abs((test_energy-mad_energy)/test_natoms),
+'force_error': [np.linalg.norm(f1-f2)/n for (f1,f2,n) in zip(mad_forces,test_forces,test_natoms) ],
+},
+shapes={
+    'forces_ref': chemiscope.ase_vectors_to_arrows(mad_structures, "forces", scale=1.0),
+    'forces_mad': chemiscope.ase_vectors_to_arrows(test_structures, "forces", scale=1.0)
+    },
+settings=chemiscope.quick_settings(
+    x='energy_mad',
+    y='energy_ref',
+    symbol='origin',
+    structure_settings={'unitCell':True, 'shape':['forces_ref']})
+    )
+
+# %%
+# Uncertainty estimation
+# ^^^^^^^^^^^^^^^^^^^^^^
+# 
+# TODO - Filippo pls add something here
+
+# %%
+# Simulating a complex surface 
+# ============================
+# 
+# PET-MAD is designed to be robust and stable when executing sophisticated
+# modeling workflows. As an example, we consider a slab of an Al-6xxx alloy
+# (aluminum with a few percent Mg and Si) with some oxygen molecules adsorbed 
+# (111) surface. 
+
+al_surface = ase.io.read("data/al6xxx-o2.xyz", "0")
 
 # %%
 #
-# Molecular dynamics with ``ASE``
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# Geometry optimization with ``ASE``
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
+
+class LBFGSLogger(LBFGS):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._traj_atoms = []
+        self._traj_energy = []
+
+    def step(self, *args, **kwargs):
+        super().step(*args, **kwargs)  # Call original step function
+        
+        self._traj_atoms.append(self.atoms.copy())
+        self._traj_energy.append(self.atoms.get_potential_energy())
+
+
+atoms = al_surface.copy()
+atoms.calc = calculator
+
+opt = LBFGSLogger(atoms)
+opt.run(fmax=0.001, steps=40)
+
+# %%
+plt.plot(opt._traj_energy)
+chemiscope.show(frames=opt._traj_atoms, mode="structure")
+# %%
 # We run Langevin molecular dynamics simulation with ASE. The system is being simulated
 # at 310 Kelvin with a timestep of 0.5 femtoseconds and for 200 steps (total simulation
 # time of 100 femtoseconds).
