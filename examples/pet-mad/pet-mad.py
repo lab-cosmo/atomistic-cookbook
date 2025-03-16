@@ -81,7 +81,7 @@ model = load_model(mad_huggingface).export()
 # on GPUs if you have some at hand.
 
 # TODO: FETCH THESE ONLINE AND REMOVE THE FILE FROM THE REPO
-test_structures = ase.io.read("data/mad-test_1.0.xyz", "::8")
+test_structures = ase.io.read("data/mad-test_1.0.xyz", "::16")
 
 # also extract reference energetics and metadata
 test_energy = []
@@ -273,9 +273,9 @@ chemiscope.show(
 
 # %%
 #
-# To run the model with LAMMPS we first have to save the model to disk
-
-model.save("pet-mad-latest.pt", collect_extensions="extensions")
+# To run the model with external codes, it can/should be saved
+# to disk. The libraries needed to run it are collected in
+# a folder (called by default ``extensions``).
 
 model.save("pet-mad-latest.pt", collect_extensions="extensions")
 
@@ -322,6 +322,16 @@ print(input_xml)
 
 sim = InteractiveSimulation(input_xml)
 sim.run(100)
+
+# %%
+str = sim.get_structures()
+str.cell
+
+#
+import ase
+
+
+str.cell.standard_form()
 
 # %%
 #
