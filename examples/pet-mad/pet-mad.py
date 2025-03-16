@@ -324,16 +324,6 @@ sim = InteractiveSimulation(input_xml)
 sim.run(100)
 
 # %%
-str = sim.get_structures()
-str.cell
-
-#
-import ase
-
-
-str.cell.standard_form()
-
-# %%
 #
 # The simulation generates output files that can be
 # parsed and visualized from Python.
