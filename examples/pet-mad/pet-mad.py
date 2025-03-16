@@ -25,6 +25,15 @@ import chemiscope
 import matplotlib.pyplot as plt
 import numpy as np
 from ase.optimize import LBFGS
+
+# i-PI scripting utilities
+from ipi.utils.parsing import read_output, read_trajectory
+from ipi.utils.scripting import (
+    InteractiveSimulation,
+    forcefield_xml,
+    motion_nvt_xml,
+    simulation_xml,
+)
 from metatensor.torch.atomistic.ase_calculator import MetatensorCalculator
 from metatrain.utils.io import load_model
 
@@ -246,6 +255,114 @@ chemiscope.show(
     settings=chemiscope.quick_settings(trajectory=True),
 )
 
+# %%
+#
+# Molecular dynamics with atoms exchange with ``i-PI``
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# The geometry optimization shows the high reactivity of
+# this surface, but does not properly account for finite
+# temperature and does not sample the diffusion of solute
+# atoms in the alloy (which is mediated by vacancies).
+#
+# We use `i-PI <http://ipi-code.org>`_ to perform a
+# molecular dynamics trajectory at 800K, combined with
+# Monte Carlo steps that swap the nature of atoms, allowing
+# to reach equilibrium in the solute-atoms distributions
+# without having to introduce vacancies or wait for the
+# very long time scale needed for diffusion.
+
+# %%
+#
+# To run the model with LAMMPS we first have to save the model to disk
+
+model.save("pet-mad-latest.pt", collect_extensions="extensions")
+
+model.save("pet-mad-latest.pt", collect_extensions="extensions")
+
+# %%
+# The behavior of i-PI is controlled by an XML input file.
+# The ``utils.scripting`` module contains several helper
+# functions to generate the basic components.
+#
+# Here we use a ``<motion mode="multi">`` block to combine
+# a MD run with a ``<motion mode="atomswap">`` block that
+# attemts swapping atoms, with a Monte Carlo acceptance.
+
+motion_xml = f"""
+<motion mode="multi">
+    {motion_nvt_xml(timestep=5.0*ase.units.fs)}
+    <motion mode="atomswap">
+        <atomswap>
+            <names> [ Al, Si, Mg, O]  </names>
+        </atomswap>
+    </motion>
+</motion>
+"""
+
+input_xml = simulation_xml(
+    structures=[al_surface],
+    forcefield=forcefield_xml(
+        name="pet-mad",
+        mode="direct",
+        pes="metatensor",
+        parameters={"model": "pet-mad-latest.pt", "template": "data/al6xxx-o2.xyz"},
+    ),
+    motion=motion_xml,
+    temperature=800,
+    prefix="nvt_atomxc",
+)
+
+print(input_xml)
+
+# %%
+# The simulation can be run from a Python script
+# or the command line. By changing the forcefield interface
+# from ``direct`` to the use of a socket, it is also possible
+# to execute separately ``i-PI`` and the ``metatensor`` driver.
+
+sim = InteractiveSimulation(input_xml)
+sim.run(100)
+
+# %%
+#
+# The simulation generates output files that can be
+# parsed and visualized from Python.
+
+data, info = read_output("nvt_atomxc.out")
+trj = read_trajectory("nvt_atomxc.pos_0.xyz")
+
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+
+ax.plot(data["time"], data["potential"], "b-", label="potential")
+ax.plot(data["time"], data["conserved"] - 4, "k-", label="conserved")
+ax.set_xlabel("t / ps")
+ax.set_ylabel("energy / ev")
+ax.legend()
+
+# %%
+# The trajectory (which is started from oxygen molecules placed on
+# top of the surface) shows quick relaxation to an oxide layer.
+# If you look carefully, you'll also see that Mg and Si atoms tend
+# to cluster together, and accumulate at the surface.
+
+chemiscope.show(
+    frames=trj,
+    properties={
+        "time": data["time"][::10],
+        "potential": data["potential"][::10],
+    },
+    mode="default",
+    settings=chemiscope.quick_settings(
+        map_settings={
+            "x": {"property": "time", "scale": "linear"},
+            "y": {"property": "potential", "scale": "linear"},
+        },
+        structure_settings={
+            "unitCell": True,
+        },
+        trajectory=True,
+    ),
+)
 
 # %%
 #
@@ -264,11 +381,6 @@ chemiscope.show(
 # with open("data/pet-mad-si.in", "r") as f:
 #    print(f.read())
 
-# %%
-#
-# To run the model with LAMMPS we first have to save the model to disk
-
-model.save("pet-mad-latest.pt", collect_extensions="extensions")
 
 # We use to the ``collect_extensions`` argument to save the compiled extensions to disk.
 # These extensions ensure that the model remains self-contained and can be executed
