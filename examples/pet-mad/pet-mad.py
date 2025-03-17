@@ -516,7 +516,7 @@ chemiscope.show(
 with open("data/al6xxx-o2.in", "r") as f:
     print(f.read())
 
-#
+# %%
 # .. warning::
 #
 #   Be aware that the extensions are compiled files and depend on your operating system.
