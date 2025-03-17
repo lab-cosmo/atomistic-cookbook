@@ -131,11 +131,25 @@ mad_huggingface = (
 )
 model = load_model(mad_huggingface).export()
 
-
 # %%
 # The model can also be downloaded separately, and loaded
 # from disk by providing the path to the :py:func:`load_model
 # <metatensor.utils.io.load_model>` function.
+
+# %%
+# This model can be used "as is" in Python - and in this form
+# one can modify it, e.g. to continue training, or to fine-tune
+# on a new dataset. However, to run with external codes,
+# it can/should be saved to disk.
+
+model.save("pet-mad-latest.pt", collect_extensions="extensions")
+
+# %%
+# We use the ``collect_extensions`` argument to save the compiled extensions to disk.
+# These extensions ensure that the model remains self-contained and can be executed
+# without requiring the original Python or C++ source code. In particular,
+# this is necessary for the LAMMPS interface to work because it has no access to
+# the Python code.
 
 # %%
 #
@@ -150,6 +164,17 @@ model = load_model(mad_huggingface).export()
 # We now wrap model in an ASE compatible calculator and calculate energy and forces.
 
 calculator = MetatensorCalculator(model, device="cpu")
+
+# %%
+# Note also that exporting the model compiles it with ``torchscript`` which
+# is also usually beneficial in terms of execution speed. For this reason,
+# we recommend loading the model from the exported (``.pt``) version also
+# before using it for inference in ASE.
+
+calculator = MetatensorCalculator(
+    "pet-mad-latest.pt", device="cpu", extensions_directory="extensions"
+)
+
 
 # %%
 #
@@ -318,21 +343,6 @@ chemiscope.show(
 # at the (111) surface.
 
 al_surface = ase.io.read("data/al6xxx-o2.xyz", "0")
-
-# %%
-#
-# To run the model with external codes, it can/should be saved
-# to disk. The libraries needed to run it are collected in
-# a folder (called by default ``extensions``).
-
-model.save("pet-mad-latest.pt", collect_extensions="extensions")
-
-# %%
-# We use the ``collect_extensions`` argument to save the compiled extensions to disk.
-# These extensions ensure that the model remains self-contained and can be executed
-# without requiring the original Python or C++ source code. In particular,
-# this is necessary for the LAMMPS interface to work because it has no access to
-# the Python code.
 
 # %%
 #
