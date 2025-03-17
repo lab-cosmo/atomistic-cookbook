@@ -13,7 +13,7 @@ PET-MAD is a "universal" machine-learning forcefield trained on
 a dataset that aims to incorporate a very high degree of
 structural diversity.
 
-The point-edge transformer is an unconstrained architecture
+The point-edge transformer (PET) is an unconstrained architecture
 that achieves a high degree of symmetry compliance through
 data augmentation during training (see the `PET paper
 <https://proceedings.neurips.cc/paper_files/paper/2023/file/fb4a7e3522363907b26a86cc5be627ac-Paper-Conference.pdf>`_
