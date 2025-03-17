@@ -34,6 +34,8 @@ from ipi.utils.scripting import (
     motion_nvt_xml,
     simulation_xml,
 )
+from ipi.utils.mathtools import get_rotation_quadrature_lebedev
+
 from metatensor.torch.atomistic.ase_calculator import MetatensorCalculator
 from metatrain.utils.io import load_model
 
@@ -196,6 +198,53 @@ chemiscope.show(
 )
 
 # %%
+# How about equivariance!?!?!11
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# The PET architecture does not provide "intrinsically" invariant
+# energy predictions, but learns symmetry from data augmentation. 
+# Should you worry? The authors of PET-MAD certainly do, and they
+# have studied potential problems `extensively 
+# <http://doi.org/10.1088/2632-2153/ad86a0>`_. You can check by 
+# yourself following the procedure below
+
+rotations = get_rotation_quadrature_lebedev(3)
+
+rot_test = test_structures[42]
+rot_structures = []
+rot_weights = []
+rot_energies = []
+rot_forces = []
+
+for rot, w, angles in rotations:
+    tmp = rot_test.copy()
+    tmp.positions = tmp.positions@rot.T
+    tmp.cell = tmp.cell@rot.T
+    tmp.calc = copy(calculator)
+    rot_weights.append(w)
+    rot_energies.append(tmp.get_potential_energy()/len(tmp))
+    rot_forces.append(tmp.get_forces())
+    rot_structures.append(tmp)
+
+
+rot_energies = np.array(rot_energies)
+print(f"""
+Symmetry breaking, energy:
+RMS: {np.sqrt(np.mean(rot_energies**2*))}
+      
+""")
+
+# %%
+    
+print(np.std(rot_energies))
+
+
+# %%  
+# Note also that `i-PI <http://ipi-code.org>`_ provides functionalities to do
+# this automatically to obtain MD trajectories with a even higher
+# degree of symmetry-compliance.
+
+# %%
 # Uncertainty estimation
 # ^^^^^^^^^^^^^^^^^^^^^^
 #
@@ -309,6 +358,7 @@ input_xml = simulation_xml(
     ),
     motion=motion_xml,
     temperature=800,
+    verbosity="low",
     prefix="nvt_atomxc",
 )
 

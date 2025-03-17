@@ -2,12 +2,12 @@ channels:
   - metatensor
   - conda-forge
 dependencies:
-  - python=3.13
+  - python=3.12
   - lammps-metatensor=*=cpu*nompi*
   - pip
   - pip:
     - ase
-    -  git+https://github.com/i-pi/i-pi@main
+    - git+https://github.com/i-pi/i-pi@main
     - git+https://github.com/lab-cosmo/chemiscope@ac-backlink  
     - metatrain[pet]
     - matplotlib
