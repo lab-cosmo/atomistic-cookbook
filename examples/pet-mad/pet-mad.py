@@ -66,6 +66,7 @@ model = load_model(mad_huggingface).export()
 # <metatensor.utils.io.load_model>` function.
 
 # %%
+#
 # Inference on the MAD test set
 # =============================
 #
@@ -109,7 +110,7 @@ test_forces = np.array(test_forces, dtype=object)
 # Single point energy and forces
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# PET-MAD is compatible with the metatomic interface which allows us to
+# PET-MAD is compatible with the metatensor atomistic interface which allows us to
 # run it with ASE and many other MD engines. For more details see the `metatensor
 # documentation
 # <https://docs.metatensor.org/latest/atomistic/engines/index.html#atomistic-models-engines>`_.
@@ -126,9 +127,10 @@ calculator = MetatensorCalculator(model, device="cpu")
 mad_energy = []
 mad_forces = []
 mad_structures = []
+
 for structure in test_structures:
     tmp = deepcopy(structure)
-    tmp.calc = copy(calculator)  # avoids ovewriting results. thanks ase 3.23!
+    tmp.calc = copy(calculator)
     mad_energy.append(tmp.get_potential_energy())
     mad_forces.append(tmp.get_forces())
     mad_structures.append(tmp)
@@ -138,10 +140,15 @@ mad_forces = np.array(mad_forces, dtype=object)
 
 
 # %%
+#
 # A parity plot with the model predictions
 
 tab10 = plt.get_cmap("tab10")
 fig, ax = plt.subplots(1, 2, figsize=(6, 3), constrained_layout=True)
+
+ax[0].plot([0, 1], [0, 1], "b:", transform=ax[0].transAxes)
+ax[1].plot([0, 1], [0, 1], "b:", transform=ax[1].transAxes)
+
 for i, sub in enumerate(subsets):
     sel = np.where(test_origin == sub)[0]
     ax[0].plot(
@@ -157,10 +164,12 @@ for i, sub in enumerate(subsets):
         ".",
         c=tab10(i),
     )
-ax[0].set_xlabel("MAD energy / eV/at.")
-ax[0].set_ylabel("Ref. energy / eV/at.")
+
+ax[0].set_xlabel("MAD energy / eV/atom")
+ax[0].set_ylabel("Reference energy / eV/atom")
 ax[1].set_xlabel("MAD forces / eV/Å")
 ax[1].set_ylabel("Ref. forces / eV/Å")
+
 fig.legend(loc="upper center", bbox_to_anchor=(0.55, 1.20), ncol=3)
 
 
@@ -259,7 +268,7 @@ print(np.std(rot_energies))
 # (aluminum with a few percent Mg and Si) with some oxygen molecules adsorbed
 # (111) surface.
 
-al_surface = ase.io.read("data/al6xxx-o2.xyz", "0")
+al_surface = ase.io.read("data/al6xxx-o2.xyz")
 
 # %%
 #
@@ -375,8 +384,7 @@ sim.run(100)
 
 # %%
 #
-# The simulation generates output files that can be
-# parsed and visualized from Python.
+# The simulation generates output files that can be parsed and visualized from Python.
 
 data, info = read_output("nvt_atomxc.out")
 trj = read_trajectory("nvt_atomxc.pos_0.xyz")
@@ -390,10 +398,10 @@ ax.set_ylabel("energy / ev")
 ax.legend()
 
 # %%
-# The trajectory (which is started from oxygen molecules placed on
-# top of the surface) shows quick relaxation to an oxide layer.
-# If you look carefully, you'll also see that Mg and Si atoms tend
-# to cluster together, and accumulate at the surface.
+#
+# The trajectory (which is started from oxygen molecules placed on top of the surface)
+# shows quick relaxation to an oxide layer. If you look carefully, you'll also see that
+# Mg and Si atoms tend to cluster together, and accumulate at the surface.
 
 chemiscope.show(
     frames=trj,
@@ -430,7 +438,6 @@ chemiscope.show(
 
 # with open("data/pet-mad-si.in", "r") as f:
 #    print(f.read())
-
 
 # We use to the ``collect_extensions`` argument to save the compiled extensions to disk.
 # These extensions ensure that the model remains self-contained and can be executed
