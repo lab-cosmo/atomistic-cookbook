@@ -102,8 +102,15 @@ model = load_model(mad_huggingface).export()
 # speed up the example runtime on CPU. The model can also run (much faster)
 # on GPUs if you have some at hand.
 
-# TODO: FETCH THESE ONLINE AND REMOVE THE FILE FROM THE REPO
-test_structures = ase.io.read("data/mad-test_1.0.xyz", "::16")
+filename = "data/mad-test-mad-settings.xyz"
+if not os.path.exists(filename):
+    url = "https://huggingface.co/lab-cosmo/pet-mad/resolve/main/benchmarks/mad-test-mad-settings-v1.0.xyz"
+    response = requests.get(url)
+    response.raise_for_status()
+    with open(filename, "wb") as f:
+        f.write(response.content)
+
+test_structures = ase.io.read(filename, "::16")
 
 # also extract reference energetics and metadata
 test_energy = []
