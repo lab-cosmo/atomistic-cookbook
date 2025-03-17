@@ -25,6 +25,7 @@ import chemiscope
 import matplotlib.pyplot as plt
 import numpy as np
 from ase.optimize import LBFGS
+from ipi.utils.mathtools import get_rotation_quadrature_lebedev
 
 # i-PI scripting utilities
 from ipi.utils.parsing import read_output, read_trajectory
@@ -34,8 +35,6 @@ from ipi.utils.scripting import (
     motion_nvt_xml,
     simulation_xml,
 )
-from ipi.utils.mathtools import get_rotation_quadrature_lebedev
-
 from metatensor.torch.atomistic.ase_calculator import MetatensorCalculator
 from metatrain.utils.io import load_model
 
@@ -66,7 +65,6 @@ model = load_model(mad_huggingface).export()
 # <metatensor.utils.io.load_model>` function.
 
 # %%
-#
 # Inference on the MAD test set
 # =============================
 #
@@ -110,7 +108,7 @@ test_forces = np.array(test_forces, dtype=object)
 # Single point energy and forces
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# PET-MAD is compatible with the metatensor atomistic interface which allows us to
+# PET-MAD is compatible with the metatomic interface which allows us to
 # run it with ASE and many other MD engines. For more details see the `metatensor
 # documentation
 # <https://docs.metatensor.org/latest/atomistic/engines/index.html#atomistic-models-engines>`_.
@@ -127,10 +125,9 @@ calculator = MetatensorCalculator(model, device="cpu")
 mad_energy = []
 mad_forces = []
 mad_structures = []
-
 for structure in test_structures:
     tmp = deepcopy(structure)
-    tmp.calc = copy(calculator)
+    tmp.calc = copy(calculator)  # avoids ovewriting results. thanks ase 3.23!
     mad_energy.append(tmp.get_potential_energy())
     mad_forces.append(tmp.get_forces())
     mad_structures.append(tmp)
@@ -140,15 +137,10 @@ mad_forces = np.array(mad_forces, dtype=object)
 
 
 # %%
-#
 # A parity plot with the model predictions
 
 tab10 = plt.get_cmap("tab10")
 fig, ax = plt.subplots(1, 2, figsize=(6, 3), constrained_layout=True)
-
-ax[0].plot([0, 1], [0, 1], "b:", transform=ax[0].transAxes)
-ax[1].plot([0, 1], [0, 1], "b:", transform=ax[1].transAxes)
-
 for i, sub in enumerate(subsets):
     sel = np.where(test_origin == sub)[0]
     ax[0].plot(
@@ -164,12 +156,10 @@ for i, sub in enumerate(subsets):
         ".",
         c=tab10(i),
     )
-
-ax[0].set_xlabel("MAD energy / eV/atom")
-ax[0].set_ylabel("Reference energy / eV/atom")
+ax[0].set_xlabel("MAD energy / eV/at.")
+ax[0].set_ylabel("Ref. energy / eV/at.")
 ax[1].set_xlabel("MAD forces / eV/Å")
 ax[1].set_ylabel("Ref. forces / eV/Å")
-
 fig.legend(loc="upper center", bbox_to_anchor=(0.55, 1.20), ncol=3)
 
 
@@ -211,44 +201,68 @@ chemiscope.show(
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # The PET architecture does not provide "intrinsically" invariant
-# energy predictions, but learns symmetry from data augmentation. 
+# energy predictions, but learns symmetry from data augmentation.
 # Should you worry? The authors of PET-MAD certainly do, and they
-# have studied potential problems `extensively 
-# <http://doi.org/10.1088/2632-2153/ad86a0>`_. You can check by 
+# have studied potential problems `extensively
+# <http://doi.org/10.1088/2632-2153/ad86a0>`_. You can check by
 # yourself following the procedure below
 
 rotations = get_rotation_quadrature_lebedev(3)
 
-rot_test = test_structures[42]
+rot_test = test_structures[100]
 rot_structures = []
 rot_weights = []
 rot_energies = []
 rot_forces = []
+rot_angles = []
 
 for rot, w, angles in rotations:
     tmp = rot_test.copy()
-    tmp.positions = tmp.positions@rot.T
-    tmp.cell = tmp.cell@rot.T
+    tmp.positions = tmp.positions @ rot.T
+    tmp.cell = tmp.cell @ rot.T
     tmp.calc = copy(calculator)
     rot_weights.append(w)
-    rot_energies.append(tmp.get_potential_energy()/len(tmp))
+    rot_energies.append(tmp.get_potential_energy() / len(tmp))
     rot_forces.append(tmp.get_forces())
     rot_structures.append(tmp)
-
+    rot_angles.append(angles)
 
 rot_energies = np.array(rot_energies)
-print(f"""
+rot_weights = np.array(rot_weights)
+rot_angles = np.array(rot_angles)
+print(rot_weights)
+print(
+    f"""
 Symmetry breaking, energy:
-RMS: {np.sqrt(np.mean(rot_energies**2*))}
-      
-""")
+RMS: {1e3*np.sqrt(np.sum(rot_energies**2*rot_weights)/np.sum(rot_weights)
+              -(np.sum(rot_energies*rot_weights)/np.sum(rot_weights))**2)} meV/at.
+Max: {1e3*np.abs(rot_energies.max()-rot_energies.min())} meV/at.
+"""
+)
 
 # %%
-    
-print(np.std(rot_energies))
+# You can also inspect the rotational behavior visually
 
+chemiscope.show(
+    rot_structures,
+    mode="default",
+    properties={
+        "delta_energy": 1e3 * (rot_energies - rot_energies.mean()),
+        "euler_angles": rot_angles,
+    },
+    shapes={
+        "forces": chemiscope.ase_vectors_to_arrows(rot_structures, "forces", scale=4.0),
+    },
+    settings=chemiscope.quick_settings(
+        x="euler_angles[1]",
+        y="euler_angles[2]",
+        z="euler_angles[3]",
+        color="delta_energy",
+        structure_settings={"unitCell": True, "shape": ["forces"]},
+    ),
+)
 
-# %%  
+# %%
 # Note also that `i-PI <http://ipi-code.org>`_ provides functionalities to do
 # this automatically to obtain MD trajectories with a even higher
 # degree of symmetry-compliance.
@@ -268,7 +282,7 @@ print(np.std(rot_energies))
 # (aluminum with a few percent Mg and Si) with some oxygen molecules adsorbed
 # (111) surface.
 
-al_surface = ase.io.read("data/al6xxx-o2.xyz")
+al_surface = ase.io.read("data/al6xxx-o2.xyz", "0")
 
 # %%
 #
@@ -384,7 +398,8 @@ sim.run(100)
 
 # %%
 #
-# The simulation generates output files that can be parsed and visualized from Python.
+# The simulation generates output files that can be
+# parsed and visualized from Python.
 
 data, info = read_output("nvt_atomxc.out")
 trj = read_trajectory("nvt_atomxc.pos_0.xyz")
@@ -398,10 +413,10 @@ ax.set_ylabel("energy / ev")
 ax.legend()
 
 # %%
-#
-# The trajectory (which is started from oxygen molecules placed on top of the surface)
-# shows quick relaxation to an oxide layer. If you look carefully, you'll also see that
-# Mg and Si atoms tend to cluster together, and accumulate at the surface.
+# The trajectory (which is started from oxygen molecules placed on
+# top of the surface) shows quick relaxation to an oxide layer.
+# If you look carefully, you'll also see that Mg and Si atoms tend
+# to cluster together, and accumulate at the surface.
 
 chemiscope.show(
     frames=trj,
@@ -438,6 +453,7 @@ chemiscope.show(
 
 # with open("data/pet-mad-si.in", "r") as f:
 #    print(f.read())
+
 
 # We use to the ``collect_extensions`` argument to save the compiled extensions to disk.
 # These extensions ensure that the model remains self-contained and can be executed
