@@ -17,7 +17,7 @@ structural diversity.
 #
 # Start by importing the required libraries.
 
-# import subprocess
+import subprocess
 from copy import copy, deepcopy
 
 import ase.units
@@ -286,6 +286,21 @@ al_surface = ase.io.read("data/al6xxx-o2.xyz", "0")
 
 # %%
 #
+# To run the model with external codes, it can/should be saved
+# to disk. The libraries needed to run it are collected in
+# a folder (called by default ``extensions``).
+
+model.save("pet-mad-latest.pt", collect_extensions="extensions")
+
+# %%
+# We use the ``collect_extensions`` argument to save the compiled extensions to disk.
+# These extensions ensure that the model remains self-contained and can be executed
+# without requiring the original Python or C++ source code. In particular,
+# this is necessary for the LAMMPS interface to work because it has no access to
+# the Python code.
+
+# %%
+#
 # Geometry optimization with ``ASE``
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 # As a first example, we use the ``ase`` geometry
@@ -343,13 +358,6 @@ chemiscope.show(
 # without having to introduce vacancies or wait for the
 # very long time scale needed for diffusion.
 
-# %%
-#
-# To run the model with external codes, it can/should be saved
-# to disk. The libraries needed to run it are collected in
-# a folder (called by default ``extensions``).
-
-model.save("pet-mad-latest.pt", collect_extensions="extensions")
 
 # %%
 # The behavior of i-PI is controlled by an XML input file.
@@ -444,36 +452,23 @@ chemiscope.show(
 #
 # We now run the same MD with `LAMMPS <https://lammps.org>`_.
 #
-# To do so, it is only required defining a ``pair_style`` that defines the model and a
-# single ``pair_coeff`` command should be used with the metatensor style, specifying the
+# To do so, it is only necessary to define a ``pair_style metatensor`` that points
+# to the exported model and a single ``pair_coeff`` command that specifies the
 # mapping from LAMMPS types to the atomic types the model can handle. The first 2
 # arguments must be ``* *`` so as to span all LAMMPS atom types. This is followed by a
 # list of N arguments that specify the mapping of metatensor atomic types to LAMMPS
 # types, where N is the number of LAMMPS atom types.
 
-# with open("data/pet-mad-si.in", "r") as f:
-#    print(f.read())
+with open("data/al6xxx-o2.in", "r") as f:
+    print(f.read())
 
-
-# We use to the ``collect_extensions`` argument to save the compiled extensions to disk.
-# These extensions ensure that the model remains self-contained and can be executed
-# without requiring the original Python or C++ source code. This is necessary for the
-# LAMMPS interface to work because it has no access to the Python code.
 #
 # .. warning::
 #
 #   Be aware that the extensions are compiled files and depend on your operating system.
 #   Usually you have re-export the extensions for different systems!
 #
-# We also save to geometry to a LAMMPS data file and finally run the simulation.
+# We also save the geometry to a LAMMPS data file and finally run the simulation.
 
-# ase.io.write("silicon.data", atoms, format="lammps-data", masses=True)
-
-# subprocess.check_call(["lmp_serial", "-in", "data/pet-mad-si.in"])
-
-
-# %%
-#
-# The LAMMPS input files looks like an usual input file but uses our metatensor
-# interface.
-#
+ase.io.write("al6xxx-o2.data", al_surface, format="lammps-data", masses=True)
+subprocess.check_call(["lmp_serial", "-in", "data/al6xxx-o2.in"])

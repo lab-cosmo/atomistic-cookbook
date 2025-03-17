@@ -5,11 +5,15 @@ dependencies:
   - python=3.12
   - lammps-metatensor=*=cpu*nompi*
   - metatrain
-  - pet-neighbors-convert
+  - pet-neighbors-convert  
   - pip
   - pip:
     - ase
     - git+https://github.com/i-pi/i-pi@main
     - git+https://github.com/lab-cosmo/chemiscope@ac-backlink  
     - matplotlib
-
+    - scipy
+    - torch_geometric 
+    - matscipy 
+    - scikit-learn 
+    - pathos  
