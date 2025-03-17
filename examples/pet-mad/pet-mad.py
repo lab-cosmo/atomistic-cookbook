@@ -1,11 +1,14 @@
 """
-PET-MAD Example
-===============
+The PET-MAD universal potential
+===============================
 
-:Authors: Philip Loche `@PicoCentauri <https://github.com/picocentauri>`_,
+:Authors: Philip Loche `@PicoCentauri <https://github.com/picocentauri>`_, 
+          Michele Ceriotti `@ceriottm <https://github.com/ceriottm>`_,
+          Arslan Mazitov `@abmazitov <https://github.com/abmazitov>`_
+
 
 This example demonstrates how to use the PET-MAD model with ASE,
-`i-PI <https://ipi-code.org>` and `LAMMPS <https://lammps.org>`_.
+`i-PI <https://ipi-code.org>`_ and `LAMMPS <https://lammps.org>`_.
 PET-MAD is a "universal" machine-learning forcefield trained on
 a dataset that aims to incorporate a very high degree of
 structural diversity.
@@ -492,4 +495,16 @@ with open("data/al6xxx-o2.in", "r") as f:
 # We also save the geometry to a LAMMPS data file and finally run the simulation.
 
 ase.io.write("al6xxx-o2.data", al_surface, format="lammps-data", masses=True)
+
 subprocess.check_call(["lmp_serial", "-in", "data/al6xxx-o2.in"])
+
+# %%
+# The resulting trajectory is qualitatively consistent with what
+# we observed with ``i-PI``.
+
+lmp_trj = ase.io.read("trajectory.xyz", ":")
+
+chemiscope.show(
+    frames=lmp_trj,
+    mode="structure"
+)
