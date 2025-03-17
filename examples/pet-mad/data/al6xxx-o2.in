@@ -10,7 +10,7 @@ pair_style metatensor &
 pair_coeff * *  13 12 8 14
 neighbor 2.0 bin
 timestep 0.005
-dump myDump all xyz 20 trajectory.xyz
+dump myDump all xyz 10 trajectory.xyz
 dump_modify myDump element Al Mg O Si
 thermo_style multi
 thermo 1
