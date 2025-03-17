@@ -2,7 +2,7 @@
 The PET-MAD universal potential
 ===============================
 
-:Authors: Philip Loche `@PicoCentauri <https://github.com/picocentauri>`_, 
+:Authors: Philip Loche `@PicoCentauri <https://github.com/picocentauri>`_,
           Michele Ceriotti `@ceriottm <https://github.com/ceriottm>`_,
           Arslan Mazitov `@abmazitov <https://github.com/abmazitov>`_
 
@@ -38,6 +38,7 @@ tasks, in `this preprint <http://arxiv.org/TBD>`_.
 #
 # Start by importing the required libraries.
 
+import os
 import subprocess
 from copy import copy, deepcopy
 
@@ -45,6 +46,7 @@ import ase.units
 import chemiscope
 import matplotlib.pyplot as plt
 import numpy as np
+import requests
 from ase.optimize import LBFGS
 from ipi.utils.mathtools import get_rotation_quadrature_lebedev
 
@@ -104,7 +106,10 @@ model = load_model(mad_huggingface).export()
 
 filename = "data/mad-test-mad-settings.xyz"
 if not os.path.exists(filename):
-    url = "https://huggingface.co/lab-cosmo/pet-mad/resolve/main/benchmarks/mad-test-mad-settings-v1.0.xyz"
+    url = (
+        "https://huggingface.co/lab-cosmo/pet-mad/resolve/"
+        "main/benchmarks/mad-test-mad-settings-v1.0.xyz"
+    )
     response = requests.get(url)
     response.raise_for_status()
     with open(filename, "wb") as f:
@@ -511,7 +516,4 @@ subprocess.check_call(["lmp_serial", "-in", "data/al6xxx-o2.in"])
 
 lmp_trj = ase.io.read("trajectory.xyz", ":")
 
-chemiscope.show(
-    frames=lmp_trj,
-    mode="structure"
-)
+chemiscope.show(frames=lmp_trj, mode="structure")
