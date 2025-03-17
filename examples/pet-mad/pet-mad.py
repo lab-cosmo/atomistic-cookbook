@@ -84,7 +84,7 @@ model = load_model(mad_huggingface).export()
 
 # %%
 # Inference on the MAD test set
-# =============================
+# -----------------------------
 #
 # We begin by using the ``ase``-compatible calculator to evaluate
 # energy and forces for a test dataset that contains both hold-out
@@ -296,7 +296,7 @@ chemiscope.show(
 
 # %%
 # Simulating a complex surface
-# ============================
+# ----------------------------
 #
 # PET-MAD is designed to be robust and stable when executing sophisticated
 # modeling workflows. As an example, we consider a slab of an Al-6xxx alloy
