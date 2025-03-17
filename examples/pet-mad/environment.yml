@@ -4,6 +4,7 @@ channels:
 dependencies:
   - python=3.12
   - lammps-metatensor=*=cpu*nompi*
+  - libtorch=*=cpu*mkl*  
   - metatrain
   - pet-neighbors-convert  
   - pip
