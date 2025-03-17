@@ -230,13 +230,16 @@ for rot, w, angles in rotations:
 rot_energies = np.array(rot_energies)
 rot_weights = np.array(rot_weights)
 rot_angles = np.array(rot_angles)
-print(rot_weights)
+erot_rms = 1e3 * np.sqrt(
+    np.sum(rot_energies**2 * rot_weights) / np.sum(rot_weights)
+    - (np.sum(rot_energies * rot_weights) / np.sum(rot_weights)) ** 2
+)
+erot_max = 1e3 * np.abs(rot_energies.max() - rot_energies.min())
 print(
     f"""
 Symmetry breaking, energy:
-RMS: {1e3*np.sqrt(np.sum(rot_energies**2*rot_weights)/np.sum(rot_weights)
-              -(np.sum(rot_energies*rot_weights)/np.sum(rot_weights))**2)} meV/at.
-Max: {1e3*np.abs(rot_energies.max()-rot_energies.min())} meV/at.
+RMS: {erot_rms:.3f} meV/at.
+Max: {erot_max:.3f} meV/at.
 """
 )
 
