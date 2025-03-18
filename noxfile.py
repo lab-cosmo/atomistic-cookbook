@@ -53,10 +53,11 @@ def filter_files(tracked_files):
     for file in tracked_files.splitlines():
         tmp = file.split(".")[-1]
         if tmp in ["rst", "py"]:  # skips all files that are not rst or py
-            if (
-                file.split("/")[-1] != ".gitignore"
-                and file.split("/")[-1] != "README.rst"
-            ):
+            if os.path.split(file)[-1] not in [
+                ".gitignore",
+                "README.rst",
+                "INSTALLING.rst",
+            ]:
                 returns.append(file)
 
     return returns
@@ -329,12 +330,18 @@ for name in EXAMPLES:
                 # Add the rest of files in the example dir (with an extra check
                 # to make sure that they are still there)
                 for file in example_files:
-                    if file.is_file():
+                    if file.is_file() and os.path.split(file)[-1] not in [
+                        "README.rst",
+                        ".gitignore",
+                    ]:
                         zipf.write(file, file.relative_to(example_dir))
 
                 # Add the .py and .ipynb files
                 zipf.write(docs_example_dir / py_file, py_file)
                 zipf.write(notebook, notebook.name)
+
+                # Adds the installation instructions
+                zipf.write("examples/INSTALLING.rst", "INSTALLING.rst")
 
         os.unlink(f"docs/src/examples/{name}/index.rst")
 
