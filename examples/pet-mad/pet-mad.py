@@ -158,8 +158,8 @@ model.save("pet-mad-latest.pt", collect_extensions="extensions")
 # Single point energy and forces
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# PET-MAD is compatible with the metatensor atomistic models interface which allows us to
-# run it with ASE and many other MD engines. For more details see the `metatensor
+# PET-MAD is compatible with the metatensor atomistic models interface which allows us
+# to run it with ASE and many other MD engines. For more details see the `metatensor
 # documentation
 # <https://docs.metatensor.org/latest/atomistic/engines/index.html#atomistic-models-engines>`_.
 #
