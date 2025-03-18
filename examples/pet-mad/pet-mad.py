@@ -142,7 +142,7 @@ model = load_model(mad_huggingface).export()
 #
 # This model can be used "as is" in Python - and in this form one can modify it, e.g. to
 # continue training, or to fine-tune on a new dataset. However, to run with external
-# codes, it can/should be saved to disk.
+# codes such as LAMMPS, it can/should be saved to disk.
 
 model.save("pet-mad-latest.pt", collect_extensions="extensions")
 
@@ -158,7 +158,7 @@ model.save("pet-mad-latest.pt", collect_extensions="extensions")
 # Single point energy and forces
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# PET-MAD is compatible with the metatomic interface which allows us to
+# PET-MAD is compatible with the metatensor atomistic models interface which allows us to
 # run it with ASE and many other MD engines. For more details see the `metatensor
 # documentation
 # <https://docs.metatensor.org/latest/atomistic/engines/index.html#atomistic-models-engines>`_.
@@ -189,7 +189,7 @@ mad_forces = []
 mad_structures = []
 for structure in test_structures:
     tmp = deepcopy(structure)
-    tmp.calc = copy(calculator)  # avoids ovewriting results. thanks ase 3.23!
+    tmp.calc = copy(calculator)  # avoids ovewriting results.
     mad_energy.append(tmp.get_potential_energy())
     mad_forces.append(tmp.get_forces())
     mad_structures.append(tmp)
@@ -266,7 +266,7 @@ chemiscope.show(
 )
 
 # %%
-# How about equivariance!?!1?1!
+# How about equivariance‽
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # The PET architecture does not provide "intrinsically" invariant
