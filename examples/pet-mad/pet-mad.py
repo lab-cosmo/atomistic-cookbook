@@ -53,9 +53,8 @@ from ipi.utils.scripting import (
     simulation_xml,
 )
 
-# metatensor models
-from metatensor.torch.atomistic.ase_calculator import MetatensorCalculator
-from metatrain.utils.io import load_model
+# pet-mad ASE calculator
+from pet_mad.calculator import PETMADCalculator
 
 
 if hasattr(__import__("builtins"), "get_ipython"):
@@ -110,64 +109,66 @@ test_origin = np.array(test_origin)
 test_energy = np.array(test_energy)
 test_forces = np.array(test_forces, dtype=object)
 
-
 # %%
 #
-# Load the model
-# ^^^^^^^^^^^^^^
+# Install PET-MAD
+# ^^^^^^^^^^^^^^^
 #
-# To start using PET-MAD, we first have to load the model. We will use the latest
-# version of the model. PET-MAD is distributed as a check-point file, that
-# allows re-training and fine-tuning, and needs to be *exported* to be used in
-# calculators and to make inference.
+# To start using PET-MAD, we first have to install the PET-MAD package.
+# If you have not done so, you can install it with pip:
+# ``pip install git+https://github.com/lab-cosmo/pet-mad.git``.
 
-mad_huggingface = (
-    "https://huggingface.co/lab-cosmo/pet-mad/resolve/main/models/pet-mad-latest.ckpt"
-)
-model = load_model(mad_huggingface).export()
+# # %%
+# #
+# # Load the model
+# # ^^^^^^^^^^^^^^
+# #
+# # We will use the latest version of the model, available as an
+# # ASE calculator.
 
-# %%
-#
-# The model can also be downloaded separately, and loaded from disk by providing the
-# path to the :py:func:`load_model <metatensor.utils.io.load_model>` function.
-#
-# This model can be used "as is" in Python - and in this form one can modify it, e.g. to
-# continue training, or to fine-tune on a new dataset. However, to run with external
-# codes, it can/should be saved to disk.
+# calculator = PETMADCalculator(version="latest", device="cpu")
 
-model.save("pet-mad-latest.pt", collect_extensions="extensions")
+# # %%
+# #
+# # The model can also be downloaded separately, and loaded from disk by providing the
+# # path to the :py:func:`load_model <metatensor.utils.io.load_model>` function.
+# #
+# # This model can be used "as is" in Python - and in this form one can modify it, e.g. to
+# # continue training, or to fine-tune on a new dataset. However, to run with external
+# # codes, it can/should be saved to disk.
 
-# %%
-# We use the ``collect_extensions`` argument to save the compiled extensions to disk.
-# These extensions ensure that the model remains self-contained and can be executed
-# without requiring the original Python or C++ source code. In particular,
-# this is necessary for the LAMMPS interface to work because it has no access to
-# the Python code.
+# model.save("pet-mad-latest.pt", collect_extensions="extensions")
+
+# # %%
+# # We use the ``collect_extensions`` argument to save the compiled extensions to disk.
+# # These extensions ensure that the model remains self-contained and can be executed
+# # without requiring the original Python or C++ source code. In particular,
+# # this is necessary for the LAMMPS interface to work because it has no access to
+# # the Python code.
 
 # %%
 #
 # Single point energy and forces
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# PET-MAD is compatible with the metatomic interface which allows us to
-# run it with ASE and many other MD engines. For more details see the `metatensor
-# documentation
+# PET-MAD has an ASE-compatible interface, which allows us to run it with ASE
+# and many other MD engines. For more details see the `metatensor documentation
 # <https://docs.metatensor.org/latest/atomistic/engines/index.html#atomistic-models-engines>`_.
 #
-# We now wrap model in an ASE compatible calculator and calculate energy and forces.
+# We now load the PET-MAD ASE calculator and calculate energy and forces.
 
-calculator = MetatensorCalculator(model, device="cpu")
+calculator = PETMADCalculator(version="latest", device="cpu")
 
-# %%
-#
-# Note also that exporting the model compiles it with ``torchscript`` which
-# is also usually beneficial in terms of execution speed. For this reason,
-# we recommend loading the model from the exported (``.pt``) version also
-# before using it for inference in ASE.
+# # %%
+# #
+# # Note also that exporting the model compiles it with ``torchscript`` which
+# # is also usually beneficial in terms of execution speed. For this reason,
+# # we recommend loading the model from the exported (``.pt``) version also
+# # before using it for inference in ASE.
 
-calculator = MetatensorCalculator(
-    "pet-mad-latest.pt", device="cpu", extensions_directory="extensions"
-)
+# calculator = MetatensorCalculator(
+#     "pet-mad-latest.pt", device="cpu", extensions_directory="extensions"
+# )
 
 
 # %%
@@ -409,6 +410,15 @@ chemiscope.show(
 # without having to introduce vacancies or wait for the
 # very long time scale needed for diffusion.
 
+# %%
+#
+# Before starting the simulations with MD engines, it is important
+# to export the model to a format that can be used by the engine.
+# This is done by saving the model to a file, which includes the
+# model weights and the compiled extensions.
+
+calculator.model.save("pet-mad-latest.pt", collect_extensions="extensions")
+
 
 # %%
 #
@@ -422,7 +432,7 @@ chemiscope.show(
 
 motion_xml = f"""
 <motion mode="multi">
-    {motion_nvt_xml(timestep=5.0*ase.units.fs)}
+    {motion_nvt_xml(timestep=5.0 * ase.units.fs)}
     <motion mode="atomswap">
         <atomswap>
             <names> [ Al, Si, Mg, O]  </names>
