@@ -127,33 +127,6 @@ test_forces = np.array(test_forces, dtype=object)
 # If you have not done so, you can install it with pip:
 # ``pip install git+https://github.com/lab-cosmo/pet-mad.git``.
 
-# # %%
-# #
-# # Load the model
-# # ^^^^^^^^^^^^^^
-# #
-# # We will use the latest version of the model, available as an
-# # ASE calculator.
-
-# calculator = PETMADCalculator(version="latest", device="cpu")
-
-# # %%
-# #
-# # The model can also be downloaded separately, and loaded from disk by providing the
-# # path to the :py:func:`load_model <metatensor.utils.io.load_model>` function.
-# #
-# # This model can be used "as is" in Python - and in this form one can modify it, e.g. to
-# # continue training, or to fine-tune on a new dataset. However, to run with external
-# # codes, it can/should be saved to disk.
-
-# model.save("pet-mad-latest.pt", collect_extensions="extensions")
-
-# # %%
-# # We use the ``collect_extensions`` argument to save the compiled extensions to disk.
-# # These extensions ensure that the model remains self-contained and can be executed
-# # without requiring the original Python or C++ source code. In particular,
-# # this is necessary for the LAMMPS interface to work because it has no access to
-# # the Python code.
 
 # %%
 #
@@ -168,17 +141,6 @@ test_forces = np.array(test_forces, dtype=object)
 # We now load the PET-MAD ASE calculator and calculate energy and forces.
 
 calculator = PETMADCalculator(version="latest", device="cpu")
-
-# # %%
-# #
-# # Note also that exporting the model compiles it with ``torchscript`` which
-# # is also usually beneficial in terms of execution speed. For this reason,
-# # we recommend loading the model from the exported (``.pt``) version also
-# # before using it for inference in ASE.
-
-# calculator = MetatensorCalculator(
-#     "pet-mad-latest.pt", device="cpu", extensions_directory="extensions"
-# )
 
 
 # %%
