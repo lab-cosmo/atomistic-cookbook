@@ -133,7 +133,7 @@ model = load_model(mad_huggingface).export()
 #
 # This model can be used "as is" in Python - and in this form one can modify it, e.g. to
 # continue training, or to fine-tune on a new dataset. However, to run with external
-# codes, it can/should be saved to disk.
+# codes such as LAMMPS, it can/should be saved to disk.
 
 model.save("pet-mad-latest.pt", collect_extensions="extensions")
 
