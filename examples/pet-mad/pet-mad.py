@@ -151,8 +151,9 @@ test_forces = np.array(test_forces, dtype=object)
 # Single point energy and forces
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# PET-MAD has an ASE-compatible interface, which allows us to run it with ASE
-# and many other MD engines. For more details see the `metatensor documentation
+# PET-MAD is compatible with the metatensor atomistic models interface which allows us to
+# run it with ASE and many other MD engines. For more details see the `metatensor
+# documentation
 # <https://docs.metatensor.org/latest/atomistic/engines/index.html#atomistic-models-engines>`_.
 #
 # We now load the PET-MAD ASE calculator and calculate energy and forces.
@@ -181,7 +182,7 @@ mad_forces = []
 mad_structures = []
 for structure in test_structures:
     tmp = deepcopy(structure)
-    tmp.calc = copy(calculator)  # avoids ovewriting results. thanks ase 3.23!
+    tmp.calc = copy(calculator)  # avoids ovewriting results.
     mad_energy.append(tmp.get_potential_energy())
     mad_forces.append(tmp.get_forces())
     mad_structures.append(tmp)
@@ -258,7 +259,7 @@ chemiscope.show(
 )
 
 # %%
-# How about equivariance!?!1?1!
+# How about equivariance‽
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # The PET architecture does not provide "intrinsically" invariant
