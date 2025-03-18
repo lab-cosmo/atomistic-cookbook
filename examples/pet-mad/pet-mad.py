@@ -356,27 +356,15 @@ al_surface = ase.io.read("data/al6xxx-o2.xyz")
 # positions. This leads to the rapid decomposition of the oxygen molecules and the
 # formation of an oxide layer.
 
-
-class LoggedLBFGS(LBFGS):
-    """A wrapper to LBFGS that allows saving
-    the sequence of structures along the optimization"""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._traj_atoms = []
-        self._traj_energy = []
-
-    def step(self, *args, **kwargs):
-        super().step(*args, **kwargs)  # Call original step function
-
-        self._traj_atoms.append(self.atoms.copy())
-        self._traj_energy.append(self.atoms.get_potential_energy())
-
-
 atoms = al_surface.copy()
 atoms.calc = calculator
 
-opt = LoggedLBFGS(atoms)
+opt = LBFGS(atoms)
+
+traj_atoms = []
+traj_energy = []
+opt.attach(lambda: traj_atoms.append(atoms.copy()))
+opt.attach(lambda: traj_energy.append(atoms.get_potential_energy()))
 
 # stop the optimization early to speed up the example
 opt.run(fmax=0.001, steps=30)
@@ -388,10 +376,10 @@ opt.run(fmax=0.001, steps=30)
 # leads to a large energetic stabilization
 
 chemiscope.show(
-    frames=opt._traj_atoms,
+    frames=traj_atoms,
     properties={
-        "index": np.arange(0, len(opt._traj_atoms)),
-        "energy": opt._traj_energy,
+        "index": np.arange(0, len(traj_atoms)),
+        "energy": traj_energy,
     },
     mode="default",
     settings=chemiscope.quick_settings(trajectory=True),
