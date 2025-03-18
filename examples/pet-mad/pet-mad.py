@@ -257,7 +257,7 @@ chemiscope.show(
 )
 
 # %%
-# How about equivariance!?!1?1!
+# How about equivariance‽
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # The PET architecture does not provide "intrinsically" invariant
