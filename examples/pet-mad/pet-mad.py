@@ -341,6 +341,13 @@ chemiscope.show(
 # modeling workflows. As an example, we consider a slab of an Al-6xxx alloy
 # (aluminum with a few percent Mg and Si) with some oxygen molecules adsorbed
 # at the (111) surface.
+#
+# .. warning::
+#
+#   The overall Si+Mg concentration in an Al6xxx alloy is far lower than what
+#   depicted here. This is just a demonstrative example and should not be taken
+#   as the starting point of a serious study of this system.
+#
 
 al_surface = ase.io.read("data/al6xxx-o2.xyz", "0")
 
