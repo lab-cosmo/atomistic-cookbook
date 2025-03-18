@@ -180,7 +180,7 @@ mad_forces = []
 mad_structures = []
 for structure in test_structures:
     tmp = deepcopy(structure)
-    tmp.calc = copy(calculator)  # avoids ovewriting results. thanks ase 3.23!
+    tmp.calc = copy(calculator)  # avoids ovewriting results.
     mad_energy.append(tmp.get_potential_energy())
     mad_forces.append(tmp.get_forces())
     mad_structures.append(tmp)
