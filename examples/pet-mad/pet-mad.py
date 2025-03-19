@@ -79,7 +79,7 @@ if hasattr(__import__("builtins"), "get_ipython"):
 # We begin by using the ``ase``-compatible calculator to evaluate energy and forces for
 # a test dataset that contains both hold-out structures from the MAD dataset, and a few
 # structures from popular datasets (`MPtrj
-# <https://figshare.com/articles/dataset/Materials_Project_Trjectory_MPtrj_Dataset/23713842?file=41619375>`,
+# <https://figshare.com/articles/dataset/Materials_Project_Trjectory_MPtrj_Dataset/23713842?file=41619375>`_,
 # `Alexandria <https://alexandria.icams.rub.de/>`_,
 # `OC2020 <https://paperswithcode.com/dataset/oc20>`_,
 # `SPICE <https://www.nature.com/articles/s41597-022-01882-6>`_,
