@@ -1,0 +1,14 @@
+channels:
+  - metatensor
+  - conda-forge
+dependencies:
+  - python=3.12
+  - lammps-metatensor=*=cpu*nompi*
+  - libtorch=*=cpu*mkl*  
+  - pet-mad
+  - pip
+  - pip:
+    - ase
+    - ipi>=3.1.r21
+    - chemiscope>=0.8.4  
+    - matplotlib

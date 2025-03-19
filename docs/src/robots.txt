@@ -1,8 +1,8 @@
 User-agent: *
 
-Disallow: /latest/
 Disallow: /_sources/
 Disallow: /_datasets/
+Disallow: /_downloads/
 
 Sitemap: https://atomistic-cookbook.org/sitemap.xml
 
