@@ -30,12 +30,19 @@ accuracy despite the MAD dataset containing fewer than 100k structures. The refe
 DFT settings are highly converged, but limited to a PBEsol functional, so the accuracy
 against experimental data depends on how good this level of theory is for a given
 system. PET-MAD is introduced, and benchmarked for several challenging modeling tasks,
-in `this preprint <http://arxiv.org/TBD>`_.
+in `this preprint <https://arxiv.org/abs/2503.14118>`_.
 """
 
 # %%
 #
-# Start by importing the required libraries.
+# Start by importing the required libraries. To use PET-MAD,
+# and obtain all the necessary dependencies, you can simply use pip
+# to install the `PET-MAD package <https://github.com/lab-cosmo/pet-mad>`_:
+#
+# .. code-block:: bash
+#
+#     pip install git+https://github.com/lab-cosmo/pet-mad.git
+#
 
 import os
 import subprocess
@@ -117,15 +124,6 @@ test_natoms = np.array(test_natoms)
 test_origin = np.array(test_origin)
 test_energy = np.array(test_energy)
 test_forces = np.array(test_forces, dtype=object)
-
-# %%
-#
-# Install PET-MAD
-# ^^^^^^^^^^^^^^^
-#
-# To start using PET-MAD, we first have to install the PET-MAD package.
-# If you have not done so, you can install it with pip:
-# ``pip install git+https://github.com/lab-cosmo/pet-mad.git``.
 
 
 # %%
