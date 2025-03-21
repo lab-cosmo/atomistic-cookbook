@@ -1,3 +1,4 @@
+name: cosmo
 channels:
   - conda-forge
 dependencies:
