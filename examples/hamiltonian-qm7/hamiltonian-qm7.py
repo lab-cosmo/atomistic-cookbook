@@ -10,12 +10,12 @@ This tutorial explains how to train a machine learning model for the a molecular
 #
 
 import os
-from ase.units import Hartree
 
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
 import torch
+from ase.units import Hartree
 from IPython.utils import io
 from mlelec.features.acdc import compute_features_for_target
 from mlelec.targets import drop_zero_blocks
@@ -27,7 +27,6 @@ import mlelec.metrics as mlmetrics  # noqa: E402
 from mlelec.data.dataset import MLDataset, MoleculeDataset, get_dataloader  # noqa: E402
 from mlelec.models.linear import LinearTargetModel  # noqa: E402
 from mlelec.train import Trainer  # noqa: E402
-from mlelec.utils.property_utils import compute_batch_polarisability  # noqa: E402
 from mlelec.utils.property_utils import instantiate_mf  # noqa: E402
 
 
@@ -52,11 +51,15 @@ torch.set_default_dtype(torch.float64)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 
-# Set the parameters for the dataset
-torch.manual_seed(42)
+# Set the parameters for the training, including the dataset set size 
+# and split, the batch size, learning rate and weights for the individual
+# components of eigenvalues, dipole and polarisability.
+# We additionally define a folder name, in which the results are saved.
+# Optionally, noise can be added to the ridge regression fit.
 
-NUM_FRAMES = 20  #
-BATCH_SIZE = 10  # 50
+
+NUM_FRAMES = 100  #
+BATCH_SIZE = 4  # 50
 NUM_EPOCHS = 100
 SHUFFLE_SEED = 42
 TRAIN_FRAC = 0.7
@@ -65,11 +68,11 @@ VALIDATION_FRAC = 0.2
 EARLY_STOP_CRITERION = 20
 VERBOSE = 10
 DUMP_HIST = 50
-LR = 1e-3  #5e-3 # 5e-4
+LR = 1e-1  # 5e-4
 VAL_INTERVAL = 1
-W_EVA = 1e2 #1000  # 1e4
-W_DIP = 2e1 #0.1  # 1e3
-W_POL = 1 #0.01  # 1e2
+W_EVA = 1  # 1e4
+W_DIP = 0  # 1e3
+W_POL = 0  # 1e2
 DEVICE = "cpu"
 
 ORTHOGONAL = True  # set to 'FALSE' if working in the non-orthogonal basis
@@ -116,6 +119,18 @@ save_parameters(
 # Create Datasets
 # ---------------
 #
+# We use the dataloader of the mlelec package, and load the ethane
+# dataset for the defined number of slices. 
+# First, we load all relavant data (geometric structures, 
+# auxiliary matrices (overlap and orbitals), and
+# targets (fock, dipole moment and polarisablity)) into a molecule dataset.
+# We do this for the minimal (STO-3G), as well as a larger basis (lb, def2-TZVP). 
+# The larger basis has additional basis functions on the valence electrons.
+# The dataset, we can then load into our dataloader ml_data, together with some
+# settings on how to get data from the dataloader.
+# Finally, we define the desired dataset split for training, validation,
+# and testing.
+
 molecule_data = MoleculeDataset(
     mol_name="ethane",
     use_precomputed=False,
@@ -146,6 +161,13 @@ ml_data._split_indices(
 # Compute Features
 # ----------------
 #
+# We use `featomic <https://github.com/metatensor/featomic/>`_
+# to compute the atomic and pair-wise features for each structure
+# in the trainingset. The output is a tensormap, containing all atomic
+# and pair-wise features ordered by the atoms, and descriptor parameters
+# (inversion_sigma, spherical_harmonics_l, species_center, species_neighbor,
+# and block type).
+# We then assign the computed features to the machine learning dataloader (ml_data).
 
 hypers = {
     "cutoff": 2.5,
@@ -173,14 +195,16 @@ features = compute_features_for_target(
 ml_data._set_features(features)
 
 
-# %%
-# Prepare training
-# ----------------
-#
-
 train_dl, val_dl, test_dl = get_dataloader(
     ml_data, model_return="blocks", batch_size=BATCH_SIZE
 )
+
+# Depending on the diversity of the structures in the datasets, it can occure that 
+# some blocks are empty, because certain structural features are only present in 
+# certain structures (e.g. if we would have some organic molecules
+# with oxygen and some without).
+# We drop these blocks, so that the dataloader does not 
+# try to load them during training.
 
 ml_data.target_train, ml_data.target_val, ml_data.target_test = drop_zero_blocks(
     ml_data.target_train, ml_data.target_val, ml_data.target_test
@@ -190,12 +214,25 @@ ml_data.feat_train, ml_data.feat_val, ml_data.feat_test = drop_zero_blocks(
     ml_data.feat_train, ml_data.feat_val, ml_data.feat_test
 )
 
+
+# %%
+# Prepare training
+# ----------------
+#
+# Next, we set up our linear neural network model.
+# As a good initial starting guess, we fit a ridge regression model
+# on the trainingset. This gives us quickly and reliably
+# parameters for the neural network, that are better than random
+# initialization. We will later compare the pred_fock from
+# the thus initialized model to the one after batch-wise training.
+# 
+
 model = LinearTargetModel(
-    dataset=ml_data, nlayers=1, nhidden=16, bias=False, device=DEVICE #16
+    dataset=ml_data, nlayers=1, nhidden=16, bias=False, device=DEVICE
 )
 
 pred_ridges, ridges = model.fit_ridge_analytical(
-    alpha=np.logspace(-8, 3, 12), 
+    alpha=np.logspace(-8, 3, 12),
     cv=3,
     set_bias=False,
 )
@@ -207,13 +244,8 @@ pred_fock = model.forward(
     ridge_fit=True,
     add_noise=NOISE,
 )
-pred_fock_ridge_test = model.forward(
-    ml_data.feat_test,
-    return_type="tensor",
-    batch_indices=ml_data.test_idx,
-    ridge_fit=True,
-    add_noise=NOISE,
-)
+
+# We 
 
 ref_polar_lb = molecule_data.lb_target["polarisability"]
 ref_dip_lb = molecule_data.lb_target["dipole_moment"]
@@ -257,7 +289,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
     optimizer,
     factor=0.5,
-    patience=20,  # 20,
+    patience=3,  # 20,
 )
 
 # Initialize trainer
@@ -296,76 +328,60 @@ history = trainer.fit(
 # %%
 # Plot loss
 # ---------
+#
 
 
 np.save(f"{FOLDER_NAME}/model_output/loss_stats.npy", history)
 
 plot_losses(history, save=True, savename=f"{FOLDER_NAME}/loss_vs_epoch.pdf")
 
-
+# %%
 # Parity plot
 
 eva_test = []
 eva_test_pred = []
-eva_test_pred_ridge = []
 f_pred = model.forward(
-        ml_data.feat_test, return_type="tensor", batch_indices=ml_data.test_idx,
-    )
+    ml_data.feat_test,
+    return_type="tensor",
+    batch_indices=ml_data.test_idx,
+)
 
 for j, i in enumerate(test_dl.dataset.test_idx):
     f = molecule_data.lb_target["fock"][i]
     s = molecule_data.lb_aux_data["overlap"][i]
-    eig = scipy.linalg.eigvalsh(f, s)[:molecule_data.target["fock"][i].shape[0]]
+    eig = scipy.linalg.eigvalsh(f, s)[: molecule_data.target["fock"][i].shape[0]]
     eva_test.append(torch.from_numpy(eig))
-    
+
     eig_pred = torch.linalg.eigvalsh(f_pred[j])
     eva_test_pred.append(eig_pred)
 
 
-
-    eig_pred_ridge=scipy.linalg.eigvalsh(pred_fock_ridge_test[j].detach().numpy(),s)
-    eva_test_pred_ridge.append(torch.from_numpy(eig_pred_ridge))
-    
-
-# print("testrev", eva_test)
-# print("testpred", eva_test_pred)
-a, b = np.polyfit(np.array(eva_test).flatten(),np.array(eva_test_pred).flatten(), 1)
-print('linefit',a,b)
-#plt.plot(np.array(eva_test).flatten(), a*np.array(eva_test).flatten()+b,label='linefit')
-#plt.loglog(np.array(eva_test).flatten(), a*np.array(eva_test).flatten()+b)
-
-plt.loglog(
-#plt.plot(
-    [np.amin(eva_test_pred), np.amax(eva_test_pred)],
-    [np.amin(eva_test_pred), np.amax(eva_test_pred)],
-    "k",
-)
-plt.loglog(np.array(eva_test).flatten(), np.array(eva_test_pred).flatten(), "o")
-#plt.plot(np.array(eva_test).flatten(), np.array(eva_test_pred).flatten(), "o", label='training')
-#plt.plot(np.array(eva_test).flatten(), np.array(eva_test_pred_ridge).flatten(), "o",label='ridge')
-plt.legend()
-plt.xlabel("Eigenvalue$_{ DFT}$")
-plt.ylabel("Eigenvalue$_{ ML}$")
-=======
 plt.figure()
-plt.plot([-25,20], [-25,20], "k--")
-plt.plot(torch.cat(eva_test).detach().numpy()*Hartree, torch.cat([ref_eva[i] for i in ml_data.test_idx]).detach().numpy()*Hartree, "o",
-            alpha=0.7,
-            color="gray",
-            markeredgecolor="black",
-            markeredgewidth=0.2,
-            label="STO-3G",)
-plt.plot(torch.cat(eva_test).detach().numpy()*Hartree, torch.cat(eva_test_pred).detach().numpy()*Hartree, "o",
-            alpha=0.7,
-            color="royalblue",
-            markeredgecolor="black",
-            markeredgewidth=0.2,
-            label="ML")
+plt.plot([-25, 20], [-25, 20], "k--")
+plt.plot(
+    torch.cat(eva_test).detach().numpy() * Hartree,
+    torch.cat([ref_eva[i] for i in ml_data.test_idx]).detach().numpy() * Hartree,
+    "o",
+    alpha=0.7,
+    color="gray",
+    markeredgecolor="black",
+    markeredgewidth=0.2,
+    label="STO-3G",
+)
+plt.plot(
+    torch.cat(eva_test).detach().numpy() * Hartree,
+    torch.cat(eva_test_pred).detach().numpy() * Hartree,
+    "o",
+    alpha=0.7,
+    color="royalblue",
+    markeredgecolor="black",
+    markeredgewidth=0.2,
+    label="ML",
+)
 plt.ylim(-25, 20)
-plt.xlim(-25,20)
+plt.xlim(-25, 20)
 plt.xlabel("Reference eigenvalues")
 plt.ylabel("Predicted eigenvalues")
->>>>>>> 43629bd0aa43085024c97779b79dbd65e0a5ed0a
 plt.savefig(f"{FOLDER_NAME}/parity_eva.pdf")
 plt.legend()
 plt.show()
