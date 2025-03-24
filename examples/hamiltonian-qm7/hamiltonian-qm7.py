@@ -140,8 +140,8 @@ molecule_data = MoleculeDataset(
     device=DEVICE,
     aux=["overlap", "orbitals"],
     lb_aux=["overlap", "orbitals"],
-    target=["fock", "dipole_moment", "polarisability"],
-    lb_target=["fock", "dipole_moment", "polarisability"],
+    target=["fock"],
+    lb_target=["fock"],
 )
 
 ml_data = MLDataset(
@@ -246,10 +246,6 @@ pred_fock = model.forward(
 )
 
 # We 
-
-ref_polar_lb = molecule_data.lb_target["polarisability"]
-ref_dip_lb = molecule_data.lb_target["dipole_moment"]
-
 ref_eva_lb = []
 for i in range(len(molecule_data.lb_target["fock"])):
     f = molecule_data.lb_target["fock"][i]
@@ -257,8 +253,7 @@ for i in range(len(molecule_data.lb_target["fock"])):
     eig = scipy.linalg.eigvalsh(f, s)
     ref_eva_lb.append(torch.from_numpy(eig))
 
-ref_polar = molecule_data.target["polarisability"]
-ref_dip = molecule_data.target["dipole_moment"]
+
 ref_eva = []
 for i in range(len(molecule_data.target["fock"])):
     f = molecule_data.target["fock"][i]
@@ -266,11 +261,7 @@ for i in range(len(molecule_data.target["fock"])):
     eig = scipy.linalg.eigvalsh(f, s)
     ref_eva.append(torch.from_numpy(eig))
 
-var_eva = torch.cat([ref_eva_lb[i].flatten() for i in range(len(ref_eva_lb))]).var()
-var_dipole = torch.cat([ref_dip_lb[i].flatten() for i in range(len(ref_dip_lb))]).var()
-var_polar = torch.cat(
-    [ref_polar_lb[i].flatten() for i in range(len(ref_polar_lb))]
-).var()
+# var_eva = torch.cat([ref_eva_lb[i].flatten() for i in range(len(ref_eva_lb))]).var()
 
 with io.capture_output() as captured:
     all_mfs, fockvars = instantiate_mf(
@@ -301,11 +292,11 @@ fit_args = {
     "all_mfs": all_mfs,
     "loss_fn": loss_fn,
     "ref_eva": ref_eva_lb,
-    "ref_dipole": ref_dip_lb,
-    "ref_polar": ref_polar_lb,
-    "var_eva": var_eva,
-    "var_dipole": var_dipole,
-    "var_polar": var_polar,
+    "ref_dipole": None,
+    "ref_polar": None,
+    "var_eva": None,
+    "var_dipole": None,
+    "var_polar": None,
     "weight_eva": W_EVA,
     "weight_dipole": W_DIP,
     "weight_polar": W_POL,
