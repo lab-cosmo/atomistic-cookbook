@@ -51,16 +51,16 @@ torch.set_default_dtype(torch.float64)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 
-# Set the parameters for the training, including the dataset set size 
+# Set the parameters for the training, including the dataset set size
 # and split, the batch size, learning rate and weights for the individual
 # components of eigenvalues, dipole and polarisability.
 # We additionally define a folder name, in which the results are saved.
 # Optionally, noise can be added to the ridge regression fit.
 
 
-NUM_FRAMES = 100  #
+NUM_FRAMES = 20#100  #
 BATCH_SIZE = 4  # 50
-NUM_EPOCHS = 100
+NUM_EPOCHS = 5 #100
 SHUFFLE_SEED = 42
 TRAIN_FRAC = 0.7
 TEST_FRAC = 0.1
@@ -120,11 +120,11 @@ save_parameters(
 # ---------------
 #
 # We use the dataloader of the mlelec package, and load the ethane
-# dataset for the defined number of slices. 
-# First, we load all relavant data (geometric structures, 
+# dataset for the defined number of slices.
+# First, we load all relavant data (geometric structures,
 # auxiliary matrices (overlap and orbitals), and
 # targets (fock, dipole moment and polarisablity)) into a molecule dataset.
-# We do this for the minimal (STO-3G), as well as a larger basis (lb, def2-TZVP). 
+# We do this for the minimal (STO-3G), as well as a larger basis (lb, def2-TZVP).
 # The larger basis has additional basis functions on the valence electrons.
 # The dataset, we can then load into our dataloader ml_data, together with some
 # settings on how to get data from the dataloader.
@@ -199,11 +199,11 @@ train_dl, val_dl, test_dl = get_dataloader(
     ml_data, model_return="blocks", batch_size=BATCH_SIZE
 )
 
-# Depending on the diversity of the structures in the datasets, it can occure that 
-# some blocks are empty, because certain structural features are only present in 
+# Depending on the diversity of the structures in the datasets, it can occure that
+# some blocks are empty, because certain structural features are only present in
 # certain structures (e.g. if we would have some organic molecules
 # with oxygen and some without).
-# We drop these blocks, so that the dataloader does not 
+# We drop these blocks, so that the dataloader does not
 # try to load them during training.
 
 ml_data.target_train, ml_data.target_val, ml_data.target_test = drop_zero_blocks(
@@ -225,7 +225,7 @@ ml_data.feat_train, ml_data.feat_val, ml_data.feat_test = drop_zero_blocks(
 # parameters for the neural network, that are better than random
 # initialization. We will later compare the pred_fock from
 # the thus initialized model to the one after batch-wise training.
-# 
+#
 
 model = LinearTargetModel(
     dataset=ml_data, nlayers=1, nhidden=16, bias=False, device=DEVICE
@@ -245,7 +245,10 @@ pred_fock = model.forward(
     add_noise=NOISE,
 )
 
-# We 
+# We save the reference values of the target values in 
+# the minimal and large basis into lists, to which we 
+# use in the training and validation step during training
+# to assess the progress. 
 
 ref_polar_lb = molecule_data.lb_target["polarisability"]
 ref_dip_lb = molecule_data.lb_target["dipole_moment"]
@@ -283,6 +286,8 @@ with io.capture_output() as captured:
 # Training parameters and training
 # --------------------------------
 #
+
+# Set loss function, optimizer and scheduler 
 
 loss_fn = mlmetrics.mse_per_atom
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)
@@ -325,18 +330,25 @@ history = trainer.fit(
     **fit_args,
 )
 
+# Save the loss history
+np.save(f"{FOLDER_NAME}/model_output/loss_stats.npy", history)
+
 # %%
 # Plot loss
 # ---------
 #
 
 
-np.save(f"{FOLDER_NAME}/model_output/loss_stats.npy", history)
-
 plot_losses(history, save=True, savename=f"{FOLDER_NAME}/loss_vs_epoch.pdf")
 
 # %%
 # Parity plot
+# -----------
+# To compare the prediction of the trained model for the eigenvalues,
+# we plot the predicted eigenvalues against out target (which is
+# the eigenvalues obtained from
+# diagonalizing the Hamiltonian from DFT).
+
 
 eva_test = []
 eva_test_pred = []
@@ -380,8 +392,8 @@ plt.plot(
 )
 plt.ylim(-25, 20)
 plt.xlim(-25, 20)
-plt.xlabel("Reference eigenvalues")
-plt.ylabel("Predicted eigenvalues")
+plt.xlabel("Reference eigenvalues [eV]")
+plt.ylabel("Predicted eigenvalues [eV]")
 plt.savefig(f"{FOLDER_NAME}/parity_eva.pdf")
 plt.legend()
 plt.show()
