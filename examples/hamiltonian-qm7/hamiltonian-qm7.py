@@ -10,6 +10,7 @@ This tutorial explains how to train a machine learning model for the a molecular
 #
 
 import os
+from ase.units import Hartree
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -57,7 +58,7 @@ torch.manual_seed(42)
 NUM_FRAMES = 20  #
 BATCH_SIZE = 10  # 50
 NUM_EPOCHS = 100
-SHUFFLE_SEED = 0
+SHUFFLE_SEED = 42
 TRAIN_FRAC = 0.7
 TEST_FRAC = 0.1
 VALIDATION_FRAC = 0.2
@@ -147,18 +148,18 @@ ml_data._split_indices(
 #
 
 hypers = {
-    "cutoff": 1.5, #1.5 #3
-    "max_radial": 4, #4 #6
-    "max_angular": 4, #4
+    "cutoff": 2.5,
+    "max_radial": 6,
+    "max_angular": 4,
     "atomic_gaussian_width": 0.3,
     "center_atom_weight": 1,
     "radial_basis": {"Gto": {}},
     "cutoff_function": {"ShiftedCosine": {"width": 0.1}},
 }
 hypers_pair = {
-    "cutoff": 3.5, #5
-    "max_radial": 6, #6
-    "max_angular": 4, #4
+    "cutoff": 2.5,
+    "max_radial": 6,
+    "max_angular": 4,
     "atomic_gaussian_width": 0.3,
     "center_atom_weight": 1,
     "radial_basis": {"Gto": {}},
@@ -304,36 +305,22 @@ plot_losses(history, save=True, savename=f"{FOLDER_NAME}/loss_vs_epoch.pdf")
 
 # Parity plot
 
-
-for data in test_dl:
-    idx = data["idx"]
-
-    # Forward pass
-    pred = model(
-        data["input"],
-        return_type="tensor",
-        batch_indices=[i.item() for i in idx],
-    )
-    pred_dipole, pred_polar, pred_eigval = compute_batch_polarisability(
-        ml_data, pred, idx, all_mfs, ORTHOGONAL
-    )
-
-    test_eva_ref = [ref_eva[j][: pred[i].shape[0]] for i, j in enumerate(idx)]
-
-
 eva_test = []
 eva_test_pred = []
 eva_test_pred_ridge = []
+f_pred = model.forward(
+        ml_data.feat_test, return_type="tensor", batch_indices=ml_data.test_idx,
+    )
 
 for j, i in enumerate(test_dl.dataset.test_idx):
-    f = molecule_data.target["fock"][i]
-    s = molecule_data.aux_data["overlap"][i]
-    eig = scipy.linalg.eigvalsh(f, s)
+    f = molecule_data.lb_target["fock"][i]
+    s = molecule_data.lb_aux_data["overlap"][i]
+    eig = scipy.linalg.eigvalsh(f, s)[:molecule_data.target["fock"][i].shape[0]]
     eva_test.append(torch.from_numpy(eig))
+    
+    eig_pred = torch.linalg.eigvalsh(f_pred[j])
+    eva_test_pred.append(eig_pred)
 
-    f_pred = model(ml_data.feat_test)[j].detach()
-    eig_pred = scipy.linalg.eigvalsh(f_pred, s)
-    eva_test_pred.append(torch.from_numpy(eig_pred))
 
 
     eig_pred_ridge=scipy.linalg.eigvalsh(pred_fock_ridge_test[j].detach().numpy(),s)
@@ -359,6 +346,26 @@ plt.loglog(np.array(eva_test).flatten(), np.array(eva_test_pred).flatten(), "o")
 plt.legend()
 plt.xlabel("Eigenvalue$_{ DFT}$")
 plt.ylabel("Eigenvalue$_{ ML}$")
+=======
+plt.figure()
+plt.plot([-25,20], [-25,20], "k--")
+plt.plot(torch.cat(eva_test).detach().numpy()*Hartree, torch.cat([ref_eva[i] for i in ml_data.test_idx]).detach().numpy()*Hartree, "o",
+            alpha=0.7,
+            color="gray",
+            markeredgecolor="black",
+            markeredgewidth=0.2,
+            label="STO-3G",)
+plt.plot(torch.cat(eva_test).detach().numpy()*Hartree, torch.cat(eva_test_pred).detach().numpy()*Hartree, "o",
+            alpha=0.7,
+            color="royalblue",
+            markeredgecolor="black",
+            markeredgewidth=0.2,
+            label="ML")
+plt.ylim(-25, 20)
+plt.xlim(-25,20)
+plt.xlabel("Reference eigenvalues")
+plt.ylabel("Predicted eigenvalues")
+>>>>>>> 43629bd0aa43085024c97779b79dbd65e0a5ed0a
 plt.savefig(f"{FOLDER_NAME}/parity_eva.pdf")
-
+plt.legend()
 plt.show()
