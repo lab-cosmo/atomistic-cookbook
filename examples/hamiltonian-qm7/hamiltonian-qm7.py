@@ -10,12 +10,12 @@ This tutorial explains how to train a machine learning model for the a molecular
 #
 
 import os
-from ase.units import Hartree
 
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
 import torch
+from ase.units import Hartree
 from IPython.utils import io
 from mlelec.features.acdc import compute_features_for_target
 from mlelec.targets import drop_zero_blocks
@@ -27,7 +27,6 @@ import mlelec.metrics as mlmetrics  # noqa: E402
 from mlelec.data.dataset import MLDataset, MoleculeDataset, get_dataloader  # noqa: E402
 from mlelec.models.linear import LinearTargetModel  # noqa: E402
 from mlelec.train import Trainer  # noqa: E402
-from mlelec.utils.property_utils import compute_batch_polarisability  # noqa: E402
 from mlelec.utils.property_utils import instantiate_mf  # noqa: E402
 
 
@@ -65,7 +64,7 @@ VERBOSE = 10
 DUMP_HIST = 50
 LR = 1e-1  # 5e-4
 VAL_INTERVAL = 1
-W_EVA = 1 # 1e4
+W_EVA = 1  # 1e4
 W_DIP = 0  # 1e3
 W_POL = 0  # 1e2
 DEVICE = "cpu"
@@ -294,41 +293,51 @@ np.save(f"{FOLDER_NAME}/model_output/loss_stats.npy", history)
 
 plot_losses(history, save=True, savename=f"{FOLDER_NAME}/loss_vs_epoch.pdf")
 
-
+# %%
 # Parity plot
 
 eva_test = []
 eva_test_pred = []
 f_pred = model.forward(
-        ml_data.feat_test, return_type="tensor", batch_indices=ml_data.test_idx,
-    )
+    ml_data.feat_test,
+    return_type="tensor",
+    batch_indices=ml_data.test_idx,
+)
 
 for j, i in enumerate(test_dl.dataset.test_idx):
     f = molecule_data.lb_target["fock"][i]
     s = molecule_data.lb_aux_data["overlap"][i]
-    eig = scipy.linalg.eigvalsh(f, s)[:molecule_data.target["fock"][i].shape[0]]
+    eig = scipy.linalg.eigvalsh(f, s)[: molecule_data.target["fock"][i].shape[0]]
     eva_test.append(torch.from_numpy(eig))
-    
+
     eig_pred = torch.linalg.eigvalsh(f_pred[j])
     eva_test_pred.append(eig_pred)
 
 
 plt.figure()
-plt.plot([-25,20], [-25,20], "k--")
-plt.plot(torch.cat(eva_test).detach().numpy()*Hartree, torch.cat([ref_eva[i] for i in ml_data.test_idx]).detach().numpy()*Hartree, "o",
-            alpha=0.7,
-            color="gray",
-            markeredgecolor="black",
-            markeredgewidth=0.2,
-            label="STO-3G",)
-plt.plot(torch.cat(eva_test).detach().numpy()*Hartree, torch.cat(eva_test_pred).detach().numpy()*Hartree, "o",
-            alpha=0.7,
-            color="royalblue",
-            markeredgecolor="black",
-            markeredgewidth=0.2,
-            label="ML")
+plt.plot([-25, 20], [-25, 20], "k--")
+plt.plot(
+    torch.cat(eva_test).detach().numpy() * Hartree,
+    torch.cat([ref_eva[i] for i in ml_data.test_idx]).detach().numpy() * Hartree,
+    "o",
+    alpha=0.7,
+    color="gray",
+    markeredgecolor="black",
+    markeredgewidth=0.2,
+    label="STO-3G",
+)
+plt.plot(
+    torch.cat(eva_test).detach().numpy() * Hartree,
+    torch.cat(eva_test_pred).detach().numpy() * Hartree,
+    "o",
+    alpha=0.7,
+    color="royalblue",
+    markeredgecolor="black",
+    markeredgewidth=0.2,
+    label="ML",
+)
 plt.ylim(-25, 20)
-plt.xlim(-25,20)
+plt.xlim(-25, 20)
 plt.xlabel("Reference eigenvalues")
 plt.ylabel("Predicted eigenvalues")
 plt.savefig(f"{FOLDER_NAME}/parity_eva.pdf")
