@@ -1,8 +1,20 @@
 """
-Hamiltonian learning
+Molecular Hamiltonian learning with Indirect Targets
 =============================
 
-This tutorial explains how to train a machine learning model for the a molecular system.
+This tutorial explains how to train a machine learning model 
+to predict the Hamiltonian of a molecular system.
+For this, we here do indirect learning by targeting properties 
+that can be derived from the Hamiltonian such 
+as the eigenvalues, the dipole moment, and the polarisability.
+More details on indirect learning can be found in 
+`ACS Cent. Sci. 2024, 10, 637−648. 
+<https://pubs.acs.org/doi/full/10.1021/acscentsci.3c01480>`_ .
+The indirect targeting of properties us to do an upscaling approach, where we 
+target properties of density functional theory (DFT)
+calculations with a larger basis (= expected to be more accurate)
+to learn a minimal basis Hamiltonian (= one basis function per
+orbital).
 """
 
 # %%
@@ -32,7 +44,14 @@ from mlelec.utils.property_utils import instantiate_mf  # noqa: E402
 
 torch.set_default_dtype(torch.float64)
 
-# sphinx_gallery_thumbnail_number = 3
+
+# %%
+# Above, we also set the pyscf-AD backend to torch. Our training
+# infrastructure is pytorch based, 
+# and do backpropagation for
+# our computed molecular properties (dipole moment and polarisablity)
+# trough pyscf-AD during training.
+
 
 
 # %%
@@ -165,19 +184,9 @@ ml_data._split_indices(
 # to compute the atomic and pair-wise features for each structure
 # in the trainingset. The output is a tensormap, containing all atomic
 # and pair-wise features ordered by the atoms, and descriptor parameters
-# (inversion_sigma, spherical_harmonics_l, species_center, species_neighbor,
+# (o3_sigma, o3_lambda, center_type, neighbor_type,
 # and block type).
 # We then assign the computed features to the machine learning dataloader (ml_data).
-
-# hypers = {
-#    "cutoff": 2.5,
-#    "max_radial": 6,
-#    "max_angular": 4,
-#    "atomic_gaussian_width": 0.3,
-#    "center_atom_weight": 1,
-#    "radial_basis": {"Gto": {}},
-#    "cutoff_function": {"ShiftedCosine": {"width": 0.1}},
-# }
 
 hypers = {
     "cutoff": {"radius": 2.5, "smoothing": {"type": "ShiftedCosine", "width": 0.1}},
@@ -188,18 +197,6 @@ hypers = {
         "radial": {"type": "Gto", "max_radial": 5},
     },
 }
-
-
-# hypers_pair = {
-#    "cutoff": 2.5,
-#    "max_radial": 6,
-#    "max_angular": 4,
-#    "atomic_gaussian_width": 0.3,
-#    "center_atom_weight": 1,
-#    "radial_basis": {"Gto": {}},
-#    "cutoff_function": {"ShiftedCosine": {"width": 0.1}},
-#    # "radial_scaling": {"Willatt2018": {"scale": 2.0, "rate": 1.0, "exponent": 4}},
-# }
 
 hypers_pair = {
     "cutoff": {"radius": 2.5, "smoothing": {"type": "ShiftedCosine", "width": 0.1}},
