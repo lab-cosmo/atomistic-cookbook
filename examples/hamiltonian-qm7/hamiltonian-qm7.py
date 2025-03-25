@@ -58,9 +58,9 @@ torch.set_default_dtype(torch.float64)
 # Optionally, noise can be added to the ridge regression fit.
 
 
-NUM_FRAMES = 20#100  #
+NUM_FRAMES = 100  # 100  #
 BATCH_SIZE = 4  # 50
-NUM_EPOCHS = 5 #100
+NUM_EPOCHS = 100  # 100
 SHUFFLE_SEED = 42
 TRAIN_FRAC = 0.7
 TEST_FRAC = 0.1
@@ -169,24 +169,46 @@ ml_data._split_indices(
 # and block type).
 # We then assign the computed features to the machine learning dataloader (ml_data).
 
+# hypers = {
+#    "cutoff": 2.5,
+#    "max_radial": 6,
+#    "max_angular": 4,
+#    "atomic_gaussian_width": 0.3,
+#    "center_atom_weight": 1,
+#    "radial_basis": {"Gto": {}},
+#    "cutoff_function": {"ShiftedCosine": {"width": 0.1}},
+# }
+
 hypers = {
-    "cutoff": 2.5,
-    "max_radial": 6,
-    "max_angular": 4,
-    "atomic_gaussian_width": 0.3,
-    "center_atom_weight": 1,
-    "radial_basis": {"Gto": {}},
-    "cutoff_function": {"ShiftedCosine": {"width": 0.1}},
+    "cutoff": {"radius": 2.5, "smoothing": {"type": "ShiftedCosine", "width": 0.1}},
+    "density": {"type": "Gaussian", "width": 0.3},
+    "basis": {
+        "type": "TensorProduct",
+        "max_angular": 4,
+        "radial": {"type": "Gto", "max_radial": 5},
+    },
 }
+
+
+# hypers_pair = {
+#    "cutoff": 2.5,
+#    "max_radial": 6,
+#    "max_angular": 4,
+#    "atomic_gaussian_width": 0.3,
+#    "center_atom_weight": 1,
+#    "radial_basis": {"Gto": {}},
+#    "cutoff_function": {"ShiftedCosine": {"width": 0.1}},
+#    # "radial_scaling": {"Willatt2018": {"scale": 2.0, "rate": 1.0, "exponent": 4}},
+# }
+
 hypers_pair = {
-    "cutoff": 2.5,
-    "max_radial": 6,
-    "max_angular": 4,
-    "atomic_gaussian_width": 0.3,
-    "center_atom_weight": 1,
-    "radial_basis": {"Gto": {}},
-    "cutoff_function": {"ShiftedCosine": {"width": 0.1}},
-    # "radial_scaling": {"Willatt2018": {"scale": 2.0, "rate": 1.0, "exponent": 4}},
+    "cutoff": {"radius": 2.5, "smoothing": {"type": "ShiftedCosine", "width": 0.1}},
+    "density": {"type": "Gaussian", "width": 0.3},
+    "basis": {
+        "type": "TensorProduct",
+        "max_angular": 4,
+        "radial": {"type": "Gto", "max_radial": 5},
+    },
 }
 
 features = compute_features_for_target(
@@ -245,13 +267,13 @@ pred_fock = model.forward(
     add_noise=NOISE,
 )
 
-# We save the reference values of the target values in 
-# the minimal and large basis into lists, to which we 
+# We save the reference values of the target values in
+# the minimal and large basis into lists, to which we
 # use in the training and validation step during training
-# to assess the progress. 
+# to assess the progress.
 
-ref_polar_lb = molecule_data.lb_target["polarisability"]
-ref_dip_lb = molecule_data.lb_target["dipole_moment"]
+# ref_polar_lb = molecule_data.lb_target["polarisability"]
+# ref_dip_lb = molecule_data.lb_target["dipole_moment"]
 
 ref_eva_lb = []
 for i in range(len(molecule_data.lb_target["fock"])):
@@ -268,7 +290,7 @@ for i in range(len(molecule_data.target["fock"])):
     eig = scipy.linalg.eigvalsh(f, s)
     ref_eva.append(torch.from_numpy(eig))
 
-# var_eva = torch.cat([ref_eva_lb[i].flatten() for i in range(len(ref_eva_lb))]).var()
+var_eva = torch.cat([ref_eva_lb[i].flatten() for i in range(len(ref_eva_lb))]).var()
 
 with io.capture_output() as captured:
     all_mfs, fockvars = instantiate_mf(
@@ -282,7 +304,7 @@ with io.capture_output() as captured:
 # --------------------------------
 #
 
-# Set loss function, optimizer and scheduler 
+# Set loss function, optimizer and scheduler
 
 loss_fn = mlmetrics.mse_per_atom
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)
@@ -303,7 +325,7 @@ fit_args = {
     "ref_eva": ref_eva_lb,
     "ref_dipole": None,
     "ref_polar": None,
-    "var_eva": None,
+    "var_eva": var_eva,
     "var_dipole": None,
     "var_polar": None,
     "weight_eva": W_EVA,
@@ -340,9 +362,8 @@ plot_losses(history, save=True, savename=f"{FOLDER_NAME}/loss_vs_epoch.pdf")
 # Parity plot
 # -----------
 # To compare the prediction of the trained model for the eigenvalues,
-# we plot the predicted eigenvalues against out target (which is
-# the eigenvalues obtained from
-# diagonalizing the Hamiltonian from DFT).
+# we compute predicted eigenvalues and the target eigenvalues by
+# diagonalizing the respective Hamiltonian.
 
 
 eva_test = []
@@ -361,6 +382,14 @@ for j, i in enumerate(test_dl.dataset.test_idx):
 
     eig_pred = torch.linalg.eigvalsh(f_pred[j])
     eva_test_pred.append(eig_pred)
+
+# After computing the eigenvalues, we now can compare them
+# in a parity plot.
+# The 'STO-3G' illustrates the difference of the two computed datasets,
+# the STO-3G eigenvalues from DFT against the ones obtained with the large basis
+# def2-TZVP. One can clearly see the difference between the eigenvalues,
+# especially for the higher eigenvalues.
+# The results of the upscale Hamiltonian model are plotted with the label 'ML'.
 
 
 plt.figure()
@@ -387,8 +416,8 @@ plt.plot(
 )
 plt.ylim(-25, 20)
 plt.xlim(-25, 20)
-plt.xlabel("Reference eigenvalues [eV]")
-plt.ylabel("Predicted eigenvalues [eV]")
+plt.xlabel("Reference eigenvalues ")
+plt.ylabel("Predicted eigenvalues ")
 plt.savefig(f"{FOLDER_NAME}/parity_eva.pdf")
 plt.legend()
 plt.show()
