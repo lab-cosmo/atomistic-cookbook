@@ -222,6 +222,7 @@ train_dl, val_dl, test_dl = get_dataloader(
     ml_data, model_return="blocks", batch_size=BATCH_SIZE
 )
 
+# %%
 # Depending on the diversity of the structures in the datasets, it can occure that
 # some blocks are empty, because certain structural features are only present in
 # certain structures (e.g. if we would have some organic molecules
@@ -268,6 +269,7 @@ pred_fock = model.forward(
     add_noise=NOISE,
 )
 
+# %%
 # We save the reference values of the target values in
 # the minimal and large basis into lists, to which we
 # use in the training and validation step during training
@@ -384,6 +386,7 @@ for j, i in enumerate(test_dl.dataset.test_idx):
     eig_pred = torch.linalg.eigvalsh(f_pred[j])
     eva_test_pred.append(eig_pred)
 
+# %%
 # After computing the eigenvalues, we now can compare them
 # in a parity plot.
 # The 'STO-3G' illustrates the difference of the two computed datasets,
