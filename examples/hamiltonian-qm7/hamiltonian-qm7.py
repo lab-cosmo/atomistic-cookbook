@@ -16,7 +16,7 @@ More details on indirect learning can be found in
 The indirect targeting of properties us to do an upscaling approach, where we
 target properties of density functional theory (DFT)
 calculations with a larger basis (
-multiple basis functions per orbital, which is 
+multiple basis functions per orbital, which is
 expected to be more accurate)
 to learn a minimal basis Hamiltonian (one basis function per
 orbital).
@@ -245,7 +245,14 @@ ml_data.feat_train, ml_data.feat_val, ml_data.feat_test = drop_zero_blocks(
 #
 # Next, we set up our linear neural network model.
 # As a good initial starting guess, we fit a ridge regression model
-# on the trainingset. This gives us quickly and reliably
+# on the trainingset.
+# For this, we use `Ridge regression
+# <https://scikit-learn.org/1.5/modules/generated/sklearn.linear_model.Ridge.html>`__
+# as implemented in `scikit-learn <https://scikit-learn.org/stable/>`__.
+# Compare to our Periodic `Hamiltonian Model Example
+# <https://atomistic-cookbook.org/examples/periodic-hamiltonian/periodic-hamiltonian.html>`__
+# for further details.
+# This gives us quickly and reliably
 # parameters for the neural network, that are better than random
 # initialization. We will later compare the pred_fock from
 # the thus initialized model to the one after batch-wise training.
