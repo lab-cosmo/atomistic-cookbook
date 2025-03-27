@@ -23,7 +23,16 @@ orbital).
 """
 
 # %%
-# First, import the necessary packages
+# Python environment and used packages 
+# ------------------------------------
+#
+
+# %%
+# First, we need to create a virtual environment and install
+# all necessary packages. The required packages are provided
+# in the environment.yml below.
+# Once the virtual environment is installed and loaded,
+# we can import the necessary packages
 #
 
 import os
@@ -53,8 +62,8 @@ torch.set_default_dtype(torch.float64)
 # %%
 # Above, we also set the pyscf-AD backend to torch. Our training
 # infrastructure is pytorch based,
-# and do backpropagation for
-# our computed molecular properties (dipole moment and polarisablity)
+# and does backpropagation for
+# the computed molecular properties (dipole moment and polarisablity)
 # through pyscf-AD during training.
 
 
@@ -88,9 +97,9 @@ torch.set_default_dtype(torch.float64)
 # Optionally, noise can be added to the ridge regression fit.
 
 
-NUM_FRAMES = 100  # 100  #
-BATCH_SIZE = 4  # 50
-NUM_EPOCHS = 100  # 100
+NUM_FRAMES = 100  
+BATCH_SIZE = 4 
+NUM_EPOCHS = 100  
 SHUFFLE_SEED = 42
 TRAIN_FRAC = 0.7
 TEST_FRAC = 0.1
@@ -161,7 +170,7 @@ save_parameters(
 # The dataset, we can then load into our dataloader ml_data, together with some
 # settings on how to get data from the dataloader.
 # Finally, we define the desired dataset split for training, validation,
-# and testing.
+# and testing from the parameters defined above.
 
 molecule_data = MoleculeDataset(
     mol_name="ethane",
@@ -193,6 +202,14 @@ ml_data._split_indices(
 # Compute Features
 # ----------------
 #
+# We use equivariant, SOAP based features for the atomic and
+# pair-wise description of our atomic enviroments. These features are
+# the input for the machine learning model, and based on these the model
+# will predict values for the corresponding Hamiltonian subblock.
+# For details on the exact form of the features and the division of the
+# hamiltonian into blocks, please have a look at our
+# `Periodic Hamiltonian Model Example
+# <https://atomistic-cookbook.org/examples/periodic-hamiltonian/periodic-hamiltonian.html>`__
 # We use `featomic <https://github.com/metatensor/featomic/>`_
 # to compute the atomic and pair-wise features for each structure
 # in the trainingset. The output is a tensormap, containing all atomic
@@ -258,7 +275,7 @@ ml_data.feat_train, ml_data.feat_val, ml_data.feat_test = drop_zero_blocks(
 # For this, we use `Ridge regression
 # <https://scikit-learn.org/1.5/modules/generated/sklearn.linear_model.Ridge.html>`__
 # as implemented in `scikit-learn <https://scikit-learn.org/stable/>`__.
-# Compare to our Periodic `Hamiltonian Model Example
+# Compare to our `Periodic Hamiltonian Model Example
 # <https://atomistic-cookbook.org/examples/periodic-hamiltonian/periodic-hamiltonian.html>`__
 # for further details.
 # This gives us quickly and reliably
