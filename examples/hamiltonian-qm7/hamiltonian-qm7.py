@@ -63,11 +63,18 @@ torch.set_default_dtype(torch.float64)
 # -----------------------------
 #
 # We use here as an example a set of 100 ethane structures.
-# For all structures, we ran pyscf calculations with the minimal
-# basis set STO-3G and def2-TZVP.
+# For all structures, we ran pyscf calculations with B3LYP functional
+# for both, a minimal
+# basis set (STO-3G) and a large basis set (def2-TZVP).
 # We stored the output hamiltonian, dipole moments, polarisability
 # and overlap matrices in hickle format.
-# The first three will be used as target in the following learning exercise.
+# Here, we target to learn indirectly the hamiltonian, by using as
+# targets properties that can be derived from the hamiltonian,
+# i.e. the eigenvalues, the dipole moments, and the polarisability.
+# Thus, during training,
+# the model itself will predict the hamiltonian, from which we then compute
+# the properties and from these properties we
+# calculate the loss with which we train the model.
 
 # %%
 # Set parameters for training
@@ -98,7 +105,7 @@ W_DIP = 0  # 1e3
 W_POL = 0  # 1e2
 DEVICE = "cpu"
 
-ORTHOGONAL = True  # set to 'FALSE' if working in the non-orthogonal basis
+ORTHOGONAL = False  # set to 'FALSE' if working in the non-orthogonal basis
 FOLDER_NAME = "FPS/ML_orthogonal_eva"
 NOISE = False
 
@@ -142,7 +149,9 @@ save_parameters(
 # Create Datasets
 # ---------------
 #
-# We use the dataloader of the mlelec package, and load the ethane
+# We use the dataloader of the
+# `mlelec package (qm7 branch) <https://github.com/curiosity54/mlelec/tree/qm7>`_,
+# and load the ethane
 # dataset for the defined number of slices.
 # First, we load all relavant data (geometric structures,
 # auxiliary matrices (overlap and orbitals), and
