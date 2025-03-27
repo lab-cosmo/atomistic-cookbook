@@ -54,7 +54,7 @@ from mlelec.data.dataset import MLDataset, MoleculeDataset, get_dataloader  # no
 from mlelec.models.linear import LinearTargetModel  # noqa: E402
 from mlelec.train import Trainer  # noqa: E402
 from mlelec.utils.property_utils import instantiate_mf  # noqa: E402
-
+from mlelec.utils.twocenter_utils import fix_orbital_order
 
 torch.set_default_dtype(torch.float64)
 
@@ -181,8 +181,8 @@ molecule_data = MoleculeDataset(
     device=DEVICE,
     aux=["overlap", "orbitals"],
     lb_aux=["overlap", "orbitals"],
-    target=["fock"],
-    lb_target=["fock"],
+    target=["fock", "eigenvalues"],
+    lb_target=["fock", "eigenvalues"],
 )
 
 ml_data = MLDataset(
@@ -311,22 +311,22 @@ pred_fock = model.forward(
 # ref_polar_lb = molecule_data.lb_target["polarisability"]
 # ref_dip_lb = molecule_data.lb_target["dipole_moment"]
 
-ref_eva_lb = []
-for i in range(len(molecule_data.lb_target["fock"])):
-    f = molecule_data.lb_target["fock"][i]
-    s = molecule_data.lb_aux_data["overlap"][i]
-    eig = scipy.linalg.eigvalsh(f, s)
-    ref_eva_lb.append(torch.from_numpy(eig))
+# ref_eva_lb = []
+# for i in range(len(molecule_data.lb_target["fock"])):
+#     f = molecule_data.lb_target["fock"][i]
+#     s = molecule_data.lb_aux_data["overlap"][i]
+#     eig = scipy.linalg.eigvalsh(f, s)
+#     ref_eva_lb.append(torch.from_numpy(eig))
 
 
-ref_eva = []
-for i in range(len(molecule_data.target["fock"])):
-    f = molecule_data.target["fock"][i]
-    s = molecule_data.aux_data["overlap"][i]
-    eig = scipy.linalg.eigvalsh(f, s)
-    ref_eva.append(torch.from_numpy(eig))
+# ref_eva = []
+# for i in range(len(molecule_data.target["fock"])):
+#     f = molecule_data.target["fock"][i]
+#     s = molecule_data.aux_data["overlap"][i]
+#     eig = scipy.linalg.eigvalsh(f, s)
+#     ref_eva.append(torch.from_numpy(eig))
 
-var_eva = torch.cat([ref_eva_lb[i].flatten() for i in range(len(ref_eva_lb))]).var()
+# var_eva = torch.cat([ref_eva_lb[i].flatten() for i in range(len(ref_eva_lb))]).var()
 
 with io.capture_output() as captured:
     all_mfs, fockvars = instantiate_mf(
@@ -358,16 +358,11 @@ fit_args = {
     "ml_data": ml_data,
     "all_mfs": all_mfs,
     "loss_fn": loss_fn,
-    "ref_eva": ref_eva_lb,
-    "ref_dipole": None,
-    "ref_polar": None,
-    "var_eva": var_eva,
-    "var_dipole": None,
-    "var_polar": None,
     "weight_eva": W_EVA,
     "weight_dipole": W_DIP,
     "weight_polar": W_POL,
     "ORTHOGONAL": ORTHOGONAL,
+    "upscale": True
 }
 
 
@@ -402,22 +397,17 @@ plot_losses(history, save=True, savename=f"{FOLDER_NAME}/loss_vs_epoch.pdf")
 # diagonalizing the respective Hamiltonian.
 
 
-eva_test = []
-eva_test_pred = []
 f_pred = model.forward(
     ml_data.feat_test,
     return_type="tensor",
     batch_indices=ml_data.test_idx,
 )
 
+eva_test_pred = []
+fix_ovlp = fix_orbital_order(molecule_data.aux_data["overlap"], ml_data.structures, molecule_data.aux_data["orbitals"])
 for j, i in enumerate(test_dl.dataset.test_idx):
-    f = molecule_data.lb_target["fock"][i]
-    s = molecule_data.lb_aux_data["overlap"][i]
-    eig = scipy.linalg.eigvalsh(f, s)[: molecule_data.target["fock"][i].shape[0]]
-    eva_test.append(torch.from_numpy(eig))
-
-    eig_pred = torch.linalg.eigvalsh(f_pred[j])
-    eva_test_pred.append(eig_pred)
+    eig_pred = scipy.linalg.eigvalsh(f_pred[j].detach().numpy(), fix_ovlp[i].detach().numpy())
+    eva_test_pred.append(torch.from_numpy(eig_pred))
 
 # %%
 # After computing the eigenvalues, we now can compare them
@@ -432,8 +422,8 @@ for j, i in enumerate(test_dl.dataset.test_idx):
 plt.figure()
 plt.plot([-25, 20], [-25, 20], "k--")
 plt.plot(
-    torch.cat(eva_test).detach().numpy() * Hartree,
-    torch.cat([ref_eva[i] for i in ml_data.test_idx]).detach().numpy() * Hartree,
+    torch.cat([molecule_data.lb_target["eigenvalues"][i][:molecule_data.target["eigenvalues"][i].shape[0]] for i in ml_data.test_idx]).detach().numpy() * Hartree,
+    torch.cat([molecule_data.target["eigenvalues"][i] for i in ml_data.test_idx]).detach().numpy() * Hartree,
     "o",
     alpha=0.7,
     color="gray",
@@ -442,7 +432,7 @@ plt.plot(
     label="STO-3G",
 )
 plt.plot(
-    torch.cat(eva_test).detach().numpy() * Hartree,
+    torch.cat([molecule_data.lb_target["eigenvalues"][i][:molecule_data.target["eigenvalues"][i].shape[0]] for i in ml_data.test_idx]).detach().numpy() * Hartree,
     torch.cat(eva_test_pred).detach().numpy() * Hartree,
     "o",
     alpha=0.7,
@@ -453,8 +443,8 @@ plt.plot(
 )
 plt.ylim(-25, 20)
 plt.xlim(-25, 20)
-plt.xlabel("Reference eigenvalues ")
-plt.ylabel("Predicted eigenvalues ")
+plt.xlabel("Reference eigenvalues")
+plt.ylabel("Predicted eigenvalues")
 plt.savefig(f"{FOLDER_NAME}/parity_eva.pdf")
 plt.legend()
 plt.show()
