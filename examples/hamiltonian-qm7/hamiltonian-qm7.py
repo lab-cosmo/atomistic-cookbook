@@ -1,19 +1,24 @@
 """
-Molecular Hamiltonian learning with Indirect Targets
+Hamiltonian Learning for Molecules with Indirect Targets
 =============================
 
-This tutorial explains how to train a machine learning model 
+:Authors: Divya Suman `@DivyaSuman14 <https://github.com/DivyaSuman14>`__,
+          Hanna Tuerk `@HannaTuerk <https://github.com/HannaTuerk>`__
+
+This tutorial explains how to train a machine learning model
 to predict the Hamiltonian of a molecular system.
-For this, we here do indirect learning by targeting properties 
-that can be derived from the Hamiltonian such 
+For this, we here do indirect learning by targeting properties
+that can be derived from the Hamiltonian such
 as the eigenvalues, the dipole moment, and the polarisability.
-More details on indirect learning can be found in 
-`ACS Cent. Sci. 2024, 10, 637−648. 
+More details on indirect learning can be found in
+`ACS Cent. Sci. 2024, 10, 637−648.
 <https://pubs.acs.org/doi/full/10.1021/acscentsci.3c01480>`_ .
-The indirect targeting of properties us to do an upscaling approach, where we 
+The indirect targeting of properties us to do an upscaling approach, where we
 target properties of density functional theory (DFT)
-calculations with a larger basis (= expected to be more accurate)
-to learn a minimal basis Hamiltonian (= one basis function per
+calculations with a larger basis (
+multiple basis functions per orbital, which is 
+expected to be more accurate)
+to learn a minimal basis Hamiltonian (one basis function per
 orbital).
 """
 
@@ -47,11 +52,10 @@ torch.set_default_dtype(torch.float64)
 
 # %%
 # Above, we also set the pyscf-AD backend to torch. Our training
-# infrastructure is pytorch based, 
+# infrastructure is pytorch based,
 # and do backpropagation for
 # our computed molecular properties (dipole moment and polarisablity)
-# trough pyscf-AD during training.
-
+# through pyscf-AD during training.
 
 
 # %%
