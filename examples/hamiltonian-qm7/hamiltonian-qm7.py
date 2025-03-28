@@ -688,29 +688,29 @@ ml_data.feat_train, ml_data.feat_val, ml_data.feat_test = drop_zero_blocks(
 # Here, we also first fit a ridge regression model to the data.
 
 model = LinearTargetModel(
-   dataset=ml_data, nlayers=1, nhidden=16, bias=False, device=DEVICE
+    dataset=ml_data, nlayers=1, nhidden=16, bias=False, device=DEVICE
 )
 
 pred_ridges, ridges = model.fit_ridge_analytical(
-   alpha=np.logspace(-8, 3, 12),
-   cv=3,
-   set_bias=False,
+    alpha=np.logspace(-8, 3, 12),
+    cv=3,
+    set_bias=False,
 )
 
 pred_fock = model.forward(
-   ml_data.feat_train,
-   return_type="tensor",
-   batch_indices=ml_data.train_idx,
-   ridge_fit=True,
-   add_noise=NOISE,
+    ml_data.feat_train,
+    return_type="tensor",
+    batch_indices=ml_data.train_idx,
+    ridge_fit=True,
+    add_noise=NOISE,
 )
 
 with io.capture_output() as captured:
-   all_mfs, fockvars = instantiate_mf(
-       ml_data,
-       fock_predictions=None,
-       batch_indices=list(range(len(ml_data.structures))),
-   )
+    all_mfs, fockvars = instantiate_mf(
+        ml_data,
+        fock_predictions=None,
+        batch_indices=list(range(len(ml_data.structures))),
+    )
 
 # %%
 # Training parameters and training
@@ -722,9 +722,9 @@ with io.capture_output() as captured:
 loss_fn = mlmetrics.mse_per_atom
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-   optimizer,
-   factor=0.5,
-   patience=3,  # 20,
+    optimizer,
+    factor=0.5,
+    patience=3,  # 20,
 )
 
 # Initialize trainer
@@ -732,27 +732,27 @@ trainer = Trainer(model, optimizer, scheduler, DEVICE)
 
 # Define necessary arguments for the training and validation process
 fit_args = {
-   "ml_data": ml_data,
-   "all_mfs": all_mfs,
-   "loss_fn": loss_fn,
-   "weight_eva": W_EVA,
-   "weight_dipole": W_DIP,
-   "weight_polar": W_POL,
-   "ORTHOGONAL": ORTHOGONAL,
-   "upscale": True,
+    "ml_data": ml_data,
+    "all_mfs": all_mfs,
+    "loss_fn": loss_fn,
+    "weight_eva": W_EVA,
+    "weight_dipole": W_DIP,
+    "weight_polar": W_POL,
+    "ORTHOGONAL": ORTHOGONAL,
+    "upscale": True,
 }
 
 
 # Train and validate
 history = trainer.fit(
-   train_dl,
-   val_dl,
-   NUM_EPOCHS,
-   EARLY_STOP_CRITERION,
-   FOLDER_NAME,
-   VERBOSE,
-   DUMP_HIST,
-   **fit_args,
+    train_dl,
+    val_dl,
+    NUM_EPOCHS,
+    EARLY_STOP_CRITERION,
+    FOLDER_NAME,
+    VERBOSE,
+    DUMP_HIST,
+    **fit_args,
 )
 
 # Save the loss history
@@ -777,22 +777,22 @@ plot_losses(history, save=True, savename=f"{FOLDER_NAME}/loss_vs_epoch.pdf")
 
 
 f_pred = model.forward(
-   ml_data.feat_test,
-   return_type="tensor",
-   batch_indices=ml_data.test_idx,
+    ml_data.feat_test,
+    return_type="tensor",
+    batch_indices=ml_data.test_idx,
 )
 
 eva_test_pred = []
 fix_ovlp = fix_orbital_order(
-   molecule_data.aux_data["overlap"],
-   ml_data.structures,
-   molecule_data.aux_data["orbitals"],
+    molecule_data.aux_data["overlap"],
+    ml_data.structures,
+    molecule_data.aux_data["orbitals"],
 )
 for j, i in enumerate(test_dl.dataset.test_idx):
-   eig_pred = scipy.linalg.eigvalsh(
-       f_pred[j].detach().numpy(), fix_ovlp[i].detach().numpy()
-   )
-   eva_test_pred.append(torch.from_numpy(eig_pred))
+    eig_pred = scipy.linalg.eigvalsh(
+        f_pred[j].detach().numpy(), fix_ovlp[i].detach().numpy()
+    )
+    eva_test_pred.append(torch.from_numpy(eig_pred))
 
 # %%
 # After computing the eigenvalues, we now can compare them
@@ -807,47 +807,47 @@ for j, i in enumerate(test_dl.dataset.test_idx):
 plt.figure()
 plt.plot([-25, 20], [-25, 20], "k--")
 plt.plot(
-   torch.cat(
-       [
-           molecule_data.lb_target["eigenvalues"][i][
-               : molecule_data.target["eigenvalues"][i].shape[0]
-           ]
-           for i in ml_data.test_idx
-       ]
-   )
-   .detach()
-   .numpy()
-   * Hartree,
-   torch.cat([molecule_data.target["eigenvalues"][i] for i in ml_data.test_idx])
-   .detach()
-   .numpy()
-   * Hartree,
-   "o",
-   alpha=0.7,
-   color="gray",
-   markeredgecolor="black",
-   markeredgewidth=0.2,
-   label="STO-3G",
+    torch.cat(
+        [
+            molecule_data.lb_target["eigenvalues"][i][
+                : molecule_data.target["eigenvalues"][i].shape[0]
+            ]
+            for i in ml_data.test_idx
+        ]
+    )
+    .detach()
+    .numpy()
+    * Hartree,
+    torch.cat([molecule_data.target["eigenvalues"][i] for i in ml_data.test_idx])
+    .detach()
+    .numpy()
+    * Hartree,
+    "o",
+    alpha=0.7,
+    color="gray",
+    markeredgecolor="black",
+    markeredgewidth=0.2,
+    label="STO-3G",
 )
 plt.plot(
-   torch.cat(
-       [
-           molecule_data.lb_target["eigenvalues"][i][
-               : molecule_data.target["eigenvalues"][i].shape[0]
-           ]
-           for i in ml_data.test_idx
-       ]
-   )
-   .detach()
-   .numpy()
-   * Hartree,
-   torch.cat(eva_test_pred).detach().numpy() * Hartree,
-   "o",
-   alpha=0.7,
-   color="royalblue",
-   markeredgecolor="black",
-   markeredgewidth=0.2,
-   label="ML",
+    torch.cat(
+        [
+            molecule_data.lb_target["eigenvalues"][i][
+                : molecule_data.target["eigenvalues"][i].shape[0]
+            ]
+            for i in ml_data.test_idx
+        ]
+    )
+    .detach()
+    .numpy()
+    * Hartree,
+    torch.cat(eva_test_pred).detach().numpy() * Hartree,
+    "o",
+    alpha=0.7,
+    color="royalblue",
+    markeredgecolor="black",
+    markeredgewidth=0.2,
+    label="ML",
 )
 plt.ylim(-25, 20)
 plt.xlim(-25, 20)
@@ -856,4 +856,3 @@ plt.ylabel("Predicted eigenvalues")
 plt.savefig(f"{FOLDER_NAME}/parity_eva.pdf")
 plt.legend()
 plt.show()
-
