@@ -1,5 +1,5 @@
-The Atomistic Cookbook
-======================
+The Atomistic Cookbook repository
+=================================
 
 .. image:: ./docs/src/_static/cookbook-icon.svg
    :alt: A cookbook with a cover showing a water molecule and mathematical symbols
@@ -9,7 +9,7 @@ The Atomistic Cookbook
 
 This repository contains the source code for a collection of software recipes,
 that combine a multitude of libraries and modeling tools to perform computer
-simulations of matter at the atomic scale. It also contains the infratructure to
+simulations of matter at the atomic scale. It also contains the infrastructure to
 automatically compile and deploy the recipes as a GitHub pages site,
 accessible at `atomistic-cookbook.org <https://atomistic-cookbook.org>`_.
 
