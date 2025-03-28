@@ -73,7 +73,6 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy
 import torch
 from ase.units import Hartree
 from IPython.utils import io
@@ -87,8 +86,12 @@ import mlelec.metrics as mlmetrics  # noqa: E402
 from mlelec.data.dataset import MLDataset, MoleculeDataset, get_dataloader  # noqa: E402
 from mlelec.models.linear import LinearTargetModel  # noqa: E402
 from mlelec.train import Trainer  # noqa: E402
-from mlelec.utils.property_utils import instantiate_mf  # noqa: E402
-from mlelec.utils.twocenter_utils import fix_orbital_order  # noqa: E402
+from mlelec.utils.property_utils import (  # noqa: E402
+    compute_dipole_moment,
+    compute_eigvals,
+    compute_polarisability,
+    instantiate_mf,
+)
 
 
 torch.set_default_dtype(torch.float64)
@@ -134,7 +137,7 @@ torch.set_default_dtype(torch.float64)
 
 NUM_FRAMES = 100
 BATCH_SIZE = 4
-NUM_EPOCHS = 100
+NUM_EPOCHS = 100  # 100
 SHUFFLE_SEED = 42
 TRAIN_FRAC = 0.7
 TEST_FRAC = 0.1
@@ -408,24 +411,24 @@ plot_losses(history, save=True, savename=f"{FOLDER_NAME}/loss_vs_epoch.pdf")
 # diagonalizing the respective Hamiltonian.
 
 
-f_pred = model.forward(
-    ml_data.feat_test,
-    return_type="tensor",
-    batch_indices=ml_data.test_idx,
-)
-
-eva_test_pred = []
-fix_ovlp = fix_orbital_order(
-    molecule_data.aux_data["overlap"],
-    ml_data.structures,
-    molecule_data.aux_data["orbitals"],
-)
-for j, i in enumerate(test_dl.dataset.test_idx):
-    eig_pred = scipy.linalg.eigvalsh(
-        f_pred[j].detach().numpy(), fix_ovlp[i].detach().numpy()
-    )
-    eva_test_pred.append(torch.from_numpy(eig_pred))
-
+# f_pred = model.forward(
+#    ml_data.feat_test,
+#    return_type="tensor",
+#    batch_indices=ml_data.test_idx,
+# )
+#
+# eva_test_pred = []
+# fix_ovlp = fix_orbital_order(
+#    molecule_data.aux_data["overlap"],
+#    ml_data.structures,
+#    molecule_data.aux_data["orbitals"],
+# )
+# for j, i in enumerate(test_dl.dataset.test_idx):
+#    eig_pred = scipy.linalg.eigvalsh(
+#        f_pred[j].detach().numpy(), fix_ovlp[i].detach().numpy()
+#    )
+#    eva_test_pred.append(torch.from_numpy(eig_pred))
+#
 # %%
 # After computing the eigenvalues, we now can compare them
 # in a parity plot.
@@ -436,58 +439,93 @@ for j, i in enumerate(test_dl.dataset.test_idx):
 # The results of the upscale Hamiltonian model are plotted with the label 'ML'.
 
 
-plt.figure()
-plt.plot([-25, 20], [-25, 20], "k--")
-plt.plot(
-    torch.cat(
-        [
-            molecule_data.lb_target["eigenvalues"][i][
-                : molecule_data.target["eigenvalues"][i].shape[0]
+def plot_parity_property(molecule_data, propert="eigenvalues", orthogonal=True):
+    plt.figure()
+    plt.plot([-25, 20], [-25, 20], "k--")
+    plt.plot(
+        torch.cat(
+            [
+                molecule_data.lb_target[propert][i][
+                    : molecule_data.target[propert][i].shape[0]
+                ]
+                for i in ml_data.test_idx
             ]
-            for i in ml_data.test_idx
-        ]
+        )
+        .detach()
+        .numpy()
+        .flatten()
+        * Hartree,
+        torch.cat([molecule_data.target[propert][i] for i in ml_data.test_idx])
+        .detach()
+        .numpy()
+        .flatten()
+        * Hartree,
+        "o",
+        alpha=0.7,
+        color="gray",
+        markeredgecolor="black",
+        markeredgewidth=0.2,
+        label="STO-3G",
     )
-    .detach()
-    .numpy()
-    * Hartree,
-    torch.cat([molecule_data.target["eigenvalues"][i] for i in ml_data.test_idx])
-    .detach()
-    .numpy()
-    * Hartree,
-    "o",
-    alpha=0.7,
-    color="gray",
-    markeredgecolor="black",
-    markeredgewidth=0.2,
-    label="STO-3G",
-)
-plt.plot(
-    torch.cat(
-        [
-            molecule_data.lb_target["eigenvalues"][i][
-                : molecule_data.target["eigenvalues"][i].shape[0]
+    f_pred = model.forward(
+        ml_data.feat_test,
+        return_type="tensor",
+        batch_indices=ml_data.test_idx,
+    )
+
+    if propert == "eigenvalues":
+        prop = compute_eigvals(
+            ml_data, f_pred, range(len(ml_data.test_idx)), orthogonal=orthogonal
+        )
+        prop = torch.tensor([p for pro in prop for p in pro]).detach().numpy()
+    elif propert == "dipole_moment":
+        prop = compute_dipole_moment(
+            [molecule_data.structures[i] for i in ml_data.test_idx],
+            f_pred,
+            orthogonal=orthogonal,
+        )
+        prop = torch.tensor([p for pro in prop for p in pro]).detach().numpy()
+    elif propert == "polarisability":
+        prop = compute_polarisability(
+            [molecule_data.structures[i] for i in ml_data.test_idx],
+            f_pred,
+            orthogonal=orthogonal,
+        )
+        prop = prop.flatten().detach().numpy()
+    else:
+        print("Property not implemented")
+
+    plt.plot(
+        torch.cat(
+            [
+                molecule_data.lb_target[propert][i][
+                    : molecule_data.target[propert][i].shape[0]
+                ]
+                for i in ml_data.test_idx
             ]
-            for i in ml_data.test_idx
-        ]
+        )
+        .detach()
+        .numpy()
+        .flatten()
+        * Hartree,
+        prop * Hartree,
+        "o",
+        alpha=0.7,
+        color="royalblue",
+        markeredgecolor="black",
+        markeredgewidth=0.2,
+        label="ML",
     )
-    .detach()
-    .numpy()
-    * Hartree,
-    torch.cat(eva_test_pred).detach().numpy() * Hartree,
-    "o",
-    alpha=0.7,
-    color="royalblue",
-    markeredgecolor="black",
-    markeredgewidth=0.2,
-    label="ML",
-)
-plt.ylim(-25, 20)
-plt.xlim(-25, 20)
-plt.xlabel("Reference eigenvalues")
-plt.ylabel("Predicted eigenvalues")
-plt.savefig(f"{FOLDER_NAME}/parity_eva.pdf")
-plt.legend()
-plt.show()
+    plt.ylim(-25, 20)
+    plt.xlim(-25, 20)
+    plt.xlabel(f"Reference {propert}")
+    plt.ylabel(f"Predicted {propert}")
+    plt.savefig(f"{FOLDER_NAME}/parity_{propert}.pdf")
+    plt.legend()
+    plt.show()
+
+
+plot_parity_property(molecule_data, propert="eigenvalues", orthogonal=ORTHOGONAL)
 
 # %%
 # Targeting the Multiple Properties
@@ -504,7 +542,7 @@ plt.show()
 # %%
 # Get Data and Prepare Data Set
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
+
 # %%
 # We use the same dataset of 100 ethane structures
 # that we used in the example above.
@@ -512,7 +550,6 @@ plt.show()
 # %%
 # Set parameters for training
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
 
 # %%
 # Set the parameters for the training, including the dataset set size
@@ -522,9 +559,9 @@ plt.show()
 # Optionally, noise can be added to the ridge regression fit.
 # Here, we now need to provide different weights
 # for the different targets (eigenvalues
-# :math: `\epsilon`, the dipole moment
-# :math: `\mu`, and polarisability
-# :math: `\alpha`), which we will use when computing the loss.
+# :math:`\epsilon`, the dipole moment
+# :math:`\mu`, and polarisability
+# :math:`\alpha`), which we will use when computing the loss :math:`\mathcal{L}`.
 #
 # .. math::
 #    \mathcal{L}_{\epsilon,\mu,\alpha} = & \;
@@ -536,13 +573,12 @@ plt.show()
 #    \sum_{m=1}^{N_A} \left( \alpha_{nm} - \tilde{\alpha}_{nm} \right)^2
 #
 # where
-# :math: `N` is the number of training points,
-# :math: `O_n` is the number of MO orbitals in the nth molecule,
-# :math: `N_A` is the number of atoms
-# :math: `i`.
+# :math:`N` is the number of training points,
+# :math:`O_n` is the number of MO orbitals in the nth molecule,
+# :math:`N_A` is the number of atoms :math:`i`.
 
-# The weights
-# :math: `\omega` are based on the size of the different properties, we
+# %%
+# The weights :math: `\omega` are based on the size of the different properties, we
 # want them in the end to contribute in equal parts to the loss.
 # The following values worked well for the ethane example, but of
 # course depending on the system that one investigates another set
@@ -771,88 +807,14 @@ plot_losses(history, save=True, savename=f"{FOLDER_NAME}/loss_vs_epoch.pdf")
 # %%
 # Parity plot
 # ~~~~~~~~~~~
-# To compare the prediction of the trained model for the eigenvalues,
-# we compute predicted eigenvalues and the target eigenvalues by
-# diagonalizing the respective Hamiltonian.
-
-
-f_pred = model.forward(
-    ml_data.feat_test,
-    return_type="tensor",
-    batch_indices=ml_data.test_idx,
-)
-
-eva_test_pred = []
-fix_ovlp = fix_orbital_order(
-    molecule_data.aux_data["overlap"],
-    ml_data.structures,
-    molecule_data.aux_data["orbitals"],
-)
-for j, i in enumerate(test_dl.dataset.test_idx):
-    eig_pred = scipy.linalg.eigvalsh(
-        f_pred[j].detach().numpy(), fix_ovlp[i].detach().numpy()
-    )
-    eva_test_pred.append(torch.from_numpy(eig_pred))
-
-# %%
-# After computing the eigenvalues, we now can compare them
+# We can now compare the properties derived from the predicted hamiltonian
+# to their actual values
 # in a parity plot.
 # The 'STO-3G' illustrates the difference of the two computed datasets,
 # the STO-3G eigenvalues from DFT against the ones obtained with the large basis
-# def2-TZVP. One can clearly see the difference between the eigenvalues,
-# especially for the higher eigenvalues.
+# def2-TZVP.
 # The results of the upscale Hamiltonian model are plotted with the label 'ML'.
 
-
-plt.figure()
-plt.plot([-25, 20], [-25, 20], "k--")
-plt.plot(
-    torch.cat(
-        [
-            molecule_data.lb_target["eigenvalues"][i][
-                : molecule_data.target["eigenvalues"][i].shape[0]
-            ]
-            for i in ml_data.test_idx
-        ]
-    )
-    .detach()
-    .numpy()
-    * Hartree,
-    torch.cat([molecule_data.target["eigenvalues"][i] for i in ml_data.test_idx])
-    .detach()
-    .numpy()
-    * Hartree,
-    "o",
-    alpha=0.7,
-    color="gray",
-    markeredgecolor="black",
-    markeredgewidth=0.2,
-    label="STO-3G",
-)
-plt.plot(
-    torch.cat(
-        [
-            molecule_data.lb_target["eigenvalues"][i][
-                : molecule_data.target["eigenvalues"][i].shape[0]
-            ]
-            for i in ml_data.test_idx
-        ]
-    )
-    .detach()
-    .numpy()
-    * Hartree,
-    torch.cat(eva_test_pred).detach().numpy() * Hartree,
-    "o",
-    alpha=0.7,
-    color="royalblue",
-    markeredgecolor="black",
-    markeredgewidth=0.2,
-    label="ML",
-)
-plt.ylim(-25, 20)
-plt.xlim(-25, 20)
-plt.xlabel("Reference eigenvalues")
-plt.ylabel("Predicted eigenvalues")
-plt.savefig(f"{FOLDER_NAME}/parity_eva.pdf")
-plt.legend()
-plt.show()
+plot_parity_property(molecule_data, propert="eigenvalues", orthogonal=ORTHOGONAL)
+plot_parity_property(molecule_data, propert="dipole_moment", orthogonal=ORTHOGONAL)
+plot_parity_property(molecule_data, propert="polarisability", orthogonal=ORTHOGONAL)
