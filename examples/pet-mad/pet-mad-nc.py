@@ -23,23 +23,19 @@ MD, see also
 #     pip install git+https://github.com/lab-cosmo/pet-mad.git
 #
 
-import os
 import subprocess
-from copy import copy, deepcopy
 
 # i-PI scripting utilities
-import ase.units
 import chemiscope
 import matplotlib.pyplot as plt
-import numpy as np
-import requests
+
+# import numpy as np
+# import requests
 from ipi.utils.parsing import read_output, read_trajectory
-from ipi.utils.scripting import (
-    InteractiveSimulation,
-    forcefield_xml,
-    motion_nvt_xml,
-    simulation_xml,
-)
+from ipi.utils.scripting import InteractiveSimulation
+
+
+# from copy import copy, deepcopy
 
 
 if hasattr(__import__("builtins"), "get_ipython"):
@@ -50,7 +46,7 @@ if hasattr(__import__("builtins"), "get_ipython"):
 # Fetch PET-MAD and export the model
 # ----------------------------------
 
-## TODO
+# TODO
 
 subprocess.run("cp data/*pt .", shell=True, check=True)
 
