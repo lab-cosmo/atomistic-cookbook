@@ -12,3 +12,4 @@ training and evaluating ML models.
 - examples/water-model/water-model
 - examples/polarizability/polarizability
 - examples/pet-mad/pet-mad
+- examples/pet-mad/pet-mad-nc

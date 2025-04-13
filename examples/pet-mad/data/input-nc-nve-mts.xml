@@ -1,5 +1,5 @@
 <simulation verbosity="medium">
-<output prefix="nve-nc">
+<output prefix="nve-nc-mts">
     <properties stride="1" filename="out">
 		[step, time{picosecond}, conserved{electronvolt}, temperature{kelvin},
         kinetic_md{electronvolt}, potential{electronvolt}, 
@@ -16,15 +16,15 @@
 
 <ffdirect  name='cons' pbc="false">
     <pes>metatensor</pes>
-    <parameters>{template:nickel.xyz,model:model_c.pt,device:cpu} </parameters>
+    <parameters>{template:data/nickel.xyz,model:model_c.pt,device:cpu} </parameters>
 </ffdirect>
 <ffdirect  name='nocons' pbc="false">
     <pes>metatensor</pes>
-    <parameters>{template:nickel.xyz,model:model_nc.pt,device:cpu,non_conservative:True} </parameters>
+    <parameters>{template:data/nickel.xyz,model:model_nc.pt,device:cpu,non_conservative:True} </parameters>
 </ffdirect>
 <system>
     <initialize nbeads="1">
-        <file mode="ase" units="angstrom"> nickel.xyz </file>
+        <file mode="ase"> data/nickel.xyz </file>
         <velocities mode="thermal" units="kelvin"> 10000.0 </velocities>
     </initialize>
     <forces>
@@ -35,13 +35,11 @@
             <mts_weights>[-1,1]</mts_weights>
         </force>
     </forces>
-
     <motion mode="dynamics">
     	<dynamics mode="nve">
         	<timestep units="femtosecond"> 16 </timestep>
             <nmts>[1,8]</nmts>
         </dynamics>
     </motion>
-
 </system>
 </simulation>
