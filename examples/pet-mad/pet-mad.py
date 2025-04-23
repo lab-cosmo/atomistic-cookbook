@@ -513,7 +513,7 @@ with open("data/al6xxx-o2.in", "r") as f:
 
 ase.io.write("al6xxx-o2.data", al_surface, format="lammps-data", masses=True)
 
-subprocess.check_call(["lmp_serial", "-in", "data/al6xxx-o2.in"])
+subprocess.check_call(["lmp", "-in", "data/al6xxx-o2.in"])
 
 # %%
 #
