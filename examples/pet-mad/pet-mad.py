@@ -96,7 +96,7 @@ filename = "data/mad-test-mad-settings.xyz"
 if not os.path.exists(filename):
     url = (
         "https://huggingface.co/lab-cosmo/pet-mad/resolve/"
-        "main/benchmarks/mad-test-mad-settings-v1.0.xyz"
+        "main/benchmarks/mad-test-mad-settings.xyz"
     )
     response = requests.get(url)
     response.raise_for_status()
@@ -513,7 +513,7 @@ with open("data/al6xxx-o2.in", "r") as f:
 
 ase.io.write("al6xxx-o2.data", al_surface, format="lammps-data", masses=True)
 
-subprocess.check_call(["lmp_serial", "-in", "data/al6xxx-o2.in"])
+subprocess.check_call(["lmp", "-in", "data/al6xxx-o2.in"])
 
 # %%
 #
