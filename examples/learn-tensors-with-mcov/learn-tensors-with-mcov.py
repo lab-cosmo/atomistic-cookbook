@@ -224,8 +224,7 @@ test_set_molecules = ase.io.read("test_set.xyz", ":")
 natm = np.array([len(mol) for mol in test_set_molecules])
 
 # %%
-# We can now compare the predictions and the targets by visualzing a parity plot
-
+# We can now compare the predictions and the targets by visualizing a parity plot
 color_per_lambda = {0: "C0", 1: "C1", 2: "C2"}
 
 fig, axes = plt.subplots(1, 2)
