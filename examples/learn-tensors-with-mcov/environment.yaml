@@ -1,0 +1,12 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+    - ase
+    - git+https://github.com/metatensor/metatrain.git@tensorbasis_torchspex#egg=metatrain[soap-bpnn]
+    - metatensor>=0.2,<0.3
+    - matplotlib
+    - chemiscope
+    - featomic
