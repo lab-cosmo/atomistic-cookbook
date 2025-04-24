@@ -15,17 +15,19 @@ and can then be used in an ASE calculator.
 # Core packages
 import subprocess
 from glob import glob
-import numpy as np
+
 import ase.io
 
 # Simulation and visualization tools
 import chemiscope
 import matplotlib.pyplot as plt
 import metatensor as mts
+import numpy as np
 
 # Model wrapping and execution tools
 from featomic.clebsch_gordan import cartesian_to_spherical
 from metatensor import Labels, TensorBlock, TensorMap
+
 
 # %%
 # Load the training data
