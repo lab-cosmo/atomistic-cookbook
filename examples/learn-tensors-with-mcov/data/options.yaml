@@ -1,4 +1,3 @@
-device: cuda
 base_precision: 32
 seed: 0
 architecture:
