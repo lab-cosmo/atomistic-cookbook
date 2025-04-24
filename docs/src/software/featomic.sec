@@ -18,3 +18,4 @@ version from the `github repository <https://github.com/metatensor/featomic>`_
 - examples/periodic-hamiltonian/periodic-hamiltonian
 - examples/rotate-equivariants/rotate-equivariants
 - examples/polarizability/polarizability
+- examples/learn-tensors-with-mcov/learn-tensors-with-mcov

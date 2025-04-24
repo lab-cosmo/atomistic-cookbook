@@ -11,5 +11,6 @@ training and evaluating ML models.
 
 - examples/water-model/water-model
 - examples/polarizability/polarizability
+- examples/learn-tensors-with-mcov/learn-tensors-with-mcov
 - examples/pet-mad/pet-mad
 - examples/pet-mad-nc/pet-mad-nc

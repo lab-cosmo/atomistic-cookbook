@@ -10,5 +10,6 @@ data.
 - examples/sample-selection/sample-selection
 - examples/periodic-hamiltonian/periodic-hamiltonian
 - examples/polarizability/polarizability
+- examples/learn-tensors-with-mcov/learn-tensors-with-mcov
 - examples/pet-mad/pet-mad
 - examples/pet-mad/pet-mad-nc
