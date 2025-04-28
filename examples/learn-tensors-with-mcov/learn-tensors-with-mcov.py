@@ -7,7 +7,7 @@ Equivariant model for tensorial properties based on scalar features
 In this example, we demonstrate how to train a `metatensor atomistic model
 <https://docs.metatensor.org/latest/atomistic>`_ on dipole moments and polarizabilities
 of small molecular systems. The model is trained with
-`metatrain<https://metatensor.github.io/metatrain/latest/index.html>`_
+`metatrain <https://metatensor.github.io/metatrain/latest/index.html>`_
 and can then be used in an ASE calculator.
 """
 
@@ -29,9 +29,11 @@ from featomic.clebsch_gordan import cartesian_to_spherical
 from metatensor import Labels, TensorBlock, TensorMap
 
 
+# sphinx_gallery_thumbnail_number = 0
+
 # %%
 # Load the training data
-# ^^^^^^^^^^^^^^^^^^^^^^
+# ----------------------
 # We load a simple dataset of :math:`\mathrm{C}_5\mathrm{NH}_7` molecules and
 # their polarizability tensors stored in extended XYZ format.
 # We also visualize the polarizability as ellipsoids to demonstrate the
@@ -58,7 +60,7 @@ cs
 
 # %%
 # Prepare the targets for training
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# --------------------------------
 # We extract the dipole moments and polarizability tensors from the extended XYZ file
 # and store them in a :class:`metatensor.torch.TensorMap` as Cartesian tensors.
 
@@ -125,9 +127,144 @@ for idx, filename in zip(
     mts.save(f"{filename}_polarizabilities.mts", mts.make_contiguous(spherical_alpha))
 
 # %%
-# Model architecture
-# ^^^^^^^^^^^^^^^^^^
-# TODO: explain the model architecture
+# The :math:`\lambda`-MCoV model
+# ------------------------------
+#
+# .. figure:: architecture.png
+#    :alt: Schematic representation of the lambda-MCoV model
+#    :width: 1200px
+#
+#    Schematic representation of the :math:`\lambda`-MCoV model
+#
+# We parametrize any spherical tensor of order :math:`\lambda` as a linear combination
+# of a small, fixed set of **maximally coupled** basis tensors computed from three
+# learned **vector** features, each modulated by a **scalar** function of the local
+# atomic environment. This enforces exact equivariance under the action of the
+# orthogonal group O(3), while relying only on efficient **scalar** networks to predict
+# the coefficients. The architecture is as follows:
+#
+# 1. Local Spherical Expansion
+# """"""""""""""""""""""""""""
+#
+# Compute atomic-centered spherical expansion coefficients of the neighbor density of a
+# given atom :math:`i` in the local environment:
+#
+# .. math::
+#
+#   \boldsymbol{\rho}_{z,nl} = \sum_{i \in z} R_{n,l}(r_i) \,
+#   \boldsymbol{Y}_l(\hat{\mathbf{r}}_i)
+#
+# for orders :math:`l=1` (vector basis) up to :math:`l=\lambda` (correction).
+#
+# 2. Learned Vector Basis
+# """""""""""""""""""""""
+#
+# From the :math:`l=1` expansions, form three global vectors
+#
+# .. math::
+#
+#  \mathbf{q}_\alpha = \sum_{z,n} W_{\alpha,zn}\,\boldsymbol{\rho}_{z,n1}
+#
+# via a learnable linear layer over species :math:`z` and radial channels :math:`n`
+#
+# 3. Maximally Coupled Tensor Basis
+# """""""""""""""""""""""""""""""""
+#
+# Construct the :math:`2\lambda+1` independent components by **maximally coupling** the
+# three vectors :math:`\mathbf{q}_1,\mathbf{q}_2,\mathbf{q}_3`. The maximal coupling of
+# tensors is defined as the contraction of their harmonic components to the highest
+# allowed angular momentum. For example, the maximal coupling of :math:`\lambda` vectors
+# is
+#
+# .. math::
+#   (\underbrace{\mathbf{a}_1 \widetilde{\otimes} \ldots \widetilde{\otimes}
+#   \mathbf{a}_\lambda}_{\lambda\text{ times}})_{\lambda\mu} := \Big(\big(\cdots
+#   \big((\mathbf{a}_1 \widetilde{\otimes} \mathbf{a}_2)_2 \widetilde{\otimes}
+#   \mathbf{a}_3\big)_3\widetilde{\otimes} \cdots \widetilde{\otimes}
+#   \mathbf{a}_{\lambda-1}\big)_{\lambda-1}\widetilde{\otimes}
+#   \mathbf{a}_\lambda\Big)_{\lambda\mu} \phantom{:}= \sum_{m_1\ldots m_\lambda}
+#   \mathcal{C}^{\lambda\mu}_{m_1\ldots m_\lambda}\big((\mathbf{a}_1)_{m_1} \cdot
+#   \ldots\cdot (\mathbf{a}_\lambda)_{m_\lambda}\big),
+#
+# with :math:`\mathcal{C}^{\lambda\mu}_{m_1\ldots m_\lambda}` a shorthand notation for
+# the components of the tensor :math:`\mathcal{C}` obtained by contracting the
+# Clebsch-Gordan coefficients involved in the coupling.
+#
+# With this definition, vector components can be expressed as
+#
+# .. math::
+#
+#   \mathbf{T}_{1}(\{\mathbf{r}_i\}) = \sum_{\alpha = 1}^3 f_{\alpha}
+#   (\{\mathbf{r}_i\})\,\mathbf{q}_{\alpha}.
+#
+# :math:`\lambda=2` components can be written as
+#
+# .. math::
+#
+#   \mathbf{T}_{2}(\{\mathbf{r}_i\}) = \sum_{\alpha = 1}^2 f_\alpha(\{\mathbf{r}_i\})
+#   \mathbf{q}_\alpha^{\widetilde{\otimes} 2}\,\,+ \sum_{\substack{\alpha_1,\alpha_2=
+#   1\\\alpha_1<\alpha_2}}^{3} g_{\alpha_1\alpha_2}(\{\mathbf{r}_i\})
+#   \big(\mathbf{q}_{\alpha_1}\widetilde{\otimes} \mathbf{q}_{\alpha_2}\big)_{2},
+#
+# and, in general, :math:`\lambda>2`-tensors can be expressed as
+#
+# .. math::
+#
+#   \mathbf{T}_{\lambda} (\{\mathbf{r}_i\}) = \sum_{l= 0}^\lambda f_{l}
+#   (\{\mathbf{r}_i\}) \Big(\mathbf{q}_1^{\widetilde{\otimes} l}\widetilde{\otimes}
+#   {\mathbf{q}}_2^{\widetilde{\otimes}(\lambda-l)}\Big)_{\lambda}+
+#   \sum_{l=0}^{\lambda-1} g_{l} (\{\mathbf{r}_i\})
+#   \Big(\mathbf{q}^{\widetilde{\otimes} l}_1\widetilde{\otimes}
+#   \mathbf{q}_2^{\widetilde{\otimes} (\lambda-l-1)}\widetilde{\otimes}
+#   \mathbf{q}_3\Big)_{\lambda\mu}.
+#
+# 4. :math:`\lambda`-Correction Term
+# """"""""""""""""""""""""""""""""""
+#
+# The above equations are, strictly speaking, only valid when the three vectors are
+# linearly independent and span the same space as the vectors naturally associated with
+# the input space of the spherical tensor (i.e., the distance vectors in the
+# neighborhood). In the simplified and practical case of the :math:`\mathbf{q}` vectors
+# defined by the spherical expansion, the model would fail for highly symmetric or
+# degenerate environments, since those vectors do not cover the whole space on which the
+# tensor is defined.
+# To handle this case, we add a simple correction using the
+# :math:`l=\lambda` spherical expansion to describe tensors with the same angular order:
+#
+# .. math::
+#   \mathbf{T}_\lambda^{\rm corr}(\{\mathbf{r}_i\}) \;=\;
+#   \sum_{\beta=1}^{2\lambda+1}
+#   h_\beta(\{\mathbf{r}_i\})\,
+#   \sum_{z,n}W^{\rm corr}_{\beta,zn}\,\boldsymbol{\rho}_{z,n}^{l=\lambda}
+#
+# with learnable scalar functions :math:`h_\beta(\{\mathbf{r}_i\})`.
+#
+# 5. Scalar Network (SOAP-BPNN)
+# """""""""""""""""""""""""""""
+#
+# We first compute **SOAP powerspectrum** features:
+#
+# .. math::
+#
+#   p_{z_1z_2,n_1 n_2,l} = \bigl(\boldsymbol{\rho}_{z_1,n_1 l} \widetilde{\otimes} \
+#   boldsymbol{\rho}_{z_2,n_2 l}\bigr)_0
+#
+# And then use a small, per-species multi-layer perceptron to map the powerspectrum
+# features to the full set of scalar coefficients :math:`f,g,h`.
+#
+# 6. Assembly and Global Output
+# """""""""""""""""""""""""""""
+#
+# We multiply each scalar coefficient by its corresponding maximally coupled tensor and
+# sum:
+#
+# .. math::
+#
+#   T^\lambda(\{r_i\}) = \sum_{m=1}^{2\lambda+1} s_m\,B^\lambda_m(q_1,q_2,q_3) +
+#   T_\lambda^{\rm corr}(\{r_i\}),
+#
+# where :math:`B^\lambda_m` are the basis tensors. For global properties, sum the
+# per-atom contributions
 
 # %%
 # Training and evaluation of the model
@@ -261,5 +398,3 @@ for ax, key in zip(axes, prediction_test):
 
     ax.legend()
 fig.tight_layout()
-
-# %%
