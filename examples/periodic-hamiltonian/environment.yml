@@ -11,11 +11,11 @@ dependencies:
       - ase==3.22.1
       - seekpath
       - requests
-      - metatensor
-      - metatensor-core
-      - metatensor-learn
-      - metatensor-operations
-      - metatensor-torch
+      - metatensor==0.2.0
+      - metatensor-core==0.1.12
+      - metatensor-learn==0.3.1
+      - metatensor-operations==0.3.2
+      - metatensor-torch==0.7.5
       - --extra-index-url https://download.pytorch.org/whl/cpu 
       - rascaline-torch @ git+https://github.com/luthaf/rascaline@3450bc4d609aee87ab73648b059536baa97d15ac#subdirectory=python/rascaline-torch
       - lightning
