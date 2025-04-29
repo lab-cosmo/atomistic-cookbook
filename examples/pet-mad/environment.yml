@@ -3,10 +3,8 @@ channels:
   - conda-forge
 dependencies:
   - python=3.12
-  - lammps-metatensor=*=cpu*nompi*
-  - libtorch=*=cpu*mkl* 
-  - pet-mad
-  - python-metatensor-torch=0.7.6  
+  - lammps-metatensor=2025.02.04.mts0=cpu_hb5fed64_nompi_git.ce972db_0
+  - pet-mad=1.1.0rc4=pyhb0d71a2_0
   - pip
   - pip:
     - ase
