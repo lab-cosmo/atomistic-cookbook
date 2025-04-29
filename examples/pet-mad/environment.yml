@@ -4,7 +4,7 @@ channels:
 dependencies:
   - python=3.12
   - lammps-metatensor=*=cpu*nompi*
-  - libtorch=*=cpu*mkl*  
+  - libtorch=*=cpu*mkl* 
   - pet-mad
   - python-metatensor-torch=0.7.6  
   - pip
