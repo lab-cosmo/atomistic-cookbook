@@ -6,7 +6,7 @@ dependencies:
   - rust >=1.65
   - pip:
     - ase==3.22.1
-    - chemiscope>=0.7
+    - chemiscope>=0.8.5
     - matplotlib
     - metatensor
     - featomic
