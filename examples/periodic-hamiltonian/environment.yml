@@ -11,13 +11,12 @@ dependencies:
       - ase==3.22.1
       - seekpath
       - requests
-      - metatensor==0.2.0
+      # metatensor packages are pinned for consistency with the rascaline version required by the version of mlelec used in this tutorial
       - metatensor-core==0.1.11
       - metatensor-learn==0.3.0
       - metatensor-operations==0.3.0
       - metatensor-torch==0.6.3
-      - --extra-index-url https://download.pytorch.org/whl/cpu 
-      - rascaline-torch @ git+https://github.com/luthaf/rascaline@3450bc4d609aee87ab73648b059536baa97d15ac#subdirectory=python/rascaline-torch
+      - --extra-index-url https://download.pytorch.org/whl/cpu
       - lightning
       - xitorch
       - keras_core
