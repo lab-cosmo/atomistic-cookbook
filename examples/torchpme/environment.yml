@@ -5,8 +5,9 @@ dependencies:
   - pip
   - pip:
     - ase==3.22.1
+    - torch==2.6
     - mpltex
     - matplotlib
     - numpy
-    - vesin
-    - torch-pme
+    - vesin==0.3.2
+    - torch-pme==0.3.0
