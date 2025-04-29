@@ -96,7 +96,7 @@ filename = "data/mad-test-mad-settings.xyz"
 if not os.path.exists(filename):
     url = (
         "https://huggingface.co/lab-cosmo/pet-mad/resolve/"
-        "main/benchmarks/mad-test-mad-settings-v1.0.xyz"
+        "main/benchmarks/mad-test-mad-settings.xyz"
     )
     response = requests.get(url)
     response.raise_for_status()
