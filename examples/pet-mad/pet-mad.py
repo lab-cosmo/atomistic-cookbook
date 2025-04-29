@@ -391,7 +391,7 @@ chemiscope.show(
 # original Python or C++ source code. In particular, this is necessary for
 # the LAMMPS interface to work because it has no access to the Python code.
 
-calculator.model.save("pet-mad-latest.pt", collect_extensions="extensions")
+calculator.model.save("pet-mad-latest.pt")
 
 
 # %%
