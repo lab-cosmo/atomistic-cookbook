@@ -58,7 +58,7 @@ this, e.g. indicating the version known to work and the next major update
 
    - my-package >=1.3.1,<2.0
 
-This way if the example breaks further down the line it is easy to 
+This way if the example breaks further down the line it is easy to
 bring it back to a working state converting these to strict pinnings,
 yet most harmless updates will be applied automatically.
 
