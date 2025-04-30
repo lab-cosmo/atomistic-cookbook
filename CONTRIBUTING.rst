@@ -49,7 +49,7 @@ Package pinning
 The Python ecosystem moves fast and breaks things. Examples should always
 be able to run in the CI system to generate webpages, and it's best for
 users if they also work out-of-the-box when downloaded. For these reasons,
-we recommend pinning the package version in the environment file.
+we recommend constraining the package version in the environment file.
 At the same time, it's best to run on updated versions that might contain
 important bugfixes. We recommend using semantic versioning to achieve
 this, e.g. indicating the version known to work and the next major update
