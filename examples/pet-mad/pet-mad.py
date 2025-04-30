@@ -140,6 +140,13 @@ test_forces = np.array(test_forces, dtype=object)
 
 calculator = PETMADCalculator(version="latest", device="cpu")
 
+# %%
+#
+# The model can also be exported in a format that can be used with
+# external MD engines. This is done by saving the model to a file,
+# which includes the model architecture and weights.
+
+calculator.model.save("pet-mad-latest.pt")
 
 # %%
 #
@@ -379,19 +386,6 @@ chemiscope.show(
 # to reach equilibrium in the solute-atoms distributions
 # without having to introduce vacancies or wait for the
 # very long time scale needed for diffusion.
-
-# %%
-#
-# Before starting the simulations with MD engines, it is important
-# to export the model to a format that can be used by the engine.
-# This is done by saving the model to a file, which includes the
-# model weights and the compiled extensions. We use the ``collect_extensions``
-# argument to save the compiled extensions to disk. These extensions ensure that
-# the model remains self-contained and can be executed without requiring the
-# original Python or C++ source code. In particular, this is necessary for
-# the LAMMPS interface to work because it has no access to the Python code.
-
-calculator.model.save("pet-mad-latest.pt", collect_extensions="extensions")
 
 
 # %%
