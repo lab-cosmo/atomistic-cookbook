@@ -43,8 +43,8 @@ following files inside:
 - as many Python files as you want, each one will be converted to a separate
   HTML page.
 
-Package pinning
-~~~~~~~~~~~~~~~
+Example dependencies
+~~~~~~~~~~~~~~~~~~~~
 
 The Python ecosystem moves fast and breaks things. Examples should always
 be able to run in the CI system to generate webpages, and it's best for
