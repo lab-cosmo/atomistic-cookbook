@@ -195,7 +195,7 @@ def get_example_metadata(rst_file):
     metadata["description"] = rst_description or ""
     metadata["html"] = html_description or ""
     metadata["thumbnail"] = thumbnail_file
-    metadata["ref"] = os.path.join(gallery_dir, example_name)
+    metadata["ref"] = str(os.path.join(gallery_dir, example_name))
 
     return metadata
 
