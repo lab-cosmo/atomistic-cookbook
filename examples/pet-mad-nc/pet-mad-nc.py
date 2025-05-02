@@ -132,7 +132,7 @@ print(input_nve)
 # but here we use the Python API to integrate it in the notebook.
 
 sim = InteractiveSimulation(input_nve)
-sim.run(400)
+sim.run(200)
 
 # %%
 #
@@ -208,7 +208,7 @@ print(input_nve_mts)
 # but here we use the Python API to integrate it in the notebook.
 
 sim = InteractiveSimulation(input_nve_mts)
-sim.run(100)
+sim.run(50)
 
 # %%
 

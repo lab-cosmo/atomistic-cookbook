@@ -6,12 +6,12 @@
         pot_component(0){electronvolt}, pot_component(1){electronvolt}
 		]
     </properties>
-    <trajectory filename="pos" stride="5" format="ase"> positions </trajectory>
-    <trajectory filename="forces_c" stride="5" format="ase"> forces_component(0) </trajectory>
-    <trajectory filename="forces_nc" stride="5" format="ase"> forces_component(1) </trajectory>
+    <trajectory filename="pos" stride="2" format="ase"> positions </trajectory>
+    <trajectory filename="forces_c" stride="2" format="ase"> forces_component(0) </trajectory>
+    <trajectory filename="forces_nc" stride="2" format="ase"> forces_component(1) </trajectory>
     <checkpoint stride="1000"/>
 </output>
-<total_steps>50</total_steps>
+<total_steps>25</total_steps>
 <prng><seed>12345</seed></prng>
 
 <ffdirect  name='cons' pbc="false">
@@ -37,8 +37,8 @@
     </forces>
     <motion mode="dynamics">
     	<dynamics mode="nve">
-        	<timestep units="femtosecond"> 4 </timestep>
-            <nmts>[1,4]</nmts>
+        	<timestep units="femtosecond"> 8 </timestep>
+            <nmts>[1,8]</nmts>
         </dynamics>
     </motion>
 </system>

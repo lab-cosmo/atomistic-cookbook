@@ -1,5 +1,5 @@
 <simulation verbosity="high">
-<output prefix="nve-nc">
+<output prefix="nve-c">
     <properties stride="8" filename="out">
 		[step, time{picosecond}, conserved{electronvolt}, temperature{kelvin},
         kinetic_md{electronvolt}, potential{electronvolt}, 
@@ -7,14 +7,14 @@
 		]
     </properties>
     <trajectory filename="pos" stride="16" format="ase"> positions </trajectory>
-    <trajectory filename="forces_nc" stride="16" format="ase"> forces_component(0) </trajectory>
+    <trajectory filename="forces_c" stride="16" format="ase"> forces_component(0) </trajectory>
     <checkpoint stride="1000"/>
 </output>
-<total_steps>200</total_steps>
+<total_steps>32</total_steps>
 <prng><seed>12345</seed></prng>
-<ffdirect  name='nocons' pbc="false">
+<ffdirect  name='cons' pbc="false">
     <pes>metatensor</pes>
-    <parameters>{template:data/bmimcl.xyz,model:pet-mad-latest.pt,device:cpu,non_conservative:True} </parameters>
+    <parameters>{template:data/bmimcl.xyz,model:pet-mad-latest.pt,device:cpu,non_conservative:False} </parameters>
 </ffdirect>
 <system>
     <initialize nbeads="1">
@@ -22,7 +22,7 @@
         <velocities mode="thermal" units="kelvin"> 400.0 </velocities>
     </initialize>
     <forces>
-        <force forcefield="nocons">
+        <force forcefield="cons">
         </force>
     </forces>
 
