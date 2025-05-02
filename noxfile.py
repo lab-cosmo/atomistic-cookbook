@@ -105,7 +105,7 @@ def should_reinstall_dependencies(session, **metadata):
             with open(value) as fd:
                 to_hash[key] = fd.read()
         else:
-            to_hash[key] = value
+            to_hash[key] = str(value)
 
     print("hashing ", to_hash)
     to_hash = json.dumps(to_hash).encode("utf8")
