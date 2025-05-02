@@ -83,7 +83,7 @@ calculator.model.save("pet-mad-latest.pt")
 # Even though the early ML-based interatomic potentials followed this route,
 # .... blah blah and intro to be filled. Reference to our paper.
 
-structure = ase.io.read("data/bimicl.xyz")
+structure = ase.io.read("data/bmimcl.xyz")
 
 structure.calc = calculator
 energy_c = structure.get_potential_energy()
