@@ -361,7 +361,7 @@ opt.attach(lambda: traj_atoms.append(atoms.copy()))
 opt.attach(lambda: traj_energy.append(atoms.get_potential_energy()))
 
 # stop the optimization early to speed up the example
-opt.run(fmax=0.001, steps=30)
+opt.run(fmax=0.001, steps=20)
 
 # %%
 #
@@ -442,7 +442,7 @@ print(input_xml)
 # execute separately ``i-PI`` and the ``metatensor`` driver.
 
 sim = InteractiveSimulation(input_xml)
-sim.run(100)
+sim.run(80)
 
 # %%
 #
