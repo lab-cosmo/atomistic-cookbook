@@ -23,8 +23,6 @@ MD, see also
 #     pip install git+https://github.com/lab-cosmo/pet-mad.git
 #
 
-import subprocess
-
 import ase.io
 
 # i-PI scripting utilities
