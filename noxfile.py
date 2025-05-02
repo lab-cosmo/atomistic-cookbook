@@ -107,6 +107,7 @@ def should_reinstall_dependencies(session, **metadata):
         else:
             to_hash[key] = value
 
+    print("hashing ", to_hash)
     to_hash = json.dumps(to_hash).encode("utf8")
     sha1 = hashlib.sha1(to_hash).hexdigest()
     sha1_path = os.path.join(session.virtualenv.location, "metadata.sha1")
