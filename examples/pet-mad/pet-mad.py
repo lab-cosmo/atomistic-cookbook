@@ -52,6 +52,9 @@ from copy import copy, deepcopy
 import ase.units
 import chemiscope
 import matplotlib.pyplot as plt
+
+# pet-mad ASE calculator
+import metatensor.torch.atomistic as mta
 import numpy as np
 import requests
 from ase.optimize import LBFGS
@@ -63,9 +66,6 @@ from ipi.utils.scripting import (
     motion_nvt_xml,
     simulation_xml,
 )
-
-# pet-mad ASE calculator
-import metatensor.torch.atomistic as mta
 from pet_mad.calculator import PETMADCalculator
 
 
@@ -153,7 +153,7 @@ calculator.model.save("pet-mad-latest.pt")
 # The model can also be loaded from this torchscript dump, which often
 # speeds up calculation as it involves compilation, and is functionally
 # equivalent unless you plan on fine-tuning, or otherwise modifying
-# the model. 
+# the model.
 
 calculator = mta.ase_calculator.MetatensorCalculator("pet-mad-latest.pt", device="cpu")
 
