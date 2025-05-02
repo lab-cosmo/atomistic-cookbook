@@ -65,6 +65,7 @@ from ipi.utils.scripting import (
 )
 
 # pet-mad ASE calculator
+import metatensor.torch.atomistic as mta
 from pet_mad.calculator import PETMADCalculator
 
 
@@ -147,6 +148,14 @@ calculator = PETMADCalculator(version="latest", device="cpu")
 # which includes the model architecture and weights.
 
 calculator.model.save("pet-mad-latest.pt")
+
+# %%
+# The model can also be loaded from this torchscript dump, which often
+# speeds up calculation as it involves compilation, and is functionally
+# equivalent unless you plan on fine-tuning, or otherwise modifying
+# the model. 
+
+calculator = mta.ase_calculator.MetatensorCalculator("pet-mad-latest.pt", device="cpu")
 
 # %%
 #
@@ -403,6 +412,7 @@ motion_xml = f"""
     {motion_nvt_xml(timestep=5.0 * ase.units.fs)}
     <motion mode="atomswap">
         <atomswap>
+            <nxc> 0.1 </nxc>
             <names> [ Al, Si, Mg, O]  </names>
         </atomswap>
     </motion>
@@ -419,7 +429,7 @@ input_xml = simulation_xml(
     ),
     motion=motion_xml,
     temperature=800,
-    verbosity="low",
+    verbosity="high",
     prefix="nvt_atomxc",
 )
 
