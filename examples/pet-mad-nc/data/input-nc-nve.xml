@@ -10,16 +10,16 @@
     <trajectory filename="forces_nc" stride="20" format="ase"> forces_component(0) </trajectory>
     <checkpoint stride="1000"/>
 </output>
-<total_steps>400</total_steps>
+<total_steps>200</total_steps>
 <prng><seed>12345</seed></prng>
 <ffdirect  name='nocons' pbc="false">
     <pes>metatensor</pes>
-    <parameters>{template:data/al6xxx-o2.xyz,model:pet-mad-latest.pt,device:cpu,non_conservative:True} </parameters>
+    <parameters>{template:data/bmimcl.xyz,model:pet-mad-latest.pt,device:cpu,non_conservative:True} </parameters>
 </ffdirect>
 <system>
     <initialize nbeads="1">
-        <file mode="ase"> data/al6xxx-o2.xyz </file>
-        <velocities mode="thermal" units="kelvin"> 1200.0 </velocities>
+        <file mode="ase"> data/bmimcl.xyz </file>
+        <velocities mode="thermal" units="kelvin"> 400.0 </velocities>
     </initialize>
     <forces>
         <force forcefield="nocons">
@@ -28,7 +28,7 @@
 
     <motion mode="dynamics">
     	<dynamics mode="nve">
-        	<timestep units="femtosecond"> 5 </timestep>
+        	<timestep units="femtosecond"> 1 </timestep>
         </dynamics>
     </motion>
 
