@@ -34,6 +34,12 @@ import matplotlib.pyplot as plt
 from ipi.utils.parsing import read_output, read_trajectory
 from ipi.utils.scripting import InteractiveSimulation
 
+import metatensor.torch.atomistic as mta
+
+# pet-mad ASE calculator
+from pet_mad.calculator import PETMADCalculator
+
+import ase.io
 
 # from copy import copy, deepcopy
 
@@ -46,9 +52,16 @@ if hasattr(__import__("builtins"), "get_ipython"):
 # Fetch PET-MAD and export the model
 # ----------------------------------
 
-# TODO
+calculator = PETMADCalculator(version="latest", device="cpu")
 
-subprocess.run("cp data/*pt .", shell=True, check=True)
+# %%
+#
+# The model can also be exported in a format that can be used with
+# external MD engines. This is done by saving the model to a file,
+# which includes the model architecture and weights.
+
+calculator.model.save("pet-mad-latest.pt")
+
 
 # %%
 #
@@ -71,6 +84,22 @@ subprocess.run("cp data/*pt .", shell=True, check=True)
 #
 # Even though the early ML-based interatomic potentials followed this route,
 # .... blah blah and intro to be filled. Reference to our paper.
+
+structure = ase.io.read('data/al6xxx-o2.xyz')
+
+structure.calc = calculator
+energy_c = structure.get_potential_energy()
+forces_c = structure.get_forces()
+
+calculator_nc = mta.ase_calculator.MetatensorCalculator(calculator.model, device="cpu", non_conservative=True)
+
+structure.calc = calculator_nc
+energy_nc = structure.get_potential_energy()
+#forces_nc = structure.get_forces()
+
+# %%
+
+print(f"Energy:\n  Conservative: {energy_c:.8}\n  Non-conserv.: {energy_nc:.8}")
 
 # %%
 #
@@ -103,7 +132,7 @@ print(input_nve)
 # but here we use the Python API to integrate it in the notebook.
 
 sim = InteractiveSimulation(input_nve)
-sim.run(800)
+sim.run(400)
 
 # %%
 #
@@ -181,4 +210,19 @@ print(input_nve_mts)
 sim = InteractiveSimulation(input_nve_mts)
 sim.run(100)
 
+# %%
+
+data_mts, info = read_output("nve-nc-mts.out")
+trj_mts = read_trajectory("nve-nc-mts.pos_0.extxyz")
+
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+
+ax.set_facecolor("white")
+ax.plot(data["time"], data["potential"], "b-", label="potential")
+ax.plot(data["time"], data["conserved"] - 20, "k-", label="conserved")
+ax.plot(data_mts["time"], data_mts["conserved"] - 20, "r-", label="conserved")
+ax.plot(data_mts["time"], data_mts["potential"] - 20, "r-", label="conserved")
+ax.set_xlabel("t / ps")
+ax.set_ylabel("energy / ev")
+ax.legend()
 # %%

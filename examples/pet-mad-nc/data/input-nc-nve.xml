@@ -1,25 +1,25 @@
-<simulation verbosity="medium">
+<simulation verbosity="high">
 <output prefix="nve-nc">
-    <properties stride="8" filename="out">
+    <properties stride="4" filename="out">
 		[step, time{picosecond}, conserved{electronvolt}, temperature{kelvin},
         kinetic_md{electronvolt}, potential{electronvolt}, 
         pot_component(0){electronvolt}
 		]
     </properties>
-    <trajectory filename="pos" stride="40" format="ase"> positions </trajectory>
-    <trajectory filename="forces_nc" stride="40" format="ase"> forces_component(0) </trajectory>
+    <trajectory filename="pos" stride="20" format="ase"> positions </trajectory>
+    <trajectory filename="forces_nc" stride="20" format="ase"> forces_component(0) </trajectory>
     <checkpoint stride="1000"/>
 </output>
-<total_steps>800</total_steps>
+<total_steps>400</total_steps>
 <prng><seed>12345</seed></prng>
 <ffdirect  name='nocons' pbc="false">
     <pes>metatensor</pes>
-    <parameters>{template:data/nickel.xyz,model:model_nc.pt,device:cpu,non_conservative:True} </parameters>
+    <parameters>{template:data/al6xxx-o2.xyz,model:pet-mad-latest.pt,device:cpu,non_conservative:True} </parameters>
 </ffdirect>
 <system>
     <initialize nbeads="1">
-        <file mode="ase"> data/nickel.xyz </file>
-        <velocities mode="thermal" units="kelvin"> 10000.0 </velocities>
+        <file mode="ase"> data/al6xxx-o2.xyz </file>
+        <velocities mode="thermal" units="kelvin"> 1200.0 </velocities>
     </initialize>
     <forces>
         <force forcefield="nocons">
@@ -28,7 +28,7 @@
 
     <motion mode="dynamics">
     	<dynamics mode="nve">
-        	<timestep units="femtosecond"> 2 </timestep>
+        	<timestep units="femtosecond"> 5 </timestep>
         </dynamics>
     </motion>
 
