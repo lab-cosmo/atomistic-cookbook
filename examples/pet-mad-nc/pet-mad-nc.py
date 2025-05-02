@@ -159,9 +159,9 @@ ax.legend()
 chemiscope.show(
     frames=trj,
     properties={
-        "time": data["time"][::5],
-        "potential": data["potential"][::5],
-        "temperature": data["temperature"][::5],
+        "time": data["time"][::2],
+        "potential": data["potential"][::2],
+        "temperature": data["temperature"][::2],
     },
     mode="default",
     settings=chemiscope.quick_settings(
