@@ -25,21 +25,21 @@ MD, see also
 
 import subprocess
 
+import ase.io
+
 # i-PI scripting utilities
 import chemiscope
 import matplotlib.pyplot as plt
+import metatensor.torch.atomistic as mta
 
 # import numpy as np
 # import requests
 from ipi.utils.parsing import read_output, read_trajectory
 from ipi.utils.scripting import InteractiveSimulation
 
-import metatensor.torch.atomistic as mta
-
 # pet-mad ASE calculator
 from pet_mad.calculator import PETMADCalculator
 
-import ase.io
 
 # from copy import copy, deepcopy
 
@@ -85,17 +85,19 @@ calculator.model.save("pet-mad-latest.pt")
 # Even though the early ML-based interatomic potentials followed this route,
 # .... blah blah and intro to be filled. Reference to our paper.
 
-structure = ase.io.read('data/al6xxx-o2.xyz')
+structure = ase.io.read("data/al6xxx-o2.xyz")
 
 structure.calc = calculator
 energy_c = structure.get_potential_energy()
 forces_c = structure.get_forces()
 
-calculator_nc = mta.ase_calculator.MetatensorCalculator(calculator.model, device="cpu", non_conservative=True)
+calculator_nc = mta.ase_calculator.MetatensorCalculator(
+    calculator.model, device="cpu", non_conservative=True
+)
 
 structure.calc = calculator_nc
 energy_nc = structure.get_potential_energy()
-#forces_nc = structure.get_forces()
+# forces_nc = structure.get_forces()
 
 # %%
 
