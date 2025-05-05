@@ -30,6 +30,7 @@ import numpy as np
 from featomic.clebsch_gordan import cartesian_to_spherical
 from metatensor import Labels, TensorBlock, TensorMap
 
+
 # %%
 # Load the training data
 # ----------------------
