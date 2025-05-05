@@ -12,6 +12,8 @@ and can then be used in an ASE calculator.
 """
 
 # %%
+# sphinx_gallery_thumbnail_number = 0
+
 # Core packages
 import subprocess
 from glob import glob
@@ -27,9 +29,6 @@ import numpy as np
 # Model wrapping and execution tools
 from featomic.clebsch_gordan import cartesian_to_spherical
 from metatensor import Labels, TensorBlock, TensorMap
-
-
-# sphinx_gallery_thumbnail_number = 0
 
 # %%
 # Load the training data
@@ -246,8 +245,8 @@ for idx, filename in zip(
 #
 # .. math::
 #
-#   p_{z_1z_2,n_1 n_2,l} = \bigl(\boldsymbol{\rho}_{z_1,n_1 l} \widetilde{\otimes} \
-#   boldsymbol{\rho}_{z_2,n_2 l}\bigr)_0
+#   p_{z_1z_2,n_1 n_2,l} = \bigl(\boldsymbol{\rho}_{z_1,n_1 l} \widetilde{\otimes}
+#   \boldsymbol{\rho}_{z_2,n_2 l}\bigr)_0
 #
 # And then use a small, per-species multi-layer perceptron to map the powerspectrum
 # features to the full set of scalar coefficients :math:`f,g,h`.
@@ -269,10 +268,11 @@ for idx, filename in zip(
 # %%
 # Training and evaluation of the model
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-# We use the `metatrain` package to train the model. The training is performed
-# using the `metatrain` command line interface. The command to start the training
+#
+# We use the ``metatrain`` package to train the model. The training is performed
+# using the ``metatrain`` command line interface. The command to start the training
 # is:
+#
 # .. code-block:: shell
 #    mtt train data/options.yaml
 #
@@ -312,9 +312,10 @@ plt.legend()
 plt.title("Training and validation loss")
 
 # %%
-# We can evaluate the model on the test set using again the `metatrain` command line
+# We can evaluate the model on the test set using again the ``metatrain`` command line
 # interface. The command to evaluate the model is
 # is:
+#
 # .. code-block:: shell
 #    mtt eval model.pt eval.yaml -e extensions -o test_results.mts
 #
@@ -342,10 +343,10 @@ subprocess.run(
 
 # %%
 # We can now load the predictions and the targets from the test set and compare them.
-# The predictions are stored in the `test_results_mtt::dipole.mts` and
-# `test_results_mtt::polarizability.mts` files and the targets are in `test_dipoles.mts`
-# and `test_polarizabilities.mts` files. We can load them using the `metatensor.load`
-# function.
+# The predictions are stored in the ``test_results_mtt::dipole.mts`` and
+# ``test_results_mtt::polarizability.mts`` files and the targets are in
+# ``test_dipoles.mts`` and ``test_polarizabilities.mts`` files. We can load them using
+# the ``metatensor.load`` function.
 
 prediction_test = {
     "dipole": mts.load("test_results_mtt::dipole.mts"),
