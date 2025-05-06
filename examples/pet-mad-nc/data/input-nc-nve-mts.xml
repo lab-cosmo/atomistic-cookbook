@@ -1,4 +1,4 @@
-<simulation verbosity="high">
+<simulation verbosity="low"> 
 <output prefix="nve-nc-mts">
     <properties stride="1" filename="out">
 		[step, time{picosecond}, conserved{electronvolt}, temperature{kelvin},
