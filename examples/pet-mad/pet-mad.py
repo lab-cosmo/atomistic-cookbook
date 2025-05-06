@@ -41,7 +41,7 @@ in `this preprint <https://arxiv.org/abs/2503.14118>`_.
 #
 # .. code-block:: bash
 #
-#     pip install git+https://github.com/lab-cosmo/pet-mad.git
+#     pip install pet-mad
 #
 
 import os

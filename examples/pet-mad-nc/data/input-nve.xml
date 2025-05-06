@@ -1,13 +1,13 @@
 <simulation verbosity="high">
 <output prefix="nve-c">
-    <properties stride="4" filename="out">
+    <properties stride="8" filename="out">
 		[step, time{picosecond}, conserved{electronvolt}, temperature{kelvin},
         kinetic_md{electronvolt}, potential{electronvolt}, 
         pot_component(0){electronvolt}
 		]
     </properties>
-    <trajectory filename="pos" stride="8" format="ase"> positions </trajectory>
-    <trajectory filename="forces_c" stride="8" format="ase"> forces_component(0) </trajectory>
+    <trajectory filename="pos" stride="16" format="ase"> positions </trajectory>
+    <trajectory filename="forces_c" stride="16" format="ase"> forces_component(0) </trajectory>
     <checkpoint stride="1000"/>
 </output>
 <total_steps>32</total_steps>
@@ -28,7 +28,7 @@
 
     <motion mode="dynamics">
     	<dynamics mode="nve">
-        	<timestep units="femtosecond"> 1 </timestep>
+        	<timestep units="femtosecond"> 0.5 </timestep>
         </dynamics>
     </motion>
 

@@ -38,7 +38,7 @@
     <motion mode="dynamics">
     	<dynamics mode="nve">
         	<timestep units="femtosecond"> 4 </timestep>
-            <nmts>[1,4]</nmts>
+            <nmts>[1,8]</nmts>
         </dynamics>
     </motion>
 </system>
