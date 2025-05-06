@@ -46,9 +46,8 @@ plt.show()
 # equivariant spherical tensors.
 #
 # Three remarks before beginning:
-# - Scipy uses a different notation for quaternions from the one in quaternionic
-#     + Scipy:         [x,y,z,w]
-#     + Quaternionic:  [w,x,y,z]
+# - Scipy uses a different notation (``[x,y,z,w]``) for quaternions
+#   from the one in quaternionic (``[x,y,z,w]``)
 #
 # - It is also useful to have a clear convention for the matrices that we use. Among the
 #   most common cases we have the standard convention x-y-z from the left to right
@@ -56,9 +55,11 @@ plt.show()
 #   angular momentum, we will use a -1, 0, 1 convention, that makes the Wigner
 #   D-matrices more readable. When used in the context of real spherical harmonics, the
 #   identification is realized by the following scheme:
+#
 #     + :math:`y \longleftrightarrow -1`
 #     + :math:`z \longleftrightarrow 0`
 #     + :math:`x \longleftrightarrow 1`
+#
 #   which then is represented by y-z-x convention.
 #
 # - If the only difference between two quaternions is their sign, they represent the

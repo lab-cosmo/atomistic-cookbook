@@ -8,6 +8,6 @@ dependencies:
   - pip
   - pip:
     - ase
-    - ipi>=3.1.2,<3.2
+    - ipi==3.1.2
     - chemiscope>=0.8.5,<0.9 
     - matplotlib
