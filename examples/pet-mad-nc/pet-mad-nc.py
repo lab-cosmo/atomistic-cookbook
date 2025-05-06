@@ -42,7 +42,6 @@ import ase.io
 import chemiscope
 import matplotlib.pyplot as plt
 import metatensor.torch.atomistic as mta
-
 from ipi.utils.parsing import read_output, read_trajectory
 from ipi.utils.scripting import InteractiveSimulation
 
