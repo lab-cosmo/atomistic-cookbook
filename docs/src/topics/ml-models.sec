@@ -11,3 +11,4 @@ data.
 - examples/periodic-hamiltonian/periodic-hamiltonian
 - examples/polarizability/polarizability
 - examples/pet-mad/pet-mad
+- examples/pet-mad/pet-mad-nc

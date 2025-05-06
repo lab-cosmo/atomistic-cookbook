@@ -1,12 +1,12 @@
 """
-Using non-conservative forces with PET-MAD
-===========================================
+MD using direct-force predictions with PET-MAD
+==============================================
 
 :Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm>`_,
           Filippo Bigi `@frostedoyster <https://github.com/frostedoyster>`_
 
-Evaluating forces as a direct output of a ML model accelerates up to 3x
-their evaluation, in comparison to the traditional approach that evaluates
+Evaluating forces as a direct output of a ML model accelerates their evaluation,
+by up to a factor of 3 in comparison to the traditional approach that evaluates
 them as derivatives of the interatomic potential.
 Unfortunately, as discussed e.g. in
 `this preprint <https://arxiv.org/abs/2412.11569>`_, doing so means
@@ -19,6 +19,8 @@ and ways to mitigate them, using the generally-applicable
 for examples of using PET-MAD for basic tasks such as geometry optimization
 and conservative MD.
 """
+
+# sphinx_gallery_thumbnail_number = 2
 
 # %%
 #
@@ -172,7 +174,7 @@ time_nve_c /= steps_nve_c + 1  # there's one extra energy evaluation at the begi
 # %%
 # Non-conservative (direct) forces
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-# %%
+#
 # The PET-MAD model provides direct force predictions, that can be
 # activated with a ``non_conservative:True`` flag. This makes it very
 # simple to modify the NVE setup:
@@ -346,7 +348,3 @@ chemiscope.show(
         trajectory=True,
     ),
 )
-
-# %%
-
-# %%
