@@ -36,6 +36,7 @@ Whenever you want to run the recipe you just need to activate the environment
 and run the recipe file. 
 
 .. code-block:: bash
+
    # When you want to use the environment
    conda env activate --name <recipe-env-path>
    
