@@ -796,7 +796,7 @@ class WaterModel(torch.nn.Module):
 # %%
 #
 # All this class does is take a ``System`` and return its energy (as a
-# :clas:`metatensor.TensorMap``).
+# :class:`metatensor.TensorMap``).
 
 qtip4pf_parameters = dict(
     cutoff=7.0,
