@@ -8,6 +8,7 @@ from pathlib import Path
 
 ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
 EXAMPLES = os.path.join(ROOT, "examples")
+# Changes in the following files will NOT trigger any example to run:
 IGNORE_CHANGES = [
     "CONDUCT.md",
     "README.rst",
@@ -59,7 +60,7 @@ def get_examples_from_modified_files(modified_files: list[Path]):
     )
 
 
-def create_json(modified_files: str):
+def create_ci_jobs_json(modified_files: str):
     """A JSON string suitable for a github action matrix."""
     if modified_files:
         modified_files = map(Path, modified_files)
@@ -85,4 +86,4 @@ if __name__ == "__main__":
         default=None,
     )
 
-    print(create_json(parser.parse_args().modified_files))
+    print(create_ci_jobs_json(parser.parse_args().modified_files))
