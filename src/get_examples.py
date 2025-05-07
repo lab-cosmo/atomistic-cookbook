@@ -62,6 +62,11 @@ def create_ci_jobs_json(modified_files: str):
     else:
         examples = get_examples()
 
+    if len(examples) == 0:
+        # We return an empty string which will be easily detected
+        # by the Github Workflow as having no examples to run.
+        return ""
+
     return json.dumps({"example-name": examples})
 
 
