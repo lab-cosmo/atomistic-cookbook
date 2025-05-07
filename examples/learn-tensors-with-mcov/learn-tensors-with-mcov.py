@@ -6,7 +6,13 @@ Equivariant model for tensorial properties based on scalar features
 
 In this example, we demonstrate how to train a `metatensor atomistic model
 <https://docs.metatensor.org/latest/atomistic>`_ on dipole moments and polarizabilities
-of small molecular systems. The model is trained with
+of small molecular systems, using a model that combines scalar descriptors
+with equivariant tensorial components that depend in a simple way from
+the molecular geometry. You may also want to read this
+`recipe for a linear polarizability model
+<http://localhost:8000/examples/polarizability/polarizability.html>`_,
+which provides an alternative approach for tensorial learning.
+The model is trained with
 `metatrain <https://metatensor.github.io/metatrain/latest/index.html>`_
 and can then be used in an ASE calculator.
 """

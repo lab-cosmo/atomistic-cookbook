@@ -344,4 +344,8 @@ chemiscope.show(
         structure_settings={"unitCell": True, "shape": ["forces_c", "forces_nc"]},
         trajectory=True,
     ),
+    meta={
+        "name": "MTS direct-forces MD for BMIM-Cl",
+        "description": "Initial configuration kindly provided by Moritz Schaefer and Fabian Zills",
+    },
 )

@@ -9,6 +9,11 @@ In this example, we demonstrate how to construct a `metatensor atomistic model
 of molecular systems. This example uses the ``featomic`` library to compute
 equivariant descriptors, and ``scikit-learn`` to train a linear regression model.
 The model can then be used in an ASE calculator.
+You could also have a look at
+`this recipe based on scalar/tensorial models
+<http://localhost:8000/examples/polarizability/polarizability.html>`_,
+which provides an alternative approach for equivariant learning
+of tensors.
 """
 
 # %%
