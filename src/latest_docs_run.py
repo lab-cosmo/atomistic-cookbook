@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """This script uses the Github API to get the ID of the latest 
 successful Documentation run on the main branch.
 
