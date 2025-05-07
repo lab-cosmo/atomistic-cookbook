@@ -40,10 +40,12 @@ from metatensor import Labels, TensorBlock, TensorMap
 # %%
 # Load the training data
 # ----------------------
-# We load a simple dataset of :math:`\mathrm{C}_5\mathrm{NH}_7` molecules and
-# their polarizability tensors stored in extended XYZ format.
-# We also visualize the polarizability as ellipsoids to demonstrate the
-# anisotropy of this molecular property.
+# We load a simple dataset of small molecules from the `QM7-X dataset
+# <https://doi.org/10.1038/s41597-021-00812-2>`__ spanning the CHNO composition space.
+# We extract their dipole moments and polarizability tensors stored in extended XYZ
+# format.
+# We also visualize dipoles as arrows and polarizabilities as ellipsoids with
+# `chemiscope <https://chemiscope.org/>`__.
 
 molecules = ase.io.read("data/qm7x_reduced_100_CHNO.xyz", ":")
 
@@ -189,7 +191,7 @@ plt.show()
 # equivariance under the action of the orthogonal group O(3), while relying only on
 # efficient scalar networks.
 #
-#  The architecture is composed as follows:
+# The architecture is composed as follows:
 #
 # 1. Local Spherical Expansion
 # """"""""""""""""""""""""""""
