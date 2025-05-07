@@ -373,7 +373,7 @@ plt.title("Training and validation loss")
 #
 
 # %%
-# To evaluate the model from within the script with
+# We can evaluate the model from within the script with
 
 subprocess.run(
     [
