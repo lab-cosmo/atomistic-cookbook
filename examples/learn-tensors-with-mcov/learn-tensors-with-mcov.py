@@ -320,11 +320,11 @@ plt.show()
 #
 # .. code-block:: shell
 #
-#    mtt train data/options.yaml
+#    mtt train options.yml
 #
 # The options file specifies the model architecture and the training parameters:
 #
-# .. literalinclude:: data/options.yaml
+# .. literalinclude:: options.yml
 #   :language: yaml
 #
 
@@ -335,7 +335,7 @@ subprocess.run(
     [
         "mtt",
         "train",
-        "data/options.yaml",
+        "options.yml",
     ],
     check=True,
 )
@@ -363,12 +363,12 @@ plt.title("Training and validation loss")
 #
 # .. code-block:: shell
 #
-#    mtt eval model.pt eval.yaml -e extensions -o test_results.mts
+#    mtt eval model.pt eval.yml -e extensions -o test_results.mts
 #
 # The evaluation YAML file contains lists the structures and corresponding reference
 # quantities for the evaluation:
 #
-# .. literalinclude:: data/eval.yaml
+# .. literalinclude:: eval.yml
 #   :language: yaml
 #
 
@@ -380,7 +380,7 @@ subprocess.run(
         "mtt",
         "eval",
         "model.pt",
-        "data/eval.yaml",
+        "eval.yml",
         "-e",
         "extensions",
         "-o",
