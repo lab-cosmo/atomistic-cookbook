@@ -20,17 +20,3 @@ runs = requests.get(doc_runs_endpoint, params={
 latest_successful_run = runs.json()["workflow_runs"][0]
 
 print(latest_successful_run["id"])
-
-# artifacts_endpoint = latest_successful_run["artifacts_url"]
-# artifacts = requests.get(artifacts_endpoint)
-
-# print(json.dumps(artifacts.json(), indent=4))
-
-# # for run in runs_json:
-# #     if run["name"] == "Documentation":
-# #         print(json.dumps(run, indent=4))
-# #         break
-
-# # resp = requests.get(actions_endpoint + "/artifacts")
-
-# # artifacts = resp.json()
