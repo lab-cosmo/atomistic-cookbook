@@ -190,7 +190,6 @@ plt.show()
 # a **scalar** function of the local atomic environment. This enforces exact
 # equivariance under the action of the orthogonal group O(3), while relying only on
 # efficient scalar networks.
-#
 # The architecture is composed as follows:
 #
 # 1. Local Spherical Expansion
@@ -312,21 +311,26 @@ plt.show()
 
 # %%
 # Training and evaluation of the model
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# ------------------------------------
 #
-# We train the model with the ``metatrain`` package via its command-line interface.
+# Rather than implementing the :math:`\lambda`-MCoV model from scratch, we use a
+# pre-defined architecture within the ``metatrain`` package, using its command-line
+# interface.
 # To start training, we run
 #
 # .. code-block:: shell
+#
 #    mtt train data/options.yaml
 #
 # The options file specifies the model architecture and the training parameters:
 #
 # .. literalinclude:: data/options.yaml
-#    :language: yaml
+#   :language: yaml
 #
 
 # %%
+# To execute ``metatrain`` from within a script, use
+
 subprocess.run(
     [
         "mtt",
@@ -337,7 +341,7 @@ subprocess.run(
 )
 # %%
 # We visualize training and validation losses as functions of the epoch.
-# The training log is stored in CSV format in the `outputs` directory.
+# The training log is stored in CSV format in the ``outputs`` directory.
 
 train_log = np.genfromtxt(
     glob("outputs/*/*/train.csv")[-1],
@@ -358,16 +362,19 @@ plt.title("Training and validation loss")
 # We evaluate the model on the test set using the ``metatrain`` command-line interface:
 #
 # .. code-block:: shell
+#
 #    mtt eval model.pt eval.yaml -e extensions -o test_results.mts
 #
 # The evaluation YAML file contains lists the structures and corresponding reference
 # quantities for the evaluation:
 #
-# .. literalinclude:: eval.yaml
-#    :language: yaml
+# .. literalinclude:: data/eval.yaml
+#   :language: yaml
 #
 
 # %%
+# To evaluate the model from within the script with
+
 subprocess.run(
     [
         "mtt",
