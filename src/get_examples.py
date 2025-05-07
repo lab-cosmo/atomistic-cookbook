@@ -8,13 +8,11 @@ from pathlib import Path
 
 ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
 EXAMPLES = os.path.join(ROOT, "examples")
-# Changes in the following files will NOT trigger any example to run:
-IGNORE_CHANGES = [
-    "CONDUCT.md",
-    "README.rst",
-    "CONTRIBUTING.rst",
-    "INSTALLING.rst",
-    "LICENSE",
+# Changes in the following files will trigger all examples to be run.
+GLOBAL_FILES = [
+    "noxfile.py",
+    "src/generate-gallery.py",
+    "src/ipynb-to-gallery.py",
 ]
 
 
@@ -39,12 +37,8 @@ def get_examples_from_modified_files(modified_files: list[Path]):
     """
     modified_files = [file.resolve().relative_to(ROOT) for file in modified_files]
 
-    if any(
-        file.parts[0] != "examples" and str(file) not in IGNORE_CHANGES
-        for file in modified_files
-    ):
-        # This means that there is a modified file outside of the examples directory.
-        # In this case, all examples *could* be affected by the change.
+    if any(str(file) in GLOBAL_FILES for file in modified_files):
+        # This means that there is a modified file that could affect all examples.
         return get_examples()
 
     def is_inside_example(file: Path) -> bool:
