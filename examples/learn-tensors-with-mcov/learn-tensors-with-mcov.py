@@ -66,7 +66,6 @@ cs = chemiscope.show(
 
 cs
 
-
 # %%
 # Prepare the target tensors for training
 # ---------------------------------------
