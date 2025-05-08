@@ -33,7 +33,7 @@ jobs:
             GET_EXAMPLES_ARGS=" --modified-files $(git diff --name-only -r HEAD^1 HEAD)"
           fi
           echo examplesjson=$(./src/get_examples.py ${GET_EXAMPLES_ARGS}) >> $GITHUB_OUTPUT
-          echo latest_docs_run=$(./src/latest_docs_run.py) >> $GITHUB_OUTPUT
+          echo latest_docs_run=$(./src/latest_docs_run.py id) >> $GITHUB_OUTPUT
 
   generate-example:
     needs: setup

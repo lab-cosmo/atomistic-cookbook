@@ -37,6 +37,7 @@ def get_lint_files():
     LINT_FILES = [
         "src/ipynb-to-gallery.py",
         "src/generate-gallery.py",
+        "src/latest_docs_run.py",
         "noxfile.py",
         "docs/src/conf.py",
         "src/get_examples.py",
