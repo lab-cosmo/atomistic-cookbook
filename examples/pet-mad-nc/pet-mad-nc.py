@@ -346,6 +346,7 @@ chemiscope.show(
     ),
     meta={
         "name": "MTS direct-forces MD for BMIM-Cl",
-        "description": "Initial configuration kindly provided by Moritz Schaefer and Fabian Zills",
+        "description": "Initial configuration kindly provided "
+        + " by Moritz Schaefer and Fabian Zills",
     },
 )
