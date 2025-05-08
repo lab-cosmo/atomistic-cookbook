@@ -7,7 +7,7 @@ Hamiltonian Learning for Molecules with Indirect Targets
 
 This tutorial introduces a machine learning (ML) framework
 that predicts Hamiltonians for molecular systems. Another 
-one of our 'cookbook examples 
+one of our `cookbook examples 
 <https://atomistic-cookbook.org/examples/periodic-hamiltonian/periodic-hamiltonian.html>`__
 demonstrates an ML model that predicts real-space Hamiltonians
 for periodic systems. While we use the same model here to predict 
@@ -17,8 +17,7 @@ properties of interest, thereby treating the Hamiltonian
 predictions as an intermediate component of the ML 
 framework. More details on this hybrid or indirect learning 
 framework can be found in `ACS Cent. Sci. 2024, 10, 637−648.
-<https://pubs.acs.org/doi/full/10.1021/acscentsci.3c01480>`_ .
-
+<https://pubs.acs.org/doi/full/10.1021/acscentsci.3c01480>`_
 
 """
 
@@ -31,7 +30,7 @@ framework can be found in `ACS Cent. Sci. 2024, 10, 637−648.
 # discrepancy between molecular orbital (MO) energies of an ethane
 # molecule obtained from a self-consistent calculation on a minimal 
 # STO-3G basis and the larger def2-TZVP basis, especially for the
-# high energy, virtuals MOs.
+# high energy, unoccupied MOs.
 
 # %%
 # .. figure:: minimal_vs_lb.png
@@ -116,7 +115,7 @@ VAL_INTERVAL = 1
 DEVICE = "cpu"
 
 ORTHOGONAL = True  # set to 'FALSE' if working in the non-orthogonal basis
-FOLDER_NAME = "FPS/ML_orthogonal_eva"
+FOLDER_NAME = "output/ethane_eva"
 NOISE = False
 
 # %%
@@ -359,7 +358,7 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
 )
 
 # %%
-# We use a``Trainer`` class to encapsulate all training logic.
+# We use a ``Trainer`` class to encapsulate all training logic.
 # It manages the training and validation loops.
 trainer = Trainer(model, optimizer, scheduler, DEVICE)
 
@@ -413,12 +412,7 @@ plot_losses(history, save=True, savename=f"{FOLDER_NAME}/loss_vs_epoch.pdf")
 # below shows the performance of our model on the test
 # dataset. ML predictions are shown with blue points and 
 # the corresponding MO energies from the STO-3G basis are
-# are shown in grey. One can clearly see that even with a 
-# minimal basis parametrisation, the model is able to reproduce
-# the large basis MO energies with good accuracy. Thus, using 
-# an indirect model, makes it possible to promote the model
-# accuracy to a higher level of theory, at no additional cost.
-
+# are shown in grey. 
 
 def plot_parity_property(molecule_data, propert="eigenvalues", orthogonal=True):
     plt.figure()
@@ -509,8 +503,16 @@ def plot_parity_property(molecule_data, propert="eigenvalues", orthogonal=True):
 plot_parity_property(molecule_data, propert="eigenvalues", orthogonal=ORTHOGONAL)
 
 # %%
-# Targeting the Multiple Properties
-# ---------------------------------
+# We can observe from the parity plot that even with a 
+# minimal basis parametrisation, the model is able to reproduce
+# the large basis MO energies with good accuracy. Thus, using 
+# an indirect model, makes it possible to promote the model
+# accuracy to a higher level of theory, at no additional cost.
+
+
+# %%
+# Targeting Multiple Properties
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # In principle we can also target multiple properties for
 # the indirect training. While MO energies can be computed
@@ -519,7 +521,7 @@ plot_parity_property(molecule_data, propert="eigenvalues", orthogonal=ORTHOGONAL
 # the position operator integral and it's derivative if 
 # we want to bacpropagate the loss. We therefore interface
 # our ML model with an electronic structure code that supports
-# automatic differentiation, `PySCFAD <https://github.com/fishjojo/pyscfad>_`,
+# automatic differentiation, `PySCFAD <https://github.com/fishjojo/pyscfad>`_,
 # an end-to-end auto-differentiable version of PySCF. By
 # doing so we delegate the computation of properties to PySCFAD,
 # which provides automatic differentiation of observables with
@@ -535,15 +537,13 @@ plot_parity_property(molecule_data, propert="eigenvalues", orthogonal=ORTHOGONAL
 # that was trained on a homogenous dataset of different 
 # configurations of ethane, we can also easily extend the 
 # framework to use  a much diverse dataset such as the 
-# `QM7 dataset <http://quantum-machine.org/datasets/>_.
+# `QM7 dataset <http://quantum-machine.org/datasets/>`_.
 # For our next example we select a subset 150 structures from
 # this dataset that consists of only C, H, N and O atoms.
 
 # %%
 # Set parameters for training
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-# %%
 # Set the parameters for the training, including the dataset set size
 # and split, the batch size, learning rate and weights for the individual
 # components of eigenvalues, dipole and polarisability.
@@ -570,56 +570,20 @@ plot_parity_property(molecule_data, propert="eigenvalues", orthogonal=ORTHOGONAL
 # :math:`N_A` is the number of atoms :math:`i`.
 
 # %%
-# The weights :math: `\omega` are based on the magnitude of errors
+# The weights 
+# :math:`\omega` are based on the magnitude of errors
 # for different properties, in the end we want each of them to 
 # contribute equally to the loss.
 # The following values worked well for the QM7 example, but of
 # course depending on the system that one investigates another set
 # of weights might work better.
 
+# %%
 NUM_FRAMES = 150
 LR = 1e-3
 W_EVA = 1e4
 W_DIP = 1e3
 W_POL = 1e2
-
-FOLDER_NAME = "FPS/ML_orthogonal_eva_dip_pol"
-
-# %%
-# Create folders and save parameters
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
-
-os.makedirs(FOLDER_NAME, exist_ok=True)
-os.makedirs(f"{FOLDER_NAME}/model_output", exist_ok=True)
-
-
-def save_parameters(file_path, **params):
-    with open(file_path, "w") as file:
-        for key, value in params.items():
-            file.write(f"{key}: {value}\n")
-
-
-# Call the function with your parameters
-save_parameters(
-    f"{FOLDER_NAME}/parameters.txt",
-    NUM_FRAMES=NUM_FRAMES,
-    BATCH_SIZE=BATCH_SIZE,
-    NUM_EPOCHS=NUM_EPOCHS,
-    SHUFFLE_SEED=SHUFFLE_SEED,
-    TRAIN_FRAC=TRAIN_FRAC,
-    TEST_FRAC=TEST_FRAC,
-    VALIDATION_FRAC=VALIDATION_FRAC,
-    LR=LR,
-    VAL_INTERVAL=VAL_INTERVAL,
-    W_EVA=W_EVA,
-    W_DIP=W_DIP,
-    W_POL=W_POL,
-    DEVICE=DEVICE,
-    ORTHOGONAL=ORTHOGONAL,
-    FOLDER_NAME=FOLDER_NAME,
-)
-
 
 # %%
 # Create Datasets
@@ -641,7 +605,7 @@ save_parameters(
 
 molecule_data = MoleculeDataset(
     mol_name="qm7",
-    use_precomputed=True,
+    use_precomputed=False,
     path="data/qm7",
     aux_path="data/qm7/sto-3g",
     frame_slice=slice(0, NUM_FRAMES),
@@ -668,8 +632,12 @@ ml_data._split_indices(
 # %%
 # Compute Features
 # ~~~~~~~~~~~~~~~~
-# TODO
-#
+# The feature hyperparameters here are similar to the
+# ones we used for our previous training, except the `cutoff`.
+# For a dataset like QM7 which contains molecules with over
+# 15 atoms, we need a slightly larger cutoff than the ones 
+# we used in case of ethane. We choose a cutoff of 3 and 5 
+# for the atom-centred and pair-centred features respectively.
 
 hypers = {
     "cutoff": {"radius": 3, "smoothing": {"type": "ShiftedCosine", "width": 0.1}},
@@ -690,17 +658,18 @@ hypers_pair = {
         "radial": {"type": "Gto", "max_radial": 5},
     },
 }
+# %%
+# .. code-block:: python
+#
+#       features = compute_features_for_target(
+#           ml_data, device=DEVICE, hypers=hypers, hypers_pair=hypers_pair
+#       )
+#       ml_data._set_features(features)
+#       
+#       train_dl, val_dl, test_dl = get_dataloader(
+#           ml_data, model_return="blocks", batch_size=BATCH_SIZE
+#       )
 
-
-features = compute_features_for_target(
-    ml_data, device=DEVICE, hypers=hypers, hypers_pair=hypers_pair
-)
-ml_data._set_features(features)
-
-
-train_dl, val_dl, test_dl = get_dataloader(
-    ml_data, model_return="blocks", batch_size=BATCH_SIZE
-)
 # %%
 # Depending on the diversity of the structures in the datasets, it may
 # happen that some blocks are empty, because certain structural 
@@ -709,115 +678,147 @@ train_dl, val_dl, test_dl = get_dataloader(
 # We drop these blocks, so that the dataloader does not
 # try to load them during training.
 
-ml_data.target_train, ml_data.target_val, ml_data.target_test = drop_zero_blocks(
-    ml_data.target_train, ml_data.target_val, ml_data.target_test
-)
-
-ml_data.feat_train, ml_data.feat_val, ml_data.feat_test = drop_zero_blocks(
-    ml_data.feat_train, ml_data.feat_val, ml_data.feat_test
-)
+# %%
+# .. code-block:: python
+#
+#          ml_data.target_train, ml_data.target_val, ml_data.target_test = drop_zero_blocks(
+#          ml_data.target_train, ml_data.target_val, ml_data.target_test
+#       
+#          ml_data.feat_train, ml_data.feat_val, ml_data.feat_test = drop_zero_blocks(
+#          ml_data.feat_train, ml_data.feat_val, ml_data.feat_test
+#       
 
 
 # %%
 # Prepare training
 # ~~~~~~~~~~~~~~~~
 #
-# Here, we also first fit a ridge regression model to the data.
+# Here again we first fit a ridge regression model to the data.
 
-model = LinearTargetModel(
-    dataset=ml_data, nlayers=1, nhidden=16, bias=False, device=DEVICE
-)
-
-pred_ridges, ridges = model.fit_ridge_analytical(
-    alpha=np.logspace(-8, 3, 12),
-    cv=3,
-    set_bias=False,
-)
-
-pred_fock = model.forward(
-    ml_data.feat_train,
-    return_type="tensor",
-    batch_indices=ml_data.train_idx,
-    ridge_fit=True,
-    add_noise=NOISE,
-)
-
-with io.capture_output() as captured:
-    all_mfs, fockvars = instantiate_mf(
-        ml_data,
-        fock_predictions=None,
-        batch_indices=list(range(len(ml_data.structures))),
-    )
+# %%
+# .. code-block:: python
+#
+#       model = LinearTargetModel(
+#           dataset=ml_data, nlayers=1, nhidden=16, bias=False, device=DEVICE
+#       )
+#        
+#       pred_ridges, ridges = model.fit_ridge_analytical(
+#           alpha=np.logspace(-8, 3, 12),
+#           cv=3,
+#           set_bias=False,
+#       )
+#
+#       pred_fock = model.forward(
+#           ml_data.feat_train,
+#           return_type="tensor",
+#           batch_indices=ml_data.train_idx,
+#           ridge_fit=True,
+#           add_noise=NOISE,
+#       )
+#
+#       with io.capture_output() as captured:
+#           all_mfs, fockvars = instantiate_mf(
+#               ml_data,
+#               fock_predictions=None,
+#               batch_indices=list(range(len(ml_data.structures))),
+#           )
 
 # %%
 # Training parameters and training
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
+# For finetuning on multiple targets we again 
+# define a loss function, optimizer and scheduler.
+# We also define the necessary arguments for training
+# and validation.
 
-# Set loss function, optimizer and scheduler
+# %%
+# .. code-block:: python
+#
+#       loss_fn = mlmetrics.mse_per_atom
+#       optimizer = torch.optim.Adam(model.parameters(), lr=LR)
+#       scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+#           optimizer,
+#           factor=0.5,
+#           patience=10, 
+#           )
 
-loss_fn = mlmetrics.mse_per_atom
-optimizer = torch.optim.Adam(model.parameters(), lr=LR)
-scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-    optimizer,
-    factor=0.5,
-    patience=10,  # 20,
-)
+# %%
+# .. code-block:: python
+#
+#       # Initialize trainer
+#       trainer = Trainer(model, optimizer, scheduler, DEVICE)
+#     
+#       # Define necessary arguments for the training and validation process
+#       fit_args = {
+#           "ml_data": ml_data,
+#           "all_mfs": all_mfs,
+#           "loss_fn": loss_fn,
+#           "weight_eva": W_EVA,
+#           "weight_dipole": W_DIP,
+#           "weight_polar": W_POL,
+#           "ORTHOGONAL": ORTHOGONAL,
+#           "upscale": True,
+#       }
+#      
+#      
+#       # Train and validate
+#       history = trainer.fit(
+#           train_dl,
+#           val_dl,
+#           200,
+#           EARLY_STOP_CRITERION,
+#           FOLDER_NAME,
+#           VERBOSE,
+#           DUMP_HIST,
+#           **fit_args,
+#       )
+#
+#       # Save the loss history
+#       np.save(f"{FOLDER_NAME}/model_output/loss_stats.npy", history)
 
-# Initialize trainer
-trainer = Trainer(model, optimizer, scheduler, DEVICE)
+# %%
+# This training can take some time to converge fully.
+# We, therefore try to load a previously trained model.
 
-# Define necessary arguments for the training and validation process
-fit_args = {
-    "ml_data": ml_data,
-    "all_mfs": all_mfs,
-    "loss_fn": loss_fn,
-    "weight_eva": W_EVA,
-    "weight_dipole": W_DIP,
-    "weight_polar": W_POL,
-    "ORTHOGONAL": ORTHOGONAL,
-    "upscale": True,
-}
-
-
-# Train and validate
-history = trainer.fit(
-    train_dl,
-    val_dl,
-    200,
-    EARLY_STOP_CRITERION,
-    FOLDER_NAME,
-    VERBOSE,
-    DUMP_HIST,
-    **fit_args,
-)
-
-# Save the loss history
-np.save(f"{FOLDER_NAME}/model_output/loss_stats.npy", history)
+# %%
+# Evaluating the trained model
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 
+# .. code-block:: python
+#
+#       model.load_state_dict(torch.load("output/qm7_eva_dip_pol/best_model.pt"))
 
 # %%
 # Plot loss
 # ~~~~~~~~~
 #
-
-# We can conveniently use the plotting function we imported from
-# mlelec above. At the same time we can save the pdf.
-
-plot_losses(history, save=True, savename=f"{FOLDER_NAME}/loss_vs_epoch.pdf")
+# .. figure:: loss_vs_epoch.png
+#    :alt: Loss versus Epoch curves for training and 
+#          validation losses.  The MSE on MO energies, dipole moments 
+#          and polarisability are shown separately.
+# The plot here shows the loss versus Epoch curves
+# for training and validation losses.  The MSE on 
+# MO energies, dipole moments and polarisability 
+# are shown separately.
 
 # %%
 # Parity plot
 # ~~~~~~~~~~~
-# We can now compare the properties derived from the predicted hamiltonian
-# to their actual values
-# in a parity plot.
-# The 'STO-3G' illustrates the difference of the two computed datasets,
-# the STO-3G eigenvalues from DFT against the ones obtained with the large basis
-# def2-TZVP.
-# The results of the upscale Hamiltonian model are plotted with the label 'ML'.
-
-plot_parity_property(molecule_data, propert="eigenvalues", orthogonal=ORTHOGONAL)
-plot_parity_property(molecule_data, propert="dipole_moment", orthogonal=ORTHOGONAL)
-plot_parity_property(molecule_data, propert="polarisability", orthogonal=ORTHOGONAL)
-
+#
+# .. figure:: parity_plots_combined.png
+#    :alt: Performance of the indirect model on the QM7 test
+#           dataset, for the (a) MO energy (b) dipole moments and (c)
+#           polarizability. Targets are computed with the def2-TZVP
+#           basis. Gray circles correspond to the values obtained from
+#           STO-3G calculations, while the blue ones correspond to val-
+#           ues computed from minimal-basis Hamiltonians predicted by
+#           the ML model.
+# We finally show the performance of the finetuned model 
+# that target the MO energies, dipole moments and polarisbaility 
+# of from a def2-TZVP calculation on the QM7 test
+# dataset. Gray circles correspond to the values obtained from
+# STO-3G calculations, while the blue ones correspond to values 
+# computed from the reduced-basis Hamiltonians predicted by
+# the ML model.
 # %%
