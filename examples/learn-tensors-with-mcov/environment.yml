@@ -1,0 +1,11 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+    - ase
+    - metatrain[soap-bpnn]>=2025.6,<2026
+    - chemiscope>=0.8.5,<0.9
+    - featomic>=0.6.1,<0.7
+    - matplotlib

@@ -1,0 +1,16 @@
+systems: 
+  read_from: test_set.xyz
+targets: 
+  mtt::dipole:
+    read_from: test_dipoles.mts
+    type: 
+      spherical:
+        irreps:
+          - {o3_lambda: 1, o3_sigma: 1}
+  mtt::polarizability:
+    read_from: test_polarizabilities.mts
+    type: 
+      spherical:
+        irreps:
+          - {o3_lambda: 0, o3_sigma: 1}
+          - {o3_lambda: 2, o3_sigma: 1}
