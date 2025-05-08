@@ -175,6 +175,8 @@ for idx, filename in zip(
 # nutshell, allows us to learn a tensorial property of a system from a set of scalar
 # features used as linear expansion coefficients of a minimal set of basis tensors.
 
+
+# visualize a scheme of the architecture that is also used as a thumbnail for the recipe
 fig, ax = plt.subplots(figsize=(5728 / 300, 2598 / 300), dpi=300)
 img = mpimg.imread("architecture.png")
 ax.imshow(img)
