@@ -87,7 +87,7 @@ jobs:
         with:
           path: docs/src/examples
           pattern: example-*
-          github-token: ${{ github.token }}
+          github-token: ${{ secrets.GH_READ_TOKEN }}
           run-id: ${{ needs.setup.outputs.latest_docs_run }}
           merge-multiple: true
 
