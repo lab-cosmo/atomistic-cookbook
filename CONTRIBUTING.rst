@@ -153,7 +153,7 @@ Alternatively, you can download the executed examples from the latest CI build:
 .. code-block:: bash
 
     python src/latest_docs_run.py download-examples
-  
+
 You can select which examples to download. Use ``--help`` to see the available options.
 
 .. _nox: https://nox.thea.codes/

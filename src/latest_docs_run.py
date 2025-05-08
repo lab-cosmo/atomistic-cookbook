@@ -47,7 +47,7 @@ def get_latest_successful_docs_run():
 def download_latest_examples(
     overwrite: bool = False,
     examples: Optional[list[str]] = None,
-    exclude: list[str] = [],
+    exclude: list[str] = (),
 ):
     """Download built examples from latest Github's CI run on the main branch.
 
@@ -94,7 +94,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="CLI to interact with the latest successful docs run on Github Actions"
+        description="Interactions with the latest successful docs run on Github Actions"
     )
 
     subparsers = parser.add_subparsers(dest="command")
