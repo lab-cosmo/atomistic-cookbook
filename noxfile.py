@@ -37,6 +37,7 @@ def get_lint_files():
     LINT_FILES = [
         "src/ipynb-to-gallery.py",
         "src/generate-gallery.py",
+        "src/latest_docs_run.py",
         "noxfile.py",
         "docs/src/conf.py",
         "src/get_examples.py",
@@ -105,7 +106,7 @@ def should_reinstall_dependencies(session, **metadata):
             with open(value) as fd:
                 to_hash[key] = fd.read()
         else:
-            to_hash[key] = value
+            to_hash[key] = str(value)
 
     to_hash = json.dumps(to_hash).encode("utf8")
     sha1 = hashlib.sha1(to_hash).hexdigest()
@@ -195,7 +196,7 @@ def get_example_metadata(rst_file):
     metadata["description"] = rst_description or ""
     metadata["html"] = html_description or ""
     metadata["thumbnail"] = thumbnail_file
-    metadata["ref"] = os.path.join(gallery_dir, example_name)
+    metadata["ref"] = str(os.path.join(gallery_dir, example_name))
 
     return metadata
 

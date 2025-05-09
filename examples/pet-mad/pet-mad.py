@@ -41,7 +41,7 @@ in `this preprint <https://arxiv.org/abs/2503.14118>`_.
 #
 # .. code-block:: bash
 #
-#     pip install git+https://github.com/lab-cosmo/pet-mad.git
+#     pip install pet-mad
 #
 
 import os
@@ -52,6 +52,9 @@ from copy import copy, deepcopy
 import ase.units
 import chemiscope
 import matplotlib.pyplot as plt
+
+# pet-mad ASE calculator
+import metatensor.torch.atomistic as mta
 import numpy as np
 import requests
 from ase.optimize import LBFGS
@@ -63,8 +66,6 @@ from ipi.utils.scripting import (
     motion_nvt_xml,
     simulation_xml,
 )
-
-# pet-mad ASE calculator
 from pet_mad.calculator import PETMADCalculator
 
 
@@ -140,6 +141,21 @@ test_forces = np.array(test_forces, dtype=object)
 
 calculator = PETMADCalculator(version="latest", device="cpu")
 
+# %%
+#
+# The model can also be exported in a format that can be used with
+# external MD engines. This is done by saving the model to a file,
+# which includes the model architecture and weights.
+
+calculator.model.save("pet-mad-latest.pt")
+
+# %%
+# The model can also be loaded from this torchscript dump, which often
+# speeds up calculation as it involves compilation, and is functionally
+# equivalent unless you plan on fine-tuning, or otherwise modifying
+# the model.
+
+calculator = mta.ase_calculator.MetatensorCalculator("pet-mad-latest.pt", device="cpu")
 
 # %%
 #
@@ -345,7 +361,7 @@ opt.attach(lambda: traj_atoms.append(atoms.copy()))
 opt.attach(lambda: traj_energy.append(atoms.get_potential_energy()))
 
 # stop the optimization early to speed up the example
-opt.run(fmax=0.001, steps=30)
+opt.run(fmax=0.001, steps=20)
 
 # %%
 #
@@ -380,19 +396,6 @@ chemiscope.show(
 # without having to introduce vacancies or wait for the
 # very long time scale needed for diffusion.
 
-# %%
-#
-# Before starting the simulations with MD engines, it is important
-# to export the model to a format that can be used by the engine.
-# This is done by saving the model to a file, which includes the
-# model weights and the compiled extensions. We use the ``collect_extensions``
-# argument to save the compiled extensions to disk. These extensions ensure that
-# the model remains self-contained and can be executed without requiring the
-# original Python or C++ source code. In particular, this is necessary for
-# the LAMMPS interface to work because it has no access to the Python code.
-
-calculator.model.save("pet-mad-latest.pt", collect_extensions="extensions")
-
 
 # %%
 #
@@ -409,6 +412,7 @@ motion_xml = f"""
     {motion_nvt_xml(timestep=5.0 * ase.units.fs)}
     <motion mode="atomswap">
         <atomswap>
+            <nxc> 0.1 </nxc>
             <names> [ Al, Si, Mg, O]  </names>
         </atomswap>
     </motion>
@@ -425,7 +429,7 @@ input_xml = simulation_xml(
     ),
     motion=motion_xml,
     temperature=800,
-    verbosity="low",
+    verbosity="high",
     prefix="nvt_atomxc",
 )
 
@@ -438,7 +442,7 @@ print(input_xml)
 # execute separately ``i-PI`` and the ``metatensor`` driver.
 
 sim = InteractiveSimulation(input_xml)
-sim.run(100)
+sim.run(80)
 
 # %%
 #

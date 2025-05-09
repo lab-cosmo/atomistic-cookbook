@@ -4,11 +4,10 @@ channels:
 dependencies:
   - python=3.12
   - lammps-metatensor=*=cpu*nompi*
-  - libtorch=*=cpu*mkl* 
-  - pet-mad
+  - pet-mad>=1.1.0rc4,<1.2
   - pip
   - pip:
     - ase
-    - ipi>=3.1.r21
-    - chemiscope>=0.8.4  
+    - ipi==3.1.2
+    - chemiscope>=0.8.5,<0.9 
     - matplotlib

@@ -5,4 +5,4 @@ sphinx-gallery
 sphinx-toggleprompt
 docutils
 furo
-chemiscope>=0.7
+chemiscope>=0.8.5
