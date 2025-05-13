@@ -463,8 +463,8 @@ neighbors
 # the system. Thanks to the fact we rely on ``torch`` autodifferentiation mechanism, the
 # forces acting on the virtual sites will be automatically split between O and H atoms,
 # in a way that is consistent with the definition.
-
-# forces acting on the M sites will be automatically split between O and H atoms, in a
+#
+# Forces acting on the M sites will be automatically split between O and H atoms, in a
 # way that is consistent with the definition.
 
 
@@ -583,7 +583,8 @@ def get_molecular_geometry(
     )
 
     tensor = TensorMap(
-        keys=Labels("_", torch.zeros(1, 1, dtype=torch.int32)), blocks=[data]
+        keys=Labels("_", torch.zeros(1, 1, device=charges.device, dtype=torch.int32)),
+        blocks=[data],
     )
 
     m_system.add_data(name="charges", tensor=tensor)
@@ -637,8 +638,6 @@ class WaterModel(torch.nn.Module):
         hoh_angle_eq: float,
         hoh_angle_k: float,
         p3m_options: Optional[dict] = None,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
     ):
         super().__init__()
 
@@ -653,34 +652,24 @@ class WaterModel(torch.nn.Module):
             **p3m_parameters,
             prefactor=torchpme.prefactors.kcalmol_A,  # consistent units
         )
-        self.p3m_calculator.to(device=device, dtype=dtype)
 
         self.coulomb = torchpme.CoulombPotential()
-        self.coulomb.to(device=device, dtype=dtype)
 
         # We use a half neighborlist and allow to have pairs farther than cutoff
         # (`strict=False`) since this is not problematic for PME and may speed up the
         # computation of the neigbors.
         self.nlo = NeighborListOptions(cutoff=cutoff, full_list=False, strict=False)
 
-        # registers model parameters as buffers
-        self.dtype = dtype if dtype is not None else torch.get_default_dtype()
-        self.device = device if device is not None else torch.get_default_device()
-
-        self.register_buffer("cutoff", torch.tensor(cutoff, dtype=self.dtype))
-        self.register_buffer("lj_sigma", torch.tensor(lj_sigma, dtype=self.dtype))
-        self.register_buffer("lj_epsilon", torch.tensor(lj_epsilon, dtype=self.dtype))
-        self.register_buffer("m_gamma", torch.tensor(m_gamma, dtype=self.dtype))
-        self.register_buffer("m_charge", torch.tensor(m_charge, dtype=self.dtype))
-        self.register_buffer("oh_bond_eq", torch.tensor(oh_bond_eq, dtype=self.dtype))
-        self.register_buffer("oh_bond_k", torch.tensor(oh_bond_k, dtype=self.dtype))
-        self.register_buffer(
-            "oh_bond_alpha", torch.tensor(oh_bond_alpha, dtype=self.dtype)
-        )
-        self.register_buffer(
-            "hoh_angle_eq", torch.tensor(hoh_angle_eq, dtype=self.dtype)
-        )
-        self.register_buffer("hoh_angle_k", torch.tensor(hoh_angle_k, dtype=self.dtype))
+        self.register_buffer("cutoff", torch.tensor(cutoff))
+        self.register_buffer("lj_sigma", torch.tensor(lj_sigma))
+        self.register_buffer("lj_epsilon", torch.tensor(lj_epsilon))
+        self.register_buffer("m_gamma", torch.tensor(m_gamma))
+        self.register_buffer("m_charge", torch.tensor(m_charge))
+        self.register_buffer("oh_bond_eq", torch.tensor(oh_bond_eq))
+        self.register_buffer("oh_bond_k", torch.tensor(oh_bond_k))
+        self.register_buffer("oh_bond_alpha", torch.tensor(oh_bond_alpha))
+        self.register_buffer("hoh_angle_eq", torch.tensor(hoh_angle_eq))
+        self.register_buffer("hoh_angle_k", torch.tensor(hoh_angle_k))
 
     def requested_neighbor_lists(self):
         """Returns the list of neighbor list options that are needed."""
@@ -778,17 +767,20 @@ class WaterModel(torch.nn.Module):
 
         # Rename property label to follow metatensor's convention for an atomistic model
         samples = Labels(
-            ["system"], torch.arange(len(systems), device=self.device).reshape(-1, 1)
+            ["system"],
+            torch.arange(len(systems), device=energy_tot.device).reshape(-1, 1),
         )
+        properties = Labels(["energy"], torch.tensor([[0]], device=energy_tot.device))
+
         block = TensorBlock(
             values=torch.sum(energy_tot).reshape(-1, 1),
             samples=samples,
             components=torch.jit.annotate(List[Labels], []),
-            properties=Labels(["energy"], torch.tensor([[0]], device=self.device)),
+            properties=properties,
         )
         return {
             "energy": TensorMap(
-                Labels("_", torch.tensor([[0]], device=self.device)), [block]
+                Labels("_", torch.tensor([[0]], device=energy_tot.device)), [block]
             ),
         }
 
@@ -861,7 +853,7 @@ The stress is
 # Model options include a definition of its units, and a description of the quantities
 # it can compute.
 #
-#  .. note::
+# .. note::
 #
 #   We neeed to specify that the model has infinite interaction range because of the
 #   presence of a long-range term that means one cannot assume that forces decay to zero
@@ -876,7 +868,7 @@ model_capabilities = ModelCapabilities(
     atomic_types=[1, 8],
     interaction_range=torch.inf,
     length_unit=length_unit,
-    supported_devices=["cpu", "cuda"],
+    supported_devices=["cuda", "cpu"],
     dtype="float32",
 )
 
