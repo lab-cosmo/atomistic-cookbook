@@ -212,10 +212,10 @@ def exctract_from_pet_mad(checkpoint="finetuning/pet-mad-latest.ckpt"):
         "Rn",
     ]
 
-    return {spec: vals[spec] for i, spec in enumerate(specorder)}
+    return {spec: vals[i] for i, spec in enumerate(specorder)}
 
 
-def get_energy_men_atomic(traj, model, spec, label="energy-men-atomic"):
+def get_energy_men_atomic(traj, model, label="energy-men-atomic"):
     """Get the energy per atom for each trajectory."""
     energies_DFT = []
     for atoms in traj:
@@ -255,12 +255,9 @@ def get_energy_men_atomic(traj, model, spec, label="energy-men-atomic"):
 # then we can save the dataset to a file.
 
 dataset = ase.io.read("data/ethanol.xyz", index=":", format="extxyz")
-atoms_types = extract_atom_types(dataset)
-print("Atoms types: ", atoms_types)
 dataset_corrected = get_energy_men_atomic(
     dataset,
     model="pet-mad-latest.ckpt",
-    spec=atoms_types,
     label="energy-men-atomic",
     labelDFT=None,
 )
