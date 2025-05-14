@@ -254,7 +254,7 @@ def get_energy_men_atomic(traj, model, label="energy-men-atomic"):
 # Now we can load the dataset and correct the energies.
 # then we can save the dataset to a file.
 
-dataset = ase.io.read("data/ethanol.xyz", index=":", format="extxyz")
+dataset = ase.io.read("data/ethanol_reduced_100.xyz", index=":", format="extxyz")
 dataset_corrected = get_energy_men_atomic(
     dataset,
     model="pet-mad-latest.ckpt",
