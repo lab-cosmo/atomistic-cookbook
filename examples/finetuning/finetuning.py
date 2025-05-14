@@ -6,8 +6,8 @@ Finetuning PET-MAD universal potential
           Zhiyi Wang `@ceriottm <https://github.com/ceriottm>`_,
           Cesare Malosso `@abmazitov <https://github.com/abmazitov>`_
 
-This example demonstrates how to finetune the PET-MAD model with metatrain, 
-`metatrain <https://github.com/metatensor/metatrain>`_. 
+This example demonstrates how to finetune the PET-MAD model with metatrain,
+`metatrain <https://github.com/metatensor/metatrain>`_.
 PET-MAD is a "universal"
 machine-learning forcefield trained on a dataset that aims to incorporate a very high
 degree of structural diversity.
@@ -36,41 +36,23 @@ in `this preprint <https://arxiv.org/abs/2503.14118>`_.
 
 # %%
 #
-# We will finetune PET-MAD on a very simple 
+# We will finetune PET-MAD on a very simple
 # dataset composed of 100 structres of ethanol
 #
 
-import os
 import subprocess
-from copy import copy, deepcopy
-
-# ASE and i-PI scripting utilities
-import ase.units
-import chemiscope
-import matplotlib.pyplot as plt
-
-# pet-mad ASE calculator
-import metatensor.torch.atomistic as mta
-import numpy as np
-import requests
-from ase.optimize import LBFGS
-
-from sklearn.linear_model import LinearRegression
-
 from collections import Counter
 
-from ase import Atoms
 import ase.io
-
-from metatensor.torch.atomistic.ase_calculator import MetatensorCalculator
-
+import numpy as np
 from metatrain.pet import PET
+from sklearn.linear_model import LinearRegression
 
 
 if hasattr(__import__("builtins"), "get_ipython"):
     get_ipython().run_line_magic("matplotlib", "inline")  # noqa: F821
-    
-    
+
+
 # %%
 # Download the model
 # ----------------------------------------
@@ -81,7 +63,7 @@ if hasattr(__import__("builtins"), "get_ipython"):
 #
 # .. code-block:: bash
 #
-#   wget https://huggingface.co/lab-cosmo/pet-mad/resolve/main/models/pet-mad-latest.ckpt
+#  wget https://huggingface.co/lab-cosmo/pet-mad/resolve/main/models/pet-mad-latest.ckpt
 #
 
 url = "https://huggingface.co/lab-cosmo/pet-mad/resolve/main/models/pet-mad-latest.ckpt"
@@ -100,6 +82,7 @@ subprocess.run(["wget", url, "-O", output_file], check=True)
 # combination of compositional models.
 # Following there are few helper functions.
 
+
 def extract_atom_types(structures):
     """Extract unique atom types from a list of ASE Atoms objects."""
     atom_types = set()
@@ -107,10 +90,12 @@ def extract_atom_types(structures):
         atom_types.update(atoms.get_chemical_symbols())
     return sorted(atom_types)
 
+
 def get_rmse(y_true, y_pred):
     """Calculate the root mean square error (RMSE) between
     true and predicted values."""
     return np.sqrt(np.mean((y_true - y_pred) ** 2))
+
 
 def prepare_features(traj):
     """Prepare feature matrix for linear regression."""
@@ -118,6 +103,8 @@ def prepare_features(traj):
     species = sorted({element for comp in compositions for element in comp})
     X = np.array([[comp.get(s, 0) for s in species] for comp in compositions])
     return X, species
+
+
 # Prepare the feature matrix (X) and target vector (y)
 def prepare_features_and_target(traj, energies_DFT):
     """Prepare feature matrix and target vector for linear regression."""
@@ -125,41 +112,115 @@ def prepare_features_and_target(traj, energies_DFT):
     y = np.array(energies_DFT)
     return X, y, species
 
-def get_compositional_energy(atom,atom_energy):
+
+def get_compositional_energy(atom, atom_energy):
     """Get the composition of the atoms object."""
     energy = 0
     for sp in atom_energy.keys():
-        energy += atom_energy[sp]*atom.get_chemical_symbols().count(sp)
+        energy += atom_energy[sp] * atom.get_chemical_symbols().count(sp)
     return energy
 
-def exctract_from_pet_mad(checkpoint='finetuning/pet-mad-latest.ckpt'):
+
+def exctract_from_pet_mad(checkpoint="finetuning/pet-mad-latest.ckpt"):
     mdlpet = PET.load_checkpoint(checkpoint)
-    vals = mdlpet.additive_models[0].weights['energy'].block().values
+    vals = mdlpet.additive_models[0].weights["energy"].block().values
     specorder = [
-    "H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mg", "Al", "Si", "P", "S",
-    "Cl", "Ar", "K", "Ca", "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn", "Ga",
-    "Ge", "As", "Se", "Br", "Kr", "Rb", "Sr", "Y", "Zr", "Nb", "Mo", "Tc", "Ru", "Rh", "Pd",
-    "Ag", "Cd", "In", "Sn", "Sb", "Te", "I", "Xe", "Cs", "Ba", "La", "Ce", "Pr", "Nd", "Pm",
-    "Sm", "Eu", "Gd", "Tb", "Dy", "Ho", "Er", "Tm", "Yb", "Lu", "Hf", "Ta", "W", "Re", "Os",
-    "Ir", "Pt", "Au", "Hg", "Tl", "Pb", "Bi", "Po", "Rn"
+        "H",
+        "He",
+        "Li",
+        "Be",
+        "B",
+        "C",
+        "N",
+        "O",
+        "F",
+        "Ne",
+        "Na",
+        "Mg",
+        "Al",
+        "Si",
+        "P",
+        "S",
+        "Cl",
+        "Ar",
+        "K",
+        "Ca",
+        "Sc",
+        "Ti",
+        "V",
+        "Cr",
+        "Mn",
+        "Fe",
+        "Co",
+        "Ni",
+        "Cu",
+        "Zn",
+        "Ga",
+        "Ge",
+        "As",
+        "Se",
+        "Br",
+        "Kr",
+        "Rb",
+        "Sr",
+        "Y",
+        "Zr",
+        "Nb",
+        "Mo",
+        "Tc",
+        "Ru",
+        "Rh",
+        "Pd",
+        "Ag",
+        "Cd",
+        "In",
+        "Sn",
+        "Sb",
+        "Te",
+        "I",
+        "Xe",
+        "Cs",
+        "Ba",
+        "La",
+        "Ce",
+        "Pr",
+        "Nd",
+        "Pm",
+        "Sm",
+        "Eu",
+        "Gd",
+        "Tb",
+        "Dy",
+        "Ho",
+        "Er",
+        "Tm",
+        "Yb",
+        "Lu",
+        "Hf",
+        "Ta",
+        "W",
+        "Re",
+        "Os",
+        "Ir",
+        "Pt",
+        "Au",
+        "Hg",
+        "Tl",
+        "Pb",
+        "Bi",
+        "Po",
+        "Rn",
     ]
-    
-    return {spec: vals[spec] for i,spec in enumerate(specorder)}
-    
+
+    return {spec: vals[spec] for i, spec in enumerate(specorder)}
 
 
-def get_energy_men_atomic(traj,
-                          model,
-                          spec ,
-                          label='energy-men-atomic',
-                          labelDFT=None):
+def get_energy_men_atomic(traj, model, spec, label="energy-men-atomic"):
     """Get the energy per atom for each trajectory."""
     energies_DFT = []
     for atoms in traj:
-        try:
-            energies_DFT.append(atoms.get_potential_energy())
-        except:
-            energies_DFT.append(atoms.info[labelDFT]) 
+
+        energies_DFT.append(atoms.get_potential_energy())
     # Get the compositional energy for the DFT energies
     X, y, species = prepare_features_and_target(traj, energies_DFT)
 
@@ -169,17 +230,21 @@ def get_energy_men_atomic(traj,
 
     # Display the coefficients
     coefficients = dict(zip(species, modelLinear.coef_))
-    
+
     # Get the energy per atom of isolated atoms for the model
-    
+
     ener = exctract_from_pet_mad(model)
-    
-    for i,atoms in enumerate(traj[:]):
-        atoms.info[label] = \
-        energies_DFT[i]-get_compositional_energy(atoms,coefficients)-\
-        modelLinear.intercept_+get_compositional_energy(atoms,ener)
-    
+
+    for i, atoms in enumerate(traj[:]):
+        atoms.info[label] = (
+            energies_DFT[i]
+            - get_compositional_energy(atoms, coefficients)
+            - modelLinear.intercept_
+            + get_compositional_energy(atoms, ener)
+        )
+
     return traj
+
 
 # %%
 # Load the dataset
@@ -189,14 +254,16 @@ def get_energy_men_atomic(traj,
 # Now we can load the dataset and correct the energies.
 # then we can save the dataset to a file.
 
-dataset = ase.io.read("data/ethanol.xyz", index=":",format="extxyz")
+dataset = ase.io.read("data/ethanol.xyz", index=":", format="extxyz")
 atoms_types = extract_atom_types(dataset)
 print("Atoms types: ", atoms_types)
-dataset_corrected = get_energy_men_atomic(dataset,
-                        model='pet-mad-latest.ckpt',
-                        spec = atoms_types,
-                        label='energy-men-atomic',
-                        labelDFT=None)
+dataset_corrected = get_energy_men_atomic(
+    dataset,
+    model="pet-mad-latest.ckpt",
+    spec=atoms_types,
+    label="energy-men-atomic",
+    labelDFT=None,
+)
 
 ase.io.write("data/ethanol_corrected.xyz", dataset_corrected, format="extxyz")
 
@@ -205,7 +272,7 @@ ase.io.write("data/ethanol_corrected.xyz", dataset_corrected, format="extxyz")
 # ^^^^^^^^^^^^^^^^^^^^^
 # we will use the `metatrain` package to finetune the model, and
 # the input file in the `data` folder.
-# Note that for our simple example the `training_set`, the 
+# Note that for our simple example the `training_set`, the
 # `validation_set` and the `test_set` are the same, for real use cases
 # you should use different sets.
 # The input file is a `.yaml` file that contains the parameters for the
@@ -226,4 +293,3 @@ subprocess.run(
     ],
     check=True,
 )
-
