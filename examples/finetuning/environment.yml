@@ -1,0 +1,13 @@
+channels:
+  - metatensor
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pet-mad>=1.1.0rc4,<1.2
+  - pip
+  - pip:
+    - ase
+    - ipi==3.1.2
+    - chemiscope>=0.8.5,<0.9 
+    - matplotlib
+    - scikit-learn
