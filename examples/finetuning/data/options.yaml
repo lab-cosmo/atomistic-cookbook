@@ -27,7 +27,7 @@ architecture:
 # training set section
 training_set:
   systems: 
-    read_from: "data/ethanol_reduced_100.xyz"
+    read_from: "data/ethanol_corrected.xyz"
     length_unit: angstrom
   targets:
     energy:
@@ -36,7 +36,7 @@ training_set:
 
 validation_set:
   systems:
-    read_from: "data/ethanol_reduced_100.xyz"
+    read_from: "data/ethanol_corrected.xyz"
     length_unit: angstrom
   targets:
     energy:
@@ -45,7 +45,7 @@ validation_set:
 
 test_set:
   systems:
-    read_from: "data/ethanol_reduced_100.xyz"
+    read_from: "data/ethanol_corrected.xyz"
     length_unit: angstrom
   targets:
     energy:
