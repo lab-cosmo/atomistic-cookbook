@@ -219,7 +219,6 @@ def get_energy_men_atomic(traj, model, label="energy-men-atomic"):
     """Get the energy per atom for each trajectory."""
     energies_DFT = []
     for atoms in traj:
-
         energies_DFT.append(atoms.get_potential_energy())
     # Get the compositional energy for the DFT energies
     X, y, species = prepare_features_and_target(traj, energies_DFT)
@@ -241,7 +240,7 @@ def get_energy_men_atomic(traj, model, label="energy-men-atomic"):
             - get_compositional_energy(atoms, coefficients)
             - modelLinear.intercept_
             + get_compositional_energy(atoms, ener)
-        )
+        ).item()
 
     return traj
 
@@ -255,13 +254,10 @@ def get_energy_men_atomic(traj, model, label="energy-men-atomic"):
 # then we can save the dataset to a file.
 
 dataset = ase.io.read("data/ethanol_reduced_100.xyz", index=":", format="extxyz")
-dataset_corrected = get_energy_men_atomic(
-    dataset,
-    model="pet-mad-latest.ckpt",
-    label="energy-men-atomic",
-    labelDFT=None,
-)
 
+dataset_corrected = get_energy_men_atomic(
+    dataset, model="pet-mad-latest.ckpt", label="energy-men-atomic"
+)
 ase.io.write("data/ethanol_corrected.xyz", dataset_corrected, format="extxyz")
 
 # %%
@@ -277,14 +273,14 @@ ase.io.write("data/ethanol_corrected.xyz", dataset_corrected, format="extxyz")
 # From command line you can run the finetuning with the following command:
 # .. code-block:: bash
 #
-#   mtt train data/finetuning.yaml -c pet-mad-latest.ckpt > train.log
+#   mtt train data/options.yaml -c pet-mad-latest.ckpt > train.log
 #
 
 subprocess.run(
     [
         "mtt",
         "train",
-        "data/finetuning.yaml",
+        "data/options.yaml",
         "-c",
         "pet-mad-latest.ckpt",
     ],
