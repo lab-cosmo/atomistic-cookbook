@@ -64,6 +64,8 @@ import ase.io
 
 from metatensor.torch.atomistic.ase_calculator import MetatensorCalculator
 
+from metatrain.pet import PET
+
 
 if hasattr(__import__("builtins"), "get_ipython"):
     get_ipython().run_line_magic("matplotlib", "inline")  # noqa: F821
@@ -87,20 +89,6 @@ output_file = "pet-mad-latest.ckpt"
 
 # Esegui wget
 subprocess.run(["wget", url, "-O", output_file], check=True)
-
-# %%
-# Export the model
-# ^^^^^^^^^^^^^^^^^^^^^
-# The model needs to be exported to be usable byt the ASE calculator.
-# it can be done with the following command:
-# .. code-block:: bash
-#
-#    mtt export pet-mad-latest.ckpt -o pet-mad-latest.pt
-
-subprocess.run(
-    ["mtt", "export", "pet-mad-latest.ckpt", "-o", "pet-mad-latest.pt"],
-    check=True,
-)
 
 # %%
 # Prepare the dataset
@@ -144,6 +132,21 @@ def get_compositional_energy(atom,atom_energy):
         energy += atom_energy[sp]*atom.get_chemical_symbols().count(sp)
     return energy
 
+def exctract_from_pet_mad(checkpoint='finetuning/pet-mad-latest.ckpt'):
+    mdlpet = PET.load_checkpoint(checkpoint)
+    vals = mdlpet.additive_models[0].weights['energy'].block().values
+    specorder = [
+    "H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mg", "Al", "Si", "P", "S",
+    "Cl", "Ar", "K", "Ca", "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn", "Ga",
+    "Ge", "As", "Se", "Br", "Kr", "Rb", "Sr", "Y", "Zr", "Nb", "Mo", "Tc", "Ru", "Rh", "Pd",
+    "Ag", "Cd", "In", "Sn", "Sb", "Te", "I", "Xe", "Cs", "Ba", "La", "Ce", "Pr", "Nd", "Pm",
+    "Sm", "Eu", "Gd", "Tb", "Dy", "Ho", "Er", "Tm", "Yb", "Lu", "Hf", "Ta", "W", "Re", "Os",
+    "Ir", "Pt", "Au", "Hg", "Tl", "Pb", "Bi", "Po", "Rn"
+    ]
+    
+    return {spec: vals[spec] for i,spec in enumerate(specorder)}
+    
+
 
 def get_energy_men_atomic(traj,
                           model,
@@ -169,18 +172,7 @@ def get_energy_men_atomic(traj,
     
     # Get the energy per atom of isolated atoms for the model
     
-    ener = {i:0 for i in spec}
-
-    for i,sp in enumerate(spec):
-        print(sp)
-        atoms = Atoms(sp,
-                positions=[[5, 5, 5]],
-                cell=[50, 50, 50],
-                pbc=True)  # No periodic boundary conditions
-
-        atoms.calc = MetatensorCalculator(model=model, device="cuda")
-        ener[sp] = atoms.get_potential_energy().item()
-    
+    ener = exctract_from_pet_mad(model)
     
     for i,atoms in enumerate(traj[:]):
         atoms.info[label] = \
