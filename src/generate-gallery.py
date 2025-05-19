@@ -4,6 +4,7 @@ import sys
 
 import chemiscope  # noqa: F401
 import sphinx_gallery.gen_gallery
+import sphinx_gallery.gen_rst
 from chemiscope.sphinx import ChemiscopeScraper
 
 
@@ -41,7 +42,7 @@ class PseudoSphinxApp:
             "examples_dirs": os.path.join(ROOT, example),
             "gallery_dirs": gallery_dir,
             "write_computation_times": False,
-            "copyfile_regex": r".*\.(sh|xyz|cp2k|yml|png|zip)",
+            "copyfile_regex": r".*\.(sh|xyz|cp2k|yml|yaml|jpg|jpeg|png|zip)",
             "matplotlib_animations": True,
             "within_subsection_order": "FileNameSortKey",
             "image_scrapers": ("matplotlib", ChemiscopeScraper()),
@@ -69,6 +70,19 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print(f"usage: {sys.argv[0]} <example/dir>")
         sys.exit(1)
+
+    # To change the download text, we change the ZIP_DOWNLOAD variable in
+    # sphinx_gallery.gen_rst. This is a bit of a hack, but arguably not
+    # worse than postmodifying RST. We perform some checks here to make
+    # sure that the hack is still valid and it does not fail silently.
+    assert hasattr(sphinx_gallery.gen_rst, "ZIP_DOWNLOAD")
+    assert isinstance(sphinx_gallery.gen_rst.ZIP_DOWNLOAD, str)
+
+    sphinx_gallery.gen_rst.ZIP_DOWNLOAD = """
+    .. container:: sphx-glr-download sphx-glr-download-zip
+
+        :download:`Download recipe: {0} <{0}>`
+    """
 
     app = PseudoSphinxApp(example=sys.argv[1])
     sphinx_gallery.gen_gallery.fill_gallery_conf_defaults(app, app.config)

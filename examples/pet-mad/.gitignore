@@ -1,0 +1,7 @@
+*.data
+*.pt
+log.lammps
+trajectory.xyz
+tmp*
+
+extensions/*
