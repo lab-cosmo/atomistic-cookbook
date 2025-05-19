@@ -1,0 +1,60 @@
+base_precision: 32
+seed: 0
+architecture:
+  name: soap_bpnn
+  training:
+    batch_size: 10
+    num_epochs: 10
+    learning_rate: 0.001
+    log_interval: 1
+training_set:
+  systems: 
+    read_from: training_set.xyz
+  targets: 
+    mtt::dipole:
+      read_from: training_dipoles.mts
+      type: 
+        spherical:
+          irreps:
+            - {o3_lambda: 1, o3_sigma: 1}
+    mtt::polarizability:
+      read_from: training_polarizabilities.mts
+      type: 
+        spherical:
+          irreps:
+            - {o3_lambda: 0, o3_sigma: 1}
+            - {o3_lambda: 2, o3_sigma: 1}
+validation_set:
+  systems: 
+    read_from: validation_set.xyz
+  targets: 
+    mtt::dipole:
+      read_from: validation_dipoles.mts
+      type: 
+        spherical:
+          irreps:
+            - {o3_lambda: 1, o3_sigma: 1}
+    mtt::polarizability:
+      read_from: validation_polarizabilities.mts
+      type: 
+        spherical:
+          irreps:
+            - {o3_lambda: 0, o3_sigma: 1}
+            - {o3_lambda: 2, o3_sigma: 1}
+test_set:
+  systems: 
+    read_from: test_set.xyz
+  targets: 
+    mtt::dipole:
+      read_from: test_dipoles.mts
+      type: 
+        spherical:
+          irreps:
+            - {o3_lambda: 1, o3_sigma: 1}
+    mtt::polarizability:
+      read_from: test_polarizabilities.mts
+      type: 
+        spherical:
+          irreps:
+            - {o3_lambda: 0, o3_sigma: 1}
+            - {o3_lambda: 2, o3_sigma: 1}

@@ -6,7 +6,7 @@ Long-distance Equivariants: a tutorial
           Kevin Huguenin-Dumittan `@kvhuguenin <https://github.com/kvhuguenin>`_
 
 This tutorial explains how Long range equivariant descriptors can be constructed using
-rascaline and the resulting descriptors be used to construct a linear model with
+featomic and the resulting descriptors be used to construct a linear model with
 equisolve
 
 First, import all the necessary packages
@@ -20,8 +20,8 @@ import metatensor
 import numpy as np
 from equisolve.numpy.models.linear_model import Ridge
 from equisolve.utils.convert import ase_to_tensormap
-from rascaline import AtomicComposition, LodeSphericalExpansion, SphericalExpansion
-from rascaline.utils import PowerSpectrum
+from featomic import AtomicComposition, LodeSphericalExpansion, SphericalExpansion
+from featomic.clebsch_gordan import PowerSpectrum
 
 
 # %%
@@ -44,7 +44,6 @@ from rascaline.utils import PowerSpectrum
 
 frames = ase.io.read("charge-charge.xyz", ":")
 
-
 # %%
 #
 # Convert target properties to metatensor format
@@ -56,6 +55,26 @@ frames = ase.io.read("charge-charge.xyz", ":")
 # into the appropriate format #justequistorethings
 
 y = ase_to_tensormap(frames, energy="energy", forces="forces")
+
+# %%
+# rename to match new label conventions
+yg = y.block(0).gradient("positions")
+yb = metatensor.TensorBlock(
+    y.block(0).values,
+    y.block(0).samples.rename("structure", "system"),
+    y.block(0).components,
+    y.block(0).properties,
+)
+yb.add_gradient(
+    "positions",
+    metatensor.TensorBlock(
+        yg.values,
+        yg.samples.rename("structure", "system"),
+        [yg.components[0].rename("direction", "xyz")],
+        yg.properties,
+    ),
+)
+y = metatensor.TensorMap(y.keys, [yb])
 
 
 # %%
@@ -73,13 +92,13 @@ y = ase_to_tensormap(frames, energy="energy", forces="forces")
 # to create SOAP features.
 
 SR_HYPERS = {
-    "cutoff": 3.0,
-    "max_radial": 6,
-    "max_angular": 2,
-    "atomic_gaussian_width": 0.3,
-    "center_atom_weight": 1.0,
-    "radial_basis": {"Gto": {}},
-    "cutoff_function": {"ShiftedCosine": {"width": 0.5}},
+    "cutoff": {"radius": 3.0, "smoothing": {"type": "ShiftedCosine", "width": 0.5}},
+    "density": {"type": "Gaussian", "width": 0.3},
+    "basis": {
+        "type": "TensorProduct",
+        "max_angular": 2,
+        "radial": {"type": "Gto", "max_radial": 5},
+    },
 }
 
 
@@ -89,20 +108,13 @@ SR_HYPERS = {
 
 
 LR_HYPERS = {
-    # Cutoff on which to project potential density
-    "cutoff": 3.0,
-    # keep max_radial slightly smaller than for SR part
-    "max_radial": 3,
-    # max_angular should be <= 4, more precisely, max_angular + potential_exponent < 10
-    "max_angular": 2,
-    # keep at >=1, WARNING: CUBIC SCALING, do not use values <0.5
-    "atomic_gaussian_width": 3.0,
-    "center_atom_weight": 1.0,
-    "radial_basis": {"Gto": {}},
-    # the exponent p that determines the 1/r^p potential
-    "potential_exponent": 1,
+    "density": {"type": "SmearedPowerLaw", "smearing": 3.0, "exponent": 1},
+    "basis": {
+        "type": "TensorProduct",
+        "max_angular": 2,
+        "radial": {"type": "Gto", "max_radial": 2, "radius": 2.0},
+    },
 }
-
 
 # %%
 # We then use the above defined hyperparaters to define the per atom short range (sr)
@@ -143,7 +155,7 @@ ps_sr = ps_calculator_sr.compute(frames, gradients=["positions"])
 #
 # We calculate gradients with respect to pistions by providing the
 # ``gradients=["positions"]`` option to the
-# :py:meth:`rascaline.calculators.CalculatorBase.compute()` method.
+# :py:meth:`featomic.calculators.CalculatorBase.compute()` method.
 #
 # For the long-range part, we combine the long-range descriptor :math:`V` with one a
 # short-range density :math:`\rho` to get :math:`\rho \otimes V` features.
@@ -161,19 +173,19 @@ ps_lr = ps_calculator_lr.compute(systems=frames, gradients=["positions"])
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # For our current model, we do not wish to treat the individual center and
-# neighbor species separately. Thus, we move the ``"species_center"`` key
-# into the ``sample`` direction, over which we will later sum over.
+# neighbor species separately. Thus, we move the ``"center_type"`` key
+# into the ``atom`` dimension, over which we will later sum over.
 
-ps_sr = ps_sr.keys_to_samples("species_center")
-ps_lr = ps_lr.keys_to_samples("species_center")
+ps_sr = ps_sr.keys_to_samples("center_type")
+ps_lr = ps_lr.keys_to_samples("center_type")
 
 
 # %%
 #
-# For linear models only: Sum features up over atoms (``samples``) in the same
+# For linear models only: Sum features up over atoms in the same
 # structure.
 
-sample_names_to_sum = ["center", "species_center"]
+sample_names_to_sum = ["atom", "center_type"]
 
 ps_sr = metatensor.sum_over_samples(ps_sr, sample_names=sample_names_to_sum)
 ps_lr = metatensor.sum_over_samples(ps_lr, sample_names=sample_names_to_sum)
@@ -184,25 +196,25 @@ ps_lr = metatensor.sum_over_samples(ps_lr, sample_names=sample_names_to_sum)
 # Initialize tensormaps for energy baselining
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# We add a simple extra descriptor :py:class:`rascaline.AtomicComposition` that stores
+# We add a simple extra descriptor :py:class:`featomic.AtomicComposition` that stores
 # how many atoms of each chemical species are contained in the structures. This is used
 # for energy baselining.
 
-calculator_co = AtomicComposition(per_structure=False)
+calculator_co = AtomicComposition(per_system=False)
 descriptor_co = calculator_co.compute(frames, gradients=["positions"])
 
-co = descriptor_co.keys_to_properties(["species_center"])
-co = metatensor.sum_over_samples(co, sample_names=["center"])
+co = descriptor_co.keys_to_properties(["center_type"])
+co = metatensor.sum_over_samples(co, sample_names=["atom"])
 
 # %%
 #
-# The :py:class:`rascaline.AtomicComposition` calculator also allows to directly perform
+# The :py:class:`featomic.AtomicComposition` calculator also allows to directly perform
 # the the sum over center atoms by using the following lines.
 #
 # .. code:: python
 #
 #    descriptor_co = AtomicComposition(per_structure=True).compute(**compute_args)
-#    co = descriptor_co.keys_to_properties(["species_center"])
+#    co = descriptor_co.keys_to_properties(["center_type"])
 #
 # Stack all the features together for linear model
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -274,10 +286,9 @@ idx_test = [i for i, f in enumerate(frames) if f.info["distance"] >= r_cut]
 # For doing the split we define two ``Labels`` instances and combine them in a
 # :py:class:`List`.
 
-samples_train = metatensor.Labels(["structure"], np.reshape(idx_train, (-1, 1)))
-samples_test = metatensor.Labels(["structure"], np.reshape(idx_test, (-1, 1)))
+samples_train = metatensor.Labels(["system"], np.reshape(idx_train, (-1, 1)))
+samples_test = metatensor.Labels(["system"], np.reshape(idx_test, (-1, 1)))
 grouped_labels = [samples_train, samples_test]
-
 
 # %%
 #
@@ -393,3 +404,5 @@ plt.axvline(r_cut, c="red", label=r"$r_\mathrm{train}$")
 plt.legend()
 plt.tight_layout()
 plt.show()
+
+# %%

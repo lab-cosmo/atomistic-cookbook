@@ -18,3 +18,8 @@ repository <https://github.com/lab-cosmo/chemiscope>`_.
 - examples/path-integrals/path-integrals
 - examples/thermostats/thermostats
 - examples/pi-mts-rpc/mts-rpc
+- examples/water-model/water-model
+- examples/polarizability/polarizability
+- examples/learn-tensors-with-mcov/learn-tensors-with-mcov
+- examples/pet-mad/pet-mad
+- examples/pet-mad/pet-mad-nc  
