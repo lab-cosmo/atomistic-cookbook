@@ -1,0 +1,19 @@
+channels:
+  - plumed/label/nightly
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - gfortran
+  - make
+  - git
+  - plumed
+  - pip:
+    - ase==3.22.1
+    - pyfftw
+    - chemiscope
+    - git+https://github.com/i-pi/i-pi.git@main#egg=ipi
+    - matplotlib
+variables:
+  PYTHONPATH: 
+  PLUMED_KERNEL:
