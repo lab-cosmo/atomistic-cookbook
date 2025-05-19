@@ -823,7 +823,7 @@ hypers_pair = {
 # ^^^^^^^^^
 #
 # .. figure:: loss_vs_epoch.png
-#    :alt: Loss versus Epoch curves for training and
+#    :alt: loss versus epoch curves for training and
 #          validation losses.  The MSE on MO energies, dipole moments
 #          and polarisability are shown separately.
 # The plot here shows the Loss versus Epoch curves
