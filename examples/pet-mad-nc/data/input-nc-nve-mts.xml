@@ -9,7 +9,10 @@
     <trajectory filename="pos" stride="2" format="ase"> positions </trajectory>
     <trajectory filename="forces_c" stride="2" format="ase"> forces_component(0) </trajectory>
     <trajectory filename="forces_nc" stride="2" format="ase"> forces_component(1) </trajectory>
+    <properties stride="2" filename="vir_c"> [vir_component(0){ase}] </properties>
+    <properties stride="2" filename="vir_nc"> [vir_component(1){ase}] </properties>
     <checkpoint stride="1000"/>
+
 </output>
 <total_steps>50</total_steps>
 <prng><seed>12345</seed></prng>
