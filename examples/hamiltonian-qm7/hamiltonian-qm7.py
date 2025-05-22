@@ -218,8 +218,8 @@ molecule_data = MoleculeDataset(
     device=DEVICE,
     aux=["overlap", "orbitals"],
     lb_aux=["overlap", "orbitals"],
-    target=["fock", "eigenvalues"],
-    lb_target=["fock", "eigenvalues"],
+    target=["fock", "eva"],
+    lb_target=["fock", "eva"],
 )
 
 ml_data = MLDataset(
@@ -439,7 +439,7 @@ plot_losses(history, save=True, savename=f"{FOLDER_NAME}/loss_vs_epoch.pdf")
 # are shown in grey.
 
 
-def plot_parity_property(molecule_data, propert="eigenvalues", orthogonal=True):
+def plot_parity_property(molecule_data, propert="eva", orthogonal=True):
     plt.figure()
     plt.plot([-25, 20], [-25, 20], "k--")
     plt.plot(
@@ -473,13 +473,13 @@ def plot_parity_property(molecule_data, propert="eigenvalues", orthogonal=True):
         batch_indices=ml_data.test_idx,
     )
 
-    if propert == "eigenvalues":
+    if propert == "eva":
         prop = compute_eigvals(
             ml_data, f_pred, range(len(ml_data.test_idx)), orthogonal=orthogonal
         )
         prop = torch.tensor([p for pro in prop for p in pro]).detach().numpy()
         propertunit = "eV"
-    elif propert == "dipole_moment":
+    elif propert == "dip":
         prop = compute_dipole_moment(
             [molecule_data.structures[i] for i in ml_data.test_idx],
             f_pred,
@@ -487,7 +487,7 @@ def plot_parity_property(molecule_data, propert="eigenvalues", orthogonal=True):
         )
         prop = torch.tensor([p for pro in prop for p in pro]).detach().numpy()
         propertunit = "a.u."
-    elif propert == "polarisability":
+    elif propert == "pol":
         prop = compute_polarisability(
             [molecule_data.structures[i] for i in ml_data.test_idx],
             f_pred,
@@ -528,7 +528,7 @@ def plot_parity_property(molecule_data, propert="eigenvalues", orthogonal=True):
     plt.show()
 
 
-plot_parity_property(molecule_data, propert="eigenvalues", orthogonal=ORTHOGONAL)
+plot_parity_property(molecule_data, propert="eva", orthogonal=ORTHOGONAL)
 
 # %%
 # We can observe from the parity plot that even with a
@@ -641,8 +641,8 @@ molecule_data = MoleculeDataset(
     device=DEVICE,
     aux=["overlap", "orbitals"],
     lb_aux=["overlap", "orbitals"],
-    target=["fock", "eigenvalues", "dipole_moment", "polarisability"],
-    lb_target=["fock", "eigenvalues", "dipole_moment", "polarisability"],
+    target=["fock", "eva", "dip", "pol"],
+    lb_target=["fock", "eva", "dip", "pol"],
 )
 
 ml_data = MLDataset(
