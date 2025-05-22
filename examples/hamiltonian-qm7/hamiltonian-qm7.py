@@ -56,7 +56,7 @@ and our preprint `arXiv:2504.01187 <https://doi.org/10.48550/arXiv.2504.01187>`_
 # We first show an example where we predict the reduced effective
 # Hamiltonians for a homogenous dataset of ethane molecule while
 # targeting the MO energies of the def2-TZVP basis. In a second example
-# We will then target multiple properties for a organic molecule dataset,
+# we will then target multiple properties for a organic molecule dataset,
 # similar to our results described in our preprint
 # `arXiv:2504.01187 <https://doi.org/10.48550/arXiv.2504.01187>`_.
 
@@ -107,8 +107,8 @@ torch.set_default_dtype(torch.float64)
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 # Before we begin our training we can decide on a set the parameters,
 # including the dataset set size, splitting fractions, the batch size,
-# learning rate, number of epochs, the early stop criterion in case of
-# early stopping and we can save the parameters for our reference later.
+# learning rate, number of epochs, and the early stop criterion in case of
+# early stopping.
 #
 
 NUM_FRAMES = 100
@@ -132,7 +132,10 @@ NOISE = False
 # %%
 # Create Folders and Save Parameters
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
+# We can save the parameters we just defined for our reference later.
+# For this, we create a folder (defined as FOLDER_NAME above)
+# in which all parameters
+# and the generated data for this example are stored.
 
 os.makedirs(FOLDER_NAME, exist_ok=True)
 os.makedirs(f"{FOLDER_NAME}/model_output", exist_ok=True)
@@ -239,10 +242,10 @@ ml_data._split_indices(
 # Computing Features that can Learn Hamiltonian Targets
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# As discussed above the Hamiltonian matrix elements
-# are dependent on single atom centers as well as two centers
+# As discussed above, the Hamiltonian matrix elements
+# are dependent on single atom centers and two centers
 # for pairwise interactions.
-# To address this we extend the equivariant, SOAP based
+# To address this, we extend the equivariant SOAP-based
 # features for the atom-centered desciptors
 # to a descriptor capable of describing multiple atomic centers and
 # their connectivities, giving rise to the equivariant pairwise descriptor
@@ -259,7 +262,7 @@ ml_data._split_indices(
 # ``density`` hyperparameter. The features are
 # discretized on a basis of spherical harmonics,
 # which consist of a radial and an angular part,
-# which can be sppecified in the ``basis`` hyperparameter. The ``cutoff``
+# which can be specified in the ``basis`` hyperparameter. The ``cutoff``
 # hyperparameter controls the extent of the atomic environment.
 # For the simple example we demonstrate here,
 # the atom and pairwise features have very similar hyperparameters,
@@ -546,7 +549,7 @@ plot_parity_property(molecule_data, propert="eva", orthogonal=ORTHOGONAL)
 # the indirect training. While MO energies can be computed
 # by simply diagonalizing the Hamiltonian matrix, some
 # properties like the dipole moment require
-# the position operator integral and it's derivative if
+# the position operator integral and its derivative if
 # we want to backpropagate the loss. We therefore interface
 # our ML model with an electronic structure code that supports
 # automatic differentiation, `PySCFAD <https://github.com/fishjojo/pyscfad>`_,
@@ -566,7 +569,7 @@ plot_parity_property(molecule_data, propert="eva", orthogonal=ORTHOGONAL)
 # configurations of ethane, we can also easily extend the
 # framework to use  a much diverse dataset such as the
 # `QM7 dataset <http://quantum-machine.org/datasets/>`_.
-# For our next example we select a subset 150 structures from
+# For our next example we select a subset of 150 structures from
 # this dataset that consists of only C, H, N and O atoms.
 
 # %%
@@ -623,11 +626,11 @@ W_POL = 1e2
 # and load the ethane
 # dataset for the defined number of slices.
 # First, we load all relavant data (geometric structures,
-# auxiliary matrices (overlap and orbitals), and
-# targets (fock, dipole moment and polarisablity)) into a molecule dataset.
+# auxiliary matrices -overlap and orbitals-, and
+# targets -fock, dipole moment, and polarisablity-) into a molecule dataset.
 # We do this for the minimal (STO-3G), as well as a larger basis (lb, def2-TZVP).
 # The larger basis has additional basis functions on the valence electrons.
-# The dataset, we can then load into our dataloader ml_data, together with some
+# The dataset, we can then load into our dataloader ```ml_data``, together with some
 # settings on how we want to sample data from the dataloader.
 # Finally, we define the desired dataset split for training, validation,
 # and testing from the parameters defined in example 1.
