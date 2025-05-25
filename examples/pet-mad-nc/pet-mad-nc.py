@@ -62,7 +62,7 @@ if hasattr(__import__("builtins"), "get_ipython"):
 model_filename = "pet-mad-latest.pt"
 if not os.path.exists(model_filename):
     calculator = PETMADCalculator(version="latest", device="cpu")
-    calculator.model.save(model_filename)
+    calculator._model.save(model_filename)
 
 # %%
 # The model can also be loaded from this torchscript dump, which often
