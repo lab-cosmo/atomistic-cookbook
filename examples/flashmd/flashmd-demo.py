@@ -179,7 +179,7 @@ chemiscope.show(
     settings=chemiscope.quick_settings(
         map_settings={
             "x": {"property": "time", "scale": "linear"},
-            "y": {"property": "pressure", "scale": "linear"},
+            "y": {"property": "volume", "scale": "linear"},
         },
         structure_settings={
             "unitCell": True,
