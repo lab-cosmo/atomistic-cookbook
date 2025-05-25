@@ -8,7 +8,7 @@ dependencies:
     - ase>=3.23
     - ipi==3.1.5
     - pet-mad>=1.1.0,<1.2
-     vesin[torch]>=0.3.2,<0.4
+    - vesin[torch]>=0.3.2,<0.4
     - flashmd>=0.1.1  
     - chemiscope>=0.8.5,<0.9 
     - matplotlib
