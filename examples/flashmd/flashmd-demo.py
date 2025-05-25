@@ -70,7 +70,7 @@ if not os.path.exists("et-mad-latest.pt"):
 
 # %%
 # Al(110) surface dynamics
-# ========================
+# ------------------------
 #
 # The (110) surface of aluminum exhibits `an interesting dynamical behavior
 # <https://doi.org/10.1103/PhysRevLett.82.3296>`_ well below the bulk melting
@@ -137,7 +137,7 @@ chemiscope.show(
 
 # %%
 # Solvated alanine dipeptide
-# ==========================
+# --------------------------
 #
 # As a second example, we run a constant-pressure simulation of
 # solvated alanine dipeptide, using the FlashMD universal model with 16 fs
@@ -179,7 +179,7 @@ chemiscope.show(
     settings=chemiscope.quick_settings(
         map_settings={
             "x": {"property": "time", "scale": "linear"},
-            "y": {"property": "pressure", "scale": "linear"},
+            "y": {"property": "volume", "scale": "linear"},
         },
         structure_settings={
             "unitCell": True,
