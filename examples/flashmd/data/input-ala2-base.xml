@@ -26,15 +26,15 @@
             <thermostat mode='ffl'><tau units='femtosecond'> 100 </tau></thermostat>
             <barostat mode='isotropic'>
                <thermostat mode='langevin'>
-                  <tau units='femtosecond'> 200 </tau>
+                  <tau units='femtosecond'> 100 </tau>
                </thermostat>
-               <tau units='femtosecond'> 400 </tau>
+               <tau units='femtosecond'> 200 </tau>
             </barostat>
          </dynamics>
      </motion>
      <ensemble>
          <temperature units="kelvin">450</temperature>
-         <pressure units="bar"> 1.0e4 </pressure>
+         <pressure units="bar"> 1.0 </pressure>
      </ensemble>
   </system>
 </simulation>
