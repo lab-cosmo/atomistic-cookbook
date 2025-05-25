@@ -8,6 +8,9 @@ dependencies:
   - pip
   - pip:
     - ase
-    - ipi==3.1.2
+    - ipi==3.1.5
+    - vesin[torch]
+    - metatensor[torch]
+    - flashmd>=0.1.1  
     - chemiscope>=0.8.5,<0.9 
     - matplotlib
