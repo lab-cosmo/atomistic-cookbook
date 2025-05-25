@@ -47,6 +47,10 @@ if not os.path.exists("et-mad-latest.pt"):
     calculator._model.save("pet-mad-latest.pt")
 
 #%%
+# Al(110) surface dynamics
+# ========================
+#
+#
 
 with open("data/input-al110-base.xml", "r") as input_xml:
     sim = InteractiveSimulation(input_xml)
@@ -59,6 +63,10 @@ sim.run(20)
 
 
 # %%
+# Solvated alanine dipeptide
+# ==========================
+
+
 with open("data/input-ala2-base.xml", "r") as input_xml:
     sim = InteractiveSimulation(input_xml)
 
