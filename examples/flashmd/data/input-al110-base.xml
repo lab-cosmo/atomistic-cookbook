@@ -18,7 +18,7 @@
       </forces>
       <initialize nbeads='1'>
         <file mode='ase'> data/al110.xyz </file>
-        <velocities mode='thermal' units='kelvin'> 550 </velocities>
+        <velocities mode='thermal' units='kelvin'> 600 </velocities>
       </initialize>
       <motion mode='dynamics'>
          <dynamics mode='nvt'>
@@ -27,7 +27,7 @@
          </dynamics>
      </motion>
      <ensemble>
-         <temperature units="kelvin">550</temperature>
+         <temperature units="kelvin">600</temperature>
      </ensemble>
   </system>
 </simulation>
