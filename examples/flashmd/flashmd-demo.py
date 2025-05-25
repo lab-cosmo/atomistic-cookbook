@@ -158,11 +158,10 @@ sim.set_motion_step(
 sim.run(10)  # only run 10 staps, pretty slow on CPU
 
 # %%
-
-# %%
-# The trajectory is stable, and one can check that the mean fluctuations
-# of the adatom are qualitatively correct, by comparing with a (much slower)
-# PET-MAD simulation with a ~2 fs time step.
+# The cell fluctuates around the equilibrium volume, in a way that
+# is consistent with the correct NpT ensemble. The trajectory is stable
+# and the alanine molecule explores the different conformations
+# (obviously when running for a reasonably long time).
 
 data, info = read_output("ala2-npt-flashmd.out")
 trj = read_trajectory("ala2-npt-flashmd.pos_0.extxyz")
