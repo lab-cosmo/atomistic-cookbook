@@ -55,17 +55,20 @@ plt.show()
 
 
 # %%
-# We start by pulling FlashMD and PET-MAD models from the repository.
+# We start by getting the FlashMD models from the ``flashmd`` package.
+# We will also use the PET-MAD universal potential as an accompanying energy model
 
-if not os.path.exists("flashmd-universal-16fs.pt"):
-    flashmd_model = get_universal_model(16)
-    flashmd_model.save("flashmd-universal-16fs.pt")
-if not os.path.exists("flashmd-universal-64fs.pt"):
-    flashmd_model = get_universal_model(64)
-    flashmd_model.save("flashmd-universal-64fs.pt")
-if not os.path.exists("pet-mad-latest.pt"):
-    calculator = PETMADCalculator(version="latest", device="cpu")
-    calculator._model.save("pet-mad-latest.pt")
+device = "cpu"  # change to "cuda" if you have a GPU; don't forget to change it in the
+# i-PI xml input files as well!
+
+flashmd_model_16 = get_universal_model(16)
+flashmd_model_16.to(device)
+
+flashmd_model_64 = get_universal_model(64)
+flashmd_model_64.to(device)
+
+calculator = PETMADCalculator(version="latest", device=device)
+calculator._model.save("pet-mad-latest.pt")
 
 
 # %%
@@ -98,11 +101,10 @@ with open("data/input-al110-base.xml", "r") as input_xml:
 # allows for random rotations of the system, which is useful to correct for the
 # fact that the model is not exactly equivariant with respect to rotations.
 
-model = load_atomistic_model("flashmd-universal-64fs.pt")
-device = "cuda" if torch.cuda.is_available() else "cpu"
-
 sim.set_motion_step(
-    get_nvt_stepper(sim, model, device, rescale_energy=True, random_rotation=True)
+    get_nvt_stepper(
+        sim, flashmd_model_64, device, rescale_energy=True, random_rotation=True
+    )
 )
 
 # run for a few steps - this is a large box, and is rather slow on CPU
@@ -150,11 +152,10 @@ chemiscope.show(
 with open("data/input-ala2-base.xml", "r") as input_xml:
     sim = InteractiveSimulation(input_xml)
 
-model = load_atomistic_model("flashmd-universal-16fs.pt")
-device = "cuda" if torch.cuda.is_available() else "cpu"
-
 sim.set_motion_step(
-    get_npt_stepper(sim, model, device, rescale_energy=True, random_rotation=True)
+    get_npt_stepper(
+        sim, flashmd_model_16, device, rescale_energy=True, random_rotation=True
+    )
 )
 sim.run(10)  # only run 10 steps, again, pretty slow on CPU
 
