@@ -2,10 +2,10 @@
 Long-stride trajectories with a universal FlashMD model
 =======================================================
 
-:Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm>`_,
+:Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm>`_
 
 This example demonstrates how to run long-stride molecular dynamics using the
-universal FlahsMD model. FlahsMD predicts directly positions and momenta of atoms
+universal FlashMD model. FlashMD predicts directly positions and momenta of atoms
 at a later time based on the current positions and momenta.
 It is trained on MD trajectories obtained with the
 `PET-MAD universal potential  <https://arxiv.org/abs/2503.14118>`_.
@@ -77,14 +77,15 @@ if not os.path.exists("et-mad-latest.pt"):
 # temperature. This manifests itself in the spontaneous formation of surface
 # defects, with mobile adatoms emerging at the surface.
 #
-# We run a FlashMD simulation with 64 fs strides at 600 K, observing the motion
-# of the adatom at the surface. We use the `i-PI` scripting API to set up the
-# simulation and run it interactively.
+# We run a FlashMD simulation with 64 fs strides (as opposed to 1 or 2 fs) at
+# 600 K, observing the motion of the adatom at the surface. We use the `i-PI`
+# scripting API to set up the simulation and run it interactively.
 
 # %%
 # The starting point is a "base" XML file that contains the setup for a traditional
-# MD simulation in i-PI. It contains PET-MAD as the potential energy calculator,
-# and the only difference is the use of an anomalously large time step.
+# MD simulation in i-PI. It contains PET-MAD as the potential energy calculator
+# (needed for the optional energy rescaling filter), and the only difference is
+# the use of an anomalously large time step.
 
 with open("data/input-al110-base.xml", "r") as input_xml:
     sim = InteractiveSimulation(input_xml)
@@ -104,13 +105,13 @@ sim.set_motion_step(
     get_nvt_stepper(sim, model, device, rescale_energy=True, random_rotation=True)
 )
 
-# run for a afes steps - this is a large box, and is rather slow on CPU
+# run for a few steps - this is a large box, and is rather slow on CPU
 sim.run(20)
 
 # %%
 # The trajectory is stable, and one can check that the mean fluctuations
 # of the adatom are qualitatively correct, by comparing with a (much slower)
-# PET-MAD simulation with a ~2 fs time step.
+# PET-MAD simulation.
 
 data, info = read_output("al110-nvt-flashmd.out")
 trj = read_trajectory("al110-nvt-flashmd.pos_0.extxyz")
@@ -139,10 +140,10 @@ chemiscope.show(
 # Solvated alanine dipeptide
 # --------------------------
 #
-# As a second example, we run a constant-pressure simulation of
+# As a second example, we run a constant-pressure simulation of explicitly
 # solvated alanine dipeptide, using the FlashMD universal model with 16 fs
-# time steps. The setup is very similar to the previous example, but we use
-# an input template that contains a NpT setup, and use
+# time steps (as opposed to 0.5 fs). The setup is very similar to the previous
+# example, but we use an input template that contains a NpT setup, and use
 # the ``get_npt_stepper`` utility function to set up a stepper that
 # combine the FlashMD velocity-Verlet step with cell updates.
 
@@ -155,7 +156,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 sim.set_motion_step(
     get_npt_stepper(sim, model, device, rescale_energy=True, random_rotation=True)
 )
-sim.run(10)  # only run 10 staps, pretty slow on CPU
+sim.run(10)  # only run 10 steps, again, pretty slow on CPU
 
 # %%
 # The cell fluctuates around the equilibrium volume, in a way that
