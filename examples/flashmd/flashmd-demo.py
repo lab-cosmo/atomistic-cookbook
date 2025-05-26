@@ -63,7 +63,7 @@ if not os.path.exists("flashmd-universal-16fs.pt"):
 if not os.path.exists("flashmd-universal-64fs.pt"):
     flashmd_model = get_universal_model(64)
     flashmd_model.save("flashmd-universal-64fs.pt")
-if not os.path.exists("et-mad-latest.pt"):
+if not os.path.exists("pet-mad-latest.pt"):
     calculator = PETMADCalculator(version="latest", device="cpu")
     calculator._model.save("pet-mad-latest.pt")
 
