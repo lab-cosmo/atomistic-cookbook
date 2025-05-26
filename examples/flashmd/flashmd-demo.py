@@ -85,7 +85,7 @@ if not os.path.exists("et-mad-latest.pt"):
 # The starting point is a "base" XML file that contains the setup for a traditional
 # MD simulation in i-PI. It contains PET-MAD as the potential energy calculator
 # (needed for the optional energy rescaling filter), and the only difference is
-# the use of an anomalously large time step.
+# the use of a much larger large time step than conventional MD.
 
 with open("data/input-al110-base.xml", "r") as input_xml:
     sim = InteractiveSimulation(input_xml)
