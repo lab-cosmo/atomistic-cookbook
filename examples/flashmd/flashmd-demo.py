@@ -25,17 +25,13 @@ You can read more about the model and its limitations in
 #     pip install pet-mad flashmd ipi
 #
 
-import os
-
 import chemiscope
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
-import torch
 from flashmd import get_universal_model
 from flashmd.ipi import get_npt_stepper, get_nvt_stepper
 from ipi.utils.parsing import read_output, read_trajectory
 from ipi.utils.scripting import InteractiveSimulation
-from metatensor.torch.atomistic import load_atomistic_model
 from pet_mad.calculator import PETMADCalculator
 
 
