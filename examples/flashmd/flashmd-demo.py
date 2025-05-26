@@ -78,8 +78,9 @@ if not os.path.exists("et-mad-latest.pt"):
 # defects, with mobile adatoms emerging at the surface.
 #
 # We run a FlashMD simulation with 64 fs strides (as opposed to 1 or 2 fs) at
-# 600 K, observing the motion of the adatom at the surface. We use the `i-PI`
-# scripting API to set up the simulation and run it interactively.
+# 600 K, observing the motion of the adatom at the surface. We use the
+# ```i-PI``<https://docs.ipi-code.org/>`_ scripting API to set up the
+# simulation and run it interactively.
 
 # %%
 # The starting point is a "base" XML file that contains the setup for a traditional
