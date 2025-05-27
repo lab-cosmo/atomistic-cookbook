@@ -25,3 +25,8 @@ jobs:
 
     - name: test lint
       run: nox -e lint
+
+    - name: Audit for large files
+      uses: HaoZeke/large-file-auditor@v0.1.0
+      with:
+        file-size-threshold: "1M"
