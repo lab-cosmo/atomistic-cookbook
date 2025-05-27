@@ -1,4 +1,4 @@
-<simulation verbosity='high' threading='false'>
+<simulation verbosity='low' threading='false'>
    <total_steps>1000</total_steps>
    <output prefix='al110-nvt-flashmd'>
       <trajectory stride='1' filename='pos' format='ase'> positions </trajectory>
