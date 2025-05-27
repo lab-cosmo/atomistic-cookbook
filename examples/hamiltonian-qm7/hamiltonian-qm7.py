@@ -76,9 +76,11 @@ and our preprint `arXiv:2504.01187 <https://doi.org/10.48550/arXiv.2504.01187>`_
 #
 
 import os
+from zipfile import ZipFile
 
 import matplotlib.pyplot as plt
 import numpy as np
+import requests
 import torch
 from ase.units import Hartree
 from IPython.utils import io
@@ -113,7 +115,7 @@ torch.set_default_dtype(torch.float64)
 
 NUM_FRAMES = 100
 BATCH_SIZE = 4
-NUM_EPOCHS = 100  # 100
+NUM_EPOCHS = 100
 SHUFFLE_SEED = 42
 TRAIN_FRAC = 0.7
 TEST_FRAC = 0.1
@@ -181,6 +183,22 @@ save_parameters(
 # basis sets.
 
 # %%
+# Download the Dataset from Zenodo
+# """"""""""""""""""""""""""""""""
+# We first download the data for the two examples from Zenodo
+# and unzip the downloaded datafile.
+
+if not os.path.exists("hamiltonian-qm7-data"):
+    url = r"https://zenodo.org/records/15524259/files/hamiltonian-qm7-data.zip"
+    response = requests.get(url)
+    response.raise_for_status()
+    with open("hamiltonian-qm7-data.zip", "wb") as f:
+        f.write(response.content)
+
+    with ZipFile("hamiltonian-qm7-data.zip", "r") as zObject:
+        zObject.extractall(path=".")
+
+# %%
 # Prepare the Dataset for ML Training
 # """""""""""""""""""""""""""""""""""
 #
@@ -215,8 +233,8 @@ save_parameters(
 molecule_data = MoleculeDataset(
     mol_name="ethane",
     use_precomputed=False,
-    path="data/ethane/",
-    aux_path="data/ethane/sto-3g",
+    path="hamiltonian-qm7-data/ethane",
+    aux_path="hamiltonian-qm7-data/ethane/sto-3g",
     frame_slice=slice(0, NUM_FRAMES),
     device=DEVICE,
     aux=["overlap", "orbitals"],
@@ -638,8 +656,8 @@ W_POL = 1e2
 molecule_data = MoleculeDataset(
     mol_name="qm7",
     use_precomputed=False,
-    path="data/qm7",
-    aux_path="data/qm7/sto-3g",
+    path="hamiltonian-qm7-data/qm7",
+    aux_path="hamiltonian-qm7-data/qm7/sto-3g",
     frame_slice=slice(0, NUM_FRAMES),
     device=DEVICE,
     aux=["overlap", "orbitals"],
