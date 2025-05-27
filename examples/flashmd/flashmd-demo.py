@@ -10,7 +10,7 @@ at a later time based on the current positions and momenta.
 It is trained on MD trajectories obtained with the
 `PET-MAD universal potential  <https://arxiv.org/abs/2503.14118>`_.
 You can read more about the model and its limitations in
-`this preprint <>`_.
+`this preprint <http://arxiv.org/abs/2505.19350>`_.
 """
 
 # %%
