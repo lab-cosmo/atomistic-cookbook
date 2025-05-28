@@ -84,6 +84,7 @@ jobs:
 
       - name: Download latest main branch built examples
         uses: actions/download-artifact@v4
+        if: ${{ github.event_name == 'pull_request' }}
         with:
           path: docs/src/examples
           pattern: example-*
