@@ -2,15 +2,15 @@
 Long-stride trajectories with a universal FlashMD model
 =======================================================
 
-:Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm>`_,
+:Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm>`_
 
 This example demonstrates how to run long-stride molecular dynamics using the
-universal FlahsMD model. FlahsMD predicts directly positions and momenta of atoms
+universal FlashMD model. FlashMD predicts directly positions and momenta of atoms
 at a later time based on the current positions and momenta.
 It is trained on MD trajectories obtained with the
 `PET-MAD universal potential  <https://arxiv.org/abs/2503.14118>`_.
 You can read more about the model and its limitations in
-`this preprint <>`_.
+`this preprint <http://arxiv.org/abs/2505.19350>`_.
 """
 
 # %%
@@ -25,17 +25,13 @@ You can read more about the model and its limitations in
 #     pip install pet-mad flashmd ipi
 #
 
-import os
-
 import chemiscope
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
-import torch
 from flashmd import get_universal_model
 from flashmd.ipi import get_npt_stepper, get_nvt_stepper
 from ipi.utils.parsing import read_output, read_trajectory
 from ipi.utils.scripting import InteractiveSimulation
-from metatensor.torch.atomistic import load_atomistic_model
 from pet_mad.calculator import PETMADCalculator
 
 
@@ -55,17 +51,20 @@ plt.show()
 
 
 # %%
-# We start by pulling FlashMD and PET-MAD models from the repository.
+# We start by getting the FlashMD models from the ``flashmd`` package.
+# We will also use the PET-MAD universal potential as an accompanying energy model
 
-if not os.path.exists("flashmd-universal-16fs.pt"):
-    flashmd_model = get_universal_model(16)
-    flashmd_model.save("flashmd-universal-16fs.pt")
-if not os.path.exists("flashmd-universal-64fs.pt"):
-    flashmd_model = get_universal_model(64)
-    flashmd_model.save("flashmd-universal-64fs.pt")
-if not os.path.exists("et-mad-latest.pt"):
-    calculator = PETMADCalculator(version="latest", device="cpu")
-    calculator._model.save("pet-mad-latest.pt")
+device = "cpu"  # change to "cuda" if you have a GPU; don't forget to change it in the
+# i-PI xml input files as well!
+
+flashmd_model_16 = get_universal_model(16)
+flashmd_model_16.to(device)
+
+flashmd_model_64 = get_universal_model(64)
+flashmd_model_64.to(device)
+
+calculator = PETMADCalculator(version="latest", device=device)
+calculator._model.save("pet-mad-latest.pt")
 
 
 # %%
@@ -77,14 +76,15 @@ if not os.path.exists("et-mad-latest.pt"):
 # temperature. This manifests itself in the spontaneous formation of surface
 # defects, with mobile adatoms emerging at the surface.
 #
-# We run a FlashMD simulation with 64 fs strides at 600 K, observing the motion
-# of the adatom at the surface. We use the `i-PI` scripting API to set up the
-# simulation and run it interactively.
+# We run a FlashMD simulation with 64 fs strides (as opposed to 1 or 2 fs) at
+# 600 K, observing the motion of the adatom at the surface. We use the
+# ``i-PI`` scripting API to set up the simulation and run it interactively.
 
 # %%
 # The starting point is a "base" XML file that contains the setup for a traditional
-# MD simulation in i-PI. It contains PET-MAD as the potential energy calculator,
-# and the only difference is the use of an anomalously large time step.
+# MD simulation in i-PI. It contains PET-MAD as the potential energy calculator
+# (needed for the optional energy rescaling filter), and the only difference is
+# the use of a much larger large time step than conventional MD.
 
 with open("data/input-al110-base.xml", "r") as input_xml:
     sim = InteractiveSimulation(input_xml)
@@ -97,20 +97,19 @@ with open("data/input-al110-base.xml", "r") as input_xml:
 # allows for random rotations of the system, which is useful to correct for the
 # fact that the model is not exactly equivariant with respect to rotations.
 
-model = load_atomistic_model("flashmd-universal-64fs.pt")
-device = "cuda" if torch.cuda.is_available() else "cpu"
-
 sim.set_motion_step(
-    get_nvt_stepper(sim, model, device, rescale_energy=True, random_rotation=True)
+    get_nvt_stepper(
+        sim, flashmd_model_64, device, rescale_energy=True, random_rotation=True
+    )
 )
 
-# run for a afes steps - this is a large box, and is rather slow on CPU
+# run for a few steps - this is a large box, and is rather slow on CPU
 sim.run(20)
 
 # %%
 # The trajectory is stable, and one can check that the mean fluctuations
 # of the adatom are qualitatively correct, by comparing with a (much slower)
-# PET-MAD simulation with a ~2 fs time step.
+# PET-MAD simulation.
 
 data, info = read_output("al110-nvt-flashmd.out")
 trj = read_trajectory("al110-nvt-flashmd.pos_0.extxyz")
@@ -139,23 +138,22 @@ chemiscope.show(
 # Solvated alanine dipeptide
 # --------------------------
 #
-# As a second example, we run a constant-pressure simulation of
+# As a second example, we run a constant-pressure simulation of explicitly
 # solvated alanine dipeptide, using the FlashMD universal model with 16 fs
-# time steps. The setup is very similar to the previous example, but we use
-# an input template that contains a NpT setup, and use
+# time steps (as opposed to 0.5 fs). The setup is very similar to the previous
+# example, but we use an input template that contains a NpT setup, and use
 # the ``get_npt_stepper`` utility function to set up a stepper that
 # combine the FlashMD velocity-Verlet step with cell updates.
 
 with open("data/input-ala2-base.xml", "r") as input_xml:
     sim = InteractiveSimulation(input_xml)
 
-model = load_atomistic_model("flashmd-universal-16fs.pt")
-device = "cuda" if torch.cuda.is_available() else "cpu"
-
 sim.set_motion_step(
-    get_npt_stepper(sim, model, device, rescale_energy=True, random_rotation=True)
+    get_npt_stepper(
+        sim, flashmd_model_16, device, rescale_energy=True, random_rotation=True
+    )
 )
-sim.run(10)  # only run 10 staps, pretty slow on CPU
+sim.run(10)  # only run 10 steps, again, pretty slow on CPU
 
 # %%
 # The cell fluctuates around the equilibrium volume, in a way that
