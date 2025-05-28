@@ -837,7 +837,7 @@ hypers_pair = {
 #
 # .. code-block:: python
 #
-#       model.load_state_dict(torch.load("output/qm7_eva_dip_pol/best_model.pt"))
+#       model.load_state_dict(torch.load("hamiltonian-qm7-data/qm7/output/qm7_eva_dip_pol/best_model.pt"))
 
 # %%
 # Plot loss
