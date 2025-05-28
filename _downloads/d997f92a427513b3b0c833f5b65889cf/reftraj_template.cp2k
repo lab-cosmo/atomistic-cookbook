@@ -1,0 +1,144 @@
+@SET PREP 0
+
+@SET SCF_GUESS RESTART
+@SET SCREEN_ON_INITIAL_P TRUE
+
+@IF ${PREP}
+  @SET SCF_GUESS ATOMIC
+  @SET SCREEN_ON_INITIAL_P FALSE
+@ENDIF
+
+&GLOBAL
+  PROJECT //PROJECT//
+  PREFERRED_FFT_LIBRARY FFTW
+  FFTW_PLAN_TYPE MEASURE
+  RUN_TYPE MD
+  PRINT_LEVEL LOW
+&END GLOBAL
+
+&MOTION
+  &PRINT
+    &CELL
+      &EACH
+        MD 1
+      &END EACH
+    &END CELL
+    &FORCES
+      &EACH
+        MD 1
+      &END EACH
+    &END FORCES
+  &END PRINT
+  &MD
+    ENSEMBLE REFTRAJ
+    &REFTRAJ  ! Loads an external trajectory file and performs analysis on the loaded snapshots.
+      EVAL_ENERGY_FORCES TRUE
+      EVAL_FORCES TRUE
+      CELL_FILE_NAME reftraj.cell
+      TRAJ_FILE_NAME reftraj.xyz
+      FIRST_SNAPSHOT 1
+      VARIABLE_VOLUME TRUE
+      LAST_SNAPSHOT //LAST_SNAPSHOT//
+    &END REFTRAJ
+  &END MD
+&END MOTION
+
+&FORCE_EVAL
+  &PRINT
+    &FORCES
+      &EACH
+        MD 1
+      &END EACH
+    &END FORCES
+  &END PRINT
+  &DFT
+    BASIS_SET_FILE_NAME ../../parameters/GTH_BASIS_SETS
+    BASIS_SET_FILE_NAME ../../parameters/BASIS_ADMM
+    POTENTIAL_FILE_NAME ../../parameters/POTENTIAL
+    &MGRID
+      CUTOFF 400
+    &END MGRID
+    &SCF
+      SCF_GUESS ${SCF_GUESS}
+      MAX_SCF 20
+      EPS_SCF 5.0E-7
+      &OT
+        MINIMIZER DIIS
+        PRECONDITIONER FULL_ALL
+      &END OT
+      &OUTER_SCF
+        MAX_SCF 20
+        EPS_SCF 5.0E-7
+      &END OUTER_SCF
+    &END SCF
+    &QS
+      EPS_DEFAULT 1.0E-12
+      EPS_PGF_ORB 1.0E-16
+      EXTRAPOLATION_ORDER 5
+    &END QS
+    &XC # revPBE0-TC-D3
+      &XC_FUNCTIONAL
+        &PBE
+          PARAMETRIZATION REVPBE
+          SCALE_X 0.75
+          SCALE_C 1.0
+        &END
+      &END XC_FUNCTIONAL
+      &HF
+        FRACTION 0.25
+        &SCREENING
+          EPS_SCHWARZ 1.0E-6
+          SCREEN_ON_INITIAL_P ${SCREEN_ON_INITIAL_P}
+        &END
+        &MEMORY
+          MAX_MEMORY 37000
+          EPS_STORAGE_SCALING 0.1
+        &END
+        &INTERACTION_POTENTIAL
+          POTENTIAL_TYPE TRUNCATED
+          CUTOFF_RADIUS 3.0
+          T_C_G_DATA ../../parameters/t_c_g.dat
+        &END
+        &HF_INFO
+        &END HF_INFO
+      &END
+      &VDW_POTENTIAL
+         POTENTIAL_TYPE PAIR_POTENTIAL
+         &PAIR_POTENTIAL
+            TYPE DFTD3
+            R_CUTOFF 15
+            LONG_RANGE_CORRECTION TRUE
+            REFERENCE_FUNCTIONAL revPBE0
+            PARAMETER_FILE_NAME ../../parameters/dftd3.dat
+         &END
+      &END
+      &XC_GRID
+        XC_DERIV SPLINE2
+      &END
+    &END XC
+    &AUXILIARY_DENSITY_MATRIX_METHOD
+      METHOD BASIS_PROJECTION
+      ADMM_PURIFICATION_METHOD MO_DIAG
+    &END AUXILIARY_DENSITY_MATRIX_METHOD
+  &END DFT
+  &SUBSYS
+    &TOPOLOGY
+      COORD_FILE_NAME init.xyz
+      COORD_FILE_FORMAT XYZ
+      CONN_FILE_FORMAT GENERATE
+    &END TOPOLOGY
+    &CELL
+      ABC [angstrom] //CELL//
+    &END CELL
+    &KIND H
+      BASIS_SET TZV2P-GTH
+      BASIS_SET AUX_FIT cpFIT3
+      POTENTIAL GTH-PBE-q1
+    &END KIND
+    &KIND O
+      BASIS_SET TZV2P-GTH
+      BASIS_SET AUX_FIT cpFIT3
+      POTENTIAL GTH-PBE-q6
+    &END KIND
+  &END SUBSYS
+&END FORCE_EVAL
