@@ -41,7 +41,7 @@ import ase.io
 # i-PI scripting utilities
 import chemiscope
 import matplotlib.pyplot as plt
-import metatensor.torch.atomistic as mta
+import metatomic.torch as mta
 from ipi.utils.parsing import read_output, read_trajectory
 from ipi.utils.scripting import InteractiveSimulation
 
@@ -70,7 +70,7 @@ if not os.path.exists(model_filename):
 # equivalent unless you plan on fine-tuning, or otherwise modifying
 # the model.
 
-calculator = mta.ase_calculator.MetatensorCalculator(model_filename, device="cpu")
+calculator = mta.ase_calculator.MetatomicCalculator(model_filename, device="cpu")
 
 # %%
 #
@@ -95,7 +95,7 @@ calculator = mta.ase_calculator.MetatensorCalculator(model_filename, device="cpu
 # computing forces directly as a function of the atomic coordinates,
 # as additional heads of the same model that computes :math:`V`,
 # is computationally more efficient (between 2x and 3x faster).
-# The `MetatensorCalculator` class allows one to choose between
+# The `MetatomicCalculator` class allows one to choose between
 # conservative (back-propagated) and non-conservative (direct)
 # force evaluation
 
@@ -105,7 +105,7 @@ structure.calc = calculator
 energy_c = structure.get_potential_energy()
 forces_c = structure.get_forces()
 
-calculator_nc = mta.ase_calculator.MetatensorCalculator(
+calculator_nc = mta.ase_calculator.MetatomicCalculator(
     model_filename, device="cpu", non_conservative=True
 )
 

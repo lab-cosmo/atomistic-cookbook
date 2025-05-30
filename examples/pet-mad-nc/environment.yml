@@ -6,8 +6,9 @@ dependencies:
   - pip
   - pip:
     - ase>=3.23
-    - pet-mad>=1.1.0,<2.0  
-    - ipi>=3.1.4,<4.0
+    - pet-mad>=1.2.0,<2.0  
+    - ipi>=3.1.5,<4.0
     - chemiscope>=0.8.5,<0.9
+    - metatomic>=0.1.0,<0.2
     - matplotlib>=3.10,<4.0
-    - vesin[torch]>=0.3.2,<0.4
+    - vesin>=0.3.5,<0.4
