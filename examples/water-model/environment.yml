@@ -7,10 +7,11 @@ dependencies:
   - pip
   - pip:
     - ase
-    - chemiscope>=0.7
-    - ipi
+    - chemiscope>=0.8
+    - ipi>=3.1.5
     - metatensor-torch<0.8
     - metatensor-operations
     - matplotlib
     - torch-pme
+    - metatomic  
     - vesin[torch]

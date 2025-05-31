@@ -6,8 +6,8 @@ Atomistic Water Model for Molecular Dynamics
           Marcel Langer `@sirmarcel <https://github.com/sirmarcel>`_ and
           Michele Ceriotti `@ceriottm <https://github.com/ceriottm>`_
 
-In this example, we demonstrate how to construct a `metatensor atomistic model
-<https://docs.metatensor.org/latest/atomistic>`_ for flexible three and four-point water
+In this example, we demonstrate how to construct a `metatomic model
+<https://docs.metatensor.org/metatomic>`_ for flexible three and four-point water
 model, with parameters optimized for use together with quantum-nuclear-effects-aware
 path integral simulations (cf. `Habershon et al., JCP (2009)
 <http://dx.doi.org/10.1063/1.3167790>`_). The model also demonstrates the use of
@@ -42,8 +42,8 @@ from ipi.utils.scripting import (
     simulation_xml,
 )
 from metatensor.torch import Labels, TensorBlock, TensorMap
-from metatensor.torch.atomistic import (
-    MetatensorAtomisticModel,
+from metatomic.torch import (
+    AtomisticModel,
     ModelCapabilities,
     ModelEvaluationOptions,
     ModelMetadata,
@@ -53,8 +53,8 @@ from metatensor.torch.atomistic import (
     load_atomistic_model,
 )
 
-# Integration with ASE calculator for metatensor atomistic models
-from metatensor.torch.atomistic.ase_calculator import MetatensorCalculator
+# Integration with ASE calculator for metatomic models
+from metatomic.torch.ase_calculator import MetatomicCalculator
 from vesin.torch.metatensor import NeighborList
 
 
@@ -401,9 +401,9 @@ fig.show()
 #
 # In order to implement a Q-TIP4P/f potential in practice, we first build a class that
 # follows the interface of a *metatomic* model. This requires defining the atomic
-# structure in terms of a :class:`metatensor.torch.atomistic.System` object - a simple
+# structure in terms of a :class:`metatomic.torch.System` object - a simple
 # container for positions, cell, and atomic types, that can also be enriched with one or
-# more :class:`metatensor.torch.atomistic.NeighborList` objects holding neighbor
+# more :class:`metatomic.torchist` objects holding neighbor
 # distance information. This is usually provided by the code used to perform a
 # simulation, but can be also computed explicitly using ``ase`` or `vesin
 # <https://luthaf.fr/vesin/latest/index.html>`_, as we do here.
@@ -420,7 +420,7 @@ chemiscope.show(
 
 # %%
 #
-# We transform the ase Atoms object into a metatensor atomistic system and define the
+# We transform the ase Atoms object into a metatomic system and define the
 # options for the neighbor list.
 
 system = System(
@@ -842,11 +842,11 @@ The stress is
 
 # %%
 #
-# Build and save a ``MetatensorAtomisticModel``
+# Build and save an ``AtomisticModel``
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # This model can be wrapped into a
-# :class:`metatensor.torch.atomistic.MetatensorAtomisticModel` class, that provides
+# :class:`metatomic.torch.AtomisticModel` class, that provides
 # useful helpers to specify the capabilities of the model, and to save it as a
 # ``torchscript`` module.
 #
@@ -872,7 +872,7 @@ model_capabilities = ModelCapabilities(
     dtype="float32",
 )
 
-atomistic_model = MetatensorAtomisticModel(
+atomistic_model = AtomisticModel(
     qtip4pf_model.eval(), ModelMetadata(), model_capabilities
 )
 
@@ -903,7 +903,7 @@ spcf_parameters = dict(
 )
 spcf_model = WaterModel(**spcf_parameters)
 
-atomistic_model = MetatensorAtomisticModel(
+atomistic_model = AtomisticModel(
     spcf_model.eval(), ModelMetadata(), model_capabilities
 )
 
@@ -922,13 +922,13 @@ atomistic_model.save("spcfw-mta.pt")
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # We begin with an example based on an ``ase``-compatible calculator. To this end,
-# ``metatensor`` provides a compatible
-# :class:`metatensor.torch.atomistic.MetatensorCalculator` wrapper to a model. Note how
+# ``metatomic`` provides a compatible
+# :class:`metatomic.torch.MetatomicCalculator` wrapper to a model. Note how
 # the metadata associated with the model are used to convert energy into the units
 # expected by ``ase`` (eV and Å).
 
 atomistic_model = load_atomistic_model("qtip4pf-mta.pt")
-mta_calculator = MetatensorCalculator(atomistic_model)
+mta_calculator = MetatomicCalculator(atomistic_model)
 
 atoms.calc = mta_calculator
 nrg = atoms.get_potential_energy()
@@ -994,7 +994,7 @@ chemiscope.show(
 # We use `i-PI <http://ipi-code.org>`_ to perform path integral molecular-dynamics
 # simulations of bulk water to include nuclear quntum effects. See `this recipe
 # <https://atomistic-cookbook.org/examples/thermostats/thermostats.html>`_ for an
-# introduction to constant-temperatur MD using i-PI.
+# introduction to constant-temperature MD using i-PI.
 #
 # First, the ``XML`` input of the i-PI simulation is created using a few utility
 # functions. This input could also be written to file and used with the command-line
@@ -1010,7 +1010,7 @@ input_xml = simulation_xml(
     forcefield=forcefield_xml(
         name="qtip4pf",
         mode="direct",
-        pes="metatensor",
+        pes="metatomic",
         parameters={"model": "qtip4pf-mta.pt", "template": "data/water_32.xyz"},
     ),
     motion=motion_nvt_xml(timestep=0.5 * ase.units.fs),
@@ -1073,7 +1073,7 @@ chemiscope.show(
 #
 # The ``metatomic`` model can also be run with `LAMMPS <https://lammps.org>`_
 # and used to perform all kinds of atomistic simulations with it.
-# This only requires defining a ``pair_metatensor`` potential, and specifying
+# This only requires defining a ``pair_metatomic`` potential, and specifying
 # the mapping between LAMMPS atom types and those used in the model.
 #
 # Note also that the ``metatomic`` interface takes care of converting the
