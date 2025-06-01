@@ -903,9 +903,7 @@ spcf_parameters = dict(
 )
 spcf_model = WaterModel(**spcf_parameters)
 
-atomistic_model = AtomisticModel(
-    spcf_model.eval(), ModelMetadata(), model_capabilities
-)
+atomistic_model = AtomisticModel(spcf_model.eval(), ModelMetadata(), model_capabilities)
 
 atomistic_model.save("spcfw-mta.pt")
 
