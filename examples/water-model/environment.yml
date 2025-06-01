@@ -14,5 +14,4 @@ dependencies:
     - matplotlib
     - metatomic-torch
     - vesin[torch]
-      # torch-pme straight from GitHub, *metatomic* branch
-    - "torch-pme @ git+https://github.com/lab-cosmo/torch-pme.git@metatomic"
+    - torch-pme>=0.3.1<0.4
