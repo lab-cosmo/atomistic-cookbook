@@ -1,9 +1,9 @@
 channels:
-  - abmazitov
+  - metatensor
   - conda-forge
 dependencies:
   - python=3.12
-  - lammps-metatensor=*=cpu*nompi*
+  - lammps-metatomic=*=cpu*nompi*
   - pip
   - pip:
     - ase
@@ -12,6 +12,7 @@ dependencies:
     - metatensor-torch<0.8
     - metatensor-operations
     - matplotlib
-    - torch-pme
-    - metatomic  
+    - metatomic-torch
     - vesin[torch]
+      # torch-pme straight from GitHub, *metatomic* branch
+    - "torch-pme @ git+https://github.com/lab-cosmo/torch-pme.git@metatomic"

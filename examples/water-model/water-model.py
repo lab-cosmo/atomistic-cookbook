@@ -1095,4 +1095,4 @@ for line in lines[:7] + lines[16:]:
 
 ase.io.write("water_32.data", atoms, format="lammps-data", masses=True)
 
-subprocess.check_call(["lmp_serial", "-in", "data/spcfw.in"])
+subprocess.check_call(["lmp", "-in", "data/spcfw.in"])
