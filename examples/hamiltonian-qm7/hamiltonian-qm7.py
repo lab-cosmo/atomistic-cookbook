@@ -635,20 +635,23 @@ W_EVA = 1e4
 W_DIP = 1e3
 W_POL = 1e2
 
+FOLDER_NAME = "output/qm7"
+
 # %%
 # Create Datasets
 # ^^^^^^^^^^^^^^^
 #
 # We use the dataloader of the
 # `mlelec package (qm7 branch) <https://github.com/curiosity54/mlelec/tree/qm7>`_,
-# and load the ethane
-# dataset for the defined number of slices.
+# and load the QM7
+# dataset we downloaded above from zenodo 
+# for the defined number of frames.
 # First, we load all relavant data (geometric structures,
 # auxiliary matrices -overlap and orbitals-, and
 # targets -fock, dipole moment, and polarisablity-) into a molecule dataset.
 # We do this for the minimal (STO-3G), as well as a larger basis (lb, def2-TZVP).
 # The larger basis has additional basis functions on the valence electrons.
-# The dataset, we can then load into our dataloader ```ml_data``, together with some
+# The dataset, we can then load into our dataloader ```ml_data```, together with some
 # settings on how we want to sample data from the dataloader.
 # Finally, we define the desired dataset split for training, validation,
 # and testing from the parameters defined in example 1.
@@ -687,7 +690,15 @@ ml_data._split_indices(
 # For a dataset like QM7 which contains molecules with over
 # 15 atoms, we need a slightly larger cutoff than the ones
 # we used in case of ethane. We choose a cutoff of 3 and 5
-# for the atom-centred and pair-centred features respectively.
+# for the atom-centred and pair-centred features, respectively.
+# Note that the computation of the features takes some time and
+# requires a large amount of memory. 
+#
+# This is why in the following
+# of this example, we are not executing the commands related to 
+# the features (that is feature computation, training, and evaluation),
+# but provide all python commands necessary if one
+# would want to do this.
 
 hypers = {
     "cutoff": {"radius": 3, "smoothing": {"type": "ShiftedCosine", "width": 0.1}},
@@ -725,7 +736,8 @@ hypers_pair = {
 # happen that some blocks are empty, because certain structural
 # features are only present in certain structures (e.g. if we
 # would have some organic molecules with oxygen and some without).
-# We drop these blocks, so that the dataloader does not
+# As this is the case for the QM7 example,
+# we drop these blocks, so that the dataloader does not
 # try to load them during training.
 
 # %%
@@ -829,11 +841,18 @@ hypers_pair = {
 
 # %%
 # This training can take some time to converge fully.
-# We, therefore try to load a previously trained model.
+# Therefore we decided not
+# run the training in this example
+# but to load a previously trained model.
+
 
 # %%
 # Evaluating the trained model
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# A previously trained model for the QM7 dataset we are using here
+# is also part of the data
+# downloaded from Zenodo.
 #
 # .. code-block:: python
 #
@@ -842,19 +861,47 @@ hypers_pair = {
 # %%
 # Plot loss
 # ^^^^^^^^^
+# As we have not performed training, we cannot plot the 
+# training and validation losses
+# from the history, as we did for example 1. In principle,
+# if training would have been performed,
+# the python command would be the same: 
+#
+# .. code-block:: python
+#
+#     plot_losses(history, save=True, savename=f"{FOLDER_NAME}/loss_vs_epoch.pdf")
+#
+# For refe`rence, we provide the loss plot we obtained during training of the
+# previously trained model.
 #
 # .. figure:: loss_vs_epoch.png
 #    :alt: loss versus epoch curves for training and
 #          validation losses.  The MSE on MO energies, dipole moments
 #          and polarisability are shown separately.
-# The plot here shows the Loss versus Epoch curves
-# for training and validation losses.  The MSE on
+#
+# The plot shows the Loss versus Epoch curves
+# for training and validation losses. The MSE on
 # MO energies, dipole moments and polarisability
 # are shown separately.
 
 # %%
 # Parity plot
 # ^^^^^^^^^^^
+#
+# We finally want to investigate the performance of the finetuned model
+# that target the MO energies, dipole moments and polarisibaility
+# of from a def2-TZVP calculation on the QM7 test dataset.
+# This can be done with the following python command:
+#
+# .. code-block:: python
+#
+#     plot_parity_property(molecule_data, propert="eva", orthogonal=ORTHOGONAL)
+#
+# This command generates a parity plot for the desired properties. 
+# As we did not compute
+# the features of the QM7 dataset for time and memory reasons, 
+# we do here not execute the python command above but provide directly the
+# parity plot as Figure.
 #
 # .. figure:: parity_plots_combined.png
 #    :alt: Performance of the indirect model on the QM7 test
@@ -864,10 +911,8 @@ hypers_pair = {
 #           STO-3G calculations, while the blue ones correspond to val-
 #           ues computed from minimal-basis Hamiltonians predicted by
 #           the ML model.
-# We finally show the performance of the finetuned model
-# that target the MO energies, dipole moments and polarisbaility
-# of from a def2-TZVP calculation on the QM7 test
-# dataset. Gray circles correspond to the values obtained from
+#
+# Gray circles correspond to the values obtained from
 # STO-3G calculations, while the blue ones correspond to values
 # computed from the reduced-basis Hamiltonians predicted by
 # the ML model.
