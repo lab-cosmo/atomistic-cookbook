@@ -94,7 +94,7 @@ import mlelec.metrics as mlmetrics  # noqa: E402
 from mlelec.data.dataset import MLDataset, MoleculeDataset, get_dataloader  # noqa: E402
 from mlelec.models.linear import LinearTargetModel  # noqa: E402
 from mlelec.train import Trainer  # noqa: E402
-from mlelec.utils.property_utils import (  # noqa: E402
+from mlelec.utils.property_utils import (  # noqa: E402, F401
     compute_dipole_moment,
     compute_eigvals,
     compute_polarisability,
@@ -373,7 +373,7 @@ with io.capture_output() as captured:
 
 # %%
 # Training: Indirect learning of the MO energies
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # Now rather than explicitly targeting the Hamiltonian matrix,
 # we instead treat it as an intermediate layer in our framework, where
@@ -453,7 +453,7 @@ plot_losses(history, save=True, savename=f"{FOLDER_NAME}/loss_vs_epoch.pdf")
 # ^^^^^^^^^^^
 # We then evaluate the prediction of the fine-tuned model on
 # the MO energies by comparing it the with the MO energies
-# from the reference def2-TZVP calculation. 
+# from the reference def2-TZVP calculation.
 
 f_pred = model.forward(
     ml_data.feat_test,
@@ -462,8 +462,8 @@ f_pred = model.forward(
 )
 
 test_eva_pred = compute_eigvals(
-            ml_data, f_pred, range(len(ml_data.test_idx)), orthogonal=ORTHOGONAL
-        )
+    ml_data, f_pred, range(len(ml_data.test_idx)), orthogonal=ORTHOGONAL
+)
 
 # The parity plot
 # below shows the performance of our model on the test
@@ -472,16 +472,12 @@ test_eva_pred = compute_eigvals(
 # are shown in grey.
 
 
-import matplotlib.pyplot as plt
-import torch
-import numpy as np
-
 def plot_parity_properties(
     molecule_data,
     ml_data,
     Hartree,
-    properties=["eva", "dip", "pol"],
-    predictions_dict=None  # dictionary with keys: "eva", "dip", "pol"
+    properties="eva",  # can be single string or list of strings
+    predictions_dict=None,  # dictionary with keys: "eva", "dip", "pol"
 ):
     # Labels, units, and axis ranges
     prop_info_map = {
@@ -490,9 +486,16 @@ def plot_parity_properties(
         "pol": {"label": "polarisability", "unit": "a.u.", "range": [-25, 150]},
     }
 
-    n = len(properties)
+    if type(properties) is list:
+        n = len(properties)
+    elif type(properties) is str:
+        properties = [properties]
+        n = 1
+    else:
+        print("Properties input should be string or list")
+
     fig, axes = plt.subplots(1, n, figsize=(6 * n, 6))
-    if n == 1:
+    if type(axes) is not list:
         axes = [axes]  # Make iterable
 
     for i, propert in enumerate(properties):
@@ -502,8 +505,14 @@ def plot_parity_properties(
         min_val, max_val = prop_info_map[propert]["range"]
 
         ax.set_axisbelow(True)
-        ax.grid(True, which='both', linestyle='-', linewidth=1, alpha=0.7)
-        ax.plot([min_val, max_val], [min_val, max_val], linestyle='--', color='black', linewidth=1.5)
+        ax.grid(True, which="both", linestyle="-", linewidth=1, alpha=0.7)
+        ax.plot(
+            [min_val, max_val],
+            [min_val, max_val],
+            linestyle="--",
+            color="black",
+            linewidth=1.5,
+        )
 
         # Reference vs low-basis
         target_vals = []
@@ -513,7 +522,7 @@ def plot_parity_properties(
             target = molecule_data.target[propert][idx]
             lb = molecule_data.lb_target[propert][idx]
             if propert == "eva":
-                lb = lb[:target.shape[0]]
+                lb = lb[: target.shape[0]]
             target_vals.append(target)
             lb_vals.append(lb)
 
@@ -526,13 +535,23 @@ def plot_parity_properties(
             x_vals *= Hartree
             y_vals *= Hartree
 
-        ax.scatter(x_vals, y_vals, color='gray', alpha=0.7, s=200, marker='o',
-                   edgecolor='black', label="STO-3G")
+        ax.scatter(
+            x_vals,
+            y_vals,
+            color="gray",
+            alpha=0.7,
+            s=200,
+            marker="o",
+            edgecolor="black",
+            label="STO-3G",
+        )
 
         # Use saved predictions
         pred_array = predictions_dict[propert]
         if propert == "eva":
-            pred_array = np.concatenate([p[:t.shape[0]] for p, t in zip(pred_array, target_vals)])
+            pred_array = np.concatenate(
+                [p[: t.shape[0]] for p, t in zip(pred_array, target_vals)]
+            )
             y_model = pred_array * Hartree
             x_model = x_vals
         elif propert == "dip":
@@ -545,11 +564,19 @@ def plot_parity_properties(
             print(f"Unknown property: {propert}")
             continue
 
-        ax.scatter(x_model, y_model, color='royalblue', alpha=0.7, s=200, marker='o',
-                   edgecolor='black', label="indirect $\mathbf{H}$ model")
+        ax.scatter(
+            x_model,
+            y_model,
+            color="royalblue",
+            alpha=0.7,
+            s=200,
+            marker="o",
+            edgecolor="black",
+            label=r"indirect $\mathbf{H}$ model",
+        )
 
-        ax.set_xlabel(f"Target {label} ({unit})", fontsize=16, fontweight='bold')
-        ax.set_ylabel(f"Predicted {label} ({unit})", fontsize=16, fontweight='bold')
+        ax.set_xlabel(f"Target {label} ({unit})", fontsize=16, fontweight="bold")
+        ax.set_ylabel(f"Predicted {label} ({unit})", fontsize=16, fontweight="bold")
         ax.set_xlim(min_val, max_val)
         ax.set_ylim(min_val, max_val)
         ax.legend(fontsize=14)
@@ -567,7 +594,7 @@ plot_parity_properties(
     ml_data,
     Hartree,
     properties=["eva"],
-    predictions_dict=predictions_dict
+    predictions_dict=predictions_dict,
 )
 
 # %%
@@ -875,7 +902,7 @@ hypers_pair = {
 # .. code-block:: python
 #
 #       model.load_state_dict(torch.load("hamiltonian-qm7-data/qm7/output/qm7_eva_dip_pol/best_model.pt"))
-# 
+#
 # We can then compute different properties from the trained model.
 #
 # .. code-block:: python
@@ -939,7 +966,7 @@ hypers_pair = {
 #         "dip": test_dip_pred.detach().numpy(),
 #         "pol": test_polar_pred.detach().numpy(),
 #     }
-# 
+#
 #     plot_parity_properties(
 #         molecule_data,
 #         ml_data,
@@ -947,7 +974,7 @@ hypers_pair = {
 #         properties=["eva", "dip", "pol"],
 #         predictions_dict=predictions_dict
 #     )
-# 
+#
 # This command generates a parity plot for the desired properties.
 # As we did not compute
 # the features of the QM7 dataset for time and memory reasons,
