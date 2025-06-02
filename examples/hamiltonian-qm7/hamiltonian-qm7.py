@@ -644,7 +644,7 @@ FOLDER_NAME = "output/qm7"
 # We use the dataloader of the
 # `mlelec package (qm7 branch) <https://github.com/curiosity54/mlelec/tree/qm7>`_,
 # and load the QM7
-# dataset we downloaded above from zenodo 
+# dataset we downloaded above from zenodo
 # for the defined number of frames.
 # First, we load all relavant data (geometric structures,
 # auxiliary matrices -overlap and orbitals-, and
@@ -692,10 +692,10 @@ ml_data._split_indices(
 # we used in case of ethane. We choose a cutoff of 3 and 5
 # for the atom-centred and pair-centred features, respectively.
 # Note that the computation of the features takes some time and
-# requires a large amount of memory. 
+# requires a large amount of memory.
 #
 # This is why in the following
-# of this example, we are not executing the commands related to 
+# of this example, we are not executing the commands related to
 # the features (that is feature computation, training, and evaluation),
 # but provide all python commands necessary if one
 # would want to do this.
@@ -861,11 +861,11 @@ hypers_pair = {
 # %%
 # Plot loss
 # ^^^^^^^^^
-# As we have not performed training, we cannot plot the 
+# As we have not performed training, we cannot plot the
 # training and validation losses
 # from the history, as we did for example 1. In principle,
 # if training would have been performed,
-# the python command would be the same: 
+# the python command would be the same:
 #
 # .. code-block:: python
 #
@@ -897,9 +897,9 @@ hypers_pair = {
 #
 #     plot_parity_property(molecule_data, propert="eva", orthogonal=ORTHOGONAL)
 #
-# This command generates a parity plot for the desired properties. 
+# This command generates a parity plot for the desired properties.
 # As we did not compute
-# the features of the QM7 dataset for time and memory reasons, 
+# the features of the QM7 dataset for time and memory reasons,
 # we do here not execute the python command above but provide directly the
 # parity plot as Figure.
 #
