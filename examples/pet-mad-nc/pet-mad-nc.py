@@ -41,7 +41,6 @@ import ase.io
 # i-PI scripting utilities
 import chemiscope
 import matplotlib.pyplot as plt
-import metatensor.torch.atomistic as mta
 import metatensor.torch.atomistic.ase_calculator as mta_ase_calculator
 from ipi.utils.parsing import read_output, read_trajectory
 from ipi.utils.scripting import InteractiveSimulation
