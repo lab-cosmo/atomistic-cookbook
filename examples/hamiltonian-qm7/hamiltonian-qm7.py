@@ -62,7 +62,7 @@ and our preprint `arXiv:2504.01187 <https://doi.org/10.48550/arXiv.2504.01187>`_
 
 # %%
 # 1. Example of Learning MO Energies for Ethane
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # %%
 # Python Environment and Used Packages
@@ -123,7 +123,7 @@ VALIDATION_FRAC = 0.2
 EARLY_STOP_CRITERION = 20
 VERBOSE = 10
 DUMP_HIST = 50
-LR = 1e-1  # 5e-4
+LR = 1e-1
 VAL_INTERVAL = 1
 DEVICE = "cpu"
 
@@ -580,7 +580,7 @@ plot_parity_properties(
 
 # %%
 # 2. Example of Targeting Multiple Properties
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # In principle we can also target multiple properties for
 # the indirect training. While MO energies can be computed
@@ -860,9 +860,8 @@ hypers_pair = {
 
 # %%
 # This training can take some time to converge fully.
-# Therefore we decided not
-# run the training in this example
-# but to load a previously trained model.
+# Thus, for this example,
+# we load a previously trained model to continue.
 
 
 # %%
