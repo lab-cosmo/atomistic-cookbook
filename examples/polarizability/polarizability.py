@@ -35,8 +35,9 @@ from featomic.torch.clebsch_gordan import (
     cartesian_to_spherical,
 )
 from metatensor.torch import Labels, TensorBlock, TensorMap
-from metatensor.torch.atomistic import (
-    MetatensorAtomisticModel,
+from metatensor.torch.learn.nn import EquivariantLinear
+from metatomic.torch import (
+    AtomisticModel,
     ModelCapabilities,
     ModelEvaluationOptions,
     ModelMetadata,
@@ -45,8 +46,7 @@ from metatensor.torch.atomistic import (
     load_atomistic_model,
     systems_to_torch,
 )
-from metatensor.torch.atomistic.ase_calculator import MetatensorCalculator
-from metatensor.torch.learn.nn import EquivariantLinear
+from metatomic.torch.ase_calculator import MetatomicCalculator
 
 # Core libraries
 from sklearn.linear_model import RidgeCV
@@ -297,7 +297,7 @@ def spherical_to_cartesian(spherical_tensor: TensorMap) -> TensorMap:
 # -------------------------------------------------------
 # In order to implement a polarizability model compatible with ``metatomic``, we need to
 # we need to define a ``torch.nn.Module`` with a ``forward`` method that takes a list of
-# :class:`metatensor.torch.atomistic.System` and returns a dictionary of
+# :class:`metatomic.torch.System` and returns a dictionary of
 # :class:`metatensor.torch.TensorMap` objects. The ``forward`` method must be compatible
 # with ``TorchScript``.
 #
@@ -475,7 +475,7 @@ model = PolarizabilityModel(
 # the resulting weights are then used to initialize a
 # :class:`metatensor.learn.nn.EquivariantLinear` module.
 # The :func:`PolariabilityModel.fit` method takes the training systems in
-# :class:`metatensor.torch.atomistic.System` format and the training target
+# :class:`metatomic.torch.System` format and the training target
 # :class:`metatensor.torch.TensorMap` as input. The `alphas` parameter is used to
 # specify the range of regularization parameters to be tested.
 
@@ -544,7 +544,7 @@ plt.show()
 # Export the model as a metatomic model
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 # Wrap the model in a
-# :class:`metatensor.torch.atomistic.MetatensorAtomisticModel`
+# :class:`metatomic.torch.AtomisticModel`
 # object.
 
 outputs = {
@@ -566,14 +566,12 @@ model_capabilities = ModelCapabilities(
     dtype="float64",
 )
 
-atomistic_model = MetatensorAtomisticModel(
-    model.eval(), ModelMetadata(), model_capabilities
-)
+atomistic_model = AtomisticModel(model.eval(), ModelMetadata(), model_capabilities)
 
 
 # %%
 # The model can be saved to disk using the
-# :func:`metatensor.torch.atomistic.save_atomistic_model` function.
+# :func:`metatomic.torch.save_atomistic_model` function.
 #
 atomistic_model.save("polarizability_model.pt", collect_extensions="extensions")
 
@@ -581,21 +579,21 @@ atomistic_model.save("polarizability_model.pt", collect_extensions="extensions")
 # Use the model as a metatensor calculator
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 # The model can be used as a calculator with the
-# :class:`metatensor.torch.atomistic.MetatensorCalculator` class.
+# :class:`metatomic.torch.MetatomicCalculator` class.
 
 atomistic_model = load_atomistic_model(
     "polarizability_model.pt", extensions_directory="extensions"
 )
-mta_calculator = MetatensorCalculator(atomistic_model)
+mta_calculator = MetatomicCalculator(atomistic_model)
 
 ase_frames = ase.io.read("data/qm7x_reduced_100.xyz", index=":")
 
 # %%
 # :class:`ase.Atoms` objects do not feature a :func:`get_polarizability` method that we
 # could call to compute the polarizability with our model. The easiest way to compute
-# the polarizability is then to directly use the :func:`MetatensorCalculator.run_model`
+# the polarizability is then to directly use the :func:`MetatomicCalculator.run_model`
 # method, which takes a list of :class:`ase.Atoms` objects and a dictionary of
-# :class:`metatensor.torch.atomistic.ModelOutput` objects as input. The output is a
+# :class:`metatomic.torch.ModelOutput` objects as input. The output is a
 # dictionary of :class:`metatensor.torch.TensorMap` objects.
 
 computed_polarizabilities = []

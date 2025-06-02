@@ -9,7 +9,7 @@
       <seed>32123</seed>
    </prng>
    <ffdirect name='driver' pbc="false">
-      <pes>metatensor</pes>
+      <pes>metatomic</pes>
       <parameters>{template:data/ala2.xyz,model:pet-mad-latest.pt,device:cpu} </parameters>
    </ffdirect>
    <system>

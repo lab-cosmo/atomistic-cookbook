@@ -13,7 +13,7 @@
 <total_steps>160</total_steps>
 <prng><seed>12345</seed></prng>
 <ffdirect  name='nocons' pbc="false">
-    <pes>metatensor</pes>
+    <pes>metatomic</pes>
     <parameters>{template:data/bmimcl.xyz,model:pet-mad-latest.pt,device:cpu,non_conservative:True} </parameters>
 </ffdirect>
 <system>

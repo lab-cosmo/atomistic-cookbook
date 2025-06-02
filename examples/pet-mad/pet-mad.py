@@ -54,7 +54,7 @@ import chemiscope
 import matplotlib.pyplot as plt
 
 # pet-mad ASE calculator
-import metatensor.torch.atomistic as mta
+import metatomic.torch as mta
 import numpy as np
 import requests
 from ase.optimize import LBFGS
@@ -132,10 +132,10 @@ test_forces = np.array(test_forces, dtype=object)
 # Single point energy and forces
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# PET-MAD is compatible with the metatensor atomistic models interface which allows us
-# to run it with ASE and many other MD engines. For more details see the `metatensor
+# PET-MAD is compatible with the metatomic models interface which allows us
+# to run it with ASE and many other MD engines. For more details see the `metatomic
 # documentation
-# <https://docs.metatensor.org/latest/atomistic/engines/index.html#atomistic-models-engines>`_.
+# <https://docs.metatensor.org/metatomic>`_.
 #
 # We now load the PET-MAD ASE calculator and calculate energy and forces.
 
@@ -155,7 +155,7 @@ calculator._model.save("pet-mad-latest.pt")
 # equivalent unless you plan on fine-tuning, or otherwise modifying
 # the model.
 
-calculator = mta.ase_calculator.MetatensorCalculator("pet-mad-latest.pt", device="cpu")
+calculator = mta.ase_calculator.MetatomicCalculator("pet-mad-latest.pt", device="cpu")
 
 # %%
 #
@@ -424,7 +424,7 @@ input_xml = simulation_xml(
     forcefield=forcefield_xml(
         name="pet-mad",
         mode="direct",
-        pes="metatensor",
+        pes="metatomic",
         parameters={"model": "pet-mad-latest.pt", "template": "data/al6xxx-o2.xyz"},
     ),
     motion=motion_xml,
@@ -439,7 +439,7 @@ print(input_xml)
 #
 # The simulation can be run from a Python script or the command line. By changing the
 # forcefield interface from ``direct`` to the use of a socket, it is also possible to
-# execute separately ``i-PI`` and the ``metatensor`` driver.
+# execute separately ``i-PI`` and the ``metatomic`` driver.
 
 sim = InteractiveSimulation(input_xml)
 sim.run(80)
@@ -494,11 +494,11 @@ chemiscope.show(
 # calculation with a ``metatomic`` potential, one needs a LAMMPS build that contains an
 # appropriate pair style. You can compile it from `source
 # <https://github.com/metatensor/lammps>`_, or fetch it from the `metatensor` channel on
-# conda. One can then just include in the input a ``pair_style metatensor`` that points
+# conda. One can then just include in the input a ``pair_style metatomic`` that points
 # to the exported model and a single ``pair_coeff`` command that specifies the mapping
 # from LAMMPS types to the atomic types the model can handle. The first two arguments
 # must be ``* *`` so as to span all LAMMPS atom types. This is followed by a list of N
-# arguments that specify the mapping of metatensor atomic types to LAMMPS types, where N
+# arguments that specify the mapping of metatomic atomic types to LAMMPS types, where N
 # is the number of LAMMPS atom types.
 
 with open("data/al6xxx-o2.in", "r") as f:
