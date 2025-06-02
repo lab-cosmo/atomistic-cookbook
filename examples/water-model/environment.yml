@@ -14,4 +14,4 @@ dependencies:
     - matplotlib
     - metatomic-torch
     - vesin[torch]
-    - torch-pme>=0.3.1<0.4
+    - torch-pme>=0.3.1,<0.4
