@@ -15,7 +15,7 @@ pair_coeff * * 6 17 1 7
 run_style verlet
 
 neighbor 2.0 bin
-timestep 0.001
+timestep 0.0005
 
 thermo 1
 
