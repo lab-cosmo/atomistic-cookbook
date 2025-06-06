@@ -89,7 +89,7 @@ calculator = mta.ase_calculator.MetatomicCalculator(model_filename, device="cpu"
 #
 # .. math ::
 #
-#    \mathbf{f}_i = \partial V/\partial \mathbf{r}_i
+#    \mathbf{f}_i = -\partial V/\partial \mathbf{r}_i
 #
 # Even though the early ML-based interatomic potentials followed this route,
 # computing forces directly as a function of the atomic coordinates,
@@ -111,11 +111,15 @@ calculator_nc = mta.ase_calculator.MetatomicCalculator(
 
 structure.calc = calculator_nc
 energy_nc = structure.get_potential_energy()
-# forces_nc = structure.get_forces() # temporarily broken
+forces_nc = structure.get_forces()
 
 # %%
 
 print(f"Energy:\n  Conservative: {energy_c:.8}\n  Non-conserv.: {energy_nc:.8}")
+print(
+    f"Force sample (atom 0):\n  Conservative: {forces_c[0]}\n"
+    + f"  Non-conserv.: {forces_nc[0]}"
+)
 
 # %%
 #
@@ -355,6 +359,7 @@ chemiscope.show(
 # The speedup of the MTS approach with direct forces can also be leveraged in LAMMPS.
 
 import subprocess
+
 
 subprocess.run("lmp -in data/lammps-c.in")
 subprocess.run("lmp -in data/lammps-nc.in")
