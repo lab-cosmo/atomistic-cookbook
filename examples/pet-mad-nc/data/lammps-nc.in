@@ -2,7 +2,7 @@ units metal
 
 atom_style atomic
 
-read_data bmimcl.data
+read_data data/bmimcl.data
 
 mass 1 12.011
 mass 2 35.453
