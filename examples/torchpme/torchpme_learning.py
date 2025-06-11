@@ -23,6 +23,7 @@ import numpy as np
 import torch
 from torchpme import CombinedPotential, EwaldCalculator, InversePowerLawPotential
 from vesin import NeighborList
+import os
 
 
 # %%
@@ -37,10 +38,22 @@ dtype = torch.float32
 prefactor = 0.5292  # Unit conversion prefactor.
 
 # %%
-# Load the dataset
-# ~~~~~~~~~~~~~~~~~~~
+# Download and load the dataset
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+import urllib.request
+
+data_dir = "data"
+os.makedirs(data_dir, exist_ok=True)
+dataset_url = "https://archive.materialscloud.org/record/file?record_id=1924&filename=point_charges_Training_set_p1.xyz"
+dataset_path = os.path.join(data_dir, "point_charges_Training_set.xyz")
+
+if not os.path.isfile(dataset_path):
+    print(f"Downloading dataset from {dataset_url} ...")
+    urllib.request.urlretrieve(dataset_url, dataset_path)
+    print("Download complete.")
+
 # The dataset consists of atomic configurations with reference energies.
-frames = ase.io.read("data/point_charges_Training_set.xyz", ":10")
+frames = ase.io.read(dataset_path, ":10")
 
 # %%
 # Define model parameters
