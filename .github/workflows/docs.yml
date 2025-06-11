@@ -68,7 +68,7 @@ jobs:
   build-and-publish:
     # Run this job even if the generate-example job was skipped due to
     # no examples to run. I.e. only avoid if generate-example failed.
-    if: ${{ always() && needs.generate-example.conclusion != 'failure' }}
+    if: ${{ always() && needs.generate-example.result != 'failure' }}
     needs: [setup, generate-example]
     runs-on: ubuntu-latest
     steps:
