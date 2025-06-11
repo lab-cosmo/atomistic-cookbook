@@ -12,7 +12,7 @@ dependencies:
   - pip:
     - ase==3.22.1
     - chemiscope
-    - git+https://github.com/i-pi/i-pi.git@main#egg=ipi
+    - ipi @ git+https://github.com/i-pi/i-pi.git@fix_socket_conda
     - matplotlib
     - skmatter
 variables:
