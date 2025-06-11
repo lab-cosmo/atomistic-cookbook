@@ -4,9 +4,10 @@ dependencies:
   - python=3.11
   - pip
   - pip:
-    - ase
-    - featomic-torch<0.7,>0.6
+    - ase>3.23,<4
+    - featomic-torch>=0.7,<0.8
     - metatensor-torch<0.8
+    - metatomic-torch
     - metatensor-operations
     - metatensor-learn
     - matplotlib
