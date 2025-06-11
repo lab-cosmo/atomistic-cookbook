@@ -14,6 +14,8 @@ through Coulomb forces.
 """
 
 # %%
+import os
+import urllib.request
 from typing import Dict
 
 import ase.io
@@ -23,7 +25,6 @@ import numpy as np
 import torch
 from torchpme import CombinedPotential, EwaldCalculator, InversePowerLawPotential
 from vesin import NeighborList
-import os
 
 
 # %%
@@ -40,11 +41,14 @@ prefactor = 0.5292  # Unit conversion prefactor.
 # %%
 # Download and load the dataset
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-import urllib.request
+
 
 data_dir = "data"
 os.makedirs(data_dir, exist_ok=True)
-dataset_url = "https://archive.materialscloud.org/record/file?record_id=1924&filename=point_charges_Training_set_p1.xyz"
+dataset_url = (
+    "https://archive.materialscloud.org/record/file?"
+    + "record_id=1924&filename=point_charges_Training_set_p1.xyz"
+)
 dataset_path = os.path.join(data_dir, "point_charges_Training_set.xyz")
 
 if not os.path.isfile(dataset_path):
