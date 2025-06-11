@@ -5,10 +5,10 @@ dependencies:
   - pip
   - rust >=1.65
   - pip:
-    - ase==3.22.1
+    - ase<3.23
     - chemiscope>=0.7
     - matplotlib
     - metatensor
     - featomic
     - scikit-learn
-    - skmatter
+    - skmatter @ git+https://github.com/scikit-learn-contrib/scikit-matter.git@main
