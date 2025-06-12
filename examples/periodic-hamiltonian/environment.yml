@@ -5,7 +5,6 @@ dependencies:
   - pip
   - graphviz
   - pyscf=2.3.0
-  - rust>=1.65
   - pip:
       - pyscfad @ git+https://github.com/fishjojo/pyscfad.git@ml#egg=pyscfad
       - ase==3.22.1
