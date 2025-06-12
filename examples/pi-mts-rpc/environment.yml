@@ -9,5 +9,5 @@ dependencies:
     - numpy
     - ase==3.22.1
     - chemiscope>=0.8
-    - ipi @ git+https://github.com/i-pi/i-pi.git@fix_socket_conda
+    - ipi>=3.1.5.1
     - matplotlib
