@@ -6,10 +6,10 @@ dependencies:
   - rust>=1.65
   - pip:
     - ase==3.22.1
-    - chemiscope>=0.7
+    - chemiscope>=0.8
     - matplotlib
-    - scipy<1.15
+    - scipy
     - metatensor
     - featomic
-    - scikit-learn<1.6
-    - git+https://github.com/scikit-learn-contrib/scikit-matter@722d582f9d88ecefb486dae90e0ca6d835d42024
+    - scikit-learn
+    - skmatter>=0.3

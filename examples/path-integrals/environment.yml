@@ -5,8 +5,7 @@ dependencies:
   - pip
   - lammps  
   - pip:
-    - ase==3.22.1
-    - chemiscope>=0.7
+    - ase
+    - chemiscope>=0.8
     - ipi  
     - matplotlib
-    - skmatter
