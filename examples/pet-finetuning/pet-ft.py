@@ -1,6 +1,6 @@
 """
-Finetuning PET-MAD universal potential
-======================================
+Fine-tuning the PET-MAD universal potential
+===========================================
 
 :Authors: Davide Tisi `@DavideTisi <https://github.com/DavideTisi>`_,
           Zhiyi Wang `@ceriottm <https://github.com/ceriottm>`_,
@@ -13,8 +13,8 @@ machine-learning forcefield trained on a dataset that aims to incorporate a very
 degree of structural diversity.
 
 The point-edge transformer (PET) is an unconstrained architecture that achieves a high
-degree of symmetry compliance through data augmentation during training (see the `PET
-paper
+degree of symmetry compliance through data augmentation during training (see the 
+`PET paper
 <https://proceedings.neurips.cc/paper_files/paper/2023/file/fb4a7e3522363907b26a86cc5be627ac-Paper-Conference.pdf>`_
 for more details). The unconstrained nature of the model simplifies its implementation
 and structure, making it computationally efficient and very expressive.
