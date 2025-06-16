@@ -1,0 +1,26 @@
+name: cosmo
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.11
+  - pip
+  - graphviz
+  - pyscf=2.3.0
+  - rust>=1.65
+  - pip:
+      - pyscfad @ git+https://github.com/fishjojo/pyscfad.git@ml#egg=pyscfad
+      - ase==3.22.1
+      - seekpath
+      - requests
+      - ipython
+      - metatensor==0.2.0
+      - metatensor-core==0.1.10
+      - metatensor-learn==0.3.0
+      - metatensor-operations==0.3.0
+      - --extra-index-url https://download.pytorch.org/whl/cpu 
+      - featomic == 0.6.1
+      - xitorch
+      - keras_core
+      - tensorboard
+      - torchviz
+      - mlelec @ git+https://github.com/curiosity54/mlelec.git@qm7#egg=mlelec

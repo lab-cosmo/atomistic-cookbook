@@ -1,0 +1,40 @@
+<simulation verbosity='low' threading='false'>
+   <total_steps>1000</total_steps>
+   <output prefix='ala2-npt-flashmd'>
+      <trajectory stride='1' filename='pos' format='ase'> positions </trajectory>
+      <properties stride='1'> [ step, time{picosecond}, temperature{kelvin}, potential{electronvolt}, conserved{electronvolt}, pressure_md{bar}, volume{angstrom3} ] </properties>
+      <trajectory stride='1' filename='vel' format='xyz'> velocities </trajectory>
+   </output>
+   <prng>
+      <seed>32123</seed>
+   </prng>
+   <ffdirect name='driver' pbc="false">
+      <pes>metatomic</pes>
+      <parameters>{template:data/ala2.xyz,model:pet-mad-latest.pt,device:cpu} </parameters>
+   </ffdirect>
+   <system>
+      <forces> 
+          <force forcefield='driver'></force>
+      </forces>
+      <initialize nbeads='1'>
+        <file mode='ase'> data/ala2.xyz </file>
+        <velocities mode='thermal' units='kelvin'> 450 </velocities>
+      </initialize>
+      <motion mode='dynamics'>
+         <dynamics mode='npt'>
+            <timestep units='femtosecond'> 16 </timestep>
+            <thermostat mode='ffl'><tau units='femtosecond'> 100 </tau></thermostat>
+            <barostat mode='isotropic'>
+               <thermostat mode='langevin'>
+                  <tau units='femtosecond'> 100 </tau>
+               </thermostat>
+               <tau units='femtosecond'> 200 </tau>
+            </barostat>
+         </dynamics>
+     </motion>
+     <ensemble>
+         <temperature units="kelvin">450</temperature>
+         <pressure units="bar"> 1.0 </pressure>
+     </ensemble>
+  </system>
+</simulation>

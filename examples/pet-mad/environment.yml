@@ -1,0 +1,13 @@
+channels:
+  - metatensor
+  - conda-forge
+dependencies:
+  - python=3.12
+  - lammps-metatomic=*=cpu*nompi*
+  - pip
+  - pip:
+    - ase
+    - pet-mad>=1.2.0,<2.0
+    - ipi==3.1.5
+    - chemiscope>=0.8.5,<0.9 
+    - matplotlib

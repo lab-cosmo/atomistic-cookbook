@@ -4,7 +4,7 @@
    </ffsocket>
    <ffplumed name="plumed">
          <file mode="xyz">data/h5o2+.xyz</file>
-         <plumeddat> data/plumed-md_hiq.dat </plumeddat>
+         <plumed_dat> data/plumed-md_hiq.dat </plumed_dat>
          <plumed_extras> [doo, co1.lessthan, co2.lessthan, dc, mtd.bias ] </plumed_extras>
    </ffplumed>
    <total_steps>2000000</total_steps>

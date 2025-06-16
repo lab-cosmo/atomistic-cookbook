@@ -1,0 +1,33 @@
+<simulation verbosity='low' threading='false'>
+   <total_steps>1000</total_steps>
+   <output prefix='al110-nvt-flashmd'>
+      <trajectory stride='1' filename='pos' format='ase'> positions </trajectory>
+      <properties stride='1'> [ step, time{picosecond}, temperature{kelvin}, potential{electronvolt}, conserved{electronvolt} ] </properties>
+      <trajectory stride='1' filename='vel' format='xyz'> velocities </trajectory>
+   </output>
+   <prng>
+      <seed>32123</seed>
+   </prng>
+   <ffdirect name='driver' pbc="false">
+      <pes>metatomic</pes>
+      <parameters>{template:data/al110.xyz,model:pet-mad-latest.pt,device:cpu} </parameters>
+   </ffdirect>
+   <system>
+      <forces> 
+          <force forcefield='driver'></force>
+      </forces>
+      <initialize nbeads='1'>
+        <file mode='ase'> data/al110.xyz </file>
+        <velocities mode='thermal' units='kelvin'> 600 </velocities>
+      </initialize>
+      <motion mode='dynamics'>
+         <dynamics mode='nvt'>
+            <timestep units='femtosecond'> 64 </timestep>
+            <thermostat mode='ffl'><tau units='femtosecond'> 100 </tau></thermostat>
+         </dynamics>
+     </motion>
+     <ensemble>
+         <temperature units="kelvin">600</temperature>
+     </ensemble>
+  </system>
+</simulation>

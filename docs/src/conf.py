@@ -29,8 +29,9 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
     "python": ("https://docs.python.org/3", None),
-    "rascaline": ("https://luthaf.fr/rascaline/latest/", None),
+    "featomic": ("https://metatensor.github.io/featomic/latest/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+    "torchpme": ("https://lab-cosmo.github.io/torch-pme/latest/", None),
 }
 
 html_js_files = [
@@ -45,6 +46,10 @@ html_js_files = [
 
 htmlhelp_basename = "The Atomistic Cookbook"
 html_theme = "furo"
+html_theme_options = {
+    "top_of_page_buttons": [],
+}
+html_use_index = False
 html_static_path = ["_static"]
 html_favicon = "_static/cookbook-icon.png"
 html_logo = "_static/cookbook-icon.svg"
@@ -53,7 +58,7 @@ html_title = "The Atomistic Cookbook"
 # sitemap/SEO settings
 html_baseurl = "https://atomistic-cookbook.org/"
 version = ""
-relsease = ""
+release = ""
 sitemap_url_scheme = "{link}"
 html_extra_path = ["google4ae5e3529d19a84c.html", "robots.txt"]
 
@@ -70,7 +75,7 @@ def post_build_tweaks(app, exception):
 
     # adds custom urls to the sitemap
     custom_urls = [
-        {"loc": "https://atomistic-cookbook.org", "priority": 2.0},
+        {"loc": "https://atomistic-cookbook.org", "priority": 1.0},
     ]
 
     sitemap_file = os.path.join(build_folder, "sitemap.xml")
@@ -96,7 +101,55 @@ def post_build_tweaks(app, exception):
     # Replace the canonical URL (if it exists) with the desired URL
     new_content = content.replace(
         '<link rel="canonical" href="https://atomistic-cookbook.org/index.html" />',
-        '<link rel="canonical" href="https://atomistic-cookbook.org" />',
+        r"""
+    <link rel="canonical" href="https://atomistic-cookbook.org" />
+    <!-- Structured Data Markup -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "The Atomistic Cookbook",
+      "url": "https://atomistic-cookbook.org",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://atomistic-cookbook.org/search.html?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://atomistic-cookbook.org/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Recipes by Topic",
+          "item": "https://atomistic-cookbook.org/topics/index.html"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Recipes by Software Used",
+          "item": "https://atomistic-cookbook.org/software/index.html"
+        },
+        {
+          "@type": "ListItem",
+          "position": 4,
+          "name": "All recipes",
+          "item": "https://atomistic-cookbook.org/all-examples.html"
+        }
+      ]
+    }
+    </script>
+        """,
     )
 
     # Write the modified content back to index.html
@@ -108,3 +161,4 @@ def post_build_tweaks(app, exception):
 
 def setup(app):
     app.connect("build-finished", post_build_tweaks)
+    app.add_css_file("cookbook.css")

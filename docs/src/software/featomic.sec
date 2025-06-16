@@ -1,0 +1,21 @@
+featomic
+=========
+
+`featomic` is a library for the efficient computing of features for
+atomistic machine learning also called “representations”, 
+“descriptors” or “fingerprints”. These features
+can be used for atomistic machine learning (ML) models including
+ML potentials, visualization or similarity analysis. You can learn how to use it
+reading the `documentation <https://metatensor.github.io/featomic>`_, and get the latest
+version from the `github repository <https://github.com/metatensor/featomic>`_
+
+- examples/gaas-map/gaas-map
+- examples/lpr/lpr
+- examples/dos-align/dos-align
+- examples/lode-linear/lode-linear
+- examples/roy-gch/roy-gch
+- examples/sample-selection/sample-selection
+- examples/periodic-hamiltonian/periodic-hamiltonian
+- examples/rotate-equivariants/rotate-equivariants
+- examples/polarizability/polarizability
+- examples/learn-tensors-with-mcov/learn-tensors-with-mcov

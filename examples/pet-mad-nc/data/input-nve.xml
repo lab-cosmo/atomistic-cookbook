@@ -1,0 +1,36 @@
+<simulation verbosity="low"> 
+<output prefix="nve-c">
+    <properties stride="8" filename="out">
+		[step, time{picosecond}, conserved{electronvolt}, temperature{kelvin},
+        kinetic_md{electronvolt}, potential{electronvolt}, 
+        pot_component(0){electronvolt}
+		]
+    </properties>
+    <trajectory filename="pos" stride="16" format="ase"> positions </trajectory>
+    <trajectory filename="forces_c" stride="16" format="ase"> forces_component(0) </trajectory>
+    <checkpoint stride="1000"/>
+</output>
+<total_steps>32</total_steps>
+<prng><seed>12345</seed></prng>
+<ffdirect  name='cons' pbc="false">
+    <pes>metatomic</pes>
+    <parameters>{template:data/bmimcl.xyz,model:pet-mad-latest.pt,device:cpu,non_conservative:False} </parameters>
+</ffdirect>
+<system>
+    <initialize nbeads="1">
+        <file mode="ase"> data/bmimcl.xyz </file>
+        <velocities mode="thermal" units="kelvin"> 400.0 </velocities>
+    </initialize>
+    <forces>
+        <force forcefield="cons">
+        </force>
+    </forces>
+
+    <motion mode="dynamics">
+    	<dynamics mode="nve">
+        	<timestep units="femtosecond"> 0.5 </timestep>
+        </dynamics>
+    </motion>
+
+</system>
+</simulation>

@@ -1,32 +1,32 @@
+.. meta::
+   :description: Computational recipes for modeling matter at the atomic scale. 
+     Interactive guides that you can also run locally and use as templates for
+     your own simulations.
+   :keywords: Atomistic simulations, statistical mechanics, machine learning,
+     molecular dynamics, quantum chemistry, materials modeling, 
+     computational chemistry
+
 The Atomistic Cookbook
 ======================
 
-.. include:: ../../README.rst
-   :start-after: marker-intro-start
-   :end-before: marker-intro-end
+The cookbook contains recipes for atomic-scale modelling of materials and
+molecules, with a particular focus on machine learning and statistical
+sampling methods.
+Many of the examples rely heavily on software developed by the laboratory of
+computational science and modeling (COSMO, see its `github page
+<https://github.com/lab-cosmo>`_) but the cookbook is open for recipes using
+all types of modeling tools and techniques.
+Rather than focusing on the usage of a specific package, this cookbook provides
+examples of the solution of concrete modeling problems, often using a combination
+of several tools.
 
-Downloading and running the recipes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Each recipe can be viewed online as an interactive HTML page, but 
-can also be downloaded as a stand-alone ``.py`` script of 
-``.ipynb`` Jupyter notebook. 
-To simplify setting up an environment that contains all the dependencies
-needed for each recipe, you can also download an ``environment.yml`` file 
-that you can use with conda to create a custom environment to run the example.
-
-.. code-block:: bash
-
-   # Pick a name for the environment and replace <environment-name> with it
-   conda env create --name <environment-name> --file environment.yml
-
-   # when you want to use the environment
-   conda env activate --name <environment-name>
-
-Additional data needed for each example is usually either downloaded
-dynamically, or can be found in a ``data`` folder for each example,
-or downloaded as a ``data.zip`` file at the end of each recipe in
-the website.
+You can view the recipes online, compiled as webpages containing explanations,
+code snippets, plots and interactive viewers based on
+`chemiscope <https://chemiscope.org>`_. However, it is also possible (and
+hopefully simple) to download scripts, and `conda environments
+<https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html>`_,
+to run the recipe on your computer. You can use these as a starting point and
+a template that can be easily adapted to your own use case.
 
 Table of contents
 ~~~~~~~~~~~~~~~~~
@@ -37,6 +37,7 @@ Table of contents
    topics/index
    software/index
    all-examples
+   downloading
    contributing
    
 Recipe of the day
