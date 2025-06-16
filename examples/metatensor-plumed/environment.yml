@@ -6,6 +6,7 @@ dependencies:
   - pip
   - plumed-metatomic
   - py-plumed-metatomic
+  - matplotlib
   - pip:
     - ase
     - numpy

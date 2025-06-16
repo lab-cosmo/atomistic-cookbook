@@ -46,6 +46,7 @@ import ase.units
 #
 import chemiscope
 import featomic.torch
+import matplotlib.pyplot as plt
 import metatensor.torch as mts
 import metatomic.torch as mta
 import numpy as np
