@@ -8,10 +8,8 @@ TODO: introduction
 """
 
 import os
-
 from typing import Dict, List, Optional
 
-import ase.build
 import ase.calculators.lj
 import ase.calculators.plumed
 import ase.io
@@ -21,10 +19,10 @@ import ase.units
 
 #
 import chemiscope
+import featomic.torch
 import metatensor.torch as mts
 import metatomic.torch as mta
 import numpy as np
-import featomic.torch
 import torch
 
 
@@ -233,7 +231,7 @@ setup = [
         FILE=HILLS
     """,
     # prints out trajectory
-    """    
+    """
     PRINT ARG=cv.*,mtd.* STRIDE=10 FILE=COLVAR
     """,
     """
