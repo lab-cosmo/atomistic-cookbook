@@ -331,11 +331,123 @@ md = ase.md.langevin.Langevin(
     friction=1.0,
 )
 
-trajectory = []
+trajectory = [atoms.copy()]
 for _ in range(100):
     md.run(steps=10)
     trajectory.append(atoms.copy())
 
 
-# TODO: read the HILLS files & show the trajectory moving across the landscape
-chemiscope.show(trajectory, mode="structure", settings=settings)
+# %%
+# Static visualization
+# ---------------------------
+#
+# The dynamics on the free energy surface can be visualized using a static plot
+# as follows.
+#
+
+# time, cv1, cv2, mtd.bias
+colvar = np.loadtxt("COLVAR")
+cv1_traj = colvar[:, 1]
+cv2_traj = colvar[:, 2]
+
+# HILLS has the free energy surface
+# time, center_cv1, center_cv2, sigma_cv1, sigma_cv2, height
+hills = np.loadtxt("HILLS")
+
+# Visually pleasing grid for the FES based on the PLUMED input
+grid_min = [-2.5, -5]
+grid_max = [12, 20]
+grid_bins = [500, 500]
+grid_cv1 = np.linspace(grid_min[0], grid_max[0], grid_bins[0])
+grid_cv2 = np.linspace(grid_min[1], grid_max[1], grid_bins[1])
+X, Y = np.meshgrid(grid_cv1, grid_cv2)
+FES = np.zeros_like(X)
+
+# Sum over aussian hills to reconstruct the bias
+for hill in hills:
+    center_cv1, center_cv2 = hill[1], hill[2]
+    sigma_cv1, sigma_cv2 = hill[3], hill[4]
+    height = hill[5]
+
+    term1 = (X - center_cv1) ** 2 / (2 * sigma_cv1**2)
+    term2 = (Y - center_cv2) ** 2 / (2 * sigma_cv2**2)
+    FES += height * np.exp((-term1 + term2))
+
+# The free energy surface is the -ve of the summed bias potential
+# Shift for 0 minimum
+FES = -FES
+FES -= FES.min()
+
+# Prepare the plot
+plt.figure(figsize=(10, 7))
+contour = plt.contourf(X, Y, FES, levels=np.linspace(0, FES.max(), 25), cmap="viridis")
+plt.colorbar(contour, label="Free Energy (kJ/mol)")
+
+# Overlay the trajectory
+plt.plot(
+    cv1_traj, cv2_traj, color="white", alpha=0.7, linewidth=1.5, label="MD Trajectory"
+)
+
+# Mark the start and end points
+plt.scatter(
+    cv1_traj[0], cv2_traj[0], c="red", marker="X", s=150, zorder=3, label="Start"
+)
+plt.scatter(
+    cv1_traj[-1], cv2_traj[-1], c="cyan", marker="o", s=150, zorder=3, label="End"
+)
+
+plt.title("Free Energy Surface of LJ38 Cluster")
+plt.xlabel("Collective Variable 1 ($q_4$)")
+plt.ylabel("Collective Variable 2 ($q_6$)")
+plt.xlim(grid_min[0], grid_max[0])
+plt.ylim(grid_min[1], grid_max[1])
+plt.legend()
+plt.grid(True, linestyle="--", alpha=0.5)
+plt.show()
+
+
+# %%
+# Dynamic visualization
+# ---------------------------
+#
+# The structures with the on the free energy surface can be visualized using a static plot
+# as follows.
+#
+
+dyn_prop = {
+    "cv1": {
+        "target": "structure",
+        "values": cv1_traj,
+        "description": "Collective Variable 1 (q4)",
+    },
+    "cv2": {
+        "target": "structure",
+        "values": cv2_traj,
+        "description": "Collective Variable 2 (q6)",
+    },
+    "time": {
+        "target": "structure",
+        "values": time,
+        "description": "Simulation time",
+        "units": "ps",
+    },
+}
+
+# Configure the settings for the chemiscope visualization.
+dyn_settings = chemiscope.quick_settings(
+    x="cv1",
+    y="cv2",
+    color="time",
+    trajectory=True,
+    map_settings={
+        "x": {"max": 12, "min": -2.5},
+        "y": {"max": 20, "min": -5},
+    },
+)
+
+# Show the trajectory in an interactive chemiscope widget.
+chemiscope.show(
+    frames=trajectory,
+    properties=dyn_prop,
+    settings=dyn_settings,
+)
