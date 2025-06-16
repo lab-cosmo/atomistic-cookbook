@@ -21,7 +21,7 @@ structures. To do this, we will:
 1.  Define a set of **collective variables (CVs)** that can distinguish between
     the disordered (liquid-like) and ordered (solid-like) states of the
     cluster. We will use a custom CV based on **Steinhardt order parameters**
-    (:math:`Q_4` and :math:`Q_6`).
+    (:math:`Q_4` and :math:`Q_6`, a.k.a the bond-order parameters).
 2.  Implement this custom CV using `featomic`, `metatensor`, and `metatomic` to
     create a portable `metatomic` model.
 3.  Use the `PLUMED <https://www.plumed.org/>`_ package, integrated with the
@@ -282,14 +282,32 @@ setup = [
     """
     mtd: METAD
         ARG=cv1,cv2
-        HEIGHT=0.05       # Height of Gaussian hills in energy units
-        PACE=50           # Add a hill every 50 steps
-        SIGMA=1,2.5       # Width of Gaussians for both CVs
-        GRID_MIN=-20,-40  # Define the grid for free energy reconstruction
+    """,
+    # Height of Gaussian hills in energy units
+    """
+        HEIGHT=0.05
+    """,
+    # Add a hill every 50 steps
+    """
+        PACE=50
+    """,
+    # Width of Gaussians for both CVs
+    """
+        SIGMA=1,2.5
+    """,
+    # Define the grid for free energy reconstruction
+    """
+        GRID_MIN=-20,-40
         GRID_MAX=20,40
         GRID_BIN=500,500
-        BIASFACTOR=5      # Well-Tempered Metadynamics factor
-        FILE=HILLS        # File wor the history of the deposited hills
+    """,
+    # Well-Tempered Metadynamics factor
+    """
+        BIASFACTOR=5
+    """,
+    # File wor the history of the deposited hills
+    """
+        FILE=HILLS
     """,
     # prints out trajectory
     """    
