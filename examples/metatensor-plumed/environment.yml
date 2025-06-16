@@ -1,10 +1,11 @@
 channels:
+  - metatensor
   - conda-forge
 dependencies:
   - python=3.12
   - pip
-  - plumed
-  - py-plumed
+  - plumed-metatomic
+  - py-plumed-metatomic
   - pip:
     - ase
     - numpy
