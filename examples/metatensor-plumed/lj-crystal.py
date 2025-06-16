@@ -33,7 +33,6 @@ structures. To do this, we will:
 """
 
 import os
-
 from typing import Dict, List, Optional
 
 import ase.build
@@ -46,10 +45,10 @@ import ase.units
 
 #
 import chemiscope
+import featomic.torch
 import metatensor.torch as mts
 import metatomic.torch as mta
 import numpy as np
-import featomic.torch
 import torch
 
 
@@ -256,10 +255,16 @@ chemiscope.explore([minimal, other, atoms], featurize=featurizer)
 # instructs PLUMED on what to do during the simulation.
 # The input file consists of the following sections:
 # - `UNITS` : Specifies the energy and length units
-# - `METATOMIC` : Defines a collective variable which is essentially an exported metatomic model
-# - `SELECT_COMPONENTS` : Splits the model output :math:`Q_4` and :math:`Q_6` parameters to scalars
-# - `METAD` : sets up the metadynamics algorithm. It will add repulsive Gaussian potentials in the (`cv1`, `cv2`) space at regular intervals (`PACE`), discouraging the simulation from re-visiting conformations and pushing it over energy barriers
-# - `PRINT` : This tells PLUMED to write the values of our CVs and the metadynamics bias energy to a file named `COLVAR` for later analysis.
+# - `METATOMIC` : Defines a collective variable which is essentially
+#                 an exported metatomic model
+# - `SELECT_COMPONENTS` : Splits the model output :math:`Q_4`
+#                         and :math:`Q_6` parameters to scalars
+# - `METAD` : sets up the metadynamics algorithm. It will add repulsive Gaussian
+#             potentials in the (`cv1`, `cv2`) space at regular intervals (`PACE`),
+#             discouraging the simulation from re-visiting conformations and pushing it
+#             over energy barriers
+# - `PRINT` : This tells PLUMED to write the values of our CVs and the
+#             metadynamics bias energy to a file named `COLVAR` for later analysis.
 
 if os.path.exists("HILLS"):
     os.unlink("HILLS")
@@ -282,38 +287,19 @@ setup = [
     """
     mtd: METAD
         ARG=cv1,cv2
-    """,
-    # Height of Gaussian hills in energy units
-    """
         HEIGHT=0.05
-    """,
-    # Add a hill every 50 steps
-    """
         PACE=50
-    """,
-    # Width of Gaussians for both CVs
-    """
         SIGMA=1,2.5
-    """,
-    # Define the grid for free energy reconstruction
-    """
         GRID_MIN=-20,-40
         GRID_MAX=20,40
         GRID_BIN=500,500
-    """,
-    # Well-Tempered Metadynamics factor
-    """
         BIASFACTOR=5
-    """,
-    # File wor the history of the deposited hills
-    """
         FILE=HILLS
     """,
     # prints out trajectory
-    """    
+    """
     PRINT ARG=cv.*,mtd.* STRIDE=10 FILE=COLVAR
     """,
-    # Flush often
     """
     FLUSH STRIDE=1
     """,
