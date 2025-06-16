@@ -8,8 +8,6 @@ TODO: introduction
 """
 
 import os
-os.environ["PLUMED_KERNEL"] = os.path.join(os.environ["HOME"],"lavoro/source/plumed-conda-metatensor/src/lib/libplumedKernel.so")
-
 
 from typing import Dict, List, Optional
 
@@ -24,8 +22,9 @@ import ase.units
 #
 import chemiscope
 import metatensor.torch as mts
+import metatomic.torch as mta
 import numpy as np
-import rascaline.torch
+import featomic.torch
 import torch
 
 
@@ -89,15 +88,20 @@ class CollectiveVariable(torch.nn.Module):
         super().__init__()
 
         self.max_angular = max(angular_list)
-        # initialize and store the rascaline calculator inside the class
-        self.spex = rascaline.torch.SphericalExpansion(
-            cutoff=cutoff,
-            max_radial=4,
-            max_angular=self.max_angular,
-            atomic_gaussian_width=0.3,
-            radial_basis={"Gto": {}},
-            center_atom_weight=1.0,
-            cutoff_function={"ShiftedCosine": {"width": 0.5}},
+        # initialize and store the featomic calculator inside the class
+        self.spex = featomic.torch.SphericalExpansion(
+            **{
+                "cutoff": {
+                    "radius": 1.3,
+                    "smoothing": {"type": "ShiftedCosine", "width": 0.5},
+                },
+                "density": {"type": "Gaussian", "width": 0.3},
+                "basis": {
+                    "type": "TensorProduct",
+                    "max_angular": 6,
+                    "radial": {"type": "Gto", "max_radial": 3},
+                },
+            }
         )
         self.selected_keys = mts.Labels(
             "o3_lambda", torch.tensor(angular_list).reshape(-1, 1)
@@ -105,8 +109,8 @@ class CollectiveVariable(torch.nn.Module):
 
     def forward(
         self,
-        systems: List[mts.atomistic.System],
-        outputs: Dict[str, mts.atomistic.ModelOutput],
+        systems: List[mta.System],
+        outputs: Dict[str, mta.ModelOutput],
         selected_atoms: Optional[mts.Labels],
     ) -> Dict[str, mts.TensorMap]:
 
@@ -126,7 +130,7 @@ class CollectiveVariable(torch.nn.Module):
                 properties=self.selected_keys,
             )
             return {"features": mts.TensorMap(keys, [block])}
-        
+
         spex = mts.remove_dimension(spex, axis="keys", name="o3_sigma")
         spex = spex.keys_to_properties("neighbor_type")
         spex = spex.keys_to_samples("center_type")
@@ -165,11 +169,11 @@ cutoff = 1.3
 module = CollectiveVariable(cutoff, angular_list=[4, 6])
 
 # metatdata about the model itself
-metadata = mts.atomistic.ModelMetadata(name="TODO", description="TODO")
+metadata = mta.ModelMetadata(name="TODO", description="TODO")
 
 # metatdata about what the model can do
-outputs = {"features": mts.atomistic.ModelOutput(per_atom=False)}
-capabilities = mts.atomistic.ModelCapabilities(
+outputs = {"features": mta.ModelOutput(per_atom=False)}
+capabilities = mta.ModelCapabilities(
     outputs=outputs,
     atomic_types=[18],
     interaction_range=cutoff,
@@ -177,7 +181,7 @@ capabilities = mts.atomistic.ModelCapabilities(
     dtype="float64",
 )
 
-model = mts.atomistic.MetatensorAtomisticModel(
+model = mta.AtomisticModel(
     module=module.eval(),
     metadata=metadata,
     capabilities=capabilities,
@@ -188,7 +192,7 @@ model.save("custom-cv.pt", collect_extensions="./extensions/")
 
 # %%
 # optional: show how one can check how the model is doing without leaving Python
-featurizer = chemiscope.metatensor_featurizer(model)
+featurizer = chemiscope.metatomic_featurizer(model)
 # TODO: add settings once https://github.com/lab-cosmo/chemiscope/pull/378 is released
 chemiscope.explore([minimal, other, atoms], featurize=featurizer)
 
@@ -205,7 +209,7 @@ setup = [
     f"UNITS LENGTH=A ENERGY={ase.units.mol / ase.units.kJ}",
     # define a collective variables using metatensor
     """
-    cv: METATENSOR
+    cv: METATOMIC
         MODEL=custom-cv.pt
         EXTENSIONS_DIRECTORY=./extensions/
         SPECIES1=1-38
@@ -234,7 +238,7 @@ setup = [
     """,
     """
     FLUSH STRIDE=1
-    """
+    """,
 ]
 
 atoms.calc = ase.calculators.plumed.Plumed(
