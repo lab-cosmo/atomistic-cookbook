@@ -372,7 +372,7 @@ for hill in hills:
 
     term1 = (X - center_cv1) ** 2 / (2 * sigma_cv1**2)
     term2 = (Y - center_cv2) ** 2 / (2 * sigma_cv2**2)
-    FES += height * np.exp((-term1 + term2))
+    FES += height * np.exp(-(term1 + term2))
 
 # The free energy surface is the -ve of the summed bias potential
 # Shift for 0 minimum
