@@ -1,0 +1,9 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip 
+  - pip:
+    - ase==3.22.1
+    - spherical
+    - featomic

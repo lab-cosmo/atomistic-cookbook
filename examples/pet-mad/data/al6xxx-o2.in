@@ -1,0 +1,23 @@
+units metal  # Angstroms, eV, picoseconds 
+atom_style atomic
+read_data al6xxx-o2.data
+# loads pet-mad-model
+pair_style metatomic &
+    pet-mad-latest.pt &
+    device cpu &
+    extensions extensions/
+# define interactions between all atoms and maps the LAMMPS types to elements
+pair_coeff * *  13 12 8 14
+neighbor 2.0 bin
+timestep 0.005
+dump myDump all xyz 10 trajectory.xyz
+dump_modify myDump element Al Mg O Si
+thermo_style multi
+thermo 1
+velocity all create 800 87287 mom yes rot yes
+fix 1 all nvt temp 800 800 0.10
+# fix 2 all atom/swap 1 1 12345 800 types 1 2
+# fix 2 all atom/swap 1 1 12345 800 types 1 3
+# fix 2 all atom/swap 1 1 12345 800 types 1 4
+run 80
+

@@ -13,17 +13,33 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     outputs:
-      examplesmatrix: ${{ steps.collectExamples.outputs.examplesjson }}
+      examplesmatrix: ${{ steps.gatherInfo.outputs.examplesjson }}
+      latest_docs_run: ${{ steps.gatherInfo.outputs.latest_docs_run }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The checkout by default doesn't fetch any history, but for PR
+          # we want to check which files have been modified.
+          # The action actions/checkout@v4 squashes the history of the PR, 
+          # into a single commit so we need to fetch with a depth of 2.
+          fetch-depth: ${{ github.event_name == 'pull_request' && 2 || 0 }}
 
-      - id: collectExamples
+      - id: gatherInfo
+        # Collect the examples that need to be run, and the id of the latest
+        # workflow run on the main branch.
         run: |
-          echo examplesjson=$(./src/get_examples.py) >> $GITHUB_OUTPUT
+          GET_EXAMPLES_ARGS=""
+          if ${{ github.event_name == 'pull_request' }}; then
+            GET_EXAMPLES_ARGS=" --modified-files $(git diff --name-only -r HEAD^1 HEAD)"
+          fi
+          echo examplesjson=$(./src/get_examples.py ${GET_EXAMPLES_ARGS}) >> $GITHUB_OUTPUT
+          echo latest_docs_run=$(./src/latest_docs_run.py id) >> $GITHUB_OUTPUT
 
   generate-example:
     needs: setup
     runs-on: ubuntu-latest
+    # Handle the case where there are no examples to run.
+    if: ${{ needs.setup.outputs.examplesmatrix != ''}}
     strategy:
       matrix:
         ${{ fromJson(needs.setup.outputs.examplesmatrix) }}
@@ -50,7 +66,10 @@ jobs:
           overwrite: true  # only keep the latest version of the example
 
   build-and-publish:
-    needs: generate-example
+    # Run this job even if the generate-example job was skipped due to
+    # no examples to run. I.e. only avoid if generate-example failed.
+    if: ${{ always() && needs.generate-example.result != 'failure' }}
+    needs: [setup, generate-example]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -63,7 +82,17 @@ jobs:
       - name: install dependencies
         run: python -m pip install nox docutils
 
-      - name: load github artifact for each example
+      - name: Download latest main branch built examples
+        uses: actions/download-artifact@v4
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          path: docs/src/examples
+          pattern: example-*
+          github-token: ${{ secrets.GH_READ_TOKEN }}
+          run-id: ${{ needs.setup.outputs.latest_docs_run }}
+          merge-multiple: true
+
+      - name: Overwrite examples with the ones built in this run
         uses: actions/download-artifact@v4
         with:
           path: docs/src/examples
@@ -97,3 +126,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./gh-pages/
           force_orphan: true
+          cname: atomistic-cookbook.org  

@@ -1,0 +1,18 @@
+metatensor
+==========
+
+`Metatensor <http://docs.metatensor.org/>`_
+is a library providing a cross-platform data interchange API
+for atomistic simulation and beyond. It also powers 
+``metatomic`` -- an API to define atomistic models that can be
+used to run simulations using several different atomistic 
+simulation packages and ``metatrain`` a set of tools to facilitate
+training and evaluating ML models.
+
+- examples/water-model/water-model
+- examples/polarizability/polarizability
+- examples/learn-tensors-with-mcov/learn-tensors-with-mcov
+- examples/pet-mad/pet-mad
+- examples/pet-mad-nc/pet-mad-nc
+- examples/flashmd/flashmd-demo
+- examples/hamiltonian-qm7/hamiltonian-qm7

@@ -3,11 +3,10 @@ channels:
 dependencies:
   - python=3.11
   - pip
-  - rust > 1.65
   - pip:
     - ase==3.22.1
     - matplotlib
-    - rascaline @ git+https://github.com/Luthaf/rascaline@ca957642f512e141c7570e987aadc05c7ac71983
+    - featomic
     - torch
     - scipy
     - numpy

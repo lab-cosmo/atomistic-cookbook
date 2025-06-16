@@ -3,21 +3,26 @@ Contributing
 
 .. marker-contrib-start
 
-Contributions are welcome, and they are greatly appreciated! Every little bit
-helps, and credit will always be given. To ensure that your contributions
-fit within the scope and the general style of the cookbook, please read
-the guidelines below.
+Contributions are welcome, and they are greatly appreciated, even it they
+are just reporting bugs in one of the existing recipes. Please use github
+to report errors and submit contributions, as this helps with making your
+work visible and giving you credit.
+If you intend to submit a new recipe, please read
+the guidelines below to ensure that your contributions
+fit within the scope and the general style of the cookbook.
 
 Requirements for new contributions
 ----------------------------------
 
-All code included in this repository is executed in each pull request. This
-ensures that the code in this repository stays executable for a longer time
+All code included in the `cookbook repository
+<https://github.com/lab-cosmo/atomistic-cookbook>`_
+is executed in each pull request. This
+ensures that the code in remains compatible and executable for a longer time
 frame. Because of that we do not want to have examples with heavy calculations
 that require more than a couple of minutes to execute.
 If you are unsure whether a contribution is suitable, or if you want to
-discuss how to structure your recipe, feel free to open an issue on the
-`github repository <https://github.com/lab-cosmo/atomistic-cookbook>`_.
+discuss how to structure your recipe, feel free to
+`open an issue <https://github.com/lab-cosmo/atomistic-cookbook/issues>`_.
 
 Adding a new recipe
 -------------------
@@ -38,6 +43,28 @@ following files inside:
 - as many Python files as you want, each one will be converted to a separate
   HTML page.
 
+Example dependencies
+~~~~~~~~~~~~~~~~~~~~
+
+The Python ecosystem moves fast and breaks things. Examples should always
+be able to run in the CI system to generate webpages, and it's best for
+users if they also work out-of-the-box when downloaded. For these reasons,
+we recommend constraining the package version in the environment file.
+At the same time, it's best to run on updated versions that might contain
+important bugfixes. We recommend using semantic versioning to achieve
+this, e.g. indicating the version known to work and the next major update
+
+.. code-block:: yaml
+
+   - my-package >=1.3.1,<2.0
+
+This way if the example breaks further down the line it is easy to
+bring it back to a working state converting these to strict pinnings,
+yet most harmless updates will be applied automatically.
+
+Data files
+~~~~~~~~~~
+
 Keep in mind that sphinx-gallery will make it easy to download a Python file and
 the notebook generated from it, but it won't give direct access to additional
 files. If your example needs such data files, there are a few options available:
@@ -47,6 +74,14 @@ files. If your example needs such data files, there are a few options available:
 - if the data files are small (few 10s of Kb) you may also include them in a
   ``data/`` folder within the example folder. A zip file will be generated that
   can be downloaded from the example page.
+
+Thematic listings
+~~~~~~~~~~~~~~~~~
+
+Each new recipe will be automatically added to the list of new recipes, but
+you should also add it to the relevant software and topical sections. To do
+so, edit the appropriate ``.sec`` file within ``docs/src/software`` and
+``docs/src/topics``.
 
 .. _sphinx-gallery: https://sphinx-gallery.github.io/
 .. _RestructuredText: https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
@@ -113,6 +148,14 @@ You can also build all examples (warning, this will take quite some time) with:
 
     nox -e docs
 
+Alternatively, you can download the executed examples from the latest CI build:
+
+.. code-block:: bash
+
+    python src/latest_docs_run.py download-examples
+
+You can select which examples to download. Use ``--help`` to see the available options.
+
 .. _nox: https://nox.thea.codes/
 
 Chemiscope widgets
@@ -131,8 +174,6 @@ Support
 
 If you still have problems adding your example to the repository, please feel
 free to contact one of the developers, e.g.
-
-`@agoscinski (Alexander Goscinski) <alexander.goscinski@epfl.ch>`_
 
 `@davidetisi (Davide Tisi) <davide.tisi@epfl.ch>`_
 
