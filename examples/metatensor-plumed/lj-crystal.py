@@ -243,8 +243,7 @@ model.save("custom-cv.pt", collect_extensions="./extensions/")
 # initial structures. This is a great way to verify that the CVs produce
 # different values for the different structures.
 featurizer = chemiscope.metatomic_featurizer(model)
-# TODO: add settings once https://github.com/lab-cosmo/chemiscope/pull/378 is released
-chemiscope.explore([minimal, other, atoms], featurize=featurizer)
+chemiscope.explore([minimal, other, atoms], featurize=featurizer, settings=settings)
 
 # %%
 #
