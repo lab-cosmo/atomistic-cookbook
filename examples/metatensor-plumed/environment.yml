@@ -2,7 +2,7 @@ channels:
   - metatensor
   - conda-forge
 dependencies:
-  - python=3.12
+  - python=3.13
   - pip
   - plumed-metatomic
   - py-plumed-metatomic
@@ -11,6 +11,6 @@ dependencies:
     - numpy
     - chemiscope
     - metatensor[torch]
-    - rascaline-torch @ git+https://github.com/Luthaf/rascaline@b14477f#subdirectory=python/rascaline-torch
+    - featomic-torch
 variables:
   PLUMED_KERNEL:
