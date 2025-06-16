@@ -1,15 +1,42 @@
-r"""
-Using machine learning collective variables in PLUMED with metatensor
-=====================================================================
+# -*- coding: utf-8 -*-
+"""
+Exploring the Lennard-Jones 38 Cluster with Metadynamics
+=========================================================
 
-:Authors: Guillaume Fraux `@Luthaf <https://github.com/luthaf/>`_
+:Authors: Guillaume Fraux `@Luthaf <https://github.com/luthaf/>`_;
+          Rohit Goswami `@HaoZeke <https://github.com/haozeke/>`_;
+          Michele Ceriotti `@ceriottim <https://github.com/ceriottim/>`_
 
-TODO: introduction
+We shall demonstrate the usage of the metatensor ecosystem within enhanced
+sampling techniques, specifically by running **metadynamics**, to explore the
+complex potential energy surface (PES) of a 38-atom Lennard-Jones (LJ) cluster.
+The LJ38 cluster is a classic benchmark system because its global minimum energy
+structure is a truncated octahedron with :math:`O_h` symmetry, which is
+difficult to find with simple optimization methods. The PES has a multi-funnel
+landscape, meaning the system can easily get trapped in local minima.
+
+Our goal is progressively transition from a random configuration to the low-energy
+structures. To do this, we will:
+
+1.  Define a set of **collective variables (CVs)** that can distinguish between
+    the disordered (liquid-like) and ordered (solid-like) states of the
+    cluster. We will use a custom CV based on **Steinhardt order parameters**
+    (:math:`Q_4` and :math:`Q_6`).
+2.  Implement this custom CV using `featomic`, `metatensor`, and `metatomic` to
+    create a portable `metatomic` model.
+3.  Use the `PLUMED <https://www.plumed.org/>`_ package, integrated with the
+    `Atomic Simulation Environment (ASE) <https://wiki.fysik.dtu.dk/ase/>`_, to
+    run a metadynamics simulation.
+4.  Analyze the results to visualize the free energy surface and run
+    trajectories with LAMMPS of the system as it explores different
+    configurations.
 """
 
 import os
+
 from typing import Dict, List, Optional
 
+import ase.build
 import ase.calculators.lj
 import ase.calculators.plumed
 import ase.io
@@ -19,23 +46,22 @@ import ase.units
 
 #
 import chemiscope
-import featomic.torch
 import metatensor.torch as mts
 import metatomic.torch as mta
 import numpy as np
+import featomic.torch
 import torch
 
 
 # %%
+# Simulation Starting Point: Random Structure w/ Energy Minimized
+# ---------------------------------------------------------------
 #
-# TODO: introduction
-#
-
-
-# %%
-#
-# TODO: simulation starting point: random structure /w energy minimized
-#
+# We start with a random cloud of 38 Argon atoms. To get a more reasonable
+# starting point for our MD simulation, we'll perform a quick energy
+# minimization using the FIRE optimizer. This relaxes the structure into a
+# nearby local minimum, mitigating artificial effects from an unphysical
+# randomized structure.
 
 np.random.seed(0xDEADBEEF)
 atoms = ase.Atoms(
@@ -52,9 +78,13 @@ optimizer = ase.optimize.FIRE(atoms)
 optimizer.run(fmax=0.8)
 
 # %%
+# The Target Structures
+# ---------------------
 #
-# TODO: where we want to go
-#
+# The two most famous structures for LJ38 are the global minimum (a perfect
+# truncated octahedron) and a lower-symmetry icosahedral structure which is a
+# deep local minimum. Let's load them and visualize all three (our starting
+# structure and the two targets) using `chemiscope`.
 
 minimal = ase.io.read("lj-oct-0k.xyz")
 # FIXME: this does not look like the "other" stable structure
@@ -65,20 +95,34 @@ chemiscope.show([minimal, other, atoms], mode="structure", settings=settings)
 
 
 # %%
-#
 # Defining our custom collective variable
 # ---------------------------------------
 #
-
-
-# TODO: build the code below step by step, explaining what's going on
+# To distinguish between the liquid-like state and the highly ordered
+# face-centered cubic (FCC) packing of the global minimum, we use **Steinhardt
+# order parameters**, specifically :math:`Q_4` and :math:`Q_6`. These parameters
+# are rotationally invariant and measure the local orientational symmetry around
+# each atom.
+#
+# - :math:`Q_6` is often high for both icosahedral and FCC-like structures,
+#   making it a good measure of general "solidness".
+# - :math:`Q_4` helps to distinguish between different crystal packing types. It
+#   is close to zero for icosahedral structures but has a distinct non-zero value
+#   for FCC structures.
+#
+# We will build a model that calculates global, system-averaged versions of these
+# parameters.
 
 
 # %%
 #
-# We can now put everything together in a single class. This class must follow the
-# required interface, as defined in [TODO link].
+# Encapsulating the Logic in a ``torch.nn.Module``
+# '''''''''''''''''''''''''''''''''''''''''''''''''
 #
+# To make this CV usable by PLUMED via the ``METATOMIC`` interface, we must wrap
+# our calculation logic in a ``torch.nn.Module``. This class takes a list of
+# atomic systems and returns a `metatensor.TensorMap` containing the calculated
+# CV values. The interface is defined in [TODO link].
 
 
 class CollectiveVariable(torch.nn.Module):
@@ -155,6 +199,9 @@ class CollectiveVariable(torch.nn.Module):
 
 # %%
 #
+# Exporting the Model
+# '''''''''''''''''''
+#
 # Once we have defined our custom model, we can now annotate it with multiple metadata
 # and export it to the disk. The resulting model file and extensions directory can then
 # be loaded by PLUMED and other, without requiring a Python installation (for example on
@@ -189,7 +236,13 @@ model = mta.AtomisticModel(
 model.save("custom-cv.pt", collect_extensions="./extensions/")
 
 # %%
-# optional: show how one can check how the model is doing without leaving Python
+# Optional: Test the Model in Python
+# ''''''''''''''''''''''''''''''''''
+#
+# Before running the full simulation, we can use ``chemiscope``'s
+# ``metatomic_featurizer`` to quickly check the output of our model on our
+# initial structures. This is a great way to verify that the CVs produce
+# different values for the different structures.
 featurizer = chemiscope.metatomic_featurizer(model)
 # TODO: add settings once https://github.com/lab-cosmo/chemiscope/pull/378 is released
 chemiscope.explore([minimal, other, atoms], featurize=featurizer)
@@ -199,6 +252,14 @@ chemiscope.explore([minimal, other, atoms], featurize=featurizer)
 # Using the model to run metadynamics with PLUMED
 # -----------------------------------------------
 #
+# With our model saved, we can now write the PLUMED input file. This file
+# instructs PLUMED on what to do during the simulation.
+# The input file consists of the following sections:
+# - `UNITS` : Specifies the energy and length units
+# - `METATOMIC` : Defines a collective variable which is essentially an exported metatomic model
+# - `SELECT_COMPONENTS` : Splits the model output :math:`Q_4` and :math:`Q_6` parameters to scalars
+# - `METAD` : sets up the metadynamics algorithm. It will add repulsive Gaussian potentials in the (`cv1`, `cv2`) space at regular intervals (`PACE`), discouraging the simulation from re-visiting conformations and pushing it over energy barriers
+# - `PRINT` : This tells PLUMED to write the values of our CVs and the metadynamics bias energy to a file named `COLVAR` for later analysis.
 
 if os.path.exists("HILLS"):
     os.unlink("HILLS")
@@ -213,32 +274,43 @@ setup = [
         SPECIES1=1-38
         SPECIES_TO_TYPES=18
     """,
-    # extract the different components from METATENSOR output into scalar
-    # (METAD only accepts scalars, and METATENSOR output is a vector here)
+    # extract the different components from the METATOMIC output into scalars
+    # (METAD only accepts scalars, and METATOMIC output is a vector here)
     "cv1: SELECT_COMPONENTS ARG=cv COMPONENTS=1",
     "cv2: SELECT_COMPONENTS ARG=cv COMPONENTS=2",
     # run metadynamics with this collective variable
     """
     mtd: METAD
         ARG=cv1,cv2
-        HEIGHT=0.05
-        PACE=50
-        SIGMA=1,2.5
-        GRID_MIN=-20,-40
+        HEIGHT=0.05       # Height of Gaussian hills in energy units
+        PACE=50           # Add a hill every 50 steps
+        SIGMA=1,2.5       # Width of Gaussians for both CVs
+        GRID_MIN=-20,-40  # Define the grid for free energy reconstruction
         GRID_MAX=20,40
         GRID_BIN=500,500
-        BIASFACTOR=5
-        FILE=HILLS
+        BIASFACTOR=5      # Well-Tempered Metadynamics factor
+        FILE=HILLS        # File wor the history of the deposited hills
     """,
     # prints out trajectory
-    """
+    """    
     PRINT ARG=cv.*,mtd.* STRIDE=10 FILE=COLVAR
     """,
+    # Flush often
     """
     FLUSH STRIDE=1
     """,
 ]
 
+# %%
+# Running dynamics I - `ase`
+# ---------------------------
+#
+# The easiest way to generate a trajectory is to leverage `ase`. In subsequent
+# sections we will use LAMMPS, as a more production worthy and correct molecular
+# dynamics engine.
+#
+
+# Create the Plumed calculator, which wraps the LJ potential
 atoms.calc = ase.calculators.plumed.Plumed(
     calc=lj_potential,
     input=setup,
