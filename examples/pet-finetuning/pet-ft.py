@@ -13,7 +13,7 @@ machine-learning forcefield trained on a dataset that aims to incorporate a very
 degree of structural diversity.
 
 The point-edge transformer (PET) is an unconstrained architecture that achieves a high
-degree of symmetry compliance through data augmentation during training (see the 
+degree of symmetry compliance through data augmentation during training (see the
 `PET paper
 <https://proceedings.neurips.cc/paper_files/paper/2023/file/fb4a7e3522363907b26a86cc5be627ac-Paper-Conference.pdf>`_
 for more details). The unconstrained nature of the model simplifies its implementation
