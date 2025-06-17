@@ -3,8 +3,8 @@ Fine-tuning the PET-MAD universal potential
 ===========================================
 
 :Authors: Davide Tisi `@DavideTisi <https://github.com/DavideTisi>`_,
-          Zhiyi Wang `@ceriottm <https://github.com/ceriottm>`_,
-          Cesare Malosso `@abmazitov <https://github.com/abmazitov>`_
+          Zhiyi Wang `@0WellyWang0 <https://github.com/0WellyWang0>`_,
+          Cesare Malosso `@cesaremalosso <https://github.com/cesaremalosso>`_
 
 This example demonstrates how to finetune the PET-MAD model with metatrain,
 `metatrain <https://github.com/metatensor/metatrain>`_.
