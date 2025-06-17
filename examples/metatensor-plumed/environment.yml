@@ -11,7 +11,9 @@ dependencies:
     - ase
     - numpy
     - chemiscope
+    - torch
     - metatensor[torch]
     - featomic-torch
 variables:
+  PIP_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
   PLUMED_KERNEL:
