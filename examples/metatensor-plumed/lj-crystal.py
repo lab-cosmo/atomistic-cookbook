@@ -348,7 +348,7 @@ for _ in range(100):
 
 # time, cv1, cv2, mtd.bias
 colvar = np.loadtxt("COLVAR")
-time = colvar[:,  0]
+time = colvar[:, 0]
 cv1_traj = colvar[:, 1]
 cv2_traj = colvar[:, 2]
 
@@ -412,8 +412,8 @@ plt.show()
 # Dynamic visualization
 # ---------------------------
 #
-# The structures with the on the free energy surface can be visualized using a static plot
-# as follows.
+# The structures with the on the free energy surface can
+# be visualized using a static plot as follows.
 #
 
 dyn_prop = {
