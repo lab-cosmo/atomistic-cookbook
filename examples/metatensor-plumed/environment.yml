@@ -6,9 +6,10 @@ dependencies:
   - pip
   - plumed-metatomic
   - py-plumed-metatomic
-  - pytorch * cpu*
   - matplotlib
   - pip:
+    - --extra-index-url https://download.pytorch.org/whl/cpu
+    - torch
     - ase
     - numpy
     - chemiscope
