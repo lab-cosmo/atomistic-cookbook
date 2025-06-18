@@ -339,6 +339,94 @@ for _ in range(100):
 
 
 # %%
+# Running dynamics II - `lammps`
+# ---------------------------
+#
+# LAMMPS is easily amongst the most robust molecular dynamics engine.
+#
+
+plumed_inp = f"""
+UNITS LENGTH=A ENERGY={ase.units.mol / ase.units.kJ}
+cv: METATOMIC ...
+    MODEL=custom-cv.pt
+    EXTENSIONS_DIRECTORY=./extensions/
+    SPECIES1=1-38
+    SPECIES_TO_TYPES=18
+...
+cv1: SELECT_COMPONENTS ARG=cv COMPONENTS=1
+cv2: SELECT_COMPONENTS ARG=cv COMPONENTS=2
+mtd: METAD ...
+    ARG=cv1,cv2
+    HEIGHT=0.05
+    PACE=50
+    SIGMA=1,2.5
+    GRID_MIN=-20,-40
+    GRID_MAX=20,40
+    GRID_BIN=500,500
+    BIASFACTOR=5
+    FILE=HILLS
+    TEMP=300
+...
+PRINT ARG=cv.*,mtd.* STRIDE=10 FILE=COLVAR
+FLUSH STRIDE=1
+"""
+
+with open("plumed.dat", "w") as fname:
+    fname.write(plumed_inp)
+
+atoms.set_atomic_numbers([1] * len(atoms))
+atoms.set_masses([1.0] * len(atoms))
+ase.io.write("structure.data", atoms, format="lammps-data")
+
+# Get LJ parameters from the ASE calculator using the default for 'Ar'
+lj_sigma = 3.405  # Angstrom
+lj_epsilon = 0.010323  # eV
+lj_cutoff = 2.5
+# Simulation parameters
+timestep = 0.01  # in ps
+n_steps = 1000  # 100 iterations * 10 steps/iter
+temperature = 0.1  # in eV (kT in ASE)
+# The LAMMPS damp parameter is a damping time. In ASE, friction = 1.0
+langevin_damp = 1.0  # in ps
+
+lammps_in = f"""
+# LAMMPS input script for Metadynamics of LJ38 cluster
+
+# -- Initialization --
+units           metal
+atom_style      atomic
+boundary        p p p
+read_data       structure.data
+
+# -- Potential --
+# All atoms are type 1
+pair_style      lj/cut {lj_cutoff}
+pair_coeff      1 1 {lj_epsilon} {lj_sigma} {lj_cutoff}
+mass            1 1.0
+
+# -- Plumed integration --
+fix             1 all plumed plumedfile plumed.dat outfile plumed.out
+
+# -- NVT Dynamics (Langevin Thermostat) --
+velocity        all create {temperature} 8675309 dist gaussian
+fix             2 all nve
+fix             3 all langevin {temperature} {temperature} {langevin_damp} 1995
+
+# -- Simulation run --
+timestep        {timestep}
+thermo          100
+dump            1 all xyz 10 traj.xyz
+run             {n_steps}
+"""
+
+with open("lammps.in", "w") as f:
+    f.write(lammps_in)
+
+subprocess.run(["lmp", "-in", "lammps.in"], check=True, capture_output=True, text=True)
+trajectory = [atoms.copy()]
+trajectory.append(ase.io.read("traj.xyz", index=":"))
+
+# %%
 # Static visualization
 # ---------------------------
 #
