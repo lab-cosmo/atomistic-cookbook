@@ -6,6 +6,7 @@ dependencies:
   - pip
   - plumed-metatomic
   - py-plumed-metatomic
+  - lammps-metatomic
   - matplotlib
   - pip:
     - --extra-index-url https://download.pytorch.org/whl/cpu
