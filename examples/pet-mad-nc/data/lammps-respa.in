@@ -1,0 +1,30 @@
+units metal
+
+atom_style atomic
+
+read_data data/bmimcl.data
+
+mass 1 12.011
+mass 2 35.453
+mass 3 1.00784
+mass 4 14.0067
+
+pair_style hybrid/overlay metatomic_1 pet-mad-latest.pt device cpu non_conservative on scale 1.0 metatomic_2 pet-mad-latest.pt device cpu non_conservative on scale -1.0 metatomic_3 pet-mad-latest.pt device cpu non_conservative off scale 1.0
+pair_coeff * * metatomic_1 6 17 1 7
+pair_coeff * * metatomic_2 6 17 1 7
+pair_coeff * * metatomic_3 6 17 1 7
+
+# 2 RESPA levels, with step sizes a factor of 8 apart
+# the components of the hybrid/overlay pair_style are assigned respectively to levels 1 (innermost), 2, 2
+run_style respa 2 8 hybrid 1 2 2
+
+neighbor 2.0 bin
+timestep 0.004
+
+thermo 1
+
+velocity all create 300 87287 mom yes rot yes
+
+fix 1 all nve
+
+run 2

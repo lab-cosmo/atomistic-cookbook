@@ -1,6 +1,6 @@
 """
 Computing NMR shielding tensors using ShiftML
-=============================================
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 :Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm/>`_
 

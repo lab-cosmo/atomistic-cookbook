@@ -33,7 +33,9 @@ and conservative MD.
 #     pip install pet-mad
 #
 
+import linecache
 import os
+import subprocess
 import time
 
 import ase.io
@@ -89,7 +91,7 @@ calculator = mta.ase_calculator.MetatomicCalculator(model_filename, device="cpu"
 #
 # .. math ::
 #
-#    \mathbf{f}_i = \partial V/\partial \mathbf{r}_i
+#    \mathbf{f}_i = -\partial V/\partial \mathbf{r}_i
 #
 # Even though the early ML-based interatomic potentials followed this route,
 # computing forces directly as a function of the atomic coordinates,
@@ -111,11 +113,15 @@ calculator_nc = mta.ase_calculator.MetatomicCalculator(
 
 structure.calc = calculator_nc
 energy_nc = structure.get_potential_energy()
-# forces_nc = structure.get_forces() # temporarily broken
+forces_nc = structure.get_forces()
 
 # %%
 
 print(f"Energy:\n  Conservative: {energy_c:.8}\n  Non-conserv.: {energy_nc:.8}")
+print(
+    f"Force sample (atom 0):\n  Conservative: {forces_c[0]}\n"
+    + f"  Non-conserv.: {forces_nc[0]}"
+)
 
 # %%
 #
@@ -349,4 +355,66 @@ chemiscope.show(
         "description": "Initial configuration kindly provided "
         + " by Moritz Schaefer and Fabian Zills",
     },
+)
+
+# %%
+# LAMMPS implementation
+# ^^^^^^^^^^^^^^^^^^^^^
+# The speedup of the MTS approach with direct forces can also be
+# exploited in LAMMPS. We only show minimal examples running for a
+# few steps to keep the execution time short, but the same approach
+# can be used for realistic simulations. Keep in mind that in order
+# to accelerate the simulation, you should change the `cpu` device
+# to `cuda` in the LAMMPS input file when running on a GPU system.
+
+# %%
+# We first launch conservative and non-conservative trajectories for
+# reference. These use the `metatomic` interface to LAMMPS (whhich
+# requires a custom LAMMPS build, available through the `metatensor`
+# conda forge). See also `the metatomic documentation
+# <https://docs.metatensor.org/metatomic/latest/engines/lammps.html>`_
+# for installation instructions.
+
+print(linecache.getline("data/lammps-c.in", 12).strip())
+
+time_lammps_c = -time.time()
+subprocess.run(["lmp", "-in", "data/lammps-c.in"])
+time_lammps_c += time.time()
+
+# %%
+# In order to get the non-conservative forces, we just need to
+# specify the ``non_conservative on`` flag in the LAMMPS input file.
+
+print(linecache.getline("data/lammps-nc.in", 12).strip())
+
+time_lammps_nc = -time.time()
+subprocess.run(["lmp", "-in", "data/lammps-nc.in"])
+time_lammps_nc += time.time()
+
+# %%
+# The multiple time stepping integrator can be implemented in lammps
+# using a ``pair_style hybrid/overlay``, providing multiple
+# ``metatomic_X`` pair styles - one for the fast forces, one for
+# the slow force and one for the correction.
+
+for lineno in [12, 13, 14, 15, 19, 22]:
+    print(linecache.getline("data/lammps-respa.in", lineno).strip())
+
+time_lammps_mts = -time.time()
+subprocess.run(["lmp", "-in", "data/lammps-respa.in"])
+time_lammps_mts += time.time()
+
+# %%
+# The timings for the three LAMMPS simulations are as follows.
+# Note that while i-PI reuses the fast force for the correction in the
+# outer loop, with the current implementation LAMMPS requires a separate
+# pair style, which reduces the MTS speedup slightly.
+
+print(
+    f"""
+Time per 0.5fs step in LAMMPS:
+Conservative forces: {time_lammps_c/16:.4f} s/step
+Direct forces:       {time_lammps_nc/16:.4f} s/step
+MTS (M=8):           {time_lammps_mts/16:.4f} s/step
+"""
 )
