@@ -172,6 +172,7 @@ class CollectiveVariable(torch.nn.Module):
             }
         )
         self.selected_keys = mts.Labels(
+            # These represent the degree of the spherical harmonics
             "o3_lambda", torch.tensor(angular_list).reshape(-1, 1)
         )
 
