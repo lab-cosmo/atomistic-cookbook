@@ -23,4 +23,4 @@ velocity all create 300 87287 mom yes rot yes
 
 fix 1 all nve
 
-run 200
+run 16
