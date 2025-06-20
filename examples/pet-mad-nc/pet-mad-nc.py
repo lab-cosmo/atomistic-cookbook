@@ -34,6 +34,7 @@ and conservative MD.
 #
 
 import os
+import subprocess
 import time
 
 import ase.io
@@ -357,8 +358,6 @@ chemiscope.show(
 
 # %%
 # The speedup of the MTS approach with direct forces can also be leveraged in LAMMPS.
-
-import subprocess
 
 
 subprocess.run("lmp -in data/lammps-c.in")
