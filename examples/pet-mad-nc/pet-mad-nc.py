@@ -360,8 +360,8 @@ chemiscope.show(
 # The speedup of the MTS approach with direct forces can also be leveraged in LAMMPS.
 
 
-subprocess.run("lmp -in data/lammps-c.in")
-subprocess.run("lmp -in data/lammps-nc.in")
-subprocess.run("lmp -in data/lammps-respa.in")
+subprocess.run(["lmp", "-in", "data/lammps-c.in"])
+subprocess.run(["lmp", "-in", "data/lammps-c.in"])
+subprocess.run(["lmp", "-in", "data/lammps-c.in"])
 
 # don't forget to mention that cpu needs to be changed to cuda for better performance!
