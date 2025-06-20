@@ -35,6 +35,7 @@ structures. To do this, we will:
 
 import os
 from typing import Dict, List, Optional
+import subprocess
 
 import ase.build
 import ase.calculators.lj
