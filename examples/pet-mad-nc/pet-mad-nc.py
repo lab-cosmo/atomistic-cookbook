@@ -395,10 +395,7 @@ time_lammps_nc += time.time()
 # The multiple time stepping integrator can be implemented in lammps
 # using a ``pair_style hybrid/overlay``, providing multiple
 # ``metatomic_X`` pair styles - one for the fast forces, one for
-# the slow force and one for the correction. Note that while
-# i-PI reuses the fast force for the correction in the outer loop,
-# with the current implementation LAMMPS requires a separate pair style,
-# which reduces the MTS speedup slightly.
+# the slow force and one for the correction.
 
 for lineno in [12, 13, 14, 15, 19, 22]:
     print(linecache.getline("data/lammps-respa.in", lineno).strip())
@@ -408,7 +405,11 @@ subprocess.run(["lmp", "-in", "data/lammps-respa.in"])
 time_lammps_mts += time.time()
 
 # %%
-# The timings for the three LAMMPS simulations are as follows:
+# The timings for the three LAMMPS simulations are as follows.
+# Note that while i-PI reuses the fast force for the correction in the
+# outer loop, with the current implementation LAMMPS requires a separate
+# pair style, which reduces the MTS speedup slightly.
+
 print(
     f"""
 Time per 0.5fs step in LAMMPS:
