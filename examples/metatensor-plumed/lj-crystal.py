@@ -130,8 +130,10 @@ chemiscope.show([minimal, other, atoms], mode="structure", settings=settings)
 #
 # To make this CV usable by PLUMED via the ``METATOMIC`` interface, we must wrap
 # our calculation logic in a ``torch.nn.Module``. This class takes a list of
-# atomic systems and returns a `metatensor.TensorMap` containing the calculated
-# CV values. The interface is defined in [TODO link].
+# atomic systems and returns a ``metatensor.TensorMap`` containing the
+# calculated CV values. The interface is defined in
+# `the PyTorch documentation <https://docs.pytorch.org/docs/stable/generated/torch.nn.Module.html>`_
+# with more examples in the .
 #
 # Our descriptor is computed in a way that is closely related to
 # the Smooth Overlap of Atomic Positions (SOAP) formalism, ensuring it is
@@ -173,7 +175,8 @@ class CollectiveVariable(torch.nn.Module):
         )
         self.selected_keys = mts.Labels(
             # These represent the degree of the spherical harmonics
-            "o3_lambda", torch.tensor(angular_list).reshape(-1, 1)
+            "o3_lambda",
+            torch.tensor(angular_list).reshape(-1, 1),
         )
 
     def forward(
@@ -234,14 +237,21 @@ class CollectiveVariable(torch.nn.Module):
 # be loaded by PLUMED and other, without requiring a Python installation (for example on
 # HPC systems).
 #
-# See [TODO link] for more information about exporting metatensor models.
+# See the
+# `upstream API documentation <https://docs.metatensor.org/metatomic/latest/torch/reference/models/export.html>`_
+# and the
+# `metatomic export example <https://docs.metatensor.org/metatomic/latest/examples/1-export-atomistic-model.html>`_
+# for more information about exporting metatensor models.
 
 # initialize the model
 cutoff = 1.3
 module = CollectiveVariable(cutoff, angular_list=[4, 6])
 
 # metatdata about the model itself
-metadata = mta.ModelMetadata(name="TODO", description="TODO")
+metadata = mta.ModelMetadata(
+    name="SOAP_order_params",
+    description="Computes smoothed out versions of the Steinhardt order parameters",
+)
 
 # metatdata about what the model can do
 outputs = {"features": mta.ModelOutput(per_atom=False)}
