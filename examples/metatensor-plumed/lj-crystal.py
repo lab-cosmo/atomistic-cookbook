@@ -7,7 +7,8 @@ Exploring the Lennard-Jones 38 Cluster with Metadynamics
           Rohit Goswami `@HaoZeke <https://github.com/haozeke/>`_;
           Michele Ceriotti `@ceriottim <https://github.com/ceriottim/>`_
 
-We shall demonstrate the usage of the metatensor ecosystem within enhanced
+We shall demonstrate the usage of `metatomic models
+<https://docs.metatensor.org/metatomic/latest/overview.html>`_ within enhanced
 sampling techniques, specifically by running **metadynamics**, to explore the
 complex potential energy surface (PES) of a 38-atom Lennard-Jones (LJ) cluster.
 The LJ38 cluster is a classic benchmark system because its global minimum energy
@@ -20,10 +21,10 @@ structures. To do this, we will:
 
 1.  Define a set of **collective variables (CVs)** that can distinguish between
     the disordered (liquid-like) and ordered (solid-like) states of the
-    cluster. We will use a custom CV based on **Steinhardt order parameters**
+    cluster. We will use a custom CVs analogous to **Steinhardt order parameters**
     (:math:`Q_4` and :math:`Q_6`, a.k.a the bond-order parameters).
-2.  Implement this custom CV using `featomic`, `metatensor`, and `metatomic` to
-    create a portable `metatomic` model.
+2.  Implement this custom CV using ``featomic``, ``metatensor``, and ``metatomic`` to
+    create a portable ``metatomic`` model.
 3.  Use the `PLUMED <https://www.plumed.org/>`_ package, integrated with the
     `Atomic Simulation Environment (ASE) <https://wiki.fysik.dtu.dk/ase/>`_, to
     run a metadynamics simulation.
@@ -84,7 +85,7 @@ optimizer.run(fmax=0.8)
 # The two most famous structures for LJ38 are the global minimum (a perfect
 # truncated octahedron) and a lower-symmetry icosahedral structure which is a
 # deep local minimum. Let's load them and visualize all three (our starting
-# structure and the two targets) using `chemiscope`.
+# structure and the two targets) using ``chemiscope``.
 
 minimal = ase.io.read("lj-oct-0k.xyz")
 # FIXME: this does not look like the "other" stable structure
@@ -99,10 +100,12 @@ chemiscope.show([minimal, other, atoms], mode="structure", settings=settings)
 # ---------------------------------------
 #
 # To distinguish between the liquid-like state and the highly ordered
-# face-centered cubic (FCC) packing of the global minimum, we use **Steinhardt
+# face-centered cubic (FCC) packing of the global minimum, the **Steinhardt
 # order parameters**, specifically :math:`Q_4` and :math:`Q_6`. These parameters
 # are rotationally invariant and measure the local orientational symmetry around
-# each atom.
+# each atom. The standard caclulation works by summing over bond vectors within
+# a cutoff radius which connect a central atom to the neighbors and does not use
+# a weighing within the cutoff radius.
 #
 # - :math:`Q_6` is often high for both icosahedral and FCC-like structures,
 #   making it a good measure of general "solidness".
@@ -110,8 +113,14 @@ chemiscope.show([minimal, other, atoms], mode="structure", settings=settings)
 #   is close to zero for icosahedral structures but has a distinct non-zero value
 #   for FCC structures.
 #
-# We will build a model that calculates global, system-averaged versions of these
-# parameters.
+# This works very well for the LJ38 and is also part of the standard PLUMED build.
+#
+# The key concept is that the geometry of the atomic neighborhood is described
+# by projection onto a basis of spherical harmonics. With that in mind, we will
+# demonstrate the usage of the SOAP power spectrum, which differs from the
+# standard Steinhardt by operating on a smooth density field, and includes
+# distance information through the aradial basis set. Additionally, unlike the
+# sharp cutoff of the Steinhardt, we will use a cosine cutoff.
 
 
 # %%
@@ -123,6 +132,23 @@ chemiscope.show([minimal, other, atoms], mode="structure", settings=settings)
 # our calculation logic in a ``torch.nn.Module``. This class takes a list of
 # atomic systems and returns a `metatensor.TensorMap` containing the calculated
 # CV values. The interface is defined in [TODO link].
+#
+# Our descriptor is computed in a way that is closely related to
+# the Smooth Overlap of Atomic Positions (SOAP) formalism, ensuring it is
+# rotationally invariant and measures local orientational symmetry.
+#
+# We will use the power spectrum components for angular channels :math:`l=4` and
+# :math:`l=6`.
+#
+# - The :math:`l=6` component is a good measure of general "solidness" or
+#   ordering, as it is significant for both icosahedral and FCC-like structures.
+# - The :math:`l=4` component helps to distinguish between different crystal
+#   packing types. It has a distinct non-zero value for FCC structures but is
+#   smaller for icosahedral symmetries.
+#
+# We will build a model that calculates global, system-averaged versions of
+# these parameters, bearing in mind that as analogs to the Steinhardt we expect
+# similar results.
 
 
 class CollectiveVariable(torch.nn.Module):
@@ -254,17 +280,17 @@ chemiscope.explore([minimal, other, atoms], featurize=featurizer, settings=setti
 # With our model saved, we can now write the PLUMED input file. This file
 # instructs PLUMED on what to do during the simulation.
 # The input file consists of the following sections:
-# - `UNITS` : Specifies the energy and length units
-# - `METATOMIC` : Defines a collective variable which is essentially
+# - ``UNITS`` : Specifies the energy and length units
+# - ``METATOMIC`` : Defines a collective variable which is essentially
 #                 an exported metatomic model
-# - `SELECT_COMPONENTS` : Splits the model output :math:`Q_4`
+# - ``SELECT_COMPONENTS`` : Splits the model output :math:`Q_4`
 #                         and :math:`Q_6` parameters to scalars
-# - `METAD` : sets up the metadynamics algorithm. It will add repulsive Gaussian
-#             potentials in the (`cv1`, `cv2`) space at regular intervals (`PACE`),
+# - ``METAD`` : sets up the metadynamics algorithm. It will add repulsive Gaussian
+#             potentials in the (``cv1``, ``cv2``) space at regular intervals (``PACE``),
 #             discouraging the simulation from re-visiting conformations and pushing it
 #             over energy barriers
-# - `PRINT` : This tells PLUMED to write the values of our CVs and the
-#             metadynamics bias energy to a file named `COLVAR` for later analysis.
+# - ``PRINT`` : This tells PLUMED to write the values of our CVs and the
+#             metadynamics bias energy to a file named ``COLVAR`` for later analysis.
 
 if os.path.exists("HILLS"):
     os.unlink("HILLS")
@@ -306,12 +332,11 @@ setup = [
 ]
 
 # %%
-# Running dynamics I - `ase`
+# Running dynamics I - ``ase``
 # ---------------------------
 #
-# The easiest way to generate a trajectory is to leverage `ase`. In subsequent
-# sections we will use LAMMPS, as a more production worthy and correct molecular
-# dynamics engine.
+# The easiest way to generate a trajectory is to leverage ``ase``. In subsequent
+# sections we will use LAMMPS, as a more production worthy dynamics engine.
 #
 
 # Create the Plumed calculator, which wraps the LJ potential
@@ -339,13 +364,13 @@ for _ in range(100):
 
 
 # %%
-# Running dynamics II - `lammps`
-# ---------------------------
+# Running dynamics II - ``lammps``
+# --------------------------------
 #
 # LAMMPS is easily amongst the most robust molecular dynamics engine.
 #
 
-plumed_inp = f"""
+plumed_input = f"""
 UNITS LENGTH=A ENERGY={ase.units.mol / ase.units.kJ}
 cv: METATOMIC ...
     MODEL=custom-cv.pt
@@ -372,7 +397,7 @@ FLUSH STRIDE=1
 """
 
 with open("plumed.dat", "w") as fname:
-    fname.write(plumed_inp)
+    fname.write(plumed_input)
 
 atoms.set_atomic_numbers([1] * len(atoms))
 atoms.set_masses([1.0] * len(atoms))
