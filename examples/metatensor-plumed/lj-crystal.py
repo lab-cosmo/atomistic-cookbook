@@ -490,10 +490,10 @@ dyn_settings = chemiscope.quick_settings(
 )
 
 # Show the trajectory in an interactive chemiscope widget.
-chemiscope.show(
-    frames=lmp_trajectory,
-    properties=dyn_prop,
-    settings=dyn_settings,
-)
+# chemiscope.show(
+#     frames=lmp_trajectory,
+#     properties=dyn_prop,
+#     settings=dyn_settings,
+# )
 
 # _PyTorch: https://docs.pytorch.org/docs/stable/generated/torch.nn.Module.html
