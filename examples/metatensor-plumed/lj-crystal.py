@@ -16,13 +16,13 @@ simulation.
 The LJ38 cluster is a classic benchmark system because its global minimum energy
 structure is a truncated octahedron with :math:`O_h` symmetry, which is
 difficult to find with simple optimization methods. The PES has a multi-funnel
-landscape, meaning the system can easily get trapped in local minima.
-Our goal is progressively transition from a random configuration to the low-energy
-structures. To do this, we will:
+landscape, meaning the system can easily get trapped in other local minima.
+Our goal is to explore the PES, moving from a random initial configuration to 
+the low-energy structures. To do this, we will:
 
 1.  Define a set of **collective variables (CVs)** that can distinguish between
     the disordered (liquid-like) and ordered (solid-like) states of the
-    cluster. We will use custom CVs analogous to **Steinhardt order parameters**
+    cluster. We will use a custom CVs analogous to **Steinhardt order parameters**
     (:math:`Q_4` and :math:`Q_6`, a.k.a the bond-order parameters).
 2.  Implement this custom CV using ``featomic``, ``metatensor``, and ``metatomic``
     to create a portable ``metatomic`` model.
@@ -32,13 +32,17 @@ structures. To do this, we will:
 4.  Analyze the results to visualize the free energy surface and run
     trajectories with LAMMPS of the system as it explores different
     configurations.
+
+As usual for these examples, the simulation is run on a small system and for
+a short time, so that results will be fast but inaccurate. If you want to use
+this exanmple as a template, you should set more appropriate parameters.
 """
 
+# %%
 import os
 import subprocess
 from typing import Dict, List, Optional
 
-import ase.build
 import ase.calculators.lj
 import ase.calculators.plumed
 import ase.io
@@ -93,10 +97,10 @@ opt_atoms = atoms.copy()
 # structure and the two targets) using ``chemiscope``.
 
 minimal = ase.io.read("data/lj-oct.xyz")
-other = ase.io.read("data/lj-ico.xyz")
+icosaed = ase.io.read("data/lj-ico.xyz")
 
 settings = {"structure": [{"playbackDelay": 50, "unitCell": True, "bonds": False}]}
-chemiscope.show([minimal, other, atoms], mode="structure", settings=settings)
+chemiscope.show([minimal, icosaed, atoms], mode="structure", settings=settings)
 
 
 # %%
@@ -286,7 +290,7 @@ model.save("custom-cv.pt", collect_extensions="./extensions/")
 # initial structures. This is a great way to verify that the CVs produce
 # different values for the different structures.
 featurizer = chemiscope.metatomic_featurizer(model)
-chemiscope.explore([minimal, other, atoms], featurize=featurizer, settings=settings)
+chemiscope.explore([minimal, icosaed, atoms], featurize=featurizer, settings=settings)
 
 # %%
 #
@@ -314,7 +318,7 @@ if os.path.exists("HILLS"):
 if os.path.exists("COLVARS"):
     os.unlink("COLVARS")
 
-with open("plumed.dat", "r") as fname:
+with open("data/plumed.dat", "r") as fname:
     print(fname.read())
 
 # %%
@@ -328,7 +332,7 @@ lmp_atoms = opt_atoms.copy()
 lmp_atoms.set_masses([1.0] * len(atoms))
 ase.io.write("data/firemin.data", lmp_atoms, format="lammps-data")
 
-subprocess.run(["lmp", "-in", "lammps.plumed.in"], check=True, capture_output=True)
+subprocess.run(["lmp", "-in", "data/lammps.plumed.in"], check=True, capture_output=True)
 lmp_trajectory = [opt_atoms.copy()]
 lmp_trajectory.append(ase.io.read("out/lj38.lammpstrj", index=":"))
 

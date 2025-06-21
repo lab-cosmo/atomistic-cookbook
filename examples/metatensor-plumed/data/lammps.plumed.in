@@ -22,7 +22,7 @@ fix            nvtall all nvt temp 0.18 0.18 1.0  # τT = 1.0 τ
 fix            1 all gle 6 0.18 0.18 1995 data/smartSampling.A
 
 # -- Plumed integration --
-fix             2 all plumed plumedfile plumed.dat outfile out/plumed.out
+fix             2 all plumed plumedfile data/plumed.dat outfile out/plumed.out
 
 # --- MD settings ------------------------------------------------------------
 timestep       0.005           # 0.005 τ ≃ 1 fs if σ=0.34 nm & ε/kB=120 K
