@@ -44,11 +44,8 @@ import subprocess
 from typing import Dict, List, Optional
 
 import ase.calculators.lj
-import ase.calculators.plumed
 import ase.io
-import ase.md.langevin
 import ase.optimize
-import ase.units
 
 #
 import chemiscope
@@ -60,6 +57,8 @@ import numpy as np
 import torch
 from matplotlib import colormaps
 
+if hasattr(__import__("builtins"), "get_ipython"):
+    get_ipython().run_line_magic("matplotlib", "inline")  # noqa: F821
 
 # %%
 # Simulation Starting Point: Random Structure w/ Energy Minimized
@@ -329,6 +328,7 @@ with open("data/plumed.dat", "r") as fname:
 #
 
 lmp_atoms = opt_atoms.copy()
+lmp_atoms.positions += lmp_atoms.cell[0,0]*0.5
 lmp_atoms.set_masses([1.0] * len(atoms))
 ase.io.write("data/firemin.data", lmp_atoms, format="lammps-data")
 
@@ -464,17 +464,17 @@ plt.show()
 dyn_prop = {
     "cv1": {
         "target": "structure",
-        "values": cv1_traj,
+        "values": cv1_traj[::10],
         "description": "Collective Variable 1 (mta_q4)",
     },
     "cv2": {
         "target": "structure",
-        "values": cv2_traj,
+        "values": cv2_traj[::10],
         "description": "Collective Variable 2 (mta_q6)",
     },
     "time": {
         "target": "structure",
-        "values": time,
+        "values": time[::10],
         "description": "Simulation time",
         "units": "ps",
     },
@@ -492,11 +492,14 @@ dyn_settings = chemiscope.quick_settings(
     },
 )
 
+lmp_trajectory = ase.io.read("out/lj38.lammpstrj", index=":")
 # Show the trajectory in an interactive chemiscope widget.
-# chemiscope.show(
-#     frames=lmp_trajectory,
-#     properties=dyn_prop,
-#     settings=dyn_settings,
-# )
+chemiscope.show(
+     frames=lmp_trajectory,
+     properties=dyn_prop,
+     settings=dyn_settings,
+)
 
 # _PyTorch: https://docs.pytorch.org/docs/stable/generated/torch.nn.Module.html
+
+# %%

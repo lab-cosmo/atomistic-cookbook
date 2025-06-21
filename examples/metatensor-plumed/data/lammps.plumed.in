@@ -29,5 +29,5 @@ timestep       0.005           # 0.005 τ ≃ 1 fs if σ=0.34 nm & ε/kB=120 K
 thermo         500
 thermo_style   custom step temp pe etotal press
 
-dump           traj all custom 1000 out/lj38.lammpstrj id type x y z
+dump           traj all custom 100 out/lj38.lammpstrj id type x y z
 run            2000          # 1 0 τ  (≈ 0.01 ns on the usual mapping)
