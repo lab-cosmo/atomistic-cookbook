@@ -1,0 +1,32 @@
+# LJ38 truncated-octahedron cluster – MD at T = 0.18 ε/kB
+
+units          lj
+dimension      3
+atom_style     atomic
+
+read_data      structure.data
+
+# --- interactions -----------------------------------------------------------
+pair_style     lj/cut 2.5
+pair_coeff     1 1 1.0 1.0 2.5   # ε = 1, σ = 1, rc = 2.5 σ
+
+neighbor       0.3 bin
+neigh_modify   delay 0 every 1 check yes
+
+# --- masses (also given in data file; harmless to repeat) -------------------
+mass           1 1.0
+
+# --- initial velocities & thermostat ----------------------------------------
+velocity       all create 0.18 12345 mom yes rot yes dist gaussian
+fix            nvtall all nvt temp 0.18 0.18 1.0  # τT = 1.0 τ
+
+# -- Plumed integration --
+fix             1 all plumed plumedfile plumed.dat outfile plumed.out
+
+# --- MD settings ------------------------------------------------------------
+timestep       0.005           # 0.005 τ ≃ 1 fs if σ=0.34 nm & ε/kB=120 K
+thermo         500
+thermo_style   custom step temp pe etotal press
+
+dump           traj all custom 1000 lj38.lammpstrj id type x y z
+run            2000          # 1 0 τ  (≈ 0.01 ns on the usual mapping)

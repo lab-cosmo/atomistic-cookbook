@@ -302,92 +302,19 @@ chemiscope.explore([minimal, other, atoms], featurize=featurizer, settings=setti
 # - ``SELECT_COMPONENTS`` : Splits the model output :math:`Q_4`
 #                         and :math:`Q_6` parameters to scalars
 # - ``METAD`` : sets up the metadynamics algorithm. It will add repulsive Gaussian
-#             potentials in the (``cv1``, ``cv2``) space at regular intervals
-#             (``PACE``), discouraging the simulation from re-visiting
-#             conformations and pushing it over energy barriers
+#             potentials in the (``cv1``, ``cv2``) space at regular intervals (``PACE``),
+#             discouraging the simulation from re-visiting conformations and pushing it
+#             over energy barriers
 # - ``PRINT`` : This tells PLUMED to write the values of our CVs and the
 #             metadynamics bias energy to a file named ``COLVAR`` for later analysis.
 
 if os.path.exists("HILLS"):
     os.unlink("HILLS")
 
-setup = [
-    f"UNITS LENGTH=A ENERGY={ase.units.mol / ase.units.kJ}",
-    # define a collective variables using metatensor
-    """
-    cv: METATOMIC
-        MODEL=custom-cv.pt
-        EXTENSIONS_DIRECTORY=./extensions/
-        SPECIES1=1-38
-        SPECIES_TO_TYPES=18
-    """,
-    # extract the different components from the METATOMIC output into scalars
-    # (METAD only accepts scalars, and METATOMIC output is a vector here)
-    "cv1: SELECT_COMPONENTS ARG=cv COMPONENTS=1",
-    "cv2: SELECT_COMPONENTS ARG=cv COMPONENTS=2",
-    # run metadynamics with this collective variable
-    """
-    mtd: METAD
-        ARG=cv1,cv2
-        HEIGHT=0.05
-        PACE=50
-        SIGMA=1,2.5
-        GRID_MIN=-20,-40
-        GRID_MAX=20,40
-        GRID_BIN=500,500
-        BIASFACTOR=5
-        FILE=HILLS
-    """,
-    # prints out trajectory
-    """
-    PRINT ARG=cv.*,mtd.* STRIDE=10 FILE=COLVAR
-    """,
-    """
-    FLUSH STRIDE=1
-    """,
-]
-
-# %%
-# Running dynamics I - ``ase``
-# ---------------------------
-#
-# The easiest way to generate a trajectory is to leverage ``ase``. In subsequent
-# sections we will use LAMMPS, as a more production worthy dynamics engine.
-#
-
-# Create the Plumed calculator, which wraps the LJ potential
-atoms.calc = ase.calculators.plumed.Plumed(
-    calc=lj_potential,
-    input=setup,
-    timestep=0.01,
-    atoms=atoms,
-    kT=0.1,
-)
-atoms.set_masses([1.0] * len(atoms))
-
-
-md = ase.md.langevin.Langevin(
-    atoms,
-    timestep=0.01,
-    temperature_K=0.1 / ase.units.kB,
-    friction=1.0,
-)
-
-trajectory = [atoms.copy()]
-for _ in range(100):
-    md.run(steps=10)
-    trajectory.append(atoms.copy())
-
-
-# %%
-# Running dynamics II - ``lammps``
-# --------------------------------
-#
-# LAMMPS is easily amongst the most robust molecular dynamics engine.
-#
+if os.path.exists("COLVARS"):
+    os.unlink("COLVARS")
 
 plumed_input = f"""
-UNITS LENGTH=A ENERGY={ase.units.mol / ase.units.kJ}
 cv: METATOMIC ...
     MODEL=custom-cv.pt
     EXTENSIONS_DIRECTORY=./extensions/
@@ -406,7 +333,7 @@ mtd: METAD ...
     GRID_BIN=500,500
     BIASFACTOR=5
     FILE=HILLS
-    TEMP=300
+    TEMP=0.1
 ...
 PRINT ARG=cv.*,mtd.* STRIDE=10 FILE=COLVAR
 FLUSH STRIDE=1
@@ -415,57 +342,20 @@ FLUSH STRIDE=1
 with open("plumed.dat", "w") as fname:
     fname.write(plumed_input)
 
-atoms.set_atomic_numbers([1] * len(atoms))
-atoms.set_masses([1.0] * len(atoms))
-ase.io.write("structure.data", atoms, format="lammps-data")
+# %%
+# Running dynamics with ``lammps``
+# --------------------------------
+#
+# LAMMPS is easily amongst the most robust molecular dynamics engine.
+#
 
-# Get LJ parameters from the ASE calculator using the default for 'Ar'
-lj_sigma = 3.405  # Angstrom
-lj_epsilon = 0.010323  # eV
-lj_cutoff = 2.5
-# Simulation parameters
-timestep = 0.01  # in ps
-n_steps = 1000  # 100 iterations * 10 steps/iter
-temperature = 0.1  # in eV (kT in ASE)
-# The LAMMPS damp parameter is a damping time. In ASE, friction = 1.0
-langevin_damp = 1.0  # in ps
+lmp_atoms = opt_atoms.copy()
+lmp_atoms.set_masses([1.0] * len(atoms))
+ase.io.write("structure.data", lmp_atoms, format="lammps-data")
 
-lammps_in = f"""
-# LAMMPS input script for Metadynamics of LJ38 cluster
-
-# -- Initialization --
-units           metal
-atom_style      atomic
-boundary        p p p
-read_data       structure.data
-
-# -- Potential --
-# All atoms are type 1
-pair_style      lj/cut {lj_cutoff}
-pair_coeff      1 1 {lj_epsilon} {lj_sigma} {lj_cutoff}
-mass            1 1.0
-
-# -- Plumed integration --
-fix             1 all plumed plumedfile plumed.dat outfile plumed.out
-
-# -- NVT Dynamics (Langevin Thermostat) --
-velocity        all create {temperature} 8675309 dist gaussian
-fix             2 all nve
-fix             3 all langevin {temperature} {temperature} {langevin_damp} 1995
-
-# -- Simulation run --
-timestep        {timestep}
-thermo          100
-dump            1 all xyz 10 traj.xyz
-run             {n_steps}
-"""
-
-with open("lammps.in", "w") as f:
-    f.write(lammps_in)
-
-subprocess.run(["lmp", "-in", "lammps.in"], check=True, capture_output=True, text=True)
-trajectory = [atoms.copy()]
-trajectory.append(ase.io.read("traj.xyz", index=":"))
+subprocess.run(["lmp", "-in", "lammps.in"], check=True, capture_output=True)
+lmp_trajectory = [opt_atoms.copy()]
+lmp_trajectory.append(ase.io.read("lj38.lammpstrj", index=":"))
 
 # %%
 # Static visualization
@@ -512,11 +402,11 @@ FES -= FES.min()
 # Prepare the plot
 plt.figure(figsize=(10, 7))
 contour = plt.contourf(X, Y, FES, levels=np.linspace(0, FES.max(), 25), cmap="viridis")
-plt.colorbar(contour, label="Free Energy (kJ/mol)")
+plt.colorbar(contour, label="Free Energy")
 
 # Overlay the trajectory
 plt.plot(
-    cv1_traj, cv2_traj, color="white", alpha=0.7, linewidth=1.5, label="MD Trajectory"
+    cv1_traj, cv2_traj, color="white", alpha=0.7, linewidth=1.5, label="LAMMPS MD Trajectory"
 )
 
 # Mark the start and end points
@@ -549,12 +439,12 @@ dyn_prop = {
     "cv1": {
         "target": "structure",
         "values": cv1_traj,
-        "description": "Collective Variable 1 (q4)",
+        "description": "Collective Variable 1 (mta_q4)",
     },
     "cv2": {
         "target": "structure",
         "values": cv2_traj,
-        "description": "Collective Variable 2 (q6)",
+        "description": "Collective Variable 2 (mta_q6)",
     },
     "time": {
         "target": "structure",
@@ -576,9 +466,9 @@ dyn_settings = chemiscope.quick_settings(
     },
 )
 
-# Show the trajectory in an interactive chemiscope widget.
-chemiscope.show(
-    frames=trajectory,
-    properties=dyn_prop,
-    settings=dyn_settings,
-)
+# # Show the trajectory in an interactive chemiscope widget.
+# chemiscope.show(
+#     frames=lmp_trajectory,
+#     properties=dyn_prop,
+#     settings=dyn_settings,
+# )
