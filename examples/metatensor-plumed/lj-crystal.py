@@ -90,9 +90,8 @@ optimizer.run(fmax=0.8)
 # deep local minimum. Let's load them and visualize all three (our starting
 # structure and the two targets) using ``chemiscope``.
 
-minimal = ase.io.read("lj-oct-0k.xyz")
-# FIXME: this does not look like the "other" stable structure
-other = ase.io.read("lj38.xyz")
+minimal = ase.io.read("data/lj-oct.xyz")
+other = ase.io.read("data/lj-ico.xyz")
 
 settings = {"structure": [{"playbackDelay": 50, "unitCell": True, "bonds": False}]}
 chemiscope.show([minimal, other, atoms], mode="structure", settings=settings)
