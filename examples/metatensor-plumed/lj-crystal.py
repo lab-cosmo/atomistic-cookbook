@@ -1,21 +1,23 @@
 # -*- coding: utf-8 -*-
 """
-Exploring the Lennard-Jones 38 Cluster with Metadynamics
-=========================================================
+Custom Collective Variables for Metadynamics with Pytorch and PLUMED
+====================================================================
 
 :Authors: Guillaume Fraux `@Luthaf <https://github.com/luthaf/>`_;
           Rohit Goswami `@HaoZeke <https://github.com/haozeke/>`_;
           Michele Ceriotti `@ceriottim <https://github.com/ceriottim/>`_
 
-We shall demonstrate the usage of `metatomic models
-<https://docs.metatensor.org/metatomic/latest/overview.html>`_ within enhanced
-sampling techniques, specifically by running **metadynamics**, to explore the
-complex potential energy surface (PES) of a 38-atom Lennard-Jones (LJ) cluster.
+This example shows how to build a `metatomic model
+<https://docs.metatensor.org/metatomic/latest/overview.html>`_ that computes
+order parameters for a Lennard-Jones cluster, and how to use it with
+the `PLUMED <https://www.plumed.org/>`_ package to run a metadynamics 
+simulation. 
+within enhanced
+
 The LJ38 cluster is a classic benchmark system because its global minimum energy
 structure is a truncated octahedron with :math:`O_h` symmetry, which is
 difficult to find with simple optimization methods. The PES has a multi-funnel
 landscape, meaning the system can easily get trapped in local minima.
-
 Our goal is progressively transition from a random configuration to the low-energy
 structures. To do this, we will:
 
@@ -23,8 +25,8 @@ structures. To do this, we will:
     the disordered (liquid-like) and ordered (solid-like) states of the
     cluster. We will use a custom CVs analogous to **Steinhardt order parameters**
     (:math:`Q_4` and :math:`Q_6`, a.k.a the bond-order parameters).
-2.  Implement this custom CV using ``featomic``, ``metatensor``, and ``metatomic`` to
-    create a portable ``metatomic`` model.
+2.  Implement this custom CV using ``featomic``, ``metatensor``, and ``metatomic``
+    to create a portable ``metatomic`` model.
 3.  Use the `PLUMED <https://www.plumed.org/>`_ package, integrated with the
     `Atomic Simulation Environment (ASE) <https://wiki.fysik.dtu.dk/ase/>`_, to
     run a metadynamics simulation.
