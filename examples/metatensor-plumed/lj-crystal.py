@@ -1,21 +1,23 @@
 # -*- coding: utf-8 -*-
 """
-Exploring the Lennard-Jones 38 Cluster with Metadynamics
-=========================================================
+Custom Collective Variables for Metadynamics with Pytorch and PLUMED
+====================================================================
 
 :Authors: Guillaume Fraux `@Luthaf <https://github.com/luthaf/>`_;
           Rohit Goswami `@HaoZeke <https://github.com/haozeke/>`_;
           Michele Ceriotti `@ceriottim <https://github.com/ceriottim/>`_
 
-We shall demonstrate the usage of `metatomic models
-<https://docs.metatensor.org/metatomic/latest/overview.html>`_ within enhanced
-sampling techniques, specifically by running **metadynamics**, to explore the
-complex potential energy surface (PES) of a 38-atom Lennard-Jones (LJ) cluster.
+This example shows how to build a `metatomic model
+<https://docs.metatensor.org/metatomic/latest/overview.html>`_ that computes
+order parameters for a Lennard-Jones cluster, and how to use it with
+the `PLUMED <https://www.plumed.org/>`_ package to run a metadynamics 
+simulation. 
+within enhanced
+
 The LJ38 cluster is a classic benchmark system because its global minimum energy
 structure is a truncated octahedron with :math:`O_h` symmetry, which is
 difficult to find with simple optimization methods. The PES has a multi-funnel
 landscape, meaning the system can easily get trapped in local minima.
-
 Our goal is progressively transition from a random configuration to the low-energy
 structures. To do this, we will:
 
@@ -23,8 +25,8 @@ structures. To do this, we will:
     the disordered (liquid-like) and ordered (solid-like) states of the
     cluster. We will use a custom CVs analogous to **Steinhardt order parameters**
     (:math:`Q_4` and :math:`Q_6`, a.k.a the bond-order parameters).
-2.  Implement this custom CV using ``featomic``, ``metatensor``, and ``metatomic`` to
-    create a portable ``metatomic`` model.
+2.  Implement this custom CV using ``featomic``, ``metatensor``, and ``metatomic``
+    to create a portable ``metatomic`` model.
 3.  Use the `PLUMED <https://www.plumed.org/>`_ package, integrated with the
     `Atomic Simulation Environment (ASE) <https://wiki.fysik.dtu.dk/ase/>`_, to
     run a metadynamics simulation.
@@ -239,9 +241,11 @@ class CollectiveVariable(torch.nn.Module):
 # HPC systems).
 #
 # See the
-# `upstream API documentation <https://docs.metatensor.org/metatomic/latest/torch/reference/models/export.html>`_
+# `upstream API documentation
+# <https://docs.metatensor.org/metatomic/latest/torch/reference/models/export.html>`_
 # and the
-# `metatomic export example <https://docs.metatensor.org/metatomic/latest/examples/1-export-atomistic-model.html>`_
+# `metatomic export example
+# <https://docs.metatensor.org/metatomic/latest/examples/1-export-atomistic-model.html>`_
 # for more information about exporting metatensor models.
 
 # initialize the model
@@ -298,9 +302,9 @@ chemiscope.explore([minimal, other, atoms], featurize=featurizer, settings=setti
 # - ``SELECT_COMPONENTS`` : Splits the model output :math:`Q_4`
 #                         and :math:`Q_6` parameters to scalars
 # - ``METAD`` : sets up the metadynamics algorithm. It will add repulsive Gaussian
-#             potentials in the (``cv1``, ``cv2``) space at regular intervals (``PACE``),
-#             discouraging the simulation from re-visiting conformations and pushing it
-#             over energy barriers
+#             potentials in the (``cv1``, ``cv2``) space at regular intervals
+#             (``PACE``), discouraging the simulation from re-visiting
+#             conformations and pushing it over energy barriers
 # - ``PRINT`` : This tells PLUMED to write the values of our CVs and the
 #             metadynamics bias energy to a file named ``COLVAR`` for later analysis.
 

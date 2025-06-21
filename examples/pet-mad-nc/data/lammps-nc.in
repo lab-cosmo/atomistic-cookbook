@@ -1,0 +1,26 @@
+units metal
+
+atom_style atomic
+
+read_data data/bmimcl.data
+
+mass 1 12.011
+mass 2 35.453
+mass 3 1.00784
+mass 4 14.0067
+
+pair_style metatomic pet-mad-latest.pt device cpu non_conservative on
+pair_coeff * * 6 17 1 7
+
+run_style verlet
+
+neighbor 2.0 bin
+timestep 0.0005
+
+thermo 1
+
+velocity all create 300 87287 mom yes rot yes
+
+fix 1 all nve
+
+run 16
