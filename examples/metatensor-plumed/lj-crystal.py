@@ -331,7 +331,7 @@ ase.io.write("data/firemin.data", lmp_atoms, format="lammps-data")
 
 subprocess.run(["lmp", "-in", "lammps.plumed.in"], check=True, capture_output=True)
 lmp_trajectory = [opt_atoms.copy()]
-lmp_trajectory.append(ase.io.read("lj38.lammpstrj", index=":"))
+lmp_trajectory.append(ase.io.read("out/lj38.lammpstrj", index=":"))
 
 # %%
 # Static visualization - I
