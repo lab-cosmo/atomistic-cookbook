@@ -34,8 +34,8 @@ structures. To do this, we will:
 """
 
 import os
-from typing import Dict, List, Optional
 import subprocess
+from typing import Dict, List, Optional
 
 import ase.build
 import ase.calculators.lj
@@ -133,7 +133,8 @@ chemiscope.show([minimal, other, atoms], mode="structure", settings=settings)
 # our calculation logic in a ``torch.nn.Module``. This class takes a list of
 # atomic systems and returns a ``metatensor.TensorMap`` containing the
 # calculated CV values. The interface is defined in
-# `the PyTorch documentation <https://docs.pytorch.org/docs/stable/generated/torch.nn.Module.html>`_
+# `the PyTorch documentation
+# <https://docs.pytorch.org/docs/stable/generated/torch.nn.Module.html>`_
 # with more examples in the .
 #
 # Our descriptor is computed in a way that is closely related to
@@ -239,9 +240,11 @@ class CollectiveVariable(torch.nn.Module):
 # HPC systems).
 #
 # See the
-# `upstream API documentation <https://docs.metatensor.org/metatomic/latest/torch/reference/models/export.html>`_
+# `upstream API documentation
+# <https://docs.metatensor.org/metatomic/latest/torch/reference/models/export.html>`_
 # and the
-# `metatomic export example <https://docs.metatensor.org/metatomic/latest/examples/1-export-atomistic-model.html>`_
+# `metatomic export example
+# <https://docs.metatensor.org/metatomic/latest/examples/1-export-atomistic-model.html>`_
 # for more information about exporting metatensor models.
 
 # initialize the model
@@ -298,9 +301,9 @@ chemiscope.explore([minimal, other, atoms], featurize=featurizer, settings=setti
 # - ``SELECT_COMPONENTS`` : Splits the model output :math:`Q_4`
 #                         and :math:`Q_6` parameters to scalars
 # - ``METAD`` : sets up the metadynamics algorithm. It will add repulsive Gaussian
-#             potentials in the (``cv1``, ``cv2``) space at regular intervals (``PACE``),
-#             discouraging the simulation from re-visiting conformations and pushing it
-#             over energy barriers
+#             potentials in the (``cv1``, ``cv2``) space at regular intervals
+#             (``PACE``), discouraging the simulation from re-visiting
+#             conformations and pushing it over energy barriers
 # - ``PRINT`` : This tells PLUMED to write the values of our CVs and the
 #             metadynamics bias energy to a file named ``COLVAR`` for later analysis.
 
