@@ -10,8 +10,8 @@ Custom Collective Variables for Metadynamics with Pytorch and PLUMED
 This example shows how to build a `metatomic model
 <https://docs.metatensor.org/metatomic/latest/overview.html>`_ that computes
 order parameters for a Lennard-Jones cluster, and how to use it with
-the `PLUMED <https://www.plumed.org/>`_ package to run a metadynamics 
-simulation. 
+the `PLUMED <https://www.plumed.org/>`_ package to run a metadynamics
+simulation.
 within enhanced
 
 The LJ38 cluster is a classic benchmark system because its global minimum energy
@@ -36,8 +36,8 @@ structures. To do this, we will:
 """
 
 import os
-from typing import Dict, List, Optional
 import subprocess
+from typing import Dict, List, Optional
 
 import ase.build
 import ase.calculators.lj
@@ -55,6 +55,7 @@ import metatensor.torch as mts
 import metatomic.torch as mta
 import numpy as np
 import torch
+from matplotlib import colormaps
 
 
 # %%
@@ -80,6 +81,8 @@ lj_potential = ase.calculators.lj.LennardJones(rc=2.5)
 atoms.calc = lj_potential
 optimizer = ase.optimize.FIRE(atoms)
 optimizer.run(fmax=0.8)
+
+opt_atoms = atoms.copy()
 
 # %%
 # The Target Structures
@@ -133,9 +136,8 @@ chemiscope.show([minimal, other, atoms], mode="structure", settings=settings)
 # To make this CV usable by PLUMED via the ``METATOMIC`` interface, we must wrap
 # our calculation logic in a ``torch.nn.Module``. This class takes a list of
 # atomic systems and returns a ``metatensor.TensorMap`` containing the
-# calculated CV values. The interface is defined in
-# `the PyTorch documentation <https://docs.pytorch.org/docs/stable/generated/torch.nn.Module.html>`_
-# with more examples in the .
+# calculated CV values. The interface is defined in the `PyTorch`_
+# documentation.
 #
 # Our descriptor is computed in a way that is closely related to
 # the Smooth Overlap of Atomic Positions (SOAP) formalism, ensuring it is
@@ -300,10 +302,10 @@ chemiscope.explore([minimal, other, atoms], featurize=featurizer, settings=setti
 #                 an exported metatomic model
 # - ``SELECT_COMPONENTS`` : Splits the model output :math:`Q_4`
 #                         and :math:`Q_6` parameters to scalars
-# - ``METAD`` : sets up the metadynamics algorithm. It will add repulsive Gaussian
-#             potentials in the (``cv1``, ``cv2``) space at regular intervals (``PACE``),
-#             discouraging the simulation from re-visiting conformations and pushing it
-#             over energy barriers
+# - ``METAD`` : sets up the metadynamics algorithm. It will add repulsive
+#             Gaussian potentials in the (``cv1``, ``cv2``) space at regular
+#             intervals (``PACE``), discouraging the simulation from re-visiting
+#             conformations and pushing it over energy barriers
 # - ``PRINT`` : This tells PLUMED to write the values of our CVs and the
 #             metadynamics bias energy to a file named ``COLVAR`` for later analysis.
 
@@ -313,33 +315,8 @@ if os.path.exists("HILLS"):
 if os.path.exists("COLVARS"):
     os.unlink("COLVARS")
 
-plumed_input = f"""
-cv: METATOMIC ...
-    MODEL=custom-cv.pt
-    EXTENSIONS_DIRECTORY=./extensions/
-    SPECIES1=1-38
-    SPECIES_TO_TYPES=18
-...
-cv1: SELECT_COMPONENTS ARG=cv COMPONENTS=1
-cv2: SELECT_COMPONENTS ARG=cv COMPONENTS=2
-mtd: METAD ...
-    ARG=cv1,cv2
-    HEIGHT=0.05
-    PACE=50
-    SIGMA=1,2.5
-    GRID_MIN=-20,-40
-    GRID_MAX=20,40
-    GRID_BIN=500,500
-    BIASFACTOR=5
-    FILE=HILLS
-    TEMP=0.1
-...
-PRINT ARG=cv.*,mtd.* STRIDE=10 FILE=COLVAR
-FLUSH STRIDE=1
-"""
-
-with open("plumed.dat", "w") as fname:
-    fname.write(plumed_input)
+with open("plumed.dat", "r") as fname:
+    print(fname.read())
 
 # %%
 # Running dynamics with ``lammps``
@@ -350,18 +327,18 @@ with open("plumed.dat", "w") as fname:
 
 lmp_atoms = opt_atoms.copy()
 lmp_atoms.set_masses([1.0] * len(atoms))
-ase.io.write("structure.data", lmp_atoms, format="lammps-data")
+ase.io.write("data/firemin.data", lmp_atoms, format="lammps-data")
 
-subprocess.run(["lmp", "-in", "lammps.in"], check=True, capture_output=True)
+subprocess.run(["lmp", "-in", "lammps.plumed.in"], check=True, capture_output=True)
 lmp_trajectory = [opt_atoms.copy()]
 lmp_trajectory.append(ase.io.read("lj38.lammpstrj", index=":"))
 
 # %%
-# Static visualization
+# Static visualization - I
 # ---------------------------
 #
 # The dynamics on the free energy surface can be visualized using a static plot
-# as follows.
+# with the trajectory overlaid as follows.
 #
 
 # time, cv1, cv2, mtd.bias
@@ -383,7 +360,7 @@ grid_cv2 = np.linspace(grid_min[1], grid_max[1], grid_bins[1])
 X, Y = np.meshgrid(grid_cv1, grid_cv2)
 FES = np.zeros_like(X)
 
-# Sum over aussian hills to reconstruct the bias
+# Sum over Gaussian hills to reconstruct the bias
 for hill in hills:
     center_cv1, center_cv2 = hill[1], hill[2]
     sigma_cv1, sigma_cv2 = hill[3], hill[4]
@@ -405,7 +382,12 @@ plt.colorbar(contour, label="Free Energy")
 
 # Overlay the trajectory
 plt.plot(
-    cv1_traj, cv2_traj, color="white", alpha=0.7, linewidth=1.5, label="LAMMPS MD Trajectory"
+    cv1_traj,
+    cv2_traj,
+    color="white",
+    alpha=0.7,
+    linewidth=1.5,
+    label="LAMMPS MD Trajectory",
 )
 
 # Mark the start and end points
@@ -425,6 +407,48 @@ plt.legend()
 plt.grid(True, linestyle="--", alpha=0.5)
 plt.show()
 
+
+# %%
+# Static visualization - II
+# ---------------------------
+#
+# We can also just check the basins.
+#
+
+# Kanged from
+# https://github.com/Sucerquia/ASE-PLUMED_tutorial/blob/master/files/plotterFES.py
+p = subprocess.Popen(
+    "plumed sum_hills --hills HILLS --outfile fes.dat"
+    + " --bin 500,500 --min -20,-40 --max 20,40",
+    shell=True,
+    stdout=subprocess.PIPE,
+)
+p.wait()
+
+# Import free energy and reshape with the number of bins defined in the
+# reconstruction process.
+scm = np.loadtxt("fes.dat", usecols=0).reshape(501, 501)
+tcm = np.loadtxt("fes.dat", usecols=1).reshape(501, 501)
+fes = np.loadtxt("fes.dat", usecols=2).reshape(501, 501)
+
+# Plot
+fig, ax = plt.subplots(figsize=(10, 9))
+
+# Plot free energy surface
+im = ax.contourf(scm, tcm, fes, 10, cmap=colormaps["Blues_r"])  # cmo.tempo_r)
+cp = ax.contour(scm, tcm, fes, 10, linestyles="-", colors="darkgray", linewidths=1.2)
+
+# Plot parameters
+ax.set_xlabel("MTA_Q4", fontsize=40)
+ax.set_ylabel("MTA_Q6", fontsize=40)
+ax.tick_params(axis="y", labelsize=25)
+ax.tick_params(axis="x", labelsize=25)
+cbar = fig.colorbar(im, ax=ax)
+cbar.set_label(label=r"FES[$\epsilon$]", fontsize=40)
+cbar.ax.tick_params(labelsize=32)
+
+plt.tight_layout()
+plt.show()
 
 # %%
 # Dynamic visualization
@@ -465,9 +489,11 @@ dyn_settings = chemiscope.quick_settings(
     },
 )
 
-# # Show the trajectory in an interactive chemiscope widget.
-# chemiscope.show(
-#     frames=lmp_trajectory,
-#     properties=dyn_prop,
-#     settings=dyn_settings,
-# )
+# Show the trajectory in an interactive chemiscope widget.
+chemiscope.show(
+    frames=lmp_trajectory,
+    properties=dyn_prop,
+    settings=dyn_settings,
+)
+
+# _PyTorch: https://docs.pytorch.org/docs/stable/generated/torch.nn.Module.html

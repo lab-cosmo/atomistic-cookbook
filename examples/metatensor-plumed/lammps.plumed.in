@@ -4,7 +4,7 @@ units          lj
 dimension      3
 atom_style     atomic
 
-read_data      data/structure.data
+read_data      data/firemin.data
 
 # --- interactions -----------------------------------------------------------
 pair_style     lj/cut 2.5
@@ -22,12 +22,12 @@ fix            nvtall all nvt temp 0.18 0.18 1.0  # τT = 1.0 τ
 fix            1 all gle 6 0.18 0.18 1995 data/smartSampling.A
 
 # -- Plumed integration --
-fix             2 all plumed plumedfile plumed.dat outfile plumed.out
+fix             2 all plumed plumedfile plumed.dat outfile out/plumed.out
 
 # --- MD settings ------------------------------------------------------------
 timestep       0.005           # 0.005 τ ≃ 1 fs if σ=0.34 nm & ε/kB=120 K
 thermo         500
 thermo_style   custom step temp pe etotal press
 
-dump           traj all custom 1000 lj38.lammpstrj id type x y z
+dump           traj all custom 1000 out/lj38.lammpstrj id type x y z
 run            2000          # 1 0 τ  (≈ 0.01 ns on the usual mapping)
