@@ -17,7 +17,7 @@ The LJ38 cluster is a classic benchmark system because its global minimum energy
 structure is a truncated octahedron with :math:`O_h` symmetry, which is
 difficult to find with simple optimization methods. The PES has a multi-funnel
 landscape, meaning the system can easily get trapped in other local minima.
-Our goal is to explore the PES, moving from a random initial configuration to 
+Our goal is to explore the PES, moving from a random initial configuration to
 the low-energy structures. To do this, we will:
 
 1.  Define a set of **collective variables (CVs)** that can distinguish between
