@@ -106,11 +106,11 @@ chemiscope.show([minimal, other, atoms], mode="structure", settings=settings)
 #
 # To distinguish between the liquid-like state and the highly ordered
 # face-centered cubic (FCC) packing of the global minimum, the **Steinhardt
-# order parameters**, specifically :math:`Q_4` and :math:`Q_6`. These parameters
-# are rotationally invariant and measure the local orientational symmetry around
-# each atom. The standard caclulation works by summing over bond vectors within
-# a cutoff radius which connect a central atom to the neighbors and does not use
-# a weighing within the cutoff radius.
+# order parameters**, specifically :math:`Q_4` and :math:`Q_6` are commmonly
+# used. These parameters are rotationally invariant and measure the local
+# orientational symmetry around each atom. The standard caclulation works by
+# summing over bond vectors within a cutoff radius which connect a central atom
+# to the neighbors and does not use a weighing within the cutoff radius.
 #
 # - :math:`Q_6` is often high for both icosahedral and FCC-like structures,
 #   making it a good measure of general "solidness".
