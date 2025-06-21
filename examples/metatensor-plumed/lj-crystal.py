@@ -12,7 +12,6 @@ This example shows how to build a `metatomic model
 order parameters for a Lennard-Jones cluster, and how to use it with
 the `PLUMED <https://www.plumed.org/>`_ package to run a metadynamics
 simulation.
-within enhanced
 
 The LJ38 cluster is a classic benchmark system because its global minimum energy
 structure is a truncated octahedron with :math:`O_h` symmetry, which is
@@ -23,7 +22,7 @@ structures. To do this, we will:
 
 1.  Define a set of **collective variables (CVs)** that can distinguish between
     the disordered (liquid-like) and ordered (solid-like) states of the
-    cluster. We will use a custom CVs analogous to **Steinhardt order parameters**
+    cluster. We will use custom CVs analogous to **Steinhardt order parameters**
     (:math:`Q_4` and :math:`Q_6`, a.k.a the bond-order parameters).
 2.  Implement this custom CV using ``featomic``, ``metatensor``, and ``metatomic``
     to create a portable ``metatomic`` model.
