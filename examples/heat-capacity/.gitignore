@@ -1,0 +1,4 @@
+RESTART
+\#*
+log.lammps
+water-cv.out

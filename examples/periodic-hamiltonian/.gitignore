@@ -1,0 +1,7 @@
+frames/
+
+
+graphene_fock.npy
+graphene_ovlp.npy
+kmesh.dat
+precomputed.zip

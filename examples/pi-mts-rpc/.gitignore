@@ -1,0 +1,6 @@
+\#*
+
+RESTART
+*.checkpoint
+*.out
+*.pos_*.xyz

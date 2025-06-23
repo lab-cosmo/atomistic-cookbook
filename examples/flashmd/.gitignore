@@ -1,0 +1,6 @@
+\#*
+RESTART
+*.out
+*.pos_0.extxyz
+*.vel_0.xyz
+*.pt
