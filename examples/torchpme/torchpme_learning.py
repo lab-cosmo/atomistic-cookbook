@@ -321,6 +321,6 @@ def plot_results(fname=None, show_snapshot=True):
 
 
 # Call the plot function to visualize results
-plot_results("toy_model_learning.pdf", show_snapshot=True)
+plot_results(show_snapshot=True)
 
 # %%

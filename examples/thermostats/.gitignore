@@ -1,0 +1,9 @@
+\#*
+
+RESTART
+lammps_out.dat
+lammps_pos.xyz
+log.lammps
+*.out
+*.pos_0.xyz
+*.vel_0.xyz

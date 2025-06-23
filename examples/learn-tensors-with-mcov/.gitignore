@@ -1,0 +1,11 @@
+extensions/
+
+*.ckpt
+*.pt
+
+outputs/
+
+*.mts
+test_set.xyz
+training_set.xyz
+validation_set.xyz

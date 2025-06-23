@@ -3,5 +3,12 @@
 log.lammps
 trajectory.xyz
 tmp*
+*.out
+*.pos_0.xyz
+*.restart
+RESTART
+\#*
 
 extensions/*
+
+data/mad-test-mad-settings.xyz
