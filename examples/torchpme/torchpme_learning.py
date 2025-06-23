@@ -45,10 +45,7 @@ prefactor = 0.5292  # Unit conversion prefactor.
 
 data_dir = "data"
 os.makedirs(data_dir, exist_ok=True)
-dataset_url = (
-    "https://archive.materialscloud.org/record/file?"
-    + "record_id=1924&filename=point_charges_Training_set_p1.xyz"
-)
+dataset_url = "https://archive.materialscloud.org/records/405an-d8183/files/point_charges_Training_set_p1.xyz"  # noqa: E501
 dataset_path = os.path.join(data_dir, "point_charges_Training_set.xyz")
 
 if not os.path.isfile(dataset_path):

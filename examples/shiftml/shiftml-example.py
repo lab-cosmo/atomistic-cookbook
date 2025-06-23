@@ -34,8 +34,7 @@ calculator = ShiftML("ShiftML3")
 filename = "ShiftML_poly.zip"
 if not os.path.exists(filename):
     url = (
-        "https://archive.materialscloud.org/record/file?"
-        + "record_id=1503&filename=ShiftML_poly.zip"
+        "https://archive.materialscloud.org/records/j2fka-sda13/files/ShiftML_poly.zip"
     )
     response = requests.get(url)
     response.raise_for_status()
