@@ -20,7 +20,7 @@ jobs:
         with:
           # The checkout by default doesn't fetch any history, but for PR
           # we want to check which files have been modified.
-          # The action actions/checkout@v4 squashes the history of the PR, 
+          # The action actions/checkout@v4 squashes the history of the PR,
           # into a single commit so we need to fetch with a depth of 2.
           fetch-depth: ${{ github.event_name == 'pull_request' && 2 || 0 }}
 
@@ -58,6 +58,14 @@ jobs:
 
       - name: build example
         run: nox -e ${{ matrix.example-name }}
+
+      - name: check that the build did not create additional files in git
+        run: |
+          untracked="$(git ls-files --exclude-standard --others)"
+          if [ -n "$untracked" ]; then
+            printf >&2 "Error: running the example created untracked files:\n%s\n" "$untracked"
+            exit 1
+          fi
 
       - name: store example as a github artifact
         uses: actions/upload-artifact@v4
@@ -127,4 +135,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./gh-pages/
           force_orphan: true
-          cname: atomistic-cookbook.org  
+          cname: atomistic-cookbook.org
