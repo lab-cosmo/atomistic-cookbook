@@ -329,6 +329,7 @@ for name in EXAMPLES:
                 "--prune",
                 f"--file={environment_yml}",
                 f"--prefix={session.virtualenv.location}",
+                "--solver=libmamba",
             )
 
             # install sphinx-gallery and its dependencies
