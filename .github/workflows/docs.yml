@@ -41,6 +41,7 @@ jobs:
     # Handle the case where there are no examples to run.
     if: ${{ needs.setup.outputs.examplesmatrix != ''}}
     strategy:
+      fail-fast: false
       matrix:
         ${{ fromJson(needs.setup.outputs.examplesmatrix) }}
 
