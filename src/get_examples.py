@@ -68,7 +68,7 @@ def create_ci_jobs_json(modified_files: str):
         # by the Github Workflow as having no examples to run.
         return ""
 
-    return json.dumps({"example-name": examples})
+    return json.dumps({"example-name": list(sorted(examples))})
 
 
 if __name__ == "__main__":
