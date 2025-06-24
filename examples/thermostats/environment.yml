@@ -3,7 +3,7 @@ channels:
 dependencies:
   - python=3.11
   - pip
-  - lammps  
+  - lammps
   - pip:
     - ase>=3.23
     - chemiscope>=0.8
