@@ -9,6 +9,7 @@ import zipfile
 from pathlib import Path
 
 import nox
+import yaml
 from docutils.core import publish_doctree, publish_parts
 from docutils.nodes import paragraph, title
 
@@ -310,6 +311,49 @@ def post_process_gallery(name, example_dir, files_before):
     os.unlink(f"docs/src/examples/{name}/index.rst")
 
 
+# For each of the dependencies as keys, add the value as an extra dependency
+DEPENCENCIES_UPDATES = {
+    "libtorch": "pytorch-cpu",
+    "lammps-metatomic": "lammps-metatomic * cpu*nompi*",
+    "plumed-metatomic": "plumed-metatomic * *nompi*",
+}
+
+
+def update_dependencies(environment_yml, session):
+    output = session.run(
+        "conda",
+        "env",
+        "create",
+        f"--file={environment_yml}",
+        "--name=atomistic-cookbook-tmp-env",
+        "--solver=libmamba",
+        "--json",
+        "--dry-run",
+        silent=True,
+    )
+
+    dependencies = json.loads(output)["dependencies"]
+
+    new_deps = set()
+    for dep in dependencies:
+        for to_update, new_dep in DEPENCENCIES_UPDATES.items():
+            if f"::{to_update}==" in dep:
+                new_deps.add(new_dep)
+
+    if len(new_deps) != 0:
+        with open(environment_yml) as fd:
+            environment = yaml.safe_load(fd)
+
+        for dep in new_deps:
+            environment["dependencies"].append(dep)
+
+        environment_yml = session.virtualenv.location + "/environment.yml"
+        with open(environment_yml, "w") as fd:
+            yaml.safe_dump(environment, fd)
+
+    return environment_yml
+
+
 # ==================================================================================== #
 #                              nox sessions definitions                                #
 # ==================================================================================== #
@@ -322,6 +366,8 @@ for name in EXAMPLES:
         example_dir = Path("examples") / name
         environment_yml = example_dir / "environment.yml"
         if should_reinstall_dependencies(session, environment_yml=environment_yml):
+            environment_yml = update_dependencies(environment_yml, session)
+
             session.run(
                 "conda",
                 "env",
@@ -329,6 +375,7 @@ for name in EXAMPLES:
                 "--prune",
                 f"--file={environment_yml}",
                 f"--prefix={session.virtualenv.location}",
+                "--solver=libmamba",
             )
 
             # install sphinx-gallery and its dependencies
@@ -340,6 +387,12 @@ for name in EXAMPLES:
                 "chemiscope",
             )
 
+        session.run(
+            "conda",
+            "list",
+            f"--prefix={session.virtualenv.location}",
+        )
+
         # Gather list of files before running the example
         files_before = list(example_dir.glob("*"))
 
@@ -347,8 +400,8 @@ for name in EXAMPLES:
 
         post_process_gallery(name, example_dir, files_before)
 
-        if "--no-build-docs" not in session.posargs:
-            session.notify("build_docs")
+        if "--no-website" not in session.posargs:
+            session.notify("build_website")
 
         output = session.run(
             "git",
@@ -369,17 +422,25 @@ for name in EXAMPLES:
 
 @nox.session(venv_backend="none")
 def docs(session):
-    """Run all examples and build the documentation"""
+    session.error("use nox -e website instead of nox -e docs")
+
+
+@nox.session(venv_backend="none")
+def website(session):
+    """Run all examples and build the website"""
 
     for example in EXAMPLES:
-        session.run("nox", "-e", example, "--", "--no-build-docs", external=True)
+        session.run("nox", "-e", example, "--", "--no-website", external=True)
 
-    session.run("nox", "-e", "build_docs", external=True)
+    session.run("nox", "-e", "build_website", external=True)
 
 
 @nox.session
-def build_docs(session):
-    """Assemble the documentation into a website, assuming pre-generated examples"""
+def build_website(session):
+    """
+    Assemble the different examples into a website, assuming the examples files are
+    already generated
+    """
 
     # install build dependencies
     requirements = "docs/requirements.txt"
