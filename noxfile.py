@@ -9,6 +9,7 @@ import zipfile
 from pathlib import Path
 
 import nox
+import yaml
 from docutils.core import publish_doctree, publish_parts
 from docutils.nodes import paragraph, title
 
@@ -310,6 +311,50 @@ def post_process_gallery(name, example_dir, files_before):
     os.unlink(f"docs/src/examples/{name}/index.rst")
 
 
+# For each of the dependencies as keys, add the value as an extra dependency
+DEPENCENCIES_UPDATES = {
+    "libtorch": "pytorch-cpu",
+    "lammps-metatomic": "lammps-metatomic * cpu*nompi*",
+    "plumed-metatomic": "plumed-metatomic * *nompi*",
+}
+
+
+def update_dependencies(environment_yml, session):
+    output = session.run(
+        "conda",
+        "env",
+        "create",
+        f"--file={environment_yml}",
+        "--name=atomistic-cookbook-tmp-env",
+        "--solver=libmamba",
+        "--json",
+        "--quiet",
+        "--dry-run",
+        silent=True,
+    )
+
+    dependencies = json.loads(output)["dependencies"]
+
+    new_deps = set()
+    for dep in dependencies:
+        for to_update, new_dep in DEPENCENCIES_UPDATES.items():
+            if f"::{to_update}==" in dep:
+                new_deps.add(new_dep)
+
+    if len(new_deps) != 0:
+        with open(environment_yml) as fd:
+            environment = yaml.safe_load(fd)
+
+        for dep in new_deps:
+            environment["dependencies"].append(dep)
+
+        environment_yml = session.virtualenv.location + "/environment.yml"
+        with open(environment_yml, "w") as fd:
+            yaml.safe_dump(environment, fd)
+
+    return environment_yml
+
+
 # ==================================================================================== #
 #                              nox sessions definitions                                #
 # ==================================================================================== #
@@ -322,6 +367,8 @@ for name in EXAMPLES:
         example_dir = Path("examples") / name
         environment_yml = example_dir / "environment.yml"
         if should_reinstall_dependencies(session, environment_yml=environment_yml):
+            environment_yml = update_dependencies(environment_yml, session)
+
             session.run(
                 "conda",
                 "env",

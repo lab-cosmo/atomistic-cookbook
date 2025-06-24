@@ -8,12 +8,12 @@ dependencies:
   - make
   - git
   - plumed
-  - py-plumed  
+  - py-plumed
   - pip:
     - ase>=3.23
     - chemiscope
     - ipi>=3.1.5.1
     - matplotlib
 variables:
-  PYTHONPATH: 
+  PYTHONPATH:
   PLUMED_KERNEL:

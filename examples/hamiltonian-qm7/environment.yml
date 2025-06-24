@@ -6,7 +6,6 @@ dependencies:
   - pip
   - graphviz
   - pyscf=2.3.0
-  - rust>=1.65
   - pip:
       - pyscfad @ git+https://github.com/fishjojo/pyscfad.git@ml#egg=pyscfad
       - ase==3.22.1
@@ -17,7 +16,6 @@ dependencies:
       - metatensor-core==0.1.10
       - metatensor-learn==0.3.0
       - metatensor-operations==0.3.0
-      - --extra-index-url https://download.pytorch.org/whl/cpu 
       - featomic == 0.6.1
       - xitorch
       - keras_core
