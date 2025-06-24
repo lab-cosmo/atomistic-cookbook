@@ -401,8 +401,8 @@ for name in EXAMPLES:
 
         post_process_gallery(name, example_dir, files_before)
 
-        if "--no-build-docs" not in session.posargs:
-            session.notify("build_docs")
+        if "--no-website" not in session.posargs:
+            session.notify("build_website")
 
         output = session.run(
             "git",
@@ -423,17 +423,25 @@ for name in EXAMPLES:
 
 @nox.session(venv_backend="none")
 def docs(session):
-    """Run all examples and build the documentation"""
+    session.error("use nox -e website instead of nox -e docs")
+
+
+@nox.session(venv_backend="none")
+def website(session):
+    """Run all examples and build the website"""
 
     for example in EXAMPLES:
-        session.run("nox", "-e", example, "--", "--no-build-docs", external=True)
+        session.run("nox", "-e", example, "--", "--no-website", external=True)
 
-    session.run("nox", "-e", "build_docs", external=True)
+    session.run("nox", "-e", "build_website", external=True)
 
 
 @nox.session
-def build_docs(session):
-    """Assemble the documentation into a website, assuming pre-generated examples"""
+def build_website(session):
+    """
+    Assemble the different examples into a website, assuming the examples files are
+    already generated
+    """
 
     # install build dependencies
     requirements = "docs/requirements.txt"
