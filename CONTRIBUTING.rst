@@ -114,8 +114,6 @@ you can use the following commands:
     # execute the example and render it to HTML
     nox -e <example-name>
 
-    # build web pages for the examples that have been already run
-    nox -e build_docs
 
 To visualize the generated cookbook open ``docs/build/html/index.html``
 in a web browser. If there are dynamical elements that have to be loaded,

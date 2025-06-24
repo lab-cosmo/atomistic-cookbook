@@ -62,7 +62,7 @@ jobs:
           PIP_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
         run: |
           conda config --set notify_outdated_conda false
-          nox -e ${{ matrix.example-name }}
+          nox -e ${{ matrix.example-name }} -- --no-website
 
       - name: check that the build did not create additional files in git
         run: |
@@ -114,7 +114,7 @@ jobs:
           merge-multiple: true
 
       - name: build documentation
-        run: nox -e build_docs
+        run: nox -e build_website
 
       - name: store documentation as github artifact to be downloaded by users
         uses: actions/upload-artifact@v4
