@@ -54,10 +54,14 @@ jobs:
           python-version: "3.12"
 
       - name: install dependencies
-        run: python -m pip install nox docutils
+        run: python -m pip install -r requirements.txt
 
       - name: build example
-        run: nox -e ${{ matrix.example-name }}
+        env:
+          PIP_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
+        run: |
+          conda config --set notify_outdated_conda false
+          nox -e ${{ matrix.example-name }}
 
       - name: check that the build did not create additional files in git
         run: |
@@ -89,7 +93,7 @@ jobs:
           python-version: "3.12"
 
       - name: install dependencies
-        run: python -m pip install nox docutils
+        run: python -m pip install -r requirements.txt
 
       - name: Download latest main branch built examples
         uses: actions/download-artifact@v4

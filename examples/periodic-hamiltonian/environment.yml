@@ -10,7 +10,6 @@ dependencies:
       - ase==3.22.1
       - seekpath
       - requests
-      - --extra-index-url https://download.pytorch.org/whl/cpu
       - lightning
       - xitorch
       - keras_core
