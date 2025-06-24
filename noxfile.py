@@ -259,6 +259,57 @@ def build_gallery_section(template):
             )
 
 
+def post_process_gallery(name, example_dir, files_before):
+    # Path of the generated gallery example.
+    docs_example_dir = Path("docs/src/examples") / name
+
+    # Get list of generated notebooks
+    notebooks = [
+        file
+        for file in docs_example_dir.glob("*.ipynb")
+        if not (example_dir / file.name).exists()
+    ]
+    # Get the source python files that generated the notebooks
+    source_py_files = [notebook.with_suffix(".py").name for notebook in notebooks]
+    # Remove them from the list of example files (we don't want to include
+    # them in every zip file)
+    example_files = [
+        file
+        for file in files_before
+        if file.suffix != ".py" or file.name not in source_py_files
+    ]
+
+    # The src/generate-gallery.py script creates a zip file with just the
+    # *.py and *.ipynb files. Downloading this zip file is not very useful
+    # to reproduce the tutorial. Here we overwrite that zip file with one
+    # that also contains the rest of the files present in the example directory
+    # before running the example (including e.g. data and environment.yml).
+    # We create a zip file for each notebook.
+    for py_file, notebook in zip(source_py_files, notebooks):
+        with zipfile.ZipFile(docs_example_dir / f"{notebook.stem}.zip", "w") as zipf:
+            # Add files from the data dir (if present)
+            for file in example_dir.rglob("data/*"):
+                zipf.write(file, file.relative_to(example_dir))
+
+            # Add the rest of files in the example dir (with an extra check
+            # to make sure that they are still there)
+            for file in example_files:
+                if file.is_file() and os.path.split(file)[-1] not in [
+                    "README.rst",
+                    ".gitignore",
+                ]:
+                    zipf.write(file, file.relative_to(example_dir))
+
+            # Add the .py and .ipynb files
+            zipf.write(docs_example_dir / py_file, py_file)
+            zipf.write(notebook, notebook.name)
+
+            # Adds the installation instructions
+            zipf.write("examples/INSTALLING.rst", "INSTALLING.rst")
+
+    os.unlink(f"docs/src/examples/{name}/index.rst")
+
+
 # ==================================================================================== #
 #                              nox sessions definitions                                #
 # ==================================================================================== #
@@ -290,64 +341,30 @@ for name in EXAMPLES:
             )
 
         # Gather list of files before running the example
-        example_files = list(example_dir.glob("*"))
+        files_before = list(example_dir.glob("*"))
 
         session.run("python", "src/generate-gallery.py", example_dir)
 
-        # Path of the generated gallery example.
-        docs_example_dir = Path("docs/src/examples") / name
-
-        # Get list of generated notebooks
-        notebooks = [
-            file
-            for file in docs_example_dir.glob("*.ipynb")
-            if not (example_dir / file.name).exists()
-        ]
-        # Get the source python files that generated the notebooks
-        source_py_files = [notebook.with_suffix(".py").name for notebook in notebooks]
-        # Remove them from the list of example files (we don't want to include
-        # them in every zip file)
-        example_files = [
-            file
-            for file in example_files
-            if file.suffix != ".py" or file.name not in source_py_files
-        ]
-
-        # The src/generate-gallery.py script creates a zip file with just the
-        # *.py and *.ipynb files. Downloading this zip file is not very useful
-        # to reproduce the tutorial. Here we overwrite that zip file with one
-        # that also contains the rest of the files present in the example directory
-        # before running the example (including e.g. data and environment.yml).
-        # We create a zip file for each notebook.
-        for py_file, notebook in zip(source_py_files, notebooks):
-
-            with zipfile.ZipFile(
-                docs_example_dir / f"{notebook.stem}.zip", "w"
-            ) as zipf:
-                # Add files from the data dir (if present)
-                for file in example_dir.rglob("data/*"):
-                    zipf.write(file, file.relative_to(example_dir))
-
-                # Add the rest of files in the example dir (with an extra check
-                # to make sure that they are still there)
-                for file in example_files:
-                    if file.is_file() and os.path.split(file)[-1] not in [
-                        "README.rst",
-                        ".gitignore",
-                    ]:
-                        zipf.write(file, file.relative_to(example_dir))
-
-                # Add the .py and .ipynb files
-                zipf.write(docs_example_dir / py_file, py_file)
-                zipf.write(notebook, notebook.name)
-
-                # Adds the installation instructions
-                zipf.write("examples/INSTALLING.rst", "INSTALLING.rst")
-
-        os.unlink(f"docs/src/examples/{name}/index.rst")
+        post_process_gallery(name, example_dir, files_before)
 
         if "--no-build-docs" not in session.posargs:
             session.notify("build_docs")
+
+        output = session.run(
+            "git",
+            "ls-files",
+            "--exclude-standard",
+            "--others",
+            silent=True,
+            external=True,
+        )
+        if output.strip() != "":
+            session.warn(
+                "WARNING: There are files untracked by git, you should add anything "
+                "generated by an example to `.gitignore`, and commit the example files."
+            )
+            session.warn("The following files are not tracked:\n " + output.strip())
+            session.warn("This will be an error when building the full website.")
 
 
 @nox.session(venv_backend="none")
@@ -394,7 +411,6 @@ that are not part of any of the other sections.
         for _, metadata in sorted(
             all_examples_rst.items(), key=(lambda kw: kw[1]["title"])
         ):
-
             # generates a thumbnail link
             output.write(
                 f"""
