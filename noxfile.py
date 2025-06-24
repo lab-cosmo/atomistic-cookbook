@@ -387,6 +387,12 @@ for name in EXAMPLES:
                 "chemiscope",
             )
 
+        session.run(
+            "conda",
+            "list",
+            f"--prefix={session.virtualenv.location}",
+        )
+
         # Gather list of files before running the example
         files_before = list(example_dir.glob("*"))
 
