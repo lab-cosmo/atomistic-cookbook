@@ -26,12 +26,10 @@ the low-energy structures. To do this, we will:
     (:math:`Q_4` and :math:`Q_6`, a.k.a the bond-order parameters).
 2.  Implement this custom CV using ``featomic``, ``metatensor``, and ``metatomic``
     to create a portable ``metatomic`` model.
-3.  Use the `PLUMED <https://www.plumed.org/>`_ package, integrated with the
-    `Atomic Simulation Environment (ASE) <https://wiki.fysik.dtu.dk/ase/>`_, to
-    run a metadynamics simulation.
-4.  Analyze the results to visualize the free energy surface and run
-    trajectories with LAMMPS of the system as it explores different
-    configurations.
+3.  Run metadynamics trajectories with LAMMPS, and visualize the system as it 
+    explores different configurations.
+4.  Show an example of integration with `i-PI <https://ipi-code.org/>`_, that 
+    uses multiple time stepping to reduce the cost of computing complicated CVs.
 
 As usual for these examples, the simulation is run on a small system and for
 a short time, so that results will be fast but inaccurate. If you want to use
@@ -90,7 +88,7 @@ opt_atoms = atoms.copy()
 # The Target Structures
 # ---------------------
 #
-# The two most famous structures for LJ38 are the global minimum (a perfect
+# The two most "famous" structures for LJ38 are the global minimum (a perfect
 # truncated octahedron) and a lower-symmetry icosahedral structure which is a
 # deep local minimum. Let's load them and visualize all three (our starting
 # structure and the two targets) using ``chemiscope``.
@@ -126,7 +124,7 @@ chemiscope.show([minimal, icosaed, atoms], mode="structure", settings=settings)
 # by projection onto a basis of spherical harmonics. With that in mind, we will
 # demonstrate the usage of the SOAP power spectrum, which differs from the
 # standard Steinhardt by operating on a smooth density field, and includes
-# distance information through the aradial basis set. Additionally, unlike the
+# distance information through the radial basis set. Additionally, unlike the
 # sharp cutoff of the Steinhardt, we will use a cosine cutoff.
 
 
@@ -168,7 +166,7 @@ class CollectiveVariable(torch.nn.Module):
         self.spex = featomic.torch.SphericalExpansion(
             **{
                 "cutoff": {
-                    "radius": 1.3,
+                    "radius": 1.5,
                     "smoothing": {"type": "ShiftedCosine", "width": 0.5},
                 },
                 "density": {"type": "Gaussian", "width": 0.3},
