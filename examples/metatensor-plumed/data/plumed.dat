@@ -1,3 +1,7 @@
+UNITS LENGTH=Bohr ENERGY=Ha
+
+x1: POSITION ATOM=1
+PRINT ARG=x1.* STRIDE=1 FILE=position
 
 cv: METATOMIC ...
     MODEL=custom-cv.pt

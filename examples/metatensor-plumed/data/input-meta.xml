@@ -4,7 +4,7 @@
    </ffsocket>
    <ffplumed name="plumed">
          <file mode="xyz">data/lj-rnd.xyz</file>
-         <plumed_dat> data/ptest.dat </plumed_dat>
+         <plumed_dat> data/plumed.dat </plumed_dat>
          <plumed_extras> [cv1, cv2 ] </plumed_extras> -->
    </ffplumed>
    <total_steps>5000</total_steps>
