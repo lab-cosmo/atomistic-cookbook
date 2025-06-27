@@ -11,7 +11,7 @@ cv2: SELECT_COMPONENTS ARG=cv COMPONENTS=2
 
 mtd: METAD ...
     ARG=cv1,cv2
-    HEIGHT=0.5
+    HEIGHT=5e-10
     PACE=50
     SIGMA=0.02,0.05
     GRID_MIN=-2,-2

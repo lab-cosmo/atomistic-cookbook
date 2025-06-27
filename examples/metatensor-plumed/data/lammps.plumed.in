@@ -7,14 +7,14 @@ atom_style     atomic
 read_data      data/firemin.data
 
 # --- interactions -----------------------------------------------------------
-pair_style     lj/cut 2.5
-pair_coeff     1 1 1.0 1.0 2.5   # ε = 1, σ = 1, rc = 2.5 σ
+pair_style     lj/cut 4.5
+pair_coeff     1 1 1.0 1.0 4.5   # ε = 1, σ = 1, rc = 4.5 σ
 
 neighbor       0.3 bin
 neigh_modify   delay 0 every 1 check yes
 
 # --- masses (also given in data file; harmless to repeat) -------------------
-mass           1 1.0
+mass           1 0.00054857991 # LAMMPS uses AMU for mass, not the actual electron mass
 
 # --- initial velocities & thermostat ----------------------------------------
 velocity       all create 56839.504 2001 mom yes rot yes dist gaussian
@@ -25,7 +25,7 @@ fix            1 all gle 6 56839.504 56839.504 1995 data/smartSampling.A
 fix             2 all plumed plumedfile data/plumed.dat outfile out/plumed.out
 
 # --- MD settings ------------------------------------------------------------
-timestep       0.01           
+timestep       0.00024188843  # this is in femtoseconds because LAMMPS, so 0.01 atomic time units -> this
 thermo         100
 thermo_style   custom step temp pe etotal press
 
