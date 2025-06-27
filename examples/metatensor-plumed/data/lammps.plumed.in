@@ -30,4 +30,4 @@ thermo         100
 thermo_style   custom step temp pe etotal press
 
 dump           traj all custom 100 out/lj38.lammpstrj id type x y z
-run            2000          # 1 0 τ  (≈ 0.01 ns on the usual mapping)
+run            40000          # 1 0 τ  (≈ 0.01 ns on the usual mapping)

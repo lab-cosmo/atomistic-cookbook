@@ -157,7 +157,7 @@ chemiscope.show([minimal, icosaed, atoms], mode="structure", settings=settings)
 # similar results.
 
 
-class CollectiveVariable(torch.nn.Module):
+class SoapCV(torch.nn.Module):
     def __init__(self, cutoff, angular_list):
         super().__init__()
 
@@ -169,7 +169,7 @@ class CollectiveVariable(torch.nn.Module):
                     "radius": 1.5,
                     "smoothing": {"type": "ShiftedCosine", "width": 0.5},
                 },
-                "density": {"type": "Gaussian", "width": 0.3},
+                "density": {"type": "Gaussian", "width": 0.25},
                 "basis": {
                     "type": "TensorProduct",
                     "max_angular": self.max_angular,
@@ -230,7 +230,6 @@ class CollectiveVariable(torch.nn.Module):
         # tools, including PLUMED where it defines a custom collective variable.
         return {"features": summed_q}
 
-
 # %%
 #
 # Exporting the Model
@@ -250,8 +249,8 @@ class CollectiveVariable(torch.nn.Module):
 # for more information about exporting metatensor models.
 
 # initialize the model
-cutoff = 1.3
-module = CollectiveVariable(cutoff, angular_list=[4, 6])
+cutoff = 1.5
+module = SoapCV(cutoff, angular_list=[4, 6])
 
 # metatdata about the model itself
 metadata = mta.ModelMetadata(
@@ -276,7 +275,114 @@ model = mta.AtomisticModel(
 )
 
 # finally, save the model to a standalone file
-model.save("custom-cv.pt", collect_extensions="./extensions/")
+model.save("soap-cv.pt", collect_extensions="./extensions/")
+
+
+# %%
+# coordination histogram
+def f_coord(y:torch.Tensor) -> torch.Tensor:
+    """
+    This function computes a switching function
+    """
+    cy = torch.zeros_like(y)
+    cy.requires_grad_(True)
+    
+    # Apply conditions as per the Fortran code using torch.where
+    cy = torch.where(y <= 0, torch.tensor(1.0, dtype=torch.float32), cy)
+    cy = torch.where(y >= 1, torch.tensor(0.0, dtype=torch.float32), cy)
+    mask = (y > 0) & (y < 1)
+    cy = torch.where(mask, ((y - 1) ** 2) * (1 + 2 * y), cy)
+    return cy
+
+class CoordinationHistogram(torch.nn.Module):
+    def __init__(self, cutoff, cn_list):
+        super().__init__()
+
+        self.cn_list = torch.tensor(cn_list, dtype=torch.int)
+        self.cutoff = cutoff
+        self.r0 = cutoff
+        self.r1 = cutoff*4.0/5.0
+        self.sigma2 = 0.5**2
+        
+    def forward(
+        self,
+        systems: List[mta.System],
+        outputs: Dict[str, mta.ModelOutput],
+        selected_atoms: Optional[mts.Labels],
+    ) -> Dict[str, mts.TensorMap]:
+
+        if len(systems[0].positions) == 0:
+            # PLUMED will first call the model with 0 atoms to get the size of the
+            # output, so we need to handle this case first
+            keys = mts.Labels("_", torch.tensor([[0]]))
+            block = mts.TensorBlock(
+                torch.zeros((0, len(self.cn_list)), dtype=torch.float64),
+                samples=mts.Labels("structure", torch.zeros((0, 1), dtype=torch.int32)),
+                components=[],
+                properties=mts.Labels("cn", self.cn_list.reshape(-1,1)),
+            )
+            return {"features": mts.TensorMap(keys, [block])}
+
+        values = []
+        isys = torch.arange(len(systems), dtype=torch.int32).reshape((-1,1))
+        for s in systems:
+            pos = s.positions
+
+            # Calculate pairwise distances  
+            dist = torch.cdist(pos, pos, p=2.0)
+            coords = f_coord((dist-self.r1) / (self.r0-self.r1)).sum(dim=1) - 1.0
+
+            cn_histo = torch.exp(-(coords - self.cn_list.reshape(-1, 1))**2*0.5/self.sigma2).sum(dim=1)
+            values.append(cn_histo)
+
+        keys = mts.Labels("_", torch.tensor([[0]]))
+        values = torch.stack(values, dim=0)
+        block = mts.TensorBlock(
+            values=values,
+            samples=mts.Labels("structure", isys),
+            components=[],
+            properties=mts.Labels("cn", self.cn_list.reshape(-1,1)),
+        )
+        mts_coords = mts.TensorMap(keys, [block])
+        # This model has a single output, named "features". This can be used by multiple
+        # tools, including PLUMED where it defines a custom collective variable.
+        return {"features": mts_coords}
+
+cutoff = 1.5
+module = CoordinationHistogram(cutoff, cn_list=[6, 8])
+
+# metatdata about the model itself
+metadata = mta.ModelMetadata(
+    name="Coordination histogram",
+    description="Computes smooth histogram of coordination numbers",
+)
+
+# metatdata about what the model can do
+outputs = {"features": mta.ModelOutput(per_atom=False)}
+capabilities = mta.ModelCapabilities(
+    outputs=outputs,
+    atomic_types=[18],
+    interaction_range=cutoff,
+    supported_devices=["cpu"],
+    dtype="float64",
+)
+
+model = mta.AtomisticModel(
+    module=module.eval(),
+    metadata=metadata,
+    capabilities=capabilities,
+)
+
+model.save("histo-cv.pt", collect_extensions="./extensions/")
+
+
+# %%
+
+featurizer = chemiscope.metatomic_featurizer(model)
+featurizer([minimal, icosaed, atoms], None)
+# mta.systems_to_torch([ minimal, icosaed, atoms])
+# model.forward(mta.systems_to_torch([ minimal, icosaed, atoms]), None, None)
+
 
 # %%
 # Optional: Test the Model in Python
@@ -353,9 +459,9 @@ cv2_traj = colvar[:, 2]
 hills = np.loadtxt("HILLS")
 
 # Visually pleasing grid for the FES based on the PLUMED input
-grid_min = [-2.5, -5]
-grid_max = [12, 20]
-grid_bins = [500, 500]
+grid_min = [0,0]
+grid_max = [1, 2]
+grid_bins = [100, 200]
 grid_cv1 = np.linspace(grid_min[0], grid_max[0], grid_bins[0])
 grid_cv2 = np.linspace(grid_min[1], grid_max[1], grid_bins[1])
 X, Y = np.meshgrid(grid_cv1, grid_cv2)
@@ -391,12 +497,14 @@ plt.plot(
     label="LAMMPS MD Trajectory",
 )
 
-# Mark the start and end points
+# Mark significant points
+
+feats = featurizer([minimal, icosaed], None)
 plt.scatter(
-    cv1_traj[0], cv2_traj[0], c="red", marker="X", s=150, zorder=3, label="Start"
+    feats[0,0], feats[0,1], c="red", marker="X", s=150, zorder=3, label="octahedron"
 )
 plt.scatter(
-    cv1_traj[-1], cv2_traj[-1], c="cyan", marker="o", s=150, zorder=3, label="End"
+    feats[1,0], feats[1,1], c="cyan", marker="o", s=150, zorder=3, label="icosahedral"
 )
 
 plt.title("Free Energy Surface of LJ38 Cluster")
@@ -420,17 +528,18 @@ plt.show()
 # https://github.com/Sucerquia/ASE-PLUMED_tutorial/blob/master/files/plotterFES.py
 p = subprocess.Popen(
     "plumed sum_hills --hills HILLS --outfile fes.dat"
-    + " --bin 500,500 --min -20,-40 --max 20,40",
+    + " --bin 100,200 --min 0,0 --max 1,2",
     shell=True,
     stdout=subprocess.PIPE,
 )
 p.wait()
 
+# %%
 # Import free energy and reshape with the number of bins defined in the
 # reconstruction process.
-scm = np.loadtxt("fes.dat", usecols=0).reshape(501, 501)
-tcm = np.loadtxt("fes.dat", usecols=1).reshape(501, 501)
-fes = np.loadtxt("fes.dat", usecols=2).reshape(501, 501)
+scm = np.loadtxt("fes.dat", usecols=0).reshape(101, 201)
+tcm = np.loadtxt("fes.dat", usecols=1).reshape(101, 201)
+fes = np.loadtxt("fes.dat", usecols=2).reshape(101, 201)
 
 # Plot
 fig, ax = plt.subplots(figsize=(10, 9))

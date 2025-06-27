@@ -7,7 +7,7 @@
          <plumed_dat> data/plumed.dat </plumed_dat>
          <plumed_extras> [cv1, cv2 ] </plumed_extras>
    </ffplumed>
-   <total_steps>20000</total_steps>
+   <total_steps>40000</total_steps>
    <output prefix="meta-md">
       <trajectory stride="10" filename="pos" cell_units="atomic_unit">positions{atomic_unit}</trajectory>
       <trajectory stride="10" filename="colvar" bead="0" extra_type="cv1, cv2"> extras_bias </trajectory>
@@ -20,10 +20,12 @@
    </prng>
    <system>
       <forces> 
-          <force forcefield="driver"></force>
+          <force forcefield="driver">
+               <mts_weights> [0,1] </mts_weights>
+          </force>
       </forces>
       <initialize nbeads="1">
-        <file mode="xyz">data/lj-rnd.xyz</file>
+        <file mode="xyz">data/lj-oct.xyz</file>
         <cell>
          [   20, 0, 0, 0, 20, 0, 0, 0, 20.29166 ]
         </cell>
@@ -37,15 +39,15 @@
         </masses>
       </initialize>
       <ensemble>
-         <temperature> 0.18 </temperature>
+         <temperature> 0.15 </temperature>
          <bias>
-            <force forcefield="plumed"/>
+             <force forcefield="plumed"/>
          </bias>
       </ensemble>
       <motion mode="dynamics">
         <fixcom> True </fixcom>
         <dynamics mode="nvt" splitting="baoab">
-        <timestep> 0.010 </timestep>
+        <timestep> 0.040 </timestep> <!-- MTS, M=4 -->
 <!--
 # Generated at http://cosmo-epfl.github.io/gle4md
 # Please cite:
@@ -70,7 +72,8 @@
    5.006223546195e+1,   -2.481525992391e+2,    9.919631802378e+2,   -7.678395124017e+1,    6.543088061039e+0,   -4.333827755521e+1,    2.612735973647e-6
      ]
     </A>
-  </thermostat>
+</thermostat>
+        <nmts> [1, 4] </nmts>
         </dynamics>
       </motion>
   </system>
