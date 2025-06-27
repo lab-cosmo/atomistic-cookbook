@@ -26,7 +26,7 @@ fix             2 all plumed plumedfile data/plumed.dat outfile out/plumed.out
 
 # --- MD settings ------------------------------------------------------------
 timestep       0.01           
-thermo         500
+thermo         100
 thermo_style   custom step temp pe etotal press
 
 dump           traj all custom 100 out/lj38.lammpstrj id type x y z

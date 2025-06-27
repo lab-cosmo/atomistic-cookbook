@@ -172,7 +172,7 @@ class CollectiveVariable(torch.nn.Module):
                 "density": {"type": "Gaussian", "width": 0.3},
                 "basis": {
                     "type": "TensorProduct",
-                    "max_angular": 6,
+                    "max_angular": self.max_angular,
                     "radial": {"type": "Gto", "max_radial": 3},
                 },
             }
@@ -210,11 +210,10 @@ class CollectiveVariable(torch.nn.Module):
         spex = mts.remove_dimension(spex, axis="keys", name="o3_sigma")
         spex = spex.keys_to_properties("neighbor_type")
         spex = spex.keys_to_samples("center_type")
-
-        spex = mts.sum_over_samples(spex, sample_names=["atom", "center_type"])
-
+        
         blocks: List[mts.TensorBlock] = []
         for block in spex.blocks():
+            # sums over both the m and the radial components
             new_block = mts.TensorBlock(
                 (block.values**2).sum(dim=(1, 2)).reshape(-1, 1),
                 samples=block.samples,
@@ -225,6 +224,7 @@ class CollectiveVariable(torch.nn.Module):
 
         summed_q = mts.TensorMap(spex.keys, blocks)
         summed_q = summed_q.keys_to_properties("o3_lambda")
+        summed_q = mts.mean_over_samples(summed_q, sample_names=["atom", "center_type"])
 
         # This model has a single output, named "features". This can be used by multiple
         # tools, including PLUMED where it defines a custom collective variable.

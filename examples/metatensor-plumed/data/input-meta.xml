@@ -5,12 +5,12 @@
    <ffplumed name="plumed">
          <file mode="xyz">data/lj-rnd.xyz</file>
          <plumed_dat> data/plumed.dat </plumed_dat>
-         <!--         <plumed_extras> [cv1, cv2 ] </plumed_extras> -->
+         <plumed_extras> [cv1, cv2 ] </plumed_extras>
    </ffplumed>
-   <total_steps>5000</total_steps>
+   <total_steps>20000</total_steps>
    <output prefix="meta-md">
       <trajectory stride="10" filename="pos" cell_units="atomic_unit">positions{atomic_unit}</trajectory>
-      <!--    <trajectory stride="10" filename="colvar" bead="0" extra_type="cv1, cv2"> extras_bias </trajectory> -->
+      <trajectory stride="10" filename="colvar" bead="0" extra_type="cv1, cv2"> extras_bias </trajectory>
       <properties stride="10"> 
       [ step, time, conserved, temperature, kinetic_md, 
         potential, ensemble_bias ] 
