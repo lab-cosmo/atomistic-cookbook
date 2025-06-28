@@ -11,3 +11,4 @@ installation instructions for the various packages are discussed on the `PLUMED
 website <http://plumed.org>`_.
 
 - examples/pi-metad/pi-metad
+- examples/metatensor-plumed/lj-crystal.py

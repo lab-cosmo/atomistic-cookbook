@@ -1,0 +1,51 @@
+UNITS LENGTH=Bohr ENERGY=Ha
+
+soap: METATOMIC ...
+    MODEL=soap-cv.pt
+    EXTENSIONS_DIRECTORY=./extensions/
+    SPECIES1=1-38
+    SPECIES_TO_TYPES=18
+...
+
+histo: METATOMIC ...
+    MODEL=histo-cv.pt
+    EXTENSIONS_DIRECTORY=./extensions/
+    SPECIES1=1-38
+    SPECIES_TO_TYPES=18
+...
+
+#cv1: SELECT_COMPONENTS ARG=soap COMPONENTS=1
+#cv2: SELECT_COMPONENTS ARG=soap COMPONENTS=2
+#
+#mtd: METAD ...
+#    ARG=cv1,cv2
+#    HEIGHT=0.2
+#    PACE=20
+#    SIGMA=0.04,0.08
+#    GRID_MIN=0,0
+#    GRID_MAX=1,2
+#    GRID_BIN=200,400
+#    BIASFACTOR=10
+#    FILE=HILLS
+#    TEMP=47366.254  # 56839.504 # 0.15 Ha in K
+#...
+
+cv1: SELECT_COMPONENTS ARG=histo COMPONENTS=1
+cv2: SELECT_COMPONENTS ARG=histo COMPONENTS=2
+
+mtd: METAD ...
+    ARG=cv1,cv2
+    HEIGHT=0.2
+    PACE=20
+    SIGMA=0.2,0.2
+    GRID_MIN=0,0
+    GRID_MAX=30,20
+    GRID_BIN=300,200
+    BIASFACTOR=10
+    FILE=HILLS
+    TEMP=47366.254  # 56839.504 # 0.15 Ha in K
+...
+
+
+PRINT ARG=cv1,cv2,mtd.*,histo.*,soap.* STRIDE=10 FILE=COLVAR
+FLUSH STRIDE=1
