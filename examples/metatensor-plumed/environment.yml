@@ -14,7 +14,8 @@ dependencies:
     - ase
     - numpy
     - chemiscope
-    - metatensor[torch]
+    - ipi>=3.1.5  
+    - metatomic[torch]
     - featomic-torch
 variables:
   PIP_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu

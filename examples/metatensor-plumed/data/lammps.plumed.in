@@ -4,7 +4,7 @@ units          electron # lj units are problematic with the plumed+metatensor co
 dimension      3
 atom_style     atomic
 
-read_data      data/firemin.data
+read_data      data/minimal.data
 
 # --- interactions -----------------------------------------------------------
 pair_style     lj/cut 4.5
