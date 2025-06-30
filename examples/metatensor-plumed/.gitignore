@@ -1,3 +1,11 @@
 extensions/
-custom-cv.pt
+histo-cv.pt
+soap-cv.pt
 HILLS
+COLVAR
+bck.*
+data/plumed-mts.dat
+data/minimal.data
+out/*
+log.*
+meta-md.*
