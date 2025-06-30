@@ -201,7 +201,7 @@ class CoordinationHistogram(torch.nn.Module):
 # ''''''''''''''''''''''''''''''''
 #
 # Rather than looking at the atomic coordination, one can also resort to
-# order parameters that capture tha ngular order. The **Steinhardt
+# order parameters that capture the angular order. The **Steinhardt
 # order parameters**, specifically :math:`Q_4` and :math:`Q_6` are
 # rotationally invariant and measure the local orientational symmetry
 # around each atom. The standard caclulation works by
@@ -214,22 +214,21 @@ class CoordinationHistogram(torch.nn.Module):
 #   is close to zero for icosahedral structures but has a distinct non-zero value
 #   for FCC structures.
 #
-# This works very well for the LJ38 and is also part of the standard PLUMED build.
+# This works fairly well for the LJ38 and is also part of the standard PLUMED build.
 #
 # The key concept is that the geometry of the atomic neighborhood is described
 # by projection onto a basis of spherical harmonics. With that in mind, we will
-# demonstrate the usage of the SOAP power spectrum, which differs from the
-# standard Steinhardt by operating on a smooth density field, and includes
-# distance information through the radial basis set. Additionally, unlike the
-# sharp cutoff of the Steinhardt, we will use a cosine cutoff.
+# use the SOAP power spectrum, which differs from the standard Steinhardt by
+# operating on a smooth density field, and includes distance information through
+# the radial basis set. Additionally, unlike the sharp cutoff of the Steinhardt,
+# we will use a cosine cutoff.
 #
 # We will use the power spectrum components for angular channels :math:`l=4` and
 # :math:`l=6`. SOAP features are computed from an expansion of the neighbor
-# density in spherical harmonics and radial functions. We will use
-# ``featomic`` to evaluate this spherical expansion, select the appropriate
-# angular indices and then sum over the :math:`m` index, as well as over the
-# radial dimension to recover order parameters analogous to :math:`Q_4` and
-# :math:`Q_6`.
+# density in spherical harmonics and radial functions.  ``featomic`` is used to
+# evaluate this spherical expansion, select the appropriate angular indices and
+# then sum over the :math:`m` index, as well as over the radial dimension to
+# recover order parameters analogous to :math:`Q_4` and :math:`Q_6`.
 
 
 class SoapCV(torch.nn.Module):
@@ -303,8 +302,7 @@ class SoapCV(torch.nn.Module):
         summed_q = summed_q.keys_to_properties("o3_lambda")
         summed_q = mts.mean_over_samples(summed_q, sample_names=["atom", "center_type"])
 
-        # This model has a single output, named "features". This can be used by multiple
-        # tools, including PLUMED where it defines a custom collective variable.
+        # This model, like CoordinationHistogram has a single output, named "features".
         return {"features": summed_q}
 
 
@@ -313,10 +311,10 @@ class SoapCV(torch.nn.Module):
 # Exporting the Model
 # '''''''''''''''''''
 #
-# Once we have defined our custom model, we can now annotate it with multiple metadata
-# and export it to the disk. The resulting model file and extensions directory can then
-# be loaded by PLUMED and other, without requiring a Python installation (for example on
-# HPC systems).
+# Once we have defined our custom model, we can now annotate it with multiple
+# metadata entries and export it to the disk. The resulting model file and
+# extensions directory can then be loaded by PLUMED and other compatible
+# engines, without requiring a Python installation (for example on HPC systems).
 #
 # See the
 # `upstream API documentation
@@ -449,7 +447,7 @@ lmp_trajectory = ase.io.read("out/lj38.lammpstrj", index=":")
 # required, cf. `the original paper
 # <https://doi.org/10.1103/PhysRevLett.100.020603>`_
 #
-# NB: PLUMED provides dedicated tools to perform
+# NB: PLUMED provides dedicated CLI tools to perform these tasks
 #
 
 # time, cv1, cv2, mtd.bias
@@ -528,11 +526,10 @@ plt.show()
 # Plotting in ``chemiscope``
 # ''''''''''''''''''''''''''
 #
-# The structures with the on the free energy surface can
-# be visualized using a dynamic plot in ``chemiscope``.
-# We load both the histogram-based and the SOAP-based CVs,
-# so you can see the difference in the two approaches by
-# changing the x and y axes in the plot settings.
+# The structures on the free energy surface can be visualized using a dynamic
+# plot in ``chemiscope``.  We load both the histogram-based and the SOAP-based
+# CVs, so you can see the difference in the two approaches by changing the x and
+# y axes in the plot settings.
 
 dyn_prop = {
     "cv1": {
@@ -623,7 +620,7 @@ ipi_input = pathlib.Path("data/input-meta.xml")
 print(ipi_input.read_text())
 
 # %%
-# We use LAMMPS to compute the LJ potential, and use i-PI in a client-server
+# We use LAMMPS to compute the LJ potential, and use i-PI in its client-server
 # mode.
 
 ipi_process = None
@@ -643,8 +640,8 @@ if ipi_process is not None:
 # i-PI output trajectory
 # ''''''''''''''''''''''
 #
-# The SOAP CVs are much more expensive to compute than the histogram-based
-# CVs, so we only run 2000 steps as a demonstration.
+# The SOAP CVs are much more expensive to compute than the histogram-based CVs,
+# so we only run 2000 steps as a demonstration.
 
 ipi_trajectory = ipi.utils.parsing.read_trajectory("meta-md.pos_0.xyz")
 ipi_properties, _ = ipi.utils.parsing.read_output("meta-md.out")
