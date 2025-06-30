@@ -42,6 +42,7 @@ import linecache
 import os
 import pathlib
 import subprocess
+from time.time import sleep
 
 # %%
 from typing import Dict, List, Optional
@@ -628,7 +629,7 @@ print(ipi_input.read_text())
 ipi_process = None
 if not os.path.exists("meta-md.out"):
     ipi_process = subprocess.Popen(["i-pi", "data/input-meta.xml"])
-    time.sleep(3)  # wait for i-PI to start
+    sleep(3)  # wait for i-PI to start
     lmp_process = subprocess.Popen(["lmp", "-in", "data/lammps.ipi.in"])
 
 # %%
