@@ -4,10 +4,10 @@
    </ffsocket>
    <ffplumed name="plumed">
          <file mode="xyz">data/lj-rnd.xyz</file>
-         <plumed_dat> data/plumed.dat </plumed_dat>
+         <plumed_dat> data/plumed-mts.dat </plumed_dat>
          <plumed_extras> [cv1, cv2 ] </plumed_extras>
    </ffplumed>
-   <total_steps>40000</total_steps>
+   <total_steps>2000</total_steps>
    <output prefix="meta-md">
       <trajectory stride="10" filename="pos" cell_units="atomic_unit">positions{atomic_unit}</trajectory>
       <trajectory stride="10" filename="colvar" bead="0" extra_type="cv1, cv2"> extras_bias </trajectory>
@@ -25,7 +25,7 @@
           </force>
       </forces>
       <initialize nbeads="1">
-        <file mode="xyz">data/lj-rnd.xyz</file>
+        <file mode="xyz">data/lj-oct.xyz</file>
         <cell>
          [   20, 0, 0, 0, 20, 0, 0, 0, 20.29166 ]
         </cell>
@@ -39,16 +39,19 @@
         </masses>
       </initialize>
       <ensemble>
-         <temperature> 0.15 </temperature>
+         <temperature> 0.16 </temperature>
          <bias>
-             <force forcefield="plumed"/>
+             <force forcefield="plumed">
+                 <mts_weights> [1,0] </mts_weights>
+             </force>
          </bias>
       </ensemble>
       <motion mode="dynamics">
         <fixcom> True </fixcom>
         <dynamics mode="nvt" splitting="baoab">
-        <timestep> 0.040 </timestep> <!-- MTS, M=4 -->
-<!--
+        <timestep> 0.020 </timestep> <!-- MTS, M=2 -->
+        <thermostat mode='multi'>
+        <!--
 # Generated at http://cosmo-epfl.github.io/gle4md
 # Please cite:
 # M. Ceriotti, G. Bussi and M. Parrinello, J. Chem. Theory Comput. 6, 1170 (2010) 
@@ -73,7 +76,10 @@
      ]
     </A>
 </thermostat>
-        <nmts> [1, 4] </nmts>
+<thermostat mode="svr"><tau> 0.1 </tau>
+</thermostat>
+</thermostat>
+        <nmts> [1, 2] </nmts>
         </dynamics>
       </motion>
   </system>

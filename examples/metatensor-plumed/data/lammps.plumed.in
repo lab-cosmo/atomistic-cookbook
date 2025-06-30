@@ -1,4 +1,4 @@
-# LJ38 truncated-octahedron cluster – MD at T = 0.18 ε/kB = 56839.504 K
+# LJ38 truncated-octahedron cluster – MD at T = 0.16 ε/kB = 50524.00 K
 
 units          electron # lj units are problematic with the plumed+metatensor combination
 dimension      3
@@ -17,9 +17,9 @@ neigh_modify   delay 0 every 1 check yes
 mass           1 0.00054857991 # LAMMPS uses AMU for mass, not the actual electron mass
 
 # --- initial velocities & thermostat ----------------------------------------
-velocity       all create 56839.504 2001 mom yes rot yes dist gaussian
-fix            nvtall all nvt temp 56839.504 56839.504 1.0  # τT = 1.0 τ
-fix            1 all gle 6 56839.504 56839.504 1995 data/smartSampling.A
+velocity       all create 50524.004 2001 mom yes rot yes dist gaussian
+fix            nvtall all nvt temp 50524.004 50524.004 1.0  # τT = 1.0 τ
+fix            1 all gle 6 50524.004 50524.004 1995 data/smartSampling.A
 
 # -- Plumed integration --
 fix             2 all plumed plumedfile data/plumed.dat outfile out/plumed.out
@@ -30,4 +30,4 @@ thermo         100
 thermo_style   custom step temp pe etotal press
 
 dump           traj all custom 100 out/lj38.lammpstrj id type x y z
-run            40000          # 1 0 τ  (≈ 0.01 ns on the usual mapping)
+run            80000          # 1 0 τ  (≈ 0.01 ns on the usual mapping)

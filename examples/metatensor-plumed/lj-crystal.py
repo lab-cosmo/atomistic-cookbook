@@ -38,14 +38,15 @@ a short time, so that results will be fast but inaccurate. If you want to use
 this exanmple as a template, you should set more appropriate parameters.
 """
 
-# %%
 import os
+import linecache
+import pathlib
 import subprocess
+
+# %%
 from typing import Dict, List, Optional
 
-import ase.calculators.lj
 import ase.io
-import ase.optimize
 
 #
 import chemiscope
@@ -55,7 +56,6 @@ import metatensor.torch as mts
 import metatomic.torch as mta
 import numpy as np
 import torch
-from matplotlib import colormaps
 
 
 if hasattr(__import__("builtins"), "get_ipython"):
@@ -401,9 +401,10 @@ chemiscope.explore(
 # The input file consists of the following sections:
 # - ``UNITS`` : Specifies the energy and length units
 # - ``METATOMIC`` : Defines a collective variable which is essentially
-#                 an exported metatomic model. We load both the
-# - ``SELECT_COMPONENTS`` : Splits the model output :math:`Q_4`
-#                         and :math:`Q_6` parameters to scalars
+#                 an exported metatomic model. We load both the models
+#                 we just created, and use the CV histogram that is faster
+#                to compute (and more efficient with metadynamics)
+# - ``SELECT_COMPONENTS`` : Splits the model output to scalars
 # - ``METAD`` : sets up the metadynamics algorithm. It will add repulsive
 #             Gaussian potentials in the (``cv1``, ``cv2``) space at regular
 #             intervals (``PACE``), discouraging the simulation from re-visiting
@@ -411,37 +412,42 @@ chemiscope.explore(
 # - ``PRINT`` : This tells PLUMED to write the values of our CVs and the
 #             metadynamics bias energy to a file named ``COLVAR`` for later analysis.
 
-if os.path.exists("HILLS"):
-    os.unlink("HILLS")
-
-if os.path.exists("COLVARS"):
-    os.unlink("COLVARS")
-
 with open("data/plumed.dat", "r") as fname:
     print(fname.read())
 
 # %%
-# Running dynamics with ``lammps``
-# --------------------------------
+# Running metadynamics with LAMMPS
+# ''''''''''''''''''''''''''''''''
 #
-# LAMMPS is easily amongst the most robust molecular dynamics engine.
-#
+# We use a custom version of LAMMPS that is linked with ``metatensor``
+# and the ``metatensor``-enabled version of PLUMED. From the point of
+# view of LAMMPS, all that is needed is to use ``fix_plumed`` to
+# load the PLUMED input file, as the calculation of the custom
+# collective variables is handled by PLUMED itself.
 
+# write the LAMMPS structure file
 lmp_atoms = minimal.copy()
 lmp_atoms.cell = [20, 20, 20]
 lmp_atoms.positions += 10
 lmp_atoms.set_masses([1.0] * len(lmp_atoms))
 ase.io.write("data/minimal.data", lmp_atoms, format="lammps-data")
 
+print(linecache.getline("data/lammps.plumed.in", 25).strip())
 subprocess.run(["lmp", "-in", "data/lammps.plumed.in"], check=True, capture_output=True)
 lmp_trajectory = ase.io.read("out/lj38.lammpstrj", index=":")
 
 # %%
-# Static visualization - I
-# ---------------------------
+# Static visualization
+# '''''''''''''''''''''
 #
-# The dynamics on the free energy surface can be visualized using a static plot
-# with the trajectory overlaid as follows.
+# The dynamics on the free energy surface can be visualized using a
+# static plot with the trajectory overlaid as follows.
+# NB: The accumulated bias is *not* the free energy
+# when performing well-tempered metadynamics, and a re-scaling is
+# required, cf. `the original paper
+# <https://doi.org/10.1103/PhysRevLett.100.020603>`_
+#
+# NB: PLUMED provides dedicated tools to perform
 #
 
 # time, cv1, cv2, mtd.bias
@@ -449,6 +455,8 @@ colvar = np.loadtxt("COLVAR")
 time = colvar[:, 0]
 cv1_traj = colvar[:, 1]
 cv2_traj = colvar[:, 2]
+soap1_traj = colvar[:, 6]
+soap2_traj = colvar[:, 7]
 
 # HILLS has the free energy surface
 # time, center_cv1, center_cv2, sigma_cv1, sigma_cv2, height
@@ -456,8 +464,8 @@ hills = np.loadtxt("HILLS")
 
 # Visually pleasing grid for the FES based on the PLUMED input
 grid_min = [0, 0]
-grid_max = [1, 2]
-grid_bins = [100, 200]
+grid_max = [32, 16]
+grid_bins = [200, 100]
 grid_cv1 = np.linspace(grid_min[0], grid_max[0], grid_bins[0])
 grid_cv2 = np.linspace(grid_min[1], grid_max[1], grid_bins[1])
 X, Y = np.meshgrid(grid_cv1, grid_cv2)
@@ -477,11 +485,12 @@ for hill in hills:
 # Shift for 0 minimum
 FES = -FES
 FES -= FES.min()
+FES *= 40 / (40 - 1)  # corrects for the well-tempered biasfactor
 
 # Prepare the plot
 plt.figure(figsize=(10, 7))
 contour = plt.contourf(X, Y, FES, levels=np.linspace(0, FES.max(), 25), cmap="viridis")
-plt.colorbar(contour, label="Free Energy")
+plt.colorbar(contour, label="-bias (a.u.)")
 
 # Overlay the trajectory
 plt.plot(
@@ -495,7 +504,7 @@ plt.plot(
 
 # Mark significant points
 
-feats = featurizer([minimal, icosaed], None)
+feats = featurizer_ch([minimal, icosaed], None)
 plt.scatter(
     feats[0, 0], feats[0, 1], c="red", marker="X", s=150, zorder=3, label="octahedron"
 )
@@ -514,66 +523,35 @@ plt.show()
 
 
 # %%
-# Static visualization - II
-# ---------------------------
-#
-# We can also just check the basins.
-#
-
-# Kanged from
-# https://github.com/Sucerquia/ASE-PLUMED_tutorial/blob/master/files/plotterFES.py
-p = subprocess.Popen(
-    "plumed sum_hills --hills HILLS --outfile fes.dat"
-    + " --bin 100,200 --min 0,0 --max 1,2",
-    shell=True,
-    stdout=subprocess.PIPE,
-)
-p.wait()
-
-# %%
-# Import free energy and reshape with the number of bins defined in the
-# reconstruction process.
-scm = np.loadtxt("fes.dat", usecols=0).reshape(101, 201)
-tcm = np.loadtxt("fes.dat", usecols=1).reshape(101, 201)
-fes = np.loadtxt("fes.dat", usecols=2).reshape(101, 201)
-
-# Plot
-fig, ax = plt.subplots(figsize=(10, 9))
-
-# Plot free energy surface
-im = ax.contourf(scm, tcm, fes, 10, cmap=colormaps["Blues_r"])  # cmo.tempo_r)
-cp = ax.contour(scm, tcm, fes, 10, linestyles="-", colors="darkgray", linewidths=1.2)
-
-# Plot parameters
-ax.set_xlabel("MTA_Q4", fontsize=40)
-ax.set_ylabel("MTA_Q6", fontsize=40)
-ax.tick_params(axis="y", labelsize=25)
-ax.tick_params(axis="x", labelsize=25)
-cbar = fig.colorbar(im, ax=ax)
-cbar.set_label(label=r"FES[$\epsilon$]", fontsize=40)
-cbar.ax.tick_params(labelsize=32)
-
-plt.tight_layout()
-plt.show()
-
-# %%
-# Dynamic visualization
-# ---------------------------
+# Plotting in ``chemiscope``
+# ''''''''''''''''''''''''''
 #
 # The structures with the on the free energy surface can
-# be visualized using a static plot as follows.
-#
+# be visualized using a dynamic plot in ``chemiscope``.
+# We load both the histogram-based and the SOAP-based CVs,
+# so you can see the difference in the two approaches by
+# changing the x and y axes in the plot settings.
 
 dyn_prop = {
     "cv1": {
         "target": "structure",
         "values": cv1_traj[::10],
-        "description": "Collective Variable 1 (mta_q4)",
+        "description": "CV1 (histo c=6)",
     },
     "cv2": {
         "target": "structure",
         "values": cv2_traj[::10],
-        "description": "Collective Variable 2 (mta_q6)",
+        "description": "CV2 (histo c=8)",
+    },
+    "soap1": {
+        "target": "structure",
+        "values": soap1_traj[::10],
+        "description": "SOAP1 (~Q4)",
+    },
+    "soap2": {
+        "target": "structure",
+        "values": soap2_traj[::10],
+        "description": "CV2 (~Q6)",
     },
     "time": {
         "target": "structure",
@@ -590,8 +568,8 @@ dyn_settings = chemiscope.quick_settings(
     color="time",
     trajectory=True,
     map_settings={
-        "x": {"max": 12, "min": -2.5},
-        "y": {"max": 20, "min": -5},
+        "x": {"max": 30, "min": 0},
+        "y": {"max": 15, "min": 0},
     },
 )
 
@@ -603,6 +581,53 @@ chemiscope.show(
     settings=dyn_settings,
 )
 
-# _PyTorch: https://docs.pytorch.org/docs/stable/generated/torch.nn.Module.html
+# %%
+# Running metadynamics with i-PI
+# ------------------------------
+#
+# The ``metatrain`` models can be used with any code that supports the
+# PLUMED interface, including `i-PI <https://ipi-code.org/>`_.
+# We take this opportunity to show how to use the multiple time stepping
+# feature of i-PI to reduce the cost of computing expensive CVs.
+#
+# We modify the PLUMED input file to use the SOAP CVs and to half the frequency
+# of the metadynamics updates, since we will call PLUMED every two steps.
+# We also change the grid and the Gaussian width, consistent with the 
+# different range of the SOAP CVs.
+
+src = pathlib.Path("data/plumed.dat")
+dst = pathlib.Path("data/plumed-mts.dat")
+
+content = src.read_text()
+dst.write_text(
+    content.replace("ARG=histo", "ARG=soap")
+        .replace("PACE=30", "PACE=15")
+        .replace("GRID_MAX=30,20", "GRID_MAX=0.5,1.5")
+        .replace("GRID_BIN=300,200", "GRID_BIN=100,300")
+        .replace("SIGMA=0.12,0.12", "SIGMA=0.03,0.05")
+    )
 
 # %%
+# The i-PI input file defines PLUMED as a forcefield, and uses the
+# ``<bias>`` tag to specify that it should be used as such, rather than
+# as a physical force. The input also demonstrates how to retrieve the 
+# CVs from PLUMED. 
+# See `this reciope
+# <https://atomistic-cookbook.org/examples/pi-mts-rpc/mts-rpc.html#multiple-time-stepping>`_
+# if you have never seen how to perform multiple time stepping with i-PI.
+# 
+
+ipi_input = pathlib.Path("data/input-meta.xml")
+print(ipi_input.read_text())
+
+# %%
+# We use LAMMPS to compute the LJ potential, and use i-PI in a client-server
+# mode.
+
+ipi_process = None
+if not os.path.exists("meta-md.out"):
+    ipi_process = subprocess.Popen(["i-pi", "data/input-meta.xml"])
+    time.sleep(5)  # wait for i-PI to start
+    lmp_process = subprocess.Popen(
+        ["lmp", "-in", "data/lammps-ipi.in"]
+    )
