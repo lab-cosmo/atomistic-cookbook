@@ -38,8 +38,8 @@ a short time, so that results will be fast but inaccurate. If you want to use
 this exanmple as a template, you should set more appropriate parameters.
 """
 
-import os
 import linecache
+import os
 import pathlib
 import subprocess
 
@@ -51,6 +51,7 @@ import ase.io
 #
 import chemiscope
 import featomic.torch
+import ipi
 import matplotlib.pyplot as plt
 import metatensor.torch as mts
 import metatomic.torch as mta
@@ -592,7 +593,7 @@ chemiscope.show(
 #
 # We modify the PLUMED input file to use the SOAP CVs and to half the frequency
 # of the metadynamics updates, since we will call PLUMED every two steps.
-# We also change the grid and the Gaussian width, consistent with the 
+# We also change the grid and the Gaussian width, consistent with the
 # different range of the SOAP CVs.
 
 src = pathlib.Path("data/plumed.dat")
@@ -601,21 +602,21 @@ dst = pathlib.Path("data/plumed-mts.dat")
 content = src.read_text()
 dst.write_text(
     content.replace("ARG=histo", "ARG=soap")
-        .replace("PACE=30", "PACE=15")
-        .replace("GRID_MAX=30,20", "GRID_MAX=0.5,1.5")
-        .replace("GRID_BIN=300,200", "GRID_BIN=100,300")
-        .replace("SIGMA=0.12,0.12", "SIGMA=0.03,0.05")
-    )
+    .replace("PACE=30", "PACE=15")
+    .replace("GRID_MAX=30,20", "GRID_MAX=0.5,1.5")
+    .replace("GRID_BIN=300,200", "GRID_BIN=100,300")
+    .replace("SIGMA=0.12,0.12", "SIGMA=0.03,0.05")
+)
 
 # %%
 # The i-PI input file defines PLUMED as a forcefield, and uses the
 # ``<bias>`` tag to specify that it should be used as such, rather than
-# as a physical force. The input also demonstrates how to retrieve the 
-# CVs from PLUMED. 
+# as a physical force. The input also demonstrates how to retrieve the
+# CVs from PLUMED.
 # See `this reciope
 # <https://atomistic-cookbook.org/examples/pi-mts-rpc/mts-rpc.html#multiple-time-stepping>`_
 # if you have never seen how to perform multiple time stepping with i-PI.
-# 
+#
 
 ipi_input = pathlib.Path("data/input-meta.xml")
 print(ipi_input.read_text())
@@ -627,7 +628,61 @@ print(ipi_input.read_text())
 ipi_process = None
 if not os.path.exists("meta-md.out"):
     ipi_process = subprocess.Popen(["i-pi", "data/input-meta.xml"])
-    time.sleep(5)  # wait for i-PI to start
-    lmp_process = subprocess.Popen(
-        ["lmp", "-in", "data/lammps-ipi.in"]
-    )
+    time.sleep(3)  # wait for i-PI to start
+    lmp_process = subprocess.Popen(["lmp", "-in", "data/lammps.ipi.in"])
+
+# %%
+# Wait for the processes to finish
+
+if ipi_process is not None:
+    ipi_process.wait()
+    lmp_process.wait()
+
+# %%
+# i-PI output trajectory
+# ''''''''''''''''''''''
+#
+# The SOAP CVs are much more expensive to compute than the histogram-based
+# CVs, so we only run 2000 steps as a demonstration.
+
+ipi_trajectory = ipi.utils.parsing.read_trajectory("meta-md.pos_0.xyz")
+ipi_properties, _ = ipi.utils.parsing.read_output("meta-md.out")
+ipi_cv = ipi.utils.parsing.read_trajectory("meta-md.colvar_0", format="extras")[
+    "cv1, cv2"
+]
+
+# %%
+# The structure doesn't move much in this short simulation, but we can still
+# see how trajectory moves around in the region surrounding the
+# octahedral structure.
+
+chemiscope.show(
+    frames=ipi_trajectory,
+    properties={
+        "time": {
+            "target": "structure",
+            "values": ipi_properties["time"],
+            "description": "Simulation time",
+            "units": "a.u.",
+        },
+        "bias": {
+            "target": "structure",
+            "values": ipi_properties["ensemble_bias"],
+            "description": "Bias energy",
+            "units": "a.u.",
+        },
+        "soap1": {
+            "target": "structure",
+            "values": ipi_cv[:, 0],
+            "description": "SOAP1 (~Q4)",
+        },
+        "soap2": {
+            "target": "structure",
+            "values": ipi_cv[:, 1],
+            "description": "SOAP2 (~Q6)",
+        },
+    },
+    settings=chemiscope.quick_settings(
+        x="soap1", y="soap2", z="", color="bias", trajectory=True
+    ),
+)
