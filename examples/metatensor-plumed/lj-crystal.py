@@ -42,7 +42,7 @@ import linecache
 import os
 import pathlib
 import subprocess
-from time.time import sleep
+from time import sleep
 
 # %%
 from typing import Dict, List, Optional
