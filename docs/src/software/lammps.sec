@@ -12,4 +12,4 @@ efficient domain decomposition scheme. Learn more about LAMMPS on its `homepage
 - examples/heat-capacity/heat-capacity
 - examples/water-model/water-model
 - examples/pet-mad/pet-mad
-- examples/metatomic-plumed/metatomic-plumed.py
+- examples/metatomic-plumed/metatomic-plumed
