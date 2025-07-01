@@ -1,41 +1,39 @@
 # -*- coding: utf-8 -*-
 """
-Custom Collective Variables for Metadynamics with Pytorch and PLUMED
-====================================================================
+ML collective variables in PLUMED with metatomic
+================================================
 
 :Authors: Guillaume Fraux `@Luthaf <https://github.com/luthaf/>`_;
           Rohit Goswami `@HaoZeke <https://github.com/haozeke/>`_;
           Michele Ceriotti `@ceriottim <https://github.com/ceriottim/>`_
 
 This example shows how to build a `metatomic model
-<https://docs.metatensor.org/metatomic/latest/overview.html>`_ that computes
-order parameters for a Lennard-Jones cluster, and how to use it with
-the `PLUMED <https://www.plumed.org/>`_ package to run a metadynamics
-simulation.
+<https://docs.metatensor.org/metatomic/latest/overview.html>`_ that computes order
+parameters for a Lennard-Jones cluster, and how to use it with the `PLUMED
+<https://www.plumed.org/>`_ package to run a metadynamics simulation.
 
 The LJ38 cluster is a classic benchmark system because its global minimum energy
-structure is a truncated octahedron with :math:`O_h` symmetry, which is
-difficult to find with simple optimization methods. The PES has a multi-funnel
-landscape, meaning the system can easily get trapped in other local minima.
-Our goal is to explore the PES, moving from a random initial configuration to
-the low-energy structures. To do this, we will:
+structure is a truncated octahedron with :math:`O_h` symmetry, which is difficult to
+find with simple optimization methods. The PES has a multi-funnel landscape, meaning the
+system can easily get trapped in other local minima. Our goal is to explore the PES,
+moving from a random initial configuration to the low-energy structures. To do this, we
+will:
 
-1.  Define a set of **collective variables (CVs)** that can distinguish between
-    the disordered (liquid-like) and ordered (solid-like) states of the
-    cluster. We will use two sets of CVs: histograms of the coordination
-    number of atoms, and two CVs derived from SOAP descriptors that are
-    analogous to the **Steinhardt order parameters**
+1.  Define a set of **collective variables (CVs)** that can distinguish between the
+    disordered (liquid-like) and ordered (solid-like) states of the cluster. We will use
+    two sets of CVs: histograms of the coordination number of atoms, and two CVs derived
+    from SOAP descriptors that are analogous to the **Steinhardt order parameters**
     :math:`Q_4` and :math:`Q_6` (a.k.a the bond-order parameters).
-2.  Implement these custom CV using ``featomic``, ``metatensor``, and ``metatomic``
-    to create a portable ``metatomic`` model.
-3.  Run metadynamics trajectories with LAMMPS, and visualize the system as it
-    explores different configurations.
-4.  Show an example of integration with `i-PI <https://ipi-code.org/>`_, that
-    uses multiple time stepping to reduce the cost of computing complicated CVs.
+2.  Implement these custom CV using ``featomic``, ``metatensor``, and ``metatomic`` to
+    create a portable ``metatomic`` model.
+3.  Run metadynamics trajectories with LAMMPS, and visualize the system as it explores
+    different configurations.
+4.  Show an example of integration with `i-PI <https://ipi-code.org/>`_, that uses
+    multiple time stepping to reduce the cost of computing complicated CVs.
 
-As usual for these examples, the simulation is run on a small system and for
-a short time, so that results will be fast but inaccurate. If you want to use
-this exanmple as a template, you should set more appropriate parameters.
+As usual for these examples, the simulation is run on a small system and for a short
+time, so that results will be fast but inaccurate. If you want to use this exanmple as a
+template, you should set more appropriate parameters.
 """
 
 import linecache
@@ -43,13 +41,9 @@ import os
 import pathlib
 import subprocess
 from time import sleep
-
-# %%
 from typing import Dict, List, Optional
 
 import ase.io
-
-#
 import chemiscope
 import featomic.torch
 import ipi
@@ -64,12 +58,13 @@ if hasattr(__import__("builtins"), "get_ipython"):
     get_ipython().run_line_magic("matplotlib", "inline")  # noqa: F821
 
 # %%
-# The Target Structures
-# ---------------------
 #
-# The two most "famous" structures for LJ38 are the global minimum (a perfect
-# truncated octahedron) and a lower-symmetry icosahedral structure which is a
-# deep local minimum. We can visualzie them using ``chemiscope``.
+# Target structures
+# ^^^^^^^^^^^^^^^^^
+#
+# The two most "famous" structures for LJ38 are the global minimum (a perfect truncated
+# octahedron) and a lower-symmetry icosahedral structure which is a deep local minimum.
+# We can visualize them using `chemiscope <https://chemiscope.org/docs/>`_.
 
 minimal = ase.io.read("data/lj-oct.xyz")
 icosaed = ase.io.read("data/lj-ico.xyz")
@@ -79,33 +74,32 @@ chemiscope.show([minimal, icosaed], mode="structure", settings=settings)
 
 
 # %%
-# Defining our custom collective variable
-# ---------------------------------------
 #
-# We use two different approaches to define our custom CVs: in one case,
-# we compute the CV manually starting from the atomic positions, in the other
-# we build the descriptors based on a spherical-harmonics expansion of
-# the neighbor density, computed using the ``featomic`` package.
-
-
-# %%
+# Defining custom collective variables
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# We use two different approaches to define our custom CVs: in one case, we compute the
+# CV manually starting from the atomic positions, in the other we build the descriptors
+# based on a spherical-harmonics expansion of the neighbor density, computed using the
+# `featomic <https://metatensor.github.io/featomic/>`_ package.
+#
 # Histogram of coordination numbers
-# '''''''''''''''''''''''''''''''''
+# ---------------------------------
 #
-# As a first set of CVs, we use a histogram of coordination numbers, that
-# was used in several examples studying this cluster (see e.g.
-# `this paper <http://doi.org/10.1021/ct3010563>`_). The idea is to
-# compute the coordination number of each atom in the cluster, and then
-# to count how many atoms have a given coordination number.
-# This makes it possible to differentiate clearly between the truncated
-# octahedron and the icosahedral configurations, as well as
-# distorted, disordered structures.
+# As a first set of CVs, we use a histogram of coordination numbers, that was used in
+# several examples studying this cluster (see e.g. `this paper
+# <http://doi.org/10.1021/ct3010563>`_). The idea is to compute the coordination number
+# of each atom in the cluster, and then to count how many atoms have a given
+# coordination number. This makes it possible to differentiate clearly between the
+# truncated octahedron and the icosahedral configurations, as well as distorted,
+# disordered structures.
 #
 #
-# To make this CV usable by PLUMED via the ``METATOMIC`` interface, we must wrap
-# our calculation logic in a ``torch.nn.Module``. This class takes a list of
-# atomic systems and returns a ``metatensor.TensorMap`` containing the
-# calculated CV values. The interface is defined in the `PyTorch`_
+# To make this CV usable by PLUMED via the ``METATOMIC`` interface, we must wrap our
+# calculation logic in a ``torch.nn.Module``. This class takes a list of atomic systems
+# and returns a ``metatensor.TensorMap`` containing the calculated CV values. The
+# interface is defined in the `metatomic
+# <https://docs.metatensor.org/metatomic/latest/torch/reference/models/export.html>`_
 # documentation.
 
 
@@ -115,8 +109,6 @@ def f_coord(y: torch.Tensor) -> torch.Tensor:
     to evaluate the coordination number.
     """
     cy = torch.zeros_like(y)
-    cy.requires_grad_(True)
-
     # we use torch.where to be compatible with autodiff
     cy = torch.where(y <= 0, torch.tensor(1.0, dtype=torch.float32), cy)
     cy = torch.where(y >= 1, torch.tensor(0.0, dtype=torch.float32), cy)
@@ -128,20 +120,28 @@ def f_coord(y: torch.Tensor) -> torch.Tensor:
 class CoordinationHistogram(torch.nn.Module):
     def __init__(self, cutoff, cn_list):
         """
-        `cutoff` provides the point at which the switching function
-        levels off to zero. Note that for simplicity we still compute
-        all distances.
-        `cn_list` is the list of bins in the histogram. strictly
-        speaking, we don't compute a histogram, but a kernel density
-        estimator centered on the values given in this list.
+        ``cutoff`` provides the point at which the switching function levels off to
+        zero. Note that for simplicity we still compute all distances.
+
+        ``cn_list`` is the list of bins in the histogram. Strictly speaking, we don't
+        compute a histogram, but a kernel density estimator centered on the values given
+        in this list.
         """
         super().__init__()
 
         self.cn_list = torch.tensor(cn_list, dtype=torch.int32)
+        self._nl_options = mta.NeighborListOptions(
+            cutoff=cutoff, full_list=True, strict=True
+        )
         self.cutoff = cutoff
         self.r0 = cutoff
         self.r1 = cutoff * 4.0 / 5.0
         self.sigma2 = 0.5**2
+
+    def requested_neighbor_lists(self) -> List[mta.NeighborListOptions]:
+        # request a neighbor list to be computed and stored in the system passed to
+        # `forward`.
+        return [self._nl_options]
 
     def forward(
         self,
@@ -149,6 +149,14 @@ class CoordinationHistogram(torch.nn.Module):
         outputs: Dict[str, mta.ModelOutput],
         selected_atoms: Optional[mts.Labels],
     ) -> Dict[str, mts.TensorMap]:
+        if "features" not in outputs:
+            return {}
+
+        if outputs["features"].per_atom:
+            raise ValueError("per-atoms features are not supported in this model")
+
+        if selected_atoms is not None:
+            raise ValueError("selected_atoms is not supported in this model")
 
         if len(systems[0].positions) == 0:
             # PLUMED will first call the model with 0 atoms to get the size of the
@@ -164,16 +172,22 @@ class CoordinationHistogram(torch.nn.Module):
 
         values = []
         # loop over all systems
-        isys = torch.arange(len(systems), dtype=torch.int32).reshape((-1, 1))
-        for s in systems:
-            pos = s.positions
+        system_index = torch.arange(len(systems), dtype=torch.int32).reshape((-1, 1))
+        for system in systems:
+            # the neighbor list has been computed by whoever is calling this model
+            neighbors = system.get_neighbor_list(self._nl_options)
 
-            # Calculate all pairwise distances
-            dist = torch.cdist(pos, pos, p=2.0)
+            # get all distances
+            distances = torch.linalg.vector_norm(neighbors.values.reshape(-1, 3), dim=1)
 
-            # Apply the switching function, then sum over all neighbor
-            # and eliminate the self-term
-            coords = f_coord((dist - self.r1) / (self.r0 - self.r1)).sum(dim=1) - 1.0
+            # switching function to evaluate the coordination number
+            z = f_coord((distances - self.r1) / (self.r0 - self.r1))
+
+            # Sum over neighbors
+            coords = torch.zeros(len(system), dtype=z.dtype, device=z.device)
+            coords.index_add_(
+                dim=0, index=neighbors.samples.column("first_atom"), source=z
+            )
 
             # Compute the KDE over the required bins
             cn_histo = torch.exp(
@@ -181,12 +195,11 @@ class CoordinationHistogram(torch.nn.Module):
             ).sum(dim=1)
             values.append(cn_histo)
 
-        # Assembles a metatensor TensorMap
+        # Assembles a TensorMap
         keys = mts.Labels("_", torch.tensor([[0]]))
-        values = torch.stack(values, dim=0)
         block = mts.TensorBlock(
-            values=values,
-            samples=mts.Labels("structure", isys),
+            values=torch.stack(values, dim=0),
+            samples=mts.Labels("structure", system_index),
             components=[],
             properties=mts.Labels("cn", self.cn_list.reshape(-1, 1)),
         )
@@ -197,38 +210,37 @@ class CoordinationHistogram(torch.nn.Module):
 
 
 # %%
+#
 # SOAP-based Steinhardt parameters
-# ''''''''''''''''''''''''''''''''
+# --------------------------------
 #
-# Rather than looking at the atomic coordination, one can also resort to
-# order parameters that capture the angular order. The **Steinhardt
-# order parameters**, specifically :math:`Q_4` and :math:`Q_6` are
-# rotationally invariant and measure the local orientational symmetry
-# around each atom. The standard caclulation works by
-# summing over bond vectors within a cutoff radius which connect a central atom
-# to the neighbors and does not use a weighing within the cutoff radius.
+# Rather than looking at the atomic coordination, one can also resort to order
+# parameters that capture the angular order. The **Steinhardt order parameters**,
+# specifically :math:`Q_4` and :math:`Q_6` are rotationally invariant and measure the
+# local orientational symmetry around each atom. The standard caclulation works by
+# summing over bond vectors within a cutoff radius which connect a central atom to the
+# neighbors and does not use a weighing within the cutoff radius.
 #
-# - :math:`Q_6` is often high for both icosahedral and FCC-like structures,
-#   making it a good measure of general "solidness".
-# - :math:`Q_4` helps to distinguish between different crystal packing types. It
-#   is close to zero for icosahedral structures but has a distinct non-zero value
-#   for FCC structures.
+# - :math:`Q_6` is often high for both icosahedral and FCC-like structures, making it a
+#   good measure of general "solidness".
+# - :math:`Q_4` helps to distinguish between different crystal packing types. It is
+#   close to zero for icosahedral structures but has a distinct non-zero value for FCC
+#   structures.
 #
 # This works fairly well for the LJ38 and is also part of the standard PLUMED build.
 #
-# The key concept is that the geometry of the atomic neighborhood is described
-# by projection onto a basis of spherical harmonics. With that in mind, we will
-# use the SOAP power spectrum, which differs from the standard Steinhardt by
-# operating on a smooth density field, and includes distance information through
-# the radial basis set. Additionally, unlike the sharp cutoff of the Steinhardt,
-# we will use a cosine cutoff.
+# The key concept is that the geometry of the atomic neighborhood is described by
+# projection onto a basis of spherical harmonics. With that in mind, we will use the
+# SOAP power spectrum, which differs from the standard Steinhardt by operating on a
+# smooth density field, and includes distance information through the radial basis set.
+# Additionally, unlike the sharp cutoff of the Steinhardt, we will use a cosine cutoff.
 #
 # We will use the power spectrum components for angular channels :math:`l=4` and
-# :math:`l=6`. SOAP features are computed from an expansion of the neighbor
-# density in spherical harmonics and radial functions.  ``featomic`` is used to
-# evaluate this spherical expansion, select the appropriate angular indices and
-# then sum over the :math:`m` index, as well as over the radial dimension to
-# recover order parameters analogous to :math:`Q_4` and :math:`Q_6`.
+# :math:`l=6`. SOAP features are computed from an expansion of the neighbor density in
+# spherical harmonics and radial functions.  ``featomic`` is used to evaluate this
+# spherical expansion, select the appropriate angular indices and then sum over the
+# :math:`m` index, as well as over the radial dimension to recover order parameters
+# analogous to :math:`Q_4` and :math:`Q_6`.
 
 
 class SoapCV(torch.nn.Module):
@@ -240,7 +252,7 @@ class SoapCV(torch.nn.Module):
         self.spex = featomic.torch.SphericalExpansion(
             **{
                 "cutoff": {
-                    "radius": 1.5,
+                    "radius": cutoff,
                     "smoothing": {"type": "ShiftedCosine", "width": 0.5},
                 },
                 "density": {"type": "Gaussian", "width": 0.25},
@@ -263,8 +275,10 @@ class SoapCV(torch.nn.Module):
         outputs: Dict[str, mta.ModelOutput],
         selected_atoms: Optional[mts.Labels],
     ) -> Dict[str, mts.TensorMap]:
+        if "features" not in outputs:
+            return {}
 
-        # computes the spherical exoansion
+        # computes the spherical expansion
         spex = self.spex(
             systems, selected_samples=selected_atoms, selected_keys=self.selected_keys
         )
@@ -281,7 +295,7 @@ class SoapCV(torch.nn.Module):
             )
             return {"features": mts.TensorMap(keys, [block])}
 
-        # then manipulate the tensormap to bring it in an easier to manipulate form
+        # then manipulate the tensormap to remove some of the sparsity
         spex = mts.remove_dimension(spex, axis="keys", name="o3_sigma")
         spex = spex.keys_to_properties("neighbor_type")
         spex = spex.keys_to_samples("center_type")
@@ -300,7 +314,11 @@ class SoapCV(torch.nn.Module):
         # packs the resulting values in a tensormap
         summed_q = mts.TensorMap(spex.keys, blocks)
         summed_q = summed_q.keys_to_properties("o3_lambda")
-        summed_q = mts.mean_over_samples(summed_q, sample_names=["atom", "center_type"])
+
+        if not outputs["features"].per_atom:
+            summed_q = mts.mean_over_samples(
+                summed_q, sample_names=["atom", "center_type"]
+            )
 
         # This model, like CoordinationHistogram has a single output, named "features".
         return {"features": summed_q}
@@ -309,20 +327,18 @@ class SoapCV(torch.nn.Module):
 # %%
 #
 # Exporting the Model
-# '''''''''''''''''''
+# -------------------
 #
-# Once we have defined our custom model, we can now annotate it with multiple
-# metadata entries and export it to the disk. The resulting model file and
-# extensions directory can then be loaded by PLUMED and other compatible
-# engines, without requiring a Python installation (for example on HPC systems).
+# Once we have defined our custom model, we can now annotate it with multiple metadata
+# entries and export it to the disk. The resulting model file and extensions directory
+# can then be loaded by PLUMED and other compatible engines, without requiring a Python
+# installation (for example on HPC systems).
 #
-# See the
-# `upstream API documentation
+# See the `corresponding documentation
 # <https://docs.metatensor.org/metatomic/latest/torch/reference/models/export.html>`_
-# and the
-# `metatomic export example
+# and `example
 # <https://docs.metatensor.org/metatomic/latest/examples/1-export-atomistic-model.html>`_
-# for more information about exporting metatensor models.
+# for more information about exporting metatomic models.
 
 # generates a coordination histogram model
 cutoff = 1.5
@@ -335,9 +351,9 @@ metadata = mta.ModelMetadata(
 )
 
 # metatdata about what the model can do
-outputs = {"features": mta.ModelOutput(per_atom=False)}
 capabilities = mta.ModelCapabilities(
-    outputs=outputs,
+    length_unit="Bohr",
+    outputs={"features": mta.ModelOutput(per_atom=False)},
     atomic_types=[18],
     interaction_range=cutoff,
     supported_devices=["cpu"],
@@ -356,7 +372,7 @@ model_ch.save("histo-cv.pt", collect_extensions="./extensions/")
 module = SoapCV(cutoff, angular_list=[4, 6])
 
 metadata = mta.ModelMetadata(
-    name="SOAP_order_params",
+    name="Steinhardt-like SOAP CV",
     description="Computes smoothed out versions of the Steinhardt order parameters",
 )
 
@@ -371,13 +387,14 @@ model_soap.save("soap-cv.pt", collect_extensions="./extensions/")
 
 
 # %%
-# Optional: Test the Model in Python
-# ''''''''''''''''''''''''''''''''''
+#
+# Optional: test the collective variables in Python
+# -------------------------------------------------
 #
 # Before running the full simulation, we can use ``chemiscope``'s
-# ``metatomic_featurizer`` to quickly check the output of our model on our
-# initial structures. This is a great way to verify that the CVs produce
-# different values for the different structures.
+# ``metatomic_featurizer`` to quickly check the output of our model on our initial
+# structures. This is a great way to verify that the CVs produce different values for
+# the different structures.
 
 featurizer_ch = chemiscope.metatomic_featurizer(model_ch)
 featurizer_soap = chemiscope.metatomic_featurizer(model_soap)
@@ -394,36 +411,36 @@ chemiscope.explore(
 # %%
 #
 # Using the model to run metadynamics with PLUMED
-# -----------------------------------------------
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# With our model saved, we can now write the PLUMED input file. This file
-# instructs PLUMED on what to do during the simulation.
-# The input file consists of the following sections:
-# - ``UNITS`` : Specifies the energy and length units
-# - ``METATOMIC`` : Defines a collective variable which is essentially
-#                 an exported metatomic model. We load both the models
-#                 we just created, and use the CV histogram that is faster
-#                to compute (and more efficient with metadynamics)
-# - ``SELECT_COMPONENTS`` : Splits the model output to scalars
-# - ``METAD`` : sets up the metadynamics algorithm. It will add repulsive
-#             Gaussian potentials in the (``cv1``, ``cv2``) space at regular
-#             intervals (``PACE``), discouraging the simulation from re-visiting
-#             conformations and pushing it over energy barriers
-# - ``PRINT`` : This tells PLUMED to write the values of our CVs and the
-#             metadynamics bias energy to a file named ``COLVAR`` for later analysis.
+# With our model saved, we can now write the PLUMED input file. This file instructs
+# PLUMED on what to do during the simulation. The input file consists of the following
+# sections:
+#
+# - ``UNITS``: Specifies the energy and length units;
+# - ``METATOMIC``: Defines a collective variable using an exported metatomic model. We
+#   load both the models we just created, and use the CV histogram that is faster to
+#   compute (and more efficient with metadynamics);
+# - ``SELECT_COMPONENTS``: Splits the model output to scalars;
+# - ``METAD``: sets up the metadynamics algorithm. It will add repulsive Gaussian
+#   potentials in the (``cv1``, ``cv2``) space at regular intervals (``PACE``),
+#   discouraging the simulation from re-visiting conformations and pushing it over
+#   energy barriers;
+# - ``PRINT``: This tells PLUMED to write the values of our CVs and the metadynamics
+#   bias energy to a file named ``COLVAR`` for later analysis.
 
 with open("data/plumed.dat", "r") as fname:
     print(fname.read())
 
 # %%
-# Running metadynamics with LAMMPS
-# ''''''''''''''''''''''''''''''''
 #
-# We use a custom version of LAMMPS that is linked with ``metatensor``
-# and the ``metatensor``-enabled version of PLUMED. From the point of
-# view of LAMMPS, all that is needed is to use ``fix_plumed`` to
-# load the PLUMED input file, as the calculation of the custom
-# collective variables is handled by PLUMED itself.
+# Running metadynamics with LAMMPS
+# --------------------------------
+#
+# We use a custom version of LAMMPS that is linked with ``metatomic`` and the
+# ``metatomic``-enabled version of PLUMED. From the point of view of LAMMPS, all that is
+# needed is to use ``fix_plumed`` to load the PLUMED input file, as the calculation of
+# the custom collective variables is handled by PLUMED itself.
 
 # write the LAMMPS structure file
 lmp_atoms = minimal.copy()
@@ -437,15 +454,14 @@ subprocess.run(["lmp", "-in", "data/lammps.plumed.in"], check=True, capture_outp
 lmp_trajectory = ase.io.read("out/lj38.lammpstrj", index=":")
 
 # %%
-# Static visualization
-# '''''''''''''''''''''
 #
-# The dynamics on the free energy surface can be visualized using a
-# static plot with the trajectory overlaid as follows.
-# NB: The accumulated bias is *not* the free energy
-# when performing well-tempered metadynamics, and a re-scaling is
-# required, cf. `the original paper
-# <https://doi.org/10.1103/PhysRevLett.100.020603>`_
+# Static visualization
+# --------------------
+#
+# The dynamics on the free energy surface can be visualized using a static plot with the
+# trajectory overlaid as follows. NB: The accumulated bias is **not** the free energy
+# when performing well-tempered metadynamics, and a re-scaling is required, cf. `the
+# original paper <https://doi.org/10.1103/PhysRevLett.100.020603>`_
 #
 # NB: PLUMED provides dedicated CLI tools to perform these tasks
 #
@@ -503,7 +519,6 @@ plt.plot(
 )
 
 # Mark significant points
-
 feats = featurizer_ch([minimal, icosaed], None)
 plt.scatter(
     feats[0, 0], feats[0, 1], c="red", marker="X", s=150, zorder=3, label="octahedron"
@@ -523,8 +538,9 @@ plt.show()
 
 
 # %%
-# Plotting in ``chemiscope``
-# ''''''''''''''''''''''''''
+#
+# Interactive visualization in ``chemiscope``
+# -------------------------------------------
 #
 # The structures on the free energy surface can be visualized using a dynamic
 # plot in ``chemiscope``.  We load both the histogram-based and the SOAP-based
@@ -581,18 +597,18 @@ chemiscope.show(
 )
 
 # %%
+#
 # Running metadynamics with i-PI
-# ------------------------------
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# The ``metatrain`` models can be used with any code that supports the
-# PLUMED interface, including `i-PI <https://ipi-code.org/>`_.
-# We take this opportunity to demonstrate the multiple time stepping
-# feature of i-PI which reduces the cost of computing expensive CVs.
+# The ``metatomic`` models can be used with any code that supports the PLUMED interface,
+# including `i-PI <https://ipi-code.org/>`_. We take this opportunity to demonstrate the
+# multiple time stepping feature of i-PI which reduces the cost of computing expensive
+# CVs.
 #
-# We modify the PLUMED input file to use the SOAP CVs and to half the frequency
-# of the metadynamics updates, since we will call PLUMED every two steps.
-# We also change the grid and the Gaussian width, consistent with the
-# different range of the SOAP CVs.
+# We modify the PLUMED input file to use the SOAP CVs and to half the frequency of the
+# metadynamics updates, since we will call PLUMED every two steps. We also change the
+# grid and the Gaussian width, consistent with the different range of the SOAP CVs.
 
 src = pathlib.Path("data/plumed.dat")
 dst = pathlib.Path("data/plumed-mts.dat")
@@ -607,20 +623,20 @@ dst.write_text(
 )
 
 # %%
+#
 # The i-PI input file defines PLUMED as a forcefield, but uses the ``<bias>``
 # tag to specify that it should not be used  as a physical force. The input also
 # demonstrates how to retrieve the CVs from PLUMED.
 # See `this recipe
 # <https://atomistic-cookbook.org/examples/pi-mts-rpc/mts-rpc.html#multiple-time-stepping>`_
 # for more details on performing multiple time stepping with i-PI.
-#
 
 ipi_input = pathlib.Path("data/input-meta.xml")
 print(ipi_input.read_text())
 
 # %%
-# We use LAMMPS to compute the LJ potential, and use i-PI in its client-server
-# mode.
+#
+# We use LAMMPS to compute the LJ potential, and use i-PI in its client-server mode.
 
 ipi_process = None
 if not os.path.exists("meta-md.out"):
@@ -629,6 +645,7 @@ if not os.path.exists("meta-md.out"):
     lmp_process = subprocess.Popen(["lmp", "-in", "data/lammps.ipi.in"])
 
 # %%
+#
 # Wait for the processes to finish
 
 if ipi_process is not None:
@@ -636,8 +653,9 @@ if ipi_process is not None:
     lmp_process.wait()
 
 # %%
+#
 # i-PI output trajectory
-# ''''''''''''''''''''''
+# ----------------------
 #
 # The SOAP CVs are much more expensive to compute than the histogram-based CVs,
 # so we only run 2000 steps as a demonstration.
@@ -649,9 +667,9 @@ ipi_cv = ipi.utils.parsing.read_trajectory("meta-md.colvar_0", format="extras")[
 ]
 
 # %%
-# The structure doesn't move much in this short simulation, but we can still
-# see how trajectory moves around in the region surrounding the
-# octahedral structure.
+#
+# The structure doesn't move much in this short simulation, but we can still see how
+# trajectory moves around in the region surrounding the octahedral structure.
 
 chemiscope.show(
     frames=ipi_trajectory,
