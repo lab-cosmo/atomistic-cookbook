@@ -1,4 +1,4 @@
-Using machine learning collective variables in PLUMED with metatensor
+Using machine learning collective variables in PLUMED with metatomic
 =====================================================================
 
 This example shows how to quickly prototype collective variables for

@@ -6,7 +6,9 @@ COLVAR
 bck.*
 data/plumed-mts.dat
 data/minimal.data
-out/*
+plumed.out
+lj38.lammpstrj
 log.*
 meta-md.*
 RESTART
+\#*

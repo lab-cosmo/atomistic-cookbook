@@ -17,3 +17,4 @@ training and evaluating ML models.
 - examples/flashmd/flashmd-demo
 - examples/shiftml/shiftml-example
 - examples/hamiltonian-qm7/hamiltonian-qm7
+- examples/metatomic-plumed/metatomic-plumed
