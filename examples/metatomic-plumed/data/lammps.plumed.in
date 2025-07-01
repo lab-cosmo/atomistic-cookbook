@@ -22,12 +22,12 @@ fix            nvtall all nvt temp 50524.004 50524.004 1.0  # τT = 1.0 τ
 fix            1 all gle 6 50524.004 50524.004 1995 data/smartSampling.A
 
 # -- Plumed integration --
-fix             2 all plumed plumedfile data/plumed.dat outfile out/plumed.out
+fix             2 all plumed plumedfile data/plumed.dat outfile plumed.out
 
 # --- MD settings ------------------------------------------------------------
 timestep       0.00024188843  # this is in femtoseconds because LAMMPS, so 0.01 atomic time units -> this
 thermo         2000
 thermo_style   custom step temp pe etotal press
 
-dump           traj all custom 100 out/lj38.lammpstrj id type x y z
+dump           traj all custom 100 lj38.lammpstrj id type x y z
 run            80000          # 1 0 τ  (≈ 0.01 ns on the usual mapping)

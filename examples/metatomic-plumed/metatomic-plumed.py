@@ -453,7 +453,7 @@ print(linecache.getline("data/lammps.plumed.in", 25).strip())
 subprocess.run(
     ["lmp", "-in", "data/lammps.plumed.in"], check=True, capture_output=False
 )
-lmp_trajectory = ase.io.read("out/lj38.lammpstrj", index=":")
+lmp_trajectory = ase.io.read("lj38.lammpstrj", index=":")
 
 # %%
 #
@@ -590,7 +590,7 @@ dyn_settings = chemiscope.quick_settings(
     },
 )
 
-lmp_trajectory = ase.io.read("out/lj38.lammpstrj", index=":")
+lmp_trajectory = ase.io.read("lj38.lammpstrj", index=":")
 # Show the trajectory in an interactive chemiscope widget.
 chemiscope.show(
     frames=lmp_trajectory,
