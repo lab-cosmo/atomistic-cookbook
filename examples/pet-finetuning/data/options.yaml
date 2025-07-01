@@ -31,7 +31,7 @@ training_set:
     length_unit: angstrom
   targets:
     energy:
-      key: "energy-men-atomic"
+      key: "energy-corrected"
       unit: "eV" # very important to run simulations
 
 validation_set:
@@ -40,7 +40,7 @@ validation_set:
     length_unit: angstrom
   targets:
     energy:
-      key: "energy-men-atomic" # name of the target value
+      key: "energy-corrected" # name of the target value
       unit: "eV" # unit of the target value
 
 test_set:
@@ -49,6 +49,5 @@ test_set:
     length_unit: angstrom
   targets:
     energy:
-      key: "energy-men-atomic" # name of the target value
+      key: "energy-corrected" # name of the target value
       unit: "eV" # unit of the target value
-
