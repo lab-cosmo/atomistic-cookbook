@@ -586,8 +586,8 @@ chemiscope.show(
 #
 # The ``metatrain`` models can be used with any code that supports the
 # PLUMED interface, including `i-PI <https://ipi-code.org/>`_.
-# We take this opportunity to show how to use the multiple time stepping
-# feature of i-PI to reduce the cost of computing expensive CVs.
+# We take this opportunity to demonstrate the multiple time stepping
+# feature of i-PI which reduces the cost of computing expensive CVs.
 #
 # We modify the PLUMED input file to use the SOAP CVs and to half the frequency
 # of the metadynamics updates, since we will call PLUMED every two steps.
@@ -607,13 +607,12 @@ dst.write_text(
 )
 
 # %%
-# The i-PI input file defines PLUMED as a forcefield, and uses the
-# ``<bias>`` tag to specify that it should be used as such, rather than
-# as a physical force. The input also demonstrates how to retrieve the
-# CVs from PLUMED.
-# See `this reciope
+# The i-PI input file defines PLUMED as a forcefield, but uses the ``<bias>``
+# tag to specify that it should not be used  as a physical force. The input also
+# demonstrates how to retrieve the CVs from PLUMED.
+# See `this recipe
 # <https://atomistic-cookbook.org/examples/pi-mts-rpc/mts-rpc.html#multiple-time-stepping>`_
-# if you have never seen how to perform multiple time stepping with i-PI.
+# for more details on performing multiple time stepping with i-PI.
 #
 
 ipi_input = pathlib.Path("data/input-meta.xml")
