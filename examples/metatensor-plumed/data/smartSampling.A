@@ -1,0 +1,20 @@
+# Generated at http://cosmo-epfl.github.io/gle4md
+# Please cite:
+# M. Ceriotti, G. Bussi and M. Parrinello, J. Chem. Theory Comput. 6, 1170 (2010) 
+# M. Ceriotti, G. Bussi and M. Parrinello, Phys. Rev. Lett. 102, 020601 (2009)
+# Smart-sampling GLE. Enforces efficient sampling, focussing the effort on the slowest mode 
+# accessible by the simulation. Generated from the parameter file
+# library/smart/smart-0.5_6-3.a, 
+# and shifted so that they are effective to sample optimally 
+# a time scale of t_opt=1 atomic time units,
+# and do as well as possible upt to a cutoff frequency of 
+# νmax=41341374 THz [1378999785 cm^-1]
+# Raw matrix format. 
+# A MATRIX: (femtoseconds^-1)
+   5.240982865742e+3    6.697392727805e+4    6.785293117816e+3    9.829485166407e+3    3.334517717058e+3   -1.300376871880e+2   -2.069557255710e+3 
+   2.024941828136e+3    2.759967870866e+5   -2.005166004838e+5    3.146546154845e+4    2.296892874283e+4   -5.422519959219e+3    1.025896936199e+4 
+   9.827894737953e+3    2.005166004838e+5    9.229417704958e+4    8.683624918786e+4   -3.112451160607e+3    1.978314485541e+4   -4.100912061969e+4 
+  -1.005417034675e+4   -3.146546154845e+4   -8.683624918786e+4    9.098124647484e+2   -2.584726798255e+2    2.358595287529e+3    3.174354029259e+3 
+  -3.336493375924e+3   -2.296892874283e+4    3.112451160607e+3    2.584726798255e+2    4.794282607294e+0   -7.810337203676e+2   -2.705002492694e+2 
+   1.298827178026e+2    5.422519959219e+3   -1.978314485541e+4   -2.358595287529e+3    7.810337203676e+2    1.530244665894e+0    1.791663931806e+3 
+   2.069641588974e+3   -1.025896936199e+4    4.100912061969e+4   -3.174354029259e+3    2.705002492694e+2   -1.791663931806e+3    1.080140945000e-4 
