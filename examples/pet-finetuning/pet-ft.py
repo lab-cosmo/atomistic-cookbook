@@ -42,9 +42,11 @@ in `this preprint <https://arxiv.org/abs/2503.14118>`_.
 
 import subprocess
 from collections import Counter
+from urllib.request import urlretrieve
 
 import ase.io
 import numpy as np
+import torch
 from metatrain.pet import PET
 from sklearn.linear_model import LinearRegression
 
@@ -69,8 +71,8 @@ if hasattr(__import__("builtins"), "get_ipython"):
 url = "https://huggingface.co/lab-cosmo/pet-mad/resolve/main/models/pet-mad-latest.ckpt"
 output_file = "pet-mad-latest.ckpt"
 
-# Esegui wget
-subprocess.run(["wget", url, "-O", output_file], check=True)
+urlretrieve(url, output_file)
+
 
 # %%
 # Prepare the dataset
@@ -121,8 +123,9 @@ def get_compositional_energy(atom, atom_energy):
     return energy
 
 
-def exctract_from_pet_mad(checkpoint="finetuning/pet-mad-latest.ckpt"):
-    mdlpet = PET.load_checkpoint(checkpoint)
+def extract_from_pet_mad(checkpoint_path="pet-mad-latest.ckpt"):
+    checkpoint = torch.load(checkpoint_path, weights_only=False)
+    mdlpet = PET.load_checkpoint(checkpoint, "finetune")
     vals = mdlpet.additive_models[0].weights["energy"].block().values
     specorder = [
         "H",
@@ -215,31 +218,31 @@ def exctract_from_pet_mad(checkpoint="finetuning/pet-mad-latest.ckpt"):
     return {spec: vals[i] for i, spec in enumerate(specorder)}
 
 
-def get_energy_men_atomic(traj, model, label="energy-men-atomic"):
+def get_energy_men_atomic(traj, output_file, label="energy-men-atomic"):
     """Get the energy per atom for each trajectory."""
     energies_DFT = []
     for atoms in traj:
         energies_DFT.append(atoms.get_potential_energy())
+
     # Get the compositional energy for the DFT energies
     X, y, species = prepare_features_and_target(traj, energies_DFT)
 
     # Train a linear regression model
-    modelLinear = LinearRegression()
-    modelLinear.fit(X, y)
+    linreg = LinearRegression()
+    linreg.fit(X, y)
 
     # Display the coefficients
-    coefficients = dict(zip(species, modelLinear.coef_))
+    coefficients = dict(zip(species, linreg.coef_))
 
     # Get the energy per atom of isolated atoms for the model
-
-    ener = exctract_from_pet_mad(model)
+    energy = extract_from_pet_mad(output_file)
 
     for i, atoms in enumerate(traj[:]):
         atoms.info[label] = (
             energies_DFT[i]
             - get_compositional_energy(atoms, coefficients)
-            - modelLinear.intercept_
-            + get_compositional_energy(atoms, ener)
+            - linreg.intercept_
+            + get_compositional_energy(atoms, energy)
         ).item()
 
     return traj
@@ -256,7 +259,7 @@ def get_energy_men_atomic(traj, model, label="energy-men-atomic"):
 dataset = ase.io.read("data/ethanol_reduced_100.xyz", index=":", format="extxyz")
 
 dataset_corrected = get_energy_men_atomic(
-    dataset, model="pet-mad-latest.ckpt", label="energy-men-atomic"
+    dataset, output_file, label="energy-men-atomic"
 )
 ase.io.write("data/ethanol_corrected.xyz", dataset_corrected, format="extxyz")
 
@@ -276,13 +279,4 @@ ase.io.write("data/ethanol_corrected.xyz", dataset_corrected, format="extxyz")
 #   mtt train data/options.yaml -c pet-mad-latest.ckpt > train.log
 #
 
-subprocess.run(
-    [
-        "mtt",
-        "train",
-        "data/options.yaml",
-        "-c",
-        "pet-mad-latest.ckpt",
-    ],
-    check=True,
-)
+subprocess.run(["mtt", "train", "data/options.yaml"], check=True)

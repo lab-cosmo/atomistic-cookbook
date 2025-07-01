@@ -1,7 +1,11 @@
 *.data
 *.pt
+*.ckpt
 log.lammps
 trajectory.xyz
 tmp*
 
 extensions/*
+
+outputs/
+data/ethanol_corrected.xyz
