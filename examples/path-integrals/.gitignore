@@ -1,0 +1,7 @@
+\#*
+RESTART
+log.lammps
+*.kin.xyz
+*.kod.xyz
+*.out
+*.pos_*.xyz

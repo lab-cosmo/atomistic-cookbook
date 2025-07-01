@@ -1,0 +1,8 @@
+*.extxyz
+*.out
+*.restart
+*.pt
+log.lammps
+
+\#*
+RESTART

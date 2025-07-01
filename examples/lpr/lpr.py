@@ -36,9 +36,10 @@ from skmatter.metrics import local_prediction_rigidity as lpr
 # analysis from Materials Cloud and load the the amorphous
 # silicon structures using `ASE <https://wiki.fysik.dtu.dk/ase/>`_.
 
+
 filename = "LPR_supp_notebook_dataset.tar.gz"
 if not os.path.exists(filename):
-    url = "https://rb.gy/wxsrug"  # shortened URL
+    url = "https://archive.materialscloud.org/records/1wsvs-sb736/files/LPR_supp_notebook_dataset.tar.gz"  # noqa: E501
     response = requests.get(url)
     response.raise_for_status()
     with open(filename, "wb") as f:

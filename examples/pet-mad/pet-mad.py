@@ -117,15 +117,14 @@ for s in test_structures:
     test_energy.append(s.get_potential_energy())
     test_natoms.append(len(s))
     test_forces.append(s.get_forces())
-    test_origin.append(s.info["origin"])
-    if s.info["origin"] not in subsets:
-        subsets.append(s.info["origin"])
+    test_origin.append(s.info["dataset"])
+    if s.info["dataset"] not in subsets:
+        subsets.append(s.info["dataset"])
 
 test_natoms = np.array(test_natoms)
 test_origin = np.array(test_origin)
 test_energy = np.array(test_energy)
 test_forces = np.array(test_forces, dtype=object)
-
 
 # %%
 #

@@ -1,0 +1,22 @@
+channels:
+  - metatensor
+  - conda-forge
+dependencies:
+  - python=3.13
+  - pip
+  - plumed-metatomic
+  - py-plumed-metatomic
+  - lammps-metatomic 2025.6.12.mta0
+  - matplotlib
+  - pip:
+    - --extra-index-url https://download.pytorch.org/whl/cpu
+    - torch==2.7.1
+    - ase
+    - numpy
+    - chemiscope
+    - ipi>=3.1.5  
+    - metatomic[torch]
+    - featomic-torch
+variables:
+  PIP_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
+  PLUMED_KERNEL: $CONDA_PREFIX/lib/libplumedKernel.so

@@ -9,4 +9,4 @@ dependencies:
     - matplotlib
     - metatensor
     - featomic
-    - skmatter @ git+https://github.com/scikit-learn-contrib/scikit-matter.git@main
+    - skmatter>=0.3
