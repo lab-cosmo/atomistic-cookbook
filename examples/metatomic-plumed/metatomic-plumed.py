@@ -450,7 +450,9 @@ lmp_atoms.set_masses([1.0] * len(lmp_atoms))
 ase.io.write("data/minimal.data", lmp_atoms, format="lammps-data")
 
 print(linecache.getline("data/lammps.plumed.in", 25).strip())
-subprocess.run(["lmp", "-in", "data/lammps.plumed.in"], check=True, capture_output=True)
+subprocess.run(
+    ["lmp", "-in", "data/lammps.plumed.in"], check=True, capture_output=False
+)
 lmp_trajectory = ase.io.read("out/lj38.lammpstrj", index=":")
 
 # %%
