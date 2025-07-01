@@ -32,7 +32,7 @@ will:
     multiple time stepping to reduce the cost of computing complicated CVs.
 
 As usual for these examples, the simulation is run on a small system and for a short
-time, so that results will be fast but inaccurate. If you want to use this exanmple as a
+time, so that results will be fast but inaccurate. If you want to use this example as a
 template, you should set more appropriate parameters.
 """
 
