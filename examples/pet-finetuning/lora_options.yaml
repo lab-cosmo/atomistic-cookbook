@@ -1,0 +1,22 @@
+architecture:
+  name: "pet"
+  training:
+    num_epochs: 1  # very short period for demostration
+    learning_rate: 1e-5  # small learning rate to stabilize training
+    finetune:
+      method: "lora"  # use LoRA fine-tuning strategy
+      read_from: pet-mad-latest.ckpt  # path to the pretrained checkpoint to start from
+      config:
+        alpha: 0.1
+        rank: 4
+
+training_set:
+  systems: 
+    read_from: "data/ethanol_corrected.xyz"  # path to the fine-tuning dataset
+    length_unit: angstrom
+  targets:
+    energy:
+      key: "energy-corrected"  # name of the target value
+      unit: "eV"
+validation_set: 0.1  # 10% of training_set used for validation
+test_set: 0.1  # 10% of training_set used for testing

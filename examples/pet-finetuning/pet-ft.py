@@ -7,7 +7,7 @@ Fine-tuning the PET-MAD universal potential
           Cesare Malosso `@cesaremalosso <https://github.com/cesaremalosso>`_
 
 This example demonstrates how to finetune the PET-MAD model with `metatrain
-<https://github.com/metatensor/metatrain>`_. PET-MAD is a "universal" machine-learning
+<https://github.com/metatensor/metatrain>`_. PET-MAD is a universal machine-learning
 forcefield trained on the MAD dataset that aims to incorporate a very high degree of
 structural diversity.
 
@@ -32,18 +32,13 @@ details are available in the MAD dataset `preprint <https://arxiv.org/abs/2506.1
 While PET-MAD is trained as a universal model capable of handling a broad range of
 atomic environments, fine-tuning of it allows to adapt this general-purpose model to a
 more specialized task by retraining it on a smaller domain-specific dataset.
+
+In this example, we fine-tune PET-MAD on a minimal dataset of 100 ethanol structures.
+The goal is to demonstrate the process, not to reach high accuracy. If adapting this for
+real case, adjust the dataset size and hyperparameters accordingly.
 """
 
 # %%
-#
-# In this example, we will finetune PET-MAD on a very simple dataset composed of 100
-# structres of ethanol. To get the PET-MAD checkpoint and obtain all the necessary
-# dependencies, you can simply use pip to install the `PET-MAD package
-# <https://github.com/lab-cosmo/pet-mad>`_:
-#
-# .. code-block:: bash
-#
-#     pip install pet-mad
 
 import subprocess
 from collections import Counter
@@ -62,14 +57,15 @@ if hasattr(__import__("builtins"), "get_ipython"):
 
 # %%
 # Download the checkpoint
-# -----------------------
+# ^^^^^^^^^^^^^^^^^^^^^^^
 #
-# To get the checkpoint, you can use wget or curl to download it from the `HuggingFace
-# repository <https://huggingface.co/lab-cosmo/pet-mad>`_:
+# First, we need to get a checkpoint of the pretrained PET-MAD model to start training
+# from it. The checkpoint is stored in `HuggingFace repository
+# <https://huggingface.co/lab-cosmo/pet-mad>`_ and can be fetched using wget or curl:
 #
 # .. code-block:: bash
 #
-#  wget https://huggingface.co/lab-cosmo/pet-mad/resolve/main/models/pet-mad-latest.ckpt
+#    wget https://huggingface.co/lab-cosmo/pet-mad/resolve/main/models/pet-mad-latest.ckpt  # noqa: E501
 #
 # We'll download it directly:
 
@@ -79,21 +75,21 @@ checkpoint_path = "pet-mad-latest.ckpt"
 urlretrieve(url, checkpoint_path)
 
 # %%
-# Prepare the dataset
-# -------------------
+# Prepare the fine-tuning dataset
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # DFT-calculated energies often contain systematic shifts due to the choice of
 # functional, basis set, or pseudopotentials. If left uncorrected, such shifts can
-# mislead the fine-tuning process. To align our finetuning dataset with PET-MAD energy
+# mislead the fine-tuning process. To align our fine-tuning dataset with PET-MAD energy
 # reference, we apply a linear correction based on atomic compositions. First, we define
-# a helper functions:
+# a helper function to load reference energies from PET-MAD.
 
 
 def load_reference_energies(checkpoint_path):
     """
     Extract atomic reference energies from PET-MAD checkpoint.
 
-    It returns a mapping element number to their reference energies (eV), e.g.: {'1':
+    It returns a mapping of elements to their reference energies (eV), e.g.: {'1':
     -1.23, '2': -5.67, ...}
     """
     checkpoint = torch.load(checkpoint_path, weights_only=False)
@@ -105,12 +101,6 @@ def load_reference_energies(checkpoint_path):
     return dict(zip(atomic_numbers, energy_values))
 
 
-def get_compositional_energy(atoms, energy_per_atom):
-    """Calculates total energy from atomic composition and per-atom energies"""
-    counts = Counter(atoms.get_atomic_numbers())
-    return sum(energy_per_atom[Z] * count for Z, count in counts.items())
-
-
 # %%
 # Energy correction
 # ^^^^^^^^^^^^^^^^^
@@ -120,26 +110,33 @@ def get_compositional_energy(atoms, energy_per_atom):
 
 dataset = ase.io.read("data/ethanol_reduced_100.xyz", index=":", format="extxyz")
 
-# Extract DFT energies and atomic compositions
+# Extract DFT energies and compositions
 dft_energies = [atoms.get_potential_energy() for atoms in dataset]
 compositions = [Counter(atoms.get_atomic_numbers()) for atoms in dataset]
 elements = sorted({element for composition in compositions for element in composition})
 
-X = np.array(
-    [[composition.get(elem, 0) for elem in elements] for composition in compositions]
-)
+X = np.array([[comp.get(elem, 0) for elem in elements] for comp in compositions])
 y = np.array(dft_energies)
 
-# Fit linear model to estimate per-element DFT contributions
+# Fit linear model to estimate DFT per-element energy
 correction_model = LinearRegression()
 correction_model.fit(X, y)
 
 coeffs = dict(zip(elements, correction_model.coef_))
 
+# Apply correction to each structure
+
+
+def get_compositional_energy(atoms, energy_per_atom):
+    """Calculates total energy from atomic composition and per-atom energies"""
+    counts = Counter(atoms.get_atomic_numbers())
+    return sum(energy_per_atom[Z] * count for Z, count in counts.items())
+
+
 # Get reference energies from PET-MAD
 ref_energies = load_reference_energies(checkpoint_path)
 
-# Apply correction to each structure
+# Apply correction
 for atoms, E_dft in zip(dataset, dft_energies):
     E_comp_dft = get_compositional_energy(atoms, coeffs)
     E_comp_ref = get_compositional_energy(atoms, ref_energies)
@@ -148,37 +145,91 @@ for atoms, E_dft in zip(dataset, dft_energies):
 
     atoms.info["energy-corrected"] = corrected_energy.item()
 
+
+# Save corrected dataset
 ase.io.write("data/ethanol_corrected.xyz", dataset, format="extxyz")
 
 
 # %%
-# Model finetuning
-# ----------------
+# Model fine-tuning
+# ^^^^^^^^^^^^^^^^^
 #
-# We will use the `metatrain` package to finetune the model. There are multiple
-# strategies to apply finetuning, each described in `metatrain documentation
-# <https://metatensor.github.io/metatrain/latest/advanced-concepts/fine-tuning.html>`_
-# The process is configured by yaml file (``options.yaml``) and executed with the simple
-# command:
+# Now, as the fine-tuning dataset is prepared, we proceed with the training. We will use
+# the ``metatrain`` package to finetune the model. There are multiple strategies to
+# apply fine-tuning, each described in `metatrain documentation
+# <https://metatensor.github.io/metatrain/latest/advanced-concepts/fine-tuning.html>`_.
+# The process is configured by ``options.yaml``.
+#
+# Basic fine-tuning
+# +++++++++++++++++
+# Here is the example of configuration for basic full-finetuning strategy, which adapts
+# all model weights to the new dataset:
+#
+# .. literalinclude:: basic_options.yaml
+#   :language: yaml
+#
+# To launch training, run:
 #
 # .. code-block:: bash
 #
-# mtt train data/options.yaml
-
-# TODO: explain quickly what is in options to finetune
-
-subprocess.run(["mtt", "train", "data/options.yaml"], check=True)
-
-# %%
+#    mtt train options.yaml
 #
-# Small example of LoRA
-# ^^^^^^^^^^^^^^^^^^^^^^^^
-#
-# TODO
+# Or from Python:
+
+subprocess.run(["mtt", "train", "basic_options.yaml"], check=True)
 
 # %%
 #
-# Finetuning on the forces
-# ^^^^^^^^^^^^^^^^^^^^^^^^
+# After the training, ``mtt train`` outputs the model.ckpt (fine-tuned checkpoint) and
+# model.pt (exported fine-tuned model) files in both current directory and
+# ``output/YYYY-MM-DD/HH-MM-SS/``.
 #
-# TODO
+# Fine-tuning with LoRA
+# +++++++++++++++++++++
+# LoRA updates a low-rank subset of parameters. To use this strategy, update the
+# configuration file with the options below. Parameter details are available in
+# `metatrain documentation
+# <https://metatensor.github.io/metatrain/latest/advanced-concepts/fine-tuning.html#lora-fine-tuning>`_.
+#
+# .. code-block:: yaml
+#
+#  architecture:
+#    training:
+#      finetune:
+#        method: "lora"
+#        read_from: pet-mad-latest.ckpt
+#        config:
+#          alpha: 0.1  # scaling factor
+#          rank: 4  # rank of the low-rank adaptation matrices
+#
+subprocess.run(["mtt", "train", "lora_options.yaml"], check=True)
+
+
+# %%
+#
+# Fine-tuning on the forces
+# -------------------------
+#
+# To include non-conservative forces in training, set the ``non_conservative_forces``
+# target as a per-atom vector in the ``options.yaml``:
+#
+# .. code-block:: yaml
+#
+#  training_set:
+#    systems:
+#      read_from: "data/ethanol_corrected.xyz"  # path to the finetuning dataset
+#      length_unit: angstrom
+#    targets:
+#      energy:
+#        key: "energy-corrected"  # name of the target value
+#        unit: "eV"
+#      non_conservative_forces:
+#        quantity: force
+#        key: "forces"
+#        unit: "eV/A"
+#        per_atom: true
+#        type:
+#          cartesian:
+#            rank: 1
+
+subprocess.run(["mtt", "train", "learn_forces_options.yaml"], check=True)
