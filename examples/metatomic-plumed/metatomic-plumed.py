@@ -69,7 +69,11 @@ if hasattr(__import__("builtins"), "get_ipython"):
 minimal = ase.io.read("data/lj-oct.xyz")
 icosaed = ase.io.read("data/lj-ico.xyz")
 
-settings = {"structure": [{"playbackDelay": 50, "unitCell": True, "bonds": True, "spaceFilling": True}]}
+settings = {
+    "structure": [
+        {"playbackDelay": 50, "unitCell": True, "bonds": True, "spaceFilling": True}
+    ]
+}
 chemiscope.show([minimal, icosaed], mode="structure", settings=settings)
 
 
@@ -700,7 +704,11 @@ chemiscope.show(
         },
     },
     settings=chemiscope.quick_settings(
-        x="soap1", y="soap2", z="", color="bias", trajectory=True,
+        x="soap1",
+        y="soap2",
+        z="",
+        color="bias",
+        trajectory=True,
         structure_settings={
             "playbackDelay": 50,  # ms between frames
             "unitCell": True,
