@@ -9,11 +9,27 @@ architecture:
 
 training_set:
   systems: 
-    read_from: "data/ethanol_corrected.xyz"  # path to the finetuning dataset
+    read_from: "data/ethanol_train.xyz"  # path to the finetuning dataset
     length_unit: angstrom
   targets:
     energy:
       key: "energy-corrected"  # name of the target value
       unit: "eV"
-validation_set: 0.1  # 10% of training_set used for validation
-test_set: 0.1  # 10% of training_set used for testing
+
+validation_set:
+  systems: 
+    read_from: "data/ethanol_val.xyz"  # path to the finetuning dataset
+    length_unit: angstrom
+  targets:
+    energy:
+      key: "energy-corrected"  # name of the target value
+      unit: "eV"
+
+test_set:
+  systems: 
+    read_from: "data/ethanol_test.xyz"  # path to the finetuning dataset
+    length_unit: angstrom
+  targets:
+    energy:
+      key: "energy-corrected"  # name of the target value
+      unit: "eV"
