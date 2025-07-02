@@ -149,8 +149,20 @@ for atoms, E_dft in zip(dataset, dft_energies):
     atoms.info["energy-corrected"] = corrected_energy.item()
 
 
-# Save corrected dataset
-ase.io.write("data/ethanol_corrected.xyz", dataset, format="extxyz")
+# Split corrected dataset and save it
+np.random.seed(42)
+indices = np.random.permutation(len(dataset))
+n = len(dataset)
+n_val = n_test = int(0.1 * n)
+n_train = n - n_val - n_test
+
+train = [dataset[i] for i in indices[:n_train]]
+val = [dataset[i] for i in indices[n_train : n_train + n_val]]
+test = [dataset[i] for i in indices[n_train + n_val :]]
+
+ase.io.write("data/ethanol_train.xyz", train, format="extxyz")
+ase.io.write("data/ethanol_val.xyz", val, format="extxyz")
+ase.io.write("data/ethanol_test.xyz", test, format="extxyz")
 
 
 # %%
@@ -187,6 +199,34 @@ subprocess.run(["mtt", "train", "basic_options.yaml"], check=True)
 # After the training, ``mtt train`` outputs the ``model.ckpt`` (fine-tuned checkpoint)
 # and ``model.pt`` (exported fine-tuned model) files in both the current directory and
 # ``output/YYYY-MM-DD/HH-MM-SS/``.
+#
+# We evaluate the model on the test set using the ``metatrain`` command-line interface:
+#
+# .. code-block:: bash
+#
+#    mtt eval eval.yaml
+#
+# The evaluation YAML file contains lists the structures and corresponding reference
+# quantities for the evaluation:
+#
+# .. literalinclude:: eval.yaml
+#   :language: yaml
+#
+# We run evaluation from Python:
+
+subprocess.run(["mtt", "eval", "model.pt", "eval.yaml"], check=True)
+
+
+# %%
+#
+# The result of running the fine-tuning for 1000 epochs in visualised with
+# ``chemiscope`` below:
+import chemiscope  # noqa: E402
+
+
+chemiscope.show_input("full_finetune_example.chemiscope.json")
+
+# %%
 #
 # Fine-tuning with LoRA
 # +++++++++++++++++++++

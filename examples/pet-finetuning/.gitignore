@@ -8,4 +8,6 @@ tmp*
 extensions/*
 
 outputs/
-data/ethanol_corrected.xyz
+data/ethanol_train.xyz
+data/ethanol_val.xyz
+data/ethanol_test.xyz
