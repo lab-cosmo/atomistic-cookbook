@@ -341,7 +341,7 @@ class SoapCV(torch.nn.Module):
 # for more information about exporting metatomic models.
 
 # generates a coordination histogram model
-cutoff = 1.5
+cutoff = 5.5
 module = CoordinationHistogram(cutoff, cn_list=[6, 8])
 
 # metatdata about the model itself
@@ -352,7 +352,7 @@ metadata = mta.ModelMetadata(
 
 # metatdata about what the model can do
 capabilities = mta.ModelCapabilities(
-    length_unit="Bohr",
+    length_unit="Angstrom",
     outputs={"features": mta.ModelOutput(per_atom=False)},
     atomic_types=[18],
     interaction_range=cutoff,
@@ -429,8 +429,8 @@ chemiscope.explore(
 # - ``PRINT``: This tells PLUMED to write the values of our CVs and the metadynamics
 #   bias energy to a file named ``COLVAR`` for later analysis.
 
-with open("data/plumed.dat", "r") as fname:
-    print(fname.read())
+with open("data/plumed.dat", "r") as fd:
+    print(fd.read())
 
 # %%
 #
@@ -443,11 +443,9 @@ with open("data/plumed.dat", "r") as fname:
 # the custom collective variables is handled by PLUMED itself.
 
 # write the LAMMPS structure file
-lmp_atoms = minimal.copy()
-lmp_atoms.cell = [20, 20, 20]
-lmp_atoms.positions += 10
-lmp_atoms.set_masses([1.0] * len(lmp_atoms))
-ase.io.write("data/minimal.data", lmp_atoms, format="lammps-data")
+lammps_initial = minimal.copy()
+lammps_initial.cell = [20, 20, 20]
+ase.io.write("data/minimal.data", lammps_initial, format="lammps-data")
 
 print(linecache.getline("data/lammps.plumed.in", 25).strip())
 subprocess.run(
@@ -468,7 +466,7 @@ lmp_trajectory = ase.io.read("lj38.lammpstrj", index=":")
 # NB: PLUMED provides dedicated CLI tools to perform these tasks
 #
 
-# time, cv1, cv2, mtd.bias
+# time, cv1, cv2, mtd.bias, histo.1, histo.2, soap.1, soap.2
 colvar = np.loadtxt("COLVAR")
 time = colvar[:, 0]
 cv1_traj = colvar[:, 1]
@@ -482,7 +480,7 @@ hills = np.loadtxt("HILLS")
 
 # Visually pleasing grid for the FES based on the PLUMED input
 grid_min = [0, 0]
-grid_max = [32, 16]
+grid_max = [30, 20]
 grid_bins = [200, 100]
 grid_cv1 = np.linspace(grid_min[0], grid_max[0], grid_bins[0])
 grid_cv2 = np.linspace(grid_min[1], grid_max[1], grid_bins[1])
@@ -530,8 +528,8 @@ plt.scatter(
 )
 
 plt.title("Free Energy Surface of LJ38 Cluster")
-plt.xlabel("Collective Variable 1 ($q_4$)")
-plt.ylabel("Collective Variable 2 ($q_6$)")
+plt.xlabel("Collective Variable 1")
+plt.ylabel("Collective Variable 2")
 plt.xlim(grid_min[0], grid_max[0])
 plt.ylim(grid_min[1], grid_max[1])
 plt.legend()
@@ -621,7 +619,7 @@ dst.write_text(
     .replace("PACE=30", "PACE=15")
     .replace("GRID_MAX=30,20", "GRID_MAX=0.5,1.5")
     .replace("GRID_BIN=300,200", "GRID_BIN=100,300")
-    .replace("SIGMA=0.12,0.12", "SIGMA=0.03,0.05")
+    .replace("SIGMA=0.5,0.25", "SIGMA=0.03,0.05")
 )
 
 # %%
@@ -639,20 +637,16 @@ print(ipi_input.read_text())
 # %%
 #
 # We use LAMMPS to compute the LJ potential, and use i-PI in its client-server mode.
-
-ipi_process = None
-if not os.path.exists("meta-md.out"):
-    ipi_process = subprocess.Popen(["i-pi", "data/input-meta.xml"])
-    sleep(3)  # wait for i-PI to start
-    lmp_process = subprocess.Popen(["lmp", "-in", "data/lammps.ipi.in"])
+ipi_process = subprocess.Popen(["i-pi", "data/input-meta.xml"])
+sleep(3)  # wait for i-PI to start
+lmp_process = subprocess.Popen(["lmp", "-in", "data/lammps.ipi.in"])
 
 # %%
 #
 # Wait for the processes to finish
 
-if ipi_process is not None:
-    ipi_process.wait()
-    lmp_process.wait()
+ipi_process.wait()
+lmp_process.wait()
 
 # %%
 #

@@ -1,4 +1,4 @@
-UNITS LENGTH=Bohr ENERGY=Ha
+UNITS LENGTH=A ENERGY=kcal/mol
 
 soap: METATOMIC ...
     MODEL=soap-cv.pt
@@ -19,15 +19,15 @@ cv2: SELECT_COMPONENTS ARG=histo COMPONENTS=2
 
 mtd: METAD ...
     ARG=cv1,cv2
-    HEIGHT=0.25
+    HEIGHT=0.1
     PACE=30
-    SIGMA=0.12,0.12
+    SIGMA=0.5,0.25
     GRID_MIN=0,0
     GRID_MAX=30,20
     GRID_BIN=300,200
     BIASFACTOR=40
     FILE=HILLS
-    TEMP=50524.004  # 0.16 Ha in K
+    TEMP=19.3
 ...
 
 
