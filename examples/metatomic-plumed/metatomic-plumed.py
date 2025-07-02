@@ -628,7 +628,7 @@ dst.write_text(
     .replace("PACE=30", "PACE=15")
     .replace("GRID_MAX=30,20", "GRID_MAX=0.5,1.5")
     .replace("GRID_BIN=300,200", "GRID_BIN=100,300")
-    .replace("SIGMA=0.5,0.25", "SIGMA=0.03,0.05")
+    .replace("SIGMA=1.0,0.5", "SIGMA=0.03,0.05")
 )
 
 # %%

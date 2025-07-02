@@ -21,7 +21,7 @@ mtd: METAD ...
     ARG=cv1,cv2
     HEIGHT=0.04
     PACE=30
-    SIGMA=0.5,0.25
+    SIGMA=1.0,0.5
     GRID_MIN=0,0
     GRID_MAX=30,20
     GRID_BIN=300,200

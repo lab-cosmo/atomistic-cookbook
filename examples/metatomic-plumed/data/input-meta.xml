@@ -8,6 +8,7 @@
          <plumed_dat> data/plumed-mts.dat </plumed_dat>
          <plumed_extras> [cv1, cv2] </plumed_extras>
    </ffplumed>
+   <prng><seed>12345</seed></prng>  
    <total_steps>2000</total_steps>
    <output prefix="meta-md">
       <trajectory stride="10" filename="pos" format="ase">positions</trajectory>
