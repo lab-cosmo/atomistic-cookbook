@@ -37,7 +37,6 @@ template, you should set more appropriate parameters.
 """
 
 import linecache
-import os
 import pathlib
 import subprocess
 from time import sleep
