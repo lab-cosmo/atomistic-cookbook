@@ -1,20 +1,11 @@
-# LJ38 truncated-octahedron cluster – MD at T = 0.16 ε/kB = 50524.00 K
-
-units          electron # lj units are problematic with the plumed+metatensor combination
-dimension      3
+units          real
 atom_style     atomic
 
 read_data      data/minimal.data
+mass           1 39.95
 
-# --- interactions -----------------------------------------------------------
-pair_style     lj/cut 4.5
-pair_coeff     1 1 1.0 1.0 4.5   # ε = 1, σ = 1, rc = 4.5 σ
-
-neighbor       0.3 bin
-neigh_modify   delay 0 every 1 check yes
-
-# --- masses (also given in data file; harmless to repeat) -------------------
-mass           1 0.00054857991 # LAMMPS uses AMU for mass, not the actual electron mass
+pair_style     lj/cut 15
+pair_coeff     1 1 0.24 3.4
 
 fix 1 all ipi lj 666 unix
-run            1000000          # 1 0 τ  (≈ 0.01 ns on the usual mapping)
+run            100000
