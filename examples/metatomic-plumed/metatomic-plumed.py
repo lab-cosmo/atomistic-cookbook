@@ -69,7 +69,7 @@ if hasattr(__import__("builtins"), "get_ipython"):
 minimal = ase.io.read("data/lj-oct.xyz")
 icosaed = ase.io.read("data/lj-ico.xyz")
 
-settings = {"structure": [{"playbackDelay": 50, "unitCell": True, "bonds": False}]}
+settings = {"structure": [{"playbackDelay": 50, "unitCell": True, "bonds": True, "spaceFilling": True}]}
 chemiscope.show([minimal, icosaed], mode="structure", settings=settings)
 
 
@@ -253,9 +253,9 @@ class SoapCV(torch.nn.Module):
             **{
                 "cutoff": {
                     "radius": cutoff,
-                    "smoothing": {"type": "ShiftedCosine", "width": 0.5},
+                    "smoothing": {"type": "ShiftedCosine", "width": 1.5},
                 },
-                "density": {"type": "Gaussian", "width": 0.25},
+                "density": {"type": "Gaussian", "width": 1.0},
                 "basis": {
                     "type": "TensorProduct",
                     "max_angular": self.max_angular,
@@ -586,6 +586,12 @@ dyn_settings = chemiscope.quick_settings(
         "x": {"max": 30, "min": 0},
         "y": {"max": 15, "min": 0},
     },
+    structure_settings={
+        "playbackDelay": 50,  # ms between frames
+        "unitCell": True,
+        "bonds": True,
+        "spaceFilling": True,
+    },
 )
 
 lmp_trajectory = ase.io.read("lj38.lammpstrj", index=":")
@@ -656,7 +662,7 @@ lmp_process.wait()
 # The SOAP CVs are much more expensive to compute than the histogram-based CVs,
 # so we only run 2000 steps as a demonstration.
 
-ipi_trajectory = ipi.utils.parsing.read_trajectory("meta-md.pos_0.xyz")
+ipi_trajectory = ase.io.read("meta-md.pos_0.extxyz", ":")
 ipi_properties, _ = ipi.utils.parsing.read_output("meta-md.out")
 ipi_cv = ipi.utils.parsing.read_trajectory("meta-md.colvar_0", format="extras")[
     "cv1, cv2"
@@ -694,6 +700,14 @@ chemiscope.show(
         },
     },
     settings=chemiscope.quick_settings(
-        x="soap1", y="soap2", z="", color="bias", trajectory=True
+        x="soap1", y="soap2", z="", color="bias", trajectory=True,
+        structure_settings={
+            "playbackDelay": 50,  # ms between frames
+            "unitCell": True,
+            "bonds": True,
+            "spaceFilling": True,
+        },
     ),
 )
+
+# %%
