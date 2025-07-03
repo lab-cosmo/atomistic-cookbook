@@ -1,0 +1,12 @@
+systems: 
+  read_from: data/ethanol_test.xyz
+targets: 
+  energy:
+    key: energy-corrected
+    unit: eV
+  non_conservative_forces:
+    key: forces
+    type:
+      cartesian:
+        rank: 1
+    per_atom: true

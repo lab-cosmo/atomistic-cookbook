@@ -4,39 +4,27 @@ Fine-tuning the PET-MAD universal potential
 
 :Authors: Davide Tisi `@DavideTisi <https://github.com/DavideTisi>`_,
           Zhiyi Wang `@0WellyWang0 <https://github.com/0WellyWang0>`_,
-          Cesare Malosso `@cesaremalosso <https://github.com/cesaremalosso>`_
+          Cesare Malosso `@cesaremalosso <https://github.com/cesaremalosso>`_,
+          Sofiia Chorna `@sofiia-chorna <https://github.com/sofiia-chorna>`_
 
 This example demonstrates fine-tuning the PET-MAD model with `metatrain
-<https://github.com/metatensor/metatrain>`_. PET-MAD is a universal machine-learning
-forcefield trained on the MAD dataset that aims to incorporate a very high degree of
-structural diversity.
+<https://github.com/metatensor/metatrain>`_ on a small dataset of ethanol structures.
 
-The Point-Edge Transformer (PET) is an unconstrained architecture that achieves a high
-degree of symmetry compliance through data augmentation during training. The
-unconstrained nature of the model simplifies its implementation and structure, making it
-computationally efficient and very expressive. See the original `PET paper
-<https://proceedings.neurips.cc/paper_files/paper/2023/file/fb4a7e3522363907b26a86cc5be627ac-Paper-Conference.pdf>`_
-for more details.
+We cover two examples: 1) simple fine-tuning the pretrained PET-MAD model to adapt it to
+specialized task by retraining it on a domain-specific dataset, and 2) two-stage
+training strategy, first on non-conservative forces for efficiency, followed by
+fine-tuning on conservative forces to ensure physical consistency.
 
-The Massive Atomic Diversity (MAD) dataset was constructed to emphasize structural
-diversity by distorting the composition and structure of stable configurations. It
-combines stable inorganic structures from the `MC3D
-<https://mc3d.materialscloud.org/>`_, 2D structures from the `MC2D
-<https://mc2d.materialscloud.org/>`_, and molecular crystals from the `ShiftML
-<https://archive.materialscloud.org/record/2022.147>`_. Despite containing fewer than
-100,000 structures, PET-MAD trained on this dataset has already achieved
-state-of-the-art performance. Electronic structure calculations use the PBEsol
-functional, optimized for consistency rather than per-structure accuracy. Further
-details are available in the MAD dataset `preprint <https://arxiv.org/abs/2506.19674>`_.
+PET-MAD is a universal machine-learning forcefield trained on `the MAD dataset
+<https://arxiv.org/abs/2506.19674>` that aims to incorporate a very high degree of
+structural diversity. It uses `the Point-Edge Transformer (PET)
+<https://proceedings.neurips.cc/paper_files/paper/2023/file/fb4a7e3522363907b26a86cc5be627ac-Paper-Conference.pdf>_,
+an unconstrained architecture that achieves symmetry compliance through data
+augmentation during training.
 
-While PET-MAD is trained as a universal model capable of handling a broad range of
-atomic environments, fine-tuning it allows to adapt this general-purpose model to a more
-specialized task by retraining it on a smaller domain-specific dataset.
-
-In this example, we fine-tune PET-MAD on a minimal dataset of 100 ethanol structures
-using three strategies: full fine-tuning, LoRA, and learning of forces directly. The
-goal is to demonstrate the process, not to reach high accuracy. Adjust the dataset size
-and hyperparameters accordingly if adapting this for a real case.
+The goal of this recipe is to demonstrate the process, not to reach high accuracy.
+Adjust the dataset size and hyperparameters accordingly if adapting this for a real
+case.
 """
 
 # %%
@@ -46,6 +34,7 @@ from collections import Counter
 from urllib.request import urlretrieve
 
 import ase.io
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from metatrain.pet import PET
@@ -57,11 +46,12 @@ if hasattr(__import__("builtins"), "get_ipython"):
 
 
 # %%
-# Download the checkpoint
-# ^^^^^^^^^^^^^^^^^^^^^^^
-#
-# First, we need to get a checkpoint of the pre-trained PET-MAD model to start training
-# from it. The checkpoint is stored in `Hugging Face repository
+# Fine-tuning of pretrained PET-MAD
+# ---------------------------------
+# While PET-MAD is trained as a universal model capable of handling a broad range of
+# atomic environments, fine-tuning it allows to adapt this general-purpose model to a
+# more specialized task. First, we need to get a checkpoint of the pre-trained PET-MAD
+# model to start training from it. The checkpoint is stored in `Hugging Face repository
 # <https://huggingface.co/lab-cosmo/pet-mad>`_ and can be fetched using wget or curl:
 #
 # .. code-block:: bash
@@ -103,13 +93,11 @@ def load_reference_energies(checkpoint_path):
 
 
 # %%
-# Energy correction
-# +++++++++++++++++
 #
-# The dataset is composed of 100 structures of ethanol. We fit a linear model based on
+# The dataset is composed of 1000 structures of ethanol. We fit a linear model based on
 # atomic compositions to apply energy correction.
 
-dataset = ase.io.read("data/ethanol_reduced_100.xyz", index=":", format="extxyz")
+dataset = ase.io.read("data/ethanol.xyz", index=":", format="extxyz")
 
 # Extract DFT energies and compositions
 dft_energies = [atoms.get_potential_energy() for atoms in dataset]
@@ -166,22 +154,18 @@ ase.io.write("data/ethanol_test.xyz", test, format="extxyz")
 
 
 # %%
-# Model fine-tuning
-# ^^^^^^^^^^^^^^^^^
+# Simple model fine-tuning
+# ^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # As the fine-tuning dataset is prepared, we will proceed with the training. We use the
 # ``metatrain`` package to finetune the model. There are multiple strategies to apply
 # fine-tuning, each described in `metatrain documentation
 # <https://metatensor.github.io/metatrain/latest/advanced-concepts/fine-tuning.html>`_.
-# The process is configured by ``options.yaml``.
+# In this example we demostrate a basic full fine-tuning strategy, which adapts all
+# model weights to the new dataset starting from the pre-trained PET-MAD checkpoint. The
+# process is configured by ``options.yaml``.
 #
-# Basic fine-tuning
-# +++++++++++++++++
-#
-# Here is an example of a configuration for a basic full-finetuning strategy, which
-# adapts all model weights to the new dataset:
-#
-# .. literalinclude:: basic_options.yaml
+# .. literalinclude:: basic_ft_options.yaml
 #   :language: yaml
 #
 # To launch training, run:
@@ -192,7 +176,7 @@ ase.io.write("data/ethanol_test.xyz", test, format="extxyz")
 #
 # Or from Python:
 
-subprocess.run(["mtt", "train", "basic_options.yaml"], check=True)
+subprocess.run(["mtt", "train", "basic_ft_options.yaml"], check=True)
 
 # %%
 #
@@ -204,17 +188,17 @@ subprocess.run(["mtt", "train", "basic_options.yaml"], check=True)
 #
 # .. code-block:: bash
 #
-#    mtt eval eval.yaml
+#    mtt eval eval_ex1.yaml
 #
 # The evaluation YAML file contains lists the structures and corresponding reference
 # quantities for the evaluation:
 #
-# .. literalinclude:: eval.yaml
+# .. literalinclude:: eval_ex1.yaml
 #   :language: yaml
 #
-# We run evaluation from Python:
+# We run it from Python:
 
-subprocess.run(["mtt", "eval", "model.pt", "eval.yaml"], check=True)
+subprocess.run(["mtt", "eval", "model.pt", "eval_ex1.yaml"], check=True)
 
 
 # %%
@@ -228,53 +212,143 @@ chemiscope.show_input("full_finetune_example.chemiscope.json")
 
 # %%
 #
-# Fine-tuning with LoRA
-# +++++++++++++++++++++
+# Two stage training strategy
+# ---------------------------
 #
-# LoRA updates a low-rank subset of parameters. To use this strategy, we will reuse the
-# same configuration file with update with LoRA hyperparameters, ``alpha`` and ``rank``.
-# Parameter details are available in `metatrain documentation
-# <https://metatensor.github.io/metatrain/latest/advanced-concepts/fine-tuning.html#lora-fine-tuning>`_.
+# This approach accelerates training by first using non-conservative forces, which
+# avoids costly backpropagation, then fine-tuning on conservative forces to ensure
+# physical consistency. Non-conservative forces can lead to pathological behavior (see
+# `preprint <https://arxiv.org/abs/2412.11569>`_), but this strategy mitigates such
+# issues while maintaining efficiency.
 #
-# .. code-block:: yaml
+# Non-conservative force training
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-#  architecture:
-#    training:
-#      finetune:
-#        method: "lora"
-#        read_from: pet-mad-latest.ckpt
-#        config:
-#          alpha: 0.1  # scaling factor
-#          rank: 4  # rank of the low-rank adaptation matrices
+# Configure ``options.yaml` to include non-conservative forces as a per-atom vector
+# target:
 #
-subprocess.run(["mtt", "train", "lora_options.yaml"], check=True)
+# .. literalinclude:: nc_train_options.yaml
+#   :language: yaml
+#
+# We run training from Python:
+
+subprocess.run(["mtt", "train", "nc_train_options.yaml"], check=True)
+
+# %%
+#
+# Let's evaluate the model:
+#
+# .. code-block:: bash
+#
+#    mtt eval model.pt eval_ex2.yaml
+#
+# Or from Python:
+
+subprocess.run(["mtt", "eval", "model.pt", "eval_ex2.yaml"], check=True)
 
 
 # %%
 #
-# Fine-tuning on the forces
-# +++++++++++++++++++++++++
+# We create parity plots comparing target and predicted forces and non-conservative
+# forces.
+
+
+def get_parity_plot(ref_path, pred_path):
+    # Reading the forces
+    ref = ase.io.read(ref_path, ":")
+    pred = ase.io.read(pred_path, ":")
+
+    forces = [atoms.get_forces() for atoms in pred]
+    nc_forces = [atoms.get_array("non_conservative_forces") for atoms in pred]
+    ref_forces = [atoms.get_forces() for atoms in ref]
+
+    ref_f = np.concatenate([x.flatten() for x in ref_forces])
+    pred_f = np.concatenate([x.flatten() for x in forces])
+    pred_nc_f = np.concatenate([x.flatten() for x in nc_forces])
+
+    # Creating a plot
+    _fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+
+    ax1.scatter(ref_f, pred_f, alpha=0.3, s=10)
+    ax1.set_xlabel("Target forces (ev/Å)")
+    ax1.set_ylabel("Predicted forces (ev/Å)")
+
+    ax2.scatter(ref_f, pred_nc_f, alpha=0.3, s=10, color="green")
+    ax2.set_xlabel("Target forces (ev/Å)")
+    ax2.set_ylabel("Predicted NC forces (ev/Å)")
+
+    for ax in [ax1, ax2]:
+        xmin, xmax = ax.get_xlim()
+        ax.plot([xmin, xmax], [xmin, xmax], "k--", lw=1)
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(xmin, xmax)
+
+    plt.tight_layout()
+    plt.show()
+
+
+get_parity_plot(ref_path="data/ethanol_test.xyz", pred_path="output.xyz")
+
+# The left plot shows that the model's force predictions deviate due to the
+# non-conservative training. On the right plot with the non-conservative forces align
+# closely with targets but lack physical constraints, potentially leading to unphysical
+# behavior.
+
+# %%
 #
-# To include non-conservative forces in training, set the ``non_conservative_forces``
-# target as a per-atom vector in the ``options.yaml``:
+# Finetuning on conservative forces
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# The next step is to fine-tune the non-conservative checkpoint to conservative forces.
+# Enable ``forces: on`` to compute them via backward propagation of gradients.
+# Expectedly, the training will be slower.
 #
 # .. code-block:: yaml
 #
-#  training_set:
-#    systems:
-#      read_from: "data/ethanol_corrected.xyz"  # path to the finetuning dataset
-#      length_unit: angstrom
-#    targets:
-#      energy:
-#        key: "energy-corrected"  # name of the target value
-#        unit: "eV"
-#      non_conservative_forces:
-#        quantity: force
-#        key: "forces"
-#        unit: "eV/A"
-#        per_atom: true
-#        type:
-#          cartesian:
-#            rank: 1
+#     training_set:
+#       systems:
+#         read_from: data/ethanol_train.xyz
+#         length_unit: angstrom
+#       targets:
+#         energy:
+#           unit: eV
+#           forces: on
+#         non_conservative_forces:
+#           key: forces
+#           type:
+#             cartesian:
+#               rank: 1
+#           per_atom: true
+#
+# Run training, restarting from the previous checkpoint:
+#
+# .. code-block:: bash
+#
+#    mtt train c_ft_options.yaml --restart model.ckpt
+#
+# Or in Python:
 
-subprocess.run(["mtt", "train", "learn_forces_options.yaml"], check=True)
+subprocess.run(
+    ["mtt", "train", "c_ft_options.yaml", "--restart", "model.ckpt"], check=True
+)
+
+
+# %%
+#
+# Let's evaluate the forces again:
+#
+# .. code-block:: bash
+#
+#    mtt eval model.pt eval_ex2.yaml
+#
+# Or from Python:
+
+subprocess.run(["mtt", "eval", "model.pt", "eval_ex2.yaml"], check=True)
+
+# %%
+#
+# Now, the updated parity plots show improved force predictions (left) with conservative
+# forces. The non-conservative forces (right) are no longer relevant, as the model now
+# prioritizes energy-derived forces.
+
+get_parity_plot(ref_path="data/ethanol_test.xyz", pred_path="output.xyz")
