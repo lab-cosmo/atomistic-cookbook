@@ -2,5 +2,5 @@ systems:
   read_from: data/ethanol_test.xyz
 targets: 
   energy:
-    key: "energy-corrected"
-    unit: "eV"
+    key: energy-corrected
+    unit: eV
