@@ -16,9 +16,9 @@ training strategy, first on non-conservative forces for efficiency, followed by
 fine-tuning on conservative forces to ensure physical consistency.
 
 PET-MAD is a universal machine-learning forcefield trained on `the MAD dataset
-<https://arxiv.org/abs/2506.19674>` that aims to incorporate a very high degree of
+<https://arxiv.org/abs/2506.19674>`_ that aims to incorporate a very high degree of
 structural diversity. It uses `the Point-Edge Transformer (PET)
-<https://proceedings.neurips.cc/paper_files/paper/2023/file/fb4a7e3522363907b26a86cc5be627ac-Paper-Conference.pdf>_,
+<https://proceedings.neurips.cc/paper_files/paper/2023/file/fb4a7e3522363907b26a86cc5be627ac-Paper-Conference.pdf>`_,
 an unconstrained architecture that achieves symmetry compliance through data
 augmentation during training.
 
@@ -34,7 +34,6 @@ from collections import Counter
 from urllib.request import urlretrieve
 
 import ase.io
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from metatrain.pet import PET
@@ -94,7 +93,7 @@ def load_reference_energies(checkpoint_path):
 
 # %%
 #
-# The dataset is composed of 1000 structures of ethanol. We fit a linear model based on
+# The dataset is composed of 100 structures of ethanol. We fit a linear model based on
 # atomic compositions to apply energy correction.
 
 dataset = ase.io.read("data/ethanol.xyz", index=":", format="extxyz")
@@ -224,7 +223,7 @@ chemiscope.show_input("full_finetune_example.chemiscope.json")
 # Non-conservative force training
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# Configure ``options.yaml` to include non-conservative forces as a per-atom vector
+# Configure ``options.yaml`` to include non-conservative forces as a per-atom vector
 # target:
 #
 # .. literalinclude:: nc_train_options.yaml
@@ -249,52 +248,15 @@ subprocess.run(["mtt", "eval", "model.pt", "eval_ex2.yaml"], check=True)
 
 # %%
 #
-# We create parity plots comparing target and predicted forces and non-conservative
-# forces.
-
-
-def get_parity_plot(ref_path, pred_path):
-    # Reading the forces
-    ref = ase.io.read(ref_path, ":")
-    pred = ase.io.read(pred_path, ":")
-
-    forces = [atoms.get_forces() for atoms in pred]
-    nc_forces = [atoms.get_array("non_conservative_forces") for atoms in pred]
-    ref_forces = [atoms.get_forces() for atoms in ref]
-
-    ref_f = np.concatenate([x.flatten() for x in ref_forces])
-    pred_f = np.concatenate([x.flatten() for x in forces])
-    pred_nc_f = np.concatenate([x.flatten() for x in nc_forces])
-
-    # Creating a plot
-    _fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
-
-    ax1.scatter(ref_f, pred_f, alpha=0.3, s=10)
-    ax1.set_xlabel("Target forces (ev/Å)")
-    ax1.set_ylabel("Predicted forces (ev/Å)")
-
-    ax2.scatter(ref_f, pred_nc_f, alpha=0.3, s=10, color="green")
-    ax2.set_xlabel("Target forces (ev/Å)")
-    ax2.set_ylabel("Predicted NC forces (ev/Å)")
-
-    for ax in [ax1, ax2]:
-        xmin, xmax = ax.get_xlim()
-        ax.plot([xmin, xmax], [xmin, xmax], "k--", lw=1)
-        ax.set_xlim(xmin, xmax)
-        ax.set_ylim(xmin, xmax)
-
-    plt.tight_layout()
-    plt.show()
-
-
-get_parity_plot(ref_path="data/ethanol_test.xyz", pred_path="output.xyz")
-
-# The left plot shows that the model's force predictions deviate due to the
-# non-conservative training. On the right plot with the non-conservative forces align
-# closely with targets but lack physical constraints, potentially leading to unphysical
-# behavior.
-
-# %%
+# The result of running non-conservative force learning for 1000 structures for 100
+# epochs is present on the parity plot below. The left plot shows that the model's force
+# predictions deviate due to the non-conservative training. On the right plot with the
+# non-conservative forces align closely with targets but lack physical constraints,
+# potentially leading to unphysical behavior.
+#
+# .. image:: nc_learning_res.png
+#    :align: center
+#    :width: 700px
 #
 # Finetuning on conservative forces
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -347,8 +309,9 @@ subprocess.run(["mtt", "eval", "model.pt", "eval_ex2.yaml"], check=True)
 
 # %%
 #
-# Now, the updated parity plots show improved force predictions (left) with conservative
-# forces. The non-conservative forces (right) are no longer relevant, as the model now
-# prioritizes energy-derived forces.
-
-get_parity_plot(ref_path="data/ethanol_test.xyz", pred_path="output.xyz")
+# After fine-tuning for 50 epochs, the updated parity plots show improved force
+# predictions (left) with conservative forces.
+#
+# .. image:: c_ft_res.png
+#    :align: center
+#    :width: 700px
