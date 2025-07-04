@@ -4,8 +4,8 @@ architecture:
   name: pet
   training:
     batch_size: 16
-    num_epochs: 100
-    num_epochs_warmup: 10
+    num_epochs: 10
+    num_epochs_warmup: 1
     learning_rate: 3e-4
 
 training_set:
