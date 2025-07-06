@@ -19,24 +19,20 @@ class DummyToctree(Directive):
     has_content = True
 
     def run(self):
-        # collect non-blank body lines → document names
+        # collect non-blank body lines (sections)
         docs = [
             line.strip()
             for line in self.content
             if line.strip() and line.strip()[0] != ":"
         ]
 
-        # stash them in a harmless node
+        # stash them as "comments"
         marker = comment()
-        marker["docnames"] = docs  # ← custom attribute
+        marker["docnames"] = docs
         return [marker]
 
 
 directives.register_directive("toctree", DummyToctree)
-
-# from sphinx.directives.other import TocTree
-# from sphinx.addnodes import toctree as TocTreeNode
-# directives.register_directive("toctree", TocTree)
 
 ROOT = os.path.realpath(os.path.dirname(__file__))
 
