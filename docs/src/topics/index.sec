@@ -8,6 +8,7 @@ more than one area, when relevant.
 
 .. toctree::
     :maxdepth: 1
+    :hidden:
 
     sampling
     analysis

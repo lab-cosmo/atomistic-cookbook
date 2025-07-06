@@ -11,8 +11,28 @@ from pathlib import Path
 import nox
 import yaml
 from docutils.core import publish_doctree, publish_parts
-from docutils.nodes import paragraph, title
+from docutils.nodes import comment, paragraph, title
+from docutils.parsers.rst import Directive, directives
 
+
+class DummyToctree(Directive):
+    has_content = True
+
+    def run(self):
+        # collect non-blank body lines → document names
+        docs = [l.strip() for l in self.content if l.strip() and l.strip()[0] != ":"]
+
+        # stash them in a harmless node
+        marker = comment()
+        marker["docnames"] = docs  # ← custom attribute
+        return [marker]
+
+
+directives.register_directive("toctree", DummyToctree)
+
+# from sphinx.directives.other import TocTree
+# from sphinx.addnodes import toctree as TocTreeNode
+# directives.register_directive("toctree", TocTree)
 
 ROOT = os.path.realpath(os.path.dirname(__file__))
 
@@ -216,6 +236,7 @@ def build_gallery_section(template):
     rst_file += ".rst"
     rst_output = ""
     section_examples = []
+    card_strings = []
     with open(template, "r") as fd:
         for line in fd:
             if line.strip()[:2] == "- ":
@@ -243,9 +264,7 @@ def build_gallery_section(template):
             thumbnail = os.path.join("../", *metadata["thumbnail"].split(os.sep))
 
             # generates a thumbnail link
-            fd.write(
-                f"""
-    .. grid-item::
+            card_string = f"""
         .. card:: {metadata["title"]}
             :link: ../{metadata["ref"]}
             :link-type: doc
@@ -257,7 +276,10 @@ def build_gallery_section(template):
                 :class: gallery-img
 
                 """
-            )
+            fd.write(f"""\n    .. grid-item::\n{card_string}""")
+            card_strings.append(card_string)
+
+    return card_strings
 
 
 def post_process_gallery(name, example_dir, files_before):
@@ -524,8 +546,40 @@ that are not part of any of the other sections.
         fd.write(";")
 
     # generates section files
-    for section in glob.glob("docs/src/*/*.sec"):
-        build_gallery_section(section)
+    for section in glob.glob("docs/src/*/index.sec"):
+        print("Processing section:", section)
+
+        # parse to get the names of the subsections
+        doctree = publish_doctree(Path(section).read_text(encoding="utf-8"))
+        docnames = [
+            name
+            for node in doctree.traverse(comment)  # look for our marker nodes
+            if "docnames" in node  # filter only the ones we made
+            for name in node["docnames"]  # flatten the list
+        ]
+        print("Found subsections:", docnames)
+
+        # now builds the index.rst file as well as all the subsections
+        rst_file, _ = os.path.splitext(section)
+        rst_file += ".rst"
+        rst_output = ""
+        # first get the title and description from the index.sec file
+        with open(section, "r") as fd:
+            for line in fd:
+                rst_output += line
+
+        # then add the sections from the toctree
+        for template in docnames:
+            cards = build_gallery_section(
+                os.path.join(os.path.dirname(section), f"{template}.sec")
+            )
+            rst_output += f":doc:`{template}`\n" + ("~" * 256) + "\n\n"
+            rst_output += ".. card-carousel:: 3\n\n"
+            for card in cards:
+                rst_output += card + "\n"
+
+        with open(rst_file, "w") as fd:
+            fd.write(rst_output)
 
     session.run("sphinx-build", "-b", "html", "docs/src", "docs/build/html")
 
