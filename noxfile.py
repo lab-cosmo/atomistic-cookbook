@@ -20,7 +20,11 @@ class DummyToctree(Directive):
 
     def run(self):
         # collect non-blank body lines → document names
-        docs = [l.strip() for l in self.content if l.strip() and l.strip()[0] != ":"]
+        docs = [
+            line.strip()
+            for line in self.content
+            if line.strip() and line.strip()[0] != ":"
+        ]
 
         # stash them in a harmless node
         marker = comment()
