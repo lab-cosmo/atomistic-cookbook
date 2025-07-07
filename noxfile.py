@@ -557,7 +557,6 @@ that are not part of any of the other sections.
             if "docnames" in node  # filter only the ones we made
             for name in node["docnames"]  # flatten the list
         ]
-        print("Found subsections:", docnames)
 
         # now builds the index.rst file as well as all the subsections
         rst_file, _ = os.path.splitext(section)
