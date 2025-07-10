@@ -34,6 +34,7 @@ and conservative MD.
 #
 
 import os
+import subprocess
 import time
 
 import ase.io
@@ -353,11 +354,25 @@ chemiscope.show(
 
 # %%
 # The speedup of the MTS approach with direct forces can also be leveraged in LAMMPS.
-
-import subprocess
+# These are the input files that can be used to run simulations in conservative,
+# non-conservative, and MTS modes, respectively:
 
 subprocess.run("lmp -in data/lammps-c.in")
 subprocess.run("lmp -in data/lammps-nc.in")
 subprocess.run("lmp -in data/lammps-respa.in")
 
-# don't forget to mention that cpu needs to be changed to cuda for better performance!
+# Don't forget that "cpu" in the LAMMPS input files needs to be changed to
+# "cuda" to run simulations on GPUs and achieve better performance, and that the
+# kokkos-enabled version is preferable when running on GPUs. Kokkos can be enabled
+# from the command line by replacing the "lmp" command with
+# "lmp -k on g 1 -pk kokkos newton on neigh half -sf kk".
+
+subprocess.run(
+    "lmp -k on g 1 -pk kokkos newton on neigh half -sf kk -in data/lammps.in"
+)
+subprocess.run(
+    "lmp -k on g 1 -pk kokkos newton on neigh half -sf kk -in data/lammps-nc.in"
+)
+subprocess.run(
+    "lmp -k on g 1 -pk kokkos newton on neigh half -sf kk -in data/lammps-respa.in"
+)
