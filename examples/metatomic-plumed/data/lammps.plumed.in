@@ -1,0 +1,28 @@
+units          real
+atom_style     atomic
+
+read_data      data/minimal.data
+mass           1 39.95
+
+variable seed equal 4242
+
+# --- interactions -----------------------------------------------------------
+pair_style     lj/cut 15
+pair_coeff     1 1 0.24 3.4
+
+# --- initial velocities & thermostat ----------------------------------------
+velocity       all create 19.3 ${seed} mom yes rot yes dist gaussian
+
+fix            1 all nvt temp 19.3 19.3 250.0
+fix            2 all gle 6 19.3 19.3 ${seed} data/gle.A
+
+# -- Plumed integration --
+fix            3 all plumed plumedfile data/plumed.dat outfile plumed.out
+
+# --- MD settings ------------------------------------------------------------
+timestep       2.5
+thermo         1000
+thermo_style   custom step temp pe etotal press
+
+dump           traj all custom 100 lj38.lammpstrj id type x y z
+run            20000

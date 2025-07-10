@@ -14,6 +14,8 @@ through Coulomb forces.
 """
 
 # %%
+import os
+import urllib.request
 from typing import Dict
 
 import ase.io
@@ -37,10 +39,22 @@ dtype = torch.float32
 prefactor = 0.5292  # Unit conversion prefactor.
 
 # %%
-# Load the dataset
-# ~~~~~~~~~~~~~~~~~~~
+# Download and load the dataset
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+data_dir = "data"
+os.makedirs(data_dir, exist_ok=True)
+dataset_url = "https://archive.materialscloud.org/records/405an-d8183/files/point_charges_Training_set_p1.xyz"  # noqa: E501
+dataset_path = os.path.join(data_dir, "point_charges_Training_set.xyz")
+
+if not os.path.isfile(dataset_path):
+    print(f"Downloading dataset from {dataset_url} ...")
+    urllib.request.urlretrieve(dataset_url, dataset_path)
+    print("Download complete.")
+
 # The dataset consists of atomic configurations with reference energies.
-frames = ase.io.read("data/point_charges_Training_set.xyz", ":10")
+frames = ase.io.read(dataset_path, ":10")
 
 # %%
 # Define model parameters
@@ -307,6 +321,6 @@ def plot_results(fname=None, show_snapshot=True):
 
 
 # Call the plot function to visualize results
-plot_results("toy_model_learning.pdf", show_snapshot=True)
+plot_results(show_snapshot=True)
 
 # %%

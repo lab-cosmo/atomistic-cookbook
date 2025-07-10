@@ -5,3 +5,6 @@ docs/src/_static/all-examples-data.js
 *egg-info/
 
 .nox/
+
+__pycache__/
+*.pyc

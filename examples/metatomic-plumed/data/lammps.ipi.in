@@ -1,0 +1,11 @@
+units          real
+atom_style     atomic
+
+read_data      data/minimal.data
+mass           1 39.95
+
+pair_style     lj/cut 15
+pair_coeff     1 1 0.24 3.4
+
+fix 1 all ipi lj 666 unix
+run            100000

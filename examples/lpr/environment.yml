@@ -3,9 +3,8 @@ channels:
 dependencies:
   - python=3.11
   - pip
-  - rust >=1.65
   - pip:
     - ase==3.22.1
     - matplotlib
     - featomic
-    - skmatter
+    - skmatter>=0.3

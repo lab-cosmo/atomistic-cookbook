@@ -4,11 +4,12 @@ channels:
 dependencies:
   - python=3.12
   - pip
+  - lammps-metatomic
   - pip:
     - ase>=3.23
-    - pet-mad>=1.2.0,<2.0  
+    - pet-mad>=1.2.0,<2.0
     - ipi>=3.1.5,<4.0
     - chemiscope>=0.8.5,<0.9
-    - metatomic>=0.1.0,<0.2
+    - metatomic-torch>=0.1.2,<0.2
     - matplotlib>=3.10,<4.0
     - vesin>=0.3.5,<0.4

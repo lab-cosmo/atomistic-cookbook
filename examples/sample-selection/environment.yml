@@ -1,14 +1,12 @@
 channels:
   - conda-forge
 dependencies:
-  - python=3.11
+  - python=3.12
   - pip
-  - rust >=1.65
   - pip:
-    - ase==3.22.1
-    - chemiscope>=0.7
+    - ase>=3.24,<3.30
+    - chemiscope>=0.8.5
     - matplotlib
     - metatensor
     - featomic
-    - skmatter @ git+https://github.com/scikit-learn-contrib/scikit-matter.git@ac4558b52b5269c0cc1b0794f0230a264a938fce
-
+    - skmatter>=0.3

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Script to create JSON string suitable for a github action matrix."""
+
 import glob
 import json
 import os
@@ -8,12 +9,12 @@ from pathlib import Path
 
 ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
 EXAMPLES = os.path.join(ROOT, "examples")
+
+
 # Changes in the following files will trigger all examples to be run.
-GLOBAL_FILES = [
-    "noxfile.py",
-    "src/generate-gallery.py",
-    "src/ipynb-to-gallery.py",
-]
+GLOBAL_FILES = ["noxfile.py"]
+GLOBAL_FILES += glob.glob("src/**")
+GLOBAL_FILES += glob.glob(".github/workflows/*")
 
 
 def get_examples():
@@ -67,7 +68,7 @@ def create_ci_jobs_json(modified_files: str):
         # by the Github Workflow as having no examples to run.
         return ""
 
-    return json.dumps({"example-name": examples})
+    return json.dumps({"example-name": list(sorted(examples))})
 
 
 if __name__ == "__main__":

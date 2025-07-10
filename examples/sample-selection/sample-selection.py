@@ -15,10 +15,13 @@ First, import all the necessary packages
 
 # %%
 
+import os
+
 import ase.io
 import chemiscope
 import metatensor
 import numpy as np
+import requests
 from featomic import SoapPowerSpectrum
 from matplotlib import pyplot as plt
 from sklearn.decomposition import PCA
@@ -37,9 +40,17 @@ from skmatter import feature_selection, sample_selection
 # The data is available as a download in the data.zip file below or in the
 # atomistic-cookbook github.
 
+filename = "gaas_training.xyz"
+if not os.path.exists(filename):
+    url = f"https://zenodo.org/records/10566825/files/{filename}"
+    response = requests.get(url)
+    response.raise_for_status()
+    with open(filename, "wb") as f:
+        f.write(response.content)
+
 # Load a subset of `structures <data/input-fps.xyz>` of the example dataset
 n_frames = 500
-frames = ase.io.read("data/input-fps.xyz", f":{n_frames}", format="extxyz")
+frames = ase.io.read("gaas_training.xyz", f":{3*n_frames}:3", format="extxyz")
 
 # %%
 # Compute SOAP descriptors using featomic
@@ -246,8 +257,8 @@ print("Structure descriptor shape after selection (CUR)", struct_soap_cur.shape)
 #
 
 # Generate a structure PCA
-struct_soap_pca = PCA(n_components=2).fit_transform(struct_soap.block(0).values)
-assert struct_soap_pca.shape == (n_frames, 2)
+struct_soap_pca = PCA(n_components=4).fit_transform(struct_soap.block(0).values)
+assert struct_soap_pca.shape == (n_frames, 4)
 
 
 # %%
@@ -302,6 +313,8 @@ properties.update(
     {
         "PC1": struct_soap_pca[:, 0],
         "PC2": struct_soap_pca[:, 1],
+        "PC3": struct_soap_pca[:, 2],
+        "PC4": struct_soap_pca[:, 3],
         "selection": np.array(selection_levels),
     }
 )

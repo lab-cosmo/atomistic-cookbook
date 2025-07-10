@@ -1,0 +1,16 @@
+*.dat
+*.out
+*.colvar_0
+*.pos_*.xyz
+*.xc.xyz
+*.restart
+RESTART
+\#*
+
+COLVAR-md
+COLVAR-pimd
+
+HILLS-md
+HILLS-pimd
+
+plumed-tutorials/
