@@ -422,8 +422,8 @@ MTS (M=8):           {time_lammps_mts / 16:.4f} s/step
 # %%
 # Don't forget that "cpu" in the LAMMPS input files needs to be changed to
 # "cuda" to run simulations on GPUs and achieve better performance, and that the
-# kokkos-enabled version is preferable when running on GPUs. Kokkos can be enabled
-# from the command line by replacing the "lmp" command with
+# kokkos-enabled version is significantly faster when running on GPUs. Kokkos can be
+# enabled from the command line by replacing the "lmp" command with
 # "lmp -k on g 1 -pk kokkos newton on neigh half -sf kk".
 
 subprocess.run(
