@@ -31,9 +31,11 @@ case.
 
 import subprocess
 from collections import Counter
+from glob import glob
 from urllib.request import urlretrieve
 
 import ase.io
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from metatrain.pet import PET
@@ -199,10 +201,43 @@ subprocess.run(["mtt", "train", "basic_ft_options.yaml"], check=True)
 
 subprocess.run(["mtt", "eval", "model.pt", "eval_ex1.yaml"], check=True)
 
+# %%
+#
+# We visualize learning curves over epoch. The training log is stored in CSV format in
+# the outputs directory.
+
+
+def display_loss(csv_file):
+    with open(csv_file, encoding="utf-8") as f:
+        headers = f.readline().strip().split(",")
+
+    cleaned_names = [h.strip().replace(" ", "_") for h in headers]
+
+    train_log = np.genfromtxt(
+        csv_file,
+        delimiter=",",
+        skip_header=2,
+        names=cleaned_names,
+    )
+
+    plt.figure(figsize=(6, 4))
+    plt.loglog(train_log["Epoch"], train_log["training_loss"], label="Training")
+    plt.loglog(train_log["Epoch"], train_log["validation_loss"], label="Validation")
+
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+
+csv_file = glob("outputs/*/*/train.csv")[-1]
+display_loss(csv_file)
+
 
 # %%
 #
-# The result of running the fine-tuning for 1000 epochs in visualised with
+# The result of running the fine-tuning for 1000 epoches in visualised with
 # ``chemiscope`` below:
 import chemiscope  # noqa: E402
 
@@ -210,6 +245,12 @@ import chemiscope  # noqa: E402
 chemiscope.show_input("full_finetune_example.chemiscope.json")
 
 # %%
+#
+# The learning curves for 1000 epoches displayed on the figure below.
+#
+# .. image:: basic_ft_loss.png
+#    :align: center
+#
 #
 # Two stage training strategy
 # ---------------------------
