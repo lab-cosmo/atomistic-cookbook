@@ -427,11 +427,14 @@ MTS (M=8):           {time_lammps_mts / 16:.4f} s/step
 # "lmp -k on g 1 -pk kokkos newton on neigh half -sf kk".
 
 subprocess.run(
-    "lmp -k on g 1 -pk kokkos newton on neigh half -sf kk -in data/lammps.in"
+    "lmp -k on g 1 -pk kokkos newton on neigh half -sf kk -in data/lammps.in",
+    shell=True,
 )
 subprocess.run(
-    "lmp -k on g 1 -pk kokkos newton on neigh half -sf kk -in data/lammps-nc.in"
+    "lmp -k on g 1 -pk kokkos newton on neigh half -sf kk -in data/lammps-nc.in",
+    shell=True,
 )
 subprocess.run(
-    "lmp -k on g 1 -pk kokkos newton on neigh half -sf kk -in data/lammps-respa.in"
+    "lmp -k on g 1 -pk kokkos newton on neigh half -sf kk -in data/lammps-respa.in",
+    shell=True,
 )
