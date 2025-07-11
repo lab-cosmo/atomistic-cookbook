@@ -8,16 +8,18 @@ Fine-tuning the PET-MAD universal potential
           Sofiia Chorna `@sofiia-chorna <https://github.com/sofiia-chorna>`_
 
 This example demonstrates fine-tuning the PET-MAD model with `metatrain
-<https://github.com/metatensor/metatrain>`_ on a small dataset of ethanol structures.
+<https://github.com/metatensor/metatrain>`_ and two-stage training strategy from
+scratch.
 
 We cover two examples: 1) simple fine-tuning the pretrained PET-MAD model to adapt it to
 specialized task by retraining it on a domain-specific dataset, and 2) two-stage
 training strategy, first on non-conservative forces for efficiency, followed by
 fine-tuning on conservative forces to ensure physical consistency.
 
-PET-MAD is a universal machine-learning forcefield trained on `the MAD dataset
-<https://arxiv.org/abs/2506.19674>`_ that aims to incorporate a very high degree of
-structural diversity. It uses `the Point-Edge Transformer (PET)
+`PET-MAD <https://arxiv.org/abs/2503.14118>`_ is a universal machine-learning forcefield
+trained on `the MAD dataset <https://arxiv.org/abs/2506.19674>`_ that aims to
+incorporate a very high degree of structural diversity. The model itself is `the
+Point-Edge Transformer (PET)
 <https://proceedings.neurips.cc/paper_files/paper/2023/file/fb4a7e3522363907b26a86cc5be627ac-Paper-Conference.pdf>`_,
 an unconstrained architecture that achieves symmetry compliance through data
 augmentation during training.
@@ -72,9 +74,13 @@ urlretrieve(url, checkpoint_path)
 #
 # DFT-calculated energies often contain systematic shifts due to the choice of
 # functional, basis set, or pseudopotentials. If left uncorrected, such shifts can
-# mislead the fine-tuning process. We apply a linear correction based on atomic
-# compositions to align our fine-tuning dataset with PET-MAD energy reference. First, we
-# define a helper function to load reference energies from PET-MAD.
+# mislead the fine-tuning process.
+#
+# On this example we use the sampled subset of ethanol structures from `rMD17 dataset
+# <https://doi.org/10.48550/arXiv.2007.09593>`_ with PBE/def2-SVP level of theory which
+# is different from the MAD where PBEsol is used. We apply a linear correction based on
+# atomic compositions to align our fine-tuning dataset with PET-MAD energy reference.
+# First, we define a helper function to load reference energies from PET-MAD.
 
 
 def load_reference_energies(checkpoint_path):
@@ -95,8 +101,8 @@ def load_reference_energies(checkpoint_path):
 
 # %%
 #
-# The dataset is composed of 100 structures of ethanol. We fit a linear model based on
-# atomic compositions to apply energy correction.
+# For demonstration, the dataset is composed only of 100 structures of ethanol. We fit a
+# linear model based on atomic compositions to apply energy correction.
 
 dataset = ase.io.read("data/ethanol.xyz", index=":", format="extxyz")
 
@@ -237,8 +243,8 @@ display_loss(csv_file)
 
 # %%
 #
-# The result of running the fine-tuning for 1000 epoches in visualised with
-# ``chemiscope`` below:
+# The result of running the fine-tuning for 1000 epoches for 1000 structures in
+# visualised with ``chemiscope`` below:
 import chemiscope  # noqa: E402
 
 
@@ -246,9 +252,6 @@ chemiscope.show_input("full_finetune_example.chemiscope.json")
 
 # %%
 #
-# The fine-tuning learning curves for 1000 epoches displayed on the figure below. For
-# comparison, we also train a model from scratch on the same dataset:
-
 # The figure below shows the training and validation losses over 1000 epochs of
 # fine-tuning. For comparison, we also train the model from scratch on the same dataset.
 # Expectedly, the pretrained model achieves better accuracy.
@@ -261,11 +264,14 @@ chemiscope.show_input("full_finetune_example.chemiscope.json")
 # Two stage training strategy
 # ---------------------------
 #
-# This approach accelerates training by first using non-conservative forces, which
-# avoids costly backpropagation, then fine-tuning on conservative forces to ensure
-# physical consistency. Non-conservative forces can lead to pathological behavior (see
-# `preprint <https://arxiv.org/abs/2412.11569>`_), but this strategy mitigates such
-# issues while maintaining efficiency.
+# As discussed in <this paper https://arxiv.org/abs/2412.11569>`_, while conservative
+# MLIPs are generally better suited for physically accurate simulations, hybrid models
+# that support direct non-conservative force predictions can accelerate both training
+# and inference. We demonstrate this practical compromise through a two-stage approach:
+# first train a model to predict non-conservative forces directly (which avoids the cost
+# of backpropagation) and then fine-tuning its energy head to produce conservative
+# forces. Although non-conservative forces can lead to unphysical behavior, this
+# two-step strategy balances efficiency and physical reliability.
 #
 # Non-conservative force training
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -357,7 +363,8 @@ subprocess.run(["mtt", "eval", "model.pt", "eval_ex2.yaml"], check=True)
 # %%
 #
 # After fine-tuning for 50 epochs, the updated parity plots show improved force
-# predictions (left) with conservative forces.
+# predictions (left) with conservative forces. The grayscale points in the background
+# correspond to the predicted forces from the previous step.
 #
 # .. image:: c_ft_res.png
 #    :align: center
