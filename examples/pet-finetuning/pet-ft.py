@@ -246,10 +246,16 @@ chemiscope.show_input("full_finetune_example.chemiscope.json")
 
 # %%
 #
-# The learning curves for 1000 epoches displayed on the figure below.
+# The fine-tuning learning curves for 1000 epoches displayed on the figure below. For
+# comparison, we also train a model from scratch on the same dataset:
+
+# The figure below shows the training and validation losses over 1000 epochs of
+# fine-tuning. For comparison, we also train the model from scratch on the same dataset.
+# Expectedly, the pretrained model achieves better accuracy.
 #
-# .. image:: basic_ft_loss.png
-#    :align: center
+# .. image:: ex1_losses_comparison.png
+#   :width: 500
+#   :align: center
 #
 #
 # Two stage training strategy
