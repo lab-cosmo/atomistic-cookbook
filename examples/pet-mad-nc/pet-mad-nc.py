@@ -34,21 +34,21 @@ and conservative MD.
 #
 
 import linecache
-import os
 import subprocess
 import time
 
 import ase.io
 
-# i-PI scripting utilities
+# visualization
 import chemiscope
 import matplotlib.pyplot as plt
-import metatomic.torch as mta
+
+# i-PI scripting utilities
 from ipi.utils.parsing import read_output, read_trajectory
 from ipi.utils.scripting import InteractiveSimulation
 
-# pet-mad ASE calculator
-from pet_mad.calculator import PETMADCalculator
+# metatomic ASE calculator
+from metatomic.torch.ase_calculator import MetatomicCalculator
 
 
 if hasattr(__import__("builtins"), "get_ipython"):
@@ -60,11 +60,16 @@ if hasattr(__import__("builtins"), "get_ipython"):
 # We first download the latest version of the PET-MAD model, and
 # export the model as a torchscript file.
 
-# downloads the model checkpoint and export it
-model_filename = "pet-mad-latest.pt"
-if not os.path.exists(model_filename):
-    calculator = PETMADCalculator(version="latest", device="cpu")
-    calculator._model.save(model_filename)
+# download the model checkpoint and export it, using metatrain from the command line:
+# mtt export https://huggingface.co/lab-cosmo/pet-mad/resolve/main/models/pet-mad-latest.ckpt  # noqa: E501
+
+subprocess.run(
+    [
+        "mtt",
+        "export",
+        "https://huggingface.co/lab-cosmo/pet-mad/resolve/main/models/pet-mad-latest.ckpt",  # noqa: E501
+    ]
+)
 
 # %%
 # The model can also be loaded from this torchscript dump, which often
@@ -72,7 +77,7 @@ if not os.path.exists(model_filename):
 # equivalent unless you plan on fine-tuning, or otherwise modifying
 # the model.
 
-calculator = mta.ase_calculator.MetatomicCalculator(model_filename, device="cpu")
+calculator = MetatomicCalculator("pet-mad-latest.pt", device="cpu")
 
 # %%
 #
@@ -107,8 +112,8 @@ structure.calc = calculator
 energy_c = structure.get_potential_energy()
 forces_c = structure.get_forces()
 
-calculator_nc = mta.ase_calculator.MetatomicCalculator(
-    model_filename, device="cpu", non_conservative=True
+calculator_nc = MetatomicCalculator(
+    "pet-mad-latest.pt", device="cpu", non_conservative=True
 )
 
 structure.calc = calculator_nc
@@ -425,6 +430,9 @@ MTS (M=8):           {time_lammps_mts / 16:.4f} s/step
 # kokkos-enabled version is significantly faster when running on GPUs. Kokkos can be
 # enabled from the command line by replacing the "lmp" command with
 # "lmp -k on g 1 -pk kokkos newton on neigh half -sf kk".
+
+# Here are the commands to run the LAMMPS simulations with Kokkos enabled, using
+# conservative, non-conservative, and MTS force evaluations, respectively:
 
 subprocess.run(
     "lmp -k on g 1 -pk kokkos newton on neigh half -sf kk -in data/lammps.in",
