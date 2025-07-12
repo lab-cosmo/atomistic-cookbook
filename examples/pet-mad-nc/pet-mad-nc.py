@@ -432,21 +432,22 @@ MTS (M=8):           {time_lammps_mts / 16:.4f} s/step
 # Running LAMMPS on GPUs with KOKKOS
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 # If you have a GPU available, you can achieve a dramatic speedup
-# by running the `metatomic` model on the GPU, which you can achieve 
-# by setting ``device cuda` for the `metatomic` pair style in the LAMMPS input files.
+# by running the `metatomic` model on the GPU, which you can achieve
+# by setting ``device cuda`` for the `metatomic` pair style in the LAMMPS input files.
 # The MD integration will however still be run on the CPU, which can become the
 # bottleneck - especially because atomic positions need to be transfered to the GPU
 # at each call. LAMMPS can also be run directly on the GPU using the KOKKOS package,
 # see `the installation instructions
-# <https://docs.metatensor.org/metatomic/latest/engines/lammps.html>`_. 
+# <https://docs.metatensor.org/metatomic/latest/engines/lammps.html>`_ for
+# the metatrain-enabled version.
 
 # %%
 # In order to enable the KOKKOS execution, you then have to use additional command-line
-# arguments when running LAMMPS,
-# ``lmp -k on g 1 -pk kokkos newton on neigh half -sf kk``.
-# Here are the commands to execute the LAMMPS simulations with Kokkos enabled, using
+# arguments when running LAMMPS, e.g.
+# ``lmp -k on g <NGPUS> -pk kokkos newton on neigh half -sf kk``.
+# The commands to execute the LAMMPS simulation examples with Kokkos enabled, using
 # conservative, non-conservative, and MTS force evaluations, are
-# 
+#
 # .. code-block:: bash
 #
 #     lmp -k on g 1 -pk kokkos newton on neigh half -sf kk -in data/lammps-c.in
