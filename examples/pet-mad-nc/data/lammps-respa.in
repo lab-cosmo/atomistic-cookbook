@@ -9,10 +9,10 @@ mass 2 35.453
 mass 3 1.00784
 mass 4 14.0067
 
-pair_style hybrid/scaled &
-     1.0 metatomic_1 pet-mad-latest.pt device cpu non_conservative on &
-    -1.0 metatomic_2 pet-mad-latest.pt device cpu non_conservative on &
-     1.0 metatomic_3 pet-mad-latest.pt device cpu non_conservative off
+pair_style hybrid/overlay &
+     metatomic_1 pet-mad-latest.pt device cpu non_conservative on scale 1.0 &
+     metatomic_2 pet-mad-latest.pt device cpu non_conservative on scale -1.0 &
+     metatomic_3 pet-mad-latest.pt device cpu non_conservative off scale 1.0
 
 pair_coeff * * metatomic_1 6 17 1 7
 pair_coeff * * metatomic_2 6 17 1 7

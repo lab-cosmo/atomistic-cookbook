@@ -394,8 +394,8 @@ time_lammps_nc += time.time()
 # %%
 # The multiple time stepping integrator can be implemented in lammps
 # using a ``pair_style hybrid/overlay``, providing multiple
-# ``metatomic_X`` pair styles - one for the fast forces, one for
-# the slow force and one for the correction.
+# ``metatomic_X`` pair styles - one for the fast (non-conservative) forces, and two
+# for the slow correction (conservative minus non-conservative).
 
 for lineno in [12, 13, 14, 15, 17, 18, 19, 24, 27]:
     print(linecache.getline("data/lammps-respa.in", lineno), end="")
