@@ -401,6 +401,10 @@ time_lammps_nc += time.time()
 # using a ``pair_style hybrid/overlay``, providing multiple
 # ``metatomic_X`` pair styles - one for the fast (non-conservative) forces, and two
 # for the slow correction (conservative minus non-conservative).
+# Note that you can also use ``pair_style hybrid/scaled``, which however
+# is affected by a `bug <https://github.com/lammps/lammps/issues/3492`_ at the
+# time of writing, which prevents it from working correctly with the GPU build
+# of LAMMPS.
 
 for lineno in [12, 13, 14, 15, 17, 18, 19, 24, 27]:
     print(linecache.getline("data/lammps-respa.in", lineno), end="")
@@ -425,24 +429,27 @@ MTS (M=8):           {time_lammps_mts / 16:.4f} s/step
 )
 
 # %%
-# Don't forget that "cpu" in the LAMMPS input files needs to be changed to
-# "cuda" to run simulations on GPUs and achieve better performance, and that the
-# kokkos-enabled version is significantly faster when running on GPUs. Kokkos can be
-# enabled from the command line by replacing the "lmp" command with
-# "lmp -k on g 1 -pk kokkos newton on neigh half -sf kk".
+# Running LAMMPS on GPUs with KOKKOS
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# If you have a GPU available, you can achieve a dramatic speedup
+# by running the `metatomic` model on the GPU, which you can achieve 
+# by setting ``device cuda` for the `metatomic` pair style in the LAMMPS input files.
+# The MD integration will however still be run on the CPU, which can become the
+# bottleneck - especially because atomic positions need to be transfered to the GPU
+# at each call. LAMMPS can also be run directly on the GPU using the KOKKOS package,
+# see `the installation instructions
+# <https://docs.metatensor.org/metatomic/latest/engines/lammps.html>`_. 
 
-# Here are the commands to run the LAMMPS simulations with Kokkos enabled, using
-# conservative, non-conservative, and MTS force evaluations, respectively:
-
-subprocess.run(
-    "lmp -k on g 1 -pk kokkos newton on neigh half -sf kk -in data/lammps.in",
-    shell=True,
-)
-subprocess.run(
-    "lmp -k on g 1 -pk kokkos newton on neigh half -sf kk -in data/lammps-nc.in",
-    shell=True,
-)
-subprocess.run(
-    "lmp -k on g 1 -pk kokkos newton on neigh half -sf kk -in data/lammps-respa.in",
-    shell=True,
-)
+# %%
+# In order to enable the KOKKOS execution, you then have to use additional command-line
+# arguments when running LAMMPS,
+# ``lmp -k on g 1 -pk kokkos newton on neigh half -sf kk``.
+# Here are the commands to execute the LAMMPS simulations with Kokkos enabled, using
+# conservative, non-conservative, and MTS force evaluations, are
+# 
+# .. code-block:: bash
+#
+#     lmp -k on g 1 -pk kokkos newton on neigh half -sf kk -in data/lammps-c.in
+#     lmp -k on g 1 -pk kokkos newton on neigh half -sf kk -in data/lammps-nc.in
+#     lmp -k on g 1 -pk kokkos newton on neigh half -sf kk -in data/lammps-respa.in
+#
