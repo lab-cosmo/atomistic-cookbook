@@ -435,7 +435,7 @@ MTS (M=8):           {time_lammps_mts / 16:.4f} s/step
 # conservative, non-conservative, and MTS force evaluations, respectively:
 
 subprocess.run(
-    "lmp -k on g 1 -pk kokkos newton on neigh half -sf kk -in data/lammps.in",
+    "lmp -k on g 1 -pk kokkos newton on neigh half -sf kk -in data/lammps-c.in",
     shell=True,
 )
 subprocess.run(
