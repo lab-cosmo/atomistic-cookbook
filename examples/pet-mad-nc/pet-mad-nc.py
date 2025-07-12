@@ -439,7 +439,7 @@ MTS (M=8):           {time_lammps_mts / 16:.4f} s/step
 # at each call. LAMMPS can also be run directly on the GPU using the KOKKOS package,
 # see `the installation instructions
 # <https://docs.metatensor.org/metatomic/latest/engines/lammps.html>`_ for
-# the metatrain-enabled version.
+# the kokkos-enabled version.
 
 # %%
 # In order to enable the KOKKOS execution, you then have to use additional command-line
