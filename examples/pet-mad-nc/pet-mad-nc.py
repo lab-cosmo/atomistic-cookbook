@@ -34,21 +34,21 @@ and conservative MD.
 #
 
 import linecache
-import os
 import subprocess
 import time
 
 import ase.io
 
-# i-PI scripting utilities
+# visualization
 import chemiscope
 import matplotlib.pyplot as plt
-import metatomic.torch as mta
+
+# i-PI scripting utilities
 from ipi.utils.parsing import read_output, read_trajectory
 from ipi.utils.scripting import InteractiveSimulation
 
-# pet-mad ASE calculator
-from pet_mad.calculator import PETMADCalculator
+# metatomic ASE calculator
+from metatomic.torch.ase_calculator import MetatomicCalculator
 
 
 if hasattr(__import__("builtins"), "get_ipython"):
@@ -60,11 +60,16 @@ if hasattr(__import__("builtins"), "get_ipython"):
 # We first download the latest version of the PET-MAD model, and
 # export the model as a torchscript file.
 
-# downloads the model checkpoint and export it
-model_filename = "pet-mad-latest.pt"
-if not os.path.exists(model_filename):
-    calculator = PETMADCalculator(version="latest", device="cpu")
-    calculator._model.save(model_filename)
+# download the model checkpoint and export it, using metatrain from the command line:
+# mtt export https://huggingface.co/lab-cosmo/pet-mad/resolve/main/models/pet-mad-latest.ckpt  # noqa: E501
+
+subprocess.run(
+    [
+        "mtt",
+        "export",
+        "https://huggingface.co/lab-cosmo/pet-mad/resolve/main/models/pet-mad-latest.ckpt",  # noqa: E501
+    ]
+)
 
 # %%
 # The model can also be loaded from this torchscript dump, which often
@@ -72,7 +77,7 @@ if not os.path.exists(model_filename):
 # equivalent unless you plan on fine-tuning, or otherwise modifying
 # the model.
 
-calculator = mta.ase_calculator.MetatomicCalculator(model_filename, device="cpu")
+calculator = MetatomicCalculator("pet-mad-latest.pt", device="cpu")
 
 # %%
 #
@@ -107,8 +112,8 @@ structure.calc = calculator
 energy_c = structure.get_potential_energy()
 forces_c = structure.get_forces()
 
-calculator_nc = mta.ase_calculator.MetatomicCalculator(
-    model_filename, device="cpu", non_conservative=True
+calculator_nc = MetatomicCalculator(
+    "pet-mad-latest.pt", device="cpu", non_conservative=True
 )
 
 structure.calc = calculator_nc
@@ -369,7 +374,7 @@ chemiscope.show(
 
 # %%
 # We first launch conservative and non-conservative trajectories for
-# reference. These use the `metatomic` interface to LAMMPS (whhich
+# reference. These use the `metatomic` interface to LAMMPS (which
 # requires a custom LAMMPS build, available through the `metatensor`
 # conda forge). See also `the metatomic documentation
 # <https://docs.metatensor.org/metatomic/latest/engines/lammps.html>`_
@@ -394,8 +399,12 @@ time_lammps_nc += time.time()
 # %%
 # The multiple time stepping integrator can be implemented in lammps
 # using a ``pair_style hybrid/overlay``, providing multiple
-# ``metatomic_X`` pair styles - one for the fast forces, one for
-# the slow force and one for the correction.
+# ``metatomic_X`` pair styles - one for the fast (non-conservative) forces, and two
+# for the slow correction (conservative minus non-conservative).
+# Note that you can also use ``pair_style hybrid/scaled``, which however
+# is affected by a `bug <https://github.com/lammps/lammps/issues/3492`_ at the
+# time of writing, which prevents it from working correctly with the GPU build
+# of LAMMPS.
 
 for lineno in [12, 13, 14, 15, 17, 18, 19, 24, 27]:
     print(linecache.getline("data/lammps-respa.in", lineno), end="")
@@ -418,3 +427,30 @@ Direct forces:       {time_lammps_nc / 16:.4f} s/step
 MTS (M=8):           {time_lammps_mts / 16:.4f} s/step
 """
 )
+
+# %%
+# Running LAMMPS on GPUs with KOKKOS
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# If you have a GPU available, you can achieve a dramatic speedup
+# by running the `metatomic` model on the GPU, which you can achieve
+# by setting ``device cuda`` for the `metatomic` pair style in the LAMMPS input files.
+# The MD integration will however still be run on the CPU, which can become the
+# bottleneck - especially because atomic positions need to be transfered to the GPU
+# at each call. LAMMPS can also be run directly on the GPU using the KOKKOS package,
+# see `the installation instructions
+# <https://docs.metatensor.org/metatomic/latest/engines/lammps.html>`_ for
+# the metatrain-enabled version.
+
+# %%
+# In order to enable the KOKKOS execution, you then have to use additional command-line
+# arguments when running LAMMPS, e.g.
+# ``lmp -k on g <NGPUS> -pk kokkos newton on neigh half -sf kk``.
+# The commands to execute the LAMMPS simulation examples with Kokkos enabled, using
+# conservative, non-conservative, and MTS force evaluations, are
+#
+# .. code-block:: bash
+#
+#     lmp -k on g 1 -pk kokkos newton on neigh half -sf kk -in data/lammps-c.in
+#     lmp -k on g 1 -pk kokkos newton on neigh half -sf kk -in data/lammps-nc.in
+#     lmp -k on g 1 -pk kokkos newton on neigh half -sf kk -in data/lammps-respa.in
+#
