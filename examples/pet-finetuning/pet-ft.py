@@ -264,7 +264,7 @@ chemiscope.show_input("full_finetune_example.chemiscope.json")
 # Two stage training strategy
 # ---------------------------
 #
-# As discussed in <this paper https://arxiv.org/abs/2412.11569>`_, while conservative
+# As discussed in `this paper <https://arxiv.org/abs/2412.11569>`_, while conservative
 # MLIPs are generally better suited for physically accurate simulations, hybrid models
 # that support direct non-conservative force predictions can accelerate both training
 # and inference. We demonstrate this practical compromise through a two-stage approach:
@@ -369,3 +369,13 @@ subprocess.run(["mtt", "eval", "model.pt", "eval_ex2.yaml"], check=True)
 # .. image:: c_ft_res.png
 #    :align: center
 #    :width: 700px
+#
+# The figure below compares the validation force MAE as a function of GPU hours for
+# direct training of the conservative PET model ("C-only") and a two-step approach:
+# initial training of a non-conservative model followed by conservative training
+# continuation. For the given GPU hours frame, the two-step approach yields lower
+# validation error.
+#
+# .. image:: training_strategy_comparison.png
+#    :align: center
+#
