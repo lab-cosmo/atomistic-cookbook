@@ -6,16 +6,17 @@ This example includes three ways of using PET-MAD's uncertainty quantification.
 
 1. Estimating uncertainties on a full validation dataset.
 2. Computing vacancy formation energies and prediction uncertainties.
-3. Propagate errors from energy predictions to
+3. Propagate errors from energy predictions to output observables.
 """
 
 # %%
-import os
+import os, subprocess, shlex
 from urllib.request import urlretrieve
 from ase import Atoms
 from ase.io.cif import read_cif
 from ase.filters import FrechetCellFilter
 from ase.optimize.bfgs import BFGS
+import ase.cell, ase.ga.utilities
 from metatrain.utils.io import load_model
 from metatrain.utils.data import Dataset, read_systems, read_targets
 from metatrain.utils.neighbor_lists import (
@@ -24,10 +25,12 @@ from metatrain.utils.neighbor_lists import (
 )
 from metatomic.torch import ModelEvaluationOptions, ModelOutput
 from metatomic.torch.ase_calculator import MetatomicCalculator
+from ipi.utils.scripting import InteractiveSimulation
 import torch
 from torch.jit import ScriptModule
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 
 # %%
 # Model Preparation
@@ -297,3 +300,92 @@ for vs in values:
 # %%
 # The following table summarizes the values computed using different methods.
 pd.DataFrame(values, index=index)
+
+# %%
+# Uncertainty Propagation with MD
+# -------------------------------
+# This example shows how to use i-PI to propagate error estimates from an ensemble to output observables. In this example, we use a box with period boundary conditions housing 32 water molecules. As an observable, we inspect the `Radial Distribution Function (RDF) <https://en.wikipedia.org/wiki/Radial_distribution_function>`_ between hydrogen-hydrogen and oxygen-oxygen bonds.
+#
+# First, we run a simulation with i-PI generating a trajectory and logging other metrics. The trajectory and committee energies can be used in a subsequent postprocessing step to obtain RDFs using ASE. These can be re-weighted to propagate errors from the committee uncertainties to the observed RDFs.
+
+# Load configuration and run simulation.
+with open("data/h2o-32.xml") as f:
+    sim = InteractiveSimulation(f.read())
+
+# NB: To get better estimates, set this to a higher number (perhaps 10000) to
+# run the simulation for a longer time.
+sim.run(200)
+
+# %%
+# Load the trajectories and compute the per-frame RDFs
+frames: list[Atoms] = ase.io.read("h2o-32.pos_0.xyz", ":")  # type: ignore
+
+# Our simulation should only include water molecules. (types: hydrogen=1, oxygen=8)
+assert set(frames[0].numbers.tolist()) == set([1, 8])
+
+# Compute the RDF of each frame (for H-H and for O-O)
+num_bins = 100
+rdfs_hh = []
+rdfs_oo = []
+for atoms in frames:
+    atoms.pbc = True
+    atoms.cell = ase.cell.Cell(9.86592 * np.eye(3))
+
+    # Csompute H-H distances
+    bins, xs = ase.ga.utilities.get_rdf(atoms, 4.5, num_bins, elements=[1, 1])
+    rdfs_hh.append(bins)
+
+    # Compute O-O distances
+    bins, xs = ase.ga.utilities.get_rdf(atoms, 4.5, num_bins, elements=[8, 8])
+    rdfs_oo.append(bins)
+rdfs_hh = np.stack(rdfs_hh, axis=0)
+rdfs_oo = np.stack(rdfs_oo, axis=0)
+
+# %%
+# Run the i-PI re-weighting utility as a post-processing step.
+
+# Save RDFs such that they can be read from i-PI.
+np.savetxt("h2o-32_rdfs_h-h.txt", rdfs_hh)
+np.savetxt("h2o-32_rdfs_o-o.txt", rdfs_oo)
+
+# Run the re-weighting tool from i-PI for H-H and O-O
+for ty in ["h-h", "o-o"]:
+    infile = f"h2o-32_rdfs_{ty}.txt"
+    outfile = f"h2o-32_rdfs_{ty}_reweighted.txt"
+    cmd = f"i-pi-committee-reweight h2o-32.committee_pot_0 {infile} --input data/h2o-32.xml"
+    print("Executing command:", "\t" + cmd, sep="\n")
+    cmd = shlex.split(cmd)
+    with open(outfile, "w") as out:
+        process = subprocess.run(cmd, stdout=out)
+
+# %%
+# Load and display the RDFs after re-weighting. Note that the results might not noisy due to the small number of MD steps.
+
+# Load the reweighted RDFs.
+rdfs_hh_reweighted = np.loadtxt("h2o-32_rdfs_h-h_reweighted.txt")
+print(rdfs_hh_reweighted.shape)
+rdfs_oo_reweighted = np.loadtxt("h2o-32_rdfs_o-o_reweighted.txt")
+
+# Extract columns.
+rdfs_hh_reweighted_mu = rdfs_hh_reweighted[:, 0]
+rdfs_hh_reweighted_err = rdfs_hh_reweighted[:, 1]
+rdfs_hh_reweighted_committees = rdfs_hh_reweighted[:, 2:]
+
+rdfs_oo_reweighted_mu = rdfs_oo_reweighted[:, 0]
+rdfs_oo_reweighted_err = rdfs_oo_reweighted[:, 1]
+rdfs_oo_reweighted_committees = rdfs_oo_reweighted[:, 2:]
+
+# Display results.
+fig, axs = plt.subplots(figsize=(6, 3), sharey=True, ncols=2)
+for title, ax, mus, errs, xlim in [
+    ("H-H", axs[0], rdfs_hh_reweighted_mu, rdfs_hh_reweighted_err, (0.0, 4.5)),
+    ("O-O", axs[1], rdfs_oo_reweighted_mu, rdfs_oo_reweighted_err, (2.0, 4.5)),
+]:
+    ylabel = r"$\Delta g(r)$" if title == "H-H" else None
+    ax.set(title=title, xlabel="Distance", ylabel=ylabel, xlim=xlim, ylim=(-1, 3.0))
+    ax.grid()
+    ax.plot(xs, mus, label="Mean", lw=2)
+    z95 = 1.96
+    rdfs_ci95 = (mus - z95 * errs, mus + z95 * errs)
+    ax.fill_between(xs, *rdfs_ci95, alpha=0.4, label="CI95")
+    ax.legend()

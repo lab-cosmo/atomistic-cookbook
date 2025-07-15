@@ -1,2 +1,9 @@
 models
 data
+
+RESTART
+\#*
+*.out
+*.xyz
+*.committee_pot_0*
+*.txt
