@@ -6,7 +6,7 @@ This example includes three ways of using PET-MAD's uncertainty quantification.
 
 1. Estimating uncertainties on a full validation dataset.
 2. Computing vacancy formation energies and prediction uncertainties.
-3. Propagate errors from energy predictions to 
+3. Propagate errors from energy predictions to
 """
 
 # %%
@@ -18,7 +18,10 @@ from ase.filters import FrechetCellFilter
 from ase.optimize.bfgs import BFGS
 from metatrain.utils.io import load_model
 from metatrain.utils.data import Dataset, read_systems, read_targets
-from metatrain.utils.neighbor_lists import get_requested_neighbor_lists, get_system_with_neighbor_lists
+from metatrain.utils.neighbor_lists import (
+    get_requested_neighbor_lists,
+    get_system_with_neighbor_lists,
+)
 from metatomic.torch import ModelEvaluationOptions, ModelOutput
 from metatomic.torch.ase_calculator import MetatomicCalculator
 import torch
@@ -31,54 +34,54 @@ import pandas as pd
 # -----------------
 # All examples require a PET-MAD model with ensemble and LLPR prediction. The following code loads a pre-built model if available or builds it on-demand. Note that, by default, PET-MAD does not (yet) come equipped with such extended capabilities.
 if not os.path.exists("models/pet-mad-latest-llpr.pt"):
-  # TODO build the LLPR scores, but -- for now -- just download a prebuilt model
-  os.makedirs("models", exist_ok=True)
-  urlretrieve(
-    "https://huggingface.co/jospies/pet-mad-llpr/resolve/main/pet-mad-latest-llpr.pt?download=true",
-    "models/pet-mad-latest-llpr.pt",
-  )
+    # TODO build the LLPR scores, but -- for now -- just download a prebuilt model
+    os.makedirs("models", exist_ok=True)
+    urlretrieve(
+        "https://huggingface.co/jospies/pet-mad-llpr/resolve/main/pet-mad-latest-llpr.pt?download=true",
+        "models/pet-mad-latest-llpr.pt",
+    )
 model = load_model("models/pet-mad-latest-llpr.pt")
 
 # %%
 # Uncertainties on a Dataset
 # ----------------------------------------------
 # This first example shows how to use PET-MAD to estimate uncertainties on a reference dataset. We use a reduced version (because of limited compute power in the CI runner) of the MAD validation set.
-# 
+#
 # For this, we first download the correspond MAD validation dataset record from Materials Cloud. Then, we prepare the dataset and pass it through the model. In the final step, we visualize the predicted uncertainties and compare them to a groundtruth method.
 
 if not os.path.exists("data/mad-val-100.xyz"):
-  os.makedirs("data", exist_ok=True)
-  urlretrieve(
-    "https://huggingface.co/jospies/pet-mad-llpr/resolve/main/mad-val-100.xyz?download=true",
-    "data/mad-val-100.xyz",
-  )
+    os.makedirs("data", exist_ok=True)
+    urlretrieve(
+        "https://huggingface.co/jospies/pet-mad-llpr/resolve/main/mad-val-100.xyz?download=true",
+        "data/mad-val-100.xyz",
+    )
 
 # Read the dataset's structures.
 systems = read_systems("data/mad-val-100.xyz")
 systems = [system.to(dtype=torch.float32) for system in systems]
 requested_neighbor_lists = get_requested_neighbor_lists(model)
 systems_with_nb_lists = [
-  get_system_with_neighbor_lists(system, requested_neighbor_lists)
-  for system in systems
+    get_system_with_neighbor_lists(system, requested_neighbor_lists)
+    for system in systems
 ]
 
 # Read the dataset's targets.
 target_config = {
-  "energy": {
-    "quantity": "energy",
-    "read_from": "data/mad-val-100.xyz",
-    "reader": "ase",
-    "key": "energy",
-    "unit": "kcal/mol",
-    "type": "scalar",
-    "per_atom": False,
-    "num_subtargets": 1,
-    "forces": False,
-    "stress": False,
-    "virial": False,
-  },
+    "energy": {
+        "quantity": "energy",
+        "read_from": "data/mad-val-100.xyz",
+        "reader": "ase",
+        "key": "energy",
+        "unit": "kcal/mol",
+        "type": "scalar",
+        "per_atom": False,
+        "num_subtargets": 1,
+        "forces": False,
+        "stress": False,
+        "virial": False,
+    },
 }
-targets, infos = read_targets(target_config) # type: ignore
+targets, infos = read_targets(target_config)  # type: ignore
 
 # Wrap in a `metatrain` compatible way.
 dataset = Dataset.from_dict({"system": systems_with_nb_lists, **targets})
@@ -95,9 +98,9 @@ evaluation_options = ModelEvaluationOptions(
     selected_atoms=None,
 )
 outputs = model(
-  [sample["system"] for sample in dataset],
-  evaluation_options,
-  check_consistency=True,
+    [sample["system"] for sample in dataset],
+    evaluation_options,
+    check_consistency=True,
 )
 predicted_energies = outputs["energy"][0].values.squeeze()
 predicted_uncertainties = outputs["energy_uncertainty"][0].values.squeeze()
@@ -106,7 +109,9 @@ predicted_uncertainties = outputs["energy_uncertainty"][0].values.squeeze()
 # Compute the true prediction error by comparing the predicted energy to the reference value from dataset.
 
 # Reference values from dataset.
-groundtruth_energies = torch.stack([sample["energy"][0].values.squeeze() for sample in dataset])
+groundtruth_energies = torch.stack(
+    [sample["energy"][0].values.squeeze() for sample in dataset]
+)
 
 # Compute squared distance between predicted energy and reference value.
 groundtruth_uncertainties = torch.square(predicted_energies - groundtruth_energies)
@@ -118,7 +123,12 @@ max_val = max(torch.max(groundtruth_uncertainties), torch.max(predicted_uncertai
 
 plt.figure(figsize=(4, 4))
 plt.grid()
-plt.gca().set(aspect="equal", title="Parity of Uncertainties", ylabel="Errors", xlabel="Uncertainties")
+plt.gca().set(
+    aspect="equal",
+    title="Parity of Uncertainties",
+    ylabel="Errors",
+    xlabel="Uncertainties",
+)
 plt.loglog()
 plt.plot([min_val, max_val], [min_val, max_val], ls="--", c="k")
 plt.scatter(predicted_uncertainties, groundtruth_uncertainties)
@@ -127,18 +137,18 @@ plt.scatter(predicted_uncertainties, groundtruth_uncertainties)
 # Uncertainties in Vacancy Formation Energies
 # -------------------------------------------
 # One interesting use of the LLPR scores are the error propagation capabilities from the predicted uncertainties for predicting `vacancy formation <https://en.wikipedia.org/wiki/Vacancy_defect>`_ energies. Albeit not completely intuitive, his can be done using the last-layer features of PET-MAD. Furthermore, this example also computes energies and variances using an ensemble method.
-# 
+#
 # In this part, we use an aluminum crystal as an example system. The structure file can be downloaded from `Material Project <https://legacy.materialsproject.org/materials/mp-134/>`_ as a `.cif` file. We've included such a file with the recipe.
 #
 # The following code loads the structure, computes the energy before creating a defect, creates a defect, runs a structural optimization, and computes the energy after the optimization. The energy difference can be used to estimate the vacancy formation energy.
 
 # Load the crystal from the Materials Project and create a supercell (not strictly necessary).
 crystal_structure = "data/Al_mp-134_conventional_standard.cif"
-atoms: Atoms = read_cif(crystal_structure) # type: ignore
+atoms: Atoms = read_cif(crystal_structure)  # type: ignore
 supercell = atoms * 2
-N = len(supercell) # store the number of atoms
+N = len(supercell)  # store the number of atoms
 
-# Attach the loaded model 
+# Attach the loaded model
 calculator = MetatomicCalculator(model)
 supercell.calc = calculator
 
@@ -156,23 +166,25 @@ output_options = {
 # %%
 # Before running the computation, we define the following function that collects information at a single stage (before vacancy, before optimization, after optimization) in a dict to remove code duplication.
 
-def collect_state(name: str, atoms: Atoms) -> tuple[str, dict[str, torch.Tensor]]:
-  """
-  Obtain and return results from the configuration in `atoms`.
 
-  Each stage of this script emits a set of results that are all similar in shape and layout. This function computes shared quantities and collects them in a dict that can be read into a dataframe.
-  """
-  outputs = calculator.run_model(supercell, output_options)
-  energy_ensemble = outputs["energy_ensemble"][0].values
-  results = dict(
-    energy=atoms.get_potential_energy(),
-    energy_uncertainty=outputs["energy_uncertainty"][0].values.squeeze(),
-    last_layer_features=outputs["mtt::aux::energy_last_layer_features"][0].values,
-    energy_ensemble_mean=torch.mean(energy_ensemble),
-    energy_ensemble_var=torch.var(energy_ensemble),
-    energy_ensemble=energy_ensemble,
-  )
-  return name, results
+def collect_state(name: str, atoms: Atoms) -> tuple[str, dict[str, torch.Tensor]]:
+    """
+    Obtain and return results from the configuration in `atoms`.
+
+    Each stage of this script emits a set of results that are all similar in shape and layout. This function computes shared quantities and collects them in a dict that can be read into a dataframe.
+    """
+    outputs = calculator.run_model(supercell, output_options)
+    energy_ensemble = outputs["energy_ensemble"][0].values
+    results = dict(
+        energy=atoms.get_potential_energy(),
+        energy_uncertainty=outputs["energy_uncertainty"][0].values.squeeze(),
+        last_layer_features=outputs["mtt::aux::energy_last_layer_features"][0].values,
+        energy_ensemble_mean=torch.mean(energy_ensemble),
+        energy_ensemble_var=torch.var(energy_ensemble),
+        energy_ensemble=energy_ensemble,
+    )
+    return name, results
+
 
 # %%
 # We can now run the different stages while keeping track of the information generated in each step.
@@ -187,7 +199,7 @@ right_after_vacancy = collect_state("Right after creating vacancy", supercell)
 
 # Run structural optimization optimizing both positions and cell layout.
 ecf = FrechetCellFilter(supercell)
-bfgs = BFGS(ecf) # type: ignore
+bfgs = BFGS(ecf)  # type: ignore
 bfgs.run()
 
 vacancy = collect_state("Energy of optimized vacancy", supercell)
@@ -199,49 +211,61 @@ vacancy_formation_energy = vacancy[1]["energy"] - (N - 1) / N * bulk[1]["energy"
 # %%
 # From the ensemble, we can estimate both the vacancy formation energy and the variance from the different predictions.
 
-vacancy_formation_energy_ensemble = torch.mean(vacancy[1]["energy_ensemble"] - (N - 1) / N * bulk[1]["energy_ensemble"])
-vacancy_formation_energy_ensemble_var = torch.var(vacancy[1]["energy_ensemble"] - (N - 1) / N * bulk[1]["energy_ensemble"])
+vacancy_formation_energy_ensemble = torch.mean(
+    vacancy[1]["energy_ensemble"] - (N - 1) / N * bulk[1]["energy_ensemble"]
+)
+vacancy_formation_energy_ensemble_var = torch.var(
+    vacancy[1]["energy_ensemble"] - (N - 1) / N * bulk[1]["energy_ensemble"]
+)
 
 # %%
 # The uncertainty in the vacancy formation energy cannot be computed in a similar, straightforward way similar to the vacancy formation energy. As mentioned previously, one has to use the last-layer features of the model to estimate the desired variance. Helper functions to compute the vacancy formation energy.
 
+
 def find_llpr_module(model) -> ScriptModule | None:
-  "Return a `LLPRUncertaintyModel` module if found."
-  for child in model.children():
-    if isinstance(child, ScriptModule) and child.original_name == "LLPRUncertaintyModel":
-      return child
-    else:
-      find_llpr_module(child)
+    "Return a `LLPRUncertaintyModel` module if found."
+    for child in model.children():
+        if (
+            isinstance(child, ScriptModule)
+            and child.original_name == "LLPRUncertaintyModel"
+        ):
+            return child
+        else:
+            find_llpr_module(child)
+
 
 def estimate_llpr_for_vacancy_formation(
-  calculator: MetatomicCalculator,
-  f_bulk: torch.Tensor,
-  f_vacancy: torch.Tensor,
-  num_atoms: int,
+    calculator: MetatomicCalculator,
+    f_bulk: torch.Tensor,
+    f_vacancy: torch.Tensor,
+    num_atoms: int,
 ) -> torch.Tensor:
-  """
-  Return the LLPR scores for the vacancy formation energy, i.e. the uncertainty/variance, given the last-layer features for the bulk and the vacancy structure.
-  """
-  # find the LLPR uncertainty quantification module (it holds the approximation to the inverse covariance matrix)
-  llpr_model = find_llpr_module(calculator._model)
-  if llpr_model is None:
-    raise RuntimeError("Unable to find LLPRUncertaintyModel in MetatomicCalculator. Ensure that the model supports computing LLPR scores with PET-MAD.")
-  
-  # manually extract the inverse covariance and calibration constant from the LLPR module
-  inv_covariance = llpr_model.inv_covariance_energy_uncertainty
-  alpha_sq = llpr_model.multiplier_energy_uncertainty
+    """
+    Return the LLPR scores for the vacancy formation energy, i.e. the uncertainty/variance, given the last-layer features for the bulk and the vacancy structure.
+    """
+    # find the LLPR uncertainty quantification module (it holds the approximation to the inverse covariance matrix)
+    llpr_model = find_llpr_module(calculator._model)
+    if llpr_model is None:
+        raise RuntimeError(
+            "Unable to find LLPRUncertaintyModel in MetatomicCalculator. Ensure that the model supports computing LLPR scores with PET-MAD."
+        )
 
-  # create the feature vector and estimate the variance
-  f = f_vacancy - (num_atoms - 1) / num_atoms * f_bulk
-  return alpha_sq * torch.einsum("...i,ij,...j->...", f, inv_covariance, f)
+    # manually extract the inverse covariance and calibration constant from the LLPR module
+    inv_covariance = llpr_model.inv_covariance_energy_uncertainty
+    alpha_sq = llpr_model.multiplier_energy_uncertainty
+
+    # create the feature vector and estimate the variance
+    f = f_vacancy - (num_atoms - 1) / num_atoms * f_bulk
+    return alpha_sq * torch.einsum("...i,ij,...j->...", f, inv_covariance, f)
+
 
 # %%
 # Estimate the uncertainty in the vacancy formation energy using the helper function that deals with the last-layer features.
 vacancy_formation_uncertainty = estimate_llpr_for_vacancy_formation(
-  calculator,
-  bulk[1]["last_layer_features"],
-  vacancy[1]["last_layer_features"],
-  N,
+    calculator,
+    bulk[1]["last_layer_features"],
+    vacancy[1]["last_layer_features"],
+    N,
 )
 vacancy_formation_uncertainty = vacancy_formation_uncertainty.item()
 
@@ -250,25 +274,25 @@ vacancy_formation_uncertainty = vacancy_formation_uncertainty.item()
 
 # Wrap information about vacancy formation in a dict to include it as a stage.
 vacancy_formation = dict(
-  energy=vacancy_formation_energy,
-  energy_uncertainty=vacancy_formation_uncertainty,
-  energy_ensemble_mean=vacancy_formation_energy_ensemble,
-  energy_ensemble_var=vacancy_formation_energy_ensemble_var,
+    energy=vacancy_formation_energy,
+    energy_uncertainty=vacancy_formation_uncertainty,
+    energy_ensemble_mean=vacancy_formation_energy_ensemble,
+    energy_ensemble_var=vacancy_formation_energy_ensemble_var,
 )
 vacancy_formation = "Vacancy Formation", vacancy_formation
 
 # Extract index and (printable) values from the stages.
 stages = [bulk, right_after_vacancy, vacancy, vacancy_formation]
-index, values = zip(*stages) # split names off (name, value) tuples
+index, values = zip(*stages)  # split names off (name, value) tuples
 
 # Ensure only printable fields are retained (as floats).
 for vs in values:
-  for field in ["last_layer_features", "energy_ensemble"]:
-    if field in vs:
-      del vs[field]
-  for field in vs:
-    if isinstance(vs[field], torch.Tensor):
-      vs[field] = vs[field].item()
+    for field in ["last_layer_features", "energy_ensemble"]:
+        if field in vs:
+            del vs[field]
+    for field in vs:
+        if isinstance(vs[field], torch.Tensor):
+            vs[field] = vs[field].item()
 
 # %%
 # The following table summarizes the values computed using different methods.
