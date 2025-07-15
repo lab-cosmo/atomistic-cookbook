@@ -10,37 +10,45 @@ This example includes three ways of using PET-MAD's uncertainty quantification.
 """
 
 # %%
-import os, subprocess, shlex
+import os
+import shlex
+import subprocess
 from urllib.request import urlretrieve
+
+import ase.cell
+import ase.ga.utilities
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import torch
 from ase import Atoms
-from ase.io.cif import read_cif
 from ase.filters import FrechetCellFilter
+from ase.io.cif import read_cif
 from ase.optimize.bfgs import BFGS
-import ase.cell, ase.ga.utilities
-from metatrain.utils.io import load_model
+from ipi.utils.scripting import InteractiveSimulation
+from metatomic.torch import ModelEvaluationOptions, ModelOutput
+from metatomic.torch.ase_calculator import MetatomicCalculator
 from metatrain.utils.data import Dataset, read_systems, read_targets
+from metatrain.utils.io import load_model
 from metatrain.utils.neighbor_lists import (
     get_requested_neighbor_lists,
     get_system_with_neighbor_lists,
 )
-from metatomic.torch import ModelEvaluationOptions, ModelOutput
-from metatomic.torch.ase_calculator import MetatomicCalculator
-from ipi.utils.scripting import InteractiveSimulation
-import torch
 from torch.jit import ScriptModule
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
 
 # %%
 # Model Preparation
 # -----------------
-# All examples require a PET-MAD model with ensemble and LLPR prediction. The following code loads a pre-built model if available or builds it on-demand. Note that, by default, PET-MAD does not (yet) come equipped with such extended capabilities.
+# All examples require a PET-MAD model with ensemble and LLPR prediction. The
+# following
+# code loads a pre-built model if available or builds it on-demand. Note that, by
+# default, PET-MAD does not (yet) come equipped with such extended capabilities.
 if not os.path.exists("models/pet-mad-latest-llpr.pt"):
     # TODO build the LLPR scores, but -- for now -- just download a prebuilt model
     os.makedirs("models", exist_ok=True)
     urlretrieve(
-        "https://huggingface.co/jospies/pet-mad-llpr/resolve/main/pet-mad-latest-llpr.pt?download=true",
+        "https://huggingface.co/jospies/pet-mad-llpr/resolve/main/"
+        "pet-mad-latest-llpr.pt?download=true",
         "models/pet-mad-latest-llpr.pt",
     )
 model = load_model("models/pet-mad-latest-llpr.pt")
@@ -48,8 +56,10 @@ model = load_model("models/pet-mad-latest-llpr.pt")
 # %%
 # Uncertainties on a Dataset
 # ----------------------------------------------
-# This first example shows how to use PET-MAD to estimate uncertainties on a reference dataset. We use a reduced version (because of limited compute power in the CI runner) of the MAD validation set.
-#
+# This first example shows how to use PET-MAD to estimate uncertainties on a reference
+# dataset. We use a reduced version (because of limited compute power in the CI runner)
+# of the MAD validation set.
+# flake
 # For this, we first download the correspond MAD validation dataset record from Materials Cloud. Then, we prepare the dataset and pass it through the model. In the final step, we visualize the predicted uncertainties and compare them to a groundtruth method.
 
 if not os.path.exists("data/mad-val-100.xyz"):
@@ -250,7 +260,8 @@ def estimate_llpr_for_vacancy_formation(
     llpr_model = find_llpr_module(calculator._model)
     if llpr_model is None:
         raise RuntimeError(
-            "Unable to find LLPRUncertaintyModel in MetatomicCalculator. Ensure that the model supports computing LLPR scores with PET-MAD."
+            "Unable to find LLPRUncertaintyModel in MetatomicCalculator. Ensure that"
+            " the model supports computing LLPR scores with PET-MAD."
         )
 
     # manually extract the inverse covariance and calibration constant from the LLPR module
@@ -312,6 +323,20 @@ pd.DataFrame(values, index=index)
 with open("data/h2o-32.xml") as f:
     sim = InteractiveSimulation(f.read())
 
+# %%
+# Right now, the model does not produce the `energy_ensemble` field on its own. The ensemble energy is only produced if the `energy_uncertainty` field is populated in the model evaluation option's output field. This does not happen by default in the `MetatomicDriver` of i-PI, but the following hack ensures that all outputs are properly requested for all force fields.
+
+for _, ff in sim.__dict__["fflist"].items():
+    outputs = ff.driver.evaluation_options.outputs
+    outputs["energy_uncertainty"] = ModelOutput()
+    ff.driver.evaluation_options = ModelEvaluationOptions(
+        length_unit="Angstrom",
+        outputs=outputs,
+    )
+
+# %%
+# Run the simulation.
+
 # NB: To get better estimates, set this to a higher number (perhaps 10000) to
 # run the simulation for a longer time.
 sim.run(200)
@@ -352,7 +377,10 @@ np.savetxt("h2o-32_rdfs_o-o.txt", rdfs_oo)
 for ty in ["h-h", "o-o"]:
     infile = f"h2o-32_rdfs_{ty}.txt"
     outfile = f"h2o-32_rdfs_{ty}_reweighted.txt"
-    cmd = f"i-pi-committee-reweight h2o-32.committee_pot_0 {infile} --input data/h2o-32.xml"
+    cmd = (
+        f"i-pi-committee-reweight h2o-32.committee_pot_0 {infile} --input"
+        " data/h2o-32.xml"
+    )
     print("Executing command:", "\t" + cmd, sep="\n")
     cmd = shlex.split(cmd)
     with open(outfile, "w") as out:
