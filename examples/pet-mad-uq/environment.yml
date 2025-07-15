@@ -1,0 +1,16 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - tqdm
+  - jupyter
+  - matplotlib
+  - pandas
+  - pip:
+    - ase
+    - ipi>=3.1.5.1,<4
+    - git+https://github.com/metatensor/metatrain.git
+    - git+https://github.com/metatensor/metatomic.git
+
+  

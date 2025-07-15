@@ -1,0 +1,33 @@
+<simulation verbosity='medium'>
+  <output prefix='data/h2o-32'>
+    <properties filename='out' stride='10'>  [ time{picosecond}, temperature{kelvin}, kinetic_md ] </properties>
+    <trajectory filename='pos' format='xyz' stride='10' cell_units='angstrom'> positions{angstrom} </trajectory>  
+    <trajectory filename="committee_pot" stride="10" extra_type="committee_pot"> extras </trajectory>
+  </output>
+  <total_steps>10000</total_steps>
+  <prng>
+    <seed>23658</seed>
+  </prng>
+  <ffdirect name='nocons' pbc="true">
+    <pes>metatomic</pes>
+    <parameters>{template:data/h2o-32.xyz,model:models/pet-mad-latest-llpr.pt,device:cuda,non_conservative:False,energy_ensemble:True,check_consistency:True}</parameters>
+  </ffdirect>
+  <system>
+    <initialize nbeads='1'>
+      <file mode='xyz' units="angstrom"> data/h2o-32.xyz </file>
+      <velocities mode='thermal' units='kelvin'> 300 </velocities>
+    </initialize>
+    <forces>
+      <force forcefield='nocons'/>
+    </forces>
+    <ensemble>
+      <temperature units='kelvin'>300</temperature>
+    </ensemble>
+    <motion mode='dynamics'>
+      <fixcom>True</fixcom>
+      <dynamics mode='nve'>
+        <timestep units='femtosecond'>0.5</timestep>
+      </dynamics>
+    </motion>
+  </system>
+</simulation>
