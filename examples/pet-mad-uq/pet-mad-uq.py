@@ -49,6 +49,8 @@ from metatrain.utils.neighbor_lists import (
     get_requested_neighbor_lists,
     get_system_with_neighbor_lists,
 )
+from scipy.optimize import root_scalar
+from scipy.stats import norm
 from torch.jit import ScriptModule
 
 
@@ -79,7 +81,7 @@ model = load_model("models/pet-mad-latest-llpr.pt")
 # For this, we first download the correspond MAD validation dataset record from
 # Materials Cloud. Then, we prepare the dataset and pass it through the model. In the
 # final step, we visualize the predicted uncertainties and compare them to a
-# groundtruth method.
+# ground truth method.
 
 if not os.path.exists("data/mad-val-100.xyz"):
     os.makedirs("data", exist_ok=True)
@@ -144,40 +146,105 @@ predicted_uncertainties = outputs["energy_uncertainty"][0].values.squeeze()
 # value from dataset.
 
 # Reference values from dataset.
-groundtruth_energies = torch.stack(
+ground_truth_energies = torch.stack(
     [sample["energy"][0].values.squeeze() for sample in dataset]
 )
 
 # Compute squared distance between predicted energy and reference value.
-groundtruth_uncertainties = torch.square(predicted_energies - groundtruth_energies)
+ground_truth_uncertainties = torch.square(predicted_energies - ground_truth_energies)
 
 # %%
-# After gathering predicted uncertainties and computing groundtruth error metrics, we
+# Define helper functions to create iso lines for the parity plot.
+
+
+def pdf(x, sigma):
+    return x * np.exp(-(x**2) / (2 * sigma**2)) * 1.0 / (sigma * np.sqrt(2 * np.pi))
+
+
+def find_where_pdf_is_c(c, sigma):
+    # Finds the two values of x where the pdf is equal to c
+    mode_value = pdf(sigma, sigma)
+    if c > mode_value:
+        raise ValueError("c must be less than mode_value")
+    where_below_mode = root_scalar(lambda x: pdf(x, sigma) - c, bracket=[0, sigma]).root
+    where_above_mode = root_scalar(
+        lambda x: pdf(x, sigma) - c, bracket=[sigma, 100]
+    ).root
+    return where_below_mode, where_above_mode
+
+
+def pdf_integral(sigma, c):
+    # Calculates the integral (analytical) of the pdf from x1 to x2,
+    # where x1 and x2 are the two values of x where the pdf is equal to c
+    x1, x2 = find_where_pdf_is_c(c, sigma)
+    return np.exp(-(x1**2) / (2 * sigma**2)) - np.exp(-(x2**2) / (2 * sigma**2))
+
+
+def find_fraction(sigma, fraction):
+    # Finds the value of c where the integral of the pdf from x1 to x2 is equal to
+    # fraction, where x1 and x2 are the two values of x where the pdf is equal to c
+    mode_value = pdf(sigma, sigma)
+    return root_scalar(
+        lambda x: pdf_integral(sigma, x) - fraction,
+        x0=mode_value - 0.01,
+        x1=mode_value - 0.02,
+    ).root
+
+
+desired_fractions = [
+    norm.cdf(1, 0.0, 1.0) - norm.cdf(-1, 0.0, 1.0),  # 1 sigma
+    norm.cdf(2, 0.0, 1.0) - norm.cdf(-2, 0.0, 1.0),  # 2 sigma
+    norm.cdf(3, 0.0, 1.0) - norm.cdf(-3, 0.0, 1.0),  # 3 sigma
+]
+
+# Hard-code the zoomed in region of the plot.
+min_val = 2.5e-2
+max_val = 2.5
+
+# Create iso lines.
+sigmas = np.geomspace(1e-2, 10, 5)
+sigmas = np.geomspace(min_val, max_val, 5)
+lower_bounds = []
+upper_bounds = []
+for desired_fraction in desired_fractions:
+    lower_bound = []
+    upper_bound = []
+    for sigma in sigmas:
+        isoline_value = find_fraction(sigma, desired_fraction)
+        x1, x2 = find_where_pdf_is_c(isoline_value, sigma)
+        lower_bound.append(x1)
+        upper_bound.append(x2)
+    lower_bounds.append(lower_bound)
+    upper_bounds.append(upper_bound)
+
+
+# %%
+# After gathering predicted uncertainties and computing ground truth error metrics, we
 # can compare them to each other. Similar to figure S4 of the PET-MAD paper, we present
 # the data in using a parity plot. Note that both the x- and the y-axis use a
 # logarithmic scale, which is more suitable for inspecting uncertainty values. Because
 # we are using a heavily reduced dataset (only 100 structures) from the MAD validation
 # set, the parity plot looks very sparse.
-min_val = min(
-    torch.min(groundtruth_uncertainties).item(),
-    torch.min(predicted_uncertainties).item(),
-)
-max_val = max(
-    torch.max(groundtruth_uncertainties).item(),
-    torch.max(predicted_uncertainties).item(),
-)
 
 plt.figure(figsize=(4, 4))
 plt.grid()
 plt.gca().set(
-    aspect="equal",
     title="Parity of Uncertainties",
     ylabel="Errors",
     xlabel="Uncertainties",
 )
 plt.loglog()
+
+# Plot iso lines.
 plt.plot([min_val, max_val], [min_val, max_val], ls="--", c="k")
-plt.scatter(predicted_uncertainties, groundtruth_uncertainties)
+for i, desired_fraction in enumerate(desired_fractions):
+    plt.plot(sigmas, lower_bounds[i], color="black", lw=0.75)
+    plt.plot(sigmas, upper_bounds[i], color="black", lw=0.75)
+
+# Add actual samples.
+plt.scatter(predicted_uncertainties, ground_truth_uncertainties)
+
+plt.tight_layout()
 
 # %%
 # Uncertainties in Vacancy Formation Energies
