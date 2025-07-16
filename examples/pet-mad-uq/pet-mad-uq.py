@@ -251,13 +251,15 @@ plt.tight_layout()
 # Uncertainties in Vacancy Formation Energies
 # -------------------------------------------
 # One interesting use of the LLPR scores are the error propagation capabilities from
-# the predicted uncertainties for predicting `vacancy formation <https://en.wikipedia.org/wiki/Vacancy_defect>`_ # noqa
+# the predicted uncertainties for predicting
+# `vacancy formation <https://en.wikipedia.org/wiki/Vacancy_defect>`_
 # energies. Albeit not completely intuitive, his can be done using the last-layer
 # features of PET-MAD. Furthermore, this example also computes energies and variances
 # using an ensemble method.
 #
 # In this part, we use an aluminum crystal as an example system. The structure file can
-# be downloaded from `Material Project <https://legacy.materialsproject.org/materials/mp-134/>`_ # noqa
+# be downloaded from
+# `Material Project <https://legacy.materialsproject.org/materials/mp-134/>`
 # as a `.cif` file. We've included such a file with the recipe.
 #
 # The following code loads the structure, computes the energy before creating a defect,
