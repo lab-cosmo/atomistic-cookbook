@@ -143,8 +143,8 @@ groundtruth_uncertainties = torch.square(predicted_energies - groundtruth_energi
 # logarithmic scale, which is more suitable for inspecting uncertainty values. Because
 # we are using a heavily reduced dataset (only 100 structures) from the MAD validation
 # set, the parity plot looks very sparse.
-min_val = min(torch.min(groundtruth_uncertainties), torch.min(predicted_uncertainties))
-max_val = max(torch.max(groundtruth_uncertainties), torch.max(predicted_uncertainties))
+min_val = min(torch.min(groundtruth_uncertainties).item(), torch.min(predicted_uncertainties).item())
+max_val = max(torch.max(groundtruth_uncertainties).item(), torch.max(predicted_uncertainties).item())
 
 plt.figure(figsize=(4, 4))
 plt.grid()
@@ -401,16 +401,17 @@ assert set(frames[0].numbers.tolist()) == set([1, 8])
 num_bins = 100
 rdfs_hh = []
 rdfs_oo = []
+xs = None
 for atoms in frames:
     atoms.pbc = True
     atoms.cell = ase.cell.Cell(9.86592 * np.eye(3))
 
-    # Csompute H-H distances
-    bins, xs = ase.ga.utilities.get_rdf(atoms, 4.5, num_bins, elements=[1, 1])
+    # Compute H-H distances
+    bins, xs = ase.ga.utilities.get_rdf(atoms, 4.5, num_bins, elements=[1, 1]) # type: ignore
     rdfs_hh.append(bins)
 
     # Compute O-O distances
-    bins, xs = ase.ga.utilities.get_rdf(atoms, 4.5, num_bins, elements=[8, 8])
+    bins, xs = ase.ga.utilities.get_rdf(atoms, 4.5, num_bins, elements=[8, 8]) # type: ignore
     rdfs_oo.append(bins)
 rdfs_hh = np.stack(rdfs_hh, axis=0)
 rdfs_oo = np.stack(rdfs_oo, axis=0)
