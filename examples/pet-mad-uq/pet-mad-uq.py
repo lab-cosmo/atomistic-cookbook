@@ -10,7 +10,7 @@ This example includes three ways of using PET-MAD's uncertainty quantification.
 2. Computing vacancy formation energies and prediction uncertainties.
 3. Propagate errors from energy predictions to output observables.
 
-For more information on PET-MAD, have a look at the
+For more information on PET-MAD, have a look at
 `Mazitov et al., 2025. <https://arxiv.org/abs/2503.14118>`_ The LLPR uncertainties are
 introduced in `Bigi et al., 2024. <https://arxiv.org/abs/2403.02251>`_ For more
 information on dataset calibration and error propagation, see the
@@ -268,7 +268,16 @@ bfgs.run()
 vacancy = collect_state("Energy of optimized vacancy", supercell)
 
 # %%
-# After running all stages, we can now compute the vacancy formation energy.
+# After running all stages, we can now compute the vacancy formation (VF) energy using
+# the following formula.
+#
+# .. math ::
+#
+#    E_\mathrm{VF}=E_\mathrm{vacancy}-\frac{N-1}{N}E_\mathrm{bulk}
+#
+# In this equation, :math:`N` denotes the number of atoms, and the factor of
+# :math:`\frac{N-1}{N}` on :math:`E_\mathrm{bulk}` accounts for the missing atom.
+
 vacancy_formation_energy = vacancy[1]["energy"] - (N - 1) / N * bulk[1]["energy"]
 
 # %%
@@ -290,12 +299,15 @@ vacancy_formation_energy_ensemble_var = torch.var(
 # The covariance on the vacancy formation energy can be computed using this formula.
 # Note that :math:`\alpha` denotes the dataset calibration constant and :math:`\Sigma`
 # is the approximation to the covariance matrix stored in the `LLPRUncertaintyModel`
-# wrapping PET-MAD in this example. :math:`N` is the number of atoms, and the factor of
-# :math:`\frac{N-1}{N}` on :math:`\mathbf{bulk}` accounts for the missing atom.
+# wrapping PET-MAD in this example. :math:`\mathbf{f}_i` denote the respective
+# last-layer features, :math:`i` can either be `bulk` or `vacancy`. :math:`N` is the
+# number of atoms.
 #
 # .. math ::
 #
-#    \sigma_\mathrm{vacancy}^2=\alpha^2\left(\mathbf{f}_\mathbf{vacancy}-\frac{N-1}{N}\mathbf{f}_\mathbf{bulk}\right)^\top\Sigma^{-1}\left(\mathbf{f}_\mathbf{vacancy}-\frac{N-1}{N}\mathbf{f}_\mathbf{bulk}\right # noqa
+#    \sigma_\mathrm{VF}^2=\alpha^2\left(\mathbf{f}_\mathrm{vacancy}-\frac{N-1}{N}
+#    \mathbf{f}_\mathrm{bulk}\right)^\top\Sigma^{-1}\left(\mathbf{f}_\mathrm{vacancy}-
+#    \frac{N-1}{N}\mathbf{f}_\mathrm{bulk}\right)
 #
 # This formula is implemented in the last line of `estimate_llpr_for_vacancy_formation`.
 
