@@ -368,16 +368,18 @@ vacancy_formation_energy_ensemble_var = torch.var(
 )
 
 # %%
-# The uncertainty in the vacancy formation energy cannot be computed in a similar,
-# straightforward way similar to the vacancy formation energy. As mentioned previously,
-# one has to use the last-layer features of the model to estimate the desired variance.
+# Unlike the vacancy formation energy, the corresponding uncertainty cannot be
+# computed with a simple formula using the individual variance estimates
+# :math:`\sigma_\mathrm{bulk}^2` and :math:`\sigma_\mathrm{vacancy}^2`. Instead, it is
+# necessary to directly use the last-layer features of the model to estimate the
+# desired variance.
 #
-# The covariance on the vacancy formation energy can be computed using this formula.
-# Note that :math:`\alpha` denotes the dataset calibration constant and :math:`\Sigma`
-# is the approximation to the covariance matrix stored in the `LLPRUncertaintyModel`
-# wrapping PET-MAD in this example. :math:`\mathbf{f}_i` denote the respective
-# last-layer features, :math:`i` can either be `bulk` or `vacancy`. :math:`N` is the
-# number of atoms.
+# The uncertainty on the vacancy formation energy can be computed using the following
+# formula. Note that :math:`\alpha` denotes the dataset calibration constant and
+# :math:`\Sigma` is the approximation to the covariance matrix stored in the
+# `LLPRUncertaintyModel` wrapping PET-MAD in this example. :math:`\mathbf{f}_i` denote
+# the respective last-layer features, :math:`i` can either be `bulk` or `vacancy`.
+# :math:`N` is the number of atoms.
 #
 # .. math ::
 #
