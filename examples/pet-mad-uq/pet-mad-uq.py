@@ -221,10 +221,11 @@ for desired_fraction in desired_fractions:
 # %%
 # After gathering predicted uncertainties and computing ground truth error metrics, we
 # can compare them to each other. Similar to figure S4 of the PET-MAD paper, we present
-# the data in using a parity plot. Note that both the x- and the y-axis use a
-# logarithmic scale, which is more suitable for inspecting uncertainty values. Because
-# we are using a heavily reduced dataset (only 100 structures) from the MAD validation
-# set, the parity plot looks very sparse.
+# the data in using a parity plot. For more information about interpreting this type of
+# plot, see Appendix F.7 of `Bigi et al., 2024 <https://arxiv.org/abs/2403.02251>`_.
+# Note that both the x- and the y-axis use a logarithmic scale, which is more suitable
+# for inspecting uncertainty values. Because we are using a heavily reduced dataset
+# (only 100 structures) from the MAD validation set, the parity plot looks very sparse.
 
 plt.figure(figsize=(4, 4))
 plt.grid()
