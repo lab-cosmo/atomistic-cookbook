@@ -277,9 +277,15 @@ calculator = MetatomicCalculator(model)
 supercell.calc = calculator
 
 # %%
-# Now we can define the requested model outputs. Note that we explicitly request the
-# last-layer features, which are required to estimated the uncertainty, and the
-# ensemble energies, to have another metric for estimating errors.
+# The pretrained model comes with ensemble prediction capabilities that allow for
+# uncertainty quantification by measuring the agreement between members of the
+# ensemble. Similar energies correspond to a high certainty; a high spread in the
+# energies corresponds to a high uncertainty. The pretrained version of PET-MAD comes
+# with an ensemble of 128 members.
+#
+# Along with the `energy_uncertainty` and `energy_ensemble`, we also explicitly request
+# the last layer features, which are needed in the analytical computation of the
+# uncertainties of the vacancy formation energies that we attempt further down.
 
 output_options = {
     # request the uncertainty in the atomic energy predictions
@@ -558,7 +564,6 @@ for ty in ["h-h", "o-o"]:
 
 # Load the reweighted RDFs.
 rdfs_hh_reweighted = np.loadtxt("h2o-32_rdfs_h-h_reweighted.txt")
-print(rdfs_hh_reweighted.shape)
 rdfs_oo_reweighted = np.loadtxt("h2o-32_rdfs_o-o_reweighted.txt")
 
 # Extract columns.
