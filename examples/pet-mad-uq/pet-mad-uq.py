@@ -36,6 +36,7 @@ from metatrain.utils.neighbor_lists import (
 )
 from torch.jit import ScriptModule
 
+
 # %%
 # Model Preparation
 # -----------------
@@ -60,12 +61,16 @@ model = load_model("models/pet-mad-latest-llpr.pt")
 # dataset. We use a reduced version (because of limited compute power in the CI runner)
 # of the MAD validation set.
 # flake
-# For this, we first download the correspond MAD validation dataset record from Materials Cloud. Then, we prepare the dataset and pass it through the model. In the final step, we visualize the predicted uncertainties and compare them to a groundtruth method.
+# For this, we first download the correspond MAD validation dataset record from
+# Materials Cloud. Then, we prepare the dataset and pass it through the model. In the
+# final step, we visualize the predicted uncertainties and compare them to a
+# groundtruth method.
 
 if not os.path.exists("data/mad-val-100.xyz"):
     os.makedirs("data", exist_ok=True)
     urlretrieve(
-        "https://huggingface.co/jospies/pet-mad-llpr/resolve/main/mad-val-100.xyz?download=true",
+        "https://huggingface.co/jospies/pet-mad-llpr/resolve/main/mad-val-100.xyz"
+        "?download=true",
         "data/mad-val-100.xyz",
     )
 
@@ -100,7 +105,8 @@ targets, infos = read_targets(target_config)  # type: ignore
 dataset = Dataset.from_dict({"system": systems_with_nb_lists, **targets})
 
 # %%
-# After preparation, the dataset can be passed through the model to obtain energy predictions and LLPR scores.
+# After preparation, the dataset can be passed through the model to obtain energy
+# predictions and LLPR scores.
 evaluation_options = ModelEvaluationOptions(
     length_unit="angstrom",
     outputs={
@@ -119,7 +125,8 @@ predicted_energies = outputs["energy"][0].values.squeeze()
 predicted_uncertainties = outputs["energy_uncertainty"][0].values.squeeze()
 
 # %%
-# Compute the true prediction error by comparing the predicted energy to the reference value from dataset.
+# Compute the true prediction error by comparing the predicted energy to the reference
+# value from dataset.
 
 # Reference values from dataset.
 groundtruth_energies = torch.stack(
@@ -130,7 +137,12 @@ groundtruth_energies = torch.stack(
 groundtruth_uncertainties = torch.square(predicted_energies - groundtruth_energies)
 
 # %%
-# After gathering predicted uncertainties and computing groundtruth error metrics, we can compare them to each other. Similar to figure S4 of the PET-MAD paper, we present the data in using a parity plot. Note that both the x- and the y-axis use a logarithmic scale, which is more suitable for inspecting uncertainty values. Because we are using a heavily reduced dataset (only 100 structures) from the MAD validation set, the parity plot looks very sparse.
+# After gathering predicted uncertainties and computing groundtruth error metrics, we
+# can compare them to each other. Similar to figure S4 of the PET-MAD paper, we present
+# the data in using a parity plot. Note that both the x- and the y-axis use a
+# logarithmic scale, which is more suitable for inspecting uncertainty values. Because
+# we are using a heavily reduced dataset (only 100 structures) from the MAD validation
+# set, the parity plot looks very sparse.
 min_val = min(torch.min(groundtruth_uncertainties), torch.min(predicted_uncertainties))
 max_val = max(torch.max(groundtruth_uncertainties), torch.max(predicted_uncertainties))
 
@@ -149,13 +161,23 @@ plt.scatter(predicted_uncertainties, groundtruth_uncertainties)
 # %%
 # Uncertainties in Vacancy Formation Energies
 # -------------------------------------------
-# One interesting use of the LLPR scores are the error propagation capabilities from the predicted uncertainties for predicting `vacancy formation <https://en.wikipedia.org/wiki/Vacancy_defect>`_ energies. Albeit not completely intuitive, his can be done using the last-layer features of PET-MAD. Furthermore, this example also computes energies and variances using an ensemble method.
+# One interesting use of the LLPR scores are the error propagation capabilities from
+# the predicted uncertainties for predicting `vacancy formation <https://en.wikipedia.org/wiki/Vacancy_defect>`_ # noqa
+# energies. Albeit not completely intuitive, his can be done using the last-layer
+# features of PET-MAD. Furthermore, this example also computes energies and variances
+# using an ensemble method.
 #
-# In this part, we use an aluminum crystal as an example system. The structure file can be downloaded from `Material Project <https://legacy.materialsproject.org/materials/mp-134/>`_ as a `.cif` file. We've included such a file with the recipe.
+# In this part, we use an aluminum crystal as an example system. The structure file can
+# be downloaded from `Material Project <https://legacy.materialsproject.org/materials/mp-134/>`_ # noqa
+# as a `.cif` file. We've included such a file with the recipe.
 #
-# The following code loads the structure, computes the energy before creating a defect, creates a defect, runs a structural optimization, and computes the energy after the optimization. The energy difference can be used to estimate the vacancy formation energy.
+# The following code loads the structure, computes the energy before creating a defect,
+# creates a defect, runs a structural optimization, and computes the energy after the
+# optimization. The energy difference can be used to estimate the vacancy formation
+# energy.
 
-# Load the crystal from the Materials Project and create a supercell (not strictly necessary).
+# Load the crystal from the Materials Project and create a supercell (not strictly
+# necessary).
 crystal_structure = "data/Al_mp-134_conventional_standard.cif"
 atoms: Atoms = read_cif(crystal_structure)  # type: ignore
 supercell = atoms * 2
@@ -166,7 +188,9 @@ calculator = MetatomicCalculator(model)
 supercell.calc = calculator
 
 # %%
-# Now we can define the requested model outputs. Note that we explicitly request the last-layer features, which are required to estimated the uncertainty, and the ensemble energies, to have another metric for estimating errors.
+# Now we can define the requested model outputs. Note that we explicitly request the
+# last-layer features, which are required to estimated the uncertainty, and the
+# ensemble energies, to have another metric for estimating errors.
 
 output_options = {
     # request the uncertainty in the atomic energy predictions
@@ -177,14 +201,18 @@ output_options = {
 }
 
 # %%
-# Before running the computation, we define the following function that collects information at a single stage (before vacancy, before optimization, after optimization) in a dict to remove code duplication.
+# Before running the computation, we define the following function that collects
+# information at a single stage (before vacancy, before optimization, after
+# optimization) in a dict to remove code duplication.
 
 
 def collect_state(name: str, atoms: Atoms) -> tuple[str, dict[str, torch.Tensor]]:
     """
     Obtain and return results from the configuration in `atoms`.
 
-    Each stage of this script emits a set of results that are all similar in shape and layout. This function computes shared quantities and collects them in a dict that can be read into a dataframe.
+    Each stage of this script emits a set of results that are all similar in shape and
+    layout. This function computes shared quantities and collects them in a dict that
+    can be read into a dataframe.
     """
     outputs = calculator.run_model(supercell, output_options)
     energy_ensemble = outputs["energy_ensemble"][0].values
@@ -200,7 +228,8 @@ def collect_state(name: str, atoms: Atoms) -> tuple[str, dict[str, torch.Tensor]
 
 
 # %%
-# We can now run the different stages while keeping track of the information generated in each step.
+# We can now run the different stages while keeping track of the information generated
+# in each step.
 
 bulk = collect_state("Before creating vacancy", supercell)
 
@@ -222,7 +251,8 @@ vacancy = collect_state("Energy of optimized vacancy", supercell)
 vacancy_formation_energy = vacancy[1]["energy"] - (N - 1) / N * bulk[1]["energy"]
 
 # %%
-# From the ensemble, we can estimate both the vacancy formation energy and the variance from the different predictions.
+# From the ensemble, we can estimate both the vacancy formation energy and the
+# variance from the different predictions.
 
 vacancy_formation_energy_ensemble = torch.mean(
     vacancy[1]["energy_ensemble"] - (N - 1) / N * bulk[1]["energy_ensemble"]
@@ -232,7 +262,10 @@ vacancy_formation_energy_ensemble_var = torch.var(
 )
 
 # %%
-# The uncertainty in the vacancy formation energy cannot be computed in a similar, straightforward way similar to the vacancy formation energy. As mentioned previously, one has to use the last-layer features of the model to estimate the desired variance. Helper functions to compute the vacancy formation energy.
+# The uncertainty in the vacancy formation energy cannot be computed in a similar,
+# straightforward way similar to the vacancy formation energy. As mentioned previously,
+# one has to use the last-layer features of the model to estimate the desired variance.
+# Helper functions to compute the vacancy formation energy.
 
 
 def find_llpr_module(model) -> ScriptModule | None:
@@ -254,9 +287,11 @@ def estimate_llpr_for_vacancy_formation(
     num_atoms: int,
 ) -> torch.Tensor:
     """
-    Return the LLPR scores for the vacancy formation energy, i.e. the uncertainty/variance, given the last-layer features for the bulk and the vacancy structure.
+    Return the LLPR scores for the vacancy formation energy, i.e. the uncertainty/
+    variance, given the last-layer features for the bulk and the vacancy structure.
     """
-    # find the LLPR uncertainty quantification module (it holds the approximation to the inverse covariance matrix)
+    # Find the LLPR uncertainty quantification module (it holds the approximation to
+    # the inverse covariance matrix)
     llpr_model = find_llpr_module(calculator._model)
     if llpr_model is None:
         raise RuntimeError(
@@ -264,17 +299,19 @@ def estimate_llpr_for_vacancy_formation(
             " the model supports computing LLPR scores with PET-MAD."
         )
 
-    # manually extract the inverse covariance and calibration constant from the LLPR module
+    # Manually extract the inverse covariance and calibration constant from the LLPR
+    # module
     inv_covariance = llpr_model.inv_covariance_energy_uncertainty
     alpha_sq = llpr_model.multiplier_energy_uncertainty
 
-    # create the feature vector and estimate the variance
+    # Create the feature vector and estimate the variance
     f = f_vacancy - (num_atoms - 1) / num_atoms * f_bulk
     return alpha_sq * torch.einsum("...i,ij,...j->...", f, inv_covariance, f)
 
 
 # %%
-# Estimate the uncertainty in the vacancy formation energy using the helper function that deals with the last-layer features.
+# Estimate the uncertainty in the vacancy formation energy using the helper function
+# that deals with the last-layer features.
 vacancy_formation_uncertainty = estimate_llpr_for_vacancy_formation(
     calculator,
     bulk[1]["last_layer_features"],
@@ -284,7 +321,8 @@ vacancy_formation_uncertainty = estimate_llpr_for_vacancy_formation(
 vacancy_formation_uncertainty = vacancy_formation_uncertainty.item()
 
 # %%
-# At this point, all energies and uncertainties have been computed. They can now be gathered in a format suitable to print in a table.
+# At this point, all energies and uncertainties have been computed. They can now be
+# gathered in a format suitable to print in a table.
 
 # Wrap information about vacancy formation in a dict to include it as a stage.
 vacancy_formation = dict(
@@ -315,16 +353,27 @@ pd.DataFrame(values, index=index)
 # %%
 # Uncertainty Propagation with MD
 # -------------------------------
-# This example shows how to use i-PI to propagate error estimates from an ensemble to output observables. In this example, we use a box with period boundary conditions housing 32 water molecules. As an observable, we inspect the `Radial Distribution Function (RDF) <https://en.wikipedia.org/wiki/Radial_distribution_function>`_ between hydrogen-hydrogen and oxygen-oxygen bonds.
+# This example shows how to use i-PI to propagate error estimates from an ensemble to
+# output observables. In this example, we use a box with period boundary conditions
+# housing 32 water molecules. As an observable, we inspect the `Radial Distribution
+# Function (RDF) <https://en.wikipedia.org/wiki/Radial_distribution_function>`_ between
+# hydrogen-hydrogen and oxygen-oxygen bonds.
 #
-# First, we run a simulation with i-PI generating a trajectory and logging other metrics. The trajectory and committee energies can be used in a subsequent postprocessing step to obtain RDFs using ASE. These can be re-weighted to propagate errors from the committee uncertainties to the observed RDFs.
+# First, we run a simulation with i-PI generating a trajectory and logging other
+# metrics. The trajectory and committee energies can be used in a subsequent
+# postprocessing step to obtain RDFs using ASE. These can be re-weighted to propagate
+# errors from the committee uncertainties to the observed RDFs.
 
 # Load configuration and run simulation.
 with open("data/h2o-32.xml") as f:
     sim = InteractiveSimulation(f.read())
 
 # %%
-# Right now, the model does not produce the `energy_ensemble` field on its own. The ensemble energy is only produced if the `energy_uncertainty` field is populated in the model evaluation option's output field. This does not happen by default in the `MetatomicDriver` of i-PI, but the following hack ensures that all outputs are properly requested for all force fields.
+# Right now, the model does not produce the `energy_ensemble` field on its own. The
+# ensemble energy is only produced if the `energy_uncertainty` field is populated in
+# the model evaluation option's output field. This does not happen by default in the
+# `MetatomicDriver` of i-PI, but the following hack ensures that all outputs are
+# properly requested for all force fields.
 
 for _, ff in sim.__dict__["fflist"].items():
     outputs = ff.driver.evaluation_options.outputs
@@ -387,7 +436,8 @@ for ty in ["h-h", "o-o"]:
         process = subprocess.run(cmd, stdout=out)
 
 # %%
-# Load and display the RDFs after re-weighting. Note that the results might not noisy due to the small number of MD steps.
+# Load and display the RDFs after re-weighting. Note that the results might not noisy
+# due to the small number of MD steps.
 
 # Load the reweighted RDFs.
 rdfs_hh_reweighted = np.loadtxt("h2o-32_rdfs_h-h_reweighted.txt")
