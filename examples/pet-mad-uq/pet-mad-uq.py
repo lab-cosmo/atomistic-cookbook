@@ -2,11 +2,26 @@
 Uncertainty Quantification with PET-MAD
 =======================================
 
+:Authors: Johannes Spies `@johannes-spies <https://github.com/johannes-spies>`_
+
 This example includes three ways of using PET-MAD's uncertainty quantification.
 
 1. Estimating uncertainties on a full validation dataset.
 2. Computing vacancy formation energies and prediction uncertainties.
 3. Propagate errors from energy predictions to output observables.
+
+For more information on PET-MAD, have a look at the
+`Mazitov et al., 2025. <https://arxiv.org/abs/2503.14118>`_ The LLPR uncertainties are
+introduced in `Bigi et al., 2024. <https://arxiv.org/abs/2403.02251>`_ For more
+information on dataset calibration and error propagation, see the
+`Imabalzano et al., 2021. <https://arxiv.org/abs/2011.08828>`_ The re-weighting scheme
+used for error propagation can be found in
+`Kellner & Ceriotti, 2024. <https://arxiv.org/abs/2402.16621>`_
+
+
+At the bottom of the page, you'll find a ZIP file containing the whole example. Note
+that it comes with an `environment.yml` file specifying all dependencies required
+to run this example.
 """
 
 # %%
@@ -143,8 +158,14 @@ groundtruth_uncertainties = torch.square(predicted_energies - groundtruth_energi
 # logarithmic scale, which is more suitable for inspecting uncertainty values. Because
 # we are using a heavily reduced dataset (only 100 structures) from the MAD validation
 # set, the parity plot looks very sparse.
-min_val = min(torch.min(groundtruth_uncertainties).item(), torch.min(predicted_uncertainties).item())
-max_val = max(torch.max(groundtruth_uncertainties).item(), torch.max(predicted_uncertainties).item())
+min_val = min(
+    torch.min(groundtruth_uncertainties).item(),
+    torch.min(predicted_uncertainties).item(),
+)
+max_val = max(
+    torch.max(groundtruth_uncertainties).item(),
+    torch.max(predicted_uncertainties).item(),
+)
 
 plt.figure(figsize=(4, 4))
 plt.grid()
@@ -265,7 +286,18 @@ vacancy_formation_energy_ensemble_var = torch.var(
 # The uncertainty in the vacancy formation energy cannot be computed in a similar,
 # straightforward way similar to the vacancy formation energy. As mentioned previously,
 # one has to use the last-layer features of the model to estimate the desired variance.
-# Helper functions to compute the vacancy formation energy.
+#
+# The covariance on the vacancy formation energy can be computed using this formula.
+# Note that :math:`\alpha` denotes the dataset calibration constant and :math:`\Sigma`
+# is the approximation to the covariance matrix stored in the `LLPRUncertaintyModel`
+# wrapping PET-MAD in this example. :math:`N` is the number of atoms, and the factor of
+# :math:`\frac{N-1}{N}` on :math:`\mathbf{bulk}` accounts for the missing atom.
+#
+# .. math ::
+#
+#    \sigma_\mathrm{vacancy}^2=\alpha^2\left(\mathbf{f}_\mathbf{vacancy}-\frac{N-1}{N}\mathbf{f}_\mathbf{bulk}\right)^\top\Sigma^{-1}\left(\mathbf{f}_\mathbf{vacancy}-\frac{N-1}{N}\mathbf{f}_\mathbf{bulk}\right # noqa
+#
+# This formula is implemented in the last line of `estimate_llpr_for_vacancy_formation`.
 
 
 def find_llpr_module(model) -> ScriptModule | None:
@@ -407,11 +439,15 @@ for atoms in frames:
     atoms.cell = ase.cell.Cell(9.86592 * np.eye(3))
 
     # Compute H-H distances
-    bins, xs = ase.ga.utilities.get_rdf(atoms, 4.5, num_bins, elements=[1, 1]) # type: ignore
+    bins, xs = ase.ga.utilities.get_rdf(  # type: ignore
+        atoms, 4.5, num_bins, elements=[1, 1]
+    )
     rdfs_hh.append(bins)
 
     # Compute O-O distances
-    bins, xs = ase.ga.utilities.get_rdf(atoms, 4.5, num_bins, elements=[8, 8]) # type: ignore
+    bins, xs = ase.ga.utilities.get_rdf(  # type: ignore
+        atoms, 4.5, num_bins, elements=[8, 8]
+    )
     rdfs_oo.append(bins)
 rdfs_hh = np.stack(rdfs_hh, axis=0)
 rdfs_oo = np.stack(rdfs_oo, axis=0)
@@ -460,7 +496,7 @@ for title, ax, mus, errs, xlim in [
     ("H-H", axs[0], rdfs_hh_reweighted_mu, rdfs_hh_reweighted_err, (0.0, 4.5)),
     ("O-O", axs[1], rdfs_oo_reweighted_mu, rdfs_oo_reweighted_err, (2.0, 4.5)),
 ]:
-    ylabel = r"$\Delta g(r)$" if title == "H-H" else None
+    ylabel = "RDF" if title == "H-H" else None
     ax.set(title=title, xlabel="Distance", ylabel=ylabel, xlim=xlim, ylim=(-1, 3.0))
     ax.grid()
     ax.plot(xs, mus, label="Mean", lw=2)
