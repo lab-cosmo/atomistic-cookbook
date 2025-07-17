@@ -1,0 +1,154 @@
+"""
+Conservative fine-tuning for a PET model
+========================================
+
+:Authors: Davide Tisi `@DavideTisi <https://github.com/DavideTisi>`_,
+          Zhiyi Wang `@0WellyWang0 <https://github.com/0WellyWang0>`_,
+          Cesare Malosso `@cesaremalosso <https://github.com/cesaremalosso>`_,
+          Sofiia Chorna `@sofiia-chorna <https://github.com/sofiia-chorna>`_
+
+This example demonstrates a "conservative fine-tuning strategy", to train a model
+using a (faster) direct, non-conservative force prediction, and then fine-tune it
+in back-propagation force mode to achieve an accurate conservative model.
+
+As discussed in `this paper <https://arxiv.org/abs/2412.11569>`_, while conservative
+MLIPs are generally better suited for physically accurate simulations, hybrid models
+that support direct non-conservative force predictions can accelerate both training
+and inference. We demonstrate this practical compromise through a two-stage approach:
+first train a model to predict non-conservative forces directly (which avoids the cost
+of backpropagation) and then fine-tuning its energy head to produce conservative
+forces. Although non-conservative forces can lead to unphysical behavior, this
+two-step strategy balances efficiency and physical reliability.
+
+If you are looking for a traditional "post-fact" fine-tuning strategy, see for example
+`this example <https://atomistic-cookbook.org/examples/pet-finetuning/pet-ft.html>`_.
+"""
+
+# %%
+
+import subprocess
+from collections import Counter
+from glob import glob
+from urllib.request import urlretrieve
+
+import ase.io
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
+from metatrain.pet import PET
+from sklearn.linear_model import LinearRegression
+
+
+if hasattr(__import__("builtins"), "get_ipython"):
+    get_ipython().run_line_magic("matplotlib", "inline")  # noqa: F821
+
+
+# %%
+# Non-conservative force training
+# --------------------------------
+#
+# Configure ``options.yaml`` to include non-conservative forces as a per-atom vector
+# target:
+#
+# .. literalinclude:: nc_train_options.yaml
+#   :language: yaml
+#
+# We run training from Python:
+
+subprocess.run(["mtt", "train", "nc_train_options.yaml"], check=True)
+
+# %%
+#
+# Let's evaluate the model:
+#
+# .. code-block:: bash
+#
+#    mtt eval model.pt eval_ex2.yaml
+#
+# Or from Python:
+
+subprocess.run(["mtt", "eval", "model.pt", "eval_ex2.yaml"], check=True)
+
+
+# %%
+#
+# The result of running non-conservative force learning for 1000 structures for 100
+# epochs is present on the parity plot below. The left plot shows that the model's force
+# predictions deviate due to the non-conservative training. On the right plot with the
+# non-conservative forces align closely with targets but lack physical constraints,
+# potentially leading to unphysical behavior.
+#
+# .. image:: nc_learning_res.png
+#    :align: center
+#    :width: 700px
+#
+
+# %%
+# Finetuning on conservative forces
+# ---------------------------------
+#
+# The next step is to fine-tune the non-conservative checkpoint to conservative forces.
+# Enable ``forces: on`` to compute them via backward propagation of gradients.
+# Expectedly, the training will be slower.
+#
+# .. code-block:: yaml
+#
+#     training_set:
+#       systems:
+#         read_from: data/ethanol_train.xyz
+#         length_unit: angstrom
+#       targets:
+#         energy:
+#           unit: eV
+#           forces: on
+#         non_conservative_forces:
+#           key: forces
+#           type:
+#             cartesian:
+#               rank: 1
+#           per_atom: true
+#
+# Run training, restarting from the previous checkpoint:
+#
+# .. code-block:: bash
+#
+#    mtt train c_ft_options.yaml --restart model.ckpt
+#
+# Or in Python:
+
+subprocess.run(
+    ["mtt", "train", "c_ft_options.yaml", "--restart", "model.ckpt"], check=True
+)
+
+
+# %%
+#
+# Let's evaluate the forces again:
+#
+# .. code-block:: bash
+#
+#    mtt eval model.pt eval_ex2.yaml
+#
+# Or from Python:
+
+subprocess.run(["mtt", "eval", "model.pt", "eval_ex2.yaml"], check=True)
+
+# %%
+#
+# After fine-tuning for 50 epochs, the updated parity plots show improved force
+# predictions (left) with conservative forces. The grayscale points in the background
+# correspond to the predicted forces from the previous step.
+#
+# .. image:: c_ft_res.png
+#    :align: center
+#    :width: 700px
+#
+# The figure below compares the validation force MAE as a function of GPU hours for
+# direct training of the conservative PET model ("C-only") and a two-step approach:
+# initial training of a non-conservative model followed by conservative training
+# continuation. For the given GPU hours frame, the two-step approach yields lower
+# validation error.
+#
+# .. image:: training_strategy_comparison.png
+#    :align: center
+#
