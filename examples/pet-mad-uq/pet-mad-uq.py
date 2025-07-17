@@ -259,7 +259,7 @@ plt.tight_layout()
 #
 # In this part, we use an aluminum crystal as an example system. The structure file can
 # be downloaded from
-# `Material Project <https://legacy.materialsproject.org/materials/mp-134/>`
+# `Material Project <https://legacy.materialsproject.org/materials/mp-134/>`_
 # as a `.cif` file. We've included such a file with the recipe.
 #
 # The following code loads the structure, computes the energy before creating a defect,
@@ -470,7 +470,7 @@ for vs in values:
 
 # %%
 # The following table summarizes the values computed using different methods.
-pd.DataFrame(values, index=index)
+pd.DataFrame(values, index=index).round(4)
 
 # %%
 # Uncertainty Propagation with MD
