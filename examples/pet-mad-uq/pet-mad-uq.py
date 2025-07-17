@@ -10,14 +10,23 @@ This example includes three ways of using PET-MAD's uncertainty quantification.
 2. Computing vacancy formation energies and prediction uncertainties.
 3. Propagate errors from energy predictions to output observables.
 
-Right now, PET-MAD does not come with out-of-the-box uncertainty quantification
-capabilities. Instead, one has to manually wrap the model using infrastructure
-available in the `metatrain <https://metatensor.github.io/metatrain/>`_ package.
-In this example, we don't explicitly integrate this ahead-of-time step. To give an idea
-of what this preprocessing step looks like, we provide the following code scaffold. For
-more information on loading a dataset with the infrastructure, have a look at
+For more information on PET-MAD, have a look at
+`Mazitov et al., 2025. <https://arxiv.org/abs/2503.14118>`_ The LLPR uncertainties are
+introduced in `Bigi et al., 2024. <https://arxiv.org/abs/2403.02251>`_ For more
+information on dataset calibration and error propagation, see the
+`Imabalzano et al., 2021. <https://arxiv.org/abs/2011.08828>`_
+
+Models compatible with `metatomic <https://metatensor.github.io/metatomic/>`_ can be
+equipped with uncertainty quantification capabilities through the
+`LLPRUncertaintyModel` wrapper included with
+`metatrain <https://metatensor.github.io/metatrain/>`_. For running this recipe, you can
+either use a prebuilt model (the example itself downloads a model from Hugging Face).
+For adding support for uncertainty quantification to an existing model, have a look at
+the following scaffold. For more information on loading a dataset with the
+infrastructure, have a look at
 `this section <https://metatensor.github.io/metatrain/latest/dev-docs/utils/data>`_
-of the documentation.
+of the documentation. The pseudocode below also shows how to create an ensemble model
+from the last-layer parameters ofl a model.
 
 .. code-block:: python
 
@@ -37,19 +46,13 @@ of the documentation.
     llpr_model.calibrate(dataloaders["val"])
 
     # In the next step, we show how to enable ensembles in PET-MAD. For that, it is
-    # necessary to extract the last-layer parameters of the model. Unfortunately, the
-    # ensemble generation expects the parameters in a flat-vector format. The following
-    # snippet shows how this can be done for PET-MAD.
-    tensor_for_energy_ensemble = []
-    for name, param in model.named_parameters():
-        if param.shape == (1, 128):
-            tensor_for_energy_ensemble.append(param.detach().flatten())
-    tensor_for_energy_ensemble = [tensor_for_energy_ensemble[i] for i in range(4)]
-    tensor_for_energy_ensemble = torch.concatenate(tensor_for_energy_ensemble)
+    # necessary to extract the last-layer parameters of the model. The ensemble
+    # generation expects the parameters in a flat-vector format.
+    last_layer_parameters = ...
 
     # Generate an ensemble with 128 members to compare ensemble uncertainties to LLPR
     # scores.
-    llpr_model.generate_ensemble({"energy": tensor_for_energy_ensemble}, 128)
+    llpr_model.generate_ensemble({"energy": last_layer_parameters}, 128)
 
     # Save the model to disk using metatomic.
     exported_model = AtomisticModel(
@@ -57,15 +60,7 @@ of the documentation.
         ModelMetadata(),
         llpr_model.capabilities,
     )
-    exported_model.save("models/pet-mad-latest-llpr.pt")
-
-For more information on PET-MAD, have a look at
-`Mazitov et al., 2025. <https://arxiv.org/abs/2503.14118>`_ The LLPR uncertainties are
-introduced in `Bigi et al., 2024. <https://arxiv.org/abs/2403.02251>`_ For more
-information on dataset calibration and error propagation, see the
-`Imabalzano et al., 2021. <https://arxiv.org/abs/2011.08828>`_ The re-weighting scheme
-used for error propagation can be found in
-`Kellner & Ceriotti, 2024. <https://arxiv.org/abs/2402.16621>`_
+    exported_model.save("models/model-with-llpr.pt")
 
 At the bottom of the page, you'll find a ZIP file containing the whole example. Note
 that it comes with an `environment.yml` file specifying all dependencies required
@@ -110,7 +105,6 @@ from torch.jit import ScriptModule
 # code loads a pre-built model if available or builds it on-demand. Note that, by
 # default, PET-MAD does not (yet) come equipped with such extended capabilities.
 if not os.path.exists("models/pet-mad-latest-llpr.pt"):
-    # TODO build the LLPR scores, but -- for now -- just download a prebuilt model
     os.makedirs("models", exist_ok=True)
     urlretrieve(
         "https://huggingface.co/jospies/pet-mad-llpr/resolve/main/"
