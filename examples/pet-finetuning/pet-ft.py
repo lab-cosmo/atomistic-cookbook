@@ -62,8 +62,8 @@ if hasattr(__import__("builtins"), "get_ipython"):
 #
 # We'll download it directly:
 
-url = "https://huggingface.co/lab-cosmo/pet-mad/resolve/main/models/pet-mad-latest.ckpt"
-checkpoint_path = "pet-mad-latest.ckpt"
+url = "https://huggingface.co/lab-cosmo/pet-mad/resolve/v1.0.1/models/pet-mad-latest.ckpt"
+checkpoint_path = "pet-mad-v1.0.1.ckpt"
 
 urlretrieve(url, checkpoint_path)
 
