@@ -10,6 +10,55 @@ This example includes three ways of using PET-MAD's uncertainty quantification.
 2. Computing vacancy formation energies and prediction uncertainties.
 3. Propagate errors from energy predictions to output observables.
 
+Right now, PET-MAD does not come with out-of-the-box uncertainty quantification
+capabilities. Instead, one has to manually wrap the model using infrastructure
+available in the `metatrain <https://metatensor.github.io/metatrain/>`_ package.
+In this example, we don't explicitly integrate this ahead-of-time step. To give an idea
+of what this preprocessing step looks like, we provide the following code scaffold. For
+more information on loading a dataset with the infrastructure, have a look at
+`this section <https://metatensor.github.io/metatrain/latest/dev-docs/utils/data>`_
+of the documentation.
+
+.. code-block:: python
+
+    from metatrain.utils.llpr import LLPRUncertaintyModel
+    from metatomic.torch import AtomisticModel, ModelMetadata
+
+    # You need to provide a model and datasets (wrapped in PyTorch dataloaders).
+    model = ...
+    dataloaders = {"train": ..., "val": ...}
+
+    # Wrap the model in a module capable of estimating uncertainties, estimate the
+    # inverse covariance on the training set, and calibrate the model on the validation
+    # set.
+    llpr_model = LLPRUncertaintyModel(model)
+    llpr_model.compute_covariance(dataloaders["train"])
+    llpr_model.compute_inverse_covariance(regularizer=1e-4)
+    llpr_model.calibrate(dataloaders["val"])
+
+    # In the next step, we show how to enable ensembles in PET-MAD. For that, it is
+    # necessary to extract the last-layer parameters of the model. Unfortunately, the
+    # ensemble generation expects the parameters in a flat-vector format. The following
+    # snippet shows how this can be done for PET-MAD.
+    tensor_for_energy_ensemble = []
+    for name, param in model.named_parameters():
+        if param.shape == (1, 128):
+            tensor_for_energy_ensemble.append(param.detach().flatten())
+    tensor_for_energy_ensemble = [tensor_for_energy_ensemble[i] for i in range(4)]
+    tensor_for_energy_ensemble = torch.concatenate(tensor_for_energy_ensemble)
+
+    # Generate an ensemble with 128 members to compare ensemble uncertainties to LLPR
+    # scores.
+    llpr_model.generate_ensemble({"energy": tensor_for_energy_ensemble}, 128)
+
+    # Save the model to disk using metatomic.
+    exported_model = AtomisticModel(
+        llpr_model.eval(),
+        ModelMetadata(),
+        llpr_model.capabilities,
+    )
+    exported_model.save("models/pet-mad-latest-llpr.pt")
+
 For more information on PET-MAD, have a look at
 `Mazitov et al., 2025. <https://arxiv.org/abs/2503.14118>`_ The LLPR uncertainties are
 introduced in `Bigi et al., 2024. <https://arxiv.org/abs/2403.02251>`_ For more
@@ -17,7 +66,6 @@ information on dataset calibration and error propagation, see the
 `Imabalzano et al., 2021. <https://arxiv.org/abs/2011.08828>`_ The re-weighting scheme
 used for error propagation can be found in
 `Kellner & Ceriotti, 2024. <https://arxiv.org/abs/2402.16621>`_
-
 
 At the bottom of the page, you'll find a ZIP file containing the whole example. Note
 that it comes with an `environment.yml` file specifying all dependencies required
