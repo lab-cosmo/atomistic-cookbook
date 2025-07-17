@@ -286,7 +286,7 @@ plt.loglog()
 
 # Plot iso lines.
 plt.plot([min_val, max_val], [min_val, max_val], ls="--", c="k")
-for i, desired_fraction in enumerate(desired_fractions):
+for i in range(len(desired_fractions)):
     plt.plot(sigmas, lower_bounds[i], color="black", lw=0.75)
     plt.plot(sigmas, upper_bounds[i], color="black", lw=0.75)
 
