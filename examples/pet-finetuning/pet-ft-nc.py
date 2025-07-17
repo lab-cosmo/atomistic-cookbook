@@ -11,7 +11,7 @@ This example demonstrates a "conservative fine-tuning strategy", to train a mode
 using a (faster) direct, non-conservative force prediction, and then fine-tune it
 in back-propagation force mode to achieve an accurate conservative model.
 
-As discussed in `this paper <https://arxiv.org/abs/2412.11569>`_, while conservative
+As discussed in `this paper <https://openreview.net/pdf?id=OEl3L8osas>`_, while conservative
 MLIPs are generally better suited for physically accurate simulations, hybrid models
 that support direct non-conservative force predictions can accelerate both training
 and inference. We demonstrate this practical compromise through a two-stage approach:
@@ -19,6 +19,10 @@ first train a model to predict non-conservative forces directly (which avoids th
 of backpropagation) and then fine-tuning its energy head to produce conservative
 forces. Although non-conservative forces can lead to unphysical behavior, this
 two-step strategy balances efficiency and physical reliability.
+An example of how to use direct forces in molecular dynamics simulations
+safely (i.e. avoiding unphysical behavior due to lack of energy conservation)
+is provided in `this example 
+<https://atomistic-cookbook.org/examples/pet-mad-nc/pet-mad-nc.html>`_.
 
 If you are looking for a traditional "post-fact" fine-tuning strategy, see for example
 `this example <https://atomistic-cookbook.org/examples/pet-finetuning/pet-ft.html>`_.
@@ -31,17 +35,9 @@ from collections import Counter
 from glob import glob
 from urllib.request import urlretrieve
 
-import ase.io
 import matplotlib.pyplot as plt
-import numpy as np
-import torch
 from metatrain.pet import PET
 from sklearn.linear_model import LinearRegression
-
-
-if hasattr(__import__("builtins"), "get_ipython"):
-    get_ipython().run_line_magic("matplotlib", "inline")  # noqa: F821
-
 
 # %%
 # Non-conservative force training

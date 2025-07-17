@@ -9,12 +9,12 @@ Fine-tuning the PET-MAD universal potential
 
 This example demonstrates fine-tuning the PET-MAD universal ML potential
 on a new dataset using `metatrain <https://github.com/metatensor/metatrain>`_,
-which allows adapting it to specialized task by retraining it on a 
+which allows adapting it to specialized task by retraining it on a
 domain-specific dataset.
 
 `PET-MAD <https://arxiv.org/abs/2503.14118>`_ is a universal machine-learning forcefield
 trained on `the MAD dataset <https://arxiv.org/abs/2506.19674>`_ that aims to
-incorporate a very high degree of structural diversity. 
+incorporate a very high degree of structural diversity.
 The model itself is `the Point-Edge Transformer (PET)
 <https://proceedings.neurips.cc/paper_files/paper/2023/file/fb4a7e3522363907b26a86cc5be627ac-Paper-Conference.pdf>`_,
 an unconstrained architecture that achieves symmetry compliance through data
@@ -26,6 +26,8 @@ The goal of this recipe is to demonstrate the process, not to reach high accurac
 Adjust the dataset size and hyperparameters accordingly if adapting this for a real
 case.
 """
+
+# sphinx_gallery_thumbnail_number = 2
 
 # %%
 
@@ -49,7 +51,7 @@ if hasattr(__import__("builtins"), "get_ipython"):
 # %%
 # Preparing for fine-tuning
 # -------------------------
-# 
+#
 # While PET-MAD is trained as a universal model capable of handling a broad range of
 # atomic environments, fine-tuning it allows to adapt this general-purpose model to a
 # more specialized task. First, we need to get a checkpoint of the pre-trained PET-MAD
@@ -58,11 +60,13 @@ if hasattr(__import__("builtins"), "get_ipython"):
 #
 # .. code-block:: bash
 #
-#    wget https://huggingface.co/lab-cosmo/pet-mad/resolve/main/models/pet-mad-latest.ckpt  # noqa: E501
+#    wget https://huggingface.co/lab-cosmo/pet-mad/resolve/v1.0.1/models/pet-mad-latest.ckpt
 #
 # We'll download it directly:
 
-url = "https://huggingface.co/lab-cosmo/pet-mad/resolve/v1.0.1/models/pet-mad-latest.ckpt"
+url = (
+    "https://huggingface.co/lab-cosmo/pet-mad/resolve/v1.0.1/models/pet-mad-latest.ckpt"
+)
 checkpoint_path = "pet-mad-v1.0.1.ckpt"
 
 urlretrieve(url, checkpoint_path)
@@ -123,6 +127,7 @@ coeffs = dict(zip(elements, correction_model.coef_))
 #
 # Apply a correction to each structure
 
+
 def get_compositional_energy(atoms, energy_per_atom):
     """Calculates total energy from atomic composition and per-atom energies"""
     counts = Counter(atoms.get_atomic_numbers())
@@ -157,61 +162,14 @@ ase.io.write("data/ethanol_train.xyz", train, format="extxyz")
 ase.io.write("data/ethanol_val.xyz", val, format="extxyz")
 ase.io.write("data/ethanol_test.xyz", test, format="extxyz")
 
-
 # %%
-# Simple model fine-tuning
-# ------------------------
-#
-# As the fine-tuning dataset is prepared, we will proceed with the training. We use the
-# ``metatrain`` package to fine-tune the model. There are multiple strategies to apply
-# fine-tuning, each described in the `metatrain documentation
-# <https://metatensor.github.io/metatrain/latest/advanced-concepts/fine-tuning.html>`_.
-# In this example we demostrate a basic full fine-tuning strategy, which adapts all
-# model weights to the new dataset starting from the pre-trained PET-MAD checkpoint. The
-# process is configured by ``options.yaml``.
-#
-# .. literalinclude:: basic_ft_options.yaml
-#   :language: yaml
-#
-# To launch training, run:
-#
-# .. code-block:: bash
-#
-#    mtt train options.yaml
-#
-# Or from Python:
-
-subprocess.run(["mtt", "train", "basic_ft_options.yaml"], check=True)
-
-# %%
-#
-# After the training, ``mtt train`` outputs the ``model.ckpt`` (fine-tuned checkpoint)
-# and ``model.pt`` (exported fine-tuned model) files in both the current directory and
-# ``output/YYYY-MM-DD/HH-MM-SS/``.
-#
-# We evaluate the model on the test set using the ``metatrain`` command-line interface:
-#
-# .. code-block:: bash
-#
-#    mtt eval eval_ex1.yaml
-#
-# The evaluation YAML file contains lists the structures and corresponding reference
-# quantities for the evaluation:
-#
-# .. literalinclude:: eval_ex1.yaml
-#   :language: yaml
-#
-# We run it from Python:
-
-subprocess.run(["mtt", "eval", "model.pt", "eval_ex1.yaml"], check=True)
-
-# %%
-#
-# We visualize learning curves over epoch. The training log is stored in CSV format in
-# the outputs directory.
+# Defines some helper functions
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# We also define a few helper functions to visualize the training results.
+# Each training run generates a log, stored in CSV format in the outputs folder.
 
 
-def display_loss(csv_file):
+def parse_training_log(csv_file):
     with open(csv_file, encoding="utf-8") as f:
         headers = f.readline().strip().split(",")
 
@@ -224,45 +182,149 @@ def display_loss(csv_file):
         names=cleaned_names,
     )
 
-    plt.figure(figsize=(6, 4))
-    plt.loglog(train_log["Epoch"], train_log["training_loss"], label="Training")
-    plt.loglog(train_log["Epoch"], train_log["validation_loss"], label="Validation")
-
-    plt.xlabel("Epoch")
-    plt.ylabel("Loss")
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
+    return train_log
 
 
-csv_file = glob("outputs/*/*/train.csv")[-1]
-display_loss(csv_file)
+def display_training_curves(train_log, ax=None, style="-", label=""):
+    """Plots training and validation losses from the training log"""
+
+    if ax is None:
+        _, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
+    else:
+        ax1, ax2 = ax
+
+    ax1.loglog(
+        train_log["Epoch"],
+        train_log["training_energy_MAE_per_atom"],
+        f"r{style}",
+        label=f"Train. {label}",
+    )
+    ax1.loglog(
+        train_log["Epoch"],
+        train_log["validation_energy_MAE_per_atom"],
+        f"b{style}",
+        label=f"Valid. {label}",
+    )
+
+    ax2.loglog(
+        train_log["Epoch"],
+        train_log["training_forces_MAE"],
+        f"r{style}",
+        label="Training, F",
+    )
+    ax2.loglog(
+        train_log["Epoch"],
+        train_log["validation_forces_MAE"],
+        f"b{style}",
+        label="Validation, F",
+    )
+
+    ax1.set_xlabel("Epoch")
+    ax2.set_xlabel("Epoch")
+    ax1.set_ylabel("Energy MAE (meV)")
+    ax2.set_ylabel("Force MAE (meV/Å)")
+    ax1.legend()
+
+    return ax1, ax2
 
 
 # %%
+# Train a model from scratch
+# --------------------------
+# We first fit a PET model to the corrected dataset to establish a baseline.
+# We use the `metatrain` utility to train the model. The training is configured
+# in a YAML file, which specifies training, validation and test set, model
+# architecture, optimizer settings, etc. You can learn more about
+# the different settings in the `metatrain documentation
+# <https://metatensor.github.io/metatrain/>`_.
 #
-# The result of running the fine-tuning for 1000 epoches for 1000 structures in
-# visualised with ``chemiscope`` below:
-import chemiscope  # noqa: E402
-
-
-chemiscope.show_input("full_finetune_example.chemiscope.json")
+# .. literalinclude:: from_scratch.yaml
+#   :language: yaml
 
 # %%
+# To launch training, you just need to run the following command in the terminal:
 #
-# The figure below shows the training and validation losses over 1000 epochs of
-# fine-tuning. For comparison, we also train the model from scratch on the same dataset.
-# Expectedly, the pretrained model achieves better accuracy.
+# .. code-block:: bash
 #
-# .. image:: ex1_losses_comparison.png
-#   :width: 500
-#   :align: center
+#    mtt train <options.yaml> [-o <output.pt>]
+#
+# Or from Python:
 
+subprocess.run(
+    ["mtt", "train", "from_scratch.yaml", "-o", "model-from_scratch.pt"], check=True
+)
 
+# %%
+# The training logs are stored in the ``outputs/`` directory, with a subdirectory
+# named by the date and time of the training run. The model checkpoint is saved as
+# ``model.ckpt`` and the exported model as ``model.pt``, unless specified otherwise
+# with the ``-o`` option.
+#
+# We can load the latest training log and visualize the training curves
+# - we will use them later to compare the fine-tuning results.
+# It is clear that training is not converged, and the learning rate is not 
+# optimal -- you can try to adjust the parameters and run for longer.
+
+csv_file = sorted(glob("outputs/*/*/train.csv"))[-1]
+from_scratch_log = parse_training_log(csv_file)
+display_training_curves(from_scratch_log)
 
 
 # %%
-# LORA fine-tuning
-# ----------------
+# Simple model fine-tuning
+# ------------------------
 #
-# ?????
+# As the fine-tuning dataset is prepared, we will proceed with the training. We use the
+# ``metatrain`` package to fine-tune the model. There are multiple strategies to apply
+# fine-tuning, each described in the `metatrain documentation
+# <https://metatensor.github.io/metatrain/latest/advanced-concepts/fine-tuning.html>`_.
+# In this example we demostrate a basic full fine-tuning strategy, which adapts all
+# model weights to the new dataset starting from the pre-trained PET-MAD checkpoint. The
+# process is configured by setting appropriate options in the YAML options file.
+#
+# .. literalinclude:: basic_ft_options.yaml
+#   :language: yaml
+#
+
+subprocess.run(
+    ["mtt", "train", "basic_ft_options.yaml", "-o", "model-fine_tune.pt"], check=True
+)
+
+
+# %%
+# Visualize the outputs, comparing the model tranined from scratch (dashed lines)
+# and the fine-tuned one (full lines). Obviously it may be possible to tweak differently
+# the optimization settings, but it is clear that fine-tuning from PET-MAD weights
+# leads to much better zero-shot accuracy, and more consistent learning dynamics.
+
+csv_file = sorted(glob("outputs/*/*/train.csv"))[-1]
+fine_tune_log = parse_training_log(csv_file)
+
+# %%
+ax = display_training_curves(fine_tune_log, label="From scratch")
+display_training_curves(from_scratch_log, ax=ax, style="--", label="Fine-tuned")
+ax[0].set_ylim(1, 1000)
+
+# %%
+# Model evaluation
+# ^^^^^^^^^^^^^^^^^^^^^
+# After the training, ``mtt train`` outputs the ``model-fine_tune.ckpt``
+# and ``model-fine_tune.pt`` (exported fine-tuned model) files in both the
+# current directory and in ``output/YYYY-MM-DD/HH-MM-SS/``.
+#
+# These can be used together with `metatrain` to evaluate the model on a
+# (potentially different) dataset. The evaluation is configured in a YAML file,
+# which specifies the model to evaluate, the dataset to use, and the metrics to compute.
+#
+# .. literalinclude:: model_eval.yaml
+#   :language: yaml
+#
+# The evaluation can be run from the command line:
+#
+# .. code-block:: bash
+#
+#    mtt eval model-fine_tune.pt model_eval.yaml
+#
+#  Or from Python:
+
+subprocess.run(["mtt", "eval", "model-fine_tune.pt", "model_eval.yaml"], check=True)
