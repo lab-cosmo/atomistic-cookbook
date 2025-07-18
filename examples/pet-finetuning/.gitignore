@@ -11,4 +11,5 @@ outputs/
 data/ethanol_train.xyz
 data/ethanol_val.xyz
 data/ethanol_test.xyz
+data/ethanol_corrected.xyz
 output.xyz

@@ -3,9 +3,9 @@ seed: 42
 architecture:
   name: pet
   training:
-    num_epochs: 50
+    num_epochs: 1000
     num_epochs_warmup: 1
-    learning_rate: 1e-4
+    learning_rate: 1e-5
 
 training_set:
   systems:
@@ -18,8 +18,8 @@ training_set:
       forces: on
     non_conservative_forces:
       key: forces
-      quantity: force
-      unit: eV/A
+      quantity: force  
+      unit: eV/A  
       type:
         cartesian:
           rank: 1
@@ -36,8 +36,8 @@ validation_set:
       forces: on
     non_conservative_forces:
       key: forces
-      quantity: force
-      unit: eV/A
+      quantity: force  
+      unit: eV/A  
       type:
         cartesian:
           rank: 1
@@ -54,8 +54,8 @@ test_set:
       forces: on
     non_conservative_forces:
       key: forces
-      quantity: force
-      unit: eV/A
+      quantity: force  
+      unit: eV/A  
       type:
         cartesian:
           rank: 1

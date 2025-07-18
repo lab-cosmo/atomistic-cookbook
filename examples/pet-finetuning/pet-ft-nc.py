@@ -35,9 +35,33 @@ from collections import Counter
 from glob import glob
 from urllib.request import urlretrieve
 
+import ase.io
+import numpy as np
 import matplotlib.pyplot as plt
 from metatrain.pet import PET
 from sklearn.linear_model import LinearRegression
+
+# %%
+# Prepare the training set
+# --------------------------
+# 
+# We begin by creating a train/validation/test split of the dataset.
+
+dataset = ase.io.read("data/ethanol.xyz", index=":", format="extxyz")
+
+np.random.seed(42)
+indices = np.random.permutation(len(dataset))
+n = len(dataset)
+n_val = n_test = int(0.1 * n)
+n_train = n - n_val - n_test
+
+train = [dataset[i] for i in indices[:n_train]]
+val = [dataset[i] for i in indices[n_train : n_train + n_val]]
+test = [dataset[i] for i in indices[n_train + n_val :]]
+
+ase.io.write("data/ethanol_train.xyz", train, format="extxyz")
+ase.io.write("data/ethanol_val.xyz", val, format="extxyz")
+ase.io.write("data/ethanol_test.xyz", test, format="extxyz")
 
 # %%
 # Non-conservative force training
@@ -49,9 +73,15 @@ from sklearn.linear_model import LinearRegression
 # .. literalinclude:: nc_train_options.yaml
 #   :language: yaml
 #
-# We run training from Python:
+# Training can be run from the command line using the `mtt` command:
+#
+# .. code-block:: bash
+#
+#    mtt train nc_train_options.yaml -o model_nc.pt
+#
+# or from Python:
 
-subprocess.run(["mtt", "train", "nc_train_options.yaml"], check=True)
+subprocess.run(["mtt", "train", "nc_train_options.yaml", "-o", "model_nc.pt"], check=True)
 
 # %%
 #

@@ -3,8 +3,9 @@ seed: 42
 architecture:
   name: pet
   training:
-    num_epochs: 50
-    num_epochs_warmup: 1
+    batch_size: 32 
+    num_epochs: 1000
+    num_epochs_warmup: 10
     learning_rate: 1e-4
 
 training_set:
@@ -13,13 +14,12 @@ training_set:
     length_unit: angstrom
   targets:
     energy:
-      key: energy
       unit: eV
-      forces: on
+      forces: off
     non_conservative_forces:
       key: forces
       quantity: force
-      unit: eV/A
+      unit: eV/A  
       type:
         cartesian:
           rank: 1
@@ -33,11 +33,11 @@ validation_set:
     energy:
       key: energy
       unit: eV
-      forces: on
+      forces: off
     non_conservative_forces:
       key: forces
-      quantity: force
-      unit: eV/A
+      quantity: force  
+      unit: eV/A  
       type:
         cartesian:
           rank: 1
@@ -51,11 +51,11 @@ test_set:
     energy:
       key: energy
       unit: eV
-      forces: on
+      forces: off
     non_conservative_forces:
       key: forces
-      quantity: force
-      unit: eV/A
+      quantity: force  
+      unit: eV/A  
       type:
         cartesian:
           rank: 1
