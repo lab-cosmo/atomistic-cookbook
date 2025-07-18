@@ -17,8 +17,8 @@ and ways to mitigate them, using the generally-applicable
 `PET-MAD potential <https://arxiv.org/abs/2503.14118>`_. See also
 `this recipe <https://atomistic-cookbook.org/examples/pet-mad/pet-mad.html>`_
 for examples of using PET-MAD for basic tasks such as geometry optimization
-and conservative MD, and 
-`this 
+and conservative MD, and
+`this
 <https://atomistic-cookbook.org/examples/pet-finetuning/pet-ft-nc.html>`_
 for an example of how to use direct forces to accelerate training.
 """

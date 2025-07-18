@@ -60,7 +60,7 @@ if hasattr(__import__("builtins"), "get_ipython"):
 #
 # .. code-block:: bash
 #
-#    wget https://huggingface.co/lab-cosmo/pet-mad/resolve/v1.0.1/models/pet-mad-latest.ckpt
+#    wget https://huggingface.co/lab-cosmo/pet-mad/resolve/v1.0.1/models/pet-mad-latest.ckpt # noqa: E501
 #
 # We'll download it directly:
 
@@ -262,7 +262,7 @@ subprocess.run(
 #
 # We can load the latest training log and visualize the training curves
 # - we will use them later to compare the fine-tuning results.
-# It is clear that training is not converged, and the learning rate is not 
+# It is clear that training is not converged, and the learning rate is not
 # optimal -- you can try to adjust the parameters and run for longer.
 
 csv_file = sorted(glob("outputs/*/*/train.csv"))[-1]
