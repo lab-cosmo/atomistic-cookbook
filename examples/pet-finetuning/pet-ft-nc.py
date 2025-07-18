@@ -26,6 +26,9 @@ is provided in `this example
 
 If you are looking for a traditional "post-fact" fine-tuning strategy, see for example
 `this example <https://atomistic-cookbook.org/examples/pet-finetuning/pet-ft.html>`_.
+Note also that the recipe data contains also "long" training settings, which
+can be used (preferably on a GPU) to train a model up to a point that reveals
+the behavior of the method in realistic conditions.
 """
 
 # %%
