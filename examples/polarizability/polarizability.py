@@ -54,9 +54,6 @@ from sklearn.linear_model import RidgeCV
 
 torch.set_default_dtype(torch.float64)  # FIXME: This is a temporary fix
 
-if hasattr(__import__("builtins"), "get_ipython"):
-    get_ipython().run_line_magic("matplotlib", "inline")  # noqa: F821
-
 # %%
 # Polarizability tensor
 # ---------------------
