@@ -7,6 +7,7 @@ from datetime import datetime
 extensions = [
     "sphinx_sitemap",
     "sphinx_design",
+    "sphinx_copybutton",
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "sphinx_gallery.load_style",

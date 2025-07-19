@@ -53,9 +53,6 @@ import numpy as np
 import torch
 
 
-if hasattr(__import__("builtins"), "get_ipython"):
-    get_ipython().run_line_magic("matplotlib", "inline")  # noqa: F821
-
 # %%
 #
 # Target structures
