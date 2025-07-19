@@ -2,6 +2,7 @@ sphinx
 sphinx-sitemap
 sphinx-design
 sphinx-gallery
+sphinx-copybutton
 sphinx-toggleprompt
 docutils
 furo
