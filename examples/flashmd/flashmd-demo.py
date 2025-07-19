@@ -63,7 +63,7 @@ flashmd_model_16.to(device)
 flashmd_model_64 = get_universal_model(64)
 flashmd_model_64.to(device)
 
-calculator = PETMADCalculator(version="v1.1.0", device=device)
+calculator = PETMADCalculator(version="1.1.0", device=device)
 calculator._model.save("pet-mad-v1.1.0.pt")
 
 
