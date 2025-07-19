@@ -142,7 +142,7 @@ calculator = PETMADCalculator(version="1.0.1", device="cpu")
 # external MD engines. This is done by saving the model to a file,
 # which includes the model architecture and weights.
 
-calculator._model.save("pet-mad-v1.0.1.pt")
+calculator._model.save("pet-mad-v1.1.0.pt")
 
 # %%
 # The model can also be loaded from this torchscript dump, which often
@@ -150,7 +150,7 @@ calculator._model.save("pet-mad-v1.0.1.pt")
 # equivalent unless you plan on fine-tuning, or otherwise modifying
 # the model.
 
-calculator = mta.ase_calculator.MetatomicCalculator("pet-mad-v1.0.1.pt", device="cpu")
+calculator = mta.ase_calculator.MetatomicCalculator("pet-mad-v1.1.0.pt", device="cpu")
 
 # %%
 #
@@ -420,7 +420,7 @@ input_xml = simulation_xml(
         name="pet-mad",
         mode="direct",
         pes="metatomic",
-        parameters={"model": "pet-mad-v1.0.1.pt", "template": "data/al6xxx-o2.xyz"},
+        parameters={"model": "pet-mad-v1.1.0.pt", "template": "data/al6xxx-o2.xyz"},
     ),
     motion=motion_xml,
     temperature=800,

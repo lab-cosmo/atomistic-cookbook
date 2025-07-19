@@ -3,7 +3,7 @@ atom_style atomic
 read_data al6xxx-o2.data
 # loads pet-mad-model
 pair_style metatomic &
-    pet-mad-v1.0.1.pt &
+    pet-mad-v1.1.0.pt &
     device cpu &
     extensions extensions/
 # define interactions between all atoms and maps the LAMMPS types to elements

@@ -54,8 +54,8 @@ from metatomic.torch.ase_calculator import MetatomicCalculator
 # %%
 # Fetch PET-MAD and export the model
 # ----------------------------------
-# We first download the development version of the PET-MAD model, and
-# export the model as a torchscript file.
+# We first download a version of the PET-MAD model that includes non-conservative
+# forces, and export the model as a torchscript file.
 
 # download the model checkpoint and export it, using metatrain from the command line:
 # mtt export https://huggingface.co/lab-cosmo/pet-mad/resolve/v1.1.0/models/pet-mad-v1.1.0.ckpt  # noqa: E501
