@@ -9,7 +9,7 @@ mass 2 35.453
 mass 3 1.00784
 mass 4 14.0067
 
-pair_style metatomic pet-mad-v1.0.1.pt device cpu non_conservative on
+pair_style metatomic pet-mad-v1.1.0.pt device cpu non_conservative on
 pair_coeff * * 6 17 1 7
 
 run_style verlet
