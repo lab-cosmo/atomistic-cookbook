@@ -14,6 +14,7 @@ data.
 - examples/pet-mad/pet-mad
 - examples/pet-mad-nc/pet-mad-nc
 - examples/pet-finetuning/pet-ft
+- examples/pet-finetuning/pet-ft-nc
 - examples/flashmd/flashmd-demo
 - examples/shiftml/shiftml-example
 - examples/hamiltonian-qm7/hamiltonian-qm7

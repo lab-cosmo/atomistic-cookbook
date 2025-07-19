@@ -32,7 +32,7 @@ can be used (preferably on a GPU) to train a model up to a point that reveals
 the behavior of the method in realistic conditions.
 """
 
-# sphinx_gallery_thumbnail_path = 'training_strategy_comparison.png'
+# sphinx_gallery_thumbnail_path = '../../examples/pet-finetuning/training_strategy_comparison.png'
 
 # %%
 

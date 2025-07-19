@@ -34,6 +34,7 @@ case.
 import subprocess
 from collections import Counter
 from glob import glob
+import os
 from urllib.request import urlretrieve
 
 import ase.io
@@ -69,7 +70,8 @@ url = (
 )
 checkpoint_path = "pet-mad-v1.1.0.ckpt"
 
-urlretrieve(url, checkpoint_path)
+if not os.path.exists(checkpoint_path):
+    urlretrieve(url, checkpoint_path)
 
 # %%
 # Applying an atomic energy correction
