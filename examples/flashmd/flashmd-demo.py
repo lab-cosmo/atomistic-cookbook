@@ -13,6 +13,8 @@ You can read more about the model and its limitations in
 `this preprint <http://arxiv.org/abs/2505.19350>`_.
 """
 
+# sphinx_gallery_thumbnail_path = '../../examples/flashmd/flashmd-scheme.png'
+
 # %%
 #
 # Start by importing the required libraries. You will need the
@@ -26,7 +28,6 @@ You can read more about the model and its limitations in
 #
 
 import chemiscope
-import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 from flashmd import get_universal_model
 from flashmd.ipi import get_npt_stepper, get_nvt_stepper
@@ -40,14 +41,9 @@ from pet_mad.calculator import PETMADCalculator
 # Each model is trained for a specific stride length, aiming to
 # reproduce the trajectories obtained with a traditional velocity
 # Verlet integrator.
-
-# use matplotlib to display the image so it also display as a thumbnail
-fig, ax = plt.subplots(figsize=(5728 / 300, 2598 / 300), dpi=300)
-img = mpimg.imread("flashmd-scheme.png")
-ax.imshow(img)
-ax.axis("off")
-fig.tight_layout()
-plt.show()
+#
+# .. image:: flashmd-scheme.png
+#    :align: center
 
 
 # %%
