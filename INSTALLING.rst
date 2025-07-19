@@ -62,7 +62,7 @@ you should run
    pip install ipykernel # in case is not part of the environment
    
    # Create the kernel definition
-   python -m ipykernel install --user --name recipei-env-path --display-name "Python (recipe)"
+   python -m ipykernel install --user --name recipe-env-path --display-name "Python (recipe)"
    
    # You can launch Jupyter from outside the conda environment,
    # unless you also need conda-installed executables. When you open
