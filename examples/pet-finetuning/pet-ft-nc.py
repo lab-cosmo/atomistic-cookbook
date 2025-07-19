@@ -32,6 +32,8 @@ can be used (preferably on a GPU) to train a model up to a point that reveals
 the behavior of the method in realistic conditions.
 """
 
+# sphinx_gallery_thumbnail_path = 'training_strategy_comparison.png'
+
 # %%
 
 import subprocess
@@ -138,8 +140,8 @@ subprocess.run("mtt eval nc_model.pt nc_model_eval.yaml".split(), check=True)
 # fine-tune the model to improve the accuracy on conservative forces.
 # Enable ``forces: on`` to compute them via backward propagation of gradients.
 # We also keep training the non-conservative forces, so that we can still use the model
-# for fast inference.
-# Expectedly, the training will be slower.
+# for fast inference. This comes with minimal overhead against forward energy
+# evaluation. Expectedly, the training will be slower.
 #
 # .. code-block:: yaml
 #
@@ -176,7 +178,7 @@ print(f"Training time (conservative fine-tuning): {time_c_ft:.2f} seconds")
 
 # %%
 #
-# Let's evaluate the forces again:
+# Let's evaluate the forces again.
 #
 # .. code-block:: bash
 #
@@ -187,6 +189,11 @@ print(f"Training time (conservative fine-tuning): {time_c_ft:.2f} seconds")
 subprocess.run("mtt eval nc_model.pt nc_model_eval.yaml".split(), check=True)
 
 # %%
+# Converged results
+# -----------------
+#
+# TODO: describe briefly how to run the long simulations, and show results for it
+# but make sure the figures are taken from the output of the long runs
 #
 # After fine-tuning for 50 epochs, the updated parity plots show improved force
 # predictions (left) with conservative forces. The grayscale points in the background
