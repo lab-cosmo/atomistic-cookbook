@@ -31,10 +31,10 @@ case.
 
 # %%
 
+import os
 import subprocess
 from collections import Counter
 from glob import glob
-import os
 from urllib.request import urlretrieve
 
 import ase.io
@@ -328,6 +328,6 @@ ax[0].set_ylim(1, 1000)
 #
 #    mtt eval fine_tune-model.pt model_eval.yaml
 #
-#  Or from Python:
+# Or from Python:
 
 subprocess.run(["mtt", "eval", "fine_tune-model.pt", "model_eval.yaml"], check=True)

@@ -32,7 +32,8 @@ can be used (preferably on a GPU) to train a model up to a point that reveals
 the behavior of the method in realistic conditions.
 """
 
-# sphinx_gallery_thumbnail_path = '../../examples/pet-finetuning/training_strategy_comparison.png'
+# sphinx_gallery_thumbnail_path =
+# '../../examples/pet-finetuning/training_strategy_comparison.png'
 
 # %%
 
@@ -83,7 +84,7 @@ ase.io.write("data/ethanol_test.xyz", test, format="extxyz")
 # Adding a ``non_conservative_forces`` target automatically adds a
 # vectorial output to the atomic heads of the model, but does not
 # disable the energy head, which is still used to compute the energy,
-# adn could in principle be used to compute conservative forces.
+# and could in principle be used to compute conservative forces.
 # To profit from the speed up of direct force evaluation, we specify
 # ``forces: off`` in the ``energy`` taget.
 #
