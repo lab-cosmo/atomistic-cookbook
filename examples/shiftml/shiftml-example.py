@@ -22,9 +22,6 @@ from ase.io import read
 from shiftml.ase import ShiftML
 
 
-if hasattr(__import__("builtins"), "get_ipython"):
-    get_ipython().run_line_magic("matplotlib", "inline")  # noqa: F821
-
 # %%
 # Create a ShiftML calculator and fetch a dataset
 # ===============================================

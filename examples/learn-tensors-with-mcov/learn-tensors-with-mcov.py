@@ -17,6 +17,8 @@ The model is trained with
 and can then be used in an ASE calculator.
 """
 
+# sphinx_gallery_thumbnail_path = '../../examples/learn-tensors-with-mcov/architecture.png' # noqa: E501
+
 # %%
 
 # Core packages
@@ -27,7 +29,6 @@ import ase.io
 
 # Simulation and visualization tools
 import chemiscope
-import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import metatensor as mts
 import numpy as np
@@ -173,15 +174,10 @@ for idx, filename in zip(
 # Here is a schematic representation of the :math:`\lambda`-MCoV model which, in a
 # nutshell, allows us to learn a tensorial property of a system from a set of scalar
 # features used as linear expansion coefficients of a minimal set of basis tensors.
+#
+# .. image:: architecture.png
+#    :align: center
 
-
-# visualize a scheme of the architecture that is also used as a thumbnail for the recipe
-fig, ax = plt.subplots(figsize=(5728 / 300, 2598 / 300), dpi=300)
-img = mpimg.imread("architecture.png")
-ax.imshow(img)
-ax.axis("off")
-fig.tight_layout()
-plt.show()
 
 # %%
 #

@@ -11,13 +11,13 @@ using the ``scipy`` and ``quaternionic`` libraries. The equivariant properties f
 this example are computed by the ``featomic`` library.
 """
 
+# sphinx_gallery_thumbnail_path = '../../examples/rotate-equivariants/rotate-equivariants-scheme.png'  # noqa: E501
+
 # %%
 # Import the necessary packages for this recipe
 
 import ase.build
 import featomic
-import matplotlib.image as mpimg
-import matplotlib.pyplot as plt
 import metatensor
 import numpy as np
 import spherical
@@ -30,11 +30,9 @@ from scipy.spatial.transform import Rotation
 # The equivariant properties of atomic structures are properties that transform in a
 # specific way under the action of a group of symmetries. In our case, we are interested
 # in the group of rotations in 3D space.
-
-img = mpimg.imread("rotate-equivariants.png")
-plt.imshow(img)
-plt.axis("off")
-plt.show()
+#
+# .. image:: rotate-equivariants.png
+#    :align: center
 
 
 # %%

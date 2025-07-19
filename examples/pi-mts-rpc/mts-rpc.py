@@ -61,9 +61,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-if hasattr(__import__("builtins"), "get_ipython"):
-    get_ipython().run_line_magic("matplotlib", "inline")  # noqa: F821
-
 # sphinx_gallery_thumbnail_number = 2
 
 # %%
