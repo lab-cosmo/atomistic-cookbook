@@ -14,7 +14,7 @@
 <prng><seed>12345</seed></prng>
 <ffdirect  name='cons' pbc="false">
     <pes>metatomic</pes>
-    <parameters>{template:data/bmimcl.xyz,model:pet-mad-latest.pt,device:cpu,non_conservative:False} </parameters>
+    <parameters>{template:data/bmimcl.xyz,model:pet-mad-dev.pt,device:cpu,non_conservative:False} </parameters>
 </ffdirect>
 <system>
     <initialize nbeads="1">

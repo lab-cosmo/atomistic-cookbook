@@ -54,17 +54,17 @@ from metatomic.torch.ase_calculator import MetatomicCalculator
 # %%
 # Fetch PET-MAD and export the model
 # ----------------------------------
-# We first download the latest version of the PET-MAD model, and
+# We first download the development version of the PET-MAD model, and
 # export the model as a torchscript file.
 
 # download the model checkpoint and export it, using metatrain from the command line:
-# mtt export https://huggingface.co/lab-cosmo/pet-mad/resolve/main/models/pet-mad-latest.ckpt  # noqa: E501
+# mtt export https://huggingface.co/lab-cosmo/pet-mad/resolve/main/models/pet-mad-dev.ckpt  # noqa: E501
 
 subprocess.run(
     [
         "mtt",
         "export",
-        "https://huggingface.co/lab-cosmo/pet-mad/resolve/main/models/pet-mad-latest.ckpt",  # noqa: E501
+        "https://huggingface.co/lab-cosmo/pet-mad/resolve/main/models/pet-mad-dev.ckpt",  # noqa: E501
     ]
 )
 
@@ -74,7 +74,7 @@ subprocess.run(
 # equivalent unless you plan on fine-tuning, or otherwise modifying
 # the model.
 
-calculator = MetatomicCalculator("pet-mad-latest.pt", device="cpu")
+calculator = MetatomicCalculator("pet-mad-dev.pt", device="cpu")
 
 # %%
 #
@@ -110,7 +110,7 @@ energy_c = structure.get_potential_energy()
 forces_c = structure.get_forces()
 
 calculator_nc = MetatomicCalculator(
-    "pet-mad-latest.pt", device="cpu", non_conservative=True
+    "pet-mad-dev.pt", device="cpu", non_conservative=True
 )
 
 structure.calc = calculator_nc
