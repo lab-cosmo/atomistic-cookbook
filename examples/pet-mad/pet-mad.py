@@ -69,10 +69,6 @@ from ipi.utils.scripting import (
 from pet_mad.calculator import PETMADCalculator
 
 
-if hasattr(__import__("builtins"), "get_ipython"):
-    get_ipython().run_line_magic("matplotlib", "inline")  # noqa: F821
-
-
 # %%
 # Inference on the MAD test set
 # -----------------------------

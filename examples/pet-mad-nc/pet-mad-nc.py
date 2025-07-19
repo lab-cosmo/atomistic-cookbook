@@ -51,9 +51,6 @@ from ipi.utils.scripting import InteractiveSimulation
 from metatomic.torch.ase_calculator import MetatomicCalculator
 
 
-if hasattr(__import__("builtins"), "get_ipython"):
-    get_ipython().run_line_magic("matplotlib", "inline")  # noqa: F821
-
 # %%
 # Fetch PET-MAD and export the model
 # ----------------------------------
