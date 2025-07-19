@@ -60,14 +60,14 @@ if hasattr(__import__("builtins"), "get_ipython"):
 #
 # .. code-block:: bash
 #
-#    wget https://huggingface.co/lab-cosmo/pet-mad/resolve/v1.0.1/models/pet-mad-latest.ckpt # noqa: E501
+#    wget https://huggingface.co/lab-cosmo/pet-mad/resolve/v1.1.0/models/pet-mad-v1.1.0.ckpt # noqa: E501
 #
 # We'll download it directly:
 
 url = (
-    "https://huggingface.co/lab-cosmo/pet-mad/resolve/v1.0.1/models/pet-mad-latest.ckpt"
+    "https://huggingface.co/lab-cosmo/pet-mad/resolve/v1.1.0/models/pet-mad-v1.1.0.ckpt"
 )
-checkpoint_path = "pet-mad-v1.0.1.ckpt"
+checkpoint_path = "pet-mad-v1.1.0.ckpt"
 
 urlretrieve(url, checkpoint_path)
 
@@ -238,7 +238,7 @@ def display_training_curves(train_log, ax=None, style="-", label=""):
 # the different settings in the `metatrain documentation
 # <https://metatensor.github.io/metatrain/>`_.
 #
-# .. literalinclude:: from_scratch.yaml
+# .. literalinclude:: from_scratch_options.yaml
 #   :language: yaml
 
 # %%
@@ -251,7 +251,8 @@ def display_training_curves(train_log, ax=None, style="-", label=""):
 # Or from Python:
 
 subprocess.run(
-    ["mtt", "train", "from_scratch.yaml", "-o", "model-from_scratch.pt"], check=True
+    ["mtt", "train", "from_scratch_options.yaml", "-o", "from_scratch-model.pt"],
+    check=True,
 )
 
 # %%
@@ -282,12 +283,12 @@ display_training_curves(from_scratch_log)
 # model weights to the new dataset starting from the pre-trained PET-MAD checkpoint. The
 # process is configured by setting appropriate options in the YAML options file.
 #
-# .. literalinclude:: basic_ft_options.yaml
+# .. literalinclude:: full_ft_options.yaml
 #   :language: yaml
 #
 
 subprocess.run(
-    ["mtt", "train", "basic_ft_options.yaml", "-o", "model-fine_tune.pt"], check=True
+    ["mtt", "train", "full_ft_options.yaml", "-o", "fine_tune-model.pt"], check=True
 )
 
 
@@ -308,8 +309,8 @@ ax[0].set_ylim(1, 1000)
 # %%
 # Model evaluation
 # ^^^^^^^^^^^^^^^^^^^^^
-# After the training, ``mtt train`` outputs the ``model-fine_tune.ckpt``
-# and ``model-fine_tune.pt`` (exported fine-tuned model) files in both the
+# After the training, ``mtt train`` outputs the ``fine_tune-model.ckpt``
+# and ``fine_tune-model.pt`` (exported fine-tuned model) files in both the
 # current directory and in ``output/YYYY-MM-DD/HH-MM-SS/``.
 #
 # These can be used together with `metatrain` to evaluate the model on a
@@ -323,8 +324,8 @@ ax[0].set_ylim(1, 1000)
 #
 # .. code-block:: bash
 #
-#    mtt eval model-fine_tune.pt model_eval.yaml
+#    mtt eval fine_tune-model.pt model_eval.yaml
 #
 #  Or from Python:
 
-subprocess.run(["mtt", "eval", "model-fine_tune.pt", "model_eval.yaml"], check=True)
+subprocess.run(["mtt", "eval", "fine_tune-model.pt", "model_eval.yaml"], check=True)
