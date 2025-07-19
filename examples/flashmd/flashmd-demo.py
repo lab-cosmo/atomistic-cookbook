@@ -28,7 +28,6 @@ You can read more about the model and its limitations in
 #
 
 import chemiscope
-import matplotlib.pyplot as plt
 from flashmd import get_universal_model
 from flashmd.ipi import get_npt_stepper, get_nvt_stepper
 from ipi.utils.parsing import read_output, read_trajectory

@@ -17,7 +17,7 @@ The model is trained with
 and can then be used in an ASE calculator.
 """
 
-# sphinx_gallery_thumbnail_path = '../../examples/learn-tensors-with-mcov/architecture.png'
+# sphinx_gallery_thumbnail_path = '../../examples/learn-tensors-with-mcov/architecture.png' # noqa: E501
 
 # %%
 
