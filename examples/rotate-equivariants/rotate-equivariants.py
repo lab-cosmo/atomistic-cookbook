@@ -11,7 +11,7 @@ using the ``scipy`` and ``quaternionic`` libraries. The equivariant properties f
 this example are computed by the ``featomic`` library.
 """
 
-# sphinx_gallery_thumbnail_path = '../../examples/rotate-equivariants/rotate-equivariants-scheme.png'  # noqa: E501
+# sphinx_gallery_thumbnail_path = '../../examples/rotate-equivariants/rotate-equivariants.png'  # noqa: E501
 
 # %%
 # Import the necessary packages for this recipe
