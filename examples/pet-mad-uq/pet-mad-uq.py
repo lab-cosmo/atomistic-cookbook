@@ -204,71 +204,6 @@ ground_truth_energies = torch.stack(
 ground_truth_uncertainties = torch.square(predicted_energies - ground_truth_energies)
 
 # %%
-# Define helper functions to create iso lines for the parity plot.
-
-
-def pdf(x, sigma):
-    return x * np.exp(-(x**2) / (2 * sigma**2)) * 1.0 / (sigma * np.sqrt(2 * np.pi))
-
-
-def find_where_pdf_is_c(c, sigma):
-    # Finds the two values of x where the pdf is equal to c
-    mode_value = pdf(sigma, sigma)
-    if c > mode_value:
-        raise ValueError("c must be less than mode_value")
-    where_below_mode = root_scalar(lambda x: pdf(x, sigma) - c, bracket=[0, sigma]).root
-    where_above_mode = root_scalar(
-        lambda x: pdf(x, sigma) - c, bracket=[sigma, 100]
-    ).root
-    return where_below_mode, where_above_mode
-
-
-def pdf_integral(sigma, c):
-    # Calculates the integral (analytical) of the pdf from x1 to x2,
-    # where x1 and x2 are the two values of x where the pdf is equal to c
-    x1, x2 = find_where_pdf_is_c(c, sigma)
-    return np.exp(-(x1**2) / (2 * sigma**2)) - np.exp(-(x2**2) / (2 * sigma**2))
-
-
-def find_fraction(sigma, fraction):
-    # Finds the value of c where the integral of the pdf from x1 to x2 is equal to
-    # fraction, where x1 and x2 are the two values of x where the pdf is equal to c
-    mode_value = pdf(sigma, sigma)
-    return root_scalar(
-        lambda x: pdf_integral(sigma, x) - fraction,
-        x0=mode_value - 0.01,
-        x1=mode_value - 0.02,
-    ).root
-
-
-desired_fractions = [
-    norm.cdf(1, 0.0, 1.0) - norm.cdf(-1, 0.0, 1.0),  # 1 sigma
-    norm.cdf(2, 0.0, 1.0) - norm.cdf(-2, 0.0, 1.0),  # 2 sigma
-    norm.cdf(3, 0.0, 1.0) - norm.cdf(-3, 0.0, 1.0),  # 3 sigma
-]
-
-# Hard-code the zoomed in region of the plot.
-min_val = 2.5e-2
-max_val = 2.5
-
-# Create iso lines.
-sigmas = np.geomspace(1e-2, 10, 5)
-sigmas = np.geomspace(min_val, max_val, 5)
-lower_bounds = []
-upper_bounds = []
-for desired_fraction in desired_fractions:
-    lower_bound = []
-    upper_bound = []
-    for sigma in sigmas:
-        isoline_value = find_fraction(sigma, desired_fraction)
-        x1, x2 = find_where_pdf_is_c(isoline_value, sigma)
-        lower_bound.append(x1)
-        upper_bound.append(x2)
-    lower_bounds.append(lower_bound)
-    upper_bounds.append(upper_bound)
-
-
-# %%
 # After gathering predicted uncertainties and computing ground truth error metrics, we
 # can compare them to each other. Similar to figure S4 of the PET-MAD paper, we present
 # the data in using a parity plot. For more information about interpreting this type of
@@ -277,6 +212,21 @@ for desired_fraction in desired_fractions:
 # for inspecting uncertainty values. Because we are using a heavily reduced dataset
 # (only 100 structures) from the MAD validation set, the parity plot looks very sparse.
 
+# Hard-code the zoomed in region of the plot and iso-lines.
+min_val, max_val = 2.5e-2, 2.5
+lower_bounds = [
+    [0.010775, 0.034072, 0.107746, 0.340723, 1.077459],
+    [0.002564, 0.008109, 0.025643, 0.08109, 0.25643],
+    [0.000229, 0.000724, 0.002288, 0.007237, 0.022885],
+]
+upper_bounds = [
+    [0.042949, 0.135817, 0.429491, 1.358168, 4.294906],
+    [0.06337, 0.200392, 0.633695, 2.00392, 6.336952],
+    [0.086097, 0.272264, 0.860975, 2.722641, 8.609747],
+]
+sigmas = np.geomspace(min_val, max_val, 5)
+
+# Create the parity plot.
 plt.figure(figsize=(4, 4))
 plt.grid()
 plt.gca().set(
@@ -288,9 +238,9 @@ plt.loglog()
 
 # Plot iso lines.
 plt.plot([min_val, max_val], [min_val, max_val], ls="--", c="k")
-for i in range(len(desired_fractions)):
-    plt.plot(sigmas, lower_bounds[i], color="black", lw=0.75)
-    plt.plot(sigmas, upper_bounds[i], color="black", lw=0.75)
+for lower_bound, upper_bound in zip(lower_bounds, upper_bounds):
+    plt.plot(sigmas, lower_bound, color="black", lw=0.75)
+    plt.plot(sigmas, upper_bound, color="black", lw=0.75)
 
 # Add actual samples.
 plt.scatter(predicted_uncertainties, ground_truth_uncertainties)
