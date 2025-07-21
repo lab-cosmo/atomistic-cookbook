@@ -78,7 +78,6 @@ to execute the script.
 
 # %%
 import os
-import shlex
 import subprocess
 from urllib.request import urlretrieve
 
@@ -128,7 +127,7 @@ model = load_model("models/pet-mad-latest-llpr.pt")
 # This first example shows how to use PET-MAD to estimate uncertainties on a reference
 # dataset. We use a reduced version (because of limited compute power in the CI runner)
 # of the MAD validation set.
-# flake
+#
 # For this, we first download the correspond MAD validation dataset record from
 # Materials Cloud. Then, we prepare the dataset and pass it through the model. In the
 # final step, we visualize the predicted uncertainties and compare them to a
