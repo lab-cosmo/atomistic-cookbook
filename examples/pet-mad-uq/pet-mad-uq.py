@@ -4,23 +4,23 @@ Uncertainty Quantification with PET-MAD
 
 :Authors: Johannes Spies `@johannes-spies <https://github.com/johannes-spies>`_
 
-This reciles demonstrates three ways of computing errors on the outputs of 
+This reciles demonstrates three ways of computing errors on the outputs of
 ML potential-driven simulations, using as an example the PET-MAD model and its
 built-in uncertainty quantification capabilities.
 
 In particular, we show
 
-1. Estimating uncertainties for single-point calculations on a 
+1. Estimating uncertainties for single-point calculations on a
    full validation dataset.
-2. Computing energies in simple functions of energy predictions, 
+2. Computing energies in simple functions of energy predictions,
    namely the value of vacancy formation energies
 3. Propagate errors from energy predictions to thermodynamic averages
    computed over a constant-temperature MD simulation.
 
 
 For more information on PET-MAD, have a look at
-`Mazitov et al., 2025. <https://arxiv.org/abs/2503.14118>`_ 
-The LLPR uncertainties are introduced in `Bigi et al., 2024. 
+`Mazitov et al., 2025. <https://arxiv.org/abs/2503.14118>`_
+The LLPR uncertainties are introduced in `Bigi et al., 2024.
 <https://arxiv.org/abs/2403.02251>`_ For more
 information on dataset calibration and error propagation, see
 `Imabalzano et al., 2021. <https://arxiv.org/abs/2011.08828>`_
