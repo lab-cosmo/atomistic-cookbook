@@ -4,29 +4,38 @@ Uncertainty Quantification with PET-MAD
 
 :Authors: Johannes Spies `@johannes-spies <https://github.com/johannes-spies>`_
 
-This example includes three ways of using PET-MAD's uncertainty quantification.
+This reciles demonstrates three ways of computing errors on the outputs of 
+ML potential-driven simulations, using as an example the PET-MAD model and its
+built-in uncertainty quantification capabilities.
 
-1. Estimating uncertainties on a full validation dataset.
-2. Computing vacancy formation energies and prediction uncertainties.
-3. Propagate errors from energy predictions to output observables.
+In particular, we show
+
+1. Estimating uncertainties for single-point calculations on a 
+   full validation dataset.
+2. Computing energies in simple functions of energy predictions, 
+   namely the value of vacancy formation energies
+3. Propagate errors from energy predictions to thermodynamic averages
+   computed over a constant-temperature MD simulation.
+
 
 For more information on PET-MAD, have a look at
-`Mazitov et al., 2025. <https://arxiv.org/abs/2503.14118>`_ The LLPR uncertainties are
-introduced in `Bigi et al., 2024. <https://arxiv.org/abs/2403.02251>`_ For more
-information on dataset calibration and error propagation, see the
+`Mazitov et al., 2025. <https://arxiv.org/abs/2503.14118>`_ 
+The LLPR uncertainties are introduced in `Bigi et al., 2024. 
+<https://arxiv.org/abs/2403.02251>`_ For more
+information on dataset calibration and error propagation, see
 `Imabalzano et al., 2021. <https://arxiv.org/abs/2011.08828>`_
 
 Models compatible with `metatomic <https://metatensor.github.io/metatomic/>`_ can be
 equipped with uncertainty quantification capabilities through the
 `LLPRUncertaintyModel` wrapper included with
 `metatrain <https://metatensor.github.io/metatrain/>`_. For running this recipe, you can
-either use a prebuilt model (the example itself downloads a model from Hugging Face).
+use a prebuilt model (the example itself downloads a model from Hugging Face).
 For adding support for uncertainty quantification to an existing model, have a look at
 the following scaffold. For more information on loading a dataset with the
 infrastructure, have a look at
 `this section <https://metatensor.github.io/metatrain/latest/dev-docs/utils/data>`_
 of the documentation. The pseudocode below also shows how to create an ensemble model
-from the last-layer parameters ofl a model.
+from the last-layer parameters of a model.
 
 .. code-block:: python
 
@@ -64,7 +73,7 @@ from the last-layer parameters ofl a model.
 
 At the bottom of the page, you'll find a ZIP file containing the whole example. Note
 that it comes with an `environment.yml` file specifying all dependencies required
-to run this example.
+to execute the script.
 """
 
 # %%
@@ -600,7 +609,7 @@ for ty in ["h-h", "o-o"]:
         " data/h2o-32.xml"
     )
     print("Executing command:", "\t" + cmd, sep="\n")
-    cmd = shlex.split(cmd)
+    cmd = cmd.split()
     with open(outfile, "w") as out:
         process = subprocess.run(cmd, stdout=out)
 
