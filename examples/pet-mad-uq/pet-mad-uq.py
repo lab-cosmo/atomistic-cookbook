@@ -95,11 +95,7 @@ from ipi.utils.scripting import InteractiveSimulation
 from metatomic.torch import ModelEvaluationOptions, ModelOutput
 from metatomic.torch.ase_calculator import MetatomicCalculator
 from metatrain.utils.data import Dataset, read_systems, read_targets
-from metatrain.utils.io import load_model
-from metatrain.utils.neighbor_lists import (
-    get_requested_neighbor_lists,
-    get_system_with_neighbor_lists,
-)
+from metatrain.utils.data.system_to_ase import system_to_ase
 
 
 # %%
@@ -107,8 +103,10 @@ from metatrain.utils.neighbor_lists import (
 # -----------------
 # All examples require a PET-MAD model with ensemble and LLPR prediction. The
 # following
-# code loads a pre-built model if available or builds it on-demand. Note that, by
-# default, PET-MAD does not (yet) come equipped with such extended capabilities.
+# code loads a pre-built model using the ASE-compatible calculator wrapper. Using the
+# calculator instead of calling the model directly conveniently hides computing
+# neighbor lists in the calculator. By default, PET-MAD does not (yet) come equipped
+# with extended capabilities producing ensemble energies and LLPR scores.
 if not os.path.exists("models/pet-mad-latest-llpr.pt"):
     os.makedirs("models", exist_ok=True)
     urlretrieve(
@@ -116,7 +114,17 @@ if not os.path.exists("models/pet-mad-latest-llpr.pt"):
         "pet-mad-latest-llpr.pt?download=true",
         "models/pet-mad-latest-llpr.pt",
     )
-model = load_model("models/pet-mad-latest-llpr.pt")
+
+# Note that we also request `additional_outputs` here, which is used in the second
+# example when using ensemble predictions.
+output_options = {
+    "energy": ModelOutput(),
+    "energy_ensemble": ModelOutput(),
+    "energy_uncertainty": ModelOutput(),
+}
+calculator = MetatomicCalculator(
+    "models/pet-mad-latest-llpr.pt", additional_outputs=output_options, device="cpu"
+)
 
 # %%
 # Uncertainties on a Dataset
@@ -140,12 +148,6 @@ if not os.path.exists("data/mad-val-100.xyz"):
 
 # Read the dataset's structures.
 systems = read_systems("data/mad-val-100.xyz")
-systems = [system.to(dtype=torch.float32) for system in systems]
-requested_neighbor_lists = get_requested_neighbor_lists(model)
-systems_with_nb_lists = [
-    get_system_with_neighbor_lists(system, requested_neighbor_lists)
-    for system in systems
-]
 
 # Read the dataset's targets.
 target_config = {
@@ -166,27 +168,24 @@ target_config = {
 targets, infos = read_targets(target_config)  # type: ignore
 
 # Wrap in a `metatrain` compatible way.
-dataset = Dataset.from_dict({"system": systems_with_nb_lists, **targets})
+dataset = Dataset.from_dict({"system": systems, **targets})
 
 # %%
-# After preparation, the dataset can be passed through the model to obtain energy
-# predictions and LLPR scores.
-evaluation_options = ModelEvaluationOptions(
-    length_unit="angstrom",
-    outputs={
-        # request the uncertainty in the atomic energy predictions
-        "energy": ModelOutput(),  # needed to request the uncertainties
-        "energy_uncertainty": ModelOutput(),
-    },
-    selected_atoms=None,
-)
-outputs = model(
-    [sample["system"] for sample in dataset],
-    evaluation_options,
-    check_consistency=True,
-)
-predicted_energies = outputs["energy"][0].values.squeeze()
-predicted_uncertainties = outputs["energy_uncertainty"][0].values.squeeze()
+# After preparation, the dataset can be passed through the model using the calculator
+# to obtain energy predictions and LLPR scores.
+
+# Convert the systems to an ASE-native `Atoms` object
+systems = [system_to_ase(sample["system"]) for sample in dataset]
+outputs = {
+    # Request the uncertainty in the atomic energy predictions
+    "energy": ModelOutput(),  # (Needed to request the uncertainties)
+    "energy_uncertainty": ModelOutput(),
+}
+results = calculator.run_model(systems, outputs)
+
+# Extract the requested results
+predicted_energies = results["energy"][0].values.squeeze()
+predicted_uncertainties = results["energy_uncertainty"][0].values.squeeze()
 
 # %%
 # Compute the true prediction error by comparing the predicted energy to the reference
@@ -266,17 +265,8 @@ plt.tight_layout()
 crystal_structure = "data/Al_mp-134_conventional_standard.cif"
 atoms: Atoms = read_cif(crystal_structure)  # type: ignore
 supercell = atoms * 2
-N = len(supercell)  # store the number of atoms
-
-# Attach the loaded model and enable returning ensemble energies when computing the
-# potential energy
-output_options = {
-    "energy": ModelOutput(),
-    "energy_ensemble": ModelOutput(),
-    "energy_uncertainty": ModelOutput(),
-}
-calculator = MetatomicCalculator(model, additional_outputs=output_options, device="cpu")
 supercell.calc = calculator
+N = len(supercell)  # store the number of atoms
 
 # %%
 # We now compute the vacancy formation energy by keeping track of the ensemble energies
