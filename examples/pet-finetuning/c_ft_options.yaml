@@ -1,0 +1,62 @@
+seed: 42
+
+architecture:
+  name: pet
+  training:
+    num_epochs: 20
+    num_epochs_warmup: 1
+    learning_rate: 1e-4
+
+training_set:
+  systems:
+    read_from: data/ethanol_train.xyz
+    length_unit: angstrom
+  targets:
+    energy:
+      key: energy
+      unit: eV
+      forces: on
+    non_conservative_forces:
+      key: forces
+      quantity: force
+      unit: eV/A
+      type:
+        cartesian:
+          rank: 1
+      per_atom: true
+
+validation_set:
+  systems: 
+    read_from: data/ethanol_val.xyz
+    length_unit: angstrom
+  targets:
+    energy:
+      key: energy
+      unit: eV
+      forces: on
+    non_conservative_forces:
+      key: forces
+      quantity: force
+      unit: eV/A
+      type:
+        cartesian:
+          rank: 1
+      per_atom: true
+
+test_set:
+  systems: 
+    read_from: data/ethanol_test.xyz
+    length_unit: angstrom
+  targets:
+    energy:
+      key: energy
+      unit: eV
+      forces: on
+    non_conservative_forces:
+      key: forces
+      quantity: force
+      unit: eV/A
+      type:
+        cartesian:
+          rank: 1
+      per_atom: true

@@ -566,6 +566,7 @@ that are not part of any of the other sections.
         with open(section, "r") as fd:
             for line in fd:
                 rst_output += line
+        rst_output += "\n\n"
 
         # then add the sections from the toctree
         for template in docnames:

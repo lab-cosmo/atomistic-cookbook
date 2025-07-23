@@ -1,0 +1,38 @@
+seed: 42
+
+architecture:
+  name: "pet"
+  training:
+    num_epochs: 50  # very short period for demostration
+    num_epochs_warmup: 1
+    learning_rate: 1e-5  # small learning rate to stabilize training
+    finetune:
+      method: "full"  # use fine-tuning strategy
+      read_from: pet-mad-v1.1.0.ckpt  # path to the pretrained checkpoint to start from
+
+training_set:
+  systems: 
+    read_from: "data/ethanol_train.xyz"  # path to the finetuning dataset
+    length_unit: angstrom
+  targets:
+    energy:
+      key: "energy-corrected"  # name of the target value
+      unit: "eV"
+
+validation_set:
+  systems: 
+    read_from: "data/ethanol_val.xyz"
+    length_unit: angstrom
+  targets:
+    energy:
+      key: "energy-corrected"
+      unit: "eV"
+
+test_set:
+  systems: 
+    read_from: "data/ethanol_test.xyz"
+    length_unit: angstrom
+  targets:
+    energy:
+      key: "energy-corrected"
+      unit: "eV"

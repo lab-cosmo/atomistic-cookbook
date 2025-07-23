@@ -9,7 +9,7 @@ Evaluating forces as a direct output of a ML model accelerates their evaluation,
 by up to a factor of 3 in comparison to the traditional approach that evaluates
 them as derivatives of the interatomic potential.
 Unfortunately, as discussed e.g. in
-`this preprint <https://arxiv.org/abs/2412.11569>`_, doing so means
+`this paper <https://openreview.net/pdf?id=OEl3L8osas>`_, doing so means
 that forces are not conservative, leading to instabilities and artefacts
 in many modeling tasks, such as constant-energy molecular dynamics.
 Here we demonstrate the issues associated with direct force predictions,
@@ -17,7 +17,10 @@ and ways to mitigate them, using the generally-applicable
 `PET-MAD potential <https://arxiv.org/abs/2503.14118>`_. See also
 `this recipe <https://atomistic-cookbook.org/examples/pet-mad/pet-mad.html>`_
 for examples of using PET-MAD for basic tasks such as geometry optimization
-and conservative MD.
+and conservative MD, and
+`this
+<https://atomistic-cookbook.org/examples/pet-finetuning/pet-ft-nc.html>`_
+for an example of how to use direct forces to accelerate training.
 """
 
 # sphinx_gallery_thumbnail_number = 2
