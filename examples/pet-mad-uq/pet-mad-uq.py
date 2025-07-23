@@ -197,7 +197,7 @@ ground_truth_energies = torch.stack(
 )
 
 # Compute squared distance between predicted energy and reference value.
-ground_truth_uncertainties = torch.square(predicted_energies - ground_truth_energies)
+ground_truth_uncertainties = torch.abs(predicted_energies - ground_truth_energies)
 
 # %%
 # After gathering predicted uncertainties and computing ground truth error metrics, we
