@@ -56,7 +56,7 @@ if hasattr(__import__("builtins"), "get_ipython"):
 # While PET-MAD is trained as a universal model capable of handling a broad range of
 # atomic environments, fine-tuning it allows to adapt this general-purpose model to a
 # more specialized task. First, we need to get a checkpoint of the pre-trained PET-MAD
-# model to start training from it. The checkpoint is stored in the 
+# model to start training from it. The checkpoint is stored in the
 # `lab-codmo Hugging Face repository
 # <https://huggingface.co/lab-cosmo/pet-mad>`_ and can be fetched using wget or curl:
 #
@@ -84,7 +84,7 @@ if not os.path.exists(checkpoint_path):
 #
 # On this example we use the sampled subset of ethanol structures from `rMD17 dataset
 # <https://doi.org/10.48550/arXiv.2007.09593>`_ with PBE/def2-SVP level of theory which
-# is different from the MAD which uses PBEsol and a plane-waves basis set. 
+# is different from the MAD which uses PBEsol and a plane-waves basis set.
 # We apply a linear correction based on
 # atomic compositions to align our fine-tuning dataset with PET-MAD energy reference.
 # First, we define a helper function to load reference energies from PET-MAD.
@@ -279,7 +279,7 @@ display_training_curves(from_scratch_log)
 # Simple model fine-tuning
 # ------------------------
 #
-# Having prepared the dataset and fitted a baseline model "from scratch", 
+# Having prepared the dataset and fitted a baseline model "from scratch",
 # we proceed with the training of a fine-tuned model. To this end, we also use the
 # ``metatrain`` package. There are multiple strategies to apply
 # fine-tuning, each described in the `documentation
@@ -298,10 +298,10 @@ subprocess.run(
 
 
 # %%
-# Comparing the model tranined from scratch (dashed lines) and the fine-tuned one 
+# Comparing the model tranined from scratch (dashed lines) and the fine-tuned one
 # (full lines), it is clear that fine-tuning from PET-MAD weights
 # leads to much better zero-shot accuracy, and more consistent learning dynamics.
-# Obviously it may be possible to tweak differently, and it is not unlikely that 
+# Obviously it may be possible to tweak differently, and it is not unlikely that
 # a large single-purpose training set and long training time might lead to better
 # validation error than performing fine tuning.
 

@@ -18,18 +18,20 @@ both training and inference.
 We demonstrate this practical compromise through a two-stage approach:
 first train a model to predict non-conservative forces directly (which avoids the cost
 of backpropagation) and then fine-tuning its energy head to produce conservative
-forces. Although non-conservative forces can lead to unphysical behavior, this
-two-step strategy balances efficiency and physical reliability.
+forces. This two-step strategy is usually faster, and produces a model that can
+exploit both types of force predictions.
 An example of how to use direct forces in molecular dynamics simulations
 safely (i.e. avoiding unphysical behavior due to lack of energy conservation)
 is provided in `this example
 <https://atomistic-cookbook.org/examples/pet-mad-nc/pet-mad-nc.html>`_.
 
 If you are looking for a traditional "post-fact" fine-tuning strategy, see for example
-`this example <https://atomistic-cookbook.org/examples/pet-finetuning/pet-ft.html>`_.
-Note also that the recipe data contains also "long" training settings, which
+`this recipe <https://atomistic-cookbook.org/examples/pet-finetuning/pet-ft.html>`_.
+Note also that the models generated in this example are run for a too short time to
+produce a useful model, and reveal the advantages of this direct-force pre-training
+strategy. The data file contains also "long" training settings, which
 can be used (preferably on a GPU) to train a model up to a point that reveals
-the behavior of the method in realistic conditions.
+the behavior of the method in more realistic conditions.
 """
 
 # sphinx_gallery_thumbnail_path =
@@ -121,11 +123,13 @@ subprocess.run("mtt eval nc_model.pt nc_model_eval.yaml".split(), check=True)
 
 # %%
 #
-# The result of running non-conservative force learning for 600 epochs is present on the
-# parity plot below. The left plot shows that the model's force predictions deviate due
-# to the non-conservative training. On the right plot with the direct, non-conservative
-# forces align closely with targets but lack physical constraints, potentially leading
-# to unphysical behavior when used in simulations.
+# The result of a non-conservative force learning run (600 epochs) is
+# present in the parity plot below.
+# The plot shows that the model's conservative force predictions (left, that are
+# not trained against) have larger errors than those obtained from the direct
+# predictions (right). The non-conservative forces align closely with targets
+# but lack the physical constraint of being the derivatives of a potential energy,
+# often leading to unphysical behavior when used in simulations.
 #
 # .. image:: nc_learning_res.png
 #    :align: center
@@ -133,8 +137,8 @@ subprocess.run("mtt eval nc_model.pt nc_model_eval.yaml".split(), check=True)
 #
 
 # %%
-# Finetuning on conservative forces
-# ---------------------------------
+# Fine-tuning on conservative forces
+# -----------------------------------
 #
 # Even though the error on energy derivatives is pretty large, the model has learned
 # a reasonable approximation of the energy, and we can use it as a starting point to
@@ -195,8 +199,9 @@ subprocess.run("mtt eval nc_model.pt nc_model_eval.yaml".split(), check=True)
 #
 # .. note::
 #    To reproduce the results shown below, run extended training simulations using the
-#    provided YAML configuration files. These runs are longer and require more GPU time
-#    to achieve better accuracy.
+#    provided YAML configuration files. These runs are longer, and too slow to be
+#    executed on a CPU in the automated testing framework of the cookbook, so we provide
+#    static images to comment on the outcomes.
 #
 # We extend the training time with more epochs to obtain improved predictive
 # performance. Below are the full YAML parameter sets used for the long non-conservative
@@ -228,7 +233,7 @@ subprocess.run("mtt eval nc_model.pt nc_model_eval.yaml".split(), check=True)
 #
 # After conservative fine-tuning for 2400 epochs, the updated parity plots show improved
 # force predictions (left) with conservative forces. The grayscale points in the
-# background correspond to the predicted forces from the previous step.
+# background correspond to the predicted forces from the non-conservative step.
 #
 # .. image:: c_ft_res.png
 #    :align: center
@@ -238,10 +243,11 @@ subprocess.run("mtt eval nc_model.pt nc_model_eval.yaml".split(), check=True)
 # direct training of the conservative PET model ("C-only") and a two-step approach:
 # initial training of a non-conservative model followed by conservative training
 # continuation. For the given GPU hours frame, the two-step approach yields lower
-# validation error.
+# validation error (or achieve the same accuracy in a shorter time).
 #
 # .. image:: training_strategy_comparison.png
 #    :align: center
+#    :width: 700px
 #
 # Training on a larger dataset and performing some hyperparameter optimization could
 # further improve performance.
