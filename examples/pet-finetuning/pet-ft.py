@@ -7,10 +7,10 @@ Fine-tuning the PET-MAD universal potential
           Cesare Malosso `@cesaremalosso <https://github.com/cesaremalosso>`_,
           Sofiia Chorna `@sofiia-chorna <https://github.com/sofiia-chorna>`_
 
-This example demonstrates fine-tuning the PET-MAD universal ML potential
-on a new dataset using `metatrain <https://github.com/metatensor/metatrain>`_,
-which allows adapting it to specialized task by retraining it on a
-domain-specific dataset.
+This example demonstrates how to fine-tune the PET-MAD universal ML potential
+on a new dataset using `metatrain <https://github.com/metatensor/metatrain>`_.
+This allows adapting the model to a specialized task by retraining it on a
+more focused, domain-specific dataset.
 
 `PET-MAD <https://arxiv.org/abs/2503.14118>`_ is a universal machine-learning forcefield
 trained on `the MAD dataset <https://arxiv.org/abs/2506.19674>`_ that aims to
@@ -23,8 +23,8 @@ You can see an overview of its usage in this `introductory example
 <https://atomistic-cookbook.org/examples/pet-mad/pet-mad.html>`_.
 
 The goal of this recipe is to demonstrate the process, not to reach high accuracy.
-Adjust the dataset size and hyperparameters accordingly if adapting this for a real
-case.
+Adjust the dataset size and hyperparameters accordingly if adapting this for an actual
+application.
 """
 
 # sphinx_gallery_thumbnail_number = 2
@@ -56,7 +56,8 @@ if hasattr(__import__("builtins"), "get_ipython"):
 # While PET-MAD is trained as a universal model capable of handling a broad range of
 # atomic environments, fine-tuning it allows to adapt this general-purpose model to a
 # more specialized task. First, we need to get a checkpoint of the pre-trained PET-MAD
-# model to start training from it. The checkpoint is stored in `Hugging Face repository
+# model to start training from it. The checkpoint is stored in the 
+# `lab-codmo Hugging Face repository
 # <https://huggingface.co/lab-cosmo/pet-mad>`_ and can be fetched using wget or curl:
 #
 # .. code-block:: bash
@@ -83,7 +84,8 @@ if not os.path.exists(checkpoint_path):
 #
 # On this example we use the sampled subset of ethanol structures from `rMD17 dataset
 # <https://doi.org/10.48550/arXiv.2007.09593>`_ with PBE/def2-SVP level of theory which
-# is different from the MAD where PBEsol is used. We apply a linear correction based on
+# is different from the MAD which uses PBEsol and a plane-waves basis set. 
+# We apply a linear correction based on
 # atomic compositions to align our fine-tuning dataset with PET-MAD energy reference.
 # First, we define a helper function to load reference energies from PET-MAD.
 
@@ -107,7 +109,7 @@ def load_reference_energies(checkpoint_path):
 # %%
 #
 # For demonstration, the dataset is composed only of 100 structures of ethanol. We fit a
-# linear model based on atomic compositions to apply energy correction.
+# linear model based on atomic compositions that we use as the energy correction.
 
 dataset = ase.io.read("data/ethanol.xyz", index=":", format="extxyz")
 
@@ -277,13 +279,14 @@ display_training_curves(from_scratch_log)
 # Simple model fine-tuning
 # ------------------------
 #
-# As the fine-tuning dataset is prepared, we will proceed with the training. We use the
-# ``metatrain`` package to fine-tune the model. There are multiple strategies to apply
-# fine-tuning, each described in the `metatrain documentation
+# Having prepared the dataset and fitted a baseline model "from scratch", 
+# we proceed with the training of a fine-tuned model. To this end, we also use the
+# ``metatrain`` package. There are multiple strategies to apply
+# fine-tuning, each described in the `documentation
 # <https://metatensor.github.io/metatrain/latest/advanced-concepts/fine-tuning.html>`_.
 # In this example we demostrate a basic full fine-tuning strategy, which adapts all
 # model weights to the new dataset starting from the pre-trained PET-MAD checkpoint. The
-# process is configured by setting appropriate options in the YAML options file.
+# process is configured by setting appropriate settings in the YAML options file.
 #
 # .. literalinclude:: full_ft_options.yaml
 #   :language: yaml
@@ -295,17 +298,18 @@ subprocess.run(
 
 
 # %%
-# Visualize the outputs, comparing the model tranined from scratch (dashed lines)
-# and the fine-tuned one (full lines). Obviously it may be possible to tweak differently
-# the optimization settings, but it is clear that fine-tuning from PET-MAD weights
+# Comparing the model tranined from scratch (dashed lines) and the fine-tuned one 
+# (full lines), it is clear that fine-tuning from PET-MAD weights
 # leads to much better zero-shot accuracy, and more consistent learning dynamics.
+# Obviously it may be possible to tweak differently, and it is not unlikely that 
+# a large single-purpose training set and long training time might lead to better
+# validation error than performing fine tuning.
 
 csv_file = sorted(glob("outputs/*/*/train.csv"))[-1]
 fine_tune_log = parse_training_log(csv_file)
 
-# %%
-ax = display_training_curves(fine_tune_log, label="From scratch")
-display_training_curves(from_scratch_log, ax=ax, style="--", label="Fine-tuned")
+ax = display_training_curves(fine_tune_log, label="Fine tuning")
+display_training_curves(from_scratch_log, ax=ax, style="--", label="From scratch")
 ax[0].set_ylim(1, 1000)
 
 # %%
@@ -317,7 +321,7 @@ ax[0].set_ylim(1, 1000)
 #
 # These can be used together with `metatrain` to evaluate the model on a
 # (potentially different) dataset. The evaluation is configured in a YAML file,
-# which specifies the model to evaluate, the dataset to use, and the metrics to compute.
+# which specifies the dataset to use, and the metrics to compute.
 #
 # .. literalinclude:: model_eval.yaml
 #   :language: yaml
