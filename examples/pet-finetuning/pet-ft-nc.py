@@ -2,9 +2,7 @@
 Conservative fine-tuning for a PET model
 ========================================
 
-:Authors: Davide Tisi `@DavideTisi <https://github.com/DavideTisi>`_,
-          Zhiyi Wang `@0WellyWang0 <https://github.com/0WellyWang0>`_,
-          Cesare Malosso `@cesaremalosso <https://github.com/cesaremalosso>`_,
+:Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm/>`_,
           Sofiia Chorna `@sofiia-chorna <https://github.com/sofiia-chorna>`_
 
 This example demonstrates a "conservative fine-tuning strategy", to train a model
@@ -34,8 +32,7 @@ can be used (preferably on a GPU) to train a model up to a point that reveals
 the behavior of the method in more realistic conditions.
 """
 
-# sphinx_gallery_thumbnail_path =
-# '../../examples/pet-finetuning/training_strategy_comparison.png'
+# sphinx_gallery_thumbnail_path = '../../examples/pet-finetuning/training_strategy_comparison.png'  # noqa
 
 # %%
 
