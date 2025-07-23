@@ -3,10 +3,10 @@ seed: 42
 architecture:
   name: pet
   training:
-    batch_size: 32 
-    num_epochs: 1000
-    num_epochs_warmup: 10
-    learning_rate: 1e-4
+    batch_size: 8
+    num_epochs: 700
+    num_epochs_warmup: 100
+    learning_rate: 3e-4
 
 training_set:
   systems:

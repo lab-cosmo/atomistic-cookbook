@@ -46,7 +46,7 @@ import numpy as np
 
 # %%
 # Prepare the training set
-# --------------------------
+# ------------------------
 #
 # We begin by creating a train/validation/test split of the dataset.
 
@@ -68,7 +68,7 @@ ase.io.write("data/ethanol_test.xyz", test, format="extxyz")
 
 # %%
 # Non-conservative force training
-# --------------------------------
+# -------------------------------
 #
 # `metatrain` provides a convenient interface to train a PET model with
 # non-conservative forces. You can see the `metatrain documentation
@@ -121,11 +121,11 @@ subprocess.run("mtt eval nc_model.pt nc_model_eval.yaml".split(), check=True)
 
 # %%
 #
-# The result of running non-conservative force learning for 1000 structures for 100
-# epochs is present on the parity plot below. The left plot shows that the model's force
-# predictions deviate due to the non-conservative training. On the right plot with the
-# direct, non-conservative forces align closely with targets but lack physical
-# constraints, potentially leading to unphysical behavior when used in simulations.
+# The result of running non-conservative force learning for 600 epochs is present on the
+# parity plot below. The left plot shows that the model's force predictions deviate due
+# to the non-conservative training. On the right plot with the direct, non-conservative
+# forces align closely with targets but lack physical constraints, potentially leading
+# to unphysical behavior when used in simulations.
 #
 # .. image:: nc_learning_res.png
 #    :align: center
@@ -193,12 +193,42 @@ subprocess.run("mtt eval nc_model.pt nc_model_eval.yaml".split(), check=True)
 # Converged results
 # -----------------
 #
-# TODO: describe briefly how to run the long simulations, and show results for it
-# but make sure the figures are taken from the output of the long runs
+# .. note::
+#    To reproduce the results shown below, run extended training simulations using the
+#    provided YAML configuration files. These runs are longer and require more GPU time
+#    to achieve better accuracy.
 #
-# After fine-tuning for 50 epochs, the updated parity plots show improved force
-# predictions (left) with conservative forces. The grayscale points in the background
-# correspond to the predicted forces from the previous step.
+# We extend the training time with more epochs to obtain improved predictive
+# performance. Below are the full YAML parameter sets used for the long non-conservative
+# and conservative runs:
+#
+# .. raw:: html
+#
+#    <details>
+#    <summary>Non-conservative training (NC) YAML</summary>
+#
+# .. literalinclude:: long_nc_options.yaml
+#    :language: yaml
+#
+# .. raw:: html
+#
+#    </details>
+#
+# .. raw:: html
+#
+#    <details>
+#    <summary>Conservative fine-tuning (C) YAML</summary>
+#
+# .. literalinclude:: long_c_ft_options.yaml
+#    :language: yaml
+#
+# .. raw:: html
+#
+#    </details>
+#
+# After conservative fine-tuning for 2400 epochs, the updated parity plots show improved
+# force predictions (left) with conservative forces. The grayscale points in the
+# background correspond to the predicted forces from the previous step.
 #
 # .. image:: c_ft_res.png
 #    :align: center
@@ -213,3 +243,5 @@ subprocess.run("mtt eval nc_model.pt nc_model_eval.yaml".split(), check=True)
 # .. image:: training_strategy_comparison.png
 #    :align: center
 #
+# Training on a larger dataset and performing some hyperparameter optimization could
+# further improve performance.
