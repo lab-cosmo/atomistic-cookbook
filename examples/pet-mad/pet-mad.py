@@ -214,20 +214,36 @@ chemiscope.show(
     mode="default",
     properties={
         "origin": test_origin,
-        "energy_ref": test_energy / test_natoms,
-        "energy_mad": mad_energy / test_natoms,
-        "energy_error": np.abs((test_energy - mad_energy) / test_natoms),
-        "force_error": [
-            np.linalg.norm(f1 - f2) / n
-            for (f1, f2, n) in zip(mad_forces, test_forces, test_natoms)
-        ],
+        "energy_ref": {
+            "target": "structure",
+            "values": test_energy / test_natoms,
+            "units": "eV/atom",
+        },
+        "energy_mad": {
+            "target": "structure",
+            "values": mad_energy / test_natoms,
+            "units": "eV/atom",
+        },
+        "energy_error": {
+            "target": "structure",
+            "values": np.abs((test_energy - mad_energy) / test_natoms),
+            "units": "eV/atom",
+        },
+        "force_error": {
+            "target": "structure",
+            "values": [
+                np.linalg.norm(f1 - f2) / n
+                for (f1, f2, n) in zip(mad_forces, test_forces, test_natoms)
+            ],
+            "units": "eV/Å",
+        },
     },
     shapes={
         "forces_ref": chemiscope.ase_vectors_to_arrows(
-            mad_structures, "forces", scale=1.0
+            mad_structures, "forces", scale=5
         ),
         "forces_mad": chemiscope.ase_vectors_to_arrows(
-            test_structures, "forces", scale=1.0
+            test_structures, "forces", scale=5
         ),
     },
     settings=chemiscope.quick_settings(
@@ -295,11 +311,17 @@ chemiscope.show(
     rot_structures,
     mode="default",
     properties={
-        "delta_energy": 1e3 * (rot_energies - rot_energies.mean()),
+        "delta_energy": {
+            "target": "structure",
+            "values": 1e3 * (rot_energies - rot_energies.mean()),
+            "units": "eV/atom",
+        },
         "euler_angles": rot_angles,
     },
     shapes={
-        "forces": chemiscope.ase_vectors_to_arrows(rot_structures, "forces", scale=4.0),
+        "forces": chemiscope.ase_vectors_to_arrows(
+            rot_structures, "forces", scale=50.0
+        ),
     },
     settings=chemiscope.quick_settings(
         x="euler_angles[1]",
