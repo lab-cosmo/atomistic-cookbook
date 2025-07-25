@@ -1,0 +1,9 @@
+PET-MAD
+======
+
+This section contains recipes that use and work with the
+PETMAD universal potential.
+
+- examples/pet-mad/pet-mad
+- examples/pet-mad-nc/pet-mad-nc
+- examples/pet-finetuning/pet-ft
