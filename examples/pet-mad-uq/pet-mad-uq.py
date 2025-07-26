@@ -4,17 +4,17 @@ Uncertainty Quantification with PET-MAD
 
 :Authors: Johannes Spies `@johannes-spies <https://github.com/johannes-spies>`_
 
-This reciles demonstrates three ways of computing errors on the outputs of
+This recipe demonstrates three ways of computing errors on the outputs of
 ML potential-driven simulations, using as an example the PET-MAD model and its
 built-in uncertainty quantification capabilities.
 
-In particular, we show
+In particular, it demonstrates:
 
 1. Estimating uncertainties for single-point calculations on a
    full validation dataset.
 2. Computing energies in simple functions of energy predictions,
    namely the value of vacancy formation energies
-3. Propagate errors from energy predictions to thermodynamic averages
+3. Propagating errors from energy predictions to thermodynamic averages
    computed over a constant-temperature MD simulation.
 
 
@@ -197,7 +197,7 @@ ground_truth_energies = torch.stack(
 )
 
 # Compute squared distance between predicted energy and reference value.
-ground_truth_uncertainties = torch.abs(predicted_energies - ground_truth_energies)
+empirical_errors = torch.abs(predicted_energies - ground_truth_energies)
 
 # %%
 # After gathering predicted uncertainties and computing ground truth error metrics, we
@@ -209,18 +209,8 @@ ground_truth_uncertainties = torch.abs(predicted_energies - ground_truth_energie
 # (only 100 structures) from the MAD validation set, the parity plot looks very sparse.
 
 # Hard-code the zoomed in region of the plot and iso-lines.
+quantile_lines = [0.00916, 0.10256, 0.4309805, 1.71796, 2.5348, 3.44388]
 min_val, max_val = 2.5e-2, 2.5
-lower_bounds = [
-    [0.010775, 0.034072, 0.107746, 0.340723, 1.077459],
-    [0.002564, 0.008109, 0.025643, 0.08109, 0.25643],
-    [0.000229, 0.000724, 0.002288, 0.007237, 0.022885],
-]
-upper_bounds = [
-    [0.042949, 0.135817, 0.429491, 1.358168, 4.294906],
-    [0.06337, 0.200392, 0.633695, 2.00392, 6.336952],
-    [0.086097, 0.272264, 0.860975, 2.722641, 8.609747],
-]
-sigmas = np.geomspace(min_val, max_val, 5)
 
 # Create the parity plot.
 plt.figure(figsize=(4, 4))
@@ -234,12 +224,11 @@ plt.loglog()
 
 # Plot iso lines.
 plt.plot([min_val, max_val], [min_val, max_val], ls="--", c="k")
-for lower_bound, upper_bound in zip(lower_bounds, upper_bounds):
-    plt.plot(sigmas, lower_bound, color="black", lw=0.75)
-    plt.plot(sigmas, upper_bound, color="black", lw=0.75)
+for factor in quantile_lines:
+    plt.plot([min_val, max_val], [factor * min_val, factor * max_val], "k:", lw=0.75)
 
 # Add actual samples.
-plt.scatter(predicted_uncertainties, ground_truth_uncertainties)
+plt.scatter(predicted_uncertainties, empirical_errors)
 
 plt.tight_layout()
 
