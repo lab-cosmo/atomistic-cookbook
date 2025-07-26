@@ -21,7 +21,7 @@ GITHUB_ACTIONS_API = "https://api.github.com/repos/lab-cosmo/atomistic-cookbook/
 NIGHTLY_LINK = "https://nightly.link/lab-cosmo/atomistic-cookbook/workflows/docs/main"
 
 
-def get_latest_successful_docs_run():
+def get_latest_successful_docs_run(api_token: Optional[str] = None) -> int:
 
     doc_runs_endpoint = GITHUB_ACTIONS_API + "/workflows/docs.yml/runs"
 
@@ -32,6 +32,7 @@ def get_latest_successful_docs_run():
             "per_page": 1,
             "status": "success",
             "exclude_pull_requests": True,
+            "auth": api_token,
         },
     )
 
@@ -99,9 +100,17 @@ if __name__ == "__main__":
 
     subparsers = parser.add_subparsers(dest="command")
 
-    subparsers.add_parser(
+    id_parser = subparsers.add_parser(
         "id",
         help="Get the ID of the latest successful docs run",
+    )
+
+    id_parser.add_argument(
+        "--api-token",
+        default=None,
+        help="""Github API token to use for the API request.
+        If not provided, the request will be unauthenticated, and there
+        are rate limits for unauthenticated requests.""",
     )
 
     download_parser = subparsers.add_parser(
@@ -139,4 +148,4 @@ if __name__ == "__main__":
             exclude=args.exclude,
         )
     elif args.command == "id":
-        print(get_latest_successful_docs_run())
+        print(get_latest_successful_docs_run(api_token=args.api_token))
