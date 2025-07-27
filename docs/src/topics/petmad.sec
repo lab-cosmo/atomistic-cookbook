@@ -1,9 +1,10 @@
-PET-MAD
-======
+Universal ML models
+===================
 
 This section contains recipes that use and work with the
-PETMAD universal potential.
+"universal" models, such as PET-MAD and FlashMD.
 
 - examples/pet-mad/pet-mad
 - examples/pet-mad-nc/pet-mad-nc
 - examples/pet-finetuning/pet-ft
+- examples/flashmd/flashmd-demo
