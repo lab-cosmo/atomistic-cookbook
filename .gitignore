@@ -8,3 +8,4 @@ docs/src/_static/all-examples-data.js
 
 __pycache__/
 *.pyc
+*.ipynb
