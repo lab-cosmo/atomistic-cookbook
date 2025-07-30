@@ -5,8 +5,9 @@ Conservative fine-tuning for a PET model
 :Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm/>`_,
           Sofiia Chorna `@sofiia-chorna <https://github.com/sofiia-chorna>`_
 
-This example demonstrates a "conservative fine-tuning strategy", to train a model
-using a (faster) direct, non-conservative force prediction, and then fine-tune it
+This example demonstrates a "conservative fine-tuning" (or equivalently,
+"non-conservative pre-training") strategy, to train a model using a (faster)
+direct, non-conservative force prediction, and then fine-tune it
 in back-propagation force mode to achieve an accurate conservative model.
 
 As discussed in `this paper <https://openreview.net/pdf?id=OEl3L8osas>`_, while
