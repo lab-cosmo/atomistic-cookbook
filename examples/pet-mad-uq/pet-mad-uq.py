@@ -6,7 +6,7 @@ Uncertainty Quantification with PET-MAD
 
 This recipe demonstrates three ways of computing errors on the outputs of
 ML potential-driven simulations, using as an example the PET-MAD model and its
-built-in uncertainty quantification capabilities.
+built-in uncertainty quantification (UQ) capabilities.
 
 In particular, it demonstrates:
 
@@ -25,12 +25,15 @@ The LLPR uncertainties are introduced in `Bigi et al., 2024.
 information on dataset calibration and error propagation, see
 `Imabalzano et al., 2021. <https://arxiv.org/abs/2011.08828>`_
 
+Optional: Adding UQ to a Model
+------------------------------
+
 Models compatible with `metatomic <https://metatensor.github.io/metatomic/>`_ can be
-equipped with uncertainty quantification capabilities through the
+equipped with UQ capabilities through the
 `LLPRUncertaintyModel` wrapper included with
 `metatrain <https://metatensor.github.io/metatrain/>`_. For running this recipe, you can
 use a prebuilt model (the example itself downloads a model from Hugging Face).
-For adding support for uncertainty quantification to an existing model, have a look at
+For adding UQ support to an existing model, have a look at
 the following scaffold. For more information on loading a dataset with the
 infrastructure, have a look at
 `this section <https://metatensor.github.io/metatrain/latest/dev-docs/utils/data>`_
@@ -71,6 +74,9 @@ from the last-layer parameters of a model.
     )
     exported_model.save("models/model-with-llpr.pt")
 
+Getting Started
+---------------
+
 At the bottom of the page, you'll find a ZIP file containing the whole example. Note
 that it comes with an `environment.yml` file specifying all dependencies required
 to execute the script.
@@ -99,14 +105,13 @@ from metatrain.utils.data.system_to_ase import system_to_ase
 
 
 # %%
-# Model Preparation
-# -----------------
+# Model Loading
+# -------------
 # All examples require a PET-MAD model with ensemble and LLPR prediction. The
 # following
-# code loads a pre-built model using the ASE-compatible calculator wrapper. Using the
+# code loads a pre-trained model using the ASE-compatible calculator wrapper. Using the
 # calculator instead of calling the model directly conveniently hides computing
-# neighbor lists in the calculator. By default, PET-MAD does not (yet) come equipped
-# with extended capabilities producing ensemble energies and LLPR scores.
+# neighbor lists in the calculator.
 if not os.path.exists("models/pet-mad-latest-llpr.pt"):
     os.makedirs("models", exist_ok=True)
     urlretrieve(
