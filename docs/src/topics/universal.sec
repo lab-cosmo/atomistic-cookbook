@@ -1,0 +1,12 @@
+Universal ML models
+===================
+
+This section contains recipes based on "universal" ML models - i.e. models that 
+are trained to make prediction across a a substantial fraction of chemical and 
+structural space.
+
+- examples/pet-mad/pet-mad
+- examples/pet-mad-nc/pet-mad-nc
+- examples/pet-finetuning/pet-ft
+- examples/pet-mad-uq/pet-mad-uq
+- examples/flashmd/flashmd-demo
