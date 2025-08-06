@@ -1,0 +1,15 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+    - torch
+    - numpy
+    - ase
+    - metatrain
+    - matplotlib
+    - pet-mad>=1.2.0,<2.0
+    - scipy
+    - metatensor-torch
+    - metatomic-torch
