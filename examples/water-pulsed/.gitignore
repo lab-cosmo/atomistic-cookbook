@@ -1,0 +1,16 @@
+# GROMACS files
+*.cpt
+*.edr
+*.gro
+*.log
+*.mdp
+*.top
+*.tpr
+*.trr
+*.xtc
+\#*
+!data/grompp.mdp
+
+# MDAnalysis offset files
+*.lock
+*.npz
