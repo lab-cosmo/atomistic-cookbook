@@ -8,9 +8,9 @@ Energy dissipation in water is very fast and more efficient than in many other l
 This behavior is commonly attributed to the intermolecular interactions associated with
 hydrogen bonding. This effect has been studied intensively by experiments, ab initio,
 and classical simulations in the work by `Elgabarty et al.
-<https://advances.sciencemag.org/content/6/17/eaay7074>`_. Here, we will run the force
-field simulations using the GROMACS package from the paper and compute the timeseries of
-the dipole moments as well as the energy.
+<https://advances.sciencemag.org/content/6/17/eaay7074>`_. Here, we will re run some of
+the classical force field molecular dynamics (MD) simulations of the paper using the
+GROMACS package to compute the timeseries of the dipole moments as well as the energy.
 
 .. note ::
 
@@ -18,7 +18,7 @@ the dipole moments as well as the energy.
     results as in the paper, one has to run around ~10,000 pulses.
 
 We start by loading the required packages. The base tool for loading trajectories will
-be MDAnalysis, and for computing the dipole moment, we will use MAICoS.
+be ``MDAnalysis``, and for computing the dipole moment, we will use ``MAICoS``.
 """
 
 # %%
@@ -84,43 +84,30 @@ plt.show()
 # molecules. We first create the topology using the ``pdb2gmx`` tool with rigid SPC/E
 # molecules.
 
-_ = subprocess.run(
-    [
-        "gmx",
-        "pdb2gmx",
-        "-f",
-        "data/conf.gro.gz",
-        "-ff",
-        "amber99",
-        "-water",
-        "spce",
-    ],
-    check=True,
+subprocess.check_call(
+    ["gmx", "pdb2gmx", "-f", "data/conf.gro.gz", "-ff", "amber99", "-water", "spce"]
 )
 
 # %%
 #
 # We use the AMBER99 force field even though we don't use any parameters besides the
-# definitions of SPC/E. We will run a simulation based on this MD parameter file:
-#
-# .. literalinclude:: data/grompp.mdp
-#
-# The simulation will be run for 10 ps with a timestep of 2 fs. For a detailed
-# explanation of the parameters, refer to the `GROMACS documentation
+# definitions of SPC/E. We will run a simulation based on MD parameter (mdp) saved in
+# the ``grompp.mdp`` file. The simulation will be run for 10 ps with a timestep of 2 fs.
+# For a detailed explanation of the parameters, refer to the `GROMACS documentation
 # <https://manual.gromacs.org/current/user-guide/mdp-options.html>`_. The electric field
 # pointing in the :math:`x` direction is defined at the very end with the
 # ``electric-field-x`` directive.
 #
 # Before running the simulation, we use the GROMACS preprocessor (``grompp``) to create
-# the necessary input file.
+# the necessary tpr input file.
 
-_ = subprocess.run(["gmx", "grompp", "-f", "data/grompp.mdp"], check=True)
+subprocess.check_call(["gmx", "grompp", "-f", "data/grompp.mdp"])
 
 # %%
 #
 # And run the simulation, which should take about 30 seconds to complete.
 
-_ = subprocess.run(["gmx", "mdrun"], check=True)
+subprocess.check_call(["gmx", "mdrun"])
 
 # %%
 #
@@ -137,9 +124,9 @@ n_residues = u.atoms.residues.n_residues
 
 # %%
 #
-# We define a helper function that provides a vector pointing in the x-direction
-# for every molecule in the system. In this case, it could be done manually,
-# but using a function makes it easily generalizable. Since our field points
+# We define a helper function that provides a vector pointing in the x-direction for
+# every molecule in the system. For this simple example, the creation could be done
+# manually, but using a function makes it easily generalizable. Since our field points
 # in the :math:`x` direction, we set ``pdim`` to 0.
 
 
@@ -151,8 +138,8 @@ def get_unit_vectors(atomgroup: mda.AtomGroup, grouping: str):
 
 # %%
 #
-# We now define the arrays to store the data and run the analysis over the trajectory
-# to compute the self and collective contributions of the dipole orientation.
+# We now define the arrays to store the data and run the analysis over the whole
+# trajectory to compute the self and collective contributions of the dipole orientation.
 
 time = np.empty(n_frames)
 cos_theta_i = np.empty(n_frames)
