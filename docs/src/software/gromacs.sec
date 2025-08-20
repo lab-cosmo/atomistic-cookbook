@@ -1,0 +1,17 @@
+GROMACS
+=======
+
+GROMACS is a versatile and highly optimized molecular dynamics (MD) engine designed for
+classical simulations. It is widely recognized for its exceptional performance,
+scalability, and efficiency, making it suitable for use on systems ranging from laptops
+to high-performance computing (HPC) clusters. Originally developed for biomolecular
+simulations, GROMACS is commonly used in fields such as biochemistry, biophysics, and
+structural biology to study proteins, lipids, and nucleic acids.
+
+In addition to its focus on biomolecular systems, GROMACS supports a wide range of force
+fields and can simulate non-biological systems such as polymers and materials. It
+includes tools for preprocessing, trajectory analysis, and visualization, providing a
+comprehensive suite for MD workflows. Its open-source nature and active community ensure
+continuous development and support.
+
+- examples/water-pulsed/water-pulsed

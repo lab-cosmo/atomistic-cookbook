@@ -1,0 +1,43 @@
+; Integrator
+; ===================================================================
+integrator            = md
+
+; MD Running Parameters
+; ===================================================================
+dt                    = 0.002
+nsteps                = 5000
+comm-mode             = linear  ; Remove center of mass translation
+nstcomm               = 500  ; Do not remove center of mass during pulse
+
+; Output control
+; frequency for coords (x), velocities (v) and forces (f)
+; ===================================================================
+nstxout-compressed    = 50
+nstlog                = 1000
+nstenergy             = 50
+nstcalcenergy         = 50
+
+; Neighbor searching
+; ===================================================================
+cutoff-scheme         = Verlet
+rlist                 = 0.9
+
+; Electrostatics
+; ===================================================================
+coulombtype           = pme
+rcoulomb              = 0.9
+
+; VdW
+; ===================================================================
+vdw-type              = Cut-off
+rvdw                  = 0.9
+vdw-modifier          = Potential-shift-Verlet
+
+; Constraints
+; ===================================================================
+constraints           = h-bonds
+constraint-algorithm  = LINCS
+
+;Electric fields
+; ===================================================================
+electric-field-x      = 0.5 1.0 5.0 0.5  ; E0 omega t0 sigma
