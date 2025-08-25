@@ -142,7 +142,7 @@ def fd_distribution(E: Sequence, mu: float, T: float) -> np.array:
 
 
 def compute_heat_capacity(
-    dos: Sequence, E: Sequence, T: float, n_elec: float, dT: float = 1.0
+    dos: Sequence, E: Sequence, T: float, dT: float = 1.0
 ):
     """Compute the electronic heat capacity.
 
@@ -155,8 +155,6 @@ def compute_heat_capacity(
         Density of states.
     E:
         Energy axis corresponding to the DOS (eV)
-    n_elec:
-        Total number of electrons in the system.
     T:
         Temperature (K).
     dT:
@@ -196,14 +194,11 @@ def compute_heat_capacity(
 # at each temperature.
 #
 
-# Total number of electrons in the system
-total_elec = 19 * len(traj_atoms[0])
-
 # Compute the heat capacity at different temperatures
 heat_capacities = []
 Ts = np.linspace(200, 1000, 10)
 for T in Ts:
-    heat_capacity = compute_heat_capacity(ensemble_DOS, E, T, n_elec=total_elec, dT=1)
+    heat_capacity = compute_heat_capacity(ensemble_DOS, E, T, dT=1)
 
     heat_capacities.append(heat_capacity.item() / len(traj_atoms[0]))
 
