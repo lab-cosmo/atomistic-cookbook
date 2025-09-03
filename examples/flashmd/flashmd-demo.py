@@ -4,6 +4,9 @@ Long-stride trajectories with a universal FlashMD model
 
 :Authors: Michele Ceriotti `@ceriottm <https://github.com/ceriottm>`_
 
+For a quickstart on how to use FlashMD with ASE,
+you can go `here <https://github.com/lab-cosmo/flashmd>`_.
+
 This example demonstrates how to run long-stride molecular dynamics using the
 universal FlashMD model. FlashMD predicts directly positions and momenta of atoms
 at a later time based on the current positions and momenta.
