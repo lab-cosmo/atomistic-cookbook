@@ -26,35 +26,11 @@ in your own atomistic cooking.
 
 .. card-carousel:: 3
 
-
-        .. card:: Atomistic Water Model for Molecular Dynamics
-            :link: ../examples/water-model/water-model
-            :link-type: doc
-            :text-align: center
-            :shadow: md
-
-            .. image:: ../examples/water-model/images/thumb/sphx_glr_water-model_thumb.png
-                :alt: In this example, we demonstrate how to construct a metatensor atomistic model for flexible three and four-point water model, with parameters optimized for use together with quantum-nuclear-effects-aware path integral simulations (cf. Habershon et al., JCP (2009)). The model also demonstrates the use of torch-pme, a Torch library for long-range interactions, and uses the resulting model to perform demonstrative molecular dynamics simulations.
-                :class: gallery-img
-
-                
 :doc:`chemiscope`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. card-carousel:: 3
 
-
-        .. card:: Atomistic Water Model for Molecular Dynamics
-            :link: ../examples/water-model/water-model
-            :link-type: doc
-            :text-align: center
-            :shadow: md
-
-            .. image:: ../examples/water-model/images/thumb/sphx_glr_water-model_thumb.png
-                :alt: In this example, we demonstrate how to construct a metatensor atomistic model for flexible three and four-point water model, with parameters optimized for use together with quantum-nuclear-effects-aware path integral simulations (cf. Habershon et al., JCP (2009)). The model also demonstrates the use of torch-pme, a Torch library for long-range interactions, and uses the resulting model to perform demonstrative molecular dynamics simulations.
-                :class: gallery-img
-
-                
 :doc:`featomic`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -75,35 +51,11 @@ in your own atomistic cooking.
 
 .. card-carousel:: 3
 
-
-        .. card:: Atomistic Water Model for Molecular Dynamics
-            :link: ../examples/water-model/water-model
-            :link-type: doc
-            :text-align: center
-            :shadow: md
-
-            .. image:: ../examples/water-model/images/thumb/sphx_glr_water-model_thumb.png
-                :alt: In this example, we demonstrate how to construct a metatensor atomistic model for flexible three and four-point water model, with parameters optimized for use together with quantum-nuclear-effects-aware path integral simulations (cf. Habershon et al., JCP (2009)). The model also demonstrates the use of torch-pme, a Torch library for long-range interactions, and uses the resulting model to perform demonstrative molecular dynamics simulations.
-                :class: gallery-img
-
-                
 :doc:`metatensor`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. card-carousel:: 3
 
-
-        .. card:: Atomistic Water Model for Molecular Dynamics
-            :link: ../examples/water-model/water-model
-            :link-type: doc
-            :text-align: center
-            :shadow: md
-
-            .. image:: ../examples/water-model/images/thumb/sphx_glr_water-model_thumb.png
-                :alt: In this example, we demonstrate how to construct a metatensor atomistic model for flexible three and four-point water model, with parameters optimized for use together with quantum-nuclear-effects-aware path integral simulations (cf. Habershon et al., JCP (2009)). The model also demonstrates the use of torch-pme, a Torch library for long-range interactions, and uses the resulting model to perform demonstrative molecular dynamics simulations.
-                :class: gallery-img
-
-                
 :doc:`plumed`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -114,15 +66,3 @@ in your own atomistic cooking.
 
 .. card-carousel:: 3
 
-
-        .. card:: Atomistic Water Model for Molecular Dynamics
-            :link: ../examples/water-model/water-model
-            :link-type: doc
-            :text-align: center
-            :shadow: md
-
-            .. image:: ../examples/water-model/images/thumb/sphx_glr_water-model_thumb.png
-                :alt: In this example, we demonstrate how to construct a metatensor atomistic model for flexible three and four-point water model, with parameters optimized for use together with quantum-nuclear-effects-aware path integral simulations (cf. Habershon et al., JCP (2009)). The model also demonstrates the use of torch-pme, a Torch library for long-range interactions, and uses the resulting model to perform demonstrative molecular dynamics simulations.
-                :class: gallery-img
-
-                
