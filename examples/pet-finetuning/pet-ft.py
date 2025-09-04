@@ -41,7 +41,7 @@ import ase.io
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from metatrain.pet import PET
+from metatrain.utils.io import model_from_checkpoint
 from sklearn.linear_model import LinearRegression
 
 
@@ -98,9 +98,9 @@ def load_reference_energies(checkpoint_path):
     -1.23, '2': -5.67, ...}
     """
     checkpoint = torch.load(checkpoint_path, weights_only=False)
-    pet_model = PET.load_checkpoint(checkpoint, "finetune")
+    pet_model = model_from_checkpoint(checkpoint, "finetune")
 
-    energy_values = pet_model.additive_models[0].weights["energy"].block().values
+    energy_values = pet_model.additive_models[0].model.weights["energy"].block().values
     atomic_numbers = checkpoint["model_data"]["dataset_info"].atomic_types
 
     return dict(zip(atomic_numbers, energy_values))
