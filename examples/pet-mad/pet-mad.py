@@ -100,7 +100,7 @@ if not os.path.exists(filename):
     with open(filename, "wb") as f:
         f.write(response.content)
 
-test_structures = ase.io.read(filename, "::16")
+test_structures = ase.io.read(filename, "::15")
 
 # also extract reference energetics and metadata
 test_energy = []
