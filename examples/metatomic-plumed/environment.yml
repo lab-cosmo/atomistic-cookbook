@@ -16,7 +16,7 @@ dependencies:
     - chemiscope
     - ipi>=3.1.5  
     - metatomic[torch]
-    - featomic-torch
+    - featomic-torch<=0.7.0
 variables:
   PIP_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
   PLUMED_KERNEL: $CONDA_PREFIX/lib/libplumedKernel.so
