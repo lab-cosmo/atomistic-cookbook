@@ -5,5 +5,6 @@ RESTART
 \#*
 *.out
 *.xyz
-*.committee_pot_0*
+*.committee_pot*
+*.atomic_error*
 *.txt

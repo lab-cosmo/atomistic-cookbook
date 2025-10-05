@@ -98,7 +98,7 @@ from ase.filters import FrechetCellFilter
 from ase.io.cif import read_cif
 from ase.optimize.bfgs import BFGS
 from ipi.utils.scripting import InteractiveSimulation
-from metatomic.torch import ModelEvaluationOptions, ModelOutput
+from metatomic.torch import ModelOutput
 from metatomic.torch.ase_calculator import MetatomicCalculator
 from metatrain.utils.data import Dataset, read_systems, read_targets
 from metatrain.utils.data.system_to_ase import system_to_ase
@@ -313,8 +313,10 @@ df = pd.DataFrame(dict(mean=df.mean(), var=df.var(), std=df.std()))
 df
 
 # %%
+#
 # Uncertainty Propagation with MD
 # -------------------------------
+#
 # This example shows how to use i-PI to propagate error estimates from an ensemble to
 # output observables. In this example, we use a box with period boundary conditions
 # housing 32 water molecules. As an observable, we inspect the `Radial Distribution
@@ -325,32 +327,26 @@ df
 # metrics. The trajectory and committee energies can be used in a subsequent
 # postprocessing step to obtain RDFs using ASE. These can be re-weighted to propagate
 # errors from the committee uncertainties to the observed RDFs.
+#
+# Note also that we set a `uncertainty_threshold` option in the driver. When running
+# from the command line, this will output a warning every time one of the atomic energy
+# is estimated to have an uncertainty above that threshold (in eV/atom).
 
 # Load configuration and run simulation.
 with open("data/h2o-32.xml") as f:
-    sim = InteractiveSimulation(f.read())
+    xml_input = f.read()
 
-# %%
-# Right now, the model does not produce the `energy_ensemble` field on its own. The
-# ensemble energy is only produced if the `energy_uncertainty` field is populated in
-# the model evaluation option's output field. This does not happen by default in the
-# `MetatomicDriver` of i-PI, but the following hack ensures that all outputs are
-# properly requested for all force fields.
+# prints the relevant sections of the input file
+print(xml_input[:883][-334:])
 
-for _, ff in sim.__dict__["fflist"].items():
-    outputs = ff.driver.evaluation_options.outputs
-    outputs["energy_uncertainty"] = ModelOutput()
-    ff.driver.evaluation_options = ModelEvaluationOptions(
-        length_unit="Angstrom",
-        outputs=outputs,
-    )
+sim = InteractiveSimulation(xml_input)
 
 # %%
 # Run the simulation.
 
 # NB: To get better estimates, set this to a higher number (perhaps 10000) to
 # run the simulation for a longer time.
-sim.run(200)
+sim.run(100)
 
 # %%
 # Load the trajectories and compute the per-frame RDFs
