@@ -3,13 +3,20 @@
     <properties filename='out' stride='10'>  [ time{picosecond}, temperature{kelvin}, kinetic_md ] </properties>
     <trajectory filename='pos' format='xyz' stride='10' cell_units='angstrom'> positions{angstrom} </trajectory>  
     <trajectory filename="committee_pot" stride="10" extra_type="committee_pot"> extras </trajectory>
+    <trajectory filename="atomic_error" stride="10" extra_type="energy_uncertainty"> extras </trajectory>
   </output>
   <prng>
     <seed>23658</seed>
   </prng>
   <ffdirect name='nocons' pbc="true">
     <pes>metatomic</pes>
-    <parameters>{template:data/h2o-32.xyz,model:models/pet-mad-latest-llpr.pt,device:cpu,non_conservative:True,energy_ensemble:True,check_consistency:False}</parameters>
+    <parameters>
+        { template:data/h2o-32.xyz,model:models/pet-mad-latest-llpr.pt,device:cpu,
+          non_conservative:False,energy_ensemble:True,
+          check_consistency:False,
+          uncertainty_threshold:7.0e-2
+        }
+    </parameters>
   </ffdirect>
   <system>
     <initialize nbeads='1'>

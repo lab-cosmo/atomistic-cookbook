@@ -9,4 +9,4 @@ dependencies:
     - matplotlib
     - metatensor
     - metatensor-core==0.1.11
-    - featomic
+    - featomic<=0.6.1
