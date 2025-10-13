@@ -12,11 +12,10 @@ dependencies:
       - seekpath
       - requests
       - ipython
-      - metatensor==0.2.0
-      - metatensor-core==0.1.10
-      - metatensor-learn==0.3.0
-      - metatensor-operations==0.3.0
-      - featomic == 0.6.1
+      - metatensor-core>=0.1.17,<0.2
+      - metatensor-learn>=0.3.0,<0.4
+      - metatensor-operations>=0.3.0,<0.4
+      - featomic>=0.6.3,<0.7
       - xitorch
       - keras_core
       - tensorboard
