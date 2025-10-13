@@ -401,10 +401,7 @@ time_lammps_nc += time.time()
 # using a ``pair_style hybrid/overlay``, providing multiple
 # ``metatomic_X`` pair styles - one for the fast (non-conservative) forces, and two
 # for the slow correction (conservative minus non-conservative).
-# Note that you can also use ``pair_style hybrid/scaled``, which however
-# is affected by a `bug <https://github.com/lammps/lammps/issues/3492`_ at the
-# time of writing, which prevents it from working correctly with the GPU build
-# of LAMMPS.
+# Note that you can also achieve the same effect with ``pair_style hybrid/scaled``.
 
 for lineno in [12, 13, 14, 15, 17, 18, 19, 24, 27]:
     print(linecache.getline("data/lammps-respa.in", lineno), end="")
