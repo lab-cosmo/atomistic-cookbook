@@ -10,7 +10,7 @@
    </prng>
    <ffdirect name='driver' pbc="false">
       <pes>metatomic</pes>
-      <parameters>{template:data/ala2.xyz,model:pet-mad-v1.1.0.pt,device:cpu} </parameters>
+      <parameters>{template:data/ala2.xyz,model:pet-omatpes.pt,device:cpu} </parameters>
    </ffdirect>
    <system>
       <forces> 
