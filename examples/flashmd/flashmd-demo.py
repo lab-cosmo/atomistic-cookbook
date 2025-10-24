@@ -53,11 +53,15 @@ from ipi.utils.scripting import InteractiveSimulation
 device = "cpu"  # change to "cuda" if you have a GPU; don't forget to change it in the
 # i-PI xml input files as well!
 
+print("Loading FlashMD models...")
 mlip_model, flashmd_model_16 = get_pretrained("pet-omatpes", 16)
+print("16 fs model loaded")
 mlip_model, flashmd_model_64 = get_pretrained("pet-omatpes", 64)
+print("64 fs model loaded")
 
 # We save the MLIP model to disk, since i-PI needs to read it from a file
 mlip_model.save("pet-omatpes.pt")
+print("MLIP model saved to pet-omatpes.pt")
 
 
 # %%
@@ -99,7 +103,9 @@ sim.set_motion_step(
 
 # We run for 50 steps -- this is a large box, and it's rather slow on CPU...
 # ...but it's equivalent to more than 3 ps with FlashMD's 64 fs time steps!
+print("Running FlashMD simulation...")
 sim.run(1)
+print("Simulation finished.")
 
 # %%
 # The trajectory is stable, and one can check that the mean fluctuations
@@ -148,7 +154,9 @@ sim.set_motion_step(
         sim, flashmd_model_16, device, rescale_energy=True, random_rotation=True
     )
 )
+print("Running FlashMD NpT simulation...")
 sim.run(1)  # only run 5 steps, again, very slow on CPU
+print("Simulation finished.")
 
 # %%
 # The cell fluctuates around the equilibrium volume, in a way that
