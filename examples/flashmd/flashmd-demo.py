@@ -85,19 +85,21 @@ with open("data/input-al110-base.xml", "r") as input_xml:
 # %%
 # To run FlashMD, we set up a custom step, using the ``get_nvt_stepper``
 # utility function from the `flashmd.ipi` module. Note the filters
-# ``rescale_energy=True`` and ``random_rotation=True``. The first one
-# ensures that the total energy of the system is conserved, while the second one
-# allows for random rotations of the system, which is useful to correct for the
-# fact that the model is not exactly equivariant with respect to rotations.
+# ``rescale_energy=False`` and ``random_rotation=True``. You can turn the first one
+# on to ensure that the total energy of the system is conserved, while the second one
+# is inexpensive and allows for random rotations of the system, which is useful to
+# correct for the fact that the model is not exactly equivariant with respect to
+# rotations.
 
 sim.set_motion_step(
     get_nvt_stepper(
-        sim, flashmd_model_64, device, rescale_energy=True, random_rotation=True
+        sim, flashmd_model_64, device, rescale_energy=False, random_rotation=True
     )
 )
 
-# run for a few steps - this is a large box, and is rather slow on CPU
-sim.run(20)
+# We run for 50 steps -- this is a large box, and it's rather slow on CPU...
+# ...but it's equivalent to more than 3 ps with FlashMD's 64 fs time steps!
+sim.run(50)
 
 # %%
 # The trajectory is stable, and one can check that the mean fluctuations
@@ -146,7 +148,7 @@ sim.set_motion_step(
         sim, flashmd_model_16, device, rescale_energy=True, random_rotation=True
     )
 )
-sim.run(10)  # only run 10 steps, again, pretty slow on CPU
+sim.run(5)  # only run 5 steps, again, very slow on CPU
 
 # %%
 # The cell fluctuates around the equilibrium volume, in a way that
