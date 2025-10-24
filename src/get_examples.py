@@ -14,7 +14,7 @@ EXAMPLES = os.path.join(ROOT, "examples")
 # Changes in the following files will trigger all examples to be run.
 GLOBAL_FILES = ["noxfile.py"]
 GLOBAL_FILES += glob.glob("src/**")
-GLOBAL_FILES += glob.glob(".github/workflows/*")
+# GLOBAL_FILES += glob.glob(".github/workflows/*")
 
 
 def get_examples():

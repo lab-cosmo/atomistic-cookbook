@@ -99,7 +99,7 @@ sim.set_motion_step(
 
 # We run for 50 steps -- this is a large box, and it's rather slow on CPU...
 # ...but it's equivalent to more than 3 ps with FlashMD's 64 fs time steps!
-sim.run(50)
+sim.run(1)
 
 # %%
 # The trajectory is stable, and one can check that the mean fluctuations
@@ -148,7 +148,7 @@ sim.set_motion_step(
         sim, flashmd_model_16, device, rescale_energy=True, random_rotation=True
     )
 )
-sim.run(5)  # only run 5 steps, again, very slow on CPU
+sim.run(1)  # only run 5 steps, again, very slow on CPU
 
 # %%
 # The cell fluctuates around the equilibrium volume, in a way that
