@@ -148,7 +148,7 @@ sim.set_motion_step(
         sim, flashmd_model_16, device, rescale_energy=True, random_rotation=True
     )
 )
-sim.run(1)  # only run 1 step, again, slow on CPU
+sim.run(3)  # only run 3 steps, again, slow on CPU
 
 # %%
 # The cell fluctuates around the equilibrium volume, in a way that
