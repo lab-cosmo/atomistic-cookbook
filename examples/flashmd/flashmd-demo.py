@@ -85,11 +85,11 @@ with open("data/input-al110-base.xml", "r") as input_xml:
 # %%
 # To run FlashMD, we set up a custom step, using the ``get_nvt_stepper``
 # utility function from the `flashmd.ipi` module. Note the filters
-# ``rescale_energy=False`` and ``random_rotation=True``. You can turn the first one
-# on to ensure that the total energy of the system is conserved, while the second one
-# is inexpensive and allows for random rotations of the system, which is useful to
-# correct for the fact that the model is not exactly equivariant with respect to
-# rotations.
+# ``rescale_energy=False`` and ``random_rotation=True``. You can turn the former on to
+# ensure that the total energy of the system is conserved, at the cost of one extra
+# energy evaluation per step, while the latter is inexpensive and allows for random
+# rotations of the system, which is useful to correct for the fact that the model is not
+# exactly equivariant with respect to rotations.
 
 sim.set_motion_step(
     get_nvt_stepper(
@@ -148,7 +148,7 @@ sim.set_motion_step(
         sim, flashmd_model_16, device, rescale_energy=True, random_rotation=True
     )
 )
-sim.run(5)  # only run 5 steps, again, slow on CPU
+sim.run(1)  # only run 1 step, again, slow on CPU
 
 # %%
 # The cell fluctuates around the equilibrium volume, in a way that
