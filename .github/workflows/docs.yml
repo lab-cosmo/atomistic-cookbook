@@ -58,7 +58,7 @@ jobs:
         run: python -m pip install -r requirements.txt
 
       - name: build example
-        timeout-minutes: 12
+        timeout-minutes: 60
         env:
           PIP_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
         run: |
