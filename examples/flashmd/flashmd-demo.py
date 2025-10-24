@@ -10,8 +10,7 @@ you can go `here <https://github.com/lab-cosmo/flashmd>`_.
 This example demonstrates how to run long-stride molecular dynamics using the
 universal FlashMD model. FlashMD predicts directly positions and momenta of atoms
 at a later time based on the current positions and momenta.
-It is trained on MD trajectories obtained with the
-`PET-MAD universal potential  <https://arxiv.org/abs/2503.14118>`_.
+It is trained to reproduce MD trajectories at the r2SCAN level of theory.
 You can read more about the model and its limitations in
 `this preprint <http://arxiv.org/abs/2505.19350>`_.
 """
@@ -20,22 +19,20 @@ You can read more about the model and its limitations in
 
 # %%
 #
-# Start by importing the required libraries. You will need the
-# `PET-MAD potential <https://github.com/lab-cosmo/pet-mad>`_,
-# as well as `FlashMD <https://github.com/lab-cosmo/flashmd>`_
+# Start by importing the required libraries. You will need
+# `FlashMD <https://github.com/lab-cosmo/flashmd>`_
 # and a recent version of `i-PI <http://ipi-code.org>`_.
 #
 # .. code-block:: bash
 #
-#     pip install pet-mad flashmd ipi
+#     pip install flashmd ipi
 #
 
 import chemiscope
-from flashmd import get_universal_model
+from flashmd import get_pretrained
 from flashmd.ipi import get_npt_stepper, get_nvt_stepper
 from ipi.utils.parsing import read_output, read_trajectory
 from ipi.utils.scripting import InteractiveSimulation
-from pet_mad.calculator import PETMADCalculator
 
 
 # %%
@@ -50,19 +47,17 @@ from pet_mad.calculator import PETMADCalculator
 
 # %%
 # We start by getting the FlashMD models from the ``flashmd`` package.
-# We will also use the PET-MAD universal potential as an accompanying energy model
+# We will also use a PET model trained on the MATPES dataset as the accompanying energy
+# model
 
 device = "cpu"  # change to "cuda" if you have a GPU; don't forget to change it in the
 # i-PI xml input files as well!
 
-flashmd_model_16 = get_universal_model(16)
-flashmd_model_16.to(device)
+mlip_model, flashmd_model_16 = get_pretrained("pet-omatpes", 16)
+mlip_model, flashmd_model_64 = get_pretrained("pet-omatpes", 64)
 
-flashmd_model_64 = get_universal_model(64)
-flashmd_model_64.to(device)
-
-calculator = PETMADCalculator(version="1.1.0", device=device)
-calculator._model.save("pet-mad-v1.1.0.pt")
+# We save the MLIP model to disk, since i-PI needs to read it from a file
+mlip_model.save("pet-omatpes.pt")
 
 
 # %%
@@ -80,7 +75,7 @@ calculator._model.save("pet-mad-v1.1.0.pt")
 
 # %%
 # The starting point is a "base" XML file that contains the setup for a traditional
-# MD simulation in i-PI. It contains PET-MAD as the potential energy calculator
+# MD simulation in i-PI. It contains the MLIP as the potential energy calculator
 # (needed for the optional energy rescaling filter), and the only difference is
 # the use of a much larger large time step than conventional MD.
 
@@ -90,24 +85,27 @@ with open("data/input-al110-base.xml", "r") as input_xml:
 # %%
 # To run FlashMD, we set up a custom step, using the ``get_nvt_stepper``
 # utility function from the `flashmd.ipi` module. Note the filters
-# ``rescale_energy=True`` and ``random_rotation=True``. The first one
-# ensures that the total energy of the system is conserved, while the second one
-# allows for random rotations of the system, which is useful to correct for the
-# fact that the model is not exactly equivariant with respect to rotations.
+# ``rescale_energy=False`` and ``random_rotation=True``. You can turn the first one
+# on to ensure that the total energy of the system is conserved, while the second one
+# is inexpensive and allows for random rotations of the system, which is useful to
+# correct for the fact that the model is not exactly equivariant with respect to
+# rotations.
 
 sim.set_motion_step(
     get_nvt_stepper(
-        sim, flashmd_model_64, device, rescale_energy=True, random_rotation=True
+        sim, flashmd_model_64, device, rescale_energy=False, random_rotation=True
     )
 )
 
-# run for a few steps - this is a large box, and is rather slow on CPU
-sim.run(20)
+# We run for 50 steps -- this is a large box, and it's rather slow on CPU...
+# ...but it's equivalent to more than 3 ps with FlashMD's 64 fs time steps!
+sim.run(50)
+raise ValueError()
 
 # %%
 # The trajectory is stable, and one can check that the mean fluctuations
 # of the adatom are qualitatively correct, by comparing with a (much slower)
-# PET-MAD simulation.
+# MLIP simulation.
 
 data, info = read_output("al110-nvt-flashmd.out")
 trj = read_trajectory("al110-nvt-flashmd.pos_0.extxyz")
@@ -151,7 +149,7 @@ sim.set_motion_step(
         sim, flashmd_model_16, device, rescale_energy=True, random_rotation=True
     )
 )
-sim.run(10)  # only run 10 steps, again, pretty slow on CPU
+sim.run(1)  # only run 5 steps, again, very slow on CPU
 
 # %%
 # The cell fluctuates around the equilibrium volume, in a way that
