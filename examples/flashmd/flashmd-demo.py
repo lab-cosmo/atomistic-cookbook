@@ -148,7 +148,7 @@ sim.set_motion_step(
         sim, flashmd_model_16, device, rescale_energy=True, random_rotation=True
     )
 )
-sim.run(2)  # only run 2 steps, again, slow on CPU
+sim.run(2)  # only run 2 steps: as for all modern MLIPs, this requires a GPU for serious simulations
 
 # %%
 # The cell fluctuates around the equilibrium volume, in a way that
