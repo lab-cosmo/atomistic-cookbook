@@ -120,16 +120,7 @@ if not os.path.exists("models/pet-mad-latest-llpr.pt"):
         "models/pet-mad-latest-llpr.pt",
     )
 
-# Note that we also request `additional_outputs` here, which is used in the second
-# example when using ensemble predictions.
-output_options = {
-    "energy": ModelOutput(),
-    "energy_ensemble": ModelOutput(),
-    "energy_uncertainty": ModelOutput(),
-}
-calculator = MetatomicCalculator(
-    "models/pet-mad-latest-llpr.pt", additional_outputs=output_options, device="cpu"
-)
+calculator = MetatomicCalculator("models/pet-mad-latest-llpr.pt", device="cpu")
 
 # %%
 # Uncertainties on a Dataset
@@ -267,28 +258,31 @@ N = len(supercell)  # store the number of atoms
 # at different stages. Note that calling `.get_potential_energy()` on an `Atoms` object
 # triggers computing the ensemble values.
 
-supercell.get_potential_energy()
-bulk = calculator.additional_outputs["energy_ensemble"][0].values
+# Get ensemble energy before creating the vacancy
+outputs = ["energy", "energy_uncertainty", "energy_ensemble"]
+results = calculator.run_model(supercell, {o: ModelOutput() for o in outputs})
+bulk = results["energy_ensemble"][0].values
 
 # Remove an atom (last atom in this case) to create a vacancy
 i = -1
 supercell.pop(i)
 
-supercell.get_potential_energy()
-right_after_vacancy = calculator.additional_outputs["energy_ensemble"][0].values
+# Get ensemble energy right after creating the vacancy
+results = calculator.run_model(supercell, {o: ModelOutput() for o in outputs})
+right_after_vacancy = results["energy_ensemble"][0].values
 
 # Run structural optimization optimizing both positions and cell layout.
 ecf = FrechetCellFilter(supercell)
 bfgs = BFGS(ecf)  # type: ignore
 bfgs.run()
 
-supercell.get_potential_energy()
-vacancy = calculator.additional_outputs["energy_ensemble"][0].values
+# get ensembele energy after optimization
+results = calculator.run_model(supercell, {o: ModelOutput() for o in outputs})
+vacancy = results["energy_ensemble"][0].values
 
 # %%
 # Compute vacancy formation energy for each ensemble member.
 
-print(f"{vacancy.shape=}, {bulk.shape=}")
 vacancy_formation = vacancy - (N - 1) / N * bulk
 
 # %%
