@@ -288,6 +288,7 @@ vacancy = calculator.additional_outputs["energy_ensemble"][0].values
 # %%
 # Compute vacancy formation energy for each ensemble member.
 
+print(f"{vacancy.shape=}, {bulk.shape=}")
 vacancy_formation = vacancy - (N - 1) / N * bulk
 
 # %%
