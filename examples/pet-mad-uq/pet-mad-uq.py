@@ -260,7 +260,8 @@ N = len(supercell)  # store the number of atoms
 
 # Get ensemble energy before creating the vacancy
 outputs = ["energy", "energy_uncertainty", "energy_ensemble"]
-results = calculator.run_model(supercell, {o: ModelOutput() for o in outputs})
+outputs = {o: ModelOutput() for o in outputs}
+results = calculator.run_model(supercell, outputs)
 bulk = results["energy_ensemble"][0].values
 
 # Remove an atom (last atom in this case) to create a vacancy
@@ -268,7 +269,7 @@ i = -1
 supercell.pop(i)
 
 # Get ensemble energy right after creating the vacancy
-results = calculator.run_model(supercell, {o: ModelOutput() for o in outputs})
+results = calculator.run_model(supercell, outputs)
 right_after_vacancy = results["energy_ensemble"][0].values
 
 # Run structural optimization optimizing both positions and cell layout.
@@ -277,7 +278,7 @@ bfgs = BFGS(ecf)  # type: ignore
 bfgs.run()
 
 # get ensembele energy after optimization
-results = calculator.run_model(supercell, {o: ModelOutput() for o in outputs})
+results = calculator.run_model(supercell, outputs)
 vacancy = results["energy_ensemble"][0].values
 
 # %%
