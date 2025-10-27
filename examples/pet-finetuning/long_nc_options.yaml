@@ -5,7 +5,6 @@ architecture:
   training:
     batch_size: 8
     num_epochs: 700
-    num_epochs_warmup: 100
     learning_rate: 3e-4
 
 training_set:
