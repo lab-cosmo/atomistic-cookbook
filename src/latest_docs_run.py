@@ -25,14 +25,18 @@ def get_latest_successful_docs_run(api_token: Optional[str] = None) -> int:
 
     doc_runs_endpoint = GITHUB_ACTIONS_API + "/workflows/docs.yml/runs"
 
+    headers = {}
+    if api_token is not None:
+        headers["Authorization"] = f"Bearer {api_token}"
+
     response = requests.get(
         doc_runs_endpoint,
+        headers=headers,
         params={
             "branch": "main",
             "per_page": 1,
             "status": "success",
             "exclude_pull_requests": True,
-            "auth": api_token,
         },
     )
 
