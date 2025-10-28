@@ -1,0 +1,16 @@
+channels:
+  - metatensor
+  - conda-forge
+  - https://repo.prefix.dev/rg-forge
+dependencies:
+  - python=3.13
+  - pip
+  - eon
+  - ira
+  - uv
+  - pip:
+    - ase>=3.23
+    - metatrain  
+    - chemiscope>=0.8.5,<0.9 
+    - matplotlib
+    - rgpycrumbs
