@@ -207,18 +207,14 @@ converged_force = 0.01
 Path("min_reactant").mkdir(exist_ok=True)
 aseio.write("min_reactant/pos.con", reactant)
 write_eon_min_config(Path("min_reactant"), Path(fname).absolute())
-#!cd min_reactant && /home/rgoswami/Git/Github/epfl/pixi_envs/atomistic-cookbook/.pixi/envs/eon-pet-neb/bin/eonclient
-#!cp min_reactant/min.con reactant.con
 
 Path("min_product").mkdir(exist_ok=True)
 aseio.write("min_product/pos.con", product)
 write_eon_min_config(Path("min_product"), Path(fname).absolute())
-#!cd min_product && /home/rgoswami/Git/Github/epfl/pixi_envs/atomistic-cookbook/.pixi/envs/eon-pet-neb/bin/eonclient
-#!cp min_product/min.con product.con
 
 # read the minimized end points
-reactant = aseio.read("data/reactant.con")
-product = aseio.read("data/product.con")
+reactant = aseio.read("min_reactant/pos.con")
+product = aseio.read("min_product/pos.con")
 
 
 # %%
