@@ -11,14 +11,13 @@ Fraux `@Luthaf <https://github.com/luthaf/>`__; Arslan Mazitov
 This example describes how to find the reaction pathway for oxadiazole
 formation from N₂O and ethylene. We will use the **PET-MAD** `metatomic
 model <https://docs.metatensor.org/metatomic/latest/overview.html>`__ to
-calculate the potential energy and forces. By convention, all ``import``
-statements are at the top of the file.
+calculate the potential energy and forces.
 
 The primary goal is to contrast a standard Nudged Elastic Band (NEB)
 calculation using the `atomic simulation environment
-(ASE) <https://databases.fysik.dtu.dk/ase/>`__\ \_ with more
+(ASE) <https://databases.fysik.dtu.dk/ase/>`__ with more
 sophisticated methods available in the `EON
-package <https://theochemui.github.io/eOn/>`__\ \_. For a complex
+package <https://theochemui.github.io/eOn/>`__. For a complex
 reaction like this, a basic NEB implementation can struggle to converge
 or may time out. We will show how EON’s advanced features, such as
 **energy-weighted springs** and **single-ended dimer searches**, can
@@ -33,32 +32,40 @@ Our approach will be:
    EON’s optimizers, including energy-weighted springs and the dimer
    method.
 5. Visualize the final converged pathway.
+
+
+Importing Required Packages
+---------------------------
+First, we import all the necessary python packages for this task.
+By convention, all ``import``
+statements are at the top of the file.
 """
 
-import requests
-
-from pathlib import Path
-import subprocess
 import os
+import subprocess
 import sys
 import uuid
+from pathlib import Path
 
-import chemiscope
 import ase
 import ase.io as aseio
-from ase.mep import NEB
-
+import chemiscope
 import ira_mod
-
+import matplotlib.pyplot as plt
+import requests
+from ase.mep import NEB
+from ase.visualize import view
+from ase.visualize.plot import plot_atoms
 from IPython.display import Image, display
 
 
 # %%
-# Obtaining PET-MAD
-# -----------------
-# 
+# Obtaining the Foundation Model - PET-MAD
+# ----------------------------------------
+#
 # ``PET-MAD`` is an instance of a point edge transformer model trained on
-# the divers MAD dataset which learns equivariance through data driven
+# the divers `MAD dataset <https://arxiv.org/abs/2506.19674>`__
+# which learns equivariance through data driven
 # measures instead of having equivariance baked in. In turn, this enables
 # the PET model to have greater design space to learn over. Integration in
 # Python and the C++ EON client occurs through the ``metatomic`` package,
@@ -66,7 +73,7 @@ from IPython.display import Image, display
 # over ``metatensor``. Essentially using any of the models involves
 # grabbing the weights off of HuggingFace and loading them with
 # ``metatomic`` before running the engine of choice.
-# 
+#
 
 repo_id = "lab-cosmo/pet-mad"
 tag = "v1.1.0"
@@ -98,34 +105,51 @@ if not Path(fname).exists():
 # %%
 # Nudged Elastic Band (NEB)
 # -------------------------
-# 
+#
 # Given two known configurations on a potential energy surface (PES),
 # often one wishes to determine the path of highest probability between
 # the two. Under the harmonic approximation to transition state theory,
 # connecting the configurations (each point representing a full molecular
 # structure) by a discrete set of images allows one to evolve the path
-# under an optimization algorithm. Applying a transformation to the second
+# under an optimization algorithm.
+# The location of the transition point (= the point with the highest
+# energy along this path), which is relevant to determine the barrier
+# height of the relevant reaction, can be found
+# by applying a transformation to the second
 # derivatives, enables optimization algorithms to climb upwards along the
-# softest mode to reach a saddle configuration, mathematically, this is
+# softest mode to reach a saddle configuration
+# (an approach called `climbing image`).
+# Mathematically, this is
 # the point with zero first derivatives and a single negative eigenvalue.
-# 
-# Concretely, consider a reactant and product state, for oxadiazole
+#
+# Concretely, in this example, we will
+# consider a reactant and product state, for oxadiazole
 # formation, namely N₂O and ethylene.
-# 
+#
 
 reactant = aseio.read("data/reactant.con")
 product = aseio.read("data/product.con")
 
+# %%
+# We can visualize these structures using ASE.
+
+fig, (ax1, ax2) = plt.subplots(1, 2)
+plot_atoms(reactant, ax1, rotation=("-90x,0y,0z"))
+plot_atoms(product, ax2, rotation=("-90x,0y,0z"))
+ax1.text(0.3, -1, "reactant")
+ax2.text(0.3, -1, "product")
+ax1.set_axis_off()
+ax2.set_axis_off()
 
 # %%
 # Preparing endpoints
 # ~~~~~~~~~~~~~~~~~~~
-# 
+#
 
 
 # %%
 # For compatibility with EON, a unit cell should be provided
-# 
+
 
 def center_cell(atoms):
     atoms.set_cell([20, 20, 20])
@@ -133,13 +157,25 @@ def center_cell(atoms):
     atoms.center()
     return atoms
 
+
 reactant = center_cell(reactant)
 product = center_cell(product)
 
+# %%
+# The resulting reactant has a larger box:
+
+fig, (ax1, ax2) = plt.subplots(1, 2)
+plot_atoms(reactant, ax1, rotation=("-90x,0y,0z"))
+plot_atoms(product, ax2, rotation=("-90x,0y,0z"))
+ax1.text(0.3, -1, "reactant")
+ax2.text(0.3, -1, "product")
+ax1.set_axis_off()
+ax2.set_axis_off()
 
 # %%
-# For finding reaction pathways, the endpoints should be minimized,
-# 
+# For finding reaction pathways, the endpoints should be minimized.
+# We can relax the structures with EON.
+
 
 def write_eon_min_config(run_dir: Path, model_path: Path):
     """
@@ -167,27 +203,28 @@ converged_force = 0.01
         f.write(config_content)
     print(f"Wrote EON NEB config to '{config_path}'")
 
+
 Path("min_reactant").mkdir(exist_ok=True)
 aseio.write("min_reactant/pos.con", reactant)
 write_eon_min_config(Path("min_reactant"), Path(fname).absolute())
-!cd min_reactant && /home/rgoswami/Git/Github/epfl/pixi_envs/atomistic-cookbook/.pixi/envs/eon-pet-neb/bin/eonclient
-!cp min_reactant/min.con reactant.con
+#!cd min_reactant && /home/rgoswami/Git/Github/epfl/pixi_envs/atomistic-cookbook/.pixi/envs/eon-pet-neb/bin/eonclient
+#!cp min_reactant/min.con reactant.con
 
 Path("min_product").mkdir(exist_ok=True)
 aseio.write("min_product/pos.con", product)
 write_eon_min_config(Path("min_product"), Path(fname).absolute())
-!cd min_product && /home/rgoswami/Git/Github/epfl/pixi_envs/atomistic-cookbook/.pixi/envs/eon-pet-neb/bin/eonclient
-!cp min_product/min.con product.con
+#!cd min_product && /home/rgoswami/Git/Github/epfl/pixi_envs/atomistic-cookbook/.pixi/envs/eon-pet-neb/bin/eonclient
+#!cp min_product/min.con product.con
 
 # read the minimized end points
-reactant = aseio.read("reactant.con")
-product = aseio.read("product.con")
+reactant = aseio.read("data/reactant.con")
+product = aseio.read("data/product.con")
 
 
 # %%
-# additionally, the relative ordering must be preserved, for which we use
+# Additionally, the relative ordering must be preserved, for which we use
 # IRA [3].
-# 
+#
 
 ira = ira_mod.IRA()
 # Default value
@@ -226,7 +263,7 @@ product.positions = coords2_aligned_permuted
 
 # %%
 # Finally we can visualize these with ``chemiscope``.
-# 
+#
 
 settings = {
     "structure": [
@@ -238,17 +275,23 @@ chemiscope.show([reactant, product], mode="structure", settings=settings)
 
 # %%
 # or with ASE.
-# 
+#
 
-view(reactant, viewer='x3d')
-
-view(product, viewer='x3d')
+# view(reactant, viewer='x3d')
+# view(product, viewer='x3d')
+fig, (ax1, ax2) = plt.subplots(1, 2)
+plot_atoms(reactant, ax1, rotation=("-90x,0y,0z"))
+plot_atoms(product, ax2, rotation=("-90x,0y,0z"))
+ax1.text(0.3, -1, "reactant")
+ax2.text(0.3, -1, "product")
+ax1.set_axis_off()
+ax2.set_axis_off()
 
 
 # %%
 # Initial path generation
 # ~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 # The earliest NEB methods linearly interpolate between the two known
 # configurations. This may break bonds or otherwise also unphysically pass
 # atoms through each other, similar to the effect of incorrect
@@ -257,9 +300,12 @@ view(product, viewer='x3d')
 # surface, commonly something cheap and analytic, like the IDPP (Image
 # dependent pair potential) which provides a surface based on bond
 # distances, and thus preventing atom-in-atom collisions.
-# 
-# Here we use the IDPP from ASE to setup the initial path.
-# 
+#
+# Here we use the IDPP from ASE to setup the initial path. You can find
+# more information about this method in the corresponding
+# `ASE tutorial <https://ase-lib.org/examples_generated/tutorials/neb_idpp.html>`_
+# or in the original IDPP publication by
+# `S. Smidstru et al. <https://doi.org/10.1063/1.4878664>`_ .
 
 N_INTERMEDIATE_IMGS = 10
 # total includes the endpoints
@@ -273,8 +319,8 @@ neb.interpolate("idpp")
 
 
 # %%
-# For EON, we write the initial path out.
-# 
+# For EON, we write the initial path to a file called ``idppPath.dat``.
+#
 
 output_dir = "path"
 os.makedirs(output_dir, exist_ok=True)
@@ -299,14 +345,22 @@ print(f"Wrote absolute paths to '{summary_file_path}'.")
 # %%
 # EON and Metatomic
 # -----------------
-# 
-# EON implements both energy weighting for improving tangent resolution
-# near the climbing image, and the Hybrid MMF-NEB-CI which involves
-# iteratively switching to the dimer method for faster convergence by the
-# climbing image ().
-# 
+#
+# EON has two implementations to accurately locate the saddle point.
+#
+# 1. Energy weighting for improving tangent resolution
+#    near the climbing image
+# 2. The Hybrid MMF-NEB-CI which involves
+#    iteratively switching to the dimer method for faster convergence by the
+#    climbing image.
+#
+# To use EON, we setup a function that writes us the desired EON input and
+# run it.
 
-def write_neb_eon_config(run_dir: Path, model_path: Path, ninterm: int = N_INTERMEDIATE_IMGS):
+
+def write_neb_eon_config(
+    run_dir: Path, model_path: Path, ninterm: int = N_INTERMEDIATE_IMGS
+):
     """
     Writes the config.ini file for an EON NEB job,
     using the user's provided template.
@@ -353,41 +407,48 @@ write_movies=true
 # %%
 # Which now let’s us write out the final triplet of reactant, product, and
 # configuration of the EON-NEB.
-# 
+#
 
 write_neb_eon_config(Path("."), Path(fname).absolute())
-aseio.write('reactant.con', reactant)
-aseio.write('product.con', product)
+aseio.write("reactant.con", reactant)
+aseio.write("product.con", product)
 
 
 # %%
 # Now we can finally run.
-# 
+#
 
-!/home/rgoswami/Git/Github/epfl/pixi_envs/atomistic-cookbook/.pixi/envs/eon-pet-neb/bin/eonclient
-
-
+#!/home/rgoswami/Git/Github/epfl/pixi_envs/atomistic-cookbook/.pixi/envs/eon-pet-neb/bin/eonclient
 
 
 # %%
 # Visual interpretation
 # ~~~~~~~~~~~~~~~~~~~~~
-# 
-# We check both the standard 1D profile () against the path reaction
+#
+# We check both the standard 1D profile against the path reaction
 # coordinate, or the distance between intermediate images:
-# 
+#
 
 os.environ.pop("MPLBACKEND", None)
 
 oneDprof_oxad = [
-    sys.executable, "-m", "rgpycrumbs.cli", "eon", "plt_neb",
-    "--con-file", "neb.con",
-    "--plot-structures", "crit_points",
-    "--facecolor", "floralwhite",
-    "--plot-type", "profile",
+    sys.executable,
+    "-m",
+    "rgpycrumbs.cli",
+    "eon",
+    "plt_neb",
+    "--con-file",
+    "neb.con",
+    "--plot-structures",
+    "crit_points",
+    "--facecolor",
+    "floralwhite",
+    "--plot-type",
+    "profile",
     "--ase-rotation=90x,0y,0z",
     "--title=NEB Path Optimization",
-    "--output-file", "1D_oxad.png"
+    "--output-file",
+    "1D_oxad.png",
 ]
 
 result = subprocess.run(oneDprof_oxad, capture_output=True, text=True)
@@ -401,20 +462,32 @@ display(Image("1D_oxad.png"))
 # %%
 # Also, the slice of PES 2D landscape profile () which shows the relative
 # distace between edpoints as the optimization takes place:
-# 
+#
 
 os.environ.pop("MPLBACKEND", None)
 
 oneDprof_oxad = [
-    sys.executable, "-m", "rgpycrumbs.cli", "eon", "plt_neb",
-    "--con-file", "neb.con", "--theme", "ruhi",
-    "--plot-structures", "crit_points",
-    "--facecolor", "floralwhite",
-    "--plot-type", "landscape",
-    "--landscape-mode", "surface",
+    sys.executable,
+    "-m",
+    "rgpycrumbs.cli",
+    "eon",
+    "plt_neb",
+    "--con-file",
+    "neb.con",
+    "--theme",
+    "ruhi",
+    "--plot-structures",
+    "crit_points",
+    "--facecolor",
+    "floralwhite",
+    "--plot-type",
+    "landscape",
+    "--landscape-mode",
+    "surface",
     "--ase-rotation=90x,0y,0z",
     "--title=NEB Path Optimization",
-    "--output-file", "2D_oxad.png"
+    "--output-file",
+    "2D_oxad.png",
 ]
 
 result = subprocess.run(oneDprof_oxad, capture_output=True, text=True)
@@ -428,23 +501,23 @@ display(Image("2D_oxad.png"))
 # %%
 # ASE
 # ---
-# 
-
-import linecache
-import pathlib
-import subprocess
-
-import ase.io as aseio
-from ase.visualize import view
-
-from ase.optimize import LBFGS
-from ase.mep import NEB
-from ase.mep.neb import NEBTools
-
-from metatomic.torch.ase_calculator import MetatomicCalculator
-
-reactant = aseio.read("data/reactant.con")
-product = aseio.read("data/product.con")
+#
+#
+# import linecache
+# import pathlib
+# import subprocess
+#
+# import ase.io as aseio
+# from ase.visualize import view
+#
+# from ase.optimize import LBFGS
+# from ase.mep import NEB
+# from ase.mep.neb import NEBTools
+#
+# from metatomic.torch.ase_calculator import MetatomicCalculator
+#
+# reactant = aseio.read("data/reactant.con")
+# product = aseio.read("data/product.con")
 
 # subprocess.run(
 #     [
@@ -453,9 +526,13 @@ product = aseio.read("data/product.con")
 #         "https://huggingface.co/lab-cosmo/pet-mad/resolve/v1.1.0/models/pet-mad-v1.1.0.ckpt",  # noqa: E501
 #     ]
 # )
+#
+#
+# def mk_mta_calc():
+#    return MetatomicCalculator(
+#        "pet-mad-v1.1.0.pt", device="cpu", non_conservative=False
+#    )
 
-def mk_mta_calc():
-    return MetatomicCalculator("pet-mad-v1.1.0.pt", device="cpu", non_conservative=False)
 
 # reactant.calc = mk_mta_calc()
 # product.calc = mk_mta_calc()
@@ -490,35 +567,32 @@ def mk_mta_calc():
 # %%
 # References
 # ==========
-# 
+#
 # (1) Bigi, F.; Abbott, J. W.; Loche, P.; Mazitov, A.; Tisi, D.; Langer,
 #     M. F.; Goscinski, A.; Pegolo, P.; Chong, S.; Goswami, R.; Chorna,
 #     S.; Kellner, M.; Ceriotti, M.; Fraux, G. Metatensor and Metatomic:
 #     Foundational Libraries for Interoperable Atomistic Machine Learning.
 #     arXiv August 21, 2025. https://doi.org/10.48550/arXiv.2508.15704.
-# 
+#
 # (2) Goswami, R. Efficient Exploration of Chemical Kinetics. arXiv
 #     October 24, 2025. https://doi.org/10.48550/arXiv.2510.21368.
-# 
+#
 # (3) Mazitov, A.; Bigi, F.; Kellner, M.; Pegolo, P.; Tisi, D.; Fraux, G.;
 #     Pozdnyakov, S.; Loche, P.; Ceriotti, M. PET-MAD, a Universal
 #     Interatomic Potential for Advanced Materials Modeling. arXiv March
 #     18, 2025. https://doi.org/10.48550/arXiv.2503.14118.
-# 
+#
 # (4) Gunde, M.; Salles, N.; Hémeryck, A.; Martin-Samos, L. IRA: A Shape
 #     Matching Approach for Recognition and Comparison of Generic Atomic
 #     Patterns. J. Chem. Inf. Model. 2021, 61 (11), 5446–5457.
 #     https://doi.org/10.1021/acs.jcim.1c00567.
-# 
+#
 # (5) Fraux, G.; Cersonsky, R.; Ceriotti, M. Chemiscope: Interactive
 #     Structure-Property Explorer for Materials and Molecules. J. Open
 #     Source Softw. 2020, 5 (51), 2117.
 #     https://doi.org/10.21105/joss.02117.
-# 
+#
 # (6) Smidstrup, S.; Pedersen, A.; Stokbro, K.; Jónsson, H. Improved
 #     Initial Guess for Minimum Energy Path Calculations. J. Chem. Phys.
 #     2014, 140 (21), 214106. https://doi.org/10.1063/1.4878664.
-# 
-
-
-
+#
