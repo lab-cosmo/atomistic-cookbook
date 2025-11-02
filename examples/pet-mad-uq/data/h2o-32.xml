@@ -1,7 +1,7 @@
 <simulation verbosity='medium'>
   <output prefix='h2o-32'>
     <properties filename='out' stride='10'>  [ time{picosecond}, temperature{kelvin}, kinetic_md ] </properties>
-    <trajectory filename='pos' format='xyz' stride='10' cell_units='angstrom'> positions{angstrom} </trajectory>  
+    <trajectory filename='pos' format='ase' stride='10'> positions </trajectory>  
     <trajectory filename="committee_pot" stride="10" extra_type="committee_pot"> extras </trajectory>
     <trajectory filename="atomic_error" stride="10" extra_type="energy_uncertainty"> extras </trajectory>
   </output>

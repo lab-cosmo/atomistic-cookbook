@@ -342,27 +342,38 @@ sim = InteractiveSimulation(xml_input)
 
 # NB: To get better estimates, set this to a higher number (perhaps 10000) to
 # run the simulation for a longer time.
-sim.run(100)
+sim.run(400)
 
 # %%
 # Load the trajectories and compute the per-frame RDFs
-frames: list[Atoms] = ase.io.read("h2o-32.pos_0.xyz", ":")  # type: ignore
+# Note that ASE applies a weird normalization to the partial RDFs,
+# so the absolute values will look strange relative to the typical
+# literature RDFs for water
+
+frames: list[Atoms] = ase.io.read("h2o-32.pos_0.extxyz", ":")  # type: ignore
 
 # Our simulation should only include water molecules. (types: hydrogen=1, oxygen=8)
 assert set(frames[0].numbers.tolist()) == set([1, 8])
 
 # Compute the RDF of each frame (for H-H and for O-O)
-num_bins = 100
+num_bins = 250
 rdfs_hh = []
 rdfs_oo = []
 xs = None
 for atoms in frames:
-    atoms.pbc = True
-    atoms.cell = ase.cell.Cell(9.86592 * np.eye(3))
 
     # Compute H-H distances
     bins, xs = ase.ga.utilities.get_rdf(  # type: ignore
         atoms, 4.5, num_bins, elements=[1, 1]
+    )
+
+    # smoothen the RDF a bit (not enough data...)
+    bins[2:-2] = (
+        bins[:-4] * 0.1
+        + bins[1:-3] * 0.2
+        + bins[2:-2] * 0.4
+        + bins[3:-1] * 0.2
+        + bins[4:] * 0.1
     )
     rdfs_hh.append(bins)
 
@@ -370,7 +381,15 @@ for atoms in frames:
     bins, xs = ase.ga.utilities.get_rdf(  # type: ignore
         atoms, 4.5, num_bins, elements=[8, 8]
     )
+    bins[2:-2] = (
+        bins[:-4] * 0.1
+        + bins[1:-3] * 0.2
+        + bins[2:-2] * 0.4
+        + bins[3:-1] * 0.2
+        + bins[4:] * 0.1
+    )
     rdfs_oo.append(bins)
+
 rdfs_hh = np.stack(rdfs_hh, axis=0)
 rdfs_oo = np.stack(rdfs_oo, axis=0)
 
@@ -413,15 +432,15 @@ rdfs_oo_reweighted_committees = rdfs_oo_reweighted[:, 2:]
 
 # Display results.
 fig, axs = plt.subplots(figsize=(6, 3), sharey=True, ncols=2)
-for title, ax, mus, errs, xlim in [
-    ("H-H", axs[0], rdfs_hh_reweighted_mu, rdfs_hh_reweighted_err, (0.0, 4.5)),
+for title, ax, mus, std, xlim in [
+    ("H-H", axs[0], rdfs_hh_reweighted_mu, rdfs_hh_reweighted_err, (1.0, 4.5)),
     ("O-O", axs[1], rdfs_oo_reweighted_mu, rdfs_oo_reweighted_err, (2.0, 4.5)),
 ]:
     ylabel = "RDF" if title == "H-H" else None
-    ax.set(title=title, xlabel="Distance", ylabel=ylabel, xlim=xlim, ylim=(-1, 3.0))
+    ax.set(title=title, xlabel="Distance", ylabel=ylabel, xlim=xlim, ylim=(-0.1, 2.0))
     ax.grid()
-    ax.plot(xs, mus, label="Mean", lw=2)
+    ax.plot(xs, mus, label="Mean", lw=0.5)
     z95 = 1.96
-    rdfs_ci95 = (mus - z95 * errs, mus + z95 * errs)
-    ax.fill_between(xs, *rdfs_ci95, alpha=0.4, label="CI95")
+    rdfs_ci95 = (mus - z95 * std, mus + z95 * std)
+    ax.fill_between(xs, *rdfs_ci95, alpha=0.5, label="CI95")
     ax.legend()
