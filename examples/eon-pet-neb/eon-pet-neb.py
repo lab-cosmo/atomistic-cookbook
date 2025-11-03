@@ -42,10 +42,12 @@ statements are at the top of the file.
 """
 
 import os
+import shutil
 import subprocess
 import sys
-import uuid
 from pathlib import Path
+from functools import partial
+from typing import Optional
 
 import ase
 import ase.io as aseio
@@ -54,10 +56,8 @@ import ira_mod
 import matplotlib.pyplot as plt
 import requests
 from ase.mep import NEB
-from ase.visualize import view
 from ase.visualize.plot import plot_atoms
 from IPython.display import Image, display
-
 
 # %%
 # Obtaining the Foundation Model - PET-MAD
@@ -411,10 +411,116 @@ aseio.write("product.con", product)
 
 
 # %%
-# Now we can finally run.
+# Now we can finally define helpers for easier visualization.
 #
 
-#!/home/rgoswami/Git/Github/epfl/pixi_envs/atomistic-cookbook/.pixi/envs/eon-pet-neb/bin/eonclient
+
+def _run_command_live(
+    cmd,
+    *,
+    check: bool = True,
+    timeout: Optional[float] = None,
+    capture: bool = False,
+    encoding: str = "utf-8",
+) -> subprocess.CompletedProcess:
+    """
+    Internal: run command and stream stdout/stderr live to current stdout.
+    If capture=True, also collect combined output and return it in CompletedProcess.stdout.
+    """
+    shell = isinstance(cmd, str)
+
+    # If list form, ensure program exists
+    if not shell and shutil.which(cmd[0]) is None:
+        raise FileNotFoundError(f"{cmd[0]!r} is not on PATH")
+
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding=encoding,
+        shell=shell,
+    )
+
+    collected = [] if capture else None
+
+    try:
+        assert proc.stdout is not None
+        for line in proc.stdout:
+            # Stream into notebook or terminal live
+            print(line, end="")
+            sys.stdout.flush()
+            if capture:
+                collected.append(line)
+        returncode = proc.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait()
+        raise
+    except KeyboardInterrupt:
+        proc.kill()
+        proc.wait()
+        raise
+    finally:
+        if proc.stdout:
+            proc.stdout.close()
+
+    if check and returncode != 0:
+        if capture:
+            raise subprocess.CalledProcessError(
+                returncode, cmd, output="".join(collected)
+            )
+        else:
+            raise subprocess.CalledProcessError(returncode, cmd)
+
+    if capture:
+        return subprocess.CompletedProcess(cmd, returncode, stdout="".join(collected))
+    else:
+        return subprocess.CompletedProcess(cmd, returncode, stdout=None)
+
+
+# %%
+# While fairly verbose, some helpers are a good investment here.
+#
+
+# Programmatic: returns CompletedProcess (capture default True so examples can embed output)
+def run_eonclient(
+    capture: bool = True, timeout: Optional[float] = 300
+) -> subprocess.CompletedProcess:
+    """Programmatic use: stream live and return captured output by default."""
+    return _run_command_live(
+        ["eonclient"], check=True, capture=capture, timeout=timeout
+    )
+
+
+# Script-friendly: one-line call that exits the process on failure (great for sphinx-gallery)
+def run_eonclient_or_exit(
+    capture: bool = False, timeout: Optional[float] = 300
+) -> subprocess.CompletedProcess:
+    """
+    One-line call for scripts/examples. Streams live. Exits with non-zero code on failure
+    so sphinx-gallery sees errors.
+    """
+    try:
+        return _run_command_live(
+            ["eonclient"], check=True, capture=capture, timeout=timeout
+        )
+    except FileNotFoundError as e:
+        print("Executable not found:", e, file=sys.stderr)
+        sys.exit(2)
+    except subprocess.CalledProcessError as e:
+        # if output captured, e.output contains the combined output
+        print(f"Command failed with exit code {e.returncode}", file=sys.stderr)
+        sys.exit(e.returncode)
+    except subprocess.TimeoutExpired:
+        print("Command timed out", file=sys.stderr)
+        sys.exit(124)
+
+# %%
+# While fairly verbose, some helpers are a good investment here.
+#
+
+run_eonclient_or_exit(capture=True, timeout=300)
 
 
 # %%
