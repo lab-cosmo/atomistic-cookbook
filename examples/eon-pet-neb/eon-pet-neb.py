@@ -483,6 +483,7 @@ def _run_command_live(
 # While fairly verbose, some helpers are a good investment here.
 #
 
+
 # Programmatic: returns CompletedProcess (capture default True so examples can embed output)
 def run_eonclient(
     capture: bool = True, timeout: Optional[float] = 300
@@ -515,6 +516,7 @@ def run_eonclient_or_exit(
     except subprocess.TimeoutExpired:
         print("Command timed out", file=sys.stderr)
         sys.exit(124)
+
 
 # %%
 # While fairly verbose, some helpers are a good investment here.
