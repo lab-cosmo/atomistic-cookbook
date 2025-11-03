@@ -5,12 +5,13 @@ channels:
 dependencies:
   - python=3.13
   - pip
-  - eon
+  - eon>=2.8.1
   - ira
   - uv
+  - libtorch>=2.8,<2.9 *cpu*
   - pip:
     - ase>=3.23
     - metatrain  
     - chemiscope>=0.8.5,<0.9 
     - matplotlib
-    - rgpycrumbs
+    - rgpycrumbs>=0.0.3,<0.1
