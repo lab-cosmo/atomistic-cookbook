@@ -347,8 +347,8 @@ sim.run(400)
 # %%
 # Load the trajectories and compute the per-frame RDFs
 # Note that ASE applies a weird normalization to the partial RDFs,
-# so the absolute values will look strange relative to the typical
-# literature RDFs for water
+# which require a correction to recover the usual asymptotic
+# behavior at large distances.
 
 frames: list[Atoms] = ase.io.read("h2o-32.pos_0.extxyz", ":")  # type: ignore
 
@@ -375,7 +375,7 @@ for atoms in frames:
         + bins[3:-1] * 0.2
         + bins[4:] * 0.1
     )
-    rdfs_hh.append(bins)
+    rdfs_hh.append(bins * 3.0 / 2.0)  # correct ASE normalization
 
     # Compute O-O distances
     bins, xs = ase.ga.utilities.get_rdf(  # type: ignore
@@ -388,7 +388,7 @@ for atoms in frames:
         + bins[3:-1] * 0.2
         + bins[4:] * 0.1
     )
-    rdfs_oo.append(bins)
+    rdfs_oo.append(bins * 3.0)  # correct ASE normalization
 
 rdfs_hh = np.stack(rdfs_hh, axis=0)
 rdfs_oo = np.stack(rdfs_oo, axis=0)
@@ -437,10 +437,12 @@ for title, ax, mus, std, xlim in [
     ("O-O", axs[1], rdfs_oo_reweighted_mu, rdfs_oo_reweighted_err, (2.0, 4.5)),
 ]:
     ylabel = "RDF" if title == "H-H" else None
-    ax.set(title=title, xlabel="Distance", ylabel=ylabel, xlim=xlim, ylim=(-0.1, 2.0))
+    ax.set(title=title, xlabel="Distance", ylabel=ylabel, xlim=xlim, ylim=(-0.1, 3.7))
     ax.grid()
     ax.plot(xs, mus, label="Mean", lw=0.5)
     z95 = 1.96
     rdfs_ci95 = (mus - z95 * std, mus + z95 * std)
     ax.fill_between(xs, *rdfs_ci95, alpha=0.5, label="CI95")
     ax.legend()
+
+# %%
