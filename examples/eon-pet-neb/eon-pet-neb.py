@@ -46,7 +46,6 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from functools import partial
 from typing import Optional
 
 import ase
@@ -58,6 +57,7 @@ import requests
 from ase.mep import NEB
 from ase.visualize.plot import plot_atoms
 from IPython.display import Image, display
+
 
 # %%
 # Obtaining the Foundation Model - PET-MAD
@@ -425,7 +425,8 @@ def _run_command_live(
 ) -> subprocess.CompletedProcess:
     """
     Internal: run command and stream stdout/stderr live to current stdout.
-    If capture=True, also collect combined output and return it in CompletedProcess.stdout.
+    If capture=True, also collect combined output and return it
+    in CompletedProcess.stdout.
     """
     shell = isinstance(cmd, str)
 
@@ -484,22 +485,12 @@ def _run_command_live(
 #
 
 
-# Programmatic: returns CompletedProcess (capture default True so examples can embed output)
-def run_eonclient(
-    capture: bool = True, timeout: Optional[float] = 300
-) -> subprocess.CompletedProcess:
-    """Programmatic use: stream live and return captured output by default."""
-    return _run_command_live(
-        ["eonclient"], check=True, capture=capture, timeout=timeout
-    )
-
-
-# Script-friendly: one-line call that exits the process on failure (great for sphinx-gallery)
 def run_eonclient_or_exit(
     capture: bool = False, timeout: Optional[float] = 300
 ) -> subprocess.CompletedProcess:
     """
-    One-line call for scripts/examples. Streams live. Exits with non-zero code on failure
+    One-line call for scripts/examples. Streams live.
+    Exits with non-zero code on failure
     so sphinx-gallery sees errors.
     """
     try:
@@ -519,7 +510,7 @@ def run_eonclient_or_exit(
 
 
 # %%
-# While fairly verbose, some helpers are a good investment here.
+# While fairly verbose, the helper is a good investment:
 #
 
 run_eonclient_or_exit(capture=True, timeout=300)
@@ -600,7 +591,7 @@ display(Image("1D_oxad.png"))
 # if result.stderr:
 #     print(result.stderr)
 
-# display(Image("2D_oxad.png"))
+display(Image("2D_oxad.png"))
 
 
 # %%
