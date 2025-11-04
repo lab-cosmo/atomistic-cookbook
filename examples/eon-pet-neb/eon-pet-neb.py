@@ -92,7 +92,7 @@ if not Path(fname).exists():
 else:
     print(f"{fname} from tag {tag} already present.")
 
-if not Path(fname.replace('ckpt', 'pt')).exists():
+if not Path(fname.replace("ckpt", "pt")).exists():
     subprocess.run(
         [
             "mtt",
