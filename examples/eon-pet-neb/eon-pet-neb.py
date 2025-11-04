@@ -568,38 +568,39 @@ display(Image("1D_oxad.png"))
 # distace between edpoints as the optimization takes place:
 #
 
-os.environ.pop("MPLBACKEND", None)
+# TODO(rg): this needs IRA within the environment which is not pip installable..
+# os.environ.pop("MPLBACKEND", None)
 
-oneDprof_oxad = [
-    sys.executable,
-    "-m",
-    "rgpycrumbs.cli",
-    "eon",
-    "plt_neb",
-    "--con-file",
-    "neb.con",
-    "--theme",
-    "ruhi",
-    "--plot-structures",
-    "crit_points",
-    "--facecolor",
-    "floralwhite",
-    "--plot-type",
-    "landscape",
-    "--landscape-mode",
-    "surface",
-    "--ase-rotation=90x,0y,0z",
-    "--title=NEB Path Optimization",
-    "--output-file",
-    "2D_oxad.png",
-]
+# twoDprof_oxad = [
+#     sys.executable,
+#     "-m",
+#     "rgpycrumbs.cli",
+#     "eon",
+#     "plt_neb",
+#     "--con-file",
+#     "neb.con",
+#     "--theme",
+#     "ruhi",
+#     "--plot-structures",
+#     "crit_points",
+#     "--facecolor",
+#     "floralwhite",
+#     "--plot-type",
+#     "landscape",
+#     "--landscape-mode",
+#     "surface",
+#     "--ase-rotation=90x,0y,0z",
+#     "--title=NEB Path Optimization",
+#     "--output-file",
+#     "2D_oxad.png",
+# ]
 
-result = subprocess.run(oneDprof_oxad, capture_output=True, text=True)
-print(result.stdout)
-if result.stderr:
-    print(result.stderr)
+# result = subprocess.run(oneDprof_oxad, capture_output=True, text=True)
+# print(result.stdout)
+# if result.stderr:
+#     print(result.stderr)
 
-display(Image("2D_oxad.png"))
+# display(Image("2D_oxad.png"))
 
 
 # %%
