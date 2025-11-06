@@ -12,4 +12,4 @@ dependencies:
     - chemiscope>=0.8.5,<0.9
     - metatomic-torch>=0.1.2,<0.2
     - matplotlib>=3.10,<4.0
-    - vesin>=0.3.5,<0.4
+    - vesin>=0.4.2,<0.5
