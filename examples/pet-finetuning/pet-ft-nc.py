@@ -89,7 +89,7 @@ ase.io.write("data/ethanol_test.xyz", test, format="extxyz")
 # disable the energy head, which is still used to compute the energy,
 # and could in principle be used to compute conservative forces.
 # To profit from the speed up of direct force evaluation, we specify
-# ``forces: off`` in the ``energy`` taget, turning off the backpropagation of forces.
+# ``forces: off`` in the ``energy`` target, turning off the backpropagation of forces.
 #
 # Training can be run from the command line using the `mtt` command:
 #
