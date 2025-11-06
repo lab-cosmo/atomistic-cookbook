@@ -6,31 +6,34 @@ Conservative fine-tuning for a PET model
           Sofiia Chorna `@sofiia-chorna <https://github.com/sofiia-chorna>`_
 
 This example demonstrates a "conservative fine-tuning" (or equivalently,
-"non-conservative pre-training") strategy, to train a model using a (faster)
-direct, non-conservative force prediction, and then fine-tune it
-in back-propagation force mode to achieve an accurate conservative model.
+"non-conservative pre-training") strategy. This consists in training a model using
+(faster) direct, non-conservative force predictions, and then fine-tuning it
+with backpropagated forces to achieve an accurate conservative model.
 
 As discussed in `this paper <https://openreview.net/pdf?id=OEl3L8osas>`_, while
 conservative MLIPs are generally better suited for physically accurate simulations,
 hybrid models that support direct non-conservative force predictions can accelerate
 both training and inference.
-We demonstrate this practical compromise through a two-stage approach:
-first train a model to predict non-conservative forces directly (which avoids the cost
-of backpropagation) and then fine-tuning its energy head to produce conservative
-forces. This two-step strategy is usually faster, and produces a model that can
+Training can be accelerated through a two-stage approach:
+first train a model to predict non-conservative forces directly (avoiding the cost
+of backpropagation) and then fine-tune its energy head to produce conservative
+forces. This two-step strategy is usually faster and produces a model that can
 exploit both types of force predictions.
 An example of how to use direct forces in molecular dynamics simulations
 safely (i.e. avoiding unphysical behavior due to lack of energy conservation)
 is provided in `this example
 <https://atomistic-cookbook.org/examples/pet-mad-nc/pet-mad-nc.html>`_.
 
-If you are looking for a traditional "post-fact" fine-tuning strategy, see for example
+If you are looking for traditional fine-tuning of a pre-trained universal model, see for
+example
 `this recipe <https://atomistic-cookbook.org/examples/pet-finetuning/pet-ft.html>`_.
-Note also that the models generated in this example are run for a too short time to
-produce a useful model, and reveal the advantages of this direct-force pre-training
-strategy. The data file contains also "long" training settings, which
+Note also that the models generated in this example are run for too short a time to
+produce a useful model (further revealing the advantages of this direct-force
+pre-training strategy). The data file contains also "long" training settings, which
 can be used (preferably on a GPU) to train a model up to a point that reveals
-the behavior of the method in more realistic conditions.
+the behavior of the method in more realistic conditions. It should also be noted that
+this technique is particularly useful to speed up the training of large models on
+large (potentially universal) datasets.
 """
 
 # sphinx_gallery_thumbnail_path = '../../examples/pet-finetuning/training_strategy_comparison.png'  # noqa
@@ -81,12 +84,12 @@ ase.io.write("data/ethanol_test.xyz", test, format="extxyz")
 # .. literalinclude:: nc_train_options.yaml
 #   :language: yaml
 #
-# Adding a ``non_conservative_forces`` target automatically adds a
-# vectorial output to the atomic heads of the model, but does not
+# Adding a ``non_conservative_forces`` target with these specifications automatically
+# adds a vectorial output to the atomic heads of the model, but does not
 # disable the energy head, which is still used to compute the energy,
 # and could in principle be used to compute conservative forces.
 # To profit from the speed up of direct force evaluation, we specify
-# ``forces: off`` in the ``energy`` taget.
+# ``forces: off`` in the ``energy`` target, turning off the backpropagation of forces.
 #
 # Training can be run from the command line using the `mtt` command:
 #
@@ -122,10 +125,10 @@ subprocess.run("mtt eval nc_model.pt nc_model_eval.yaml".split(), check=True)
 # %%
 #
 # The result of a non-conservative force learning run (600 epochs) is
-# present in the parity plot below.
-# The plot shows that the model's conservative force predictions (left, that are
-# not trained against) have larger errors than those obtained from the direct
-# predictions (right). The non-conservative forces align closely with targets
+# presented in the parity plot below.
+# The plot shows that the model's conservative force predictions (that are
+# not trained, on the left) have larger errors than those obtained from the trained
+# direct predictions (right). The non-conservative forces align closely with targets
 # but lack the physical constraint of being the derivatives of a potential energy,
 # often leading to unphysical behavior when used in simulations.
 #
@@ -139,12 +142,12 @@ subprocess.run("mtt eval nc_model.pt nc_model_eval.yaml".split(), check=True)
 # -----------------------------------
 #
 # Even though the error on energy derivatives is pretty large, the model has learned
-# a reasonable approximation of the energy, and we can use it as a starting point to
-# fine-tune the model to improve the accuracy on conservative forces.
-# Enable ``forces: on`` to compute them via backward propagation of gradients.
-# We also keep training the non-conservative forces, so that we can still use the model
-# for fast inference. This comes with minimal overhead against forward energy
-# evaluation. Expectedly, the training will be slower.
+# a reasonable representation of the energy of the systems, and we can use it as a
+# starting point to fine-tune the model to improve the accuracy on conservative forces.
+# We enable ``forces: on`` to compute them via backward propagation of gradients.
+# We also keep training the non-conservative forces (with a small loss weight) so that
+# we can still use the model for fast direct force inference, with minimal overhead
+# against forward energy evaluation. Expectedly, the training will be slower.
 #
 # .. code-block:: yaml
 #

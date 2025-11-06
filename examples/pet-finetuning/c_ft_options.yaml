@@ -6,6 +6,10 @@ architecture:
     num_epochs: 20
     learning_rate: 1e-4
     batch_size: 10
+    loss:
+      non_conservative_forces:
+        weight: 0.01
+        # all other loss weights are 1 by default
 
 training_set:
   systems:

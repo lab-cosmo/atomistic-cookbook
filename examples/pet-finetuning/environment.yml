@@ -6,6 +6,6 @@ dependencies:
   - pip
   - pip:
     - ase>=3.23
-    - metatrain[pet]>=2025.8,<2026
+    - metatrain[pet]>=2025.11,<2026
     - matplotlib
     - scikit-learn
