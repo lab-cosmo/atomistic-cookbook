@@ -85,7 +85,7 @@ ase.io.write("data/ethanol_test.xyz", test, format="extxyz")
 #   :language: yaml
 #
 # Adding a ``non_conservative_forces`` target with these specifications automatically
-# adds avectorial output to the atomic heads of the model, but does not
+# adds a vectorial output to the atomic heads of the model, but does not
 # disable the energy head, which is still used to compute the energy,
 # and could in principle be used to compute conservative forces.
 # To profit from the speed up of direct force evaluation, we specify
