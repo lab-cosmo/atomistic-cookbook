@@ -128,9 +128,9 @@ subprocess.run("mtt eval nc_model.pt nc_model_eval.yaml".split(), check=True)
 # presented in the parity plot below.
 # The plot shows that the model's conservative force predictions (that are
 # not trained, on the left) have larger errors than those obtained from the trained
-# direct predictions (right). The non-conservative forces align closely with targets
-# but lack the physical constraint of being the derivatives of a potential energy,
-# often leading to unphysical behavior when used in simulations.
+# direct predictions (right). The non-conservative forces align closely with the
+# targets but lack the physical constraint of being the derivatives of a potential
+# energy, often leading to unphysical behavior when used in simulations.
 #
 # .. image:: nc_learning_res.png
 #    :align: center
