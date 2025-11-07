@@ -1,0 +1,67 @@
+scikit-matter
+=============
+
+scikit-matter is a toolbox of methods developed in the computational chemical
+and materials science community, following the scikit-learn API and coding
+guidelines to promote usability and interoperability with existing workflows.
+You can get the latest version from its `github repository
+<https://github.com/scikit-learn-contrib/scikit-matter>`_ and learn how to use
+it from its `documentation <https://scikit-matter.readthedocs.io/en/latest/>`_.
+
+
+
+.. grid:: 1 2 2 3
+    :gutter: 1 1 2 3
+
+    .. grid-item::
+
+        .. card:: Sample and Feature Selection with FPS and CUR
+            :link: ../examples/sample-selection/sample-selection
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/sample-selection/images/thumb/sphx_glr_sample-selection_thumb.png
+                :alt: In this tutorial we generate descriptors using featomic, then select a subset of structures using both the farthest-point sampling (FPS) and CUR algorithms implemented in scikit-matter. Finally, we also generate a selection of the most important features using the same techniques.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Generalized Convex Hull construction for the polymorphs of ROY
+            :link: ../examples/roy-gch/roy-gch
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/roy-gch/images/thumb/sphx_glr_roy-gch_thumb.png
+                :alt: This notebook analyzes the structures of 264 polymorphs of ROY, from Beran et Al, Chemical Science (2022), comparing the conventional density-energy convex hull with a Generalized Convex Hull (GCH) analysis (see Anelli et al., Phys. Rev. Materials (2018)). It uses features computed with featomic and uses the directional convex hull function from scikit-matter to make the figure.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Local Prediction Rigidity analysis
+            :link: ../examples/lpr/lpr
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/lpr/images/thumb/sphx_glr_lpr_thumb.png
+                :alt: In this tutorial, we calculate the SOAP descriptors of an amorphous silicon dataset using featomic, then compute the local prediction rigidity (LPR) for the atoms of a "test" set before and after modifications to the "training" dataset has been made.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: PCA/PCovR Visualization of a training dataset for a potential
+            :link: ../examples/gaas-map/gaas-map
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/gaas-map/images/thumb/sphx_glr_gaas-map_thumb.png
+                :alt: This example uses featomic and metatensor to compute structural properties for the structures in a training dataset for a ML potential. These are then used with simple dimensionality reduction algorithms (implemented in sklearn and skmatter) to obtain a simplified description of the dataset, that is then visualized using chemiscope.
+                :class: gallery-img
+
+                
