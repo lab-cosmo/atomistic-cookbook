@@ -3,8 +3,7 @@ Reaction Path Finding with EON and a Metatomic Potential
 ========================================================
 
 :Authors: Rohit Goswami `@HaoZeke <https://github.com/haozeke/>`__;
-Hanna Tuerk `@HannaTuerk <https://github.com/HannaTuerk>`__; Guillaume
-Fraux `@Luthaf <https://github.com/luthaf/>`__; Arslan Mazitov
+Hanna Tuerk `@HannaTuerk <https://github.com/HannaTuerk>`__; Arslan Mazitov
 `@abmazitov <https://github.com/abmazitov>`__; Michele Ceriotti
 `@ceriottim <https://github.com/ceriottim/>`__
 
