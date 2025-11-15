@@ -323,8 +323,9 @@ climbing_image_method = true
 climbing_image_converged_only = true
 ci_after = 0.5
 ci_mmf = true
-ci_mmf_after = 0.5
-ci_mmf_nsteps = 10
+# can be 0.5 and 10 for PET-MAD 1.1
+ci_mmf_after = 1.5
+ci_mmf_nsteps = 20
 
 [Optimizer]
 max_iterations = 100
@@ -449,6 +450,7 @@ def run_eonclient_or_exit(
 # While fairly verbose, the helper is a good investment:
 
 run_eonclient_or_exit(capture=True, timeout=300)
+
 # %%
 # Visual interpretation
 # ~~~~~~~~~~~~~~~~~~~~~
