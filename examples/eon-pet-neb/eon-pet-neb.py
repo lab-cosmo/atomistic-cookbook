@@ -19,17 +19,17 @@ calculation using the `atomic simulation environment
 sophisticated methods available in the `EON
 package <https://theochemui.github.io/eOn/>`__. For a complex
 reaction like this, a basic NEB implementation can struggle to converge
-or may time out. We will show how EON’s advanced features, such as
-**energy-weighted springs** and **single-ended dimer searches**, can
-efficiently locate and refine the reaction path.
+or may time out. We will show how EON's advanced features, such as
+**energy-weighted springs** and mixing in **single-ended dimer search steps**, can
+efficiently locate and refine the transition state along the path.
 
 Our approach will be:
 
 1. Set up the **PET-MAD metatomic calculator**.
 2. Illustrate the limitations of a standard NEB calculation in ASE.
-3. Use EON to find an initial reaction path.
+3. Use ASE to generate an initial IDPP reaction path.
 4. Refine the path and locate the transition state saddle point using
-   EON’s optimizers, including energy-weighted springs and the dimer
+   EON's optimizers, including energy-weighted springs and the dimer
    method.
 5. Visualize the final converged pathway.
 6. Demonstrate endpoind relaxation with EON
@@ -66,15 +66,15 @@ from metatomic.torch.ase_calculator import MetatomicCalculator
 # ----------------------------------------
 #
 # ``PET-MAD`` is an instance of a point edge transformer model trained on
-# the divers `MAD dataset <https://arxiv.org/abs/2506.19674>`__
-# which learns equivariance through data driven
-# measures instead of having equivariance baked in. In turn, this enables
+# the diverse `MAD dataset <https://arxiv.org/abs/2506.19674>`__
+# which learns equivariance through data driven measures 
+# instead of having equivariance baked in. In turn, this enables
 # the PET model to have greater design space to learn over. Integration in
-# Python and the C++ EON client occurs through the ``metatomic`` package,
+# Python and the C++ EON client occurs through the ``metatomic`` software,
 # which in turn relies on the atomistic machine learning toolkit build
-# over ``metatensor``. Essentially using any of the models involves
-# grabbing the weights off of HuggingFace and loading them with
-# ``metatomic`` before running the engine of choice.
+# over ``metatensor``. Essentially using any of the metatomic models involves
+# grabbing weights off of HuggingFace and loading them with
+# ``metatomic`` before running the `engine of choice <https://docs.metatensor.org/metatomic/latest/engines/index.html>`_.
 #
 
 repo_id = "lab-cosmo/pet-mad"
@@ -113,16 +113,19 @@ if not Path(fname.replace("ckpt", "pt")).exists():
 # the two. Under the harmonic approximation to transition state theory,
 # connecting the configurations (each point representing a full molecular
 # structure) by a discrete set of images allows one to evolve the path
-# under an optimization algorithm.
-# The location of the transition point (= the point with the highest
+# under an optimization algorithm, and allows approximating the reaction to
+# three states, the reactant, product, and transition state.
+# The location of this transition state (≈ the point with the highest
 # energy along this path), which is relevant to determine the barrier
-# height of the relevant reaction, can be found
+# height of the relevant reaction, and can be found
 # by applying a transformation to the second
-# derivatives, enables optimization algorithms to climb upwards along the
-# softest mode to reach a saddle configuration
-# (an approach called `climbing image`).
-# Mathematically, this is
-# the point with zero first derivatives and a single negative eigenvalue.
+# derivatives, to enable optimization algorithms to step along the
+# softest mode to reach a saddle configuration. An approximation which is free
+# from finding the actual mode involves moving the highest image of a NEB path,
+# the "climbing" image along the reversed NEB tangent force.  Mathematically,
+# this is the point with zero first derivatives and a single negative
+# eigenvalue, and single ended methods [2] approximate the Hessian and
+# softest-mode with different methods.
 #
 # Concretely, in this example, we will
 # consider a reactant and product state, for oxadiazole
@@ -144,10 +147,12 @@ ax1.set_axis_off()
 ax2.set_axis_off()
 
 # %%
-# For finding reaction pathways, the endpoints should be minimized.
-# We here provided directly relaxed cells, but in order to see
-# how to relax your endpoints with EON, please have a look at the
-# end of this tutorial.
+# Endpoint minimization
+# ~~~~~~~~~~~~~~~~~~~~~
+# 
+# For finding reaction pathways, the endpoints should be minimized.  We provided
+# initial configurations which are already minimized, but in order to see how to
+# relax endpoints with EON, please have a look at the end of this tutorial.
 
 
 # %%
@@ -155,13 +160,14 @@ ax2.set_axis_off()
 # ~~~~~~~~~~~~~~~~~~~~~~~
 #
 # The earliest NEB methods linearly interpolate between the two known
-# configurations. This may break bonds or otherwise also unphysically pass
-# atoms through each other, similar to the effect of incorrect
-# permutations. To ameliorate this effect, the NEB algorithm is often
-# started from the linear interpolation with a surrogate potential energy
-# surface, commonly something cheap and analytic, like the IDPP (Image
-# dependent pair potential) which provides a surface based on bond
-# distances, and thus preventing atom-in-atom collisions.
+# configurations since these methods build on "drag coordinate" methods. This
+# may break bonds or otherwise also unphysically pass atoms through each other,
+# similar to the effect of incorrect permutations. To ameliorate this effect,
+# the NEB algorithm is often started from the linear interpolation but then the
+# path is optimized on a surrogate potential energy surface, commonly something
+# cheap and analytic, like the IDPP (Image dependent pair potential, [6]) which
+# provides a surface based on bond distances, and thus preventing atom-in-atom
+# collisions.
 #
 # Here we use the IDPP from ASE to setup the initial path. You can find
 # more information about this method in the corresponding
@@ -178,6 +184,11 @@ images += [product]
 
 neb = NEB(images)
 neb.interpolate("idpp")
+
+# %%
+# We don't cover subtleties in setting the number of images, typically too many
+# intermediate images may cause kinks but too few will be unable to resolve the
+# tangent to any reasonable quality.
 
 
 # %%
@@ -254,8 +265,10 @@ plt.show()
 
 # %%
 # In the 100 NEB steps we took, the structure did unfortunately not converge.
-# As we are obtaining a warning that the uncertainty of the calculator was very
-# high, we stop after this 100 steps.
+# The metatomic calculator for PET-MAD v1.0.2 provides `LLPR based energy
+# uncertainities <https://atomistic-cookbook.org/examples/pet-mad-uq/pet-mad-uq.html>`_.
+# As we obtain a warning that the uncertainty of the path structure sampled is
+# very high, we stop after 100 steps.
 # The ASE algorithm with LBFGS optimizer does not
 # find good intermediate structures and does not converge
 # at all. Our test showed that the FIRE
