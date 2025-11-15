@@ -316,11 +316,14 @@ initial_path_in = idppPath.dat
 minimize_endpoints = false
 climbing_image_method = true
 climbing_image_converged_only = true
-ci_after = 0.5
+ci_after = 1.5
 ci_mmf = true
-# can be 0.5 and 10 for PET-MAD 1.1
-ci_mmf_after = 1.5
+ci_mmf_after = 0.5
 ci_mmf_nsteps = 20
+
+# for PET-MAD 1.1
+# ci_after = 0.5
+# ci_mmf_nsteps = 10
 
 [Optimizer]
 max_iterations = 100
