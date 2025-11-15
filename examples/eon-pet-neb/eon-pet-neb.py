@@ -129,8 +129,8 @@ if not Path(fname.replace("ckpt", "pt")).exists():
 # formation, namely N₂O and ethylene.
 #
 
-reactant = aseio.read("data/reactant_minimized.con")
-product = aseio.read("data/product_minimized.con")
+reactant = aseio.read("data/min_reactant.con")
+product = aseio.read("data/min_product.con")
 
 # %%
 # We can visualize these structures using ASE.
