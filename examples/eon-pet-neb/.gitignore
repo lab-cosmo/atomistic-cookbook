@@ -22,3 +22,5 @@ min_reactant/
 
 # Ignore the top-level config.ini
 config.ini
+# Ignore generated ASE trajectory
+A2B.traj

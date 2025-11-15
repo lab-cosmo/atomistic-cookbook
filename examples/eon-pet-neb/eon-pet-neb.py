@@ -46,7 +46,6 @@ import os
 import shutil
 import subprocess
 import sys
-import urllib.request
 from pathlib import Path
 from typing import Optional
 
@@ -56,6 +55,8 @@ import ira_mod
 import matplotlib.pyplot as plt
 import requests
 from ase.mep import NEB
+from ase.optimize import LBFGS
+from ase.visualize import view
 from ase.visualize.plot import plot_atoms
 from IPython.display import Image, display
 from metatomic.torch.ase_calculator import MetatomicCalculator
@@ -74,7 +75,8 @@ from metatomic.torch.ase_calculator import MetatomicCalculator
 # which in turn relies on the atomistic machine learning toolkit build
 # over ``metatensor``. Essentially using any of the metatomic models involves
 # grabbing weights off of HuggingFace and loading them with
-# ``metatomic`` before running the `engine of choice <https://docs.metatensor.org/metatomic/latest/engines/index.html>`_.
+# ``metatomic`` before running the
+# `engine of choice <https://docs.metatensor.org/metatomic/latest/engines/index.html>`_.
 #
 
 repo_id = "lab-cosmo/pet-mad"
@@ -218,12 +220,6 @@ print(f"Wrote absolute paths to '{summary_file_path}'.")
 # ASE
 # ---
 #
-
-import ase.io as aseio
-from ase.mep import NEB
-from ase.optimize import FIRE, LBFGS
-from ase.visualize import view
-from metatomic.torch.ase_calculator import MetatomicCalculator
 
 
 # define the calculator
