@@ -621,16 +621,7 @@ coords2_aligned_permuted = coords2_aligned[p]
 product = reactant.copy()
 product.positions = coords2_aligned_permuted
 # %%
-# Finally we can visualize these with ``chemiscope``.
-#
-# settings = {
-#    "structure": [
-#        {"playbackDelay": 50, "unitCell": True, "bonds": True, "spaceFilling": True}
-#    ]
-# }
-# chemiscope.show([reactant, product], mode="structure", settings=settings)
-# %%
-# or with ASE.
+# Finally we can visualize these with ASE.
 #
 view(reactant, viewer="x3d")
 view(product, viewer="x3d")
