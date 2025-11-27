@@ -25,8 +25,8 @@ efficiently locate and refine the transition state along the path.
 Our approach will be:
 
 1. Set up the **PET-MAD metatomic calculator**.
-2. Illustrate the limitations of a standard NEB calculation in ASE.
-3. Use ASE to generate an initial IDPP reaction path.
+2. Use ASE to generate an initial IDPP reaction path.
+3. Illustrate the limitations of a standard NEB calculation in ASE.
 4. Refine the path and locate the transition state saddle point using
    EON's optimizers, including energy-weighted springs and the dimer
    method.
