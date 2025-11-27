@@ -491,7 +491,7 @@ display(Image("1D_oxad.png"))
 
 # %%
 # Also, the PES 2D landscape profile as a function of the RMSD [2] which shows
-# the relative distace between edpoints as the optimization takes place:
+# the relative distance between the endpoints as the optimization takes place:
 #
 # TODO(rg): this needs IRA within the environment which is not pip installable..
 # os.environ.pop("MPLBACKEND", None)
