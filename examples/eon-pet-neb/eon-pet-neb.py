@@ -58,7 +58,6 @@ from ase.mep import NEB
 from ase.optimize import LBFGS
 from ase.visualize import view
 from ase.visualize.plot import plot_atoms
-from IPython.display import Image, display
 from metatomic.torch.ase_calculator import MetatomicCalculator
 
 
@@ -116,18 +115,19 @@ if not Path(fname.replace("ckpt", "pt")).exists():
 # connecting the configurations (each point representing a full molecular
 # structure) by a discrete set of images allows one to evolve the path
 # under an optimization algorithm, and allows approximating the reaction to
-# three states, the reactant, product, and transition state.
-# The location of this transition state (≈ the point with the highest
-# energy along this path), which is relevant to determine the barrier
-# height of the relevant reaction, and can be found
-# by applying a transformation to the second
-# derivatives, to enable optimization algorithms to step along the
-# softest mode to reach a saddle configuration. An approximation which is free
-# from finding the actual mode involves moving the highest image of a NEB path,
-# the "climbing" image along the reversed NEB tangent force.  Mathematically,
-# this is the point with zero first derivatives and a single negative
-# eigenvalue, and single ended methods [2] approximate the Hessian and
-# softest-mode with different methods.
+# three states: the reactant, product, and transition state.
+#
+# The location of this transition state (≈ the point with the highest energy
+# along this path) determines the barrier height of the reaction. This saddle
+# point can be found by transforming the second derivatives (Hessian) to step
+# along the softest mode. However, an approximation which is free from
+# explicitly finding this mode involves moving the highest image of a NEB path:
+# the "climbing" image.
+#
+# Mathematically, the saddle point has zero first derivatives and a single
+# negative eigenvalue. The climbing image technique moves the highest energy
+# image along the reversed NEB tangent force, avoiding the cost of full
+# Hessian diagonalization used in single-ended methods [2].
 #
 # Concretely, in this example, we will
 # consider a reactant and product state, for oxadiazole
@@ -152,7 +152,7 @@ ax2.set_axis_off()
 # Endpoint minimization
 # ~~~~~~~~~~~~~~~~~~~~~
 #
-# For finding reaction pathways, the endpoints should be minimized.  We provided
+# For finding reaction pathways, the endpoints should be minimized. We provide
 # initial configurations which are already minimized, but in order to see how to
 # relax endpoints with EON, please have a look at the end of this tutorial.
 
@@ -217,9 +217,10 @@ with open(summary_file_path, "w") as f:
 print(f"Wrote absolute paths to '{summary_file_path}'.")
 
 # %%
-# ASE
-# ---
+# ASE and Metatomic
+# -----------------
 #
+# We first consider using metatomic with the ASE calculator.
 
 
 # define the calculator
@@ -488,7 +489,7 @@ run_command_or_exit(oneDprof_oxad, capture=False, timeout=60)
 img = mpimg.imread("1D_oxad.png")
 plt.figure(figsize=(10, 8))
 plt.imshow(img)
-plt.axis('off')
+plt.axis("off")
 plt.show()
 
 
@@ -536,9 +537,9 @@ run_command_or_exit(twoDprof_oxad, capture=False, timeout=60)
 
 # Display the result
 img = mpimg.imread("2D_oxad.png")
-plt.figure(figsize=(10, 8)) # Adjust size as needed
+plt.figure(figsize=(10, 8))  # Adjust size as needed
 plt.imshow(img)
-plt.axis('off')  # Turn off the axis so it looks like a standalone image
+plt.axis("off")  # Turn off the axis so it looks like a standalone image
 plt.show()
 
 # %%
