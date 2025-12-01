@@ -46,12 +46,13 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Union
 
 import ase
 import ase.io as aseio
 import ira_mod
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 import requests
 from ase.mep import NEB
 from ase.optimize import LBFGS
@@ -353,7 +354,7 @@ aseio.write("product.con", product)
 
 
 def _run_command_live(
-    cmd,
+    cmd: Union[str, List[str]],
     *,
     check: bool = True,
     timeout: Optional[float] = None,
@@ -366,11 +367,14 @@ def _run_command_live(
     in CompletedProcess.stdout.
     """
     shell = isinstance(cmd, str)
+    cmd_str = cmd if shell else cmd[0]
 
-    # If list form, ensure program exists
-    if not shell and shutil.which(cmd[0]) is None:
-        raise FileNotFoundError(f"{cmd[0]!r} is not on PATH")
+    # If list form, ensure program exists before trying to run
+    if not shell and shutil.which(cmd_str) is None:
+        raise FileNotFoundError(f"{cmd_str!r} is not on PATH")
 
+    # Start the process
+    # We combine stderr into stdout so we only have one stream to read
     proc = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
@@ -378,6 +382,7 @@ def _run_command_live(
         text=True,
         encoding=encoding,
         shell=shell,
+        bufsize=1,  # Line buffered
     )
 
     collected = [] if capture else None
@@ -390,7 +395,10 @@ def _run_command_live(
             sys.stdout.flush()
             if capture:
                 collected.append(line)
+
+        # Wait for the process to actually exit after stream closes
         returncode = proc.wait(timeout=timeout)
+
     except subprocess.TimeoutExpired:
         proc.kill()
         proc.wait()
@@ -404,39 +412,27 @@ def _run_command_live(
             proc.stdout.close()
 
     if check and returncode != 0:
-        if capture:
-            raise subprocess.CalledProcessError(
-                returncode, cmd, output="".join(collected)
-            )
-        else:
-            raise subprocess.CalledProcessError(returncode, cmd)
+        output_str = "".join(collected) if capture else ""
+        raise subprocess.CalledProcessError(returncode, cmd, output=output_str)
 
-    if capture:
-        return subprocess.CompletedProcess(cmd, returncode, stdout="".join(collected))
-    else:
-        return subprocess.CompletedProcess(cmd, returncode, stdout=None)
+    return subprocess.CompletedProcess(
+        cmd, returncode, stdout="".join(collected) if capture else None
+    )
 
 
-# %%
-# While fairly verbose, some helpers are a good investment here.
-#
-def run_eonclient_or_exit(
-    capture: bool = False, timeout: Optional[float] = 300
+def run_command_or_exit(
+    cmd: Union[str, List[str]], capture: bool = False, timeout: Optional[float] = 300
 ) -> subprocess.CompletedProcess:
     """
-    One-line call for scripts/examples. Streams live.
-    Exits with non-zero code on failure
-    so sphinx-gallery sees errors.
+    Helper wrapper to run commands, stream output, and exit script/notebook
+    cleanly on failure so sphinx-gallery sees the errors appropriately.
     """
     try:
-        return _run_command_live(
-            ["eonclient"], check=True, capture=capture, timeout=timeout
-        )
+        return _run_command_live(cmd, check=True, capture=capture, timeout=timeout)
     except FileNotFoundError as e:
-        print("Executable not found:", e, file=sys.stderr)
+        print(f"Executable not found: {e}", file=sys.stderr)
         sys.exit(2)
     except subprocess.CalledProcessError as e:
-        # if output captured, e.output contains the combined output
         print(f"Command failed with exit code {e.returncode}", file=sys.stderr)
         sys.exit(e.returncode)
     except subprocess.TimeoutExpired:
@@ -445,18 +441,22 @@ def run_eonclient_or_exit(
 
 
 # %%
-# While fairly verbose, the helper is a good investment:
+# Run the main client
+# -------------------
 
-run_eonclient_or_exit(capture=True, timeout=300)
+# This runs 'eonclient' and streams output live.
+# If it fails, the notebook execution stops here.
+run_command_or_exit(["eonclient"], capture=True, timeout=300)
+
 
 # %%
 # Visual interpretation
-# ~~~~~~~~~~~~~~~~~~~~~
+# ---------------------
 #
 # We check both the standard 1D profile against the path reaction
 # coordinate, or the distance between intermediate images:
 
-
+# Clean env to prevent backend conflicts in notebooks
 os.environ.pop("MPLBACKEND", None)
 
 oneDprof_oxad = [
@@ -481,29 +481,65 @@ oneDprof_oxad = [
     "1D_oxad.png",
 ]
 
-result = subprocess.run(oneDprof_oxad, capture_output=True, text=True)
-print(result.stdout)
-if result.stderr:
-    print(result.stderr)
+# Run the 1D plotting command using the helper
+run_command_or_exit(oneDprof_oxad, capture=False, timeout=60)
 
-display(Image("1D_oxad.png"))
+# Display the result
+img = mpimg.imread("1D_oxad.png")
+plt.figure(figsize=(10, 8))
+plt.imshow(img)
+plt.axis('off')
+plt.show()
 
 
 # %%
 # Also, the PES 2D landscape profile as a function of the RMSD [2] which shows
 # the relative distance between the endpoints as the optimization takes place:
-#
-# TODO(rg): this needs IRA within the environment which is not pip installable..
-# os.environ.pop("MPLBACKEND", None)
-# """
-# --con-file neb.con --plot-structures "crit_points" --facecolor "white"
-# --rc-mode path --ase-rotation="90x,0y,0z" --title "NEB-RMSD Surface"
-# --fontsize-base 16 --landscape-mode "surface" --landscape-path
-# --"all" --plot-type "landscape" --output-file 2D_oxad.png --show-pts True
-# --surface-type "rbf" --theme ruhi
-# """
 
-display(Image("2D_oxad.png"))
+twoDprof_oxad = [
+    sys.executable,
+    "-m",
+    "rgpycrumbs.cli",
+    "eon",
+    "plt_neb",
+    "--theme",
+    "ruhi",
+    "--con-file",
+    "neb.con",
+    "--plot-structures",
+    "crit_points",
+    "--facecolor",
+    "white",
+    "--rc-mode",
+    "path",
+    "--ase-rotation=90x,0y,0z",
+    "--title",
+    "NEB-RMSD Surface",
+    "--fontsize-base",
+    "16",
+    "--landscape-mode",
+    "surface",
+    "--landscape-path",
+    "all",
+    "--plot-type",
+    "landscape",
+    "--show-pts",
+    "True",
+    "--surface-type",
+    "rbf",
+    "--output-file",
+    "2D_oxad.png",
+]
+
+# Run the 2D plotting command using the helper
+run_command_or_exit(twoDprof_oxad, capture=False, timeout=60)
+
+# Display the result
+img = mpimg.imread("2D_oxad.png")
+plt.figure(figsize=(10, 8)) # Adjust size as needed
+plt.imshow(img)
+plt.axis('off')  # Turn off the axis so it looks like a standalone image
+plt.show()
 
 # %%
 # Relaxing the endpoints with EON
