@@ -46,13 +46,13 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional, List, Union
+from typing import List, Optional, Union
 
 import ase
 import ase.io as aseio
 import ira_mod
-import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
 import requests
 from ase.mep import NEB
 from ase.optimize import LBFGS
@@ -458,7 +458,7 @@ run_command_or_exit(["eonclient"], capture=True, timeout=300)
 # designed to bridge the gap between raw computational output and physical
 # intuition, mapping high-dimensional NEB trajectories onto interpretable 1D
 # energy profiles and 2D RMSD landscapes.
-# 
+#
 # We check both the standard 1D profile against the path reaction
 # coordinate, or the distance between intermediate images:
 
