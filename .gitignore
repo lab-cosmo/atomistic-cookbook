@@ -2,6 +2,7 @@ docs/src/examples/
 docs/src/_static/all-examples-data.js
 
 *build*
+*.json.gz
 *egg-info/
 
 .nox/

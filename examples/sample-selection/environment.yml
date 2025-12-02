@@ -10,3 +10,4 @@ dependencies:
     - metatensor
     - featomic
     - skmatter>=0.3
+    - requests
