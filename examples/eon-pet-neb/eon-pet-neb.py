@@ -270,9 +270,19 @@ final_energies = [i.get_potential_energy() for i in ipath]
 # Plot initial and final path
 plt.figure(figsize=(8, 6))
 # Initial Path (Blue)
-plt.plot(initial_energies, "o-", label="Initial Path (IDPP)", color="xkcd:blue")
+plt.plot(
+    initial_energies - min(initial_energies),
+    "o-",
+    label="Initial Path (IDPP)",
+    color="xkcd:blue",
+)
 # Final Path (Orange)
-plt.plot(final_energies, "o-", label="Optimized Path (LBFGS)", color="xkcd:orange")
+plt.plot(
+    final_energies - min(initial_energies),
+    "o-",
+    label="Optimized Path (LBFGS)",
+    color="xkcd:orange",
+)
 # Metadata
 plt.xlabel("Image number")
 plt.ylabel("Potential Energy (eV)")
