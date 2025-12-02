@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 r"""
-Reaction Path Finding with EON and a Metatomic Potential
-==========================================================
+Finding Reaction Paths with EON and a Metatomic Potential
+=========================================================
 
 :Authors: Rohit Goswami `@HaoZeke <https://github.com/haozeke/>`_,
           Hanna Tuerk `@HannaTuerk <https://github.com/HannaTuerk>`_,
