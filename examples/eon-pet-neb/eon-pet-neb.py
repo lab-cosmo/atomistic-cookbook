@@ -150,7 +150,7 @@ ax2.set_axis_off()
 
 # %%
 # Endpoint minimization
-# ~~~~~~~~~~~~~~~~~~~~~
+# ^^^^^^^^^^^^^^^^^^^^^
 #
 # For finding reaction pathways, the endpoints should be minimized. We provide
 # initial configurations which are already minimized, but in order to see how to
@@ -159,23 +159,28 @@ ax2.set_axis_off()
 
 # %%
 # Initial path generation
-# ~~~~~~~~~~~~~~~~~~~~~~~
+# ^^^^^^^^^^^^^^^^^^^^^^^
 #
-# The earliest NEB methods linearly interpolate between the two known
-# configurations since these methods build on "drag coordinate" methods. This
-# may break bonds or otherwise also unphysically pass atoms through each other,
-# similar to the effect of incorrect permutations. To ameliorate this effect,
-# the NEB algorithm is often started from the linear interpolation but then the
-# path is optimized on a surrogate potential energy surface, commonly something
-# cheap and analytic, like the IDPP (Image dependent pair potential, [6]) which
-# provides a surface based on bond distances, and thus preventing atom-in-atom
-# collisions.
+# To begin an NEB method, an initial path is required, the optimal construction
+# of which still forms an active area of research. The simplest approximation to
+# an initial path for NEB methods linearly interpolate between the two known
+# configurations building on intuition developed from "drag coordinate" methods.
+# This may break bonds or otherwise also unphysically pass atoms through each
+# other, similar to the effect of incorrect permutations. To ameliorate this
+# effect, the NEB algorithm is often started from the linear interpolation but
+# then the path is optimized on a surrogate potential energy surface, commonly
+# something cheap and analytic, like the IDPP (Image dependent pair potential,
+# [6]) which provides a surface based on bond distances, and thus preventing
+# atom-in-atom collisions.
 #
 # Here we use the IDPP from ASE to setup the initial path. You can find
 # more information about this method in the corresponding
 # `ASE tutorial <https://ase-lib.org/examples_generated/tutorials/neb_idpp.html>`_
 # or in the original IDPP publication by
 # `S. Smidstru et al. <https://doi.org/10.1063/1.4878664>`_ .
+# A brief pedagogical discussion of the transition state methods may be found on
+# the `Rowan blog <https://rowansci.com/blog/guessing-transition-states>`_,
+# though the software is proprietary there.
 
 N_INTERMEDIATE_IMGS = 10
 # total includes the endpoints
@@ -191,9 +196,7 @@ neb.interpolate("idpp")
 # We don't cover subtleties in setting the number of images, typically too many
 # intermediate images may cause kinks but too few will be unable to resolve the
 # tangent to any reasonable quality.
-
-
-# %%
+#
 # For EON, we write the initial path to a file called ``idppPath.dat``.
 #
 
@@ -217,8 +220,14 @@ with open(summary_file_path, "w") as f:
 print(f"Wrote absolute paths to '{summary_file_path}'.")
 
 # %%
+# Running NEBs
+# ------------
+#
+# We will now consider actually running the Nudged Elastic Band with different
+# codes.
+#
 # ASE and Metatomic
-# -----------------
+# ^^^^^^^^^^^^^^^^^
 #
 # We first consider using metatomic with the ASE calculator.
 
@@ -268,16 +277,18 @@ plt.show()
 # very high, we stop after 100 steps.
 # The ASE algorithm with LBFGS optimizer does not
 # find good intermediate structures and does not converge
-# at all. Our test showed that the FIRE
-# optimizer works better in this context, but still takes over 500 steps
-# to converge.
-# We thus want to look at a different code, which manages to compute a
-# NEB for this simple system more efficiently.
+# at all. Our test showed that the FIRE optimizer works better in this context,
+# but still takes over 500 steps to converge, and since second order methods are
+# faster, we consider the LBFGS routine throughout this notebook.
+#
+# We thus want to
+# look at a different code, which manages to compute a NEB for this simple
+# system more efficiently.
 
 
 # %%
 # EON and Metatomic
-# -----------------
+# ^^^^^^^^^^^^^^^^^
 #
 # `EON <https://eondocs.org>`_ has two improvements to accurately locate the
 # saddle point.
@@ -442,9 +453,9 @@ def run_command_or_exit(
 
 
 # %%
-# Run the main client
-# -------------------
-
+# Run the main C++ client
+# ^^^^^^^^^^^^^^^^^^^^^^^
+#
 # This runs 'eonclient' and streams output live.
 # If it fails, the notebook execution stops here.
 run_command_or_exit(["eonclient"], capture=True, timeout=300)
@@ -478,7 +489,7 @@ oneDprof_oxad = [
     "--plot-structures",
     "crit_points",
     "--facecolor",
-    "floralwhite",
+    "white",
     "--plot-type",
     "profile",
     "--ase-rotation=90x,0y,0z",
@@ -549,7 +560,7 @@ plt.show()
 
 # %%
 # Relaxing the endpoints with EON
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# -------------------------------
 #
 # In this final part we come back to an essential
 # point of performing NEB calculations, and that is the
@@ -677,7 +688,7 @@ ax2.set_axis_off()
 
 # %%
 # References
-# ==========
+# ----------
 #
 # (1) Bigi, F.; Abbott, J. W.; Loche, P.; Mazitov, A.; Tisi, D.; Langer,
 #     M. F.; Goscinski, A.; Pegolo, P.; Chong, S.; Goswami, R.; Chorna,
