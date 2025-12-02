@@ -1,11 +1,12 @@
+# -*- coding: utf-8 -*-
 """
 Reaction Path Finding with EON and a Metatomic Potential
 ========================================================
 
-:Authors: Rohit Goswami `@HaoZeke <https://github.com/haozeke/>`__;
-Hanna Tuerk `@HannaTuerk <https://github.com/HannaTuerk>`__; Arslan Mazitov
-`@abmazitov <https://github.com/abmazitov>`__; Michele Ceriotti
-`@ceriottim <https://github.com/ceriottim/>`__
+:Authors: Rohit Goswami `@HaoZeke <https://github.com/haozeke/>`_;
+          Hanna Tuerk `@HannaTuerk <https://github.com/HannaTuerk>`_;
+          Arslan Mazitov `@abmazitov <https://github.com/abmazitov>`_;
+          Michele Ceriotti `@ceriottim <https://github.com/ceriottim/>`_
 
 This example describes how to find the reaction pathway for oxadiazole
 formation from N₂O and ethylene. We will use the **PET-MAD** `metatomic
