@@ -3,14 +3,15 @@ channels:
   - conda-forge
   - https://repo.prefix.dev/rg-forge
 dependencies:
-  - python=3.13
-  - pip
   - eon>=2.8.2
   - ira
-  - uv
   - libtorch>=2.9,<2.10 
+  - pip
+  - python=3.13
+  - uv
   - pip:
     - ase>=3.23
-    - metatrain  
     - matplotlib
+    - metatrain  
+    - requests
     - rgpycrumbs>=0.0.4,<0.1
