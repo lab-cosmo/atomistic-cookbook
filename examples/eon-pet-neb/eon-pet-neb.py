@@ -326,7 +326,9 @@ plt.show()
 #    climbing image.
 #
 # To use EON, we setup a function that writes the desired EON input for us and
-# runs the ``eonclient`` binary.
+# runs the ``eonclient`` binary. Since we are in a notebook environment, we will
+# use several abstractions over raw ``subprocess`` calls. In practice, writing
+# and using EON is much simpler.
 
 
 def write_neb_eon_config(
