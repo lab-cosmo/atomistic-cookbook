@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
+r"""
 Reaction Path Finding with EON and a Metatomic Potential
-========================================================
+==========================================================
 
-:Authors: Rohit Goswami `@HaoZeke <https://github.com/haozeke/>`_;
-          Hanna Tuerk `@HannaTuerk <https://github.com/HannaTuerk>`_;
-          Arslan Mazitov `@abmazitov <https://github.com/abmazitov>`_;
+:Authors: Rohit Goswami `@HaoZeke <https://github.com/haozeke/>`_,
+          Hanna Tuerk `@HannaTuerk <https://github.com/HannaTuerk>`_,
+          Arslan Mazitov `@abmazitov <https://github.com/abmazitov>`_,
           Michele Ceriotti `@ceriottim <https://github.com/ceriottim/>`_
 
 This example describes how to find the reaction pathway for oxadiazole
@@ -773,7 +773,6 @@ ax2.set_axis_off()
 #
 # (3) Goswami, R. Efficient Exploration of Chemical Kinetics. arXiv
 #     October 24, 2025. https://doi.org/10.48550/arXiv.2510.21368.
-
 #
 # (4) Gunde, M.; Salles, N.; Hémeryck, A.; Martin-Samos, L. IRA: A Shape
 #     Matching Approach for Recognition and Comparison of Generic Atomic
