@@ -2,10 +2,10 @@ import glob
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
-import re
 import zipfile
 from pathlib import Path
 
