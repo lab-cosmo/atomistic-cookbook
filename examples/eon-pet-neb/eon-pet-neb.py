@@ -17,7 +17,7 @@ The primary goal is to contrast a standard Nudged Elastic Band (NEB)
 calculation using the `atomic simulation environment
 (ASE) <https://databases.fysik.dtu.dk/ase/>`__ with more
 sophisticated methods available in the `EON
-package <https://theochemui.github.io/eOn/>`__. For a complex
+package <https://theochemui.github.io/eOn/>`__. For even a relatively simple 
 reaction like this, a basic NEB implementation can struggle to converge
 or may time out. We will show how EON's advanced features, such as
 **energy-weighted springs** and mixing in **single-ended dimer search steps**, can
