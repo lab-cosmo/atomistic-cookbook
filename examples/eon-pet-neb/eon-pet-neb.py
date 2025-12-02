@@ -62,6 +62,9 @@ from ase.visualize.plot import plot_atoms
 from metatomic.torch.ase_calculator import MetatomicCalculator
 
 
+# sphinx_gallery_thumbnail_number = 4
+
+
 # %%
 # Obtaining the Foundation Model - PET-MAD
 # ----------------------------------------
@@ -525,7 +528,7 @@ run_command_or_exit(oneDprof_oxad, capture=False, timeout=60)
 
 # Display the result
 img = mpimg.imread("1D_oxad.png")
-plt.figure(figsize=(10, 8))
+plt.figure(figsize=(8, 6))
 plt.imshow(img)
 plt.axis("off")
 plt.show()
@@ -575,9 +578,9 @@ run_command_or_exit(twoDprof_oxad, capture=False, timeout=60)
 
 # Display the result
 img = mpimg.imread("2D_oxad.png")
-plt.figure(figsize=(10, 8))  # Adjust size as needed
+plt.figure(figsize=(8, 6))
 plt.imshow(img)
-plt.axis("off")  # Turn off the axis so it looks like a standalone image
+plt.axis("off")
 plt.show()
 
 # %%
