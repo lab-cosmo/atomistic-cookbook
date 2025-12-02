@@ -10,3 +10,4 @@ dependencies:
     - torch
     - scipy
     - numpy
+    - requests

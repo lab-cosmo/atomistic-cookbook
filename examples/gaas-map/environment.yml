@@ -11,3 +11,4 @@ dependencies:
     - featomic
     - scikit-learn
     - skmatter>=0.3
+    - requests
