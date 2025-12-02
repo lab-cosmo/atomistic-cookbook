@@ -454,6 +454,11 @@ run_command_or_exit(["eonclient"], capture=True, timeout=300)
 # Visual interpretation
 # ---------------------
 #
+# `rgpycrumbs <http://pypi.org/project/rgpycrumbs>`_ is a visualization toolkit
+# designed to bridge the gap between raw computational output and physical
+# intuition, mapping high-dimensional NEB trajectories onto interpretable 1D
+# energy profiles and 2D RMSD landscapes.
+# 
 # We check both the standard 1D profile against the path reaction
 # coordinate, or the distance between intermediate images:
 
