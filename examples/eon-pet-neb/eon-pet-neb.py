@@ -253,9 +253,8 @@ print(img.calc._model.capabilities().outputs)
 neb = NEB(ipath, climb=True, k=5, method="improvedtangent")
 neb.interpolate("idpp")
 
-# plot the initial energy path guess
-energies = [i.get_potential_energy() for i in ipath]
-plt.plot(energies)
+# store initial path guess for plotting
+initial_energies = [img.get_potential_energy() for img in ipath]
 
 # setup the NEB clalculation
 optimizer = LBFGS(neb, trajectory="A2B.traj", logfile="opt.log")
@@ -266,8 +265,20 @@ print("Check if calculation has converged:", conv)
 if conv:
     print(neb)
 
-energies = [i.get_potential_energy() for i in ipath]
-plt.plot(energies)
+final_energies = [i.get_potential_energy() for i in ipath]
+
+# Plot initial and final path
+plt.figure(figsize=(8, 6))
+# Initial Path (Blue)
+plt.plot(initial_energies, "o-", label="Initial Path (IDPP)", color="xkcd:blue")
+# Final Path (Orange)
+plt.plot(final_energies, "o-", label="Optimized Path (LBFGS)", color="xkcd:orange")
+# Metadata
+plt.xlabel("Image number")
+plt.ylabel("Potential Energy (eV)")
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.title("NEB Path Evolution")
 plt.show()
 
 # %%
