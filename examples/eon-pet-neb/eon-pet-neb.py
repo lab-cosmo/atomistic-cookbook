@@ -275,14 +275,14 @@ final_energies = [i.get_potential_energy() for i in ipath]
 plt.figure(figsize=(8, 6))
 # Initial Path (Blue)
 plt.plot(
-    initial_energies - min(initial_energies),
+    initial_energies - initial_energies[0],
     "o-",
     label="Initial Path (IDPP)",
     color="xkcd:blue",
 )
 # Final Path (Orange)
 plt.plot(
-    final_energies - min(initial_energies),
+    final_energies - initial_energies[0],
     "o-",
     label="Optimized Path (LBFGS)",
     color="xkcd:orange",
