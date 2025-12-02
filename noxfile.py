@@ -2,6 +2,7 @@ import glob
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -212,6 +213,12 @@ def get_example_metadata(rst_file):
             html_description = rst_to_html(rst_description)
         if rst_title and rst_description:  # break when done
             break
+
+    if rst_title is None:
+        # Grab any text at start of line, followed by newline, followed by 3+ '=' signs
+        match = re.search(r"^([^:\n].+)\n={3,}", rst_content, re.MULTILINE)
+        if match:
+            rst_title = match.group(1).strip()
 
     metadata["title"] = rst_title or ""
     metadata["description"] = rst_description or ""

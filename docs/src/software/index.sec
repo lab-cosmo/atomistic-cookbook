@@ -10,12 +10,13 @@ in your own atomistic cooking.
     :maxdepth: 1
     :hidden:
 
-    i-pi
     chemiscope
-    featomic
-    scikit-matter
     cp2k
+    eon
+    featomic
+    i-pi
     lammps
     metatensor
     plumed
+    scikit-matter
     torch-pme
