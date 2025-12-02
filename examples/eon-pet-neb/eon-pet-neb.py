@@ -41,6 +41,7 @@ By convention, all ``import``
 statements are at the top of the file.
 """
 
+import contextlib
 import os
 import shutil
 import subprocess
@@ -624,22 +625,56 @@ converged_force = 0.01
     print(f"Wrote EON NEB config to '{config_path}'")
 
 
-Path("min_reactant").mkdir(exist_ok=True)
-aseio.write("min_reactant/pos.con", reactant)
-write_eon_min_config(Path("min_reactant"), Path(fname).absolute())
+# Reactant setup
+dir_reactant = Path("min_reactant")
+dir_reactant.mkdir(exist_ok=True)
 
-Path("min_product").mkdir(exist_ok=True)
-aseio.write("min_product/pos.con", product)
-write_eon_min_config(Path("min_product"), Path(fname).absolute())
+aseio.write(dir_reactant / "pos.con", reactant)
+write_eon_min_config(dir_reactant, Path(fname).absolute())
 
-# read the minimized end points
-reactant = aseio.read("min_reactant/pos.con")
-product = aseio.read("min_product/pos.con")
+# Product setup
+dir_product = Path("min_product")
+dir_product.mkdir(exist_ok=True)
+
+aseio.write(dir_product / "pos.con", product)
+write_eon_min_config(dir_product, Path(fname).absolute())
+
+
+# %%
+# Run the minimization
+# ^^^^^^^^^^^^^^^^^^^^
+#
+# The 'eonclient' will use the correct configuration within the folder.
+#
+@contextlib.contextmanager
+def work_in_dir(path: Path):
+    """
+    Context manager to safely change directory and return to previous
+    one afterwards. Crucial for notebooks to avoid path drift.
+    """
+    prev_cwd = Path.cwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(prev_cwd)
+
+
+with work_in_dir(dir_reactant):
+    run_command_or_exit(["eonclient"], capture=True, timeout=300)
+
+
+with work_in_dir(dir_product):
+    run_command_or_exit(["eonclient"], capture=True, timeout=300)
+
 
 # %%
 # Additionally, the relative ordering must be preserved, for which we use
 # IRA [3].
 #
+reactant = aseio.read(dir_reactant / "min.con")
+product = aseio.read(dir_product / "min.con")
+
 ira = ira_mod.IRA()
 # Default value
 kmax_factor = 1.8
