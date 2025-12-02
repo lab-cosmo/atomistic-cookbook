@@ -8,3 +8,4 @@ dependencies:
     - chemiscope>=0.8
     - matplotlib
     - shiftml
+    - requests

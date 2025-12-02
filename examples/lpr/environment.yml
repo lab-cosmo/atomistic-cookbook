@@ -8,3 +8,4 @@ dependencies:
     - matplotlib
     - featomic
     - skmatter>=0.3
+    - requests
