@@ -1,11 +1,15 @@
 docs/src/examples/
 docs/src/_static/all-examples-data.js
 
+examples/**/*.json.gz
+
 *build*
-*.json.gz
 *egg-info/
 
 .nox/
 
 __pycache__/
 *.pyc
+*.ipynb
+# Ruff stuff:
+.ruff_cache/

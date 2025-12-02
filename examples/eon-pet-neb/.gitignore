@@ -1,0 +1,27 @@
+.DS_Store
+.idea
+*.log
+tmp/
+
+# --- Core Logs and Data ---
+# Generated data files (results.dat, neb.dat, path logs, images)
+*.dat
+*.png
+
+# --- Checkpoints and Models ---
+*.ckpt
+*.pt
+
+# --- Coordinate and Path Files ---
+# Intermediate and final coordinate files (.con) that are results of the run
+*.con
+
+# Ignore subdirectories containing generated minima and path steps
+path/
+min_product/
+min_reactant/
+
+# Ignore the top-level config.ini
+config.ini
+# Ignore generated ASE trajectory
+A2B.traj

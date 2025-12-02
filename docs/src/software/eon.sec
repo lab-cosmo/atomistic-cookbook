@@ -1,0 +1,12 @@
+eon
+===
+
+eOn is a distributed client-server architecture for rare event simulations,
+specifically designed for finding saddle points and exploring potential energy
+surfaces over long time scales. It implements methods such as Adaptive Kinetic
+Monte Carlo (AKMC), Nudged Elastic Band (NEB), and dimer searches. The core
+client is written in C++ for performance, while the server and Python interface
+manage the state. Learn more about it on its `homepage <https://eondocs.org>`_
+or `the github repository <https://github.com/TheochemUI/EONgit>`_.
+
+- examples/eon-pet-neb/eon-pet-neb
