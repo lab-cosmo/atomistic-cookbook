@@ -1,0 +1,76 @@
+Analysis and post-processing
+============================
+
+This section contains recipes that analyze the output of a simulation,
+for post-processing, diagnostics or visualization purposes.
+
+
+
+.. grid:: 1 2 2 3
+    :gutter: 1 1 2 3
+
+    .. grid-item::
+
+        .. card:: PCA/PCovR Visualization of a training dataset for a potential
+            :link: ../examples/gaas-map/gaas-map
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/gaas-map/images/thumb/sphx_glr_gaas-map_thumb.png
+                :alt: This example uses featomic and metatensor to compute structural properties for the structures in a training dataset for a ML potential. These are then used with simple dimensionality reduction algorithms (implemented in sklearn and skmatter) to obtain a simplified description of the dataset, that is then visualized using chemiscope.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Local Prediction Rigidity analysis
+            :link: ../examples/lpr/lpr
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/lpr/images/thumb/sphx_glr_lpr_thumb.png
+                :alt: In this tutorial, we calculate the SOAP descriptors of an amorphous silicon dataset using featomic, then compute the local prediction rigidity (LPR) for the atoms of a "test" set before and after modifications to the "training" dataset has been made.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Generalized Convex Hull construction for the polymorphs of ROY
+            :link: ../examples/roy-gch/roy-gch
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/roy-gch/images/thumb/sphx_glr_roy-gch_thumb.png
+                :alt: This notebook analyzes the structures of 264 polymorphs of ROY, from Beran et Al, Chemical Science (2022), comparing the conventional density-energy convex hull with a Generalized Convex Hull (GCH) analysis (see Anelli et al., Phys. Rev. Materials (2018)). It uses features computed with featomic and uses the directional convex hull function from scikit-matter to make the figure.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Rotating equivariants
+            :link: ../examples/rotate-equivariants/rotate-equivariants
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/rotate-equivariants/images/thumb/sphx_glr_rotate-equivariants_thumb.png
+                :alt: This example shows how to rotate equivariant properties of atomic structures using the scipy and quaternionic libraries. The equivariant properties for this example are computed by the featomic library.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Water orientation in a pulsed electric field
+            :link: ../examples/water-pulsed/water-pulsed
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/water-pulsed/images/thumb/sphx_glr_water-pulsed_thumb.png
+                :alt: Energy dissipation in water is very fast and more efficient than in many other liquids. This behavior is commonly attributed to the intermolecular interactions associated with hydrogen bonding. This effect has been studied intensively by experiments, ab initio, and classical simulations in the work by Elgabarty et al.. Here, we will re run some of the classical force field molecular dynamics (MD) simulations of the paper using the GROMACS package to compute the timeseries of the dipole moments as well as the energy.
+                :class: gallery-img
+
+                

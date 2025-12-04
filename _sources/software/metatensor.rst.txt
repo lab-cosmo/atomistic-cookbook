@@ -1,0 +1,159 @@
+metatensor
+==========
+
+`Metatensor <http://docs.metatensor.org/>`_
+is a library providing a cross-platform data interchange API
+for atomistic simulation and beyond. It also powers 
+``metatomic`` -- an API to define atomistic models that can be
+used to run simulations using several different atomistic 
+simulation packages and ``metatrain`` a set of tools to facilitate
+training and evaluating ML models.
+
+
+
+.. grid:: 1 2 2 3
+    :gutter: 1 1 2 3
+
+    .. grid-item::
+
+        .. card:: Atomistic Water Model for Molecular Dynamics
+            :link: ../examples/water-model/water-model
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/water-model/images/thumb/sphx_glr_water-model_thumb.png
+                :alt: In this example, we demonstrate how to construct a metatomic model for flexible three and four-point water model, with parameters optimized for use together with quantum-nuclear-effects-aware path integral simulations (cf. Habershon et al., JCP (2009)). The model also demonstrates the use of torch-pme, a Torch library for long-range interactions, and uses the resulting model to perform demonstrative molecular dynamics simulations.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Equivariant linear model for polarizability
+            :link: ../examples/polarizability/polarizability
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/polarizability/images/thumb/sphx_glr_polarizability_thumb.png
+                :alt: In this example, we demonstrate how to construct a metatensor atomistic model for the polarizability tensor of molecular systems. This example uses the featomic library to compute equivariant descriptors, and scikit-learn to train a linear regression model. The model can then be used in an ASE calculator. You could also have a look at this recipe based on scalar/tensorial models, which provides an alternative approach for equivariant learning of tensors.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Equivariant model for tensorial properties based on scalar features
+            :link: ../examples/learn-tensors-with-mcov/learn-tensors-with-mcov
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/learn-tensors-with-mcov/images/thumb/sphx_glr_learn-tensors-with-mcov_thumb.png
+                :alt: In this example, we demonstrate how to train a metatensor atomistic model on dipole moments and polarizabilities of small molecular systems, using a model that combines scalar descriptors with equivariant tensorial components that depend in a simple way from the molecular geometry. You may also want to read this recipe for a linear polarizability model, which provides an alternative approach for tensorial learning. The model is trained with metatrain and can then be used in an ASE calculator.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: The PET-MAD universal potential
+            :link: ../examples/pet-mad/pet-mad
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/pet-mad/images/thumb/sphx_glr_pet-mad_thumb.png
+                :alt: This example demonstrates how to use the PET-MAD model with ASE, i-PI and LAMMPS. PET-MAD is a "universal" machine-learning forcefield trained on a dataset that aims to incorporate a very high degree of structural diversity.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: MD using direct-force predictions with PET-MAD
+            :link: ../examples/pet-mad-nc/pet-mad-nc
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/pet-mad-nc/images/thumb/sphx_glr_pet-mad-nc_thumb.png
+                :alt: Evaluating forces as a direct output of a ML model accelerates their evaluation, by up to a factor of 3 in comparison to the traditional approach that evaluates them as derivatives of the interatomic potential. Unfortunately, as discussed e.g. in this paper, doing so means that forces are not conservative, leading to instabilities and artefacts in many modeling tasks, such as constant-energy molecular dynamics. Here we demonstrate the issues associated with direct force predictions, and ways to mitigate them, using the generally-applicable PET-MAD potential. See also this recipe for examples of using PET-MAD for basic tasks such as geometry optimization and conservative MD, and this for an example of how to use direct forces to accelerate training.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Fine-tuning the PET-MAD universal potential
+            :link: ../examples/pet-finetuning/pet-ft
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/pet-finetuning/images/thumb/sphx_glr_pet-ft_thumb.png
+                :alt: This example demonstrates how to fine-tune the PET-MAD universal ML potential on a new dataset using metatrain. This allows adapting the model to a specialized task by retraining it on a more focused, domain-specific dataset.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Conservative fine-tuning for a PET model
+            :link: ../examples/pet-finetuning/pet-ft-nc
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/pet-finetuning/images/thumb/sphx_glr_pet-ft-nc_thumb.png
+                :alt: This example demonstrates a "conservative fine-tuning" (or equivalently, "non-conservative pre-training") strategy. This consists in training a model using (faster) direct, non-conservative force predictions, and then fine-tuning it with backpropagated forces to achieve an accurate conservative model.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Long-stride trajectories with a universal FlashMD model
+            :link: ../examples/flashmd/flashmd-demo
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/flashmd/images/thumb/sphx_glr_flashmd-demo_thumb.png
+                :alt: For a quickstart on how to use FlashMD with ASE, you can go here.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Computing NMR shielding tensors using ShiftML
+            :link: ../examples/shiftml/shiftml-example
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/shiftml/images/thumb/sphx_glr_shiftml-example_thumb.png
+                :alt: This example shows how to compute NMR shielding tensors using a point-edge transformer model trained on the ShiftML dataset.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Hamiltonian Learning for Molecules with Indirect Targets
+            :link: ../examples/hamiltonian-qm7/hamiltonian-qm7
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/hamiltonian-qm7/images/thumb/sphx_glr_hamiltonian-qm7_thumb.png
+                :alt: This tutorial introduces a machine learning (ML) framework that predicts Hamiltonians for molecular systems. Another one of our cookbook examples demonstrates an ML model that predicts real-space Hamiltonians for periodic systems. While we use the same model here to predict a molecular Hamiltonians, we further finetune these models to optimise predictions of different quantum mechanical (QM) properties of interest, thereby treating the Hamiltonian predictions as an intermediate component of the ML framework. More details on this hybrid or indirect learning framework can be found in ACS Cent. Sci. 2024, 10, 637−648. and our preprint arXiv:2504.01187.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: ML collective variables in PLUMED with metatomic
+            :link: ../examples/metatomic-plumed/metatomic-plumed
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/metatomic-plumed/images/thumb/sphx_glr_metatomic-plumed_thumb.png
+                :alt: This example shows how to build a metatomic model that computes order parameters for a Lennard-Jones cluster, and how to use it with the PLUMED package to run a metadynamics simulation.
+                :class: gallery-img
+
+                

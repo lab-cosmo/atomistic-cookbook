@@ -1,0 +1,116 @@
+Statistical sampling and dynamics
+=================================
+
+This section contains recipes that compute thermodynamic averages by sampling,
+evaluates dynamical properties, or otherwise computes the properties of a
+set of configurations of an atomistic system.
+
+
+
+.. grid:: 1 2 2 3
+    :gutter: 1 1 2 3
+
+    .. grid-item::
+
+        .. card:: Constant-temperature MD and thermostats
+            :link: ../examples/thermostats/thermostats
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/thermostats/images/thumb/sphx_glr_thermostats_thumb.png
+                :alt: This recipe gives a practical introduction to finite-temperature molecular dynamics simulations, and provides a guide to choose the most appropriate thermostat for the simulation at hand.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Path integral molecular dynamics
+            :link: ../examples/path-integrals/path-integrals
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/path-integrals/images/thumb/sphx_glr_path-integrals_thumb.png
+                :alt: This example shows how to run a path integral molecular dynamics simulation using i-PI, analyze the output and visualize the trajectory in chemiscope. It uses LAMMPS as the driver to simulate the q-TIP4P/f water model.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Path integral metadynamics
+            :link: ../examples/pi-metad/pi-metad
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/pi-metad/images/thumb/sphx_glr_pi-metad_thumb.png
+                :alt: This example shows how to run a free-energy sampling calculation that combines path integral molecular dynamics to model nuclear quantum effects and metadynamics to accelerate sampling of the high-free-energy regions.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Batch run of CP2K calculations
+            :link: ../examples/batch-cp2k/reference-trajectory
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/batch-cp2k/images/thumb/sphx_glr_reference-trajectory_thumb.png
+                :alt: This is an example how to perform single point calculations based on list of structures using CP2K using its reftraj functionality. The inputs are a set of structures in :download:`example.xyz` using the DFT parameters defined in :download:`reftraj_template.cp2k`. The reference DFT parameters are taken from Cheng et al. Ab initio thermodynamics of liquid and solid water 2019. Due to the small size of the test structure and convergence issues, we have decreased the size of the CUTOFF_RADIUS from 6.0\,\mathrm{Å} to 3.0\,\mathrm{Å}. For actual production calculations adapt the template!
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Quantum heat capacity of water
+            :link: ../examples/heat-capacity/heat-capacity
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/heat-capacity/images/thumb/sphx_glr_heat-capacity_thumb.png
+                :alt: This example shows how to estimate the heat capacity of liquid water from a path integral molecular dynamics simulation. The dynamics are run with i-PI, and LAMMPS is used as the driver to simulate the q-TIP4P/f water model.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Multiple time stepping and ring-polymer contraction
+            :link: ../examples/pi-mts-rpc/mts-rpc
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/pi-mts-rpc/images/thumb/sphx_glr_mts-rpc_thumb.png
+                :alt: This notebook provides an introduction to multiple time stepping and ring polymer contraction, two closely-related techniques, that are geared towards reducing the cost of calculations by separating slowly-varying (and computationally-expensive) components of the potential energy from the fast-varying (and hopefully cheaper) ones.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Atomistic Water Model for Molecular Dynamics
+            :link: ../examples/water-model/water-model
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/water-model/images/thumb/sphx_glr_water-model_thumb.png
+                :alt: In this example, we demonstrate how to construct a metatomic model for flexible three and four-point water model, with parameters optimized for use together with quantum-nuclear-effects-aware path integral simulations (cf. Habershon et al., JCP (2009)). The model also demonstrates the use of torch-pme, a Torch library for long-range interactions, and uses the resulting model to perform demonstrative molecular dynamics simulations.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: ML collective variables in PLUMED with metatomic
+            :link: ../examples/metatomic-plumed/metatomic-plumed
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/metatomic-plumed/images/thumb/sphx_glr_metatomic-plumed_thumb.png
+                :alt: This example shows how to build a metatomic model that computes order parameters for a Lennard-Jones cluster, and how to use it with the PLUMED package to run a metadynamics simulation.
+                :class: gallery-img
+
+                
