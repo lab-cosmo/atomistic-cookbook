@@ -1,0 +1,8 @@
+channels:
+  - conda-forge
+dependencies:
+  - chemiscope
+  - gromacs
+  - mdanalysis
+  - metatrain
+  - python=3.12

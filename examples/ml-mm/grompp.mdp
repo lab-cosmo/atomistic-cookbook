@@ -1,0 +1,30 @@
+; Run control
+integrator              = md
+dt                      = 0.0005
+nsteps                  = 500
+
+; Output control
+nstxout                 = 10
+nstvout                 = 10
+nstenergy               = 10
+nstcalcenergy           = 10
+nstlog                  = 10
+
+; Neighborsearching
+cutoff-scheme           = Verlet
+pbc                     = xyz
+
+; Electrostatics
+coulombtype             = PME
+
+; Temperature coupling
+tcoupl                  = v-rescale
+tc-grps                 = water protein ; two coupling groups - more accurate
+tau-t                   = 2.0   2.0 ; time constant, in ps
+ref-t                   = 300   300
+
+; Metatomic interface
+; metatomic-active        = yes
+; metatomic-input-group   = protein  ; the group on which ML forces are applied
+; metatomic-modelfile     = pet-mad-v1.0.2.pt  ; path to the ML model file
+; metatomic-device        = cpu  ; device to run the ML model on (cpu or cuda)
