@@ -569,7 +569,6 @@ twoDprof_oxad = [
     "--plot-type",
     "landscape",
     "--show-pts",
-    "True",
     "--surface-type",
     "rbf",
     "--output-file",
