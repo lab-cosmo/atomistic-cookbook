@@ -8,15 +8,17 @@ dependencies:
   - py-plumed-metatomic
   - lammps-metatomic
   - matplotlib
+  - libtorch==2.9.1
+  - libmetatomic-torch==0.1.7
   - pip:
     - --extra-index-url https://download.pytorch.org/whl/cpu
-    - torch==2.7.1
+    - torch==2.9.1
     - ase
     - numpy
     - chemiscope
-    - ipi>=3.1.5  
-    - metatomic[torch]
-    - featomic-torch<=0.7.0
+    - ipi>=3.1.5
+    - metatomic-torch==0.1.7
+    - featomic-torch
 variables:
   PIP_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
   PLUMED_KERNEL: $CONDA_PREFIX/lib/libplumedKernel.so
