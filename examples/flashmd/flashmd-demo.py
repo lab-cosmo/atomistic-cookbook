@@ -137,7 +137,7 @@ chemiscope.show(
 # solvated alanine dipeptide, using the FlashMD universal model with 16 fs
 # time steps (note that normal MD would require 0.5 fs steps). The setup
 # is very similar to the previous example, but we use an input template
-# that contains a NpT setup, and use the ``get_npt_stepper`` utility
+# that contains a NpT setup, and we use the ``get_npt_stepper`` utility
 # function to set up a stepper that combines the FlashMD velocity-Verlet
 # step with cell updates.
 #
