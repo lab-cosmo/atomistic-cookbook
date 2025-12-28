@@ -141,7 +141,7 @@ chemiscope.show(
 # function to set up a stepper that combines the FlashMD velocity-Verlet
 # step with cell updates.
 #
-# Note also that the MLIP is now also used to
+# Note that the MLIP is now also used to
 # obtain stresses by backpropagation (and not only energies to enforce
 # energy conservation). Therefore, compared to the NVT run, we disable
 # non-conservative mode for the MLIP in the xml file. As long as the cell
