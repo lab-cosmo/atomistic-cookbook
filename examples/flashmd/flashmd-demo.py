@@ -135,10 +135,19 @@ chemiscope.show(
 #
 # As a second example, we run a constant-pressure simulation of explicitly
 # solvated alanine dipeptide, using the FlashMD universal model with 16 fs
-# time steps (as opposed to 0.5 fs). The setup is very similar to the previous
-# example, but we use an input template that contains a NpT setup, and use
-# the ``get_npt_stepper`` utility function to set up a stepper that
-# combine the FlashMD velocity-Verlet step with cell updates.
+# time steps (note that normal MD would require 0.5 fs steps). The setup
+# is very similar to the previous example, but we use an input template
+# that contains a NpT setup, and use the ``get_npt_stepper`` utility
+# function to set up a stepper that combines the FlashMD velocity-Verlet
+# step with cell updates.
+#
+# Note also that the MLIP is now also used to
+# obtain stresses by backpropagation (and not only energies to enforce
+# energy conservation). Therefore, compared to the NVT run, we disable
+# non-conservative mode for the MLIP in the xml file. As long as the cell
+# degrees of freedom are thermostatted, like in this case, disabling
+# non-conservative mode wouldn't strictly be necessary to obtain a stable
+# run.
 
 with open("data/input-ala2-base.xml", "r") as input_xml:
     sim = InteractiveSimulation(input_xml)
