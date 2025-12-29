@@ -87,8 +87,7 @@ import os
 import subprocess
 from urllib.request import urlretrieve
 
-import ase.cell
-import ase.ga.utilities
+import ase.geometry.rdf
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -363,7 +362,7 @@ xs = None
 for atoms in frames:
 
     # Compute H-H distances
-    bins, xs = ase.ga.utilities.get_rdf(  # type: ignore
+    bins, xs = ase.geometry.rdf.get_rdf(  # type: ignore
         atoms, 4.5, num_bins, elements=[1, 1]
     )
 
@@ -378,7 +377,7 @@ for atoms in frames:
     rdfs_hh.append(bins * 3.0 / 2.0)  # correct ASE normalization
 
     # Compute O-O distances
-    bins, xs = ase.ga.utilities.get_rdf(  # type: ignore
+    bins, xs = ase.geometry.rdf.get_rdf(  # type: ignore
         atoms, 4.5, num_bins, elements=[8, 8]
     )
     bins[2:-2] = (
