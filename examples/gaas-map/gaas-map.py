@@ -35,6 +35,7 @@ from sklearn.decomposition import PCA
 from sklearn.linear_model import RidgeCV
 from skmatter.decomposition import PCovR
 from skmatter.preprocessing import StandardFlexibleScaler
+from urllib3.util.retry import Retry
 
 
 # %%
@@ -68,6 +69,7 @@ def fetch_dataset(filename, base_url, local_path=""):
         file.write(response.content)
 
 
+filename = "gaas_training.xyz"
 fetch_dataset(filename, "https://zenodo.org/records/10566825/files/")
 
 structures = ase.io.read(filename, ":")

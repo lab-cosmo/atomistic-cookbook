@@ -87,6 +87,7 @@ from IPython.utils import io
 from mlelec.features.acdc import compute_features_for_target
 from mlelec.targets import drop_zero_blocks  # noqa: F401
 from mlelec.utils.plot_utils import plot_losses
+from urllib3.util.retry import Retry
 
 
 os.environ["PYSCFAD_BACKEND"] = "torch"
