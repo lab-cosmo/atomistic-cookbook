@@ -10,5 +10,5 @@ dependencies:
     - vesin[torch]>=0.3.2,<0.4
     - flashmd>=0.2.2
     - metatrain  
-    - chemiscope>=0.8.5,<0.9 
+    - chemiscope>=0.8 
     - matplotlib
