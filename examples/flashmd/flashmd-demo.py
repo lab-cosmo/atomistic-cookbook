@@ -89,7 +89,11 @@ with open("data/input-al110-base.xml", "r") as input_xml:
 # ensure that the total energy of the system is conserved, at the cost of one extra
 # energy evaluation per step, while the latter is inexpensive and allows for random
 # rotations of the system, which is useful to correct for the fact that the model is not
-# exactly equivariant with respect to rotations.
+# exactly equivariant with respect to rotations. Note that the ``xml`` input uses
+# the option ``non-conservative:True``: only the energy is needed to monitor and
+# correct for energy drift, and given that i-PI always evaluates also forces for good
+# measure, using a non-conservative model reduces the overead associated with the
+# potential energy evaluations that would occur when using ``rescale_energy=True``.
 
 sim.set_motion_step(
     get_nvt_stepper(
