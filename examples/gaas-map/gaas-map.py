@@ -35,6 +35,7 @@ from sklearn.decomposition import PCA
 from sklearn.linear_model import RidgeCV
 from skmatter.decomposition import PCovR
 from skmatter.preprocessing import StandardFlexibleScaler
+from urllib3.util.retry import Retry
 
 
 # %%
@@ -45,13 +46,31 @@ from skmatter.preprocessing import StandardFlexibleScaler
 # train a ML potential to describe the full composition range.
 #
 
-filename = "gaas_training.xyz"
-if not os.path.exists(filename):
-    url = f"https://zenodo.org/records/10566825/files/{filename}"
-    response = requests.get(url)
+
+def fetch_dataset(filename, base_url, local_path=""):
+    """Helper function to load the pre-computed examples"""
+
+    local_file = local_path + filename
+    if os.path.isfile(local_file):
+        return
+
+    # Retry strategy: wait 1s, 2s, 4s, 8s, 16s on 429/5xx errors
+    retry_strategy = Retry(
+        total=5, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504]
+    )
+    session = requests.Session()
+    session.mount("https://", requests.adapters.HTTPAdapter(max_retries=retry_strategy))
+
+    # Fetch with automatic retry and error raising
+    response = session.get(base_url + filename)
     response.raise_for_status()
-    with open(filename, "wb") as f:
-        f.write(response.content)
+
+    with open(local_file, "wb") as file:
+        file.write(response.content)
+
+
+filename = "gaas_training.xyz"
+fetch_dataset(filename, "https://zenodo.org/records/10566825/files/")
 
 structures = ase.io.read(filename, ":")
 energy = np.array([f.info["energy"] for f in structures])

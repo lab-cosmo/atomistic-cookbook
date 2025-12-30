@@ -87,6 +87,7 @@ from IPython.utils import io
 from mlelec.features.acdc import compute_features_for_target
 from mlelec.targets import drop_zero_blocks  # noqa: F401
 from mlelec.utils.plot_utils import plot_losses
+from urllib3.util.retry import Retry
 
 
 os.environ["PYSCFAD_BACKEND"] = "torch"
@@ -188,15 +189,33 @@ save_parameters(
 # We first download the data for the two examples from Zenodo
 # and unzip the downloaded datafile.
 
-if not os.path.exists("hamiltonian-qm7-data"):
-    url = r"https://zenodo.org/records/15524259/files/hamiltonian-qm7-data.zip"
-    response = requests.get(url)
-    response.raise_for_status()
-    with open("hamiltonian-qm7-data.zip", "wb") as f:
-        f.write(response.content)
 
-    with ZipFile("hamiltonian-qm7-data.zip", "r") as zObject:
-        zObject.extractall(path=".")
+def fetch_dataset(filename, base_url, local_path=""):
+    """Helper function to load the pre-computed examples"""
+
+    local_file = local_path + filename
+    if os.path.isfile(local_file):
+        return
+
+    # Retry strategy: wait 1s, 2s, 4s, 8s, 16s on 429/5xx errors
+    retry_strategy = Retry(
+        total=5, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504]
+    )
+    session = requests.Session()
+    session.mount("https://", requests.adapters.HTTPAdapter(max_retries=retry_strategy))
+
+    # Fetch with automatic retry and error raising
+    response = session.get(base_url + filename)
+    response.raise_for_status()
+
+    with open(local_file, "wb") as file:
+        file.write(response.content)
+
+
+fetch_dataset("hamiltonian-qm7-data.zip", "https://zenodo.org/records/15524259/files/")
+
+with ZipFile("hamiltonian-qm7-data.zip", "r") as zObject:
+    zObject.extractall(path=".")
 
 # %%
 # Prepare the Dataset for ML Training
