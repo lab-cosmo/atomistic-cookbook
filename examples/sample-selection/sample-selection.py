@@ -28,27 +28,40 @@ from sklearn.decomposition import PCA
 from skmatter import feature_selection, sample_selection
 
 
-# Note that you will need a the specific new version of skmatter (state: Feb. 2025).
-# The link is provided in the environment.yml file that you can find on github.
-
 # %%
-# Load molecular data
+# Load structure data
 # -------------------
 #
-# Load 500 example BTO structures from file, reading them using
+# Load 500 example Ga/As structures from file, reading them using
 # `ASE <https://wiki.fysik.dtu.dk/ase/>`_.
-# The data is available as a download in the data.zip file below or in the
-# atomistic-cookbook github.
+
+def fetch_dataset(filename, base_url, local_path=""):
+    """Helper function to load data with retries on errors."""
+
+    local_file = local_path + filename
+    if os.path.isfile(local_file):
+        return
+
+    # Retry strategy: wait 1s, 2s, 4s, 8s, 16s on 429/5xx errors
+    retry_strategy = Retry(
+        total=5, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504]
+    )
+    session = requests.Session()
+    session.mount("https://", requests.adapters.HTTPAdapter(max_retries=retry_strategy))
+
+    # Fetch with automatic retry and error raising
+    response = session.get(base_url + filename)
+    response.raise_for_status()
+
+    with open(local_file, "wb") as file:
+        file.write(response.content)
+
 
 filename = "gaas_training.xyz"
-if not os.path.exists(filename):
-    url = f"https://zenodo.org/records/10566825/files/{filename}"
-    response = requests.get(url)
-    response.raise_for_status()
-    with open(filename, "wb") as f:
-        f.write(response.content)
+fetch_dataset(filename, "https://zenodo.org/records/10566825/files/")
 
-# Load a subset of `structures <data/input-fps.xyz>` of the example dataset
+
+# Load a subset of structures from the example dataset
 n_frames = 500
 frames = ase.io.read("gaas_training.xyz", f":{3*n_frames}:3", format="extxyz")
 
@@ -56,7 +69,7 @@ frames = ase.io.read("gaas_training.xyz", f":{3*n_frames}:3", format="extxyz")
 # Compute SOAP descriptors using featomic
 # ----------------------------------------
 #
-# First, define the featomic hyperparameters used to compute SOAP.
+# First, define the featomic hyperparameters used to compute SOAP features.
 
 
 # featomic hyperparameters

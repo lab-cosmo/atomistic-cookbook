@@ -191,7 +191,7 @@ save_parameters(
 
 
 def fetch_dataset(filename, base_url, local_path=""):
-    """Helper function to load the pre-computed examples"""
+    """Helper function to load data with retries on errors."""
 
     local_file = local_path + filename
     if os.path.isfile(local_file):
