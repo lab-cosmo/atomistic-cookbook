@@ -26,6 +26,7 @@ from featomic import SoapPowerSpectrum
 from matplotlib import pyplot as plt
 from sklearn.decomposition import PCA
 from skmatter import feature_selection, sample_selection
+from urllib3.util.retry import Retry
 
 
 # %%
