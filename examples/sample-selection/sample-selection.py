@@ -35,6 +35,7 @@ from skmatter import feature_selection, sample_selection
 # Load 500 example Ga/As structures from file, reading them using
 # `ASE <https://wiki.fysik.dtu.dk/ase/>`_.
 
+
 def fetch_dataset(filename, base_url, local_path=""):
     """Helper function to load data with retries on errors."""
 
