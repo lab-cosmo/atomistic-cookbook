@@ -217,7 +217,7 @@ class CoordinationHistogram(torch.nn.Module):
 # Rather than looking at the atomic coordination, one can also resort to order
 # parameters that capture the angular order. The **Steinhardt order parameters**,
 # specifically :math:`Q_4` and :math:`Q_6` are rotationally invariant and measure the
-# local orientational symmetry around each atom. The standard caclulation works by
+# local orientational symmetry around each atom. The standard calculation works by
 # summing over bond vectors within a cutoff radius which connect a central atom to the
 # neighbors and does not use a weighing within the cutoff radius.
 #
@@ -344,13 +344,13 @@ class SoapCV(torch.nn.Module):
 cutoff = 5.5
 module = CoordinationHistogram(cutoff, cn_list=[6, 8])
 
-# metatdata about the model itself
+# metadata about the model itself
 metadata = mta.ModelMetadata(
     name="Coordination histogram",
     description="Computes smooth histogram of coordination numbers",
 )
 
-# metatdata about what the model can do
+# metadata about what the model can do
 capabilities = mta.ModelCapabilities(
     length_unit="Angstrom",
     outputs={"features": mta.ModelOutput(per_atom=False)},

@@ -35,7 +35,7 @@ import numpy as np
 #    :align: center
 #    :width: 600px
 #
-#    A representation of ther ring-polymer Hamiltonian for a water molecule.
+#    A representation of the ring-polymer Hamiltonian for a water molecule.
 #
 # In order to describe the quantum mechanical nature of light nuclei
 # (nuclear quantum effects) one of the most widely-applicable methods uses
@@ -187,7 +187,7 @@ plt.show()
 # You can also visualize the (very short) trajectory in a way that highlights the fast
 # spreading out of the beads of the ring polymer. We use ``chemiscope``'s ability to
 # visualize custom shaped to interleave the trajectories of the beads, forming a
-# trajectory that shows the connecttions between the replicas of each atom. Each atom
+# trajectory that shows the connections between the replicas of each atom. Each atom
 # and its connections are color-coded.
 
 nbeads, nframes, natoms = (

@@ -298,7 +298,7 @@ plt.show()
 # %%
 # In the 100 NEB steps we took, the structure did unfortunately not converge.
 # The metatomic calculator for PET-MAD v1.0.2 provides `LLPR based energy
-# uncertainities <https://atomistic-cookbook.org/examples/pet-mad-uq/pet-mad-uq.html>`_.
+# uncertainties <https://atomistic-cookbook.org/examples/pet-mad-uq/pet-mad-uq.html>`_.
 # As we obtain a warning that the uncertainty of the path structure sampled is
 # very high, we stop after 100 steps.
 # The ASE algorithm with LBFGS optimizer does not

@@ -136,7 +136,7 @@ calculator_lr = LodeSphericalExpansion(**LR_HYPERS)
 # Taking a look at the output we find that the resulting
 # :py:class:`metatensor.TensorMap` are quite similar in their structure. The short range
 # :py:class:`metatensor.TensorMap` contains more blocks due to the higher
-# ``max_angular`` paramater we choosed above.
+# ``max_angular`` parameter we chose above.
 #
 # Generate the rotational invariants (power spectra)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

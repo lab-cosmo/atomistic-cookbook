@@ -92,7 +92,7 @@ torch.set_default_dtype(torch.float64)
 # Start by importing all the modules from the `batch-cp2k
 # tutorial <https://tinyurl.com/cp2krun>`__ and run the cell to install
 # CP2K. Run also the cells up to the one defining ``write_cp2k_in``.
-# The following code snippet defines a slighly modified version of that function,
+# The following code snippet defines a slightly modified version of that function,
 # allowing for non-orthorombic supercell, and accounting for the reftraj file
 # name change.
 #

@@ -325,7 +325,7 @@ def evaluate_spline(spline_coefs, spline_positions, x):
     x = torch.clamp(
         x, min=spline_positions[0], max=spline_positions[-1] - 0.0005
     )  # restrict x to fall within the spline interval
-    # 0.0005 is substracted to combat errors arising from precision
+    # 0.0005 is subtracted to combat errors arising from precision
     indexes = torch.floor(
         (x - spline_positions[0]) / interval
     ).long()  # Obtain the index for the appropriate spline coefficients
@@ -438,7 +438,7 @@ train_index = train_index[:val_mark]
 # %%
 # 2) Define the dataloader and the Model Architecture
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# We will now build a dataloader and dataset to facillitate training the model batchwise
+# We will now build a dataloader and dataset to facilitate training the model batchwise
 
 
 def generate_atomstructure_index(n_atoms_per_structure):

@@ -69,7 +69,7 @@ else:
 def write_reftraj(fname: str, frames: Union[ase.Atoms, List[ase.Atoms]]) -> None:
     """Writes a list of ase atoms objects to a reference trajectory.
 
-    A reference trajectory is the CP2K compatible format for the compuation of batches.
+    A reference trajectory is the CP2K compatible format for the computation of batches.
     All frames must have the stoichiometry/composition.
     """
 
@@ -84,7 +84,7 @@ def write_reftraj(fname: str, frames: Union[ase.Atoms, List[ase.Atoms]]) -> None
         ):
             raise ValueError(
                 f"Atom symbols in frame {i},{atoms.get_chemical_formula()} are "
-                f"different compared to inital frame "
+                f"different compared to initial frame "
                 f"{frames[0].get_chemical_formula()}. "
                 "CP2K does not support changing atom types within a reftraj run!"
             )

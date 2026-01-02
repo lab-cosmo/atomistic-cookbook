@@ -54,7 +54,7 @@ and our preprint `arXiv:2504.01187 <https://doi.org/10.48550/arXiv.2504.01187>`_
 
 # %%
 # We first show an example where we predict the reduced effective
-# Hamiltonians for a homogenous dataset of ethane molecule while
+# Hamiltonians for a homogeneous dataset of ethane molecule while
 # targeting the MO energies of the def2-TZVP basis. In a second example
 # we will then target multiple properties for a organic molecule dataset,
 # similar to our results described in our preprint
@@ -71,7 +71,7 @@ and our preprint `arXiv:2504.01187 <https://doi.org/10.48550/arXiv.2504.01187>`_
 # %%
 # We start by creating a virtual environment and installing
 # all necessary packages. The required packages are provided
-# in the environment.yml file that can be dowloaded at the end.
+# in the environment.yml file that can be downloaded at the end.
 # We can then import the necessary packages.
 #
 
@@ -174,7 +174,7 @@ save_parameters(
 # In principle one can generate the training data of reference
 # Hamiltonians from a given set of structures, using any
 # electronic structure code. Here we provide a pre-computed,
-# homogenous dataset that contains 100 different
+# homogeneous dataset that contains 100 different
 # configurations of ethane molecule. For all structures, we
 # performed Kohn-Sham density functional theory (DFT)
 # calculations with `PySCF <https://github.com/pyscf/pyscf>`_,
@@ -228,7 +228,7 @@ with ZipFile("hamiltonian-qm7-data.zip", "r") as zObject:
 # `mlelec  <https://github.com/curiosity54/mlelec/tree/qm7>`_.
 # In this section we initialise the ``MoleculeDataset`` where
 # we specify the molecule name, file paths and the desired targets
-# and auxillary data to be used for training for the minimal
+# and auxiliary data to be used for training for the minimal
 # (STO-3G), as well as a larger basis (lb, def2-TZVP).
 # Once the molecular data is prepared, we wrap it into an
 # ``MLDataset`` instance. This class structures the dataset
@@ -283,7 +283,7 @@ ml_data._split_indices(
 # are dependent on single atom centers and two centers
 # for pairwise interactions.
 # To address this, we extend the equivariant SOAP-based
-# features for the atom-centered desciptors
+# features for the atom-centered descriptors
 # to a descriptor capable of describing multiple atomic centers and
 # their connectivities, giving rise to the equivariant pairwise descriptor
 # which simultaneously characterizes the environments for pairs of atoms
@@ -362,7 +362,7 @@ train_dl, val_dl, test_dl = get_dataloader(
 # This provides us a more reliable set of weights to initialise the
 # fine-tuning rather than starting from any random guess,
 # effectively saving us training time by starting the training process
-# closer to the desired minumum.
+# closer to the desired minimum.
 
 
 model = LinearTargetModel(
@@ -648,7 +648,7 @@ plot_parity_properties(
 # Get Data and Prepare Data Set
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 # In our last example even though we show an indirect ML model
-# that was trained on a homogenous dataset of different
+# that was trained on a homogeneous dataset of different
 # configurations of ethane, we can also easily extend the
 # framework to use  a much diverse dataset such as the
 # `QM7 dataset <http://quantum-machine.org/datasets/>`_.
@@ -711,7 +711,7 @@ FOLDER_NAME = "output/qm7"
 # and load the QM7
 # dataset we downloaded above from zenodo
 # for the defined number of frames.
-# First, we load all relavant data (geometric structures,
+# First, we load all relevant data (geometric structures,
 # auxiliary matrices -overlap and orbitals-, and
 # targets -fock, dipole moment, and polarisablity-) into a molecule dataset.
 # We do this for the minimal (STO-3G), as well as a larger basis (lb, def2-TZVP).
