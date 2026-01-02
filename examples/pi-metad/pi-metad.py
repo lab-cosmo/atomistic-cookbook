@@ -557,12 +557,11 @@ if ipi_process is not None:
 # Analysis of the simulation
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# A path integral simulation evolves multiple configurations at the same
-# time, forming a `ring polymer`. Each replica provides a sample of the
-# quantum mechanical configuration distribution of the atoms. To provide
-# an overall visualization of the path integral dynamics, we load all the
-# replicas and combine them using a utility function from the
-# `chemiscope` library.`
+# A path integral simulation evolves multiple configurations at the same time, forming a
+# `ring polymer`. Each replica provides a sample of the quantum mechanical configuration
+# distribution of the atoms. To provide an overall visualization of the path integral
+# dynamics, we can use chemiscope and define custom shapes to represent the different
+# rings.
 
 
 output_data, output_desc = ipi.read_output("meta-pimd.out")
@@ -571,20 +570,54 @@ colvar_data = ipi.read_trajectory("meta-pimd.colvar_0", format="extras")[
 ]
 pimd_traj_data = [ipi.read_trajectory(f"meta-pimd.pos_{i}.xyz") for i in range(8)]
 
-# combines the PI beads and sets up the visualization options
-traj_pimd = chemiscope.ase_merge_pi_frames(pimd_traj_data)
-traj_pimd["shapes"]["paths"]["parameters"]["global"]["radius"] = 0.05
-traj_pimd["properties"] = dict(
-    d_OO=10 * colvar_data[:, 0],  # nm to Å
-    delta_coord=colvar_data[:, 1],
-    bias=27.211386 * output_data["ensemble_bias"],  # Ha to eV
-    time=2.4188843e-05 * output_data["time"],
+
+nbeads, nframes, natoms = (
+    len(pimd_traj_data),
+    len(pimd_traj_data[0]),
+    len(pimd_traj_data[0][0]),
 )
-traj_pimd["settings"] = chemiscope.quick_settings(
+
+# creates frames with all beads, so we can use periodic boundary conditions when
+# computing distances
+full_frames = []
+for i in range(nframes):
+    struc = pimd_traj_data[0][i].copy()
+    for k in range(1, nbeads):
+        struc += pimd_traj_data[k][i]
+    full_frames.append(struc)
+
+distance_vectors = [
+    full_frames[frame_i].get_distance(
+        bead_i * natoms + atom_i,
+        ((bead_i + 1) % nbeads) * natoms + atom_i,
+        mic=True,
+        vector=True,
+    )
+    for frame_i in range(nframes)
+    for bead_i in range(nbeads)
+    for atom_i in range(natoms)
+]
+
+paths_shapes = {
+    "kind": "cylinder",
+    "parameters": {
+        "global": {"radius": 0.05},
+        "atom": [{"vector": d.tolist()} for d in distance_vectors],
+    },
+}
+
+properties = {
+    "d_OO": 10 * colvar_data[:, 0],  # nm to Å
+    "delta_coord": colvar_data[:, 1],
+    "bias": 27.211386 * output_data["ensemble_bias"],  # Ha to eV
+    "time": 2.4188843e-05 * output_data["time"],
+}
+
+settings = chemiscope.quick_settings(
     x="d_OO",
     y="delta_coord",
     z="bias",
-    color="time",
+    map_color="time",
     trajectory=True,
     structure_settings=dict(
         bonds=False,
@@ -596,14 +629,21 @@ traj_pimd["settings"] = chemiscope.quick_settings(
         ],
     ),
 )
-traj_pimd["settings"]["target"] = "structure"
+settings["target"] = "structure"
+
 
 # %%
 #
 # Visualize the trajectory. Note the similar behavior as for the classical
 # trajectory, and the delocalization of the protons
 
-chemiscope.show(**traj_pimd)
+chemiscope.show(
+    full_frames,
+    properties=properties,
+    environments=chemiscope.all_atomic_environments(full_frames, 4.0),
+    shapes={"paths": paths_shapes},
+    settings=settings,
+)
 
 
 # %%
