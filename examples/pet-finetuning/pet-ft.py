@@ -284,7 +284,7 @@ display_training_curves(from_scratch_log)
 # ``metatrain`` package. There are multiple strategies to apply
 # fine-tuning, each described in the `documentation
 # <https://metatensor.github.io/metatrain/latest/advanced-concepts/fine-tuning.html>`_.
-# In this example we demostrate a basic full fine-tuning strategy, which adapts all
+# In this example we demonstrate a basic full fine-tuning strategy, which adapts all
 # model weights to the new dataset starting from the pre-trained PET-MAD checkpoint. The
 # process is configured by setting appropriate settings in the YAML options file.
 #

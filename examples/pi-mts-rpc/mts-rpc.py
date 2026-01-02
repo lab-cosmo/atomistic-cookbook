@@ -322,7 +322,7 @@ for line in lines[7:13]:
 # components are active at each level of the MTS hierarchy.
 # These weights indicate that the smooth part (full minus short-range)
 # is active in the outer loop, and the short-range part is active in the inner
-# loop. Note that the implementation is smart enough to re-use the short-range
+# loop. Note that the implementation is smart enough to reuse the short-range
 # potential computed in the inner loop, multiplying it with a weight of -1 to
 # compute :math:`V_\mathrm{lr}=V-V_\mathrm{sr}`.
 

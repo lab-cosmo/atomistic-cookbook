@@ -808,7 +808,7 @@ plt.show()
 
 # %%
 # Especially in the high-frequency region, the deconvolution
-# algorithm succees in recovering the underlying NVE dynamics,
+# algorithm succeeds in recovering the underlying NVE dynamics,
 # which can be useful whenever one wants to optimize statistical
 # efficiency while still being able to estimate dynamical
 # properties.

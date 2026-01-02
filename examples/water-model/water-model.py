@@ -550,7 +550,7 @@ def get_molecular_geometry(
 
     # adjust neighbor lists to point at the m sites rather than O atoms. this assumes
     # this won't have atoms cross the cutoff, which is of course only approximately
-    # true, so one should use a slighlty larger-than-usual cutoff nb - this is reshaped
+    # true, so one should use a slightly larger-than-usual cutoff nb - this is reshaped
     # to match the values in a NL tensorblock
     nl = system.get_neighbor_list(nlo)
     i_idx = nl.samples.view(["first_atom"]).values.flatten()
@@ -657,7 +657,7 @@ class WaterModel(torch.nn.Module):
 
         # We use a half neighborlist and allow to have pairs farther than cutoff
         # (`strict=False`) since this is not problematic for PME and may speed up the
-        # computation of the neigbors.
+        # computation of the neighbors.
         self.nlo = NeighborListOptions(cutoff=cutoff, full_list=False, strict=False)
 
         self.register_buffer("cutoff", torch.tensor(cutoff))
@@ -855,7 +855,7 @@ The stress is
 #
 # .. note::
 #
-#   We neeed to specify that the model has infinite interaction range because of the
+#   We need to specify that the model has infinite interaction range because of the
 #   presence of a long-range term that means one cannot assume that forces decay to zero
 #   beyond the cutoff.
 

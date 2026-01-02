@@ -162,7 +162,7 @@ mad_forces = []
 mad_structures = []
 for structure in test_structures:
     tmp = deepcopy(structure)
-    tmp.calc = copy(calculator)  # avoids ovewriting results.
+    tmp.calc = copy(calculator)  # avoids overwriting results.
     mad_energy.append(tmp.get_potential_energy())
     mad_forces.append(tmp.get_forces())
     mad_structures.append(tmp)
@@ -200,7 +200,7 @@ for i, sub in enumerate(subsets):
 ax[0].set_xlabel("MAD energy / eV/atom")
 ax[0].set_ylabel("Reference energy / eV/atom")
 ax[1].set_xlabel("MAD forces / eV/Å")
-ax[1].set_ylabel("Refrerence forces / eV/Å")
+ax[1].set_ylabel("Reference forces / eV/Å")
 
 fig.legend(loc="upper center", bbox_to_anchor=(0.55, 1.20), ncol=3)
 
@@ -422,7 +422,7 @@ chemiscope.show(
 #
 # Here we use a ``<motion mode="multi">`` block to combine
 # a MD run with a ``<motion mode="atomswap">`` block that
-# attemts swapping atoms, with a Monte Carlo acceptance.
+# attempts swapping atoms, with a Monte Carlo acceptance.
 
 motion_xml = f"""
 <motion mode="multi">

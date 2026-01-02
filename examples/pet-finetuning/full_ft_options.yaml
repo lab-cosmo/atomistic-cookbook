@@ -4,7 +4,7 @@ architecture:
   name: "pet"
   training:
     batch_size: 10
-    num_epochs: 50  # very short period for demostration
+    num_epochs: 50  # very short period for demonstration
     learning_rate: 1e-5  # small learning rate to stabilize training
     finetune:
       method: "full"  # use fine-tuning strategy

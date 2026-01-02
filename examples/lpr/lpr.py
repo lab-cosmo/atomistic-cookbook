@@ -70,7 +70,7 @@ frames_defect = [frames_defect[ii] for ii in ids]
 # 4 coordinating atoms. "Defect" refers to structures that contain
 # atoms with coordination numbers other than 4.
 #
-# We use :code:`get_all_distances` funciton of :code:`ase.Atoms` to detect the
+# We use :code:`get_all_distances` function of :code:`ase.Atoms` to detect the
 # number of coordinated atoms.
 
 cur_cutoff = 2.7

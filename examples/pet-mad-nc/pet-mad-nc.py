@@ -435,7 +435,7 @@ MTS (M=8):           {time_lammps_mts / 16:.4f} s/step
 # by running the `metatomic` model on the GPU, which you can achieve
 # by setting ``device cuda`` for the `metatomic` pair style in the LAMMPS input files.
 # The MD integration will however still be run on the CPU, which can become the
-# bottleneck - especially because atomic positions need to be transfered to the GPU
+# bottleneck - especially because atomic positions need to be transferred to the GPU
 # at each call. LAMMPS can also be run directly on the GPU using the KOKKOS package,
 # see `the installation instructions
 # <https://docs.metatensor.org/metatomic/latest/engines/lammps.html>`_ for
