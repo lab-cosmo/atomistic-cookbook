@@ -142,7 +142,7 @@ calculator = PETMADCalculator(version="1.0.1", device="cpu")
 # external MD engines. This is done by saving the model to a file,
 # which includes the model architecture and weights.
 
-calculator._model.save("pet-mad-v1.1.0.pt")
+calculator.model.save("pet-mad-v1.1.0.pt")
 
 # %%
 # The model can also be loaded from this torchscript dump, which often
