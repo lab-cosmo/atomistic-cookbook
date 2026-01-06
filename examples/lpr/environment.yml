@@ -7,5 +7,5 @@ dependencies:
     - ase==3.22.1
     - matplotlib
     - featomic
-    - skmatter>=0.3
+    - skmatter>=0.3.3
     - requests
