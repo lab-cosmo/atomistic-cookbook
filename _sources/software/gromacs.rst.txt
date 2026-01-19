@@ -1,0 +1,34 @@
+GROMACS
+=======
+
+GROMACS is a versatile and highly optimized molecular dynamics (MD) engine designed for
+classical simulations. It is widely recognized for its exceptional performance,
+scalability, and efficiency, making it suitable for use on systems ranging from laptops
+to high-performance computing (HPC) clusters. Originally developed for biomolecular
+simulations, GROMACS is commonly used in fields such as biochemistry, biophysics, and
+structural biology to study proteins, lipids, and nucleic acids.
+
+In addition to its focus on biomolecular systems, GROMACS supports a wide range of force
+fields and can simulate non-biological systems such as polymers and materials. It
+includes tools for preprocessing, trajectory analysis, and visualization, providing a
+comprehensive suite for MD workflows. Its open-source nature and active community ensure
+continuous development and support.
+
+
+
+.. grid:: 1 2 2 3
+    :gutter: 1 1 2 3
+
+    .. grid-item::
+
+        .. card:: Water orientation in a pulsed electric field
+            :link: ../examples/water-pulsed/water-pulsed
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/water-pulsed/images/thumb/sphx_glr_water-pulsed_thumb.png
+                :alt: Energy dissipation in water is very fast and more efficient than in many other liquids. This behavior is commonly attributed to the intermolecular interactions associated with hydrogen bonding. This effect has been studied intensively by experiments, ab initio, and classical simulations in the work by Elgabarty et al.. Here, we will re run some of the classical force field molecular dynamics (MD) simulations of the paper using the GROMACS package to compute the timeseries of the dipole moments as well as the energy.
+                :class: gallery-img
+
+                
