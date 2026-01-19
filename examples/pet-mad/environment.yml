@@ -3,7 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - python=3.12
-  - lammps-metatomic
+  - lammps-metatomic=2025.09.10.mta1
   - pip
   - pip:
     - ase
