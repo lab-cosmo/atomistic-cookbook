@@ -21,4 +21,3 @@ dependencies:
     - featomic-torch
 variables:
   PIP_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
-  PLUMED_KERNEL: $CONDA_PREFIX/lib/libplumedKernel.so
