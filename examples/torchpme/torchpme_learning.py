@@ -149,10 +149,12 @@ def loss(charge_dict: Dict[str, torch.Tensor]) -> torch.Tensor:
 # %%
 # Set initial values for the potential
 potential = CombinedPotential(
-    potentials=[InversePowerLawPotential(exponent=1.0, smearing=smearing)],
+    potentials=[
+        InversePowerLawPotential(exponent=1.0, smearing=smearing, prefactor=prefactor)
+    ],
     smearing=smearing,
 )
-calculator = EwaldCalculator(potential=potential, **params, prefactor=prefactor)
+calculator = EwaldCalculator(potential=potential, **params)
 calculator.to(device=device, dtype=dtype)
 
 q_Na = torch.tensor(1e-5).to(device=device, dtype=dtype)
@@ -204,13 +206,13 @@ for step in range(1000):
 # Set initial values for the kernel model
 potential = CombinedPotential(
     [
-        InversePowerLawPotential(exponent=1.0, smearing=smearing),
-        InversePowerLawPotential(exponent=2.0, smearing=smearing),
+        InversePowerLawPotential(exponent=1.0, smearing=smearing, prefactor=prefactor),
+        InversePowerLawPotential(exponent=2.0, smearing=smearing, prefactor=prefactor),
     ],
     smearing=smearing,
 )
 
-calculator = EwaldCalculator(potential=potential, **params, prefactor=prefactor)
+calculator = EwaldCalculator(potential=potential, **params)
 calculator.to(device=device, dtype=dtype)
 
 # %%
