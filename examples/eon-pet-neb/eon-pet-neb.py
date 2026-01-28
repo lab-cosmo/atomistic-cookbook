@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 r"""
-Finding Reaction Paths with EON and a Metatomic Potential
+Finding Reaction Paths with eOn and a Metatomic Potential
 =========================================================
 
 :Authors: Rohit Goswami `@HaoZeke <https://github.com/haozeke/>`_,
@@ -13,15 +13,14 @@ formation from N₂O and ethylene. We will use the **PET-MAD** `metatomic
 model <https://docs.metatensor.org/metatomic/latest/overview.html>`__ to
 calculate the potential energy and forces.
 
-The primary goal is to contrast a standard Nudged Elastic Band (NEB)
-calculation using the `atomic simulation environment
-(ASE) <https://databases.fysik.dtu.dk/ase/>`__ with more
-sophisticated methods available in the `EON
-package <https://theochemui.github.io/eOn/>`__. For even a relatively simple
-reaction like this, a basic NEB implementation can struggle to converge
-or may time out. We will show how EON's advanced features, such as
-**energy-weighted springs** and mixing in **single-ended dimer search steps**, can
-efficiently locate and refine the transition state along the path.
+The primary goal is to contrast a standard Nudged Elastic Band (NEB) calculation
+using the `atomic simulation environment (ASE)
+<https://databases.fysik.dtu.dk/ase/>`__ with more sophisticated methods
+available in the `eOn package <https://eondocs.org/>`__. For even a relatively
+simple reaction like this, a basic NEB implementation can struggle to converge
+or may time out. We will show how eOn's advanced features, such as
+**energy-weighted springs** and mixing in **single-ended dimer search steps**,
+can efficiently locate and refine the transition state along the path.
 
 Our approach will be:
 
@@ -29,10 +28,10 @@ Our approach will be:
 2. Use ASE to generate an initial IDPP reaction path.
 3. Illustrate the limitations of a standard NEB calculation in ASE.
 4. Refine the path and locate the transition state saddle point using
-   EON's optimizers, including energy-weighted springs and the dimer
+   eOn's optimizers, including energy-weighted springs and the dimer
    method.
 5. Visualize the final converged pathway.
-6. Demonstrate endpoind relaxation with EON
+6. Demonstrate endpoint relaxation with eOn
 
 
 Importing Required Packages
@@ -44,23 +43,22 @@ statements are at the top of the file.
 
 import contextlib
 import os
-import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import List, Optional, Union
 
 import ase
 import ase.io as aseio
 import ira_mod
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
-import requests
 from ase.mep import NEB
 from ase.optimize import LBFGS
 from ase.visualize import view
 from ase.visualize.plot import plot_atoms
 from metatomic.torch.ase_calculator import MetatomicCalculator
+from rgpycrumbs.eon.helpers import write_eon_config
+from rgpycrumbs.run.jupyter import run_command_or_exit
 
 
 # sphinx_gallery_thumbnail_number = 4
@@ -86,17 +84,23 @@ from metatomic.torch.ase_calculator import MetatomicCalculator
 repo_id = "lab-cosmo/upet"
 tag = "v1.1.0"
 url_path = f"models/pet-mad-s-{tag}.ckpt"
-fname = Path(url_path).name
+fname = Path(url_path.replace(".ckpt", ".pt"))
 url = f"https://huggingface.co/{repo_id}/resolve/main/{url_path}"
-export_name = fname.replace(".ckpt", ".pt")
-
-if not Path(export_name).exists():
-    subprocess.run(
-        ["uvx", "--from", "metatrain", "mtt", "export", url], check=True
-    )
-    print(f"Successfully exported {fname} to {export_name}.")
-else:
-    print(f"Exported file {export_name} already exists.")
+fname.parent.mkdir(parents=True, exist_ok=True)
+subprocess.run(
+    [
+        "uvx",
+        "--from",
+        "metatrain",
+        "mtt",
+        "export",
+        url,
+        "-o",
+        fname,
+    ],
+    check=True,
+)
+print(f"Successfully exported {fname}.")
 
 
 # %%
@@ -148,7 +152,7 @@ ax2.set_axis_off()
 #
 # For finding reaction pathways, the endpoints should be minimized. We provide
 # initial configurations which are already minimized, but in order to see how to
-# relax endpoints with EON, please have a look at the end of this tutorial.
+# relax endpoints with eOn, please have a look at the end of this tutorial.
 
 
 # %%
@@ -191,7 +195,7 @@ neb.interpolate("idpp")
 # intermediate images may cause kinks but too few will be unable to resolve the
 # tangent to any reasonable quality.
 #
-# For EON, we write the initial path to a file called ``idppPath.dat``.
+# For eOn, we write the initial path to a file called ``idppPath.dat``.
 #
 
 output_dir = "path"
@@ -229,7 +233,7 @@ print(f"Wrote absolute paths to '{summary_file_path}'.")
 # define the calculator
 def mk_mta_calc():
     return MetatomicCalculator(
-        "pet-mad-v1.0.2.pt",
+        fname,
         device="cpu",
         non_conservative=False,
         uncertainty_threshold=0.001,
@@ -302,172 +306,70 @@ plt.show()
 
 
 # %%
-# EON and Metatomic
+# eOn and Metatomic
 # ^^^^^^^^^^^^^^^^^
 #
-# `EON <https://eondocs.org>`_ has two improvements to accurately locate the
+# `eOn <https://eondocs.org>`_ has two improvements to accurately locate the
 # saddle point.
 #
 # 1. Energy weighting for improving tangent resolution
 #    near the climbing image
-# 2. The Hybrid MMF-NEB-CI which involves
-#    iteratively switching to the dimer method for faster convergence by the
-#    climbing image.
+# 2. The Off-path climbing image (6) which involves
+#    iteratively switching to the dimer method for
+#    faster convergence by the climbing image.
 #
-# To use EON, we setup a function that writes the desired EON input for us and
+# To use eOn, we setup a function that writes the desired eOn input for us and
 # runs the ``eonclient`` binary. Since we are in a notebook environment, we will
 # use several abstractions over raw ``subprocess`` calls. In practice, writing
-# and using EON is much simpler.
+# and using eOn involves a configuration file, which we define as a dictionary
+# to be used with a helper to generate the final output.
 
-
-def write_neb_eon_config(
-    run_dir: Path, model_path: Path, ninterm: int = N_INTERMEDIATE_IMGS
-):
-    """
-    Writes the config.ini file for an EON NEB job,
-    using the user's provided template.
-    """
-    config_content = f"""[Main]
-job=nudged_elastic_band
-random_seed = 706253457
-
-[Potential]
-potential = Metatomic
-
-[Metatomic]
-model_path = {Path(str(model_path).replace("ckpt", "pt")).absolute()}
-
-[Nudged Elastic Band]
-images={ninterm}
-energy_weighted=true
-ew_ksp_min = 0.972
-ew_ksp_max = 9.72
-initial_path_in = idppPath.dat
-minimize_endpoints = false
-climbing_image_method = true
-climbing_image_converged_only = true
-ci_after = 1.5
-ci_mmf = true
-ci_mmf_after = 0.5
-ci_mmf_nsteps = 20
-
-# for PET-MAD 1.1
-# ci_after = 0.5
-# ci_mmf_nsteps = 10
-
-[Optimizer]
-max_iterations = 100
-opt_method = lbfgs
-max_move = 0.1
-converged_force = 0.01
-
-[Debug]
-write_movies=true
-"""
-    config_path = run_dir / "config.ini"
-    with open(config_path, "w") as f:
-        f.write(config_content)
-    print(f"Wrote EON NEB config to '{config_path}'")
+# Define configuration as a dictionary for clarity
+neb_settings = {
+    "Main": {"job": "nudged_elastic_band", "random_seed": 706253457},
+    "Potential": {"potential": "Metatomic"},
+    "Metatomic": {"model_path": fname.absolute()},
+    "Nudged Elastic Band": {
+        "images": N_INTERMEDIATE_IMGS,
+        # initialization
+        "initializer": "file",
+        "initial_path_in": "idppPath.dat",
+        "minimize_endpoints": "false",
+        # CI-NEB settings
+        "climbing_image_method": "true",
+        "climbing_image_converged_only": "true",
+        "ci_after": 0.5,
+        "ci_after_rel": 0.8,
+        # energy weighing
+        "energy_weighted": "true",
+        "ew_ksp_min": 0.972,
+        "ew_ksp_max": 9.72,
+        # OCI-NEB settings
+        "ci_mmf": "true",
+        "ci_mmf_after": 0.1,
+        "ci_mmf_after_rel": 0.5,
+        "ci_mmf_penalty_strength": 1.5,
+        "ci_mmf_penalty_base": 0.4,
+        "ci_mmf_angle": 0.9,
+        "ci_mmf_nsteps": 1000,
+    },
+    "Optimizer": {
+        "max_iterations": 1000,
+        "opt_method": "lbfgs",
+        "max_move": 0.1,
+        "converged_force": 0.01,
+    },
+    "Debug": {"write_movies": "true"},
+}
 
 
 # %%
 # Which now let's us write out the final triplet of reactant, product, and
-# configuration of the EON-NEB.
+# configuration of the eOn-NEB.
 
-write_neb_eon_config(Path("."), Path(fname).absolute())
+write_eon_config(Path("."), neb_settings)
 aseio.write("reactant.con", reactant)
 aseio.write("product.con", product)
-
-# %%
-# Now we can finally define helpers for easier visualization.
-
-
-def _run_command_live(
-    cmd: Union[str, List[str]],
-    *,
-    check: bool = True,
-    timeout: Optional[float] = None,
-    capture: bool = False,
-    encoding: str = "utf-8",
-) -> subprocess.CompletedProcess:
-    """
-    Internal: run command and stream stdout/stderr live to current stdout.
-    If capture=True, also collect combined output and return it
-    in CompletedProcess.stdout.
-    """
-    shell = isinstance(cmd, str)
-    cmd_str = cmd if shell else cmd[0]
-
-    # If list form, ensure program exists before trying to run
-    if not shell and shutil.which(cmd_str) is None:
-        raise FileNotFoundError(f"{cmd_str!r} is not on PATH")
-
-    # Start the process
-    # We combine stderr into stdout so we only have one stream to read
-    proc = subprocess.Popen(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        encoding=encoding,
-        shell=shell,
-        bufsize=1,  # Line buffered
-    )
-
-    collected = [] if capture else None
-
-    try:
-        assert proc.stdout is not None
-        for line in proc.stdout:
-            # Stream into notebook or terminal live
-            print(line, end="")
-            sys.stdout.flush()
-            if capture:
-                collected.append(line)
-
-        # Wait for the process to actually exit after stream closes
-        returncode = proc.wait(timeout=timeout)
-
-    except subprocess.TimeoutExpired:
-        proc.kill()
-        proc.wait()
-        raise
-    except KeyboardInterrupt:
-        proc.kill()
-        proc.wait()
-        raise
-    finally:
-        if proc.stdout:
-            proc.stdout.close()
-
-    if check and returncode != 0:
-        output_str = "".join(collected) if capture else ""
-        raise subprocess.CalledProcessError(returncode, cmd, output=output_str)
-
-    return subprocess.CompletedProcess(
-        cmd, returncode, stdout="".join(collected) if capture else None
-    )
-
-
-def run_command_or_exit(
-    cmd: Union[str, List[str]], capture: bool = False, timeout: Optional[float] = 300
-) -> subprocess.CompletedProcess:
-    """
-    Helper wrapper to run commands, stream output, and exit script/notebook
-    cleanly on failure so sphinx-gallery sees the errors appropriately.
-    """
-    try:
-        return _run_command_live(cmd, check=True, capture=capture, timeout=timeout)
-    except FileNotFoundError as e:
-        print(f"Executable not found: {e}", file=sys.stderr)
-        sys.exit(2)
-    except subprocess.CalledProcessError as e:
-        print(f"Command failed with exit code {e.returncode}", file=sys.stderr)
-        sys.exit(e.returncode)
-    except subprocess.TimeoutExpired:
-        print("Command timed out", file=sys.stderr)
-        sys.exit(124)
-
 
 # %%
 # Run the main C++ client
@@ -485,7 +387,69 @@ run_command_or_exit(["eonclient"], capture=True, timeout=300)
 # `rgpycrumbs <http://pypi.org/project/rgpycrumbs>`_ is a visualization toolkit
 # designed to bridge the gap between raw computational output and physical
 # intuition, mapping high-dimensional NEB trajectories onto interpretable 1D
-# energy profiles and 2D RMSD landscapes.
+# energy profiles and 2D RMSD landscapes.  As it is normally used from the
+# command-line, here we define a helper.
+
+
+def get_neb_plot_cmd(
+    mode: str,
+    con_file: str = "neb.con",
+    output_file: str = "plot.png",
+    title: str = "",
+    rotation: str = "90x,0y,0z",
+) -> list[str]:
+    """
+    Constructs the CLI command for rgpycrumbs plotting to avoid clutter in notebooks.
+    mode: 'profile' (1D) or 'landscape' (2D)
+    """
+    base_cmd = [
+        sys.executable,
+        "-m",
+        "rgpycrumbs.cli",
+        "eon",
+        "plt_neb",
+        "--con-file",
+        con_file,
+        "--output-file",
+        output_file,
+        "--ase-rotation",
+        rotation,
+        "--facecolor",
+        "white",
+        "--plot-structures",
+        "crit_points",
+    ]
+
+    if title:
+        base_cmd.extend(["--title", title])
+
+    if mode == "profile":
+        base_cmd.extend(["--plot-type", "profile"])
+    elif mode == "landscape":
+        base_cmd.extend(
+            [
+                "--plot-type",
+                "landscape",
+                "--rc-mode",
+                "path",
+                "--fontsize-base",
+                "16",
+                "--landscape-mode",
+                "surface",
+                "--landscape-path",
+                "all",
+                "--show-pts",
+                "--surface-type",
+                "rbf",
+            ]
+        )
+    else:
+        raise ValueError(f"Unknown plot mode: {mode}")
+
+    return base_cmd
+
+
+# %%
 #
 # We check both the standard 1D profile against the path reaction
 # coordinate, or the distance between intermediate images:
@@ -493,30 +457,11 @@ run_command_or_exit(["eonclient"], capture=True, timeout=300)
 # Clean env to prevent backend conflicts in notebooks
 os.environ.pop("MPLBACKEND", None)
 
-oneDprof_oxad = [
-    sys.executable,
-    "-m",
-    "rgpycrumbs.cli",
-    "eon",
-    "plt_neb",
-    "--theme",
-    "ruhi",
-    "--con-file",
-    "neb.con",
-    "--plot-structures",
-    "crit_points",
-    "--facecolor",
-    "white",
-    "--plot-type",
-    "profile",
-    "--ase-rotation=90x,0y,0z",
-    "--title=NEB Path Optimization",
-    "--output-file",
-    "1D_oxad.png",
-]
-
 # Run the 1D plotting command using the helper
-run_command_or_exit(oneDprof_oxad, capture=False, timeout=60)
+cmd_1d = get_neb_plot_cmd(
+    "profile", title="NEB Path Optimization", output_file="1D_oxad.png"
+)
+run_command_or_exit(cmd_1d, capture=False, timeout=60)
 
 # Display the result
 img = mpimg.imread("1D_oxad.png")
@@ -530,42 +475,11 @@ plt.show()
 # Also, the PES 2D landscape profile as a function of the RMSD [3] which shows
 # the relative distance between the endpoints as the optimization takes place:
 
-twoDprof_oxad = [
-    sys.executable,
-    "-m",
-    "rgpycrumbs.cli",
-    "eon",
-    "plt_neb",
-    "--theme",
-    "ruhi",
-    "--con-file",
-    "neb.con",
-    "--plot-structures",
-    "crit_points",
-    "--facecolor",
-    "white",
-    "--rc-mode",
-    "path",
-    "--ase-rotation=90x,0y,0z",
-    "--title",
-    "NEB-RMSD Surface",
-    "--fontsize-base",
-    "16",
-    "--landscape-mode",
-    "surface",
-    "--landscape-path",
-    "all",
-    "--plot-type",
-    "landscape",
-    "--show-pts",
-    "--surface-type",
-    "rbf",
-    "--output-file",
-    "2D_oxad.png",
-]
-
 # Run the 2D plotting command using the helper
-run_command_or_exit(twoDprof_oxad, capture=False, timeout=60)
+cmd_2d = get_neb_plot_cmd(
+    "landscape", title="NEB-RMSD Surface", output_file="2D_oxad.png"
+)
+run_command_or_exit(cmd_2d, capture=False, timeout=60)
 
 # Display the result
 img = mpimg.imread("2D_oxad.png")
@@ -583,7 +497,7 @@ plt.show()
 # of all the black dots. See [3, Chapter 4] for more details of this
 # visualization.
 #
-# Relaxing the endpoints with EON
+# Relaxing the endpoints with eOn
 # -------------------------------
 #
 # In this final part we come back to an essential
@@ -597,7 +511,7 @@ reactant = aseio.read("data/reactant.con")
 product = aseio.read("data/product.con")
 
 
-# For compatibility with EON, we also need to provide
+# For compatibility with eOn, we also need to provide
 # a unit cell
 def center_cell(atoms):
     atoms.set_cell([20, 20, 20])
@@ -620,47 +534,31 @@ ax2.text(0.3, -1, "product")
 ax1.set_axis_off()
 ax2.set_axis_off()
 
-
-def write_eon_min_config(run_dir: Path, model_path: Path):
-    """
-    Writes the config.ini file for an EON NEB job,
-    using the user's provided template.
-    """
-    config_content = f"""[Main]
-job=minimization
-random_seed = 706253457
-
-[Potential]
-potential = Metatomic
-
-[Metatomic]
-model_path = {Path(str(model_path).replace("ckpt", "pt")).absolute()}
-
-[Optimizer]
-max_iterations = 2000
-opt_method = lbfgs
-max_move = 0.1
-converged_force = 0.01
-"""
-    config_path = run_dir / "config.ini"
-    with open(config_path, "w") as f:
-        f.write(config_content)
-    print(f"Wrote EON NEB config to '{config_path}'")
-
-
 # Reactant setup
 dir_reactant = Path("min_reactant")
 dir_reactant.mkdir(exist_ok=True)
-
 aseio.write(dir_reactant / "pos.con", reactant)
-write_eon_min_config(dir_reactant, Path(fname).absolute())
 
 # Product setup
 dir_product = Path("min_product")
 dir_product.mkdir(exist_ok=True)
-
 aseio.write(dir_product / "pos.con", product)
-write_eon_min_config(dir_product, Path(fname).absolute())
+
+# Shared minimization settings
+min_settings = {
+    "Main": {"job": "minimization", "random_seed": 706253457},
+    "Potential": {"potential": "Metatomic"},
+    "Metatomic": {"model_path": fname.absolute()},
+    "Optimizer": {
+        "max_iterations": 2000,
+        "opt_method": "lbfgs",
+        "max_move": 0.1,
+        "converged_force": 0.01,
+    },
+}
+
+write_eon_config(dir_reactant, min_settings)
+write_eon_config(dir_product, min_settings)
 
 
 # %%
@@ -770,4 +668,8 @@ ax2.set_axis_off()
 # (5) Smidstrup, S.; Pedersen, A.; Stokbro, K.; Jónsson, H. Improved
 #     Initial Guess for Minimum Energy Path Calculations. J. Chem. Phys.
 #     2014, 140 (21), 214106. https://doi.org/10.1063/1.4878664.
+#
+# (6) Goswami, R; Gunde, M; Jónsson, H. Enhanced climbing image nudged elastic
+#     band method with hessian eigenmode alignment, Jan. 22, 2026, arXiv:
+#     arXiv:2601.12630. doi: 10.48550/arXiv.2601.12630.
 #
