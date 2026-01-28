@@ -75,7 +75,7 @@ from metatomic.torch.ase_calculator import MetatomicCalculator
 # which learns equivariance through data driven measures
 # instead of having equivariance baked in [1]. In turn, this enables
 # the PET model to have greater design space to learn over. Integration in
-# Python and the C++ EON client occurs through the ``metatomic`` software [2],
+# Python and the C++ eOn client occurs through the ``metatomic`` software [2],
 # which in turn relies on the atomistic machine learning toolkit build
 # over ``metatensor``. Essentially using any of the metatomic models involves
 # grabbing weights off of HuggingFace and loading them with
@@ -83,31 +83,20 @@ from metatomic.torch.ase_calculator import MetatomicCalculator
 # `engine of choice <https://docs.metatensor.org/metatomic/latest/engines/index.html>`_.
 #
 
-repo_id = "lab-cosmo/pet-mad"
-tag = "v1.0.2"
-url_path = f"models/pet-mad-{tag}.ckpt"
+repo_id = "lab-cosmo/upet"
+tag = "v1.1.0"
+url_path = f"models/pet-mad-s-{tag}.ckpt"
 fname = Path(url_path).name
-url = f"https://huggingface.co/{repo_id}/resolve/{tag}/{url_path}"
+url = f"https://huggingface.co/{repo_id}/resolve/main/{url_path}"
+export_name = fname.replace(".ckpt", ".pt")
 
-if not Path(fname).exists():
-    response = requests.get(url)
-    if response.ok:
-        with open(fname, "wb") as f:
-            f.write(response.content)
-        print(f"Downloaded {fname} from tag {tag}.")
-    else:
-        print("Failed to download:", response.status_code)
-else:
-    print(f"{fname} from tag {tag} already present.")
-
-if not Path(fname.replace("ckpt", "pt")).exists():
+if not Path(export_name).exists():
     subprocess.run(
-        [
-            "mtt",
-            "export",
-            "pet-mad-v1.0.2.ckpt",  # noqa: E501
-        ]
+        ["uvx", "--from", "metatrain", "mtt", "export", url], check=True
     )
+    print(f"Successfully exported {fname} to {export_name}.")
+else:
+    print(f"Exported file {export_name} already exists.")
 
 
 # %%
