@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - https://repo.prefix.dev/rg-forge
 dependencies:
-  - eon>=2.8.2
+  - eon>=2.9.0
   - ira
   - libtorch>=2.9,<2.10 
   - pip
@@ -14,4 +14,4 @@ dependencies:
     - matplotlib
     - metatrain  
     - requests
-    - rgpycrumbs>=0.0.4,<0.1
+    - rgpycrumbs>=0.1.2,<0.2
