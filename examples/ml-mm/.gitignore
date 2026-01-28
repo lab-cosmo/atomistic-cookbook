@@ -1,0 +1,11 @@
+#*
+*.cpt
+*.edr
+*.lock
+*.log
+*.npz
+*.pt
+*.trr
+*.tpr
+confout.gro
+mdout.mdp
