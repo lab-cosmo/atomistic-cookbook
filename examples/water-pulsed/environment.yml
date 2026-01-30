@@ -2,7 +2,7 @@ channels:
   - conda-forge
 dependencies:
   - python=3.12
-  - gromacs
+  - "gromacs<2026"
   - pip
   - pip:
     - maicos
