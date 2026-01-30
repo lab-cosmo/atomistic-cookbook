@@ -89,9 +89,6 @@ url = f"https://huggingface.co/{repo_id}/resolve/main/{url_path}"
 fname.parent.mkdir(parents=True, exist_ok=True)
 subprocess.run(
     [
-        "uvx",
-        "--from",
-        "metatrain",
         "mtt",
         "export",
         url,
@@ -391,7 +388,7 @@ run_command_or_exit(["eonclient"], capture=True, timeout=300)
 # command-line, here we define a helper.
 
 
-def get_neb_plot_cmd(
+def run_neb_plot(
     mode: str,
     con_file: str = "neb.con",
     output_file: str = "plot.png",
@@ -446,7 +443,8 @@ def get_neb_plot_cmd(
     else:
         raise ValueError(f"Unknown plot mode: {mode}")
 
-    return base_cmd
+    # Run the generated command
+    run_command_or_exit(base_cmd, capture=False, timeout=60)
 
 
 # %%
@@ -458,10 +456,7 @@ def get_neb_plot_cmd(
 os.environ.pop("MPLBACKEND", None)
 
 # Run the 1D plotting command using the helper
-cmd_1d = get_neb_plot_cmd(
-    "profile", title="NEB Path Optimization", output_file="1D_oxad.png"
-)
-run_command_or_exit(cmd_1d, capture=False, timeout=60)
+run_neb_plot("profile", title="NEB Path Optimization", output_file="1D_oxad.png")
 
 # Display the result
 img = mpimg.imread("1D_oxad.png")
@@ -476,10 +471,7 @@ plt.show()
 # the relative distance between the endpoints as the optimization takes place:
 
 # Run the 2D plotting command using the helper
-cmd_2d = get_neb_plot_cmd(
-    "landscape", title="NEB-RMSD Surface", output_file="2D_oxad.png"
-)
-run_command_or_exit(cmd_2d, capture=False, timeout=60)
+run_neb_plot("landscape", title="NEB-RMSD Surface", output_file="2D_oxad.png")
 
 # Display the result
 img = mpimg.imread("2D_oxad.png")
