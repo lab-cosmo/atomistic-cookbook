@@ -20,24 +20,40 @@ import requests
 # %%
 from ase.io import read
 from shiftml.ase import ShiftML
+from urllib3.util.retry import Retry
 
 
 # %%
 # Create a ShiftML calculator and fetch a dataset
 # ===============================================
 
+
+def fetch_dataset(filename, base_url, local_path=""):
+    """Helper function to load data with retries on errors."""
+
+    local_file = local_path + filename
+    if os.path.isfile(local_file):
+        return
+
+    # Retry strategy: wait 1s, 2s, 4s, 8s, 16s on 429/5xx errors
+    retry_strategy = Retry(
+        total=5, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504]
+    )
+    session = requests.Session()
+    session.mount("https://", requests.adapters.HTTPAdapter(max_retries=retry_strategy))
+
+    # Fetch with automatic retry and error raising
+    response = session.get(base_url + filename)
+    response.raise_for_status()
+
+    with open(local_file, "wb") as file:
+        file.write(response.content)
+
+
 calculator = ShiftML("ShiftML3")
 
 filename = "ShiftML_poly.zip"
-if not os.path.exists(filename):
-    url = (
-        "https://archive.materialscloud.org/records/j2fka-sda13/files/ShiftML_poly.zip"
-    )
-    response = requests.get(url)
-    response.raise_for_status()
-    with open(filename, "wb") as f:
-        f.write(response.content)
-
+fetch_dataset(filename, "https://archive.materialscloud.org/records/j2fka-sda13/files/")
 
 with zipfile.ZipFile(filename, "r") as zip_ref:
     for file in ["ShiftML_poly/Cocaine/cocaine_QuantumEspresso.xyz"]:
