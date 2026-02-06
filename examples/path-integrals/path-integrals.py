@@ -361,8 +361,8 @@ kinetic_cv = ipi.read_trajectory("simulation_piglet.kin.xyz")[1:]
 kinetic_od = ipi.read_trajectory("simulation_piglet.kod.xyz")[1:]
 kinetic_tens = np.hstack(
     [
-        np.asarray([k.arrays['kinetic_cv'] for k in kinetic_cv[-10:]]).mean(axis=0),
-        np.asarray([k.arrays['kinetic_od'] for k in kinetic_od[-10:]]).mean(axis=0),
+        np.asarray([k.arrays["kinetic_cv"] for k in kinetic_cv[-10:]]).mean(axis=0),
+        np.asarray([k.arrays["kinetic_od"] for k in kinetic_od[-10:]]).mean(axis=0),
     ]
 )
 
