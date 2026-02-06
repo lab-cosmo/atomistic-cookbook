@@ -1,11 +1,11 @@
 channels:
   - conda-forge
 dependencies:
-  - python=3.11
+  - python=3.12
   - pip
   - lammps  
   - pip:
     - ase
-    - chemiscope>=0.8
+    - chemiscope>0.9
     - ipi  
     - matplotlib
