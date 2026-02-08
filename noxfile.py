@@ -362,7 +362,11 @@ def update_dependencies(environment_yml, session):
         silent=True,
     )
 
-    dependencies = json.loads(output)["dependencies"]
+    try:
+        data = json.loads(output)
+        dependencies = data["dependencies"]
+    except json.JSONDecodeError:
+        session.error(f"Conda did not return valid JSON. Output was: {output}")
 
     new_deps = set()
     for dep in dependencies:

@@ -361,8 +361,8 @@ kinetic_cv = ipi.read_trajectory("simulation_piglet.kin.xyz")[1:]
 kinetic_od = ipi.read_trajectory("simulation_piglet.kod.xyz")[1:]
 kinetic_tens = np.hstack(
     [
-        np.asarray([k.positions for k in kinetic_cv[-10:]]).mean(axis=0),
-        np.asarray([k.positions for k in kinetic_od[-10:]]).mean(axis=0),
+        np.asarray([k.arrays["kinetic_cv"] for k in kinetic_cv[-10:]]).mean(axis=0),
+        np.asarray([k.arrays["kinetic_od"] for k in kinetic_od[-10:]]).mean(axis=0),
     ]
 )
 
@@ -377,7 +377,7 @@ centroid.arrays["kinetic_cv"] = kinetic_tens
 # insufficient to converge the estimator fully.
 
 ellipsoids = chemiscope.ase_tensors_to_ellipsoids(
-    [centroid], "kinetic_cv", scale=15, force_positive=True
+    [centroid], "kinetic_cv", scale=2, force_positive=True
 )
 
 chemiscope.show(
