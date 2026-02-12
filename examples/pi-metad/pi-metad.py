@@ -580,7 +580,7 @@ nbeads, nframes, natoms = (
 # creates frames with all beads, so we can use periodic boundary conditions when
 # computing distances. skips first frame so beads have spread out a tiny bit
 full_frames = []
-for i in range(1,nframes):
+for i in range(1, nframes):
     struc = pimd_traj_data[0][i].copy()
     for k in range(1, nbeads):
         struc += pimd_traj_data[k][i]
