@@ -593,7 +593,7 @@ distance_vectors = [
         mic=True,
         vector=True,
     )
-    for frame_i in range(nframes-1)
+    for frame_i in range(nframes - 1)
     for bead_i in range(nbeads)
     for atom_i in range(natoms)
 ]
