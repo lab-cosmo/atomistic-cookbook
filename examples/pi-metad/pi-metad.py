@@ -578,9 +578,9 @@ nbeads, nframes, natoms = (
 )
 
 # creates frames with all beads, so we can use periodic boundary conditions when
-# computing distances
+# computing distances. skips first frame so beads have spread out a tiny bit
 full_frames = []
-for i in range(nframes):
+for i in range(1, nframes):
     struc = pimd_traj_data[0][i].copy()
     for k in range(1, nbeads):
         struc += pimd_traj_data[k][i]
@@ -593,7 +593,7 @@ distance_vectors = [
         mic=True,
         vector=True,
     )
-    for frame_i in range(nframes)
+    for frame_i in range(nframes - 1)
     for bead_i in range(nbeads)
     for atom_i in range(natoms)
 ]
@@ -607,10 +607,10 @@ paths_shapes = {
 }
 
 properties = {
-    "d_OO": 10 * colvar_data[:, 0],  # nm to Å
-    "delta_coord": colvar_data[:, 1],
-    "bias": 27.211386 * output_data["ensemble_bias"],  # Ha to eV
-    "time": 2.4188843e-05 * output_data["time"],
+    "d_OO": 10 * colvar_data[1:, 0],  # nm to Å
+    "delta_coord": colvar_data[1:, 1],
+    "bias": 27.211386 * output_data["ensemble_bias"][1:],  # Ha to eV
+    "time": 2.4188843e-05 * output_data["time"][1:],
 }
 
 settings = chemiscope.quick_settings(
@@ -640,7 +640,6 @@ settings["target"] = "structure"
 chemiscope.show(
     full_frames,
     properties=properties,
-    environments=chemiscope.all_atomic_environments(full_frames, 4.0),
     shapes={"paths": paths_shapes},
     settings=settings,
 )
