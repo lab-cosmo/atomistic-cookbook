@@ -640,7 +640,6 @@ settings["target"] = "structure"
 chemiscope.show(
     full_frames,
     properties=properties,
-    environments=chemiscope.all_atomic_environments(full_frames, 4.0),
     shapes={"paths": paths_shapes},
     settings=settings,
 )
