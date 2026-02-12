@@ -607,10 +607,10 @@ paths_shapes = {
 }
 
 properties = {
-    "d_OO": 10 * colvar_data[:, 0],  # nm to Å
-    "delta_coord": colvar_data[:, 1],
-    "bias": 27.211386 * output_data["ensemble_bias"],  # Ha to eV
-    "time": 2.4188843e-05 * output_data["time"],
+    "d_OO": 10 * colvar_data[1:, 0],  # nm to Å
+    "delta_coord": colvar_data[1:, 1],
+    "bias": 27.211386 * output_data["ensemble_bias"][1:],  # Ha to eV
+    "time": 2.4188843e-05 * output_data["time"][1:],
 }
 
 settings = chemiscope.quick_settings(
