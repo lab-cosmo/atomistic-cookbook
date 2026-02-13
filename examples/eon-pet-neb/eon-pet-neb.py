@@ -413,6 +413,9 @@ def run_neb_plot(
         rotation,
         "--facecolor",
         "white",
+        "--figsize",
+        "5.37",
+        "5.37",
         "--plot-structures",
         "crit_points",
     ]
@@ -421,7 +424,14 @@ def run_neb_plot(
         base_cmd.extend(["--title", title])
 
     if mode == "profile":
-        base_cmd.extend(["--plot-type", "profile"])
+        base_cmd.extend(
+            [
+                "--plot-type",
+                "profile",
+                "--zoom-ratio",
+                "0.15",
+            ]
+        )
     elif mode == "landscape":
         base_cmd.extend(
             [
@@ -436,8 +446,10 @@ def run_neb_plot(
                 "--landscape-path",
                 "all",
                 "--show-pts",
+                "--zoom-ratio",
+                "0.35",
                 "--surface-type",
-                "rbf",
+                "grad_imq",
             ]
         )
     else:
@@ -460,7 +472,7 @@ run_neb_plot("profile", title="NEB Path Optimization", output_file="1D_oxad.png"
 
 # Display the result
 img = mpimg.imread("1D_oxad.png")
-plt.figure(figsize=(8, 6))
+plt.figure(figsize=(5.37, 5.37))
 plt.imshow(img)
 plt.axis("off")
 plt.show()
@@ -475,7 +487,7 @@ run_neb_plot("landscape", title="NEB-RMSD Surface", output_file="2D_oxad.png")
 
 # Display the result
 img = mpimg.imread("2D_oxad.png")
-plt.figure(figsize=(8, 6))
+plt.figure(figsize=(5.37, 5.37))
 plt.imshow(img)
 plt.axis("off")
 plt.show()
