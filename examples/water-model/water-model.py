@@ -966,7 +966,7 @@ nrg_final = atoms.get_potential_energy()
 # together with the convergence of the energy to a local minimum.
 
 chemiscope.show(
-    frames=opt_trj,
+    structures=opt_trj,
     properties={
         "step": 1 + np.arange(0, len(opt_trj)),
         "energy": opt_nrg - nrg_final,
@@ -1046,7 +1046,7 @@ ax.legend()
 # %%
 
 chemiscope.show(
-    frames=trj,
+    structures=trj,
     properties={
         "time": data["time"][::10],
         "potential": data["potential"][::10],

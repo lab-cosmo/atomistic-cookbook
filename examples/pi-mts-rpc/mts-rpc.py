@@ -685,7 +685,7 @@ for idx_f in range(len(pi_frames[0])):
 
 
 chemiscope.show(
-    frames=frames,
+    structures=frames,
     properties={
         "t": {
             "values": rpcmts_output["time"][::25],
@@ -706,7 +706,7 @@ chemiscope.show(
     settings=chemiscope.quick_settings(
         x="t",
         y="K",
-        color="U",
+        map_color="U",
         structure_settings={
             "bonds": False,
             "unitCell": True,

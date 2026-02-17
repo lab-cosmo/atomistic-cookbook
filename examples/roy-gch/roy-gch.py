@@ -110,8 +110,8 @@ print(f"Mean hull energy for 'other' structures {dch_dist[iothers].mean()} kJ/mo
 #
 
 cs = chemiscope.show(
-    structures,
-    dict(
+    structures=structures,
+    properties=dict(
         energy=energy,
         density=density,
         hull_energy=dch_dist,
@@ -255,7 +255,7 @@ structure_properties.update({"per_atom_energy": energy, "hull_energy": dch_dist}
 
 chemiscope.write_input(
     "roy_gch.json.gz",
-    frames=structures,
+    structures=structures,
     properties=structure_properties,
     meta={
         "name": "GCH for ROY polymorphs",

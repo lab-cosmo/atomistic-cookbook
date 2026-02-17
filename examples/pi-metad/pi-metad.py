@@ -86,7 +86,7 @@ import numpy as np
 # and forces acting on the atoms.
 
 zundel = ase.io.read("data/h5o2+.xyz", ":")
-chemiscope.show(frames=zundel, mode="structure")
+chemiscope.show(structures=zundel, mode="structure")
 
 # %%
 #
@@ -261,7 +261,7 @@ traj_data = ipi.read_trajectory("meta-md.pos_0.xyz")
 # %%
 # then, assemble a visualization
 chemiscope.show(
-    frames=traj_data,
+    structures=traj_data,
     properties=dict(
         d_OO=10 * colvar_data[:, 0],  # nm to Å
         delta_coord=colvar_data[:, 1],
@@ -269,7 +269,7 @@ chemiscope.show(
         time=2.4188843e-05 * output_data["time"],  # atomictime to ps
     ),  # attime to ps
     settings=chemiscope.quick_settings(
-        x="d_OO", y="delta_coord", z="bias", color="time", trajectory=True
+        x="d_OO", y="delta_coord", z="bias", map_color="time", trajectory=True
     ),
     mode="default",
 )

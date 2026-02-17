@@ -5,7 +5,7 @@ dependencies:
   - pip
   - pip:
     - ase>=3.24,<3.30
-    - chemiscope>=0.8.5
+    - chemiscope>=1.0
     - matplotlib
     - metatensor
     - featomic

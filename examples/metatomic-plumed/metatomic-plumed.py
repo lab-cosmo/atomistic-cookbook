@@ -400,8 +400,8 @@ featurizer_ch = chemiscope.metatomic_featurizer(model_ch)
 featurizer_soap = chemiscope.metatomic_featurizer(model_soap)
 
 chemiscope.explore(
-    [minimal, icosaed],
-    featurize=featurizer_ch,
+    structures=[minimal, icosaed],
+    featurizer=featurizer_ch,
     # we can also add extra properties, here we use this
     # to include additional descriptors
     properties={"cv_soap": featurizer_soap([minimal, icosaed], None)},
@@ -580,7 +580,7 @@ dyn_prop = {
 dyn_settings = chemiscope.quick_settings(
     x="cv1",
     y="cv2",
-    color="time",
+    map_color="time",
     trajectory=True,
     map_settings={
         "x": {"max": 30, "min": 0},
@@ -597,7 +597,7 @@ dyn_settings = chemiscope.quick_settings(
 lmp_trajectory = ase.io.read("lj38.lammpstrj", index=":")
 # Show the trajectory in an interactive chemiscope widget.
 chemiscope.show(
-    frames=lmp_trajectory,
+    structures=lmp_trajectory,
     properties=dyn_prop,
     settings=dyn_settings,
 )
@@ -674,7 +674,7 @@ ipi_cv = ipi.utils.parsing.read_trajectory("meta-md.colvar_0", format="extras")[
 # trajectory moves around in the region surrounding the octahedral structure.
 
 chemiscope.show(
-    frames=ipi_trajectory,
+    structures=ipi_trajectory,
     properties={
         "time": {
             "target": "structure",
@@ -703,7 +703,7 @@ chemiscope.show(
         x="soap1",
         y="soap2",
         z="",
-        color="bias",
+        map_color="bias",
         trajectory=True,
         structure_settings={
             "playbackDelay": 50,  # ms between frames
