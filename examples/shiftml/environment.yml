@@ -7,5 +7,5 @@ dependencies:
     - ase>=3.23
     - chemiscope>=1.0
     - matplotlib
-    - shiftml
+    - shiftml==0.1.1
     - requests
