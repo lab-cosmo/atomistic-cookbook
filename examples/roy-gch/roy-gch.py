@@ -110,8 +110,8 @@ print(f"Mean hull energy for 'other' structures {dch_dist[iothers].mean()} kJ/mo
 #
 
 cs = chemiscope.show(
-    structures,
-    dict(
+    structures=structures,
+    properties=dict(
         energy=energy,
         density=density,
         hull_energy=dch_dist,
