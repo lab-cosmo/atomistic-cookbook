@@ -7,7 +7,7 @@ dependencies:
   - pip
   - pip:
     - ase
-    - chemiscope>=0.8
+    - chemiscope>=1.0
     - ipi>=3.1.5
     - metatensor-torch<0.8
     - metatensor-operations

@@ -15,7 +15,7 @@ dependencies:
     - torch==2.9.1
     - ase
     - numpy
-    - chemiscope
+    - chemiscope>=1.0
     - ipi>=3.1.5
     - metatomic-torch==0.1.7
     - featomic-torch

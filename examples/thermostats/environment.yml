@@ -6,6 +6,6 @@ dependencies:
   - lammps
   - pip:
     - ase>=3.23
-    - chemiscope>=0.8
+    - chemiscope>=1.0
     - ipi>=3.1.5
     - matplotlib

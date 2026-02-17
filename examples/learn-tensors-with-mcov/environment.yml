@@ -6,6 +6,6 @@ dependencies:
   - pip:
     - ase
     - metatrain[soap-bpnn]>=2025.6,<2026
-    - chemiscope>=0.8.5,<0.9
+    - chemiscope>=1.0
     - featomic>=0.6.3,<0.7
     - matplotlib
