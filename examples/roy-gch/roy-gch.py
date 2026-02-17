@@ -255,7 +255,7 @@ structure_properties.update({"per_atom_energy": energy, "hull_energy": dch_dist}
 
 chemiscope.write_input(
     "roy_gch.json.gz",
-    frames=structures,
+    structures=structures,
     properties=structure_properties,
     meta={
         "name": "GCH for ROY polymorphs",

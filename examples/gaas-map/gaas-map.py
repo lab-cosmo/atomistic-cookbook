@@ -217,7 +217,7 @@ plt.show()
 #
 
 # extracts force data (adding considerably to the dataset size...)
-force_vectors = chemiscope.ase_vectors_to_arrows(structures, scale=1)
+force_vectors = chemiscope.ase_vectors_to_arrows(structures, key="forces", scale=1)
 force_vectors["parameters"]["global"]["color"] = 0x505050
 
 # adds properties to the ASE frames
@@ -235,7 +235,7 @@ for i, f in enumerate(structures):
 structure_properties = chemiscope.extract_properties(structures)
 
 cs = chemiscope.show(
-    frames=structures,
+    structures=structures,
     properties=structure_properties,
     shapes={"forces": force_vectors},
     # the settings are a tad verbose, but give full control over the visualization

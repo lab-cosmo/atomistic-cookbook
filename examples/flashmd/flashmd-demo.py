@@ -114,7 +114,7 @@ data, info = read_output("al110-nvt-flashmd.out")
 trj = read_trajectory("al110-nvt-flashmd.pos_0.extxyz")
 
 chemiscope.show(
-    frames=trj,
+    structures=trj,
     properties={
         "time": data["time"],
         "potential": data["potential"],
@@ -175,7 +175,7 @@ data, info = read_output("ala2-npt-flashmd.out")
 trj = read_trajectory("ala2-npt-flashmd.pos_0.extxyz")
 
 chemiscope.show(
-    frames=trj,
+    structures=trj,
     properties={
         "time": data["time"],
         "volume": data["volume"],

@@ -327,7 +327,7 @@ chemiscope.show(
         x="euler_angles[1]",
         y="euler_angles[2]",
         z="euler_angles[3]",
-        color="delta_energy",
+        map_color="delta_energy",
         structure_settings={"unitCell": True, "shape": ["forces"]},
     ),
 )
@@ -387,7 +387,7 @@ opt.run(fmax=0.001, steps=20)
 # leads to a large energetic stabilization
 
 chemiscope.show(
-    frames=traj_atoms,
+    structures=traj_atoms,
     properties={
         "index": np.arange(0, len(traj_atoms)),
         "energy": traj_energy,
@@ -483,7 +483,7 @@ ax.legend()
 # Mg and Si atoms tend to cluster together, and accumulate at the surface.
 
 chemiscope.show(
-    frames=trj,
+    structures=trj,
     properties={
         "time": data["time"][::10],
         "potential": data["potential"][::10],
@@ -543,4 +543,4 @@ subprocess.check_call(["lmp", "-in", "data/al6xxx-o2.in"])
 
 lmp_trj = ase.io.read("trajectory.xyz", ":")
 
-chemiscope.show(frames=lmp_trj, mode="structure")
+chemiscope.show(structures=lmp_trj, mode="structure")
