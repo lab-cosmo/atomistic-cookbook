@@ -580,7 +580,7 @@ dyn_prop = {
 dyn_settings = chemiscope.quick_settings(
     x="cv1",
     y="cv2",
-    color_map="time",
+    map_color="time",
     trajectory=True,
     map_settings={
         "x": {"max": 30, "min": 0},
@@ -703,7 +703,7 @@ chemiscope.show(
         x="soap1",
         y="soap2",
         z="",
-        color_map="bias",
+        map_color="bias",
         trajectory=True,
         structure_settings={
             "playbackDelay": 50,  # ms between frames
