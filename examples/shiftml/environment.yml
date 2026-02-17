@@ -7,5 +7,5 @@ dependencies:
     - ase>=3.23
     - chemiscope>=0.8
     - matplotlib
-    - git+https://github.com/lab-cosmo/shiftml.git@main
+    - shiftml==0.1.1
     - requests
