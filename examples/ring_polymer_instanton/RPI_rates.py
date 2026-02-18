@@ -39,11 +39,13 @@ import time
 import warnings
 import glob
 import re
+import shutil
 
 import chemiscope
 import ipi
 import matplotlib.pyplot as plt
 import numpy as np
+from ipi.utils.tools import interpolate_instanton
 
 from matplotlib import cycler
 from scipy import constants
@@ -191,6 +193,7 @@ plt.xlabel('mode number')
 plt.ylabel('Eigenvalues (a.u.)')
 plt.show()
 
+shutil.copy("RESTART", "RESTART_reactant")
 # 
 # %%
 # Step 2 - Optimizing and Analyzing the Transition State
@@ -244,9 +247,8 @@ ts_energy_ev = np.loadtxt('ts.out')[1,-1]
 # To generate the initial guess for the instanton optimization, we use the
 # transition state geometry and hessian obtained in the previous step. The
 
-# Let us first now retrieve the filenames of the Hessian and geometry
-# corresponding to the converged instanton.
-# the next calculation.
+# Retrieve the Hessian and geometry files from the converged
+# transition-state calculation and rename them as required.
 
 final_step = max(
     int(re.search(r"hess_(\d+)$", f).group(1))
@@ -257,7 +259,6 @@ ts_hess_file = f"ts.instanton_FINAL.hess_{final_step}"
 ts_xyz_file  = f"ts.instanton_FINAL_{final_step}.xyz"
 
 
-import shutil
 
 shutil.copy(ts_xyz_file, "init_inst_geop.xyz")
 shutil.copy(ts_hess_file, "init_inst_geop.hess")
@@ -267,7 +268,7 @@ shutil.copy(ts_hess_file, "init_inst_geop.hess")
 #    driver instances simultaneously using:
 
 ipi_process = None
-ipi_process = subprocess.Popen(["i-pi", "data/input_geop_reactant.xml"])
+ipi_process = subprocess.Popen(["i-pi", "data/input_geop_RPI_40.xml"])
 time.sleep(5)  # wait for i-PI to start
 
 FF_process = [
@@ -279,66 +280,83 @@ ipi_process.wait()
 
 
 #    The program first generates an initial instanton guess by placing
-#    points around the transition state along the direction of the
-#    imaginary mode. It then performs an optimization, which converges
-#    in 8 steps. The optimized instanton geometry is written to
-#    ``ts.instanton_FINAL_7.xyz`` and can be visualized using ``vmd``.
+#    replicas around the transition state along the direction of the
+#    imaginary mode. It then performs a saddle-point optimization.
+#    The optimized instanton geometry is written to
+#    ``ts.instanton_FINAL_X.xyz`` and can be visualized using ``vmd``.
 #    Finally, the Hessians for each bead are computed and saved in
-#    ``ts.instanton_FINAL.hess_7`` with dimensions (3n, 3Nn), where n
-#    is the number of atoms.
+#    ``ts.instanton_FINAL.hess_X`` with dimensions (3n, 3Nn), where n
+#    is the number of atoms and N the number of beads.
 
 
 
 # %%
 # Step 4 - Second and subsequent instanton optimizations 
 # ------------------------------------------------------
+# The instanton obtained in the previous step might not be fully converged with
+# respect to the number of beads. To obtain a more converged instanton, we can 
+# interpolate the geometry and the Hessian to a larger number of beads and then
+# re-optimize. This procedure can be repeated until the instanton is converged
+#
+# The procedure would be as follows:
+# 1. Let's retrieve the filenames of the Hessian and geometry
+# corresponding to the converged instanton.
 
-# 1.  Make the folder ``input/instanton/80``.
+final_step = max(
+    int(re.search(r"hess_(\d+)$", f).group(1))
+    for f in glob.glob("inst.instanton_FINAL.hess_*")
+)
+
+inst_hess_file_40 = f"inst.instanton_FINAL.hess_{final_step}"
+inst_xyz_file_40  = f"inst.instanton_FINAL_{final_step}.xyz"
+
+# 2. The utility function ``interpolate_instanton`` can now be used to
+# interpolate both the geometry and the Hessian to a larger number of beads.
+# For example, to increase the number of beads from 40 to 80:
+
+
+interpolate_instanton(input_geo=inst_xyz_file_40, input_hess=inst_hess_file_40, nbeadsNew=80)
 # 
-# 2.  Go to the folder ``input/instanton/80``.
+# 3. Rename the new files as required by new input.xml
+
+shutil.copy("new_instanton.xyz", "init_inst_80beads.xyz")
+shutil.copy("new_hessian.dat", "init_inst_80beads.hess")
+
 # 
-# 3.  Copy the optimized instanton geometry obtained in Exercise 3 and
-#     name it ``init0``.
 # 
-# 4.  Copy the last hessian obtained in Exercise 3 and name it ``hess0``.
-# 
-# 5.  Interpolate the instanton and the hessian to 80 beads by typing:
-# 
-#     ``$ python ${ipi-path}/tools/py/Instanton_interpolation.py -m -xyz init0 -hess hess0 -n 80``
-# 
-# 6.  Rename the new hessian and instanton geometry to ``hessian.dat`` and
-#     ``init.xyz`` respectively
-# 
-# 7.  Copy the ``input.xml`` file from ``input/instanton/40/``.
-# 
-# 8.  Change the number of beads from 40 to 80 in ``input.xml``.
-# 
-# 9.  Change the hessian shape from (18,18) to (18,1440) in ``input.xml``.
-# 
-# 10. Run as before. The program performs a optimization which takes 6
-#     steps and then computes a hessian.
+# 4. Run as before. 
+
+
+ipi_process = None
+ipi_process = subprocess.Popen(["i-pi", "data/input_geop_RPI_80.xml"])
+time.sleep(5)  # wait for i-PI to start
+
+FF_process = [
+    subprocess.Popen(["i-pi-driver", "-u", "-m", "ch4hcbe"])
+    for i in range(4)
+]
+#FF_process.wait()
+ipi_process.wait()
 
 
 # %%
 # Step 5 -  Postprocessing for the rate calculation 
 # ------------------------------------------------------
 
-# Note that we have been optimizing half ring polymers as we expect the
-# forward and backward imaginary time path between the reactant and the
-# product to be the same. Thus the actual number of replicas for the
-# instanton obtained by optimizing a ring polymer with 80 replicas are
-# 160. This is a little confusing currently, and may be changed in the
-# future, so when using the Instanton posprocessing tool check use the
-# help option (using -h) to find out what is needed. Before starting this
-# section, ensure that ``$PYTHONPATH`` includes the i-PI directory and
-# that the variable ``$ipi_path`` is correctly set in the postprocessing
-# script ``${ipi-path}/tools/py/Instanton_postproc.py`` where
-# ``${ipi-path}`` is the location of i-PI directory.
-# 
+# Note that we have been optimizing half ring polymers, as we expect the
+# forward and backward imaginary-time paths between the reactant and the
+# product to be identical. Therefore, the actual number of replicas in the
+# instanton obtained by optimizing a ring polymer with 80 replicas is 160.
+# This convention is currently somewhat confusing and may change in the
+# future. When using the Instanton postprocessing tool, always check the
+# help option (using -h) to determine the required inputs.
+#
+HERE
+ 
 # 1. To compute the CH\ :math:`_4` partition function, go the
 #    input/reactant/phonons folder and type
 # 
-#    ``$ python ${ipi-path}/tools/py/Instanton_postproc.py RESTART -c reactant -t 300 -n 160 -f 5``
+#    ``$ python ${ipi-path}/tools/py/Instanton_postproc.py RESTART_reactant -c reactant -t 300 -n 160 -f 5``
 # 
 #    which computes the ring polymer parition function for CH\ :math:`_4`
 #    with N = 160. Look at the output and make a note of the
