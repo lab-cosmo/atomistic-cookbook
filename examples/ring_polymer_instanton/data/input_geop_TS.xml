@@ -9,7 +9,7 @@
    </ffsocket>
    <system >
        <initialize nbeads='1'> 
-           <file mode='xyz' >  init_ts.xyz </file>
+           <file mode='xyz' >  data/init_ts.xyz </file>
            <cell mode='abc'> [200.0,  200.0,  200.0  ] </cell>
        </initialize>
        <forces>

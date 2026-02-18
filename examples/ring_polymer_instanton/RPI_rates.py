@@ -195,7 +195,7 @@ print('Running data/input_geop_TS.xml\n')
 ipi_process = subprocess.Popen(["i-pi", "data/input_geop_TS.xml"])
 time.sleep(5)  # wait for i-PI to start
 
-FF_process =  subprocess.Popen(["i-pi-driver", "-u", "-m", "ch4hcbe"]
+FF_process =  subprocess.Popen(["i-pi-driver", "-u", "-m", "ch4hcbe"])
 FF_process.wait()
 ipi_process.wait()
 
