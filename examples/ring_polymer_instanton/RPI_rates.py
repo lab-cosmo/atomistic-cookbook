@@ -129,7 +129,7 @@ ipi.install_driver()
 #
 # Open and inspect the XML input file:
 
-with open("data/data/input_vibrations_reactant.xml", "r") as file:
+with open("data/input_vibrations_reactant.xml", "r") as file:
     lines = file.readlines()
 
 for line in lines[18:26]:
@@ -256,19 +256,12 @@ final_step = max(
 ts_hess_file = f"ts.instanton_FINAL.hess_{final_step}"
 ts_xyz_file  = f"ts.instanton_FINAL_{final_step}.xyz"
 
-with open("init_inst_geop.xyz", "w") as outfile:
-    subprocess.run(
-        ["cp", ts_xyz_file],
-        stdout=outfile,
-        check=True
-    )
 
-with open("init_inst_geop.hess", "w") as outfile:
-    subprocess.run(
-        ["cp", ts_hess_file],
-        stdout=outfile,
-        check=True
-    )
+import shutil
+
+shutil.copy(ts_xyz_file, "init_inst_geop.xyz")
+shutil.copy(ts_hess_file, "init_inst_geop.hess")
+
 
 #    We run i-PI in the usual way, but here we launch four
 #    driver instances simultaneously using:
@@ -278,10 +271,10 @@ ipi_process = subprocess.Popen(["i-pi", "data/input_geop_reactant.xml"])
 time.sleep(5)  # wait for i-PI to start
 
 FF_process = [
-    subprocess.Popen(["i-pi-driver", "-u", "-m", "ch4cbe"])
+    subprocess.Popen(["i-pi-driver", "-u", "-m", "ch4hcbe"])
     for i in range(4)
 ]
-FF_process.wait()
+#FF_process.wait()
 ipi_process.wait()
 
 
@@ -325,7 +318,6 @@ ipi_process.wait()
 # 10. Run as before. The program performs a optimization which takes 6
 #     steps and then computes a hessian.
 
-# ALBERTO visualize the instanton geometry. 
 
 # %%
 # Step 5 -  Postprocessing for the rate calculation 
