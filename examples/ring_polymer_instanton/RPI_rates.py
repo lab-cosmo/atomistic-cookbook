@@ -4,27 +4,30 @@ Ring Polymer Instanton Rate Theory: Tunneling Rates
 
 :Authors: Yair Litman `@litman90 <https://github.com/litman90>`_ 
 
-
-This notebook provides an introduction to the calcultion of tunnelling rates using
-ring polymer instanton rate theory. The main theory can be check in [CITE], and the implementation in i-PI is described in
-[CITE]. Some practical guidelines can be found in my doctoral thesis [CITE]. 
-
-
-In this exercises we will use i-PI not to run molecular dynamics but
-instead to optimize stationary points on the ring-polymer
-potential-energy surface. Then by simple extension, the ring-polymer
-instanton will be found which can be used to compute the thermal rate of
-a chemical reaction including tunnelling effects. The example which we
-will use is for the gas-phase bimolecular scattering reaction of H +
-CH\ :math:`_4` . We have used the CBE potential-energy surface [1]. This
-requires multiple runs of i-PI for the different stationary points on
-the surface followed by one postprocessing calculation to combine all
-the data to compute the rate. Full details of the instanton approach are
-described in [2].
+This notebook introduces the calculation of tunneling rates using
+ring-polymer instanton rate theory. A comprehensive presentation of the
+instanton formalism can be found in the review article by
+`J. Richardson, Ring-polymer instanton theory, Int. Rev. Phys. Chem., 37, 171, 2018 <https://doi.org/10.1080/0144235X.2018.1472353>`_,
+while the implementation within i-PI is described in
+`V. Kapil et al., Comp. Phys. Commun., 236, 214, 2020 <https://doi.org/10.1016/j.cpc.2018.09.020>`_.
+Additional practical details are available in Yair Litman's doctoral thesis
+<https://pure.mpg.de/rest/items/item_3246769_3/component/file_3246770/content>`_.
 
 
-If you need an introduction to path integral simulations,
-or to the use of `i-PI <http://ipi-code.org>`_, which is the
+In these exercises, i-PI will be used not for molecular dynamics simulations,
+but to optimize stationary points on the ring-polymer potential-energy surface.
+From these stationary points, the ring-polymer instanton can be obtained and
+employed to evaluate thermal reaction rates that include tunneling contributions.
+
+
+
+As a working example, we consider the gas-phase bimolecular reaction
+H + CH\ :math:`_4`. The calculations are performed using the CBE
+potential-energy surface reported in
+`J. C. Corchado et al., J. Chem. Phys., 130, 184314, 2009 <https://doi.org/10.1063/1.3132223>`_.
+
+If you are new to path-integral simulations or to the use of
+ `i-PI <http://ipi-code.org>`_, which is the
 software which will be used to perform simulations, you can see
 `this introductory recipe
 <https://atomistic-cookbook.org/examples/path-integrals/path-integrals.html>`_.
@@ -34,6 +37,8 @@ import os
 import subprocess
 import time
 import warnings
+import glob
+import re
 
 import chemiscope
 import ipi
@@ -53,68 +58,86 @@ plt.rcParams['ytick.labelsize'] = 'x-large'
 params = {'figure.figsize':(12, 5)}
 plt.rcParams['axes.prop_cycle'] = cycler(color=['r','b','k','g','y','c'])
 
-
 # %%
 # Calculation Workflow
 # --------------------
+# The calculation of tunneling rates using ring-polymer instanton theory
+# is a multi-step procedure that requires the optimization of several
+# stationary points on the system’s potential-energy surface.
+# The workflow is not fully automated and therefore involves multiple
+# independent runs of i-PI.
 #
-#A typical workflow is summarized as follows:
-#1. Find the minima on the potential energy landscape of the physical system to identify the reactant and the product, and estimate their hessian, normal-mode frequencies and eigenvectors.
+# A typical workflow is summarized below:
 #
-#2. Fing the first-order saddle point to locate the relevant transition state, and estimate the hessian.
+#1. Locate the minima on the physical potential-energy surface to identify
+#   the reactant and product states. Compute their Hessians, normal-mode
+#   frequencies, and eigenvectors.
 #
-#3. Estimate an "unconverged" instanton by finding the first-order saddle point for the ring polymer Hamiltonian for N replicas. Note that this N should be large enough for instanton can be a good guess for a converged calculation with large enough N, but small enough that the cost of the "unconverged" calculation isn't too high. This step should also give you the approximate Hessian for each replica. 
+#2. Find the first-order saddle point corresponding to the transition
+#   state and evaluate its Hessian.
 #
-#4. Using ring-polymer interpolation calculate the ring polymer instanton for a larger number of replicas. A good rule of thumb is to double the number of replicas.
+#3. Obtain an "unconverged" instanton by locating the first-order saddle
+#   point of the ring-polymer Hamiltonian using N replicas. The chosen
+#   N should be large enough that the instanton provides a reasonable
+#   initial guess for a more converged calculation with a larger number
+#   of replicas, but small enough to keep the computational cost moderate.
+#   This step also provides an approximate Hessian for each replica.
 #
-#5. Estimate the instanton by locating the first-order saddle point. 
+#4. Use ring-polymer interpolation to construct an instanton with a
+#   larger number of replicas. As a rule of thumb, the number of replicas
+#   can be doubled.
 #
-#6. Repeat 4 and 5 until you have converged the instanton with respect to the number of replicas. 
+#5. Re-optimize the instanton by locating the corresponding first-order
+#   saddle point.
 #
-#7. Recompute the Hessian for each replica accurately and estimate the rate. 
+#6. Repeat steps 4 and 5 until the instanton is converged with respect
+#   to the number of replicas.
 #
-#If rates are required at more than one temperature, it is recommended to start with those closest to the crossover temperature and cool sequentially, again using initial guesses from the previous optimizations.
+#7. Recompute the Hessian for each replica accurately and evaluate
+#   the reaction rate.
+#
+#If rates are required at multiple temperatures, it is recommended to
+#start with temperatures close to the crossover temperature and then
+#cool sequentially, using the optimized instanton from the previous
+#temperature as the initial guess for the next calculation.
 
 # %%
 # Installing the Python driver
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# These calculations will be performed using the  ALBERTO r model
-# (CITE)
-# that contains a described 
+# i-PI provides a FORTRAN driver that includes the CBE potential-energy
+# surface. However, the driver must be compiled from source.
+# We use a utility function to compile it.
 #
-# i-PI comes with a FORTRAN driver, which however has to be installed
-# from source. We use a utility function to compile it. Note that this requires
-# a functioning build system with `gfortran` and `make`.
-#
+# Note that this requires a working build environment with
+# `gfortran` and `make` available.
 #
 #
+
 
 
 ipi.install_driver()
 
 # %%
-# Step 1 - Optimizing and analysing the reactant
+# Step 1 - Optimizing and Analyzing the Reactant
 # ----------------------------------------------
 #
-# First, let's run the geometry optimization for the reactant 
+# 1. We begin by performing a geometry optimization of the reactant.
 #
-# The important parts of the input file indicating the geometry optimization are
-# Open and read the XML file
-with open("data/input_vibrations_reactant.xml", "r") as file:
+# The relevant sections of the input file that control the geometry
+# optimization are highlighted below.
+#
+# Open and inspect the XML input file:
+
+with open("data/data/input_vibrations_reactant.xml", "r") as file:
     lines = file.readlines()
 
-for line in lines[7:10]:
+for line in lines[18:26]:
     print(line, end="")
 
-print("\n[...]\n")
-
-for line in lines[15:18]:
-    print(line, end="")
 
 
 # We can launch i-pi and the driver from a Python script as follows
-print('Running data/input_geop_reactant.xml\n')
 
 ipi_process = None
 ipi_process = subprocess.Popen(["i-pi", "data/input_geop_reactant.xml"])
@@ -125,16 +148,19 @@ FF_process.wait()
 ipi_process.wait()
 
 # %%
-# The simulation takes 31 steps and the final geometry can be seen in
-# the last frame in ``min.xc.xyz``. Once you finish this exercise, you
-# could come back here and try to get the optimization to finish in
-# fewer steps, e.g. by changing ``sd`` to one of the other optimizers.
-# 
-# Note that as this is a bimolecular reaction, the H and the
-# CH\ :math:`_4` should be well separated and we have used a very large
-# box size.
-# 
-# 2. Next, let's extract the last frame of the geomety optimization trajectory
+# The simulation converges in 31 steps, and the optimized geometry can
+# be found in the last frame of ``min.xc.xyz``. After completing this
+# exercise, you may return to this point and attempt to reduce the number
+# of optimization steps, for example by replacing ``sd`` with one of the
+# alternative optimizers.
+#
+# Since this is a bimolecular reaction, the H atom and CH\ :math:`_4`
+# molecule must remain well separated. For this reason, a very large
+# simulation box has been used.
+#
+# 2. Extract the final frame of the geometry optimization trajectory
+#    and use it to compute the harmonic vibrational frequencies.
+
 
 with open("min_reactant.xyz", "w") as outfile:
     subprocess.run(
@@ -147,7 +173,6 @@ with open("min_reactant.xyz", "w") as outfile:
 time.sleep(5)  # wait for i-PI to start
 #    We will now compute the hessian of this  minimum eneryg geometry
 
-print('Running data/input_vibrations_reactant.xml\n')
 ipi_process = None
 ipi_process = subprocess.Popen(["i-pi", "data/input_vibrations_reactant.xml"])
 time.sleep(5)  # wait for i-PI to start
@@ -162,36 +187,39 @@ ipi_process.wait()
 
 eigvals = np.genfromtxt('vib_reactant.vib.eigval')
 plt.plot(eigvals,'x')
-plt.xlabel('$i$')
-plt.ylabel('$\lambda_i$')
+plt.xlabel('mode number')
+plt.ylabel('Eigenvalues (a.u.)')
 plt.show()
 
 # 
 # %%
-# Step 2 - Optimizing and analysing the transition state
+# Step 2 - Optimizing and Analyzing the Transition State
 # ------------------------------------------------------
 #
-# Next, we will optimize the transition state geometry.
-# We proceed in the same way as for the reactant, but using a different input file, that is set up to perform a transition state optimization. 
-# The important parts of the input file indicating the transition state optimization are 
+# We now optimize the transition-state (TS) geometry.
+# The procedure is analogous to that used for the reactant, but we
+# employ a different input file configured specifically for a
+# transition-state optimization.
+#
+# The relevant sections of the input file that define the
+# transition-state optimization are highlighted below:
+#
+
 
 with open("data/input_geop_TS.xml", "r") as file:
     lines = file.readlines()
 
-for line in lines[7:10]:
+for line in lines[18:31]:
     print(line, end="")
 
-print("\n[...]\n")
+# Note that Here i-PI treats the TS search as a one-bead instanton
+# optimization. 
 
-for line in lines[15:18]:
-    print(line, end="")
-
-# Let's launch i-PI and the driver from a Python script as follows
-
+# We now launch i-PI together with the driver using commands analogous
+# to those used in the previous step:
 
 
 ipi_process = None
-print('Running data/input_geop_TS.xml\n')
 ipi_process = subprocess.Popen(["i-pi", "data/input_geop_TS.xml"])
 time.sleep(5)  # wait for i-PI to start
 
@@ -199,40 +227,73 @@ FF_process =  subprocess.Popen(["i-pi-driver", "-u", "-m", "ch4hcbe"])
 FF_process.wait()
 ipi_process.wait()
 
-# Here i-PI treats the TS search as a one-bead instanton
-# optimization. The simulation takes 12 steps and puts the optimized
-# geometry in ``ts.instanton_FINAL_12.xyz`` and its Hessian in
-# ``ts.instanton_FINAL.hess_12``. 
+# The simulation typically converges in 11–12 steps and writes the
+# optimized geometry to ``ts.instanton_FINAL_xx.xyz`` and the corresponding
+# Hessian to ``ts.instanton_FINAL.hess_xx``.
 
 
-
-
-# Visualize the geometry using ``vmd``. #ALBERTO
-
+ts_energy_ev = np.loadtxt('ts.out')[1,-1]  
 
 # %%
 # Step 3 - First instanton optimization
 # ------------------------------------------------------
 
+# We now continue with the optimization of the ring-polymer instanton. This is a
+# first-order saddle point of the ring-polymer Hamiltonian, and therefore
+# the optimization procedure is analogous to that used for the transition state.
+# To generate the initial guess for the instanton optimization, we use the
+# transition state geometry and hessian obtained in the previous step. The
+
+# Let us first now retrieve the filenames of the Hessian and geometry
+# corresponding to the converged instanton.
+# the next calculation.
+
+final_step = max(
+    int(re.search(r"hess_(\d+)$", f).group(1))
+    for f in glob.glob("ts.instanton_FINAL.hess_*")
+)
+
+ts_hess_file = f"ts.instanton_FINAL.hess_{final_step}"
+ts_xyz_file  = f"ts.instanton_FINAL_{final_step}.xyz"
+
+with open("init_inst_geop.xyz", "w") as outfile:
+    subprocess.run(
+        ["cp", ts_xyz_file],
+        stdout=outfile,
+        check=True
+    )
+
+with open("init_inst_geop.hess", "w") as outfile:
+    subprocess.run(
+        ["cp", ts_hess_file],
+        stdout=outfile,
+        check=True
+    )
+
+#    We run i-PI in the usual way, but here we launch four
+#    driver instances simultaneously using:
+
+ipi_process = None
+ipi_process = subprocess.Popen(["i-pi", "data/input_geop_reactant.xml"])
+time.sleep(5)  # wait for i-PI to start
+
+FF_process = [
+    subprocess.Popen(["i-pi-driver", "-u", "-m", "ch4cbe"])
+    for i in range(4)
+]
+FF_process.wait()
+ipi_process.wait()
 
 
-#ALBERTO 
-#    Go to the folder ``input/instanton/40``. Copy the optimized
-#    transition state geometry obtained in Exercise 2 and name it
-#    ``init.xyz``. Also copy the transition state hessian and name it
-#    ``hessian.dat``. Run i-PI in the usual way, but here we can run 4
-#    instances of driver simultaneously using:
-# 
-#    ``$ i-pi-driver -m ch4hcbe -u &`` ``$ i-pi-driver -m ch4hcbe -u &``
-#    ``$ i-pi-driver -m ch4hcbe -u &`` ``$ i-pi-driver -m ch4hcbe -u &``
-# 
-#    The program first generates the initial instanton guess based on
-#    points spread around the TS in the direction of the imaginary mode.
-#    It then an optimization which takes 8 steps. The instanton geometry
-#    is saved in ``ts.instanton_FINAL_7.xyz`` and should be visualized
-#    with ``vmd``. Finally hessians for each bead are also computed and
-#    saved in ``ts.instanton_FINAL.hess_7`` in the shape (3n,3Nn) where n
+#    The program first generates an initial instanton guess by placing
+#    points around the transition state along the direction of the
+#    imaginary mode. It then performs an optimization, which converges
+#    in 8 steps. The optimized instanton geometry is written to
+#    ``ts.instanton_FINAL_7.xyz`` and can be visualized using ``vmd``.
+#    Finally, the Hessians for each bead are computed and saved in
+#    ``ts.instanton_FINAL.hess_7`` with dimensions (3n, 3Nn), where n
 #    is the number of atoms.
+
 
 
 # %%
@@ -398,10 +459,4 @@ plt.ylabel(r'$\kappa$')
 plt.show()
 
 
-# [1] Jose C Corchado, Jose L Bravo, and Joaquin Espinosa-Garcia. The
-# hydrogen abstraction reaction H + CH_4 . I. New analytical potential
-# energy surface based on fitting to ab initio calculations. J. Chem.
-# Phys., 130(18): 184314, 2009. [2] Jeremy O. Richardson. Ring-polymer
-# instanton theory. Int. Rev. Phys. Chem., 37:171, 2018.
-# 
 

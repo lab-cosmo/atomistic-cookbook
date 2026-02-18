@@ -8,7 +8,7 @@
    </ffsocket>
    <system >
        <initialize nbeads='40'>               <!-- This number represents the number of replicas that we are actually computing. i.e. Half instanton --> 
-           <file mode='xyz' >  init.xyz </file>
+           <file mode='xyz' >  init_inst_geop.xyz </file>
            <cell mode='abc'> [200.0,  200.0,  200.0  ] </cell>
        </initialize>
        <forces>
@@ -34,7 +34,7 @@
                <hessian_asr>poly</hessian_asr> <!-- Type of acoustic sum rule applied --> 
                <hessian_final>true</hessian_final>  <!-- Boolean that specifies if after the optimization is converged a hessian should be computed or not --> 
 	       <biggest_step>0.3</biggest_step>
-               <hessian mode='file' shape='(18, 18)' >hessian.dat</hessian>    
+               <hessian mode='file' shape='(18, 18)' >init_inst_geop.hess</hessian>    
            </instanton>
        </motion>
    </system>
