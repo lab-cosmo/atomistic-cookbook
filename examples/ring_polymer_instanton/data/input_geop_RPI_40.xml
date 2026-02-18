@@ -1,0 +1,41 @@
+<simulation mode="static" verbosity="medium">
+    <output prefix='inst'>
+        <properties stride='1' filename='out'>  [ step, potential{electronvolt}] </properties>
+   </output>
+   <total_steps>20       </total_steps>
+   <ffsocket name="cbe" mode="unix" >
+       <address> localhost </address>  
+   </ffsocket>
+   <system >
+       <initialize nbeads='40'>               <!-- This number represents the number of replicas that we are actually computing. i.e. Half instanton --> 
+           <file mode='xyz' >  init.xyz </file>
+           <cell mode='abc'> [200.0,  200.0,  200.0  ] </cell>
+       </initialize>
+       <forces>
+          <force forcefield="cbe"> </force>
+       </forces>
+       <ensemble>
+           <temperature units="kelvin">300</temperature>
+       </ensemble>
+       <normal_modes>
+       <open_paths> [ 0,1,2,3,4,5 ] </open_paths>   <!-- Used for a proper initialization  --> 
+       </normal_modes>
+       <motion mode='instanton'>
+           <instanton mode='rate'>        <!-- This option implies that we are looking a transition state -->
+               <alt_out>10</alt_out>      <!-- Print frequency of alternative output. -->
+               <tolerances>
+                   <energy> 5e-6 </energy>
+	           <force> 5e-6 </force>
+	           <position> 1e-3 </position>
+               </tolerances>
+               <delta> 0.1 </delta>  <!-- Specify the length of the initial instanton geometry guess along the mode with a negative eigenvalue. -->    
+               <opt>nichols</opt>     <!-- Optimization algorithm -->    
+               <hessian_update>powell</hessian_update> <!-- Specify the way we update our hessian. Options: powell or recompute. -->   
+               <hessian_asr>poly</hessian_asr> <!-- Type of acoustic sum rule applied --> 
+               <hessian_final>true</hessian_final>  <!-- Boolean that specifies if after the optimization is converged a hessian should be computed or not --> 
+	       <biggest_step>0.3</biggest_step>
+               <hessian mode='file' shape='(18, 18)' >hessian.dat</hessian>    
+           </instanton>
+       </motion>
+   </system>
+</simulation>
