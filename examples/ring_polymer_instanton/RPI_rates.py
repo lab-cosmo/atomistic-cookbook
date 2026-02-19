@@ -10,7 +10,7 @@ instanton formalism can be found in the review article by
 `J. Richardson, Ring-polymer instanton theory, Int. Rev. Phys. Chem., 37, 171, 2018 <https://doi.org/10.1080/0144235X.2018.1472353>`_,
 while the implementation within i-PI is described in
 `V. Kapil et al., Comp. Phys. Commun., 236, 214, 2020 <https://doi.org/10.1016/j.cpc.2018.09.020>`_.
-Additional practical details are available in Yair Litman's doctoral thesis
+Additional practical details are available in `Yair Litman's doctoral thesis
 <https://pure.mpg.de/rest/items/item_3246769_3/component/file_3246770/content>`_.
 
 
@@ -26,10 +26,8 @@ H + CH\ :math:`_4`. The calculations are performed using the CBE
 potential-energy surface reported in
 `J. C. Corchado et al., J. Chem. Phys., 130, 184314, 2009 <https://doi.org/10.1063/1.3132223>`_.
 
-If you are new to path-integral simulations or to the use of
- `i-PI <http://ipi-code.org>`_, which is the
-software which will be used to perform simulations, you can see
-`this introductory recipe
+If you are new to path-integral simulations or to the use of `i-PI <http://ipi-code.org>`_, which is the
+software which will be used to perform simulations, you can see `this introductory recipe
 <https://atomistic-cookbook.org/examples/path-integrals/path-integrals.html>`_.
 """
 
@@ -43,25 +41,44 @@ import shutil
 
 import chemiscope
 import ipi
+from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
 from matplotlib import cycler
 from scipy import constants
 
-plt.rc('text', usetex=True)
-plt.rc('ps', usedistiller = 'xpdf')
-plt.rcParams['legend.fontsize'] = 'x-large'
-plt.rcParams['axes.labelsize'] = 'x-large'
-plt.rcParams['axes.titlesize'] = 'x-large'
-plt.rcParams['xtick.labelsize'] = 'x-large'
-plt.rcParams['ytick.labelsize'] = 'x-large'
-params = {'figure.figsize':(12, 5)}
-plt.rcParams['axes.prop_cycle'] = cycler(color=['r','b','k','g','y','c'])
+#####plt.rc('text', usetex=True)
+#####plt.rc('ps', usedistiller = 'xpdf')
+#####plt.rcParams['legend.fontsize'] = 'x-large'
+#####plt.rcParams['axes.labelsize'] = 'x-large'
+#####plt.rcParams['axes.titlesize'] = 'x-large'
+#####plt.rcParams['xtick.labelsize'] = 'x-large'
+#####plt.rcParams['ytick.labelsize'] = 'x-large'
+#####params = {'figure.figsize':(12, 5)}
+#####plt.rcParams['axes.prop_cycle'] = cycler(color=['r','b','k','g','y','c'])
+# %%
+# Installing the Python driver
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# i-PI provides a FORTRAN driver that includes the CBE potential-energy
+# surface. However, the driver must be compiled from source.
+# We use a utility function to compile it.
+#
+# Note that this requires a working build environment with
+# `gfortran` and `make` available.
+#
+#
+
+
+
+ipi.install_driver()
+
 
 # %%
 # Calculation Workflow
-# --------------------
+# ~~~~~~~~~~~~~~~~~~~~
+# 
 # The calculation of tunneling rates using ring-polymer instanton theory
 # is a multi-step procedure that requires the optimization of several
 # stationary points on the system’s potential-energy surface.
@@ -103,23 +120,6 @@ plt.rcParams['axes.prop_cycle'] = cycler(color=['r','b','k','g','y','c'])
 #temperature as the initial guess for the next calculation.
 
 # %%
-# Installing the Python driver
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# i-PI provides a FORTRAN driver that includes the CBE potential-energy
-# surface. However, the driver must be compiled from source.
-# We use a utility function to compile it.
-#
-# Note that this requires a working build environment with
-# `gfortran` and `make` available.
-#
-#
-
-
-
-ipi.install_driver()
-
-# %%
 # Step 1 - Optimizing and Analyzing the Reactant
 # ----------------------------------------------
 #
@@ -133,11 +133,11 @@ ipi.install_driver()
 with open("data/input_vibrations_reactant.xml", "r") as file:
     lines = file.readlines()
 
-for line in lines[18:26]:
+for line in lines[18:23]:
     print(line, end="")
 
 
-
+# %%
 # We can launch i-pi and the driver from a Python script as follows
 
 ipi_process = None
@@ -182,8 +182,9 @@ FF_process =  subprocess.Popen(["i-pi-driver", "-u", "-m", "ch4hcbe"])
 FF_process.wait()
 ipi_process.wait()
 
+# %%
 # The hessian is saved in ``vib_reactant.hess`` and its eigenvalues in ``vib_reactant.eigval``.
-
+#
 # Check that it has the required number (9) of  almost zero eigenvalues. Why?
 
 eigvals = np.genfromtxt('vib_reactant.vib.eigval')
@@ -214,9 +215,10 @@ with open("data/input_geop_TS.xml", "r") as file:
 for line in lines[18:31]:
     print(line, end="")
 
+# %%
 # Note that Here i-PI treats the TS search as a one-bead instanton
 # optimization. 
-
+#
 # We now launch i-PI together with the driver using commands analogous
 # to those used in the previous step:
 
@@ -228,7 +230,10 @@ time.sleep(5)  # wait for i-PI to start
 FF_process =  subprocess.Popen(["i-pi-driver", "-u", "-m", "ch4hcbe"])
 FF_process.wait()
 ipi_process.wait()
+shutil.copy("RESTART", "RESTART_ts")
 
+# 
+# %%
 # The simulation typically converges in 11–12 steps and writes the
 # optimized geometry to ``ts.instanton_FINAL_xx.xyz`` and the corresponding
 # Hessian to ``ts.instanton_FINAL.hess_xx``.
@@ -263,6 +268,8 @@ shutil.copy(ts_xyz_file, "init_inst_geop.xyz")
 shutil.copy(ts_hess_file, "init_inst_geop.hess")
 
 
+# 
+# %%
 #    We run i-PI in the usual way, but here we launch four
 #    driver instances simultaneously using:
 
@@ -277,7 +284,10 @@ FF_process = [
 
 ipi_process.wait()
 
+shutil.copy("RESTART", "RESTART_RPI_40")
 
+# 
+# %%
 #    The program first generates an initial instanton guess by placing
 #    replicas around the transition state along the direction of the
 #    imaginary mode. It then performs a saddle-point optimization.
@@ -309,17 +319,24 @@ final_step = max(
 inst_hess_file_40 = f"inst.instanton_FINAL.hess_{final_step}"
 inst_xyz_file_40  = f"inst.instanton_FINAL_{final_step}.xyz"
 
- HERE
+# 
+# %%
 # 2. The utility function ``interpolate_instanton`` can now be used to
-# interpolate both the geometry and the Hessian to a larger number of beads.
-# For example, to increase the number of beads from 40 to 80:
-# You can use the script provided by typin 
-#     ``$ python ${ipi-path}/tools/py/Instanton_interpolation.py -m -xyz init0 -hess hess0 -n 80``
-# However here we import the corresponding function
+#    interpolate both the geometry and the Hessian to a larger number
+#    of beads. For example, to increase the number of beads from 40 to 80,
+#    you could run:
+#
+#    ``$ python ${ipi-path}/tools/py/Instanton_interpolation.py -m -xyz init0 -hess hess0 -n 80``
+#
+#    Here, however, we import and use the corresponding function directly
+#    within Python.
 
 from ipi.utils.tools import interpolate_instanton
 
-interpolate_instanton(input_geo=inst_xyz_file_40, input_hess=inst_hess_file_40, nbeadsNew=80)
+interpolate_instanton(input_geo=inst_xyz_file_40, input_hess=inst_hess_file_40, nbeadsNew=80,manual='True')
+
+# 
+# %%
 # 
 # 3. The previous function generates the interpolated geometry and hessian. 
 # we now rename the new files as required by new input.xml
@@ -327,9 +344,9 @@ interpolate_instanton(input_geo=inst_xyz_file_40, input_hess=inst_hess_file_40, 
 shutil.copy("new_instanton.xyz", "init_inst_80beads.xyz")
 shutil.copy("new_hessian.dat", "init_inst_80beads.hess")
 
-# 
-# 
-# 4. Run as before. 
+# %%
+#
+# 4. We now run the instanton optimization with 80 beads.
 
 
 ipi_process = None
@@ -342,28 +359,102 @@ FF_process = [
 ]
 #FF_process.wait()
 ipi_process.wait()
+time.sleep(5) 
 
+shutil.copy("RESTART", "RESTART_RPI_80")
 
 # %%
 # Step 5 -  Postprocessing for the rate calculation 
 # ------------------------------------------------------
 
-# Note that we have been optimizing half ring polymers, as we expect the
-# forward and backward imaginary-time paths between the reactant and the
-# product to be identical. Therefore, the actual number of replicas in the
-# instanton obtained by optimizing a ring polymer with 80 replicas is 160.
-# This convention is currently somewhat confusing and may change in the
-# future. When using the Instanton postprocessing tool, always check the
-# help option (using -h) to determine the required inputs.
+# In the remainder of this step, we use the Instanton postprocessing
+# tool to compute the partition functions and the tunneling factor.
+# This Python script evaluates the different contributions to the rate,
+# including the partition functions and the instanton action, from the
+# outputs generated in the previous steps. It is located in the
+# ``tools/py`` directory of the i-PI installation.
 #
-HERE
- 
-# 1. To compute the CH\ :math:`_4` partition function, go the
-#    input/reactant/phonons folder and type
-# 
+# Note that we optimize only half of the ring polymer, since the forward
+# and backward imaginary-time paths between reactant and product are
+# identical. As a result, optimizing a ring polymer with 80 replicas
+# corresponds to a full instanton containing 160 replicas.
+# (This convention is currently somewhat confusing and  may change in future versions.)
+# When using the Instanton postprocessing tool, always consult the
+# help option (``-h``) to verify the expected inputs.
+#
+
+# In this tutorial, we use the ``instanton_compute`` function to carry
+# out the postprocessing directly within Python.
+# However, the same analysis can also be performed using the corresponding
+# standalone script provided in the i-PI ``tools/py`` directory.
+# For completeness and future reference, we list the equivalent
+# command-line instructions below.
+
+from ipi.utils.tools import instanton_compute
+from ipi.utils.messages import verbosity
+from ipi.utils.units import unit_to_internal
+
+# %%
+# 1. Compute the CH\ :math:`_4` partition function.
+#
+#    We compute the partition function at 300 K using 160 beads.
+#    Although within the harmonic approximation the exact value could
+#    be obtained analytically, it is preferable to use the finite-bead
+#    representation in order to remain consistent with the instanton
+#    calculation and benefit from error cancellation.
+#
+#    This can be done using the standalone script:
+#
 #    ``$ python ${ipi-path}/tools/py/Instanton_postproc.py RESTART_reactant -c reactant -t 300 -n 160 -f 5``
-# 
-#    which computes the ring polymer parition function for CH\ :math:`_4`
+#
+#    Below, we perform the same calculation directly in Python.
+#
+
+RESTART_filename = "RESTART_reactant" #this is the restart file from the reactant calculation.
+case='reactant'
+K2au = unit_to_internal("temperature", "kelvin", 1.0)
+temperature=300*K2au
+index_to_filter = [5] #we need to filter the H free atom.
+asr='poly' #we are treating the system as a polyatomic molecule, so we need to use the corresponding acoustic sum rule (ASR)
+V00=0.0   #This can be used to shift the energy. Since we are interested in the partition function of the reactant, we can set it to zero. However, when analyzing the transition state and the instanton, it is important to use the corresponding value of V00 in order to ensure that the partition functions are computed consistently.
+nbeadsR=160 #number of beads in the reactant calculation. This should be consistent with the number of beads used in the instanton calculation.
+
+
+
+ipi_path = Path(ipi.__file__).resolve().parent
+print(ipi_path)
+
+
+ipi_path = Path(ipi.__file__).resolve().parent
+print(ipi_path)
+
+cmd = [
+    "python",
+    f"{ipi_path}/utils/tools/instanton_postproc.py",
+    RESTART_filename,
+    "-c", case,
+    "-t", str(temperature),
+    "-n", str(nbeadsR),
+    "-f", "5",
+]
+
+with open("data_reactant.out", "w") as outfile:
+    subprocess.run(cmd, stdout=outfile, check=True)
+
+# %%
+# Let's read the output
+with open("data_reactant.out", "r") as file:
+    lines = file.readlines()
+
+for line in lines[0:21]:
+    print(line, end="")
+
+
+#### instanton_compute(inputt=RESTART_filename, case=case, temp=temperature, asr=asr, V00=V00, filt=index_to_filter, nbeadsR=nbeadsR, input_freq=None, quiet='False', Verbosity=verbosity)
+
+# %%
+#   
+#   which computes the ring polymer parition function for CH\ :math:`_4`
 #    with N = 160. Look at the output and make a note of the
 #    translational, rotational and vibrational partition functions. You
 #    may also want to put > data.out after the command to save the text
