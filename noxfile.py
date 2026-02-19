@@ -600,8 +600,7 @@ def lint(session):
     """Run linters and type checks"""
 
     if not session.virtualenv._reused:
-        # TODO: remove the pin after https://github.com/keewis/blackdoc/pull/256 lands
-        session.install("black==25.1.0", "blackdoc==0.4.2")
+        session.install("black", "blackdoc")
         session.install("flake8", "flake8-bugbear", "flake8-sphinx-links")
         session.install("isort")
         session.install("sphinx-lint")
