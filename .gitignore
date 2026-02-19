@@ -13,14 +13,3 @@ __pycache__/
 *.ipynb
 # Ruff stuff:
 .ruff_cache/
-
-#Instanton stuff
-\#*
-RESTART
-*.checkpoint
-*.out
-*.pos_*.xyz
-*.dat
-*.hess*
-*RESTART*
-*ener
