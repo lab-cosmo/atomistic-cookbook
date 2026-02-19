@@ -37,24 +37,23 @@ software which will be used to perform simulations, you can see `this introducto
 <https://atomistic-cookbook.org/examples/path-integrals/path-integrals.html>`_.
 """
 
+import glob
 import os
+import re
+import shutil
 import subprocess
 import time
 import warnings
-import glob
-import re
-import shutil
+from pathlib import Path
 
 import chemiscope
 import ipi
-from ipi.utils.messages import verbosity
-
-from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
-
+from ipi.utils.messages import verbosity
 from matplotlib import cycler
 from scipy import constants
+
 
 ipi_path = Path(ipi.__file__).resolve().parent
 
@@ -295,7 +294,7 @@ shutil.copy("RESTART", "RESTART_RPI_40")
 
 
 # %%
-# Let's visualize the instanton geometry. We first retrieve the filename of the optimized geometry and then use chemiscope to visualize it. 
+# Let's visualize the instanton geometry. We first retrieve the filename of the optimized geometry and then use chemiscope to visualize it.
 
 final_step = max(
     int(re.search(r"hess_(\d+)$", f).group(1))
@@ -303,7 +302,6 @@ final_step = max(
 )
 
 inst_xyz_file_40 = f"inst.instanton_FINAL_{final_step}.xyz"
-
 
 
 warnings.filterwarnings("ignore", ".*residuenumbers array.*")
@@ -344,6 +342,7 @@ inst_hess_file_40 = f"inst.instanton_FINAL.hess_{final_step}"
 #    within Python.
 
 from ipi.utils.tools import interpolate_instanton
+
 
 interpolate_instanton(
     input_geo=inst_xyz_file_40,
