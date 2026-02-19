@@ -42,7 +42,6 @@ import shutil
 import chemiscope
 import ipi
 from ipi.utils.messages import verbosity
-from ipi.utils.units import unit_to_internal
 
 from pathlib import Path
 import matplotlib.pyplot as plt
@@ -402,8 +401,7 @@ RESTART_filename = (
     "RESTART_reactant"  # this is the restart file from the reactant calculation.
 )
 case = "reactant"
-K2au = unit_to_internal("temperature", "kelvin", 1.0)
-temperature = 300 * K2au
+temperature = 300 
 nbeadsR = 160  # number of beads in the reactant calculation. This should be consistent with the number of beads used in the instanton calculation.
 asr = "poly"  # we are treating the system as a polyatomic molecule, so we need to use the corresponding acoustic sum rule (ASR)
 index_to_filter = 5  # we need to filter the H free atom.
@@ -453,8 +451,7 @@ RESTART_filename = (
     "RESTART_ts"  # this is the restart file from the reactant calculation.
 )
 case = "TS"
-K2au = unit_to_internal("temperature", "kelvin", 1.0)
-temperature = 300 * K2au
+temperature = 300 
 nbeadsR = 160
 
 cmd = [
@@ -533,8 +530,7 @@ RESTART_filename = (
     "RESTART_RPI_80"  # this is the restart file from the reactant calculation.
 )
 case = "instanton"
-K2au = unit_to_internal("temperature", "kelvin", 1.0)
-temperature = 300 * K2au
+temperature = 300 
 
 cmd = [
     "python",
