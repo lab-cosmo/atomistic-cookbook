@@ -4,3 +4,7 @@ RESTART
 *.checkpoint
 *.out
 *.pos_*.xyz
+*.dat
+*.hess*
+*RESTART
+*ener
