@@ -1,8 +1,8 @@
 """
-Ring Polymer Instanton Rate Theory: Tunneling Rates 
+Ring Polymer Instanton Rate Theory: Tunneling Rates
 ===================================================
 
-:Authors: Yair Litman `@litman90 <https://github.com/litman90>`_ 
+:Authors: Yair Litman `@litman90 <https://github.com/litman90>`_
 
 This notebook introduces the calculation of tunneling rates using
 ring-polymer instanton rate theory. A comprehensive presentation of the
@@ -50,6 +50,7 @@ import numpy as np
 
 from matplotlib import cycler
 from scipy import constants
+
 ipi_path = Path(ipi.__file__).resolve().parent
 
 # %%
@@ -66,14 +67,13 @@ ipi_path = Path(ipi.__file__).resolve().parent
 #
 
 
-
 ipi.install_driver()
 
 
 # %%
 # Calculation Workflow
 # ~~~~~~~~~~~~~~~~~~~~
-# 
+#
 # The calculation of tunneling rates using ring-polymer instanton theory
 # is a multi-step procedure that requires the optimization of several
 # stationary points on the system’s potential-energy surface.
@@ -82,37 +82,37 @@ ipi.install_driver()
 #
 # A typical workflow is summarized below:
 #
-#1. Locate the minima on the physical potential-energy surface to identify
+# 1. Locate the minima on the physical potential-energy surface to identify
 #   the reactant and product states. Compute their Hessians, normal-mode
 #   frequencies, and eigenvectors.
 #
-#2. Find the first-order saddle point corresponding to the transition
+# 2. Find the first-order saddle point corresponding to the transition
 #   state and evaluate its Hessian.
 #
-#3. Obtain an "unconverged" instanton by locating the first-order saddle
+# 3. Obtain an "unconverged" instanton by locating the first-order saddle
 #   point of the ring-polymer Hamiltonian using N replicas. The chosen
 #   N should be large enough that the instanton provides a reasonable
 #   initial guess for a more converged calculation with a larger number
 #   of replicas, but small enough to keep the computational cost moderate.
 #   This step also provides an approximate Hessian for each replica.
 #
-#4. Use ring-polymer interpolation to construct an instanton with a
+# 4. Use ring-polymer interpolation to construct an instanton with a
 #   larger number of replicas. As a rule of thumb, the number of replicas
 #   can be doubled.
 #
-#5. Re-optimize the instanton by locating the corresponding first-order
+# 5. Re-optimize the instanton by locating the corresponding first-order
 #   saddle point.
 #
-#6. Repeat steps 4 and 5 until the instanton is converged with respect
+# 6. Repeat steps 4 and 5 until the instanton is converged with respect
 #   to the number of replicas.
 #
-#7. Recompute the Hessian for each replica accurately and evaluate
+# 7. Recompute the Hessian for each replica accurately and evaluate
 #   the reaction rate.
 #
-#If rates are required at multiple temperatures, it is recommended to
-#start with temperatures close to the crossover temperature and then
-#cool sequentially, using the optimized instanton from the previous
-#temperature as the initial guess for the next calculation.
+# If rates are required at multiple temperatures, it is recommended to
+# start with temperatures close to the crossover temperature and then
+# cool sequentially, using the optimized instanton from the previous
+# temperature as the initial guess for the next calculation.
 
 # %%
 # Step 1 - Optimizing and Analyzing the Reactant
@@ -139,7 +139,7 @@ ipi_process = None
 ipi_process = subprocess.Popen(["i-pi", "data/input_geop_reactant.xml"])
 time.sleep(5)  # wait for i-PI to start
 
-FF_process =  subprocess.Popen(["i-pi-driver", "-u", "-m", "ch4hcbe"])
+FF_process = subprocess.Popen(["i-pi-driver", "-u", "-m", "ch4hcbe"])
 FF_process.wait()
 ipi_process.wait()
 
@@ -160,12 +160,10 @@ ipi_process.wait()
 
 with open("min_reactant.xyz", "w") as outfile:
     subprocess.run(
-        ["tail", "-n", "8", "geop_reactant.xc.xyz"],
-        stdout=outfile,
-        check=True
+        ["tail", "-n", "8", "geop_reactant.xc.xyz"], stdout=outfile, check=True
     )
 
-     
+
 time.sleep(5)  # wait for i-PI to start
 #    We will now compute the hessian of this  minimum eneryg geometry
 
@@ -173,7 +171,7 @@ ipi_process = None
 ipi_process = subprocess.Popen(["i-pi", "data/input_vibrations_reactant.xml"])
 time.sleep(5)  # wait for i-PI to start
 
-FF_process =  subprocess.Popen(["i-pi-driver", "-u", "-m", "ch4hcbe"])
+FF_process = subprocess.Popen(["i-pi-driver", "-u", "-m", "ch4hcbe"])
 FF_process.wait()
 ipi_process.wait()
 
@@ -182,14 +180,14 @@ ipi_process.wait()
 #
 # Check that it has the required number (9) of  almost zero eigenvalues. Why?
 
-eigvals = np.genfromtxt('vib_reactant.vib.eigval')
-plt.plot(eigvals,'x')
-plt.xlabel('mode number')
-plt.ylabel('Eigenvalues (a.u.)')
+eigvals = np.genfromtxt("vib_reactant.vib.eigval")
+plt.plot(eigvals, "x")
+plt.xlabel("mode number")
+plt.ylabel("Eigenvalues (a.u.)")
 plt.show()
 
 shutil.copy("RESTART", "RESTART_reactant")
-# 
+#
 # %%
 # Step 2 - Optimizing and Analyzing the Transition State
 # ------------------------------------------------------
@@ -212,7 +210,7 @@ for line in lines[18:31]:
 
 # %%
 # Note that Here i-PI treats the TS search as a one-bead instanton
-# optimization. 
+# optimization.
 #
 # We now launch i-PI together with the driver using commands analogous
 # to those used in the previous step:
@@ -222,19 +220,19 @@ ipi_process = None
 ipi_process = subprocess.Popen(["i-pi", "data/input_geop_TS.xml"])
 time.sleep(5)  # wait for i-PI to start
 
-FF_process =  subprocess.Popen(["i-pi-driver", "-u", "-m", "ch4hcbe"])
+FF_process = subprocess.Popen(["i-pi-driver", "-u", "-m", "ch4hcbe"])
 FF_process.wait()
 ipi_process.wait()
 shutil.copy("RESTART", "RESTART_ts")
 
-# 
+#
 # %%
 # The simulation typically converges in 11–12 steps and writes the
 # optimized geometry to ``ts.instanton_FINAL_xx.xyz`` and the corresponding
 # Hessian to ``ts.instanton_FINAL.hess_xx``.
 
 
-ts_energy_ev = np.loadtxt('ts.out')[1,-1]  
+ts_energy_ev = np.loadtxt("ts.out")[1, -1]
 
 # %%
 # Step 3 - First instanton optimization
@@ -255,15 +253,14 @@ final_step = max(
 )
 
 ts_hess_file = f"ts.instanton_FINAL.hess_{final_step}"
-ts_xyz_file  = f"ts.instanton_FINAL_{final_step}.xyz"
-
+ts_xyz_file = f"ts.instanton_FINAL_{final_step}.xyz"
 
 
 shutil.copy(ts_xyz_file, "init_inst_geop.xyz")
 shutil.copy(ts_hess_file, "init_inst_geop.hess")
 
 
-# 
+#
 # %%
 #    We run i-PI in the usual way, but here we launch four
 #    driver instances simultaneously using:
@@ -273,15 +270,14 @@ ipi_process = subprocess.Popen(["i-pi", "data/input_geop_RPI_40.xml"])
 time.sleep(5)  # wait for i-PI to start
 
 FF_process = [
-    subprocess.Popen(["i-pi-driver", "-u", "-m", "ch4hcbe"])
-    for i in range(4)
+    subprocess.Popen(["i-pi-driver", "-u", "-m", "ch4hcbe"]) for i in range(4)
 ]
 
 ipi_process.wait()
 
 shutil.copy("RESTART", "RESTART_RPI_40")
 
-# 
+#
 # %%
 #    The program first generates an initial instanton guess by placing
 #    replicas around the transition state along the direction of the
@@ -293,12 +289,11 @@ shutil.copy("RESTART", "RESTART_RPI_40")
 #    is the number of atoms and N the number of beads.
 
 
-
 # %%
-# Step 4 - Second and subsequent instanton optimizations 
+# Step 4 - Second and subsequent instanton optimizations
 # ------------------------------------------------------
 # The instanton obtained in the previous step might not be fully converged with
-# respect to the number of beads. To obtain a more converged instanton, we can 
+# respect to the number of beads. To obtain a more converged instanton, we can
 # interpolate the geometry and the Hessian to a larger number of beads and then
 # re-optimize. This procedure can be repeated until the instanton is converged
 #
@@ -312,9 +307,9 @@ final_step = max(
 )
 
 inst_hess_file_40 = f"inst.instanton_FINAL.hess_{final_step}"
-inst_xyz_file_40  = f"inst.instanton_FINAL_{final_step}.xyz"
+inst_xyz_file_40 = f"inst.instanton_FINAL_{final_step}.xyz"
 
-# 
+#
 # %%
 # 2. The utility function ``interpolate_instanton`` can now be used to
 #    interpolate both the geometry and the Hessian to a larger number
@@ -328,12 +323,17 @@ inst_xyz_file_40  = f"inst.instanton_FINAL_{final_step}.xyz"
 
 from ipi.utils.tools import interpolate_instanton
 
-interpolate_instanton(input_geo=inst_xyz_file_40, input_hess=inst_hess_file_40, nbeadsNew=80,manual='True')
+interpolate_instanton(
+    input_geo=inst_xyz_file_40,
+    input_hess=inst_hess_file_40,
+    nbeadsNew=80,
+    manual="True",
+)
 
-# 
+#
 # %%
-# 
-# 3. The previous function generates the interpolated geometry and hessian. 
+#
+# 3. The previous function generates the interpolated geometry and hessian.
 # we now rename the new files as required by new input.xml
 
 shutil.copy("new_instanton.xyz", "init_inst_80beads.xyz")
@@ -349,17 +349,16 @@ ipi_process = subprocess.Popen(["i-pi", "data/input_geop_RPI_80.xml"])
 time.sleep(5)  # wait for i-PI to start
 
 FF_process = [
-    subprocess.Popen(["i-pi-driver", "-u", "-m", "ch4hcbe"])
-    for i in range(4)
+    subprocess.Popen(["i-pi-driver", "-u", "-m", "ch4hcbe"]) for i in range(4)
 ]
-#FF_process.wait()
+# FF_process.wait()
 ipi_process.wait()
-time.sleep(5) 
+time.sleep(5)
 
 shutil.copy("RESTART", "RESTART_RPI_80")
 
 # %%
-# Step 5 -  Postprocessing for the rate calculation 
+# Step 5 -  Postprocessing for the rate calculation
 # ------------------------------------------------------
 #
 # In the remainder of this step, we use the Instanton postprocessing
@@ -399,25 +398,33 @@ shutil.copy("RESTART", "RESTART_RPI_80")
 #    may also want to put > data.out after the command to save the text
 #    directly to a file.
 
-RESTART_filename = "RESTART_reactant" #this is the restart file from the reactant calculation.
-case='reactant'
+RESTART_filename = (
+    "RESTART_reactant"  # this is the restart file from the reactant calculation.
+)
+case = "reactant"
 K2au = unit_to_internal("temperature", "kelvin", 1.0)
-temperature=300*K2au
-nbeadsR=160 #number of beads in the reactant calculation. This should be consistent with the number of beads used in the instanton calculation.
-asr='poly' #we are treating the system as a polyatomic molecule, so we need to use the corresponding acoustic sum rule (ASR)
-index_to_filter = 5 #we need to filter the H free atom.
-V00=0.0   #This can be used to shift the energy. Since we are interested in the partition function of the reactant, we can set it to zero. However, when analyzing the transition state and the instanton, it is important to use the corresponding value of V00 in order to ensure that the partition functions are computed consistently.
+temperature = 300 * K2au
+nbeadsR = 160  # number of beads in the reactant calculation. This should be consistent with the number of beads used in the instanton calculation.
+asr = "poly"  # we are treating the system as a polyatomic molecule, so we need to use the corresponding acoustic sum rule (ASR)
+index_to_filter = 5  # we need to filter the H free atom.
+V00 = 0.0  # This can be used to shift the energy. Since we are interested in the partition function of the reactant, we can set it to zero. However, when analyzing the transition state and the instanton, it is important to use the corresponding value of V00 in order to ensure that the partition functions are computed consistently.
 
 cmd = [
     "python",
     f"{ipi_path}/utils/tools/instanton_postproc.py",
     RESTART_filename,
-    "-c", case,
-    "-t", str(temperature),
-    "-n", str(nbeadsR),
-    "-asr", asr,
-    "-f", str(index_to_filter),
-    "--energy_shift", str(V00), 
+    "-c",
+    case,
+    "-t",
+    str(temperature),
+    "-n",
+    str(nbeadsR),
+    "-asr",
+    asr,
+    "-f",
+    str(index_to_filter),
+    "--energy_shift",
+    str(V00),
 ]
 
 with open("data_reactant.out", "w") as outfile:
@@ -433,29 +440,35 @@ for line in lines[0:21]:
 
 
 # %%
-# 
+#
 # 2. Compute the TS partition function.  This can be done using the standalone script:
-# 
+#
 #    ``$ python ${ipi-path}/utils/tools/instanton_postproc.py RESTART_ts -c TS -t 300 -n 160``
-# 
+#
 #    which computes the ring polymer parition function for the TS with
 #    :math:`N = 160`.
 
 
-RESTART_filename = "RESTART_ts" #this is the restart file from the reactant calculation.
-case='TS'
+RESTART_filename = (
+    "RESTART_ts"  # this is the restart file from the reactant calculation.
+)
+case = "TS"
 K2au = unit_to_internal("temperature", "kelvin", 1.0)
-temperature=300*K2au
-nbeadsR=160
+temperature = 300 * K2au
+nbeadsR = 160
 
 cmd = [
     "python",
     f"{ipi_path}/utils/tools/instanton_postproc.py",
     RESTART_filename,
-    "-c", case,
-    "-t", str(temperature),
-    "-n", str(nbeadsR),
-    "-asr", asr,
+    "-c",
+    case,
+    "-t",
+    str(temperature),
+    "-n",
+    str(nbeadsR),
+    "-asr",
+    asr,
 ]
 
 with open("data_ts.out", "w") as outfile:
@@ -474,50 +487,65 @@ for line in lines:
 #
 #     Look for the value of the imaginary frequency and
 #    use this to compute the crossover temperature defined by
-# 
+#
 #    .. math:: \beta_c = \dfrac{2 \pi}{\omega_b}.
-# 
+#
 #    Be careful of units! You should find that it is about 340 K. In the
 #    cell below we define a quick function that helps you with the
 #    necessary unit conversions.
-# 
+#
 
 ####### Physical Constants ###########
-cm2hartree=1./(constants.physical_constants['hartree-inverse meter relationship'][0]/100)
-Boltzmannau = constants.physical_constants['Boltzmann constant in eV/K'][0]*constants.physical_constants['electron volt-hartree relationship'][0]
+cm2hartree = 1.0 / (
+    constants.physical_constants["hartree-inverse meter relationship"][0] / 100
+)
+Boltzmannau = (
+    constants.physical_constants["Boltzmann constant in eV/K"][0]
+    * constants.physical_constants["electron volt-hartree relationship"][0]
+)
 ########## Temperature <-> beta conversion ############
-K2beta = lambda T : 1./T/Boltzmannau
-beta2K = lambda B : 1./B/Boltzmannau
+K2beta = lambda T: 1.0 / T / Boltzmannau
+beta2K = lambda B: 1.0 / B / Boltzmannau
+
 
 def omb2Trecr(omega):
-    return beta2K(2.*np.pi/(omega*cm2hartree))
+    return beta2K(2.0 * np.pi / (omega * cm2hartree))
 
-omega = 1486.88   # given in reciprocal cm
-print('The barrier frequency is %.2f cm^-1. \nThe first recrossing temperature is ~ %.2f K.'%(omega,omb2Trecr(omega)))
+
+omega = 1486.88  # given in reciprocal cm
+print(
+    "The barrier frequency is %.2f cm^-1. \nThe first recrossing temperature is ~ %.2f K."
+    % (omega, omb2Trecr(omega))
+)
 
 
 # %%
 # 3. To compute the instanton partition function, :math:`B_N` and action,
 #    we continue as follows
-# 
+#
 #    ``$ python ${ipi-path}/utils/tools/instanton_postproc.py RESTART_RPI_80 -c instanton -t 300 ``
-# 
-#     We don't need to specify the number of beads here, since the script can read this from the restart file. 
-#     The script will read the optimized instanton geometry and the corresponding Hessians, and use these to compute the partition functions and the action. 
+#
+#     We don't need to specify the number of beads here, since the script can read this from the restart file.
+#     The script will read the optimized instanton geometry and the corresponding Hessians, and use these to compute the partition functions and the action.
 #     Make a note of the different contributions to the rate that are printed in the output.
 
-RESTART_filename = "RESTART_RPI_80" #this is the restart file from the reactant calculation.
-case='instanton'
+RESTART_filename = (
+    "RESTART_RPI_80"  # this is the restart file from the reactant calculation.
+)
+case = "instanton"
 K2au = unit_to_internal("temperature", "kelvin", 1.0)
-temperature=300*K2au
+temperature = 300 * K2au
 
 cmd = [
     "python",
     f"{ipi_path}/utils/tools/instanton_postproc.py",
     RESTART_filename,
-    "-c", case,
-    "-t", str(temperature),
-    "-asr", asr,
+    "-c",
+    case,
+    "-t",
+    str(temperature),
+    "-asr",
+    asr,
 ]
 
 with open("data_RPI_80.out", "w") as outfile:
@@ -538,20 +566,20 @@ for line in lines:
 #    :math:`B_N`, :math:`S`, etc. into the formula given for the rate.
 #    Compare the instanton results with those of the transition state in
 #    order to compute the tunnelling factor.
-# 
+#
 #    .. math::  \kappa = f_{\mathrm{trans}}\ f_{\mathrm{rot}}\ f_{\mathrm{vib}}\ e^{-S/\hbar + \beta V^{\dagger}}
-# 
-#    .. math::  f_{\mathrm{trans}} = \dfrac{Q^{\mathrm{inst}}_{\mathrm{trans}}}{Q^{\mathrm{TS}}_{\mathrm{trans}}} 
-# 
-#    .. math::  f_{\mathrm{rot}} = \dfrac{Q^{\mathrm{inst}}_{\mathrm{rot}}}{Q^{\mathrm{TS}}_{\mathrm{rot}}} 
-# 
-#    .. math::  f_{\mathrm{vib}} = \sqrt{\dfrac{2 \pi N B_N}{\beta \hbar^2}}\dfrac{Q^{\mathrm{inst}}_{\mathrm{vib}}}{Q^{\mathrm{TS}}_{\mathrm{vib}}} 
-# 
+#
+#    .. math::  f_{\mathrm{trans}} = \dfrac{Q^{\mathrm{inst}}_{\mathrm{trans}}}{Q^{\mathrm{TS}}_{\mathrm{trans}}}
+#
+#    .. math::  f_{\mathrm{rot}} = \dfrac{Q^{\mathrm{inst}}_{\mathrm{rot}}}{Q^{\mathrm{TS}}_{\mathrm{rot}}}
+#
+#    .. math::  f_{\mathrm{vib}} = \sqrt{\dfrac{2 \pi N B_N}{\beta \hbar^2}}\dfrac{Q^{\mathrm{inst}}_{\mathrm{vib}}}{Q^{\mathrm{TS}}_{\mathrm{vib}}}
+#
 #    Note that it is the log of the vibrational partition function which
 #    is printed, so you will have to convert this. In this way, you should
 #    find that the rate is about 9.8 times faster due to tunnelling. Which
 #    is the major contributing factor?
-# 
+#
 
 Q_trn_TS = 10.187982157
 Q_rot_TS = 1206.15097078
@@ -560,48 +588,74 @@ Q_trn_inst = 10.188
 Q_rot_inst = 1251.044
 Q_vib_inst = np.exp(-43.478)
 BN = 14.289
-recip_betan_hbar =   0.15201
+recip_betan_hbar = 0.15201
 N = 160
 Soverhbar = -25.026
 VoverBeta = 25.1656385465
 
-def kappa(Q_trn_TS,Q_rot_TS,Q_vib_TS,Q_trn_inst,Q_rot_inst,Q_vib_inst,BN,recip_betan_hbar,N,Soverhbar,VoverBeta):
+
+def kappa(
+    Q_trn_TS,
+    Q_rot_TS,
+    Q_vib_TS,
+    Q_trn_inst,
+    Q_rot_inst,
+    Q_vib_inst,
+    BN,
+    recip_betan_hbar,
+    N,
+    Soverhbar,
+    VoverBeta,
+):
     f_trn = Q_trn_inst / Q_trn_TS
     f_rot = Q_rot_inst / Q_rot_TS
-    f_vib = np.sqrt(2.*np.pi*BN*recip_betan_hbar)*Q_vib_inst/Q_vib_TS
-    
+    f_vib = np.sqrt(2.0 * np.pi * BN * recip_betan_hbar) * Q_vib_inst / Q_vib_TS
+
     kappa = f_trn * f_rot * f_vib * np.exp(Soverhbar + VoverBeta)
-    
-    #printing out the transmission factor and the relevant contributions. 
-    print('f_trans = %8.5e'%f_trn)
-    print('f_rot = %8.5e'%f_rot)
-    print('f_vib = %8.5e'%f_vib)
-    print('exp(-S/hbar) = %8.5e'%np.exp(Soverhbar))
-    print('exp(V/beta) = %8.5e'%np.exp(VoverBeta))
-    print('=============================')
-    print('kappa = %8.5e'%kappa)
-        
+
+    # printing out the transmission factor and the relevant contributions.
+    print("f_trans = %8.5e" % f_trn)
+    print("f_rot = %8.5e" % f_rot)
+    print("f_vib = %8.5e" % f_vib)
+    print("exp(-S/hbar) = %8.5e" % np.exp(Soverhbar))
+    print("exp(V/beta) = %8.5e" % np.exp(VoverBeta))
+    print("=============================")
+    print("kappa = %8.5e" % kappa)
+
     return kappa
 
-kappa(Q_trn_TS,Q_rot_TS,Q_vib_TS,Q_trn_inst,Q_rot_inst,Q_vib_inst,BN,recip_betan_hbar,N,Soverhbar,VoverBeta)
+
+kappa(
+    Q_trn_TS,
+    Q_rot_TS,
+    Q_vib_TS,
+    Q_trn_inst,
+    Q_rot_inst,
+    Q_vib_inst,
+    BN,
+    recip_betan_hbar,
+    N,
+    Soverhbar,
+    VoverBeta,
+)
 
 
 # %%
 # 4. In this tutorial, the number of beads used in the example is much
 #    more than necessary. Please try the instanton calculation with 10 or
 #    20 beads, and see how the results :math:`\kappa` compare.
-# 
+#
 
-kappadat = np.array([
-    [10  ,  18.486247675370873],
-    [20  ,  11.481103709870357],
-    [40  ,  10.127813329699068],
-    [80  ,   9.809437521247709]])
+kappadat = np.array(
+    [
+        [10, 18.486247675370873],
+        [20, 11.481103709870357],
+        [40, 10.127813329699068],
+        [80, 9.809437521247709],
+    ]
+)
 
-plt.plot(kappadat[:,0],kappadat[:,1],'ro--')
-plt.xlabel(r'number of instanton beads')
-plt.ylabel(r'$\kappa$')
+plt.plot(kappadat[:, 0], kappadat[:, 1], "ro--")
+plt.xlabel(r"number of instanton beads")
+plt.ylabel(r"$\kappa$")
 plt.show()
-
-
-
