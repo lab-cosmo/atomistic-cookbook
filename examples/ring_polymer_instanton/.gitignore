@@ -6,5 +6,5 @@ RESTART
 *.pos_*.xyz
 *.dat
 *.hess*
-*RESTART
+*RESTART*
 *ener
