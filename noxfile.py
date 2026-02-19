@@ -40,7 +40,6 @@ ROOT = os.path.realpath(os.path.dirname(__file__))
 sys.path.insert(0, ROOT)
 from src.get_examples import get_examples  # noqa: E402
 
-
 # global nox options
 nox.needs_version = ">=2024"
 nox.options.reuse_venv = "yes"
@@ -255,13 +254,11 @@ def build_gallery_section(template):
         fd.write(rst_output)
 
         # gallery thumbnails
-        fd.write(
-            """
+        fd.write("""
 
 .. grid:: 1 2 2 3
     :gutter: 1 1 2 3
-"""
-        )
+""")
         # sort by title
         for example in section_examples:
             file = os.path.join("docs", "src", f"{example}.rst")
@@ -489,8 +486,7 @@ def build_website(session):
 
     # generate global list
     with open("docs/src/all-examples.rst", "w") as output:
-        output.write(
-            """
+        output.write("""
 List of all recipes
 ===================
 
@@ -500,15 +496,13 @@ that are not part of any of the other sections.
 
 .. grid:: 1 2 2 3
     :gutter: 1 1 2 3
-"""
-        )
+""")
         # sort by title
         for _, metadata in sorted(
             all_examples_rst.items(), key=(lambda kw: kw[1]["title"])
         ):
             # generates a thumbnail link
-            output.write(
-                f"""
+            output.write(f"""
     .. grid-item::
         .. card:: {metadata["title"]}
             :link: {metadata["ref"]}
@@ -520,18 +514,15 @@ that are not part of any of the other sections.
                 :alt: {metadata["description"]}
                 :class: gallery-img
 
-                """
-            )
+                """)
 
-        output.write(
-            """
+        output.write("""
 .. toctree::
    :maxdepth: 1
    :hidden:
    :titlesonly:
 
-"""
-        )
+""")
         for _, metadata in sorted(
             all_examples_rst.items(), key=(lambda kw: kw[1]["title"])
         ):
@@ -600,18 +591,19 @@ def lint(session):
     """Run linters and type checks"""
 
     if not session.virtualenv._reused:
-        session.install("black", "blackdoc")
+        session.install("blackdoc")
+        session.install("ruff")
         session.install("flake8", "flake8-bugbear", "flake8-sphinx-links")
-        session.install("isort")
+        # session.install("isort")
         session.install("sphinx-lint")
 
     # Get files
     LINT_FILES = get_lint_files()
 
     # Formatting
-    session.run("black", "--check", "--diff", *LINT_FILES)
+    session.run("ruff", "format", "--check", "--diff", *LINT_FILES)
     session.run("blackdoc", "--check", "--diff", *LINT_FILES)
-    session.run("isort", "--check-only", "--diff", *LINT_FILES)
+    # session.run("isort", "--check-only", "--diff", *LINT_FILES)
 
     # Linting
     session.run(
@@ -647,14 +639,14 @@ def format(session):
 
     if not session.virtualenv._reused:
         # TODO: remove the pin after https://github.com/keewis/blackdoc/pull/256 lands
-        session.install("black==25.1.0", "blackdoc==0.4.2")
-        session.install("isort")
+        session.install("blackdoc")
+        session.install("ruff")
     # Get files
     LINT_FILES = get_lint_files()
 
-    session.run("black", *LINT_FILES)
+    session.run("ruff", "format", *LINT_FILES)
     session.run("blackdoc", *LINT_FILES)
-    session.run("isort", *LINT_FILES)
+    # session.run("isort", *LINT_FILES)
     for file in LINT_FILES:
         remove_trailing_whitespace(file)
 

@@ -828,8 +828,7 @@ outputs = {"energy": ModelOutput(quantity="energy", unit=energy_unit, per_atom=F
 nrg = qtip4pf_model.forward([system], outputs)
 nrg["energy"].block(0).values.backward()
 
-print(
-    f"""
+print(f"""
 Energy is {nrg["energy"].block(0).values[0].item()} kcal/mol
 
 The forces on the first molecule (in kcal/mol/Å) are
@@ -837,8 +836,7 @@ The forces on the first molecule (in kcal/mol/Å) are
 
 The stress is
 {system.cell.grad}
-"""
-)
+""")
 
 # %%
 #
@@ -931,11 +929,9 @@ mta_calculator = MetatomicCalculator(atomistic_model)
 atoms.calc = mta_calculator
 nrg = atoms.get_potential_energy()
 
-print(
-    f"""
-Energy is {nrg} eV, corresponding to {nrg*23.060548} kcal/mol
-"""
-)
+print(f"""
+Energy is {nrg} eV, corresponding to {nrg * 23.060548} kcal/mol
+""")
 
 
 # %%
