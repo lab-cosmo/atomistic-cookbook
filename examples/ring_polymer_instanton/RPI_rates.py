@@ -45,7 +45,6 @@ import chemiscope
 import ipi
 import matplotlib.pyplot as plt
 import numpy as np
-from ipi.utils.tools import interpolate_instanton
 
 from matplotlib import cycler
 from scipy import constants
@@ -275,7 +274,7 @@ FF_process = [
     subprocess.Popen(["i-pi-driver", "-u", "-m", "ch4hcbe"])
     for i in range(4)
 ]
-#FF_process.wait()
+
 ipi_process.wait()
 
 
@@ -310,14 +309,20 @@ final_step = max(
 inst_hess_file_40 = f"inst.instanton_FINAL.hess_{final_step}"
 inst_xyz_file_40  = f"inst.instanton_FINAL_{final_step}.xyz"
 
+ HERE
 # 2. The utility function ``interpolate_instanton`` can now be used to
 # interpolate both the geometry and the Hessian to a larger number of beads.
 # For example, to increase the number of beads from 40 to 80:
+# You can use the script provided by typin 
+#     ``$ python ${ipi-path}/tools/py/Instanton_interpolation.py -m -xyz init0 -hess hess0 -n 80``
+# However here we import the corresponding function
 
+from ipi.utils.tools import interpolate_instanton
 
 interpolate_instanton(input_geo=inst_xyz_file_40, input_hess=inst_hess_file_40, nbeadsNew=80)
 # 
-# 3. Rename the new files as required by new input.xml
+# 3. The previous function generates the interpolated geometry and hessian. 
+# we now rename the new files as required by new input.xml
 
 shutil.copy("new_instanton.xyz", "init_inst_80beads.xyz")
 shutil.copy("new_hessian.dat", "init_inst_80beads.hess")
