@@ -41,22 +41,17 @@ import shutil
 
 import chemiscope
 import ipi
+from ipi.utils.messages import verbosity
+from ipi.utils.units import unit_to_internal
+
 from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
 from matplotlib import cycler
 from scipy import constants
+ipi_path = Path(ipi.__file__).resolve().parent
 
-#####plt.rc('text', usetex=True)
-#####plt.rc('ps', usedistiller = 'xpdf')
-#####plt.rcParams['legend.fontsize'] = 'x-large'
-#####plt.rcParams['axes.labelsize'] = 'x-large'
-#####plt.rcParams['axes.titlesize'] = 'x-large'
-#####plt.rcParams['xtick.labelsize'] = 'x-large'
-#####plt.rcParams['ytick.labelsize'] = 'x-large'
-#####params = {'figure.figsize':(12, 5)}
-#####plt.rcParams['axes.prop_cycle'] = cycler(color=['r','b','k','g','y','c'])
 # %%
 # Installing the Python driver
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -366,13 +361,14 @@ shutil.copy("RESTART", "RESTART_RPI_80")
 # %%
 # Step 5 -  Postprocessing for the rate calculation 
 # ------------------------------------------------------
-
+#
 # In the remainder of this step, we use the Instanton postprocessing
 # tool to compute the partition functions and the tunneling factor.
 # This Python script evaluates the different contributions to the rate,
 # including the partition functions and the instanton action, from the
 # outputs generated in the previous steps. It is located in the
-# ``tools/py`` directory of the i-PI installation.
+# ``utils/tools/instanton_postproc.py`` directory of the i-PI installation.
+#
 #
 # Note that we optimize only half of the ring polymer, since the forward
 # and backward imaginary-time paths between reactant and product are
@@ -383,16 +379,6 @@ shutil.copy("RESTART", "RESTART_RPI_80")
 # help option (``-h``) to verify the expected inputs.
 #
 
-# In this tutorial, we use the ``instanton_compute`` function to carry
-# out the postprocessing directly within Python.
-# However, the same analysis can also be performed using the corresponding
-# standalone script provided in the i-PI ``tools/py`` directory.
-# For completeness and future reference, we list the equivalent
-# command-line instructions below.
-
-from ipi.utils.tools import instanton_compute
-from ipi.utils.messages import verbosity
-from ipi.utils.units import unit_to_internal
 
 # %%
 # 1. Compute the CH\ :math:`_4` partition function.
@@ -405,28 +391,22 @@ from ipi.utils.units import unit_to_internal
 #
 #    This can be done using the standalone script:
 #
-#    ``$ python ${ipi-path}/tools/py/Instanton_postproc.py RESTART_reactant -c reactant -t 300 -n 160 -f 5``
+#    ``$ python ${ipi-path}/utils/tools/instanton_postproc.py RESTART_reactant -c reactant -t 300 -n 160 -f 5``
 #
-#    Below, we perform the same calculation directly in Python.
-#
+#   which computes the ring polymer parition function for CH\ :math:`_4`
+#    with N = 160. Look at the output and make a note of the
+#    translational, rotational and vibrational partition functions. You
+#    may also want to put > data.out after the command to save the text
+#    directly to a file.
 
 RESTART_filename = "RESTART_reactant" #this is the restart file from the reactant calculation.
 case='reactant'
 K2au = unit_to_internal("temperature", "kelvin", 1.0)
 temperature=300*K2au
-index_to_filter = [5] #we need to filter the H free atom.
-asr='poly' #we are treating the system as a polyatomic molecule, so we need to use the corresponding acoustic sum rule (ASR)
-V00=0.0   #This can be used to shift the energy. Since we are interested in the partition function of the reactant, we can set it to zero. However, when analyzing the transition state and the instanton, it is important to use the corresponding value of V00 in order to ensure that the partition functions are computed consistently.
 nbeadsR=160 #number of beads in the reactant calculation. This should be consistent with the number of beads used in the instanton calculation.
-
-
-
-ipi_path = Path(ipi.__file__).resolve().parent
-print(ipi_path)
-
-
-ipi_path = Path(ipi.__file__).resolve().parent
-print(ipi_path)
+asr='poly' #we are treating the system as a polyatomic molecule, so we need to use the corresponding acoustic sum rule (ASR)
+index_to_filter = 5 #we need to filter the H free atom.
+V00=0.0   #This can be used to shift the energy. Since we are interested in the partition function of the reactant, we can set it to zero. However, when analyzing the transition state and the instanton, it is important to use the corresponding value of V00 in order to ensure that the partition functions are computed consistently.
 
 cmd = [
     "python",
@@ -435,7 +415,9 @@ cmd = [
     "-c", case,
     "-t", str(temperature),
     "-n", str(nbeadsR),
-    "-f", "5",
+    "-asr", asr,
+    "-f", str(index_to_filter),
+    "--energy_shift", str(V00), 
 ]
 
 with open("data_reactant.out", "w") as outfile:
@@ -450,22 +432,47 @@ for line in lines[0:21]:
     print(line, end="")
 
 
-#### instanton_compute(inputt=RESTART_filename, case=case, temp=temperature, asr=asr, V00=V00, filt=index_to_filter, nbeadsR=nbeadsR, input_freq=None, quiet='False', Verbosity=verbosity)
-
 # %%
-#   
-#   which computes the ring polymer parition function for CH\ :math:`_4`
-#    with N = 160. Look at the output and make a note of the
-#    translational, rotational and vibrational partition functions. You
-#    may also want to put > data.out after the command to save the text
-#    directly to a file.
 # 
-# 2. To compute the TS partition function, go to ``input/TS`` and type
+# 2. Compute the TS partition function.  This can be done using the standalone script:
 # 
-#    ``$ python ${ipi-path}/tools/py/Instanton_postproc.py RESTART -c TS -t 300 -n 160``
+#    ``$ python ${ipi-path}/utils/tools/instanton_postproc.py RESTART_ts -c TS -t 300 -n 160``
 # 
 #    which computes the ring polymer parition function for the TS with
-#    :math:`N = 160`. Look for the value of the imaginary frequency and
+#    :math:`N = 160`.
+
+
+RESTART_filename = "RESTART_ts" #this is the restart file from the reactant calculation.
+case='TS'
+K2au = unit_to_internal("temperature", "kelvin", 1.0)
+temperature=300*K2au
+nbeadsR=160
+
+cmd = [
+    "python",
+    f"{ipi_path}/utils/tools/instanton_postproc.py",
+    RESTART_filename,
+    "-c", case,
+    "-t", str(temperature),
+    "-n", str(nbeadsR),
+    "-asr", asr,
+]
+
+with open("data_ts.out", "w") as outfile:
+    subprocess.run(cmd, stdout=outfile, check=True)
+
+# %%
+# Let's read the output
+with open("data_ts.out", "r") as file:
+    lines = file.readlines()
+
+for line in lines:
+    print(line, end="")
+
+
+# %%
+#
+#     Look for the value of the imaginary frequency and
 #    use this to compute the crossover temperature defined by
 # 
 #    .. math:: \beta_c = \dfrac{2 \pi}{\omega_b}.
@@ -491,10 +498,42 @@ print('The barrier frequency is %.2f cm^-1. \nThe first recrossing temperature i
 
 # %%
 # 3. To compute the instanton partition function, :math:`B_N` and action,
-#    go to ``input/instanton/80`` and type
+#    we continue as follows
 # 
-#    ``$ python ${ipi-path}/tools/py/Instanton_postproc.py RESTART -c instanton -t 300 > data.txt``
+#    ``$ python ${ipi-path}/utils/tools/instanton_postproc.py RESTART_RPI_80 -c instanton -t 300 ``
 # 
+#     We don't need to specify the number of beads here, since the script can read this from the restart file. 
+#     The script will read the optimized instanton geometry and the corresponding Hessians, and use these to compute the partition functions and the action. 
+#     Make a note of the different contributions to the rate that are printed in the output.
+
+RESTART_filename = "RESTART_RPI_80" #this is the restart file from the reactant calculation.
+case='instanton'
+K2au = unit_to_internal("temperature", "kelvin", 1.0)
+temperature=300*K2au
+
+cmd = [
+    "python",
+    f"{ipi_path}/utils/tools/instanton_postproc.py",
+    RESTART_filename,
+    "-c", case,
+    "-t", str(temperature),
+    "-asr", asr,
+]
+
+with open("data_RPI_80.out", "w") as outfile:
+    subprocess.run(cmd, stdout=outfile, check=True)
+
+# %%
+# Let's read the output
+with open("data_RPI_80.out", "r") as file:
+    lines = file.readlines()
+
+for line in lines:
+    print(line, end="")
+
+
+# %%
+#
 #    Then it is a simple matter to combine the partition functions,
 #    :math:`B_N`, :math:`S`, etc. into the formula given for the rate.
 #    Compare the instanton results with those of the transition state in

@@ -9,5 +9,5 @@ dependencies:
     - numpy
     - ase>=3.23
     - chemiscope>=1.0
-    - ipi>=3.1.5.1
+    - ipi>=3.1.10
     - matplotlib
