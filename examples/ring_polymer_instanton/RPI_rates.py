@@ -1,4 +1,10 @@
 """
+final_step = max(
+    int(re.search(r"hess_(\d+)$", f).group(1))
+    for f in glob.glob("inst.instanton_FINAL.hess_*")
+)
+
+inst_xyz_file_40 = f"inst.instanton_FINAL_{final_step}.xyz"
 Ring Polymer Instanton Rate Theory: Tunneling Rates
 ===================================================
 
@@ -289,6 +295,29 @@ shutil.copy("RESTART", "RESTART_RPI_40")
 
 
 # %%
+# Let's visualize the instanton geometry. We first retrieve the filename of the optimized geometry and then use chemiscope to visualize it. 
+
+final_step = max(
+    int(re.search(r"hess_(\d+)$", f).group(1))
+    for f in glob.glob("inst.instanton_FINAL.hess_*")
+)
+
+inst_xyz_file_40 = f"inst.instanton_FINAL_{final_step}.xyz"
+
+
+
+warnings.filterwarnings("ignore", ".*residuenumbers array.*")
+pi_frames = ipi.read_trajectory(inst_xyz_file_40)
+
+chemiscope.show(
+    structures=pi_frames,
+    settings=chemiscope.quick_settings(
+        trajectory=True,
+    ),
+    mode="structure",
+)
+
+# %%
 # Step 4 - Second and subsequent instanton optimizations
 # ------------------------------------------------------
 # The instanton obtained in the previous step might not be fully converged with
@@ -300,13 +329,7 @@ shutil.copy("RESTART", "RESTART_RPI_40")
 # 1. Let's retrieve the filenames of the Hessian and geometry
 # corresponding to the converged instanton.
 
-final_step = max(
-    int(re.search(r"hess_(\d+)$", f).group(1))
-    for f in glob.glob("inst.instanton_FINAL.hess_*")
-)
-
 inst_hess_file_40 = f"inst.instanton_FINAL.hess_{final_step}"
-inst_xyz_file_40 = f"inst.instanton_FINAL_{final_step}.xyz"
 
 #
 # %%
@@ -401,7 +424,7 @@ RESTART_filename = (
     "RESTART_reactant"  # this is the restart file from the reactant calculation.
 )
 case = "reactant"
-temperature = 300 
+temperature = 300
 nbeadsR = 160  # number of beads in the reactant calculation. This should be consistent with the number of beads used in the instanton calculation.
 asr = "poly"  # we are treating the system as a polyatomic molecule, so we need to use the corresponding acoustic sum rule (ASR)
 index_to_filter = 5  # we need to filter the H free atom.
@@ -451,7 +474,7 @@ RESTART_filename = (
     "RESTART_ts"  # this is the restart file from the reactant calculation.
 )
 case = "TS"
-temperature = 300 
+temperature = 300
 nbeadsR = 160
 
 cmd = [
@@ -530,7 +553,7 @@ RESTART_filename = (
     "RESTART_RPI_80"  # this is the restart file from the reactant calculation.
 )
 case = "instanton"
-temperature = 300 
+temperature = 300
 
 cmd = [
     "python",
