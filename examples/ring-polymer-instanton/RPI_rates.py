@@ -1,10 +1,4 @@
 """
-final_step = max(
-    int(re.search(r"hess_(\d+)$", f).group(1))
-    for f in glob.glob("inst.instanton_FINAL.hess_*")
-)
-
-inst_xyz_file_40 = f"inst.instanton_FINAL_{final_step}.xyz"
 Ring Polymer Instanton Rate Theory: Tunneling Rates
 ===================================================
 
