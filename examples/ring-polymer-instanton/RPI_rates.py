@@ -3,35 +3,6 @@ Ring Polymer Instanton Rate Theory: Tunneling Rates
 ===================================================
 
 :Authors: Yair Litman `@litman90 <https://github.com/litman90>`_
-
-This notebook introduces the calculation of tunneling rates using
-ring-polymer instanton rate theory. A comprehensive presentation of the
-instanton formalism can be found in the review article by
-`J. Richardson, Ring-polymer instanton theory,
- Int. Rev. Phys. Chem., 37, 171, 2018 <https://doi.org/10.1080/0144235X.2018.1472353>`_,
-while the implementation within i-PI is described in
-`V. Kapil et al., Comp. Phys. Commun., 236, 214, 2020
-<https://doi.org/10.1016/j.cpc.2018.09.020>`_.
-Additional practical details are available in `Yair Litman's doctoral thesis
-<https://pure.mpg.de/rest/items/item_3246769_3/component/file_3246770/content>`_.
-
-
-In these exercises, i-PI will be used not for molecular dynamics simulations,
-but to optimize stationary points on the ring-polymer potential-energy surface.
-From these stationary points, the ring-polymer instanton can be obtained and
-employed to evaluate thermal reaction rates that include tunneling contributions.
-
-As a working example, we consider the gas-phase bimolecular reaction
-H + CH4 -->CH3 + H2. The calculations are performed using the CBE
-potential-energy surface reported in
-`J. C. Corchado et al., J. Chem. Phys., 130, 184314, 2009
-<https://doi.org/10.1063/1.3132223>`_.
-
-If you are new to path-integral simulations or to the use of
-`i-PI <http://ipi-code.org>`_, which is the
-software which will be used to perform simulations,
-you can see `this introductory recipe
-<https://atomistic-cookbook.org/examples/path-integrals/path-integrals.html>`_.
 """
 
 import glob
@@ -48,6 +19,38 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import constants
 from ipi.utils.tools import interpolate_instanton
+
+# %%
+# Installing the Python driver
+#
+# This notebook introduces the calculation of tunneling rates using
+# ring-polymer instanton rate theory. A comprehensive presentation of the
+# instanton formalism can be found in the review article by
+# `J. Richardson, Int. Rev. Phys. Chem., 37, 171, 2018
+# <https://doi.org/10.1080/0144235X.2018.1472353>`_,
+# while the implementation within i-PI is described in
+# `V. Kapil et al., Comp. Phys. Commun., 236, 214, 2020
+# <https://doi.org/10.1016/j.cpc.2018.09.020>`_.
+# Additional practical details are available in `Yair Litman's doctoral thesis
+# <https://pure.mpg.de/rest/items/item_3246769_3/component/file_3246770/content>`_.
+#
+#
+# In these exercises, i-PI will be used not for molecular dynamics simulations,
+# but to optimize stationary points on the ring-polymer potential-energy surface.
+# From these stationary points, the ring-polymer instanton can be obtained and
+# employed to evaluate thermal reaction rates that include tunneling contributions.
+#
+# As a working example, we consider the gas-phase bimolecular reaction
+# H + CH4 -->CH3 + H2. The calculations are performed using the CBE
+# potential-energy surface reported in
+# `J. C. Corchado et al., J. Chem. Phys., 130, 184314, 2009
+# <https://doi.org/10.1063/1.3132223>`_.
+#
+# If you are new to path-integral simulations or to the use of
+# `i-PI <http://ipi-code.org>`_, which is the
+# software which will be used to perform simulations,
+# you can see `this introductory recipe
+# <https://atomistic-cookbook.org/examples/path-integrals/path-integrals.html>`_.
 
 
 ipi_path = Path(ipi.__file__).resolve().parent
@@ -82,31 +85,31 @@ ipi.install_driver()
 # A typical workflow is summarized below:
 #
 # 1. Locate the minima on the physical potential-energy surface to identify
-#   the reactant and product states. Compute their Hessians, normal-mode
-#   frequencies, and eigenvectors.
+# the reactant and product states. Compute their Hessians, normal-mode
+# frequencies, and eigenvectors.
 #
 # 2. Find the first-order saddle point corresponding to the transition
-#   state and evaluate its Hessian.
+# state and evaluate its Hessian.
 #
 # 3. Obtain an "unconverged" instanton by locating the first-order saddle
-#   point of the ring-polymer Hamiltonian using N replicas. The chosen
-#   N should be large enough that the instanton provides a reasonable
-#   initial guess for a more converged calculation with a larger number
-#   of replicas, but small enough to keep the computational cost moderate.
-#   This step also provides an approximate Hessian for each replica.
+# point of the ring-polymer Hamiltonian using N replicas. The chosen
+# N should be large enough that the instanton provides a reasonable
+# initial guess for a more converged calculation with a larger number
+# of replicas, but small enough to keep the computational cost moderate.
+# This step also provides an approximate Hessian for each replica.
 #
 # 4. Use ring-polymer interpolation to construct an instanton with a
-#   larger number of replicas. As a rule of thumb, the number of replicas
-#   can be doubled.
+# larger number of replicas. As a rule of thumb, the number of replicas
+# can be doubled.
 #
 # 5. Re-optimize the instanton by locating the corresponding first-order
-#   saddle point.
+# saddle point.
 #
 # 6. Repeat steps 4 and 5 until the instanton is converged with respect
-#   to the number of replicas.
+# to the number of replicas.
 #
 # 7. Recompute the Hessian for each replica accurately and evaluate
-#   the reaction rate.
+# the reaction rate.
 #
 # If rates are required at multiple temperatures, it is recommended to
 # start with temperatures close to the crossover temperature and then
@@ -237,7 +240,7 @@ ts_energy_ev = np.loadtxt("ts.out")[1, -1]
 # %%
 # Step 3 - First instanton optimization
 # ------------------------------------------------------
-
+#
 # We now continue with the optimization of the ring-polymer instanton. This is a
 # first-order saddle point of the ring-polymer Hamiltonian, and therefore
 # the optimization procedure is analogous to that used for the transition state.
@@ -330,15 +333,14 @@ inst_hess_file_40 = f"inst.instanton_FINAL.hess_{final_step}"
 #
 # %%
 # 2. The utility function ``interpolate_instanton`` can now be used to
-#    interpolate both the geometry and the Hessian to a larger number
-#    of beads. For example, to increase the number of beads from 40 to 80,
-#    you could run:
+# interpolate both the geometry and the Hessian to a larger number
+# of beads. For example, to increase the number of beads from 40 to 80,
+# you could run the script inside ${ipi-path}/uitls/tools/:
 #
-#    ``$ python ${ipi-path}/tools/py/Instanton_interpolation.py -m -xyz init0 \
-#                     -hess hess0 -n 80``
+# ``python onstanton_interpolation.py -m -xyz init0 -hess hess0 -n 80``
 #
-#    Here, however, we import and use the corresponding function directly
-#    within Python.
+# Here, however, we import and use the corresponding function directly
+# within Python.
 
 
 interpolate_instanton(
@@ -400,22 +402,22 @@ shutil.copy("RESTART", "RESTART_RPI_80")
 # %%
 # 1. Compute the CH\ :math:`_4` partition function.
 #
-#    We compute the partition function at 300 K using 160 beads.
-#    Although within the harmonic approximation the exact value could
-#    be obtained analytically, it is preferable to use the finite-bead
-#    representation in order to remain consistent with the instanton
-#    calculation and benefit from error cancellation.
+# We compute the partition function at 300 K using 160 beads.
+# Although within the harmonic approximation the exact value could
+# be obtained analytically, it is preferable to use the finite-bead
+# representation in order to remain consistent with the instanton
+# calculation and benefit from error cancellation.
 #
-#    This can be done using the standalone script:
+# This can be done using the standalone script located in
+# ${ipi-path}/tools/py/
 #
-#    ``$ python ${ipi-path}/utils/tools/instanton_postproc.py RESTART_reactant \
-#                              -c reactant -t 300 -n 160 -f 5``
+# ``python instanton_postproc.py RESTART_reactant -c reactant -t 300 -n 160 -f 5``
 #
-#   which computes the ring polymer parition function for CH\ :math:`_4`
-#    with N = 160. Look at the output and make a note of the
-#    translational, rotational and vibrational partition functions. You
-#    may also want to put > data.out after the command to save the text
-#    directly to a file.
+# which computes the ring polymer parition function for CH\ :math:`_4`
+# with N = 160. Look at the output and make a note of the
+# translational, rotational and vibrational partition functions. You
+# may also want to put > data.out after the command to save the text
+# directly to a file.
 
 RESTART_filename = (
     "RESTART_reactant"  # this is the restart file from the reactant calculation.
@@ -469,13 +471,13 @@ for line in lines[0:21]:
 
 # %%
 #
-# 2. Compute the TS partition function.  This can be done using the standalone script:
+# 2. Compute the TS partition function.  This can be done using the standalone script
+# located in ${ipi-path}/tools/py/ as follows:
 #
-# ``$ python ${ipi-path}/utils/tools/instanton_postproc.py RESTART_ts \
-#            -c TS -t 300 -n 160``
+# ``python instanton_postproc.py RESTART_ts -c TS -t 300 -n 160``
 #
-#    which computes the ring polymer parition function for the TS with
-#    :math:`N = 160`.
+# which computes the ring polymer parition function for the TS with
+# :math:`N = 160`.
 
 
 RESTART_filename = (
@@ -553,18 +555,18 @@ print(
 
 # %%
 # 3. To compute the instanton partition function, :math:`B_N` and action,
-#  we continue as follows
+# we continue by calling the instanton postprocessing script
+# located ${ipi-path}/utils/tools
 #
-#  ``$ python ${ipi-path}/utils/tools/instanton_postproc.py RESTART_RPI_80 \
-#               -c instanton -t 300 ``
+# ``python instanton_postproc.py RESTART_RPI_80 -c instanton -t 300``
 #
-#   We don't need to specify the number of beads here, since the script can read this
-#   from the restart file.
-#   The script will read the optimized instanton geometry and
-#   the corresponding Hessians, and use these to compute the partition functions
-#   and the action.
-#   Make a note of the different contributions to the rate that are printed
-#   in the output.
+# We don't need to specify the number of beads here, since the script can read this
+# from the restart file.
+# The script will read the optimized instanton geometry and
+# the corresponding Hessians, and use these to compute the partition functions
+# and the action.
+# Make a note of the different contributions to the rate that are printed
+# in the output.
 
 RESTART_filename = (
     "RESTART_RPI_80"  # this is the restart file from the reactant calculation.
