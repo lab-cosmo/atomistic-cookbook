@@ -823,7 +823,6 @@ for i, (idx, label) in enumerate(
         ["train", "validation", "test"],
     )
 ):
-
     target = (
         torch.stack([target_eigenvalues[i] for i in idx]).flatten().detach() * Hartree
     )

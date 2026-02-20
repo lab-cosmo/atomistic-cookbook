@@ -65,7 +65,7 @@ fetch_dataset(filename, "https://zenodo.org/records/10566825/files/")
 
 # Load a subset of structures from the example dataset
 n_frames = 500
-frames = ase.io.read("gaas_training.xyz", f":{3*n_frames}:3", format="extxyz")
+frames = ase.io.read("gaas_training.xyz", f":{3 * n_frames}:3", format="extxyz")
 
 # %%
 # Compute SOAP descriptors using featomic

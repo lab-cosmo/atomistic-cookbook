@@ -296,13 +296,11 @@ erot_rms = 1e3 * np.sqrt(
     - (np.sum(rot_energies * rot_weights) / np.sum(rot_weights)) ** 2
 )
 erot_max = 1e3 * np.abs(rot_energies.max() - rot_energies.min())
-print(
-    f"""
+print(f"""
 Symmetry breaking, energy:
 RMS: {erot_rms:.3f} meV/at.
 Max: {erot_max:.3f} meV/at.
-"""
-)
+""")
 
 # %%
 # You can also inspect the rotational behavior visually

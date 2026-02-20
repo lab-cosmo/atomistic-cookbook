@@ -287,14 +287,12 @@ time_nve_mts /= steps_nve_mts * nmts + 1
 # The MTS calculation recovers most of the speedup of direct forces
 #
 
-print(
-    f"""
+print(f"""
 Time per 0.5fs step:
 Conservative forces: {time_nve_c:.4f} s/step
 Direct forces:       {time_nve_nc:.4f} s/step
 MTS (M=8):           {time_nve_mts:.4f} s/step
-"""
-)
+""")
 
 # %%
 # ... and the energy conservation is on par with the conservative
@@ -419,14 +417,12 @@ time_lammps_mts += time.time()
 # outer loop, with the current implementation LAMMPS requires a separate
 # pair style, which reduces the MTS speedup slightly.
 
-print(
-    f"""
+print(f"""
 Time per 0.5fs step in LAMMPS:
 Conservative forces: {time_lammps_c / 16:.4f} s/step
 Direct forces:       {time_lammps_nc / 16:.4f} s/step
 MTS (M=8):           {time_lammps_mts / 16:.4f} s/step
-"""
-)
+""")
 
 # %%
 # Running LAMMPS on GPUs with KOKKOS

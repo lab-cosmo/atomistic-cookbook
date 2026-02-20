@@ -71,7 +71,6 @@ def download_latest_examples(
     n_examples = len(examples)
     examples_dir = ROOT / "docs/src/examples"
     for i, example in enumerate(examples):
-
         # Skip examples that exist if overwrite is False
         if not overwrite and Path(examples_dir / example).exists():
             print(f"[{i + 1} / {n_examples}] Skipping {example} (already exists)")
@@ -95,7 +94,6 @@ def download_latest_examples(
 
 
 if __name__ == "__main__":
-
     import argparse
 
     parser = argparse.ArgumentParser(

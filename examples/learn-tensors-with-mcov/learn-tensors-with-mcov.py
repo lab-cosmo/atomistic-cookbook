@@ -415,7 +415,6 @@ color_per_lambda = {0: "C0", 1: "C1", 2: "C2"}
 
 fig, axes = plt.subplots(1, 2)
 for ax, key in zip(axes, prediction_test):
-
     ax.set_aspect("equal")
 
     pred = prediction_test[key]

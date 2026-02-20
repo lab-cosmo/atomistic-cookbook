@@ -360,7 +360,6 @@ rdfs_hh = []
 rdfs_oo = []
 xs = None
 for atoms in frames:
-
     # Compute H-H distances
     bins, xs = ase.geometry.rdf.get_rdf(  # type: ignore
         atoms, 4.5, num_bins, elements=[1, 1]
