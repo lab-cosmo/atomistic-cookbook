@@ -161,7 +161,7 @@ subprocess.run("mtt eval nc_model.pt nc_model_eval.yaml".split(), check=True)
 #           forces: on
 #         non_conservative_forces:
 #           key: forces
-# type:
+#           type:
 #             cartesian:
 #               rank: 1
 #           per_atom: true
