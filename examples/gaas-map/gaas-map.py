@@ -124,7 +124,7 @@ ax.plot(energy / natoms, atom_energy / natoms, "b.")
 ax.set_xlabel("Energy / (eV/atom)")
 ax.set_ylabel("Atomic e. / (eV/atom)")
 plt.show()
-print(f"RMSE / (eV/atom): {np.sqrt(np.mean((cohesive_peratom)**2))}")
+print(f"RMSE / (eV/atom): {np.sqrt(np.mean((cohesive_peratom) ** 2))}")
 
 
 # %%

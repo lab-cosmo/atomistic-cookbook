@@ -613,9 +613,7 @@ test_mae = np.abs(
     (cartesian_polarizability - computed_polarizabilities)[test_idx]
 ).mean()
 
-print(
-    f"""
+print(f"""
 Model train MAE: {train_mae} a.u.
 Model test MAE:  {test_mae} a.u.
-"""
-)
+""")
