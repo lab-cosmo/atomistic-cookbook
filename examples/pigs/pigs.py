@@ -17,12 +17,12 @@ All input templates and helper scripts shown below are pulled from the upstream
 `i-PI` repository at runtime, so this recipe does not vendor a data payload.
 """
 
-from pathlib import Path
 import shutil
 import subprocess
 import urllib.request
 import warnings
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 import ipi
 import matplotlib.pyplot as plt
@@ -107,11 +107,19 @@ if files is not None:
     reference_xml = ET.parse(files["reference_input"]).getroot()
 
     print("Reference simulation setup:")
-    print("   " + ET.tostring(reference_xml.find(".//initialize"), encoding="unicode").strip())
-    print("   " + ET.tostring(reference_xml.find(".//dynamics"), encoding="unicode").strip())
+    print(
+        "   "
+        + ET.tostring(reference_xml.find(".//initialize"), encoding="unicode").strip()
+    )
+    print(
+        "   "
+        + ET.tostring(reference_xml.find(".//dynamics"), encoding="unicode").strip()
+    )
 
     print("\nReference force components:")
-    print("   " + ET.tostring(reference_xml.find(".//forces"), encoding="unicode").strip())
+    print(
+        "   " + ET.tostring(reference_xml.find(".//forces"), encoding="unicode").strip()
+    )
 
     print("\nReference trajectory outputs:")
     for traj in reference_xml.find("output").findall("trajectory"):
@@ -162,7 +170,10 @@ if files is not None:
         print("   " + ET.tostring(ff, encoding="unicode").strip())
 
     print("\nProduction force components:")
-    print("   " + ET.tostring(production_xml.find(".//forces"), encoding="unicode").strip())
+    print(
+        "   "
+        + ET.tostring(production_xml.find(".//forces"), encoding="unicode").strip()
+    )
 
     print("\nProduction trajectory output:")
     for traj in production_xml.find("output").findall("trajectory"):
