@@ -1,0 +1,34 @@
+<simulation mode="static" verbosity="medium">
+    <output prefix='ts'>
+       <trajectory filename='pos' stride='1' format='xyz' cell_units='angstrom'> positions{angstrom} </trajectory>
+        <properties stride='1' filename='out'>  [ step, potential{electronvolt}] </properties>
+   </output>
+   <total_steps>20       </total_steps>
+   <ffsocket name="cbe" mode="unix" >
+       <address> localhost </address>  
+   </ffsocket>
+   <system >
+       <initialize nbeads='1'> 
+           <file mode='xyz' >  data/init_ts.xyz </file>
+           <cell mode='abc'> [200.0,  200.0,  200.0  ] </cell>
+       </initialize>
+       <forces>
+          <force forcefield="cbe"> </force>
+       </forces>
+       <motion mode='instanton'>
+           <instanton mode='rate'>                      <!-- This option implies that we are looking a transition state -->
+               <tolerances>
+                   <energy> 5e-6 </energy>
+	           <force> 5e-6 </force>
+	           <position> 1e-3 </position>
+               </tolerances>
+               <alt_out>-1</alt_out>                    <!-- Print frequency of alternative output. --> 
+               <hessian_update>powell</hessian_update>  <!-- Specify the way we update our hessian. Options: powell or recompute. -->  
+               <hessian_asr>poly</hessian_asr>          <!-- Type of acoustic sum rule applied -->   
+               <hessian_init>true</hessian_init>        <!-- Boolean that specifies if the initial hessian is going to be computed from scratch or not -->     
+               <hessian_final>true</hessian_final>      <!-- Boolean that specifies if after the optimization is converged a hessian should be computed or not -->     
+	       <biggest_step>0.3</biggest_step>
+           </instanton>
+       </motion>
+   </system>
+</simulation>

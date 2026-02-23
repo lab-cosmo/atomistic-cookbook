@@ -244,7 +244,6 @@ for rotated_structure, rotation in zip(rotated_structures, rotations):
 # its real counterpart.
 # Putting all together, the function is
 def WignerD_calculator(rotations, L):
-
     # We initialize the Wigner calculator from the quaternionic library...
     wigner = spherical.Wigner(L)
     # ...and we also initialize the transformation matrix from complex to real

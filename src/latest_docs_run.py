@@ -22,7 +22,6 @@ NIGHTLY_LINK = "https://nightly.link/lab-cosmo/atomistic-cookbook/workflows/docs
 
 
 def get_latest_successful_docs_run(api_token: Optional[str] = None) -> int:
-
     doc_runs_endpoint = GITHUB_ACTIONS_API + "/workflows/docs.yml/runs"
 
     headers = {}

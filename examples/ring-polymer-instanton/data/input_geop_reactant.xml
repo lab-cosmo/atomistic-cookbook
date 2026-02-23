@@ -1,0 +1,28 @@
+<simulation mode="static" verbosity="medium">
+    <output prefix='geop_reactant'>
+        <properties stride='1' filename='out'>  [ step, potential{electronvolt}] </properties>
+        <trajectory stride="1" filename="xc" format="xyz">x_centroid{angstrom}</trajectory>
+   </output>
+   <total_steps>400       </total_steps>
+   <ffsocket name="cbe" mode="unix" >
+       <address> localhost </address> 
+   </ffsocket>
+   <system >
+       <initialize nbeads='1'> 
+           <file mode='xyz' >  data/init_reactant.xyz </file>
+           <cell mode='abc'> [200.0,  200.0,  200.0  ] </cell>
+       </initialize>
+       <forces>
+          <force forcefield="cbe"> </force>
+       </forces>
+       <motion mode="minimize">
+       <optimizer mode="sd"> <!-- optimization algorithm. Possible options: steepest descent(sd), conjugate gradient(cg), line search BFGS (bfgs), BFGS with trust radius method (bfgstrm) and lBFGS(lbfgs)-->
+                <tolerances>
+                    <energy> 5e-5 </energy>
+                    <force> 5e-5</force>
+                    <position> 5e-5 </position>
+                </tolerances>
+           </optimizer>
+       </motion>
+   </system>
+</simulation>

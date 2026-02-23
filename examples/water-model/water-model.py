@@ -709,7 +709,6 @@ class WaterModel(torch.nn.Module):
         outputs: Dict[str, ModelOutput],  # noqa
         selected_atoms: Optional[Labels] = None,
     ) -> Dict[str, TensorMap]:  # noqa
-
         if list(outputs.keys()) != ["energy"]:
             raise ValueError(
                 f"`outputs` keys ({', '.join(outputs.keys())}) contain unsupported "
