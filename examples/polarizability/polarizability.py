@@ -240,7 +240,6 @@ def matrix_from_l2_components(l2: torch.Tensor) -> torch.Tensor:
 
 
 def spherical_to_cartesian(spherical_tensor: TensorMap) -> TensorMap:
-
     dtype = spherical_tensor[0].values.dtype
 
     new_block: Dict[int, torch.Tensor] = {}
@@ -311,7 +310,6 @@ class PolarizabilityModel(torch.nn.Module):
         atomic_types: List[int],
         dtype: torch.dtype = None,
     ) -> None:
-
         super().__init__()
 
         if dtype is None:
@@ -350,7 +348,6 @@ class PolarizabilityModel(torch.nn.Module):
         )
 
     def fit(self, training_systems, training_targets, alphas=None):
-
         lambda_soap = self._compute_descriptor(training_systems)
 
         ridges: List[RidgeCV] = []
@@ -412,7 +409,6 @@ class PolarizabilityModel(torch.nn.Module):
         outputs: Dict[str, ModelOutput],  # noqa
         selected_atoms: Optional[Labels] = None,  # noqa
     ) -> Dict[str, TensorMap]:  # noqa
-
         if list(outputs.keys()) != ["cookbook::polarizability"]:
             raise ValueError(
                 f"`outputs` keys ({', '.join(outputs.keys())}) contain unsupported "

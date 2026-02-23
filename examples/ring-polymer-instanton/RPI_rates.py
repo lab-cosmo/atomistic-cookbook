@@ -5,6 +5,21 @@ Ring Polymer Instanton Rate Theory: Tunneling Rates
 :Authors: Yair Litman `@litman90 <https://github.com/litman90>`_
 """
 
+# sphinx_gallery_thumbnail_number = 2
+
+# %%
+# This notebook introduces the calculation of tunneling rates using
+# ring-polymer instanton rate theory. A comprehensive presentation of the
+# instanton formalism can be found in the review article by
+# `J. Richardson, Int. Rev. Phys. Chem., 37, 171, 2018
+# <https://doi.org/10.1080/0144235X.2018.1472353>`_,
+# while the implementation within i-PI is described in
+# `V. Kapil et al., Comp. Phys. Commun., 236, 214, 2020
+# <https://doi.org/10.1016/j.cpc.2018.09.020>`_.
+# Additional practical details are available in `Yair Litman's doctoral thesis
+# <https://pure.mpg.de/rest/items/item_3246769_3/component/file_3246770/content>`_.
+#
+
 import glob
 import re
 import shutil
@@ -20,20 +35,10 @@ import numpy as np
 from scipy import constants
 from ipi.utils.tools import interpolate_instanton
 
+
 # %%
-# Installing the Python driver
-#
-# This notebook introduces the calculation of tunneling rates using
-# ring-polymer instanton rate theory. A comprehensive presentation of the
-# instanton formalism can be found in the review article by
-# `J. Richardson, Int. Rev. Phys. Chem., 37, 171, 2018
-# <https://doi.org/10.1080/0144235X.2018.1472353>`_,
-# while the implementation within i-PI is described in
-# `V. Kapil et al., Comp. Phys. Commun., 236, 214, 2020
-# <https://doi.org/10.1016/j.cpc.2018.09.020>`_.
-# Additional practical details are available in `Yair Litman's doctoral thesis
-# <https://pure.mpg.de/rest/items/item_3246769_3/component/file_3246770/content>`_.
-#
+# Instanton calculations using i-PI
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # In these exercises, i-PI will be used not for molecular dynamics simulations,
 # but to optimize stationary points on the ring-polymer potential-energy surface.
@@ -57,7 +62,7 @@ ipi_path = Path(ipi.__file__).resolve().parent
 
 # %%
 # Installing the Python driver
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ----------------------------
 #
 # i-PI provides a FORTRAN driver that includes the CBE potential-energy
 # surface. However, the driver must be compiled from source.
@@ -65,9 +70,6 @@ ipi_path = Path(ipi.__file__).resolve().parent
 #
 # Note that this requires a working build environment with
 # `gfortran` and `make` available.
-#
-#
-
 
 ipi.install_driver()
 
@@ -190,7 +192,7 @@ plt.ylabel("Eigenvalues (a.u.)")
 plt.show()
 
 shutil.copy("RESTART", "RESTART_reactant")
-#
+
 # %%
 # Step 2 - Optimizing and Analyzing the Transition State
 # ------------------------------------------------------
@@ -228,7 +230,6 @@ FF_process.wait()
 ipi_process.wait()
 shutil.copy("RESTART", "RESTART_ts")
 
-#
 # %%
 # The simulation typically converges in 11–12 steps and writes the
 # optimized geometry to ``ts.instanton_FINAL_xx.xyz`` and the corresponding
@@ -263,7 +264,6 @@ shutil.copy(ts_xyz_file, "init_inst_geop.xyz")
 shutil.copy(ts_hess_file, "init_inst_geop.hess")
 
 
-#
 # %%
 #    We run i-PI in the usual way, but here we launch four
 #    driver instances simultaneously using:
@@ -280,7 +280,6 @@ ipi_process.wait()
 
 shutil.copy("RESTART", "RESTART_RPI_40")
 
-#
 # %%
 #    The program first generates an initial instanton guess by placing
 #    replicas around the transition state along the direction of the
@@ -305,8 +304,14 @@ final_step = max(
 inst_xyz_file_40 = f"inst.instanton_FINAL_{final_step}.xyz"
 
 
-warnings.filterwarnings("ignore", ".*residuenumbers array.*")
-pi_frames = ipi.read_trajectory(inst_xyz_file_40)
+# NB: there is a parsing bug in i-PI 3.1 that causes the units to be
+# converted incorrectly. The following code is a workaround to convert
+# the units back to angstroms.
+pi_frames = ipi.read_trajectory(
+    inst_xyz_file_40, dimension="length", cell_units="atomic_unit", units="angstrom"
+)
+for f in pi_frames:
+    f.positions *= 0.529177  # convert from bohr to angstrom
 
 chemiscope.show(
     structures=pi_frames,
@@ -350,7 +355,6 @@ interpolate_instanton(
     manual="True",
 )
 
-#
 # %%
 #
 # 3. The previous function generates the interpolated geometry and hessian.
