@@ -11,5 +11,5 @@ dependencies:
     - ipi==3.1.5
     - chemiscope>=1.0
     - matplotlib
-    - vesin>=0.5.0,<0.6.0
+    - vesin==0.4.2
     - requests
