@@ -25,7 +25,6 @@ import re
 import shutil
 import subprocess
 import time
-import warnings
 from pathlib import Path
 
 import chemiscope
