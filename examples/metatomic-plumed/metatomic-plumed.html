@@ -1,0 +1,1360 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="search" title="Search" href="../../search.html"><link rel="next" title="Multiple time stepping and ring-polymer contraction" href="../pi-mts-rpc/mts-rpc.html"><link rel="prev" title="MD using direct-force predictions with PET-MAD" href="../pet-mad-nc/pet-mad-nc.html">
+        <link rel="canonical" href="https://atomistic-cookbook.org/examples/metatomic-plumed/metatomic-plumed.html">
+        <link rel="prefetch" href="../../_static/cookbook-icon.svg" as="image">
+
+    <link rel="shortcut icon" href="../../_static/cookbook-icon.png"><!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>ML collective variables in PLUMED with metatomic - The Atomistic Cookbook</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/cookbook.css?v=d86cfb60" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">The Atomistic Cookbook</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/cookbook-icon.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">The Atomistic Cookbook</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../topics/index.html">Recipes grouped by topic</a><input aria-label="Toggle navigation of Recipes grouped by topic" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/sampling.html">Statistical sampling and dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/analysis.html">Analysis and post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/ml-models.html">Machine learning models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/universal.html">Universal ML models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/nqes.html">Nuclear quantum effects</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../software/index.html">Recipes grouped by software used</a><input aria-label="Toggle navigation of Recipes grouped by software used" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../software/chemiscope.html">chemiscope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/cp2k.html">cp2k</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/eon.html">eon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/featomic.html">featomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/gromacs.html">GROMACS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/i-pi.html">i-PI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/lammps.html">LAMMPS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/metatensor.html">metatensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/plumed.html">PLUMED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/scikit-matter.html">scikit-matter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/torch-pme.html">torch-pme</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../all-examples.html">List of all recipes</a><input aria-label="Toggle navigation of List of all recipes" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../dos-align/dos-align.html">A ML model for the electron density of states</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-model/water-model.html">Atomistic Water Model for Molecular Dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../batch-cp2k/reference-trajectory.html">Batch run of CP2K calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../shiftml/shiftml-example.html">Computing NMR shielding tensors using ShiftML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft-nc.html">Conservative fine-tuning for a PET model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermostats/thermostats.html">Constant-temperature MD and thermostats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../polarizability/polarizability.html">Equivariant linear model for polarizability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../learn-tensors-with-mcov/learn-tensors-with-mcov.html">Equivariant model for tensorial properties based on scalar features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../eon-pet-neb/eon-pet-neb.html">Finding Reaction Paths with eOn and a Metatomic Potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft.html">Fine-tuning the PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../roy-gch/roy-gch.html">Generalized Convex Hull construction for the polymorphs of ROY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hamiltonian-qm7/hamiltonian-qm7.html">Hamiltonian Learning for Molecules with Indirect Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../torchpme/torchpme_learning.html">Learning Capabilities with torchpme</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lpr/lpr.html">Local Prediction Rigidity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lode-linear/lode-linear.html">Long-distance Equivariants: a tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flashmd/flashmd-demo.html">Long-stride trajectories with a universal FlashMD model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-nc/pet-mad-nc.html">MD using direct-force predictions with PET-MAD</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">ML collective variables in PLUMED with metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-mts-rpc/mts-rpc.html">Multiple time stepping and ring-polymer contraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../gaas-map/gaas-map.html">PCA/PCovR Visualization of a training dataset for a potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-metad/pi-metad.html">Path integral metadynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../path-integrals/path-integrals.html">Path integral molecular dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../periodic-hamiltonian/periodic-hamiltonian.html">Periodic Hamiltonian learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../heat-capacity/heat-capacity.html">Quantum heat capacity of water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ring-polymer-instanton/rpi-rates.html">Ring Polymer Instanton Rate Theory: Tunneling Rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rotate-equivariants/rotate-equivariants.html">Rotating equivariants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sample-selection/sample-selection.html">Sample and Feature Selection with FPS and CUR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad/pet-mad.html">The PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-uq/pet-mad-uq.html">Uncertainty Quantification with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-pulsed/water-pulsed.html">Water orientation in a pulsed electric field</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../downloading.html">Downloading and running the recipes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing a recipe</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-examples-metatomic-plumed-metatomic-plumed-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="ml-collective-variables-in-plumed-with-metatomic">
+<span id="sphx-glr-examples-metatomic-plumed-metatomic-plumed-py"></span><h1>ML collective variables in PLUMED with metatomic<a class="headerlink" href="#ml-collective-variables-in-plumed-with-metatomic" title="Link to this heading">¶</a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Authors<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Guillaume Fraux <a class="reference external" href="https://github.com/luthaf/">&#64;Luthaf</a>;
+Rohit Goswami <a class="reference external" href="https://github.com/haozeke/">&#64;HaoZeke</a>;
+Michele Ceriotti <a class="reference external" href="https://github.com/ceriottim/">&#64;ceriottim</a></p>
+</dd>
+</dl>
+<p>This example shows how to build a <a class="reference external" href="https://docs.metatensor.org/metatomic/latest/overview.html">metatomic model</a> that computes order
+parameters for a Lennard-Jones cluster, and how to use it with the <a class="reference external" href="https://www.plumed.org/">PLUMED</a> package to run a metadynamics simulation.</p>
+<p>The LJ38 cluster is a classic benchmark system because its global minimum energy
+structure is a truncated octahedron with <span class="math notranslate nohighlight">\(O_h\)</span> symmetry, which is difficult to
+find with simple optimization methods. The PES has a multi-funnel landscape, meaning the
+system can easily get trapped in other local minima. Our goal is to explore the PES,
+moving from a random initial configuration to the low-energy structures. To do this, we
+will:</p>
+<ol class="arabic simple">
+<li><p>Define a set of <strong>collective variables (CVs)</strong> that can distinguish between the
+disordered (liquid-like) and ordered (solid-like) states of the cluster. We will use
+two sets of CVs: histograms of the coordination number of atoms, and two CVs derived
+from SOAP descriptors that are analogous to the <strong>Steinhardt order parameters</strong>
+<span class="math notranslate nohighlight">\(Q_4\)</span> and <span class="math notranslate nohighlight">\(Q_6\)</span> (a.k.a the bond-order parameters).</p></li>
+<li><p>Implement these custom CV using <code class="docutils literal notranslate"><span class="pre">featomic</span></code>, <code class="docutils literal notranslate"><span class="pre">metatensor</span></code>, and <code class="docutils literal notranslate"><span class="pre">metatomic</span></code> to
+create a portable <code class="docutils literal notranslate"><span class="pre">metatomic</span></code> model.</p></li>
+<li><p>Run metadynamics trajectories with LAMMPS, and visualize the system as it explores
+different configurations.</p></li>
+<li><p>Show an example of integration with <a class="reference external" href="https://ipi-code.org/">i-PI</a>, that uses
+multiple time stepping to reduce the cost of computing complicated CVs.</p></li>
+</ol>
+<p>As usual for these examples, the simulation is run on a small system and for a short
+time, so that results will be fast but inaccurate. If you want to use this example as a
+template, you should set more appropriate parameters.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">linecache</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pathlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">time</span><span class="w"> </span><span class="kn">import</span> <span class="n">sleep</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">ase.io</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">chemiscope</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">featomic.torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ipi</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">metatensor.torch</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mts</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">metatomic.torch</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mta</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+</pre></div>
+</div>
+<section id="target-structures">
+<h2>Target structures<a class="headerlink" href="#target-structures" title="Link to this heading">¶</a></h2>
+<p>The two most “famous” structures for LJ38 are the global minimum (a perfect truncated
+octahedron) and a lower-symmetry icosahedral structure which is a deep local minimum.
+We can visualize them using <a class="reference external" href="https://chemiscope.org/docs/">chemiscope</a>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">minimal</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;data/lj-oct.xyz&quot;</span><span class="p">)</span>
+<span class="n">icosaed</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;data/lj-ico.xyz&quot;</span><span class="p">)</span>
+
+<span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;structure&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;playbackDelay&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span> <span class="s2">&quot;unitCell&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;bonds&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;spaceFilling&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+<span class="n">chemiscope</span><span class="o">.</span><span class="n">show</span><span class="p">([</span><span class="n">minimal</span><span class="p">,</span> <span class="n">icosaed</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;structure&quot;</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="n">settings</span><span class="p">)</span>
+</pre></div>
+</div>
+<!-- begin headers -->
+<!-- Load all dependencies -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
+
+<!-- JS scripts -->
+<script src="../../_static/chemiscope.min.js"></script>
+<script src="../../_static/chemiscope-sphinx.js"></script>
+
+<!-- CSS styles -->
+<link rel="stylesheet" href="../../_static/chemiscope-sphinx.css" type="text/css" />
+<!-- end headers -->
+
+<!-- Error display -->
+<div id="chsp-a9612ecc-516c-4938-815e-f9574d07a792-error-display" class="chemiscope-sphinx-error">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-a9612ecc-516c-4938-815e-f9574d07a792-error-display')">
+        &times;
+    </button>
+</div>
+
+<!-- Warning Display -->
+<div id="chsp-a9612ecc-516c-4938-815e-f9574d07a792-warning-display" class="chemiscope-sphinx-warning">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-a9612ecc-516c-4938-815e-f9574d07a792-warning-display')">
+        &times;
+    </button>
+</div>
+<div style="padding: 0.5rem 1.25rem" />
+
+<!-- Loading Spinner -->
+<div id="chsp-a9612ecc-516c-4938-815e-f9574d07a792-loading" class="chemiscope-sphinx-spinner">
+    <img src="../../_static/chemiscope-loading.svg" alt="Loading icon" />
+</div>
+
+<!-- Chemiscope Visualization -->
+<div id="chsp-a9612ecc-516c-4938-815e-f9574d07a792">
+    <!-- This will be replaced by the chemiscope HTML -->
+</div>
+
+<!-- Load Visualization Script -->
+<script>
+    loadChemiscopeSphinx('chsp-a9612ecc-516c-4938-815e-f9574d07a792', '../../_datasets/32e67c35060c3d4a317474320e7208ceda0567ced58aee91df1b2ea0f1e7f47a-fig_metatomic-plumed_001.json.gz', 'structure', '2000.0');
+</script>
+<div class="output_subarea output_html rendered_html output_result">
+
+</div>
+<br />
+<br /></section>
+<section id="defining-custom-collective-variables">
+<h2>Defining custom collective variables<a class="headerlink" href="#defining-custom-collective-variables" title="Link to this heading">¶</a></h2>
+<p>We use two different approaches to define our custom CVs: in one case, we compute the
+CV manually starting from the atomic positions, in the other we build the descriptors
+based on a spherical-harmonics expansion of the neighbor density, computed using the
+<a class="reference external" href="https://metatensor.github.io/featomic/">featomic</a> package.</p>
+<section id="histogram-of-coordination-numbers">
+<h3>Histogram of coordination numbers<a class="headerlink" href="#histogram-of-coordination-numbers" title="Link to this heading">¶</a></h3>
+<p>As a first set of CVs, we use a histogram of coordination numbers, that was used in
+several examples studying this cluster (see e.g. <a class="reference external" href="http://doi.org/10.1021/ct3010563">this paper</a>). The idea is to compute the coordination number
+of each atom in the cluster, and then to count how many atoms have a given
+coordination number. This makes it possible to differentiate clearly between the
+truncated octahedron and the icosahedral configurations, as well as distorted,
+disordered structures.</p>
+<p>To make this CV usable by PLUMED via the <code class="docutils literal notranslate"><span class="pre">METATOMIC</span></code> interface, we must wrap our
+calculation logic in a <code class="docutils literal notranslate"><span class="pre">torch.nn.Module</span></code>. This class takes a list of atomic systems
+and returns a <code class="docutils literal notranslate"><span class="pre">metatensor.TensorMap</span></code> containing the calculated CV values. The
+interface is defined in the <a class="reference external" href="https://docs.metatensor.org/metatomic/latest/torch/reference/models/export.html">metatomic</a>
+documentation.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">f_coord</span><span class="p">(</span><span class="n">y</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function computes a switching function that we use</span>
+<span class="sd">    to evaluate the coordination number.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cy</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="c1"># we use torch.where to be compatible with autodiff</span>
+    <span class="n">cy</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">y</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">cy</span><span class="p">)</span>
+    <span class="n">cy</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">y</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">cy</span><span class="p">)</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">cy</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="p">((</span><span class="n">y</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">y</span><span class="p">),</span> <span class="n">cy</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cy</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">CoordinationHistogram</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">,</span> <span class="n">cn_list</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        ``cutoff`` provides the point at which the switching function levels off to</span>
+<span class="sd">        zero. Note that for simplicity we still compute all distances.</span>
+
+<span class="sd">        ``cn_list`` is the list of bins in the histogram. Strictly speaking, we don&#39;t</span>
+<span class="sd">        compute a histogram, but a kernel density estimator centered on the values given</span>
+<span class="sd">        in this list.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cn_list</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">cn_list</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nl_options</span> <span class="o">=</span> <span class="n">mta</span><span class="o">.</span><span class="n">NeighborListOptions</span><span class="p">(</span>
+            <span class="n">cutoff</span><span class="o">=</span><span class="n">cutoff</span><span class="p">,</span> <span class="n">full_list</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cutoff</span> <span class="o">=</span> <span class="n">cutoff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">r0</span> <span class="o">=</span> <span class="n">cutoff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">r1</span> <span class="o">=</span> <span class="n">cutoff</span> <span class="o">*</span> <span class="mf">4.0</span> <span class="o">/</span> <span class="mf">5.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma2</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">requested_neighbor_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">mta</span><span class="o">.</span><span class="n">NeighborListOptions</span><span class="p">]:</span>
+        <span class="c1"># request a neighbor list to be computed and stored in the system passed to</span>
+        <span class="c1"># `forward`.</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_nl_options</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">systems</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">mta</span><span class="o">.</span><span class="n">System</span><span class="p">],</span>
+        <span class="n">outputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">mta</span><span class="o">.</span><span class="n">ModelOutput</span><span class="p">],</span>
+        <span class="n">selected_atoms</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">mts</span><span class="o">.</span><span class="n">Labels</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">mts</span><span class="o">.</span><span class="n">TensorMap</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="s2">&quot;features&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;features&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">per_atom</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;per-atoms features are not supported in this model&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">selected_atoms</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;selected_atoms is not supported in this model&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">systems</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">positions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># PLUMED will first call the model with 0 atoms to get the size of the</span>
+            <span class="c1"># output, so we need to handle this case first</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="n">mts</span><span class="o">.</span><span class="n">Labels</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([[</span><span class="mi">0</span><span class="p">]]))</span>
+            <span class="n">block</span> <span class="o">=</span> <span class="n">mts</span><span class="o">.</span><span class="n">TensorBlock</span><span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cn_list</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+                <span class="n">samples</span><span class="o">=</span><span class="n">mts</span><span class="o">.</span><span class="n">Labels</span><span class="p">(</span><span class="s2">&quot;structure&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int32</span><span class="p">)),</span>
+                <span class="n">components</span><span class="o">=</span><span class="p">[],</span>
+                <span class="n">properties</span><span class="o">=</span><span class="n">mts</span><span class="o">.</span><span class="n">Labels</span><span class="p">(</span><span class="s2">&quot;cn&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cn_list</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;features&quot;</span><span class="p">:</span> <span class="n">mts</span><span class="o">.</span><span class="n">TensorMap</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="p">[</span><span class="n">block</span><span class="p">])}</span>
+
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># loop over all systems</span>
+        <span class="n">system_index</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">systems</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">system</span> <span class="ow">in</span> <span class="n">systems</span><span class="p">:</span>
+            <span class="c1"># the neighbor list has been computed by whoever is calling this model</span>
+            <span class="n">neighbors</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">get_neighbor_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nl_options</span><span class="p">)</span>
+
+            <span class="c1"># get all distances</span>
+            <span class="n">distances</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">vector_norm</span><span class="p">(</span><span class="n">neighbors</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="c1"># switching function to evaluate the coordination number</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">f_coord</span><span class="p">((</span><span class="n">distances</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">r1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">r1</span><span class="p">))</span>
+
+            <span class="c1"># Sum over neighbors</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">system</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">z</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">z</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">coords</span><span class="o">.</span><span class="n">index_add_</span><span class="p">(</span>
+                <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">neighbors</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">column</span><span class="p">(</span><span class="s2">&quot;first_atom&quot;</span><span class="p">),</span> <span class="n">source</span><span class="o">=</span><span class="n">z</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Compute the KDE over the required bins</span>
+            <span class="n">cn_histo</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span>
+                <span class="o">-</span><span class="p">((</span><span class="n">coords</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">cn_list</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.5</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma2</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cn_histo</span><span class="p">)</span>
+
+        <span class="c1"># Assembles a TensorMap</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">mts</span><span class="o">.</span><span class="n">Labels</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([[</span><span class="mi">0</span><span class="p">]]))</span>
+        <span class="n">block</span> <span class="o">=</span> <span class="n">mts</span><span class="o">.</span><span class="n">TensorBlock</span><span class="p">(</span>
+            <span class="n">values</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+            <span class="n">samples</span><span class="o">=</span><span class="n">mts</span><span class="o">.</span><span class="n">Labels</span><span class="p">(</span><span class="s2">&quot;structure&quot;</span><span class="p">,</span> <span class="n">system_index</span><span class="p">),</span>
+            <span class="n">components</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">properties</span><span class="o">=</span><span class="n">mts</span><span class="o">.</span><span class="n">Labels</span><span class="p">(</span><span class="s2">&quot;cn&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cn_list</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+        <span class="p">)</span>
+        <span class="n">mts_coords</span> <span class="o">=</span> <span class="n">mts</span><span class="o">.</span><span class="n">TensorMap</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="p">[</span><span class="n">block</span><span class="p">])</span>
+        <span class="c1"># This model has a single output, named &quot;features&quot;. This can be used by multiple</span>
+        <span class="c1"># tools, including PLUMED where it defines a custom collective variable.</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;features&quot;</span><span class="p">:</span> <span class="n">mts_coords</span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="soap-based-steinhardt-parameters">
+<h3>SOAP-based Steinhardt parameters<a class="headerlink" href="#soap-based-steinhardt-parameters" title="Link to this heading">¶</a></h3>
+<p>Rather than looking at the atomic coordination, one can also resort to order
+parameters that capture the angular order. The <strong>Steinhardt order parameters</strong>,
+specifically <span class="math notranslate nohighlight">\(Q_4\)</span> and <span class="math notranslate nohighlight">\(Q_6\)</span> are rotationally invariant and measure the
+local orientational symmetry around each atom. The standard calculation works by
+summing over bond vectors within a cutoff radius which connect a central atom to the
+neighbors and does not use a weighing within the cutoff radius.</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(Q_6\)</span> is often high for both icosahedral and FCC-like structures, making it a
+good measure of general “solidness”.</p></li>
+<li><p><span class="math notranslate nohighlight">\(Q_4\)</span> helps to distinguish between different crystal packing types. It is
+close to zero for icosahedral structures but has a distinct non-zero value for FCC
+structures.</p></li>
+</ul>
+<p>This works fairly well for the LJ38 and is also part of the standard PLUMED build.</p>
+<p>The key concept is that the geometry of the atomic neighborhood is described by
+projection onto a basis of spherical harmonics. With that in mind, we will use the
+SOAP power spectrum, which differs from the standard Steinhardt by operating on a
+smooth density field, and includes distance information through the radial basis set.
+Additionally, unlike the sharp cutoff of the Steinhardt, we will use a cosine cutoff.</p>
+<p>We will use the power spectrum components for angular channels <span class="math notranslate nohighlight">\(l=4\)</span> and
+<span class="math notranslate nohighlight">\(l=6\)</span>. SOAP features are computed from an expansion of the neighbor density in
+spherical harmonics and radial functions.  <code class="docutils literal notranslate"><span class="pre">featomic</span></code> is used to evaluate this
+spherical expansion, select the appropriate angular indices and then sum over the
+<span class="math notranslate nohighlight">\(m\)</span> index, as well as over the radial dimension to recover order parameters
+analogous to <span class="math notranslate nohighlight">\(Q_4\)</span> and <span class="math notranslate nohighlight">\(Q_6\)</span>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SoapCV</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">,</span> <span class="n">angular_list</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_angular</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">angular_list</span><span class="p">)</span>
+        <span class="c1"># initialize and store the featomic calculator inside the class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spex</span> <span class="o">=</span> <span class="n">featomic</span><span class="o">.</span><span class="n">torch</span><span class="o">.</span><span class="n">SphericalExpansion</span><span class="p">(</span>
+            <span class="o">**</span><span class="p">{</span>
+                <span class="s2">&quot;cutoff&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="n">cutoff</span><span class="p">,</span>
+                    <span class="s2">&quot;smoothing&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;ShiftedCosine&quot;</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mf">1.5</span><span class="p">},</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;density&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Gaussian&quot;</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">},</span>
+                <span class="s2">&quot;basis&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;TensorProduct&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;max_angular&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_angular</span><span class="p">,</span>
+                    <span class="s2">&quot;radial&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Gto&quot;</span><span class="p">,</span> <span class="s2">&quot;max_radial&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">},</span>
+                <span class="p">},</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selected_keys</span> <span class="o">=</span> <span class="n">mts</span><span class="o">.</span><span class="n">Labels</span><span class="p">(</span>
+            <span class="c1"># These represent the degree of the spherical harmonics</span>
+            <span class="s2">&quot;o3_lambda&quot;</span><span class="p">,</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">angular_list</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">systems</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">mta</span><span class="o">.</span><span class="n">System</span><span class="p">],</span>
+        <span class="n">outputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">mta</span><span class="o">.</span><span class="n">ModelOutput</span><span class="p">],</span>
+        <span class="n">selected_atoms</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">mts</span><span class="o">.</span><span class="n">Labels</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">mts</span><span class="o">.</span><span class="n">TensorMap</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="s2">&quot;features&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+
+        <span class="c1"># computes the spherical expansion</span>
+        <span class="n">spex</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spex</span><span class="p">(</span>
+            <span class="n">systems</span><span class="p">,</span> <span class="n">selected_samples</span><span class="o">=</span><span class="n">selected_atoms</span><span class="p">,</span> <span class="n">selected_keys</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_keys</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">spex</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># PLUMED will first call the model with 0 atoms to get the size of the</span>
+            <span class="c1"># output, so we need to handle this case first</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="n">mts</span><span class="o">.</span><span class="n">Labels</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([[</span><span class="mi">0</span><span class="p">]]))</span>
+            <span class="n">block</span> <span class="o">=</span> <span class="n">mts</span><span class="o">.</span><span class="n">TensorBlock</span><span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_keys</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+                <span class="n">samples</span><span class="o">=</span><span class="n">mts</span><span class="o">.</span><span class="n">Labels</span><span class="p">(</span><span class="s2">&quot;structure&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int32</span><span class="p">)),</span>
+                <span class="n">components</span><span class="o">=</span><span class="p">[],</span>
+                <span class="n">properties</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_keys</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;features&quot;</span><span class="p">:</span> <span class="n">mts</span><span class="o">.</span><span class="n">TensorMap</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="p">[</span><span class="n">block</span><span class="p">])}</span>
+
+        <span class="c1"># then manipulate the tensormap to remove some of the sparsity</span>
+        <span class="n">spex</span> <span class="o">=</span> <span class="n">mts</span><span class="o">.</span><span class="n">remove_dimension</span><span class="p">(</span><span class="n">spex</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;keys&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;o3_sigma&quot;</span><span class="p">)</span>
+        <span class="n">spex</span> <span class="o">=</span> <span class="n">spex</span><span class="o">.</span><span class="n">keys_to_properties</span><span class="p">(</span><span class="s2">&quot;neighbor_type&quot;</span><span class="p">)</span>
+        <span class="n">spex</span> <span class="o">=</span> <span class="n">spex</span><span class="o">.</span><span class="n">keys_to_samples</span><span class="p">(</span><span class="s2">&quot;center_type&quot;</span><span class="p">)</span>
+
+        <span class="n">blocks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">mts</span><span class="o">.</span><span class="n">TensorBlock</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">spex</span><span class="o">.</span><span class="n">blocks</span><span class="p">():</span>
+            <span class="c1"># squares, and sums over both the m and the radial components</span>
+            <span class="n">new_block</span> <span class="o">=</span> <span class="n">mts</span><span class="o">.</span><span class="n">TensorBlock</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">values</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="n">samples</span><span class="o">=</span><span class="n">block</span><span class="o">.</span><span class="n">samples</span><span class="p">,</span>
+                <span class="n">components</span><span class="o">=</span><span class="p">[],</span>
+                <span class="n">properties</span><span class="o">=</span><span class="n">mts</span><span class="o">.</span><span class="n">Labels</span><span class="p">(</span><span class="s2">&quot;n&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([[</span><span class="mi">0</span><span class="p">]])),</span>
+            <span class="p">)</span>
+            <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_block</span><span class="p">)</span>
+
+        <span class="c1"># packs the resulting values in a tensormap</span>
+        <span class="n">summed_q</span> <span class="o">=</span> <span class="n">mts</span><span class="o">.</span><span class="n">TensorMap</span><span class="p">(</span><span class="n">spex</span><span class="o">.</span><span class="n">keys</span><span class="p">,</span> <span class="n">blocks</span><span class="p">)</span>
+        <span class="n">summed_q</span> <span class="o">=</span> <span class="n">summed_q</span><span class="o">.</span><span class="n">keys_to_properties</span><span class="p">(</span><span class="s2">&quot;o3_lambda&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;features&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">per_atom</span><span class="p">:</span>
+            <span class="n">summed_q</span> <span class="o">=</span> <span class="n">mts</span><span class="o">.</span><span class="n">mean_over_samples</span><span class="p">(</span>
+                <span class="n">summed_q</span><span class="p">,</span> <span class="n">sample_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;atom&quot;</span><span class="p">,</span> <span class="s2">&quot;center_type&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+
+        <span class="c1"># This model, like CoordinationHistogram has a single output, named &quot;features&quot;.</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;features&quot;</span><span class="p">:</span> <span class="n">summed_q</span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="exporting-the-model">
+<h3>Exporting the Model<a class="headerlink" href="#exporting-the-model" title="Link to this heading">¶</a></h3>
+<p>Once we have defined our custom model, we can now annotate it with multiple metadata
+entries and export it to the disk. The resulting model file and extensions directory
+can then be loaded by PLUMED and other compatible engines, without requiring a Python
+installation (for example on HPC systems).</p>
+<p>See the <a class="reference external" href="https://docs.metatensor.org/metatomic/latest/torch/reference/models/export.html">corresponding documentation</a>
+and <a class="reference external" href="https://docs.metatensor.org/metatomic/latest/examples/1-export-atomistic-model.html">example</a>
+for more information about exporting metatomic models.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># generates a coordination histogram model</span>
+<span class="n">cutoff</span> <span class="o">=</span> <span class="mf">5.5</span>
+<span class="n">module</span> <span class="o">=</span> <span class="n">CoordinationHistogram</span><span class="p">(</span><span class="n">cutoff</span><span class="p">,</span> <span class="n">cn_list</span><span class="o">=</span><span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">])</span>
+
+<span class="c1"># metadata about the model itself</span>
+<span class="n">metadata</span> <span class="o">=</span> <span class="n">mta</span><span class="o">.</span><span class="n">ModelMetadata</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Coordination histogram&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Computes smooth histogram of coordination numbers&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># metadata about what the model can do</span>
+<span class="n">capabilities</span> <span class="o">=</span> <span class="n">mta</span><span class="o">.</span><span class="n">ModelCapabilities</span><span class="p">(</span>
+    <span class="n">length_unit</span><span class="o">=</span><span class="s2">&quot;Angstrom&quot;</span><span class="p">,</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;features&quot;</span><span class="p">:</span> <span class="n">mta</span><span class="o">.</span><span class="n">ModelOutput</span><span class="p">(</span><span class="n">per_atom</span><span class="o">=</span><span class="kc">False</span><span class="p">)},</span>
+    <span class="n">atomic_types</span><span class="o">=</span><span class="p">[</span><span class="mi">18</span><span class="p">],</span>
+    <span class="n">interaction_range</span><span class="o">=</span><span class="n">cutoff</span><span class="p">,</span>
+    <span class="n">supported_devices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;cpu&quot;</span><span class="p">],</span>
+    <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float64&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">model_ch</span> <span class="o">=</span> <span class="n">mta</span><span class="o">.</span><span class="n">AtomisticModel</span><span class="p">(</span>
+    <span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">eval</span><span class="p">(),</span>
+    <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
+    <span class="n">capabilities</span><span class="o">=</span><span class="n">capabilities</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">model_ch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;histo-cv.pt&quot;</span><span class="p">,</span> <span class="n">collect_extensions</span><span class="o">=</span><span class="s2">&quot;./extensions/&quot;</span><span class="p">)</span>
+
+<span class="c1"># ... and a SOAP-based CV, with the same cutoff</span>
+<span class="n">module</span> <span class="o">=</span> <span class="n">SoapCV</span><span class="p">(</span><span class="n">cutoff</span><span class="p">,</span> <span class="n">angular_list</span><span class="o">=</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">])</span>
+
+<span class="n">metadata</span> <span class="o">=</span> <span class="n">mta</span><span class="o">.</span><span class="n">ModelMetadata</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Steinhardt-like SOAP CV&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Computes smoothed out versions of the Steinhardt order parameters&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">model_soap</span> <span class="o">=</span> <span class="n">mta</span><span class="o">.</span><span class="n">AtomisticModel</span><span class="p">(</span>
+    <span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">eval</span><span class="p">(),</span>
+    <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
+    <span class="n">capabilities</span><span class="o">=</span><span class="n">capabilities</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># finally, save the model to a standalone file</span>
+<span class="n">model_soap</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;soap-cv.pt&quot;</span><span class="p">,</span> <span class="n">collect_extensions</span><span class="o">=</span><span class="s2">&quot;./extensions/&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="optional-test-the-collective-variables-in-python">
+<h3>Optional: test the collective variables in Python<a class="headerlink" href="#optional-test-the-collective-variables-in-python" title="Link to this heading">¶</a></h3>
+<p>Before running the full simulation, we can use <code class="docutils literal notranslate"><span class="pre">chemiscope</span></code>’s
+<code class="docutils literal notranslate"><span class="pre">metatomic_featurizer</span></code> to quickly check the output of our model on our initial
+structures. This is a great way to verify that the CVs produce different values for
+the different structures.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">featurizer_ch</span> <span class="o">=</span> <span class="n">chemiscope</span><span class="o">.</span><span class="n">metatomic_featurizer</span><span class="p">(</span><span class="n">model_ch</span><span class="p">)</span>
+<span class="n">featurizer_soap</span> <span class="o">=</span> <span class="n">chemiscope</span><span class="o">.</span><span class="n">metatomic_featurizer</span><span class="p">(</span><span class="n">model_soap</span><span class="p">)</span>
+
+<span class="n">chemiscope</span><span class="o">.</span><span class="n">explore</span><span class="p">(</span>
+    <span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="n">minimal</span><span class="p">,</span> <span class="n">icosaed</span><span class="p">],</span>
+    <span class="n">featurizer</span><span class="o">=</span><span class="n">featurizer_ch</span><span class="p">,</span>
+    <span class="c1"># we can also add extra properties, here we use this</span>
+    <span class="c1"># to include additional descriptors</span>
+    <span class="n">properties</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;cv_soap&quot;</span><span class="p">:</span> <span class="n">featurizer_soap</span><span class="p">([</span><span class="n">minimal</span><span class="p">,</span> <span class="n">icosaed</span><span class="p">],</span> <span class="kc">None</span><span class="p">)},</span>
+    <span class="n">settings</span><span class="o">=</span><span class="n">settings</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+
+
+<!-- Error display -->
+<div id="chsp-3d831b35-c0e8-4893-b964-a7d76ee416ea-error-display" class="chemiscope-sphinx-error">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-3d831b35-c0e8-4893-b964-a7d76ee416ea-error-display')">
+        &times;
+    </button>
+</div>
+
+<!-- Warning Display -->
+<div id="chsp-3d831b35-c0e8-4893-b964-a7d76ee416ea-warning-display" class="chemiscope-sphinx-warning">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-3d831b35-c0e8-4893-b964-a7d76ee416ea-warning-display')">
+        &times;
+    </button>
+</div>
+<div style="padding: 0.5rem 1.25rem" />
+
+<!-- Loading Spinner -->
+<div id="chsp-3d831b35-c0e8-4893-b964-a7d76ee416ea-loading" class="chemiscope-sphinx-spinner">
+    <img src="../../_static/chemiscope-loading.svg" alt="Loading icon" />
+</div>
+
+<!-- Chemiscope Visualization -->
+<div id="chsp-3d831b35-c0e8-4893-b964-a7d76ee416ea">
+    <!-- This will be replaced by the chemiscope HTML -->
+</div>
+
+<!-- Load Visualization Script -->
+<script>
+    loadChemiscopeSphinx('chsp-3d831b35-c0e8-4893-b964-a7d76ee416ea', '../../_datasets/fab0a88d26dc271f53886cf06d08ef96ad49e9356f0d4c42e454a6d2c57faf2b-fig_metatomic-plumed_002.json.gz', 'default', '2000.0');
+</script>
+<div class="output_subarea output_html rendered_html output_result">
+
+</div>
+<br />
+<br /></section>
+</section>
+<section id="using-the-model-to-run-metadynamics-with-plumed">
+<h2>Using the model to run metadynamics with PLUMED<a class="headerlink" href="#using-the-model-to-run-metadynamics-with-plumed" title="Link to this heading">¶</a></h2>
+<p>With our model saved, we can now write the PLUMED input file. This file instructs
+PLUMED on what to do during the simulation. The input file consists of the following
+sections:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">UNITS</span></code>: Specifies the energy and length units;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">METATOMIC</span></code>: Defines a collective variable using an exported metatomic model. We
+load both the models we just created, and use the CV histogram that is faster to
+compute (and more efficient with metadynamics);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SELECT_COMPONENTS</span></code>: Splits the model output to scalars;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">METAD</span></code>: sets up the metadynamics algorithm. It will add repulsive Gaussian
+potentials in the (<code class="docutils literal notranslate"><span class="pre">cv1</span></code>, <code class="docutils literal notranslate"><span class="pre">cv2</span></code>) space at regular intervals (<code class="docutils literal notranslate"><span class="pre">PACE</span></code>),
+discouraging the simulation from re-visiting conformations and pushing it over
+energy barriers;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PRINT</span></code>: This tells PLUMED to write the values of our CVs and the metadynamics
+bias energy to a file named <code class="docutils literal notranslate"><span class="pre">COLVAR</span></code> for later analysis.</p></li>
+</ul>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;data/plumed.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">fd</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>UNITS LENGTH=A ENERGY=kcal/mol
+
+soap: METATOMIC ...
+    MODEL=soap-cv.pt
+    EXTENSIONS_DIRECTORY=./extensions/
+    SPECIES1=1-38
+    SPECIES_TO_TYPES=18
+...
+
+histo: METATOMIC ...
+    MODEL=histo-cv.pt
+    EXTENSIONS_DIRECTORY=./extensions/
+    SPECIES1=1-38
+    SPECIES_TO_TYPES=18
+...
+
+cv1: SELECT_COMPONENTS ARG=histo COMPONENTS=1
+cv2: SELECT_COMPONENTS ARG=histo COMPONENTS=2
+
+mtd: METAD ...
+    ARG=cv1,cv2
+    HEIGHT=0.04
+    PACE=30
+    SIGMA=1.0,0.5
+    GRID_MIN=0,0
+    GRID_MAX=30,20
+    GRID_BIN=300,200
+    BIASFACTOR=40
+    FILE=HILLS
+    TEMP=19.3
+...
+
+
+PRINT ARG=cv1,cv2,mtd.*,histo.*,soap.* STRIDE=10 FILE=COLVAR
+FLUSH STRIDE=1
+</pre></div>
+</div>
+<section id="running-metadynamics-with-lammps">
+<h3>Running metadynamics with LAMMPS<a class="headerlink" href="#running-metadynamics-with-lammps" title="Link to this heading">¶</a></h3>
+<p>We use a custom version of LAMMPS that is linked with <code class="docutils literal notranslate"><span class="pre">metatomic</span></code> and the
+<code class="docutils literal notranslate"><span class="pre">metatomic</span></code>-enabled version of PLUMED. From the point of view of LAMMPS, all that is
+needed is to use <code class="docutils literal notranslate"><span class="pre">fix_plumed</span></code> to load the PLUMED input file, as the calculation of
+the custom collective variables is handled by PLUMED itself.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># write the LAMMPS structure file</span>
+<span class="n">lammps_initial</span> <span class="o">=</span> <span class="n">minimal</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">lammps_initial</span><span class="o">.</span><span class="n">cell</span> <span class="o">=</span> <span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">]</span>
+<span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;data/minimal.data&quot;</span><span class="p">,</span> <span class="n">lammps_initial</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;lammps-data&quot;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">linecache</span><span class="o">.</span><span class="n">getline</span><span class="p">(</span><span class="s2">&quot;data/lammps.plumed.in&quot;</span><span class="p">,</span> <span class="mi">25</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+<span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="p">[</span><span class="s2">&quot;lmp&quot;</span><span class="p">,</span> <span class="s2">&quot;-in&quot;</span><span class="p">,</span> <span class="s2">&quot;data/lammps.plumed.in&quot;</span><span class="p">],</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+<span class="n">lmp_trajectory</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;lj38.lammpstrj&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>thermo_style   custom step temp pe etotal press
+</pre></div>
+</div>
+</section>
+<section id="static-visualization">
+<h3>Static visualization<a class="headerlink" href="#static-visualization" title="Link to this heading">¶</a></h3>
+<p>The dynamics on the free energy surface can be visualized using a static plot with the
+trajectory overlaid as follows. NB: The accumulated bias is <strong>not</strong> the free energy
+when performing well-tempered metadynamics, and a re-scaling is required, cf. <a class="reference external" href="https://doi.org/10.1103/PhysRevLett.100.020603">the
+original paper</a></p>
+<p>NB: PLUMED provides dedicated CLI tools to perform these tasks</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># time, cv1, cv2, mtd.bias, histo.1, histo.2, soap.1, soap.2</span>
+<span class="n">colvar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="s2">&quot;COLVAR&quot;</span><span class="p">)</span>
+<span class="n">time</span> <span class="o">=</span> <span class="n">colvar</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="n">cv1_traj</span> <span class="o">=</span> <span class="n">colvar</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="n">cv2_traj</span> <span class="o">=</span> <span class="n">colvar</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="n">soap1_traj</span> <span class="o">=</span> <span class="n">colvar</span><span class="p">[:,</span> <span class="mi">6</span><span class="p">]</span>
+<span class="n">soap2_traj</span> <span class="o">=</span> <span class="n">colvar</span><span class="p">[:,</span> <span class="mi">7</span><span class="p">]</span>
+
+<span class="c1"># HILLS has the free energy surface</span>
+<span class="c1"># time, center_cv1, center_cv2, sigma_cv1, sigma_cv2, height</span>
+<span class="n">hills</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="s2">&quot;HILLS&quot;</span><span class="p">)</span>
+
+<span class="c1"># Visually pleasing grid for the FES based on the PLUMED input</span>
+<span class="n">grid_min</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="n">grid_max</span> <span class="o">=</span> <span class="p">[</span><span class="mi">30</span><span class="p">,</span> <span class="mi">20</span><span class="p">]</span>
+<span class="n">grid_bins</span> <span class="o">=</span> <span class="p">[</span><span class="mi">200</span><span class="p">,</span> <span class="mi">100</span><span class="p">]</span>
+<span class="n">grid_cv1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">grid_min</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">grid_max</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">grid_bins</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">grid_cv2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">grid_min</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">grid_max</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">grid_bins</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">grid_cv1</span><span class="p">,</span> <span class="n">grid_cv2</span><span class="p">)</span>
+<span class="n">FES</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+<span class="c1"># Sum over Gaussian hills to reconstruct the bias</span>
+<span class="k">for</span> <span class="n">hill</span> <span class="ow">in</span> <span class="n">hills</span><span class="p">:</span>
+    <span class="n">center_cv1</span><span class="p">,</span> <span class="n">center_cv2</span> <span class="o">=</span> <span class="n">hill</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">hill</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">sigma_cv1</span><span class="p">,</span> <span class="n">sigma_cv2</span> <span class="o">=</span> <span class="n">hill</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">hill</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+    <span class="n">height</span> <span class="o">=</span> <span class="n">hill</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+
+    <span class="n">term1</span> <span class="o">=</span> <span class="p">(</span><span class="n">X</span> <span class="o">-</span> <span class="n">center_cv1</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sigma_cv1</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">term2</span> <span class="o">=</span> <span class="p">(</span><span class="n">Y</span> <span class="o">-</span> <span class="n">center_cv2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sigma_cv2</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">FES</span> <span class="o">+=</span> <span class="n">height</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">term1</span> <span class="o">+</span> <span class="n">term2</span><span class="p">))</span>
+
+<span class="c1"># The free energy surface is the -ve of the summed bias potential</span>
+<span class="c1"># Shift for 0 minimum</span>
+<span class="n">FES</span> <span class="o">=</span> <span class="o">-</span><span class="n">FES</span>
+<span class="n">FES</span> <span class="o">-=</span> <span class="n">FES</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+<span class="n">FES</span> <span class="o">*=</span> <span class="mi">40</span> <span class="o">/</span> <span class="p">(</span><span class="mi">40</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># corrects for the well-tempered biasfactor</span>
+
+<span class="c1"># Prepare the plot</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
+<span class="n">contour</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">contourf</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">FES</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">FES</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="mi">25</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;viridis&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">contour</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;-bias (a.u.)&quot;</span><span class="p">)</span>
+
+<span class="c1"># Overlay the trajectory</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">cv1_traj</span><span class="p">,</span>
+    <span class="n">cv2_traj</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;white&quot;</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+    <span class="n">linewidth</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;LAMMPS MD Trajectory&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Mark significant points</span>
+<span class="n">feats</span> <span class="o">=</span> <span class="n">featurizer_ch</span><span class="p">([</span><span class="n">minimal</span><span class="p">,</span> <span class="n">icosaed</span><span class="p">],</span> <span class="kc">None</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+    <span class="n">feats</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">feats</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;X&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;octahedron&quot;</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+    <span class="n">feats</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">feats</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s2">&quot;cyan&quot;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;icosahedral&quot;</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Free Energy Surface of LJ38 Cluster&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Collective Variable 1&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Collective Variable 2&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="n">grid_min</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">grid_max</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="n">grid_min</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">grid_max</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_metatomic-plumed_001.png" srcset="../../_images/sphx_glr_metatomic-plumed_001.png" alt="Free Energy Surface of LJ38 Cluster" class = "sphx-glr-single-img"/></section>
+<section id="interactive-visualization-in-chemiscope">
+<h3>Interactive visualization in <code class="docutils literal notranslate"><span class="pre">chemiscope</span></code><a class="headerlink" href="#interactive-visualization-in-chemiscope" title="Link to this heading">¶</a></h3>
+<p>The structures on the free energy surface can be visualized using a dynamic
+plot in <code class="docutils literal notranslate"><span class="pre">chemiscope</span></code>.  We load both the histogram-based and the SOAP-based
+CVs, so you can see the difference in the two approaches by changing the x and
+y axes in the plot settings.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">dyn_prop</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;cv1&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="s2">&quot;structure&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;values&quot;</span><span class="p">:</span> <span class="n">cv1_traj</span><span class="p">[::</span><span class="mi">10</span><span class="p">],</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;CV1 (histo c=6)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;cv2&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="s2">&quot;structure&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;values&quot;</span><span class="p">:</span> <span class="n">cv2_traj</span><span class="p">[::</span><span class="mi">10</span><span class="p">],</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;CV2 (histo c=8)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;soap1&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="s2">&quot;structure&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;values&quot;</span><span class="p">:</span> <span class="n">soap1_traj</span><span class="p">[::</span><span class="mi">10</span><span class="p">],</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;SOAP1 (~Q4)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;soap2&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="s2">&quot;structure&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;values&quot;</span><span class="p">:</span> <span class="n">soap2_traj</span><span class="p">[::</span><span class="mi">10</span><span class="p">],</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;CV2 (~Q6)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="s2">&quot;structure&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;values&quot;</span><span class="p">:</span> <span class="n">time</span><span class="p">[::</span><span class="mi">10</span><span class="p">],</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Simulation time&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="s2">&quot;ps&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+<span class="c1"># Configure the settings for the chemiscope visualization.</span>
+<span class="n">dyn_settings</span> <span class="o">=</span> <span class="n">chemiscope</span><span class="o">.</span><span class="n">quick_settings</span><span class="p">(</span>
+    <span class="n">x</span><span class="o">=</span><span class="s2">&quot;cv1&quot;</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;cv2&quot;</span><span class="p">,</span>
+    <span class="n">map_color</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">,</span>
+    <span class="n">trajectory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">map_settings</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span> <span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+        <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span> <span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+    <span class="p">},</span>
+    <span class="n">structure_settings</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;playbackDelay&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>  <span class="c1"># ms between frames</span>
+        <span class="s2">&quot;unitCell&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;bonds&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;spaceFilling&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+
+<span class="n">lmp_trajectory</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;lj38.lammpstrj&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+<span class="c1"># Show the trajectory in an interactive chemiscope widget.</span>
+<span class="n">chemiscope</span><span class="o">.</span><span class="n">show</span><span class="p">(</span>
+    <span class="n">structures</span><span class="o">=</span><span class="n">lmp_trajectory</span><span class="p">,</span>
+    <span class="n">properties</span><span class="o">=</span><span class="n">dyn_prop</span><span class="p">,</span>
+    <span class="n">settings</span><span class="o">=</span><span class="n">dyn_settings</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+
+
+<!-- Error display -->
+<div id="chsp-653c9211-b3fb-41d8-9d27-8cb48221e99e-error-display" class="chemiscope-sphinx-error">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-653c9211-b3fb-41d8-9d27-8cb48221e99e-error-display')">
+        &times;
+    </button>
+</div>
+
+<!-- Warning Display -->
+<div id="chsp-653c9211-b3fb-41d8-9d27-8cb48221e99e-warning-display" class="chemiscope-sphinx-warning">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-653c9211-b3fb-41d8-9d27-8cb48221e99e-warning-display')">
+        &times;
+    </button>
+</div>
+<div style="padding: 0.5rem 1.25rem" />
+
+<!-- Loading Spinner -->
+<div id="chsp-653c9211-b3fb-41d8-9d27-8cb48221e99e-loading" class="chemiscope-sphinx-spinner">
+    <img src="../../_static/chemiscope-loading.svg" alt="Loading icon" />
+</div>
+
+<!-- Chemiscope Visualization -->
+<div id="chsp-653c9211-b3fb-41d8-9d27-8cb48221e99e">
+    <!-- This will be replaced by the chemiscope HTML -->
+</div>
+
+<!-- Load Visualization Script -->
+<script>
+    loadChemiscopeSphinx('chsp-653c9211-b3fb-41d8-9d27-8cb48221e99e', '../../_datasets/8cb4b120d25ada56d1c36ec8c76448a54e95fdef6e3fa6317f1d076237a7845f-fig_metatomic-plumed_003.json.gz', 'default', '2000.0');
+</script>
+<div class="output_subarea output_html rendered_html output_result">
+
+</div>
+<br />
+<br /></section>
+</section>
+<section id="running-metadynamics-with-i-pi">
+<h2>Running metadynamics with i-PI<a class="headerlink" href="#running-metadynamics-with-i-pi" title="Link to this heading">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">metatomic</span></code> models can be used with any code that supports the PLUMED interface,
+including <a class="reference external" href="https://ipi-code.org/">i-PI</a>. We take this opportunity to demonstrate the
+multiple time stepping feature of i-PI which reduces the cost of computing expensive
+CVs.</p>
+<p>We modify the PLUMED input file to use the SOAP CVs and to half the frequency of the
+metadynamics updates, since we will call PLUMED every two steps. We also change the
+grid and the Gaussian width, consistent with the different range of the SOAP CVs.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">src</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;data/plumed.dat&quot;</span><span class="p">)</span>
+<span class="n">dst</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;data/plumed-mts.dat&quot;</span><span class="p">)</span>
+
+<span class="n">content</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
+<span class="n">dst</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+    <span class="n">content</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;ARG=histo&quot;</span><span class="p">,</span> <span class="s2">&quot;ARG=soap&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;PACE=30&quot;</span><span class="p">,</span> <span class="s2">&quot;PACE=15&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;GRID_MAX=30,20&quot;</span><span class="p">,</span> <span class="s2">&quot;GRID_MAX=0.5,1.5&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;GRID_BIN=300,200&quot;</span><span class="p">,</span> <span class="s2">&quot;GRID_BIN=100,300&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;SIGMA=1.0,0.5&quot;</span><span class="p">,</span> <span class="s2">&quot;SIGMA=0.03,0.05&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>646
+</pre></div>
+</div>
+<p>The i-PI input file defines PLUMED as a forcefield, but uses the <code class="docutils literal notranslate"><span class="pre">&lt;bias&gt;</span></code>
+tag to specify that it should not be used  as a physical force. The input also
+demonstrates how to retrieve the CVs from PLUMED.
+See <a class="reference external" href="https://atomistic-cookbook.org/examples/pi-mts-rpc/mts-rpc.html#multiple-time-stepping">this recipe</a>
+for more details on performing multiple time stepping with i-PI.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ipi_input</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;data/input-meta.xml&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ipi_input</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;simulation safe_stride=&#39;10&#39; verbosity=&#39;medium&#39;&gt;
+    &lt;ffsocket mode=&#39;unix&#39; name=&#39;driver&#39;&gt;
+         &lt;latency&gt; 1.00000000e-04 &lt;/latency&gt;
+         &lt;address&gt; lj &lt;/address&gt;
+   &lt;/ffsocket&gt;
+   &lt;ffplumed name=&quot;plumed&quot;&gt;
+         &lt;file mode=&quot;xyz&quot; units=&quot;angstrom&quot;&gt; data/lj-oct.xyz &lt;/file&gt;
+         &lt;plumed_dat&gt; data/plumed-mts.dat &lt;/plumed_dat&gt;
+         &lt;plumed_extras&gt; [cv1, cv2] &lt;/plumed_extras&gt;
+   &lt;/ffplumed&gt;
+   &lt;prng&gt;&lt;seed&gt;12345&lt;/seed&gt;&lt;/prng&gt;
+   &lt;total_steps&gt;2000&lt;/total_steps&gt;
+   &lt;output prefix=&quot;meta-md&quot;&gt;
+      &lt;trajectory stride=&quot;10&quot; filename=&quot;pos&quot; format=&quot;ase&quot;&gt;positions&lt;/trajectory&gt;
+      &lt;trajectory stride=&quot;10&quot; filename=&quot;colvar&quot; bead=&quot;0&quot; extra_type=&quot;cv1, cv2&quot;&gt; extras_bias &lt;/trajectory&gt;
+      &lt;properties stride=&quot;10&quot;&gt;
+          [ step, time{picosecond}, conserved{ase}, temperature{kelvin}, kinetic_md{ase}, potential{ase}, ensemble_bias{ase} ]
+      &lt;/properties&gt;
+   &lt;/output&gt;
+   &lt;prng&gt;
+      &lt;seed&gt;18885&lt;/seed&gt;
+   &lt;/prng&gt;
+   &lt;system&gt;
+      &lt;forces&gt;
+          &lt;force forcefield=&quot;driver&quot;&gt;
+               &lt;mts_weights&gt; [0,1] &lt;/mts_weights&gt;
+          &lt;/force&gt;
+      &lt;/forces&gt;
+      &lt;initialize nbeads=&quot;1&quot;&gt;
+        &lt;file mode=&quot;xyz&quot; units=&quot;angstrom&quot;&gt;data/lj-oct.xyz&lt;/file&gt;
+        &lt;cell units=&quot;angstrom&quot;&gt;[ 20, 0, 0, 0, 20, 0, 0, 0, 20 ]&lt;/cell&gt;
+        &lt;velocities mode=&quot;thermal&quot; units=&quot;kelvin&quot;&gt; 19.3 &lt;/velocities&gt;
+      &lt;/initialize&gt;
+      &lt;ensemble&gt;
+         &lt;temperature units=&quot;kelvin&quot;&gt; 19.3 &lt;/temperature&gt;
+         &lt;bias&gt;
+             &lt;force forcefield=&quot;plumed&quot;&gt;
+                 &lt;mts_weights&gt; [1, 0] &lt;/mts_weights&gt;
+             &lt;/force&gt;
+         &lt;/bias&gt;
+      &lt;/ensemble&gt;
+      &lt;motion mode=&quot;dynamics&quot;&gt;
+        &lt;fixcom&gt; True &lt;/fixcom&gt;
+        &lt;dynamics mode=&quot;nvt&quot; splitting=&quot;baoab&quot;&gt;
+            &lt;timestep units=&quot;femtosecond&quot;&gt; 5.0 &lt;/timestep&gt; &lt;!-- 2x the fast timestep --&gt;
+          &lt;thermostat mode=&#39;multi&#39;&gt;
+              &lt;thermostat mode=&#39;gle&#39;&gt;
+&lt;!--
+# Generated at http://cosmo-epfl.github.io/gle4md
+# Please cite:
+# M. Ceriotti, G. Bussi and M. Parrinello, J. Chem. Theory Comput. 6, 1170 (2010)
+# M. Ceriotti, G. Bussi and M. Parrinello, Phys. Rev. Lett. 102, 020601 (2009)
+# Smart-sampling GLE. Enforces efficient sampling, focussing the effort on the slowest mode
+# accessible by the simulation. Generated from the parameter file
+# library/smart/smart-0.5_6-2.a,
+# and shifted so that they are effective to sample optimally
+# a time scale of t_opt=1 picoseconds,
+# and do as well as possible upt to a cutoff frequency of
+# νmax=100 THz [3336 cm^-1]
+--&gt;
+    &lt;A shape=&#39;(7,7)&#39;&gt;
+      [   8.191023526179e-4,    8.328506066524e-3,    1.657771834013e-3,    9.736989925341e-4,    2.841803794895e-4,   -3.176846864198e-5,   -2.967010478210e-4,
+  -8.389856546341e-4,    2.405526974742e-2,   -1.507872374848e-2,    2.589784240185e-3,    1.516783633362e-3,   -5.958833418565e-4,    4.198422349789e-4,
+   7.798710586406e-4,    1.507872374848e-2,    8.569039501219e-3,    6.001000899602e-3,    1.062029383877e-3,    1.093939147968e-3,   -2.661575532976e-3,
+  -9.676783161546e-4,   -2.589784240185e-3,   -6.001000899602e-3,    2.680459336535e-5,   -5.214694469742e-5,    4.231304910751e-4,   -2.104894919743e-5,
+  -2.841997149166e-4,   -1.516783633362e-3,   -1.062029383877e-3,    5.214694469742e-5,    1.433903506353e-9,   -4.241574212449e-5,    7.910178912362e-5,
+   3.333208286893e-5,    5.958833418565e-4,   -1.093939147968e-3,   -4.231304910751e-4,    4.241574212449e-5,    2.385554468441e-8,   -3.139255482869e-5,
+   2.967533789056e-4,   -4.198422349789e-4,    2.661575532976e-3,    2.104894919743e-5,   -7.910178912362e-5,    3.139255482869e-5,   2.432567259684e-11
+     ]
+    &lt;/A&gt;
+            &lt;/thermostat&gt;
+            &lt;thermostat mode=&quot;svr&quot;&gt;
+                &lt;tau units=&quot;femtosecond&quot;&gt; 25 &lt;/tau&gt;
+            &lt;/thermostat&gt;
+          &lt;/thermostat&gt;
+          &lt;nmts&gt; [1, 2] &lt;/nmts&gt;
+        &lt;/dynamics&gt;
+      &lt;/motion&gt;
+  &lt;/system&gt;
+  &lt;smotion mode=&quot;metad&quot;&gt;
+     &lt;metad&gt; &lt;metaff&gt; [ plumed ] &lt;/metaff&gt; &lt;/metad&gt;
+  &lt;/smotion&gt;
+&lt;/simulation&gt;
+</pre></div>
+</div>
+<p>We use LAMMPS to compute the LJ potential, and use i-PI in its client-server mode.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ipi_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;i-pi&quot;</span><span class="p">,</span> <span class="s2">&quot;data/input-meta.xml&quot;</span><span class="p">])</span>
+<span class="n">sleep</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>  <span class="c1"># wait for i-PI to start</span>
+<span class="n">lmp_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;lmp&quot;</span><span class="p">,</span> <span class="s2">&quot;-in&quot;</span><span class="p">,</span> <span class="s2">&quot;data/lammps.ipi.in&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Wait for the processes to finish</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ipi_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+<span class="n">lmp_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>1
+</pre></div>
+</div>
+<section id="i-pi-output-trajectory">
+<h3>i-PI output trajectory<a class="headerlink" href="#i-pi-output-trajectory" title="Link to this heading">¶</a></h3>
+<p>The SOAP CVs are much more expensive to compute than the histogram-based CVs,
+so we only run 2000 steps as a demonstration.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ipi_trajectory</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;meta-md.pos_0.extxyz&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">)</span>
+<span class="n">ipi_properties</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">ipi</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">parsing</span><span class="o">.</span><span class="n">read_output</span><span class="p">(</span><span class="s2">&quot;meta-md.out&quot;</span><span class="p">)</span>
+<span class="n">ipi_cv</span> <span class="o">=</span> <span class="n">ipi</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">parsing</span><span class="o">.</span><span class="n">read_trajectory</span><span class="p">(</span><span class="s2">&quot;meta-md.colvar_0&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;extras&quot;</span><span class="p">)[</span>
+    <span class="s2">&quot;cv1, cv2&quot;</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>The structure doesn’t move much in this short simulation, but we can still see how
+trajectory moves around in the region surrounding the octahedral structure.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">chemiscope</span><span class="o">.</span><span class="n">show</span><span class="p">(</span>
+    <span class="n">structures</span><span class="o">=</span><span class="n">ipi_trajectory</span><span class="p">,</span>
+    <span class="n">properties</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="s2">&quot;structure&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;values&quot;</span><span class="p">:</span> <span class="n">ipi_properties</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Simulation time&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="s2">&quot;a.u.&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;bias&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="s2">&quot;structure&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;values&quot;</span><span class="p">:</span> <span class="n">ipi_properties</span><span class="p">[</span><span class="s2">&quot;ensemble_bias&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Bias energy&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="s2">&quot;a.u.&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;soap1&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="s2">&quot;structure&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;values&quot;</span><span class="p">:</span> <span class="n">ipi_cv</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;SOAP1 (~Q4)&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;soap2&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="s2">&quot;structure&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;values&quot;</span><span class="p">:</span> <span class="n">ipi_cv</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;SOAP2 (~Q6)&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+    <span class="n">settings</span><span class="o">=</span><span class="n">chemiscope</span><span class="o">.</span><span class="n">quick_settings</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="s2">&quot;soap1&quot;</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="s2">&quot;soap2&quot;</span><span class="p">,</span>
+        <span class="n">z</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">map_color</span><span class="o">=</span><span class="s2">&quot;bias&quot;</span><span class="p">,</span>
+        <span class="n">trajectory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">structure_settings</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;playbackDelay&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>  <span class="c1"># ms between frames</span>
+            <span class="s2">&quot;unitCell&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;bonds&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;spaceFilling&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+
+
+<!-- Error display -->
+<div id="chsp-f58a831f-d273-4c14-a164-b16191c02622-error-display" class="chemiscope-sphinx-error">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-f58a831f-d273-4c14-a164-b16191c02622-error-display')">
+        &times;
+    </button>
+</div>
+
+<!-- Warning Display -->
+<div id="chsp-f58a831f-d273-4c14-a164-b16191c02622-warning-display" class="chemiscope-sphinx-warning">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-f58a831f-d273-4c14-a164-b16191c02622-warning-display')">
+        &times;
+    </button>
+</div>
+<div style="padding: 0.5rem 1.25rem" />
+
+<!-- Loading Spinner -->
+<div id="chsp-f58a831f-d273-4c14-a164-b16191c02622-loading" class="chemiscope-sphinx-spinner">
+    <img src="../../_static/chemiscope-loading.svg" alt="Loading icon" />
+</div>
+
+<!-- Chemiscope Visualization -->
+<div id="chsp-f58a831f-d273-4c14-a164-b16191c02622">
+    <!-- This will be replaced by the chemiscope HTML -->
+</div>
+
+<!-- Load Visualization Script -->
+<script>
+    loadChemiscopeSphinx('chsp-f58a831f-d273-4c14-a164-b16191c02622', '../../_datasets/5862253e4281b3c8779a1c78e53741bb957b65b201383dc5e3630c35ead007e2-fig_metatomic-plumed_004.json.gz', 'default', '2000.0');
+</script>
+<div class="output_subarea output_html rendered_html output_result">
+
+</div>
+<br />
+<br /><p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (1 minutes 16.568 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-metatomic-plumed-metatomic-plumed-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/6317b510250d625ce2853265ef4b42f5/metatomic-plumed.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">metatomic-plumed.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/5bf5a7ab587bf3dc7c1352039a933a5e/metatomic-plumed.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">metatomic-plumed.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/744df6e23623b9108251ee246acc60a1/metatomic-plumed.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">recipe:</span> <span class="pre">metatomic-plumed.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../pi-mts-rpc/mts-rpc.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Multiple time stepping and ring-polymer contraction</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../pet-mad-nc/pet-mad-nc.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">MD using direct-force predictions with PET-MAD</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; BSD 3-Clause License, Copyright (c) 2026, The atomistic cookbook team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">ML collective variables in PLUMED with metatomic</a><ul>
+<li><a class="reference internal" href="#target-structures">Target structures</a></li>
+<li><a class="reference internal" href="#defining-custom-collective-variables">Defining custom collective variables</a><ul>
+<li><a class="reference internal" href="#histogram-of-coordination-numbers">Histogram of coordination numbers</a></li>
+<li><a class="reference internal" href="#soap-based-steinhardt-parameters">SOAP-based Steinhardt parameters</a></li>
+<li><a class="reference internal" href="#exporting-the-model">Exporting the Model</a></li>
+<li><a class="reference internal" href="#optional-test-the-collective-variables-in-python">Optional: test the collective variables in Python</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-the-model-to-run-metadynamics-with-plumed">Using the model to run metadynamics with PLUMED</a><ul>
+<li><a class="reference internal" href="#running-metadynamics-with-lammps">Running metadynamics with LAMMPS</a></li>
+<li><a class="reference internal" href="#static-visualization">Static visualization</a></li>
+<li><a class="reference internal" href="#interactive-visualization-in-chemiscope">Interactive visualization in <code class="docutils literal notranslate"><span class="pre">chemiscope</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#running-metadynamics-with-i-pi">Running metadynamics with i-PI</a><ul>
+<li><a class="reference internal" href="#i-pi-output-trajectory">i-PI output trajectory</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script data-domain="atomistic-cookbook.org" defer="defer" src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"></script>
+    <script src="../../_static/all-examples-data.js?v=01c87ff6"></script>
+    <script src="../../_static/daily-recipe.js?v=b5e71911"></script>
+    </body>
+</html>

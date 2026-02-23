@@ -1,0 +1,679 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="search" title="Search" href="../../search.html"><link rel="next" title="Ring Polymer Instanton Rate Theory: Tunneling Rates" href="../ring-polymer-instanton/rpi-rates.html"><link rel="prev" title="Periodic Hamiltonian learning" href="../periodic-hamiltonian/periodic-hamiltonian.html">
+        <link rel="canonical" href="https://atomistic-cookbook.org/examples/heat-capacity/heat-capacity.html">
+        <link rel="prefetch" href="../../_static/cookbook-icon.svg" as="image">
+
+    <link rel="shortcut icon" href="../../_static/cookbook-icon.png"><!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>Quantum heat capacity of water - The Atomistic Cookbook</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/cookbook.css?v=d86cfb60" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">The Atomistic Cookbook</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/cookbook-icon.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">The Atomistic Cookbook</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../topics/index.html">Recipes grouped by topic</a><input aria-label="Toggle navigation of Recipes grouped by topic" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/sampling.html">Statistical sampling and dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/analysis.html">Analysis and post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/ml-models.html">Machine learning models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/universal.html">Universal ML models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/nqes.html">Nuclear quantum effects</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../software/index.html">Recipes grouped by software used</a><input aria-label="Toggle navigation of Recipes grouped by software used" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../software/chemiscope.html">chemiscope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/cp2k.html">cp2k</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/eon.html">eon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/featomic.html">featomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/gromacs.html">GROMACS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/i-pi.html">i-PI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/lammps.html">LAMMPS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/metatensor.html">metatensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/plumed.html">PLUMED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/scikit-matter.html">scikit-matter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/torch-pme.html">torch-pme</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../all-examples.html">List of all recipes</a><input aria-label="Toggle navigation of List of all recipes" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../dos-align/dos-align.html">A ML model for the electron density of states</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-model/water-model.html">Atomistic Water Model for Molecular Dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../batch-cp2k/reference-trajectory.html">Batch run of CP2K calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../shiftml/shiftml-example.html">Computing NMR shielding tensors using ShiftML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft-nc.html">Conservative fine-tuning for a PET model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermostats/thermostats.html">Constant-temperature MD and thermostats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../polarizability/polarizability.html">Equivariant linear model for polarizability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../learn-tensors-with-mcov/learn-tensors-with-mcov.html">Equivariant model for tensorial properties based on scalar features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../eon-pet-neb/eon-pet-neb.html">Finding Reaction Paths with eOn and a Metatomic Potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft.html">Fine-tuning the PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../roy-gch/roy-gch.html">Generalized Convex Hull construction for the polymorphs of ROY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hamiltonian-qm7/hamiltonian-qm7.html">Hamiltonian Learning for Molecules with Indirect Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../torchpme/torchpme_learning.html">Learning Capabilities with torchpme</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lpr/lpr.html">Local Prediction Rigidity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lode-linear/lode-linear.html">Long-distance Equivariants: a tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flashmd/flashmd-demo.html">Long-stride trajectories with a universal FlashMD model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-nc/pet-mad-nc.html">MD using direct-force predictions with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metatomic-plumed/metatomic-plumed.html">ML collective variables in PLUMED with metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-mts-rpc/mts-rpc.html">Multiple time stepping and ring-polymer contraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../gaas-map/gaas-map.html">PCA/PCovR Visualization of a training dataset for a potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-metad/pi-metad.html">Path integral metadynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../path-integrals/path-integrals.html">Path integral molecular dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../periodic-hamiltonian/periodic-hamiltonian.html">Periodic Hamiltonian learning</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Quantum heat capacity of water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ring-polymer-instanton/rpi-rates.html">Ring Polymer Instanton Rate Theory: Tunneling Rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rotate-equivariants/rotate-equivariants.html">Rotating equivariants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sample-selection/sample-selection.html">Sample and Feature Selection with FPS and CUR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad/pet-mad.html">The PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-uq/pet-mad-uq.html">Uncertainty Quantification with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-pulsed/water-pulsed.html">Water orientation in a pulsed electric field</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../downloading.html">Downloading and running the recipes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing a recipe</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-examples-heat-capacity-heat-capacity-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="quantum-heat-capacity-of-water">
+<span id="sphx-glr-examples-heat-capacity-heat-capacity-py"></span><h1>Quantum heat capacity of water<a class="headerlink" href="#quantum-heat-capacity-of-water" title="Link to this heading">¶</a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Authors<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Filippo Bigi <a class="reference external" href="https://github.com/frostedoyster/">&#64;frostedoyster</a>;
+Michele Ceriotti <a class="reference external" href="https://github.com/ceriottm/">&#64;ceriottm</a></p>
+</dd>
+</dl>
+<p>This example shows how to estimate the heat capacity of liquid water
+from a path integral molecular dynamics simulation. The dynamics are
+run with <a class="reference external" href="http://ipi-code.org">i-PI</a>, and
+<a class="reference external" href="http://lammps.org">LAMMPS</a> is used
+as the driver to simulate the <a class="reference external" href="http://doi.org/10.1063/1.3167790">q-TIP4P/f water
+model</a>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xml.etree.ElementTree</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ET</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">ipi</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</pre></div>
+</div>
+<section id="a-non-trivial-energy-estimator">
+<h2>A non-trivial energy estimator<a class="headerlink" href="#a-non-trivial-energy-estimator" title="Link to this heading">¶</a></h2>
+<p>As introduced in the
+<a class="reference external" href="http://lab-cosmo.github.io/atomistic-cookbook/latest/examples/path-integrals">path-integrals example</a>,
+path-integral estimators
+for observables that depend on momenta are generally not trivial to compute.</p>
+<p>In this example, we will focus on the constant-volume heat capacity,
+<span class="math notranslate nohighlight">\(c_V\)</span>, which is one such
+observable, and we will calculate it for liquid water at room temperature.
+Because of the presence of high-frequency vibrations, many of the nuclear
+degrees of freedom are trapped in the vibrational ground state, which reduces
+substantially the heat capacity from the value that would be obtained
+in the classical limit. See <a class="reference external" href="http://doi.org/10.1021/acs.chemrev.5b00674">this review</a>
+for an overview of the impact of quantum nuclei on the properties of water.
+From a computational perspective, this means that it is necessary to use
+specialized simulations and estimators to evaluate the correct value.</p>
+<section id="running-the-pimd-calculation">
+<h3>Running the PIMD calculation<a class="headerlink" href="#running-the-pimd-calculation" title="Link to this heading">¶</a></h3>
+<p>This follows the same steps as the <code class="docutils literal notranslate"><span class="pre">path-integrals</span></code> example. One important
+difference is that we will request the <code class="docutils literal notranslate"><span class="pre">scaledcoords</span></code> output to the relevant
+section of the <code class="docutils literal notranslate"><span class="pre">i-PI</span></code> input XML file, which
+contains estimators that can be used to calculate the total energy and
+heat capacity as following
+<a class="reference external" href="https://arxiv.org/abs/physics/0505109">Yamamoto, J. Chem. Phys. (2005)</a>.</p>
+<p>The input file is shown below. It should be noted that <code class="docutils literal notranslate"><span class="pre">scaledcoords</span></code>
+is given a finite differences displacement as a parameter. This is necessary
+as the estimators require higher order derivatives of the potential energy,
+which are calculated using finite differences. This also means that
+evaluating the estimator adds substantial overhead (so it is wise to only
+compute it every few simulation steps, to eliminate correlations between
+snapshots) and that one should be careful to use well-converged simulation
+parameters to avoid discontinuities and noise (for instance, we increase
+the accuracy of the particle-mesh electrostatic calculation, and use a
+shifted Lennard-Jones potential to avoid a discontinuity at the cutoff).</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Open and show the relevant part of the input</span>
+<span class="n">xmlroot</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;data/input.xml&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">getroot</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;      &quot;</span> <span class="o">+</span> <span class="n">ET</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">xmlroot</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;.//properties&quot;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;unicode&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;properties filename=&quot;out&quot; stride=&quot;4&quot;&gt;
+   [ step, time{picosecond}, conserved, potential, kinetic_cv,
+     scaledcoords(fd_delta=5e-3) ]
+&lt;/properties&gt;
+</pre></div>
+</div>
+<p>We launch the i-PI and LAMMPS processes, exactly as in the
+<code class="docutils literal notranslate"><span class="pre">path-integrals</span></code> example.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># don&#39;t rerun if the outputs already exist</span>
+<span class="n">ipi_process</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">&quot;water-cv.out&quot;</span><span class="p">):</span>
+    <span class="n">ipi_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;i-pi&quot;</span><span class="p">,</span> <span class="s2">&quot;data/input.xml&quot;</span><span class="p">])</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># wait for i-PI to start</span>
+    <span class="n">lmp_process</span> <span class="o">=</span> <span class="p">[</span><span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;lmp&quot;</span><span class="p">,</span> <span class="s2">&quot;-in&quot;</span><span class="p">,</span> <span class="s2">&quot;data/in.lmp&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>Skip this cell if you want to run in the background</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">ipi_process</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">ipi_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+    <span class="n">lmp_process</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+    <span class="n">lmp_process</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="analyzing-the-results">
+<h3>Analyzing the results<a class="headerlink" href="#analyzing-the-results" title="Link to this heading">¶</a></h3>
+<p>Let’s plot the potential and conserved energy as a function of time,
+just to check that the simulation ran sensibly.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">output_data</span><span class="p">,</span> <span class="n">output_desc</span> <span class="o">=</span> <span class="n">ipi</span><span class="o">.</span><span class="n">read_output</span><span class="p">(</span><span class="s2">&quot;water-cv.out&quot;</span><span class="p">)</span>
+<span class="n">fix</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;potential&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;potential&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+    <span class="s2">&quot;b-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Potential, $V$&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;conserved&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;conserved&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+    <span class="s2">&quot;r-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Conserved, $H$&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$t$ / ps&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;energy / a.u.&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_heat-capacity_001.png" srcset="../../_images/sphx_glr_heat-capacity_001.png" alt="heat capacity" class = "sphx-glr-single-img"/><p>As described in the <a class="reference external" href="https://ipi-code.org/i-pi/output-tags.html">i-PI documentation</a>,
+the two quantities returned by the <code class="docutils literal notranslate"><span class="pre">scaledcoords</span></code> output are <code class="docutils literal notranslate"><span class="pre">eps_v</span></code>
+and <code class="docutils literal notranslate"><span class="pre">eps_v'</span></code>, defined in the aforementioned
+<a class="reference external" href="https://arxiv.org/abs/physics/0505109">paper</a>.</p>
+<p>These estimators (<span class="math notranslate nohighlight">\(\epsilon_v\)</span> and <span class="math notranslate nohighlight">\(\epsilon_v'\)</span>) are derived in the
+“scaled coordinates” formalism, which is a useful trick to avoid the
+growth of the error in the instantaneous values of the estimators with
+the number of beads used in the path integral simulation.</p>
+<p>The same paper contains the formulas to calculate the total energy and
+heat capacity from these estimators:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[E = \langle \epsilon_v \rangle \quad
+C_V = k_B \beta^2 \left( \langle \epsilon_v^2 \rangle - \langle
+    \epsilon_v \rangle^2 - \langle \epsilon_v' \rangle \right)\]</div>
+</div>
+<p>First the energy, whose estimator will be compared to the total energy
+calculated as the sum of the potential and kinetic energy estimators.
+Since the kinetic energy is itself calculated from a scaled-coordinates
+estimator (the “centroid virial” estimator), the two total energies are
+the same.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">eps_v</span> <span class="o">=</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;scaledcoords(fd_delta=5e-3)&quot;</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="n">eps_v_prime</span> <span class="o">=</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;scaledcoords(fd_delta=5e-3)&quot;</span><span class="p">][:,</span> <span class="mi">1</span><span class="p">]</span>
+
+<span class="n">energy_estimator</span> <span class="o">=</span> <span class="n">eps_v</span>  <span class="c1"># first formula</span>
+
+<span class="n">fix</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+    <span class="n">energy_estimator</span> <span class="o">-</span> <span class="n">energy_estimator</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="s2">&quot;b-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;scaled coordinates estimator&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">][:],</span>
+    <span class="p">(</span>
+        <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;potential&quot;</span><span class="p">]</span>
+        <span class="o">-</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;potential&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="o">+</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;kinetic_cv&quot;</span><span class="p">]</span>
+        <span class="o">-</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;kinetic_cv&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="p">),</span>
+    <span class="s2">&quot;r.&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;potential + virial kinetic&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$t$ / ps&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;total energy / a.u.&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_heat-capacity_002.png" srcset="../../_images/sphx_glr_heat-capacity_002.png" alt="heat capacity" class = "sphx-glr-single-img"/><p>And, finally, the heat capacity. Note that normally the simulation
+requires a few ps for equilibration. Here we discard a few dozen steps
+to eliminate the initial jump, which is due to the relaxation of the
+ring polymers starting from a single atomic configuration.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># i-PI scaledcoords outputs are in atomic units (see docs)</span>
+<span class="n">kB</span> <span class="o">=</span> <span class="mf">3.16681e-6</span>  <span class="c1"># Boltzmann constant in atomic units</span>
+<span class="n">T</span> <span class="o">=</span> <span class="mf">298.0</span>  <span class="c1"># temperature in K, as defined in the input file</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">kB</span> <span class="o">*</span> <span class="n">T</span><span class="p">)</span>
+
+<span class="n">skip</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">heat_capacity</span> <span class="o">=</span> <span class="p">(</span>  <span class="c1"># second formula</span>
+    <span class="n">kB</span>
+    <span class="o">*</span> <span class="p">(</span><span class="n">beta</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="o">*</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">eps_v</span><span class="p">[</span><span class="n">skip</span><span class="p">:]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">eps_v</span><span class="p">[</span><span class="n">skip</span><span class="p">:])</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">eps_v_prime</span><span class="p">[</span><span class="n">skip</span><span class="p">:])</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="n">heat_capacity_per_molecule</span> <span class="o">=</span> <span class="n">heat_capacity</span> <span class="o">/</span> <span class="mi">32</span>  <span class="c1"># 32 molecules in the simulation</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Heat capacity (per water molecule): </span><span class="si">{</span><span class="p">(</span><span class="n">heat_capacity_per_molecule</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">kB</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> kB&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Heat capacity (per water molecule): 15.17 kB
+</pre></div>
+</div>
+<p>You may recognize that the first part of the estimator is reminiscent
+of the classical estimator for the heat capacity as the fluctuations of the
+(quantum) total energy, which in this case however requires a correction given
+by the mean of the second part of the scaled-coordinates estimator.</p>
+</section>
+<section id="estimating-the-statistical-error">
+<h3>Estimating the statistical error<a class="headerlink" href="#estimating-the-statistical-error" title="Link to this heading">¶</a></h3>
+<p>Especially with such an underconverged simulation, it is important to
+estimate the statistical error in the heat capacity.</p>
+<p>Generally, errors on measurements are computed
+as “standard errors”, i.e. the standard deviation of a series of data points
+divided by the square root of the number of data points. In our case,
+however, this is made more complicated by the correlation between
+close steps in the molecular dynamics trajectory, which would lead to an
+overestimation of the number of independent samples. To fix this, we can
+calculate the autocorrelation time of the estimators whose errors we
+want to estimate, and apply a correction factor to the number of samples.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">autocorrelate</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">xo</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">x</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>  <span class="c1"># remove mean</span>
+    <span class="n">acov</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">correlate</span><span class="p">(</span><span class="n">xo</span><span class="p">,</span> <span class="n">xo</span><span class="p">,</span> <span class="s2">&quot;full&quot;</span><span class="p">))[</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span> <span class="p">:]</span>
+    <span class="k">return</span> <span class="n">acov</span><span class="p">[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">acov</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">autocorrelation_time</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">acov</span> <span class="o">=</span> <span class="n">autocorrelate</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">acov</span><span class="p">)</span> <span class="o">/</span> <span class="n">acov</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Using these helper functions, we can now calculate the error on the various
+parts of the heat capacity estimator. Note also the autocorrelation times, that
+are just a little larger than one, indicating that the stride used to print out
+the estimators is appropriate (as there is little correlation between the samples).</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Autocorrelation times (i.e. number of steps needed to have independent samples)</span>
+<span class="n">autocorr_time_error_delta_eps_v</span> <span class="o">=</span> <span class="n">autocorrelation_time</span><span class="p">(</span>
+    <span class="p">(</span><span class="n">eps_v</span><span class="p">[</span><span class="n">skip</span><span class="p">:]</span> <span class="o">-</span> <span class="n">eps_v</span><span class="p">[</span><span class="n">skip</span><span class="p">:]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">**</span> <span class="mi">2</span>
+<span class="p">)</span>
+<span class="n">autocorr_time_error_eps_v_prime</span> <span class="o">=</span> <span class="n">autocorrelation_time</span><span class="p">(</span><span class="n">eps_v_prime</span><span class="p">[</span><span class="n">skip</span><span class="p">:])</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Autocorrelation times (in number of samples):</span>
+<span class="s2">(eps-&lt;eps&gt;)^2: </span><span class="si">{</span><span class="n">autocorr_time_error_delta_eps_v</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span>
+<span class="s2">eps&#39;:          </span><span class="si">{</span><span class="n">autocorr_time_error_eps_v_prime</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+
+<span class="c1"># Effective number of samples</span>
+<span class="n">effective_samples_delta_eps_v</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">eps_v</span><span class="p">[</span><span class="n">skip</span><span class="p">:])</span> <span class="o">/</span> <span class="n">autocorr_time_error_delta_eps_v</span>
+<span class="n">effective_samples_eps_v_prime</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">eps_v</span><span class="p">[</span><span class="n">skip</span><span class="p">:])</span> <span class="o">/</span> <span class="n">autocorr_time_error_eps_v_prime</span>
+
+<span class="c1"># Standard errors using the effective number of samples</span>
+<span class="n">error_delta_eps_v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">((</span><span class="n">eps_v</span><span class="p">[</span><span class="n">skip</span><span class="p">:]</span> <span class="o">-</span> <span class="n">eps_v</span><span class="p">[</span><span class="n">skip</span><span class="p">:]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+    <span class="n">effective_samples_delta_eps_v</span>
+<span class="p">)</span>
+<span class="n">error_eps_v_prime</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">eps_v_prime</span><span class="p">[</span><span class="n">skip</span><span class="p">:])</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">effective_samples_eps_v_prime</span><span class="p">)</span>
+
+<span class="c1"># Error on the heat capacity (assuming quadrature sum)</span>
+<span class="n">error_heat_capacity</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">kB</span> <span class="o">*</span> <span class="p">(</span><span class="n">beta</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">error_delta_eps_v</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">error_eps_v_prime</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">error_heat_capacity_per_molecule</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">error_heat_capacity</span> <span class="o">/</span> <span class="mi">32</span>
+<span class="p">)</span>  <span class="c1"># 32 molecules in the simulation</span>
+
+<span class="nb">print</span><span class="p">(</span>
+    <span class="s2">&quot;Error on the heat capacity (per water molecule): &quot;</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="p">(</span><span class="n">error_heat_capacity_per_molecule</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">kB</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> kB&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Autocorrelation times (in number of samples):
+(eps-&lt;eps&gt;)^2: 1.94
+eps&#39;:          1.31
+
+Error on the heat capacity (per water molecule): 2.06 kB
+</pre></div>
+</div>
+<p>The obtained heat capacity is consistent with the values from the literature
+(see e.g. <a class="reference external" href="http://doi.org/10.1063/1.3556661">Ceriotti et al., J. Chem. Phys. (2011)</a>
+where the convergence of the heat capacity with number of beads is shown for the same
+water model used in this example).
+However, the error is quite large, which is expected given the short simulation time.
+To reduce the error, one would need to run a longer simulation. Other important error
+sources, which are not accounted for in the error estimate, are the finite size of the
+system and number of beads. Both of these are too small in this example to give
+reliable results.</p>
+<p>In a realistic simulation, up to a few 100s of picoseconds might be needed to reduce
+the sampling error to a small value (1-2% of the heat capacity). For water at room
+temperature, you will need 32 beads at the very least (8 were used in this example).
+It is more difficult to give a general rule for the system size: (quantum) energy
+fluctuations are usually localized, but to guarantee accurate sampling of the
+liquid structure, a few hundred water molecules would be a reasonable guess
+(32 were used in this example).</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 46.335 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-heat-capacity-heat-capacity-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/2c684432538bab3d8a6f8db14f3827bf/heat-capacity.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">heat-capacity.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/f04a73ec1916d97f905162a40b2a3dd0/heat-capacity.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">heat-capacity.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/b59df37786d0d368d9bf73d930d78801/heat-capacity.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">recipe:</span> <span class="pre">heat-capacity.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../ring-polymer-instanton/rpi-rates.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Ring Polymer Instanton Rate Theory: Tunneling Rates</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../periodic-hamiltonian/periodic-hamiltonian.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Periodic Hamiltonian learning</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; BSD 3-Clause License, Copyright (c) 2026, The atomistic cookbook team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Quantum heat capacity of water</a><ul>
+<li><a class="reference internal" href="#a-non-trivial-energy-estimator">A non-trivial energy estimator</a><ul>
+<li><a class="reference internal" href="#running-the-pimd-calculation">Running the PIMD calculation</a></li>
+<li><a class="reference internal" href="#analyzing-the-results">Analyzing the results</a></li>
+<li><a class="reference internal" href="#estimating-the-statistical-error">Estimating the statistical error</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script data-domain="atomistic-cookbook.org" defer="defer" src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"></script>
+    <script src="../../_static/all-examples-data.js?v=01c87ff6"></script>
+    <script src="../../_static/daily-recipe.js?v=b5e71911"></script>
+    </body>
+</html>

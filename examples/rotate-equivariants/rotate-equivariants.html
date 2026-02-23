@@ -1,0 +1,793 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="search" title="Search" href="../../search.html"><link rel="next" title="Sample and Feature Selection with FPS and CUR" href="../sample-selection/sample-selection.html"><link rel="prev" title="Ring Polymer Instanton Rate Theory: Tunneling Rates" href="../ring-polymer-instanton/rpi-rates.html">
+        <link rel="canonical" href="https://atomistic-cookbook.org/examples/rotate-equivariants/rotate-equivariants.html">
+        <link rel="prefetch" href="../../_static/cookbook-icon.svg" as="image">
+
+    <link rel="shortcut icon" href="../../_static/cookbook-icon.png"><!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>Rotating equivariants - The Atomistic Cookbook</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/cookbook.css?v=d86cfb60" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">The Atomistic Cookbook</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/cookbook-icon.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">The Atomistic Cookbook</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../topics/index.html">Recipes grouped by topic</a><input aria-label="Toggle navigation of Recipes grouped by topic" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/sampling.html">Statistical sampling and dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/analysis.html">Analysis and post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/ml-models.html">Machine learning models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/universal.html">Universal ML models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/nqes.html">Nuclear quantum effects</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../software/index.html">Recipes grouped by software used</a><input aria-label="Toggle navigation of Recipes grouped by software used" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../software/chemiscope.html">chemiscope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/cp2k.html">cp2k</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/eon.html">eon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/featomic.html">featomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/gromacs.html">GROMACS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/i-pi.html">i-PI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/lammps.html">LAMMPS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/metatensor.html">metatensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/plumed.html">PLUMED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/scikit-matter.html">scikit-matter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/torch-pme.html">torch-pme</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../all-examples.html">List of all recipes</a><input aria-label="Toggle navigation of List of all recipes" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../dos-align/dos-align.html">A ML model for the electron density of states</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-model/water-model.html">Atomistic Water Model for Molecular Dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../batch-cp2k/reference-trajectory.html">Batch run of CP2K calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../shiftml/shiftml-example.html">Computing NMR shielding tensors using ShiftML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft-nc.html">Conservative fine-tuning for a PET model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermostats/thermostats.html">Constant-temperature MD and thermostats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../polarizability/polarizability.html">Equivariant linear model for polarizability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../learn-tensors-with-mcov/learn-tensors-with-mcov.html">Equivariant model for tensorial properties based on scalar features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../eon-pet-neb/eon-pet-neb.html">Finding Reaction Paths with eOn and a Metatomic Potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft.html">Fine-tuning the PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../roy-gch/roy-gch.html">Generalized Convex Hull construction for the polymorphs of ROY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hamiltonian-qm7/hamiltonian-qm7.html">Hamiltonian Learning for Molecules with Indirect Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../torchpme/torchpme_learning.html">Learning Capabilities with torchpme</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lpr/lpr.html">Local Prediction Rigidity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lode-linear/lode-linear.html">Long-distance Equivariants: a tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flashmd/flashmd-demo.html">Long-stride trajectories with a universal FlashMD model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-nc/pet-mad-nc.html">MD using direct-force predictions with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metatomic-plumed/metatomic-plumed.html">ML collective variables in PLUMED with metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-mts-rpc/mts-rpc.html">Multiple time stepping and ring-polymer contraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../gaas-map/gaas-map.html">PCA/PCovR Visualization of a training dataset for a potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-metad/pi-metad.html">Path integral metadynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../path-integrals/path-integrals.html">Path integral molecular dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../periodic-hamiltonian/periodic-hamiltonian.html">Periodic Hamiltonian learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../heat-capacity/heat-capacity.html">Quantum heat capacity of water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ring-polymer-instanton/rpi-rates.html">Ring Polymer Instanton Rate Theory: Tunneling Rates</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Rotating equivariants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sample-selection/sample-selection.html">Sample and Feature Selection with FPS and CUR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad/pet-mad.html">The PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-uq/pet-mad-uq.html">Uncertainty Quantification with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-pulsed/water-pulsed.html">Water orientation in a pulsed electric field</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../downloading.html">Downloading and running the recipes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing a recipe</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-examples-rotate-equivariants-rotate-equivariants-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="rotating-equivariants">
+<span id="sphx-glr-examples-rotate-equivariants-rotate-equivariants-py"></span><h1>Rotating equivariants<a class="headerlink" href="#rotating-equivariants" title="Link to this heading">¶</a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Authors<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Filippo Bigi <a class="reference external" href="https://github.com/frostedoyster/">&#64;frostedoyster</a>;
+Michelangelo Domina <a class="reference external" href="https://github.com/MichelangeloDomina/">&#64;MichelangeloDomina</a></p>
+</dd>
+</dl>
+<p>This example shows how to rotate equivariant properties of atomic structures
+using the <code class="docutils literal notranslate"><span class="pre">scipy</span></code> and <code class="docutils literal notranslate"><span class="pre">quaternionic</span></code> libraries. The equivariant properties for
+this example are computed by the <code class="docutils literal notranslate"><span class="pre">featomic</span></code> library.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># sphinx_gallery_thumbnail_path = &#39;../../examples/rotate-equivariants/rotate-equivariants.png&#39;  # noqa: E501</span>
+</pre></div>
+</div>
+<p>Import the necessary packages for this recipe</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ase.build</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">featomic</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">metatensor</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">spherical</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.spatial.transform</span><span class="w"> </span><span class="kn">import</span> <span class="n">Rotation</span>
+</pre></div>
+</div>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
+<p>The equivariant properties of atomic structures are properties that transform in a
+specific way under the action of a group of symmetries. In our case, we are interested
+in the group of rotations in 3D space.</p>
+<img alt="../../_images/rotate-equivariants.png" class="align-center" src="../../_images/rotate-equivariants.png" />
+</section>
+<section id="the-quaternionic-library">
+<h2>The quaternionic library<a class="headerlink" href="#the-quaternionic-library" title="Link to this heading">¶</a></h2>
+<p>The <a class="reference external" href="https://quaternionic.readthedocs.io/en/latest/">quaternionic</a> library
+is a Python library for working with quaternions and much more. In our case,
+we will use it to calculate Wigner D matrices, which are essential to rotate
+equivariant spherical tensors.</p>
+<p>Three remarks before beginning:
+- Scipy uses a different notation (<code class="docutils literal notranslate"><span class="pre">[x,y,z,w]</span></code>) for quaternions</p>
+<blockquote>
+<div><p>from the one in quaternionic (<code class="docutils literal notranslate"><span class="pre">[x,y,z,w]</span></code>)</p>
+</div></blockquote>
+<ul>
+<li><p>It is also useful to have a clear convention for the matrices that we use. Among the
+most common cases we have the standard convention x-y-z from the left to right
+and from the top to bottom. However, when dealing with irreducible components of the
+angular momentum, we will use a -1, 0, 1 convention, that makes the Wigner
+D-matrices more readable. When used in the context of real spherical harmonics, the
+identification is realized by the following scheme:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(y \longleftrightarrow -1\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(z \longleftrightarrow 0\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(x \longleftrightarrow 1\)</span></p></li>
+</ul>
+</div></blockquote>
+<p>which then is represented by y-z-x convention.</p>
+</li>
+<li><p>If the only difference between two quaternions is their sign, they represent the
+same rotation. When this happens, we can just check their scalar product: if it
+is negative (and it should be -1 when this happens) then we can invert the sign
+of one of the two quaternions.</p></li>
+</ul>
+</section>
+<section id="utility-functions">
+<h2>Utility functions<a class="headerlink" href="#utility-functions" title="Link to this heading">¶</a></h2>
+<p>We define a couple of utility functions to obtain orthogonal matrices that represent
+rotations in the 3D space. Here we use the <cite>scipy.spatial.transform.Rotation</cite> class
+to generate random orthogonal matrices with determinant equal to 1. This is done by
+means of the function</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">get_random_rotation</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">Rotation</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+
+
+<span class="c1"># and we can test that the generated matrices are indeed orthogonal by</span>
+<span class="n">rotation</span> <span class="o">=</span> <span class="n">get_random_rotation</span><span class="p">()</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span>
+<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">rotation</span> <span class="o">@</span> <span class="n">rotation</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The determinant is: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">rotation</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Now we can define the function that generates the transformation matrix from the</span>
+<span class="c1"># standard (complex) spherical harmonics to the real spherical harmonics. This function</span>
+<span class="c1"># is given by the following code:</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">complex_to_real_spherical_harmonics_transform</span><span class="p">(</span><span class="n">ell</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="c1"># Generates the transformation matrix from complex spherical harmonics</span>
+    <span class="c1"># to real spherical harmonics for a given l.</span>
+    <span class="c1"># Returns a transformation matrix of shape ((2l+1), (2l+1)).</span>
+
+    <span class="k">if</span> <span class="n">ell</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ell</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;l must be a non-negative integer.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># The size of the transformation matrix is (2l+1) x (2l+1)</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">ell</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">U</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">size</span><span class="p">,</span> <span class="n">size</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="n">ell</span><span class="p">,</span> <span class="n">ell</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">m_index</span> <span class="o">=</span> <span class="n">m</span> <span class="o">+</span> <span class="n">ell</span>  <span class="c1"># Index in the matrix</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Real part of Y_{l}^{m}</span>
+            <span class="n">U</span><span class="p">[</span><span class="n">m_index</span><span class="p">,</span> <span class="n">ell</span> <span class="o">+</span> <span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="n">m</span>
+            <span class="n">U</span><span class="p">[</span><span class="n">m_index</span><span class="p">,</span> <span class="n">ell</span> <span class="o">-</span> <span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">m</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Imaginary part of Y_{l}^{|m|}</span>
+            <span class="n">U</span><span class="p">[</span><span class="n">m_index</span><span class="p">,</span> <span class="n">ell</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">m</span><span class="p">)]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="n">m</span>
+            <span class="n">U</span><span class="p">[</span><span class="n">m_index</span><span class="p">,</span> <span class="n">ell</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span><span class="n">m</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># m == 0</span>
+            <span class="c1"># Y_{l}^{0} remains unchanged</span>
+            <span class="n">U</span><span class="p">[</span><span class="n">m_index</span><span class="p">,</span> <span class="n">ell</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">U</span>
+
+
+<span class="c1"># This matrix must be unitary, as can be easily checked by direct evaluation</span>
+<span class="k">for</span> <span class="n">ell</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+    <span class="n">U</span> <span class="o">=</span> <span class="n">complex_to_real_spherical_harmonics_transform</span><span class="p">(</span><span class="n">ell</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">U</span> <span class="o">@</span> <span class="n">U</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ell</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;For l = </span><span class="si">{</span><span class="n">ell</span><span class="si">}</span><span class="s2">, the U matrix is unitary&quot;</span><span class="p">)</span>
+
+<span class="c1"># This is a necesseary condition when we have a transformation matrix that leads to a</span>
+<span class="c1"># change of basis (in this case from the complex to the real representation of spherical</span>
+<span class="c1"># harmonics).</span>
+<span class="c1"># Finally, in order to address the difference in convention betqween the scipy and the</span>
+<span class="c1"># quaternionic libraries, we define the following function which allows to convert from</span>
+<span class="c1"># the former to the latter:</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">scipy_quaternion_to_quaternionic</span><span class="p">(</span><span class="n">q_scipy</span><span class="p">):</span>
+    <span class="c1"># This function convert a quaternion obtained from the scipy library to the format</span>
+    <span class="c1"># used by the quaternionic library.</span>
+    <span class="c1"># Note: &#39;xyzw&#39; is the format used by scipy.spatial.transform.Rotation</span>
+    <span class="c1"># while &#39;wxyz&#39; is the format used by quaternionic.</span>
+    <span class="n">qx</span><span class="p">,</span> <span class="n">qy</span><span class="p">,</span> <span class="n">qz</span><span class="p">,</span> <span class="n">qw</span> <span class="o">=</span> <span class="n">q_scipy</span>
+    <span class="n">q_quaternion</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">qw</span><span class="p">,</span> <span class="n">qx</span><span class="p">,</span> <span class="n">qy</span><span class="p">,</span> <span class="n">qz</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">q_quaternion</span>
+
+
+<span class="c1"># As a last utility function, we define the utility function to convert from rotation</span>
+<span class="c1"># written in the y-z-x convention to rotations in the x-y-z convention.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">rotation_matrix_conversion_order</span><span class="p">(</span><span class="n">rotation_matrix</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function is used to convert a rotation matrix from the format (y, z, x)</span>
+<span class="sd">    to (x, y, z).</span>
+
+<span class="sd">    Note: &#39;xyz&#39; is the format used by scipy.spatial.transform.Rotation</span>
+<span class="sd">    while &#39;yzx&#39; is the format used by the spherical harmonics.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">converted_matrix</span> <span class="o">=</span> <span class="n">rotation_matrix</span><span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">:]</span>
+    <span class="n">converted_matrix</span> <span class="o">=</span> <span class="n">converted_matrix</span><span class="p">[:,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+    <span class="k">return</span> <span class="n">converted_matrix</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The determinant is: 1.000
+For l = 0, the U matrix is unitary
+For l = 1, the U matrix is unitary
+For l = 2, the U matrix is unitary
+For l = 3, the U matrix is unitary
+For l = 4, the U matrix is unitary
+</pre></div>
+</div>
+</section>
+<section id="generating-equivariants">
+<h2>Generating equivariants<a class="headerlink" href="#generating-equivariants" title="Link to this heading">¶</a></h2>
+<p>Here, we generate some equivariants for a water molecule using <code class="docutils literal notranslate"><span class="pre">featomic</span></code>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># We first generate the structure of a water molecule...</span>
+<span class="n">structure</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">build</span><span class="o">.</span><span class="n">molecule</span><span class="p">(</span><span class="s2">&quot;H2O&quot;</span><span class="p">)</span>
+
+<span class="c1"># ...and set the hyperparameters as required by ``featomic``</span>
+<span class="n">hypers</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;cutoff&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">,</span>
+        <span class="s2">&quot;smoothing&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;ShiftedCosine&quot;</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;density&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Gaussian&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;basis&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;TensorProduct&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;max_angular&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s2">&quot;radial&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Gto&quot;</span><span class="p">,</span> <span class="s2">&quot;max_radial&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+<span class="c1"># We initialize the spherical expansion calculator and compute the features</span>
+<span class="n">spherical_expansion_calculator</span> <span class="o">=</span> <span class="n">featomic</span><span class="o">.</span><span class="n">SphericalExpansion</span><span class="p">(</span><span class="o">**</span><span class="n">hypers</span><span class="p">)</span>
+<span class="n">equivariants</span> <span class="o">=</span> <span class="n">spherical_expansion_calculator</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">structure</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">equivariants</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>TensorMap with 12 blocks
+keys: o3_lambda  o3_sigma  center_type  neighbor_type
+          0         1           1             1
+          1         1           1             1
+          2         1           1             1
+          0         1           1             8
+          1         1           1             8
+          2         1           1             8
+          0         1           8             1
+          1         1           8             1
+          2         1           8             1
+          0         1           8             8
+          1         1           8             8
+          2         1           8             8
+</pre></div>
+</div>
+<p>the neighbor type labels to the properties. In this way, the only relevant keys will
+be the o3_lambda and o3_sigma representing, respectively, the angular momentum channel
+and the parity under inversion of the corresponding spherical tensor.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">equivariants</span> <span class="o">=</span> <span class="n">equivariants</span><span class="o">.</span><span class="n">keys_to_samples</span><span class="p">(</span><span class="s2">&quot;center_type&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">keys_to_properties</span><span class="p">(</span>
+    <span class="s2">&quot;neighbor_type&quot;</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">equivariants</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>TensorMap with 3 blocks
+keys: o3_lambda  o3_sigma
+          0         1
+          1         1
+          2         1
+</pre></div>
+</div>
+<p>For this exercise we will focus on the L = 2 case, so we drop the L = 0 and L = 1
+ones, represented by the keys o3_lambda = 0 and o3_lambda = 1:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">equivariants</span> <span class="o">=</span> <span class="n">metatensor</span><span class="o">.</span><span class="n">drop_blocks</span><span class="p">(</span>
+    <span class="n">equivariants</span><span class="p">,</span> <span class="n">metatensor</span><span class="o">.</span><span class="n">Labels</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;o3_lambda&quot;</span><span class="p">],</span> <span class="n">values</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">]]))</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">equivariants</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>TensorMap with 1 blocks
+keys: o3_lambda  o3_sigma
+          2         1
+</pre></div>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">n_rotations</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">rotations</span> <span class="o">=</span> <span class="p">[</span><span class="n">get_random_rotation</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_rotations</span><span class="p">)]</span>
+
+<span class="c1"># This list contains the rotation matrices that we will use to rotate both the</span>
+<span class="c1"># atomic positions and to generate the Wigner D matrices to rotate also the associated</span>
+<span class="c1"># equavariants.</span>
+<span class="c1">#</span>
+<span class="c1"># Let us first rotate the atomic structures by first generating a copy...</span>
+<span class="n">rotated_structures</span> <span class="o">=</span> <span class="p">[</span><span class="n">structure</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_rotations</span><span class="p">)]</span>
+<span class="c1"># ...and then applying the rotations to the positions</span>
+<span class="k">for</span> <span class="n">rotated_structure</span><span class="p">,</span> <span class="n">rotation</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">rotated_structures</span><span class="p">,</span> <span class="n">rotations</span><span class="p">):</span>
+    <span class="c1"># Here we rotate using the trasponse of the rotation matrices because we are</span>
+    <span class="c1"># applying the rotations from the left to the right.</span>
+    <span class="n">rotated_structure</span><span class="o">.</span><span class="n">positions</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">rotated_structure</span><span class="o">.</span><span class="n">positions</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rotation</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">())</span><span class="o">.</span><span class="n">T</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<p>To rotate the equivariants, we need to generate the Wigner D matrices with the right
+angular momentum. We can do this by using the following function, which takes as input
+our set and rotation and the L channel characterizing the representation. The function
+returns a list of Wigner D matrices, one for each rotation. Moreover, since we want
+a real representation, we will use the formula</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[R_{mm'}^{l} = \sum_{m_1m_2} U^{l*}_{mm_1}D_{m_1m_2}^{l} (U^T)^l_{m_2m'}\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(U^l\)</span> is the transformation matrix from the complex to the real spherical
+defined above, <span class="math notranslate nohighlight">\(D^l\)</span> is the complex Wigner D-matrix and <span class="math notranslate nohighlight">\(R^l\)</span> is
+its real counterpart.
+Putting all together, the function is</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">WignerD_calculator</span><span class="p">(</span><span class="n">rotations</span><span class="p">,</span> <span class="n">L</span><span class="p">):</span>
+    <span class="c1"># We initialize the Wigner calculator from the quaternionic library...</span>
+    <span class="n">wigner</span> <span class="o">=</span> <span class="n">spherical</span><span class="o">.</span><span class="n">Wigner</span><span class="p">(</span><span class="n">L</span><span class="p">)</span>
+    <span class="c1"># ...and we also initialize the transformation matrix from complex to real</span>
+    <span class="n">complex_to_real_transform</span> <span class="o">=</span> <span class="n">complex_to_real_spherical_harmonics_transform</span><span class="p">(</span><span class="n">L</span><span class="p">)</span>
+
+    <span class="c1"># We now generate the Wigner D matrices for each rotation and put them in a list</span>
+    <span class="n">wigner_D_matrices</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">rotation</span> <span class="ow">in</span> <span class="n">rotations</span><span class="p">:</span>
+        <span class="c1"># Obtaining the quaternion associated with the rotation by means of the scipy</span>
+        <span class="c1"># libtary</span>
+        <span class="n">quaternion_scipy</span> <span class="o">=</span> <span class="n">rotation</span><span class="o">.</span><span class="n">as_quat</span><span class="p">()</span>
+        <span class="c1"># Change convention to be consistent with the one of the quaternionic library</span>
+        <span class="n">quaternion_quaternionic</span> <span class="o">=</span> <span class="n">scipy_quaternion_to_quaternionic</span><span class="p">(</span><span class="n">quaternion_scipy</span><span class="p">)</span>
+        <span class="c1"># applying the quaternion to the Wigner D to obtain the actual values</span>
+        <span class="n">wigners_R</span> <span class="o">=</span> <span class="n">wigner</span><span class="o">.</span><span class="n">D</span><span class="p">(</span><span class="n">quaternion_quaternionic</span><span class="p">)</span>
+
+        <span class="c1"># We now extract the values of the Wigner D matrices and transform them to real</span>
+        <span class="n">wigner_D_matrix_complex</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span> <span class="o">*</span> <span class="n">L</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">L</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">mp</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="c1"># This is the procedure that gives the correct indexing of the Wigner</span>
+                <span class="c1"># D matrices, note that the quaternionic library uses a convention such</span>
+                <span class="c1"># that the resulting matrix is the complex conjugate of the one that we</span>
+                <span class="c1"># expect from the rotation, and so we take the complex conjugation</span>
+                <span class="n">wigner_D_matrix_complex</span><span class="p">[</span><span class="n">m</span> <span class="o">+</span> <span class="n">L</span><span class="p">,</span> <span class="n">mp</span> <span class="o">+</span> <span class="n">L</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">wigners_R</span><span class="p">[</span><span class="n">wigner</span><span class="o">.</span><span class="n">Dindex</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">mp</span><span class="p">)]</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span>
+
+        <span class="c1"># We finally transform everything in the real representation...</span>
+        <span class="n">wigner_D_matrix</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">complex_to_real_transform</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span>
+            <span class="o">@</span> <span class="n">wigner_D_matrix_complex</span>
+            <span class="o">@</span> <span class="n">complex_to_real_transform</span><span class="o">.</span><span class="n">T</span>
+        <span class="p">)</span>
+        <span class="c1"># ...and check that we do not have imaginary contributions</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">wigner_D_matrix</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>  <span class="c1"># check that the matrix is real</span>
+
+        <span class="c1"># We can now store the real part of the evaluated matrix and return the final</span>
+        <span class="c1"># list</span>
+        <span class="n">wigner_D_matrices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">wigner_D_matrix</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">wigner_D_matrices</span>
+
+
+<span class="c1"># To do a simple test of the function, we can generate the Wigner D matrices for the</span>
+<span class="c1"># case L = 1 and check that they are, indeed, the same as the function generating the</span>
+<span class="c1"># rotation matrices that we generated. Importantly, we need to change convention using</span>
+<span class="c1"># the utility function ``rotation_matrix_conversion_order``.</span>
+
+<span class="c1"># Initialize the L for the comparison with the rotation matrices</span>
+<span class="n">L</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="c1"># Generate the Wigner D matrices</span>
+<span class="n">wigner_D_matrices</span> <span class="o">=</span> <span class="n">WignerD_calculator</span><span class="p">(</span><span class="n">rotations</span><span class="p">,</span> <span class="n">L</span><span class="p">)</span>
+<span class="c1"># Change convention to match the one of the rotation matrices</span>
+<span class="n">wigner_D_matrices</span> <span class="o">=</span> <span class="p">[</span><span class="n">rotation_matrix_conversion_order</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">wigner_D_matrices</span><span class="p">]</span>
+
+<span class="c1"># Check that the Wigner D matrices are the same as the rotation matrices</span>
+<span class="k">for</span> <span class="n">w</span><span class="p">,</span> <span class="n">rotation</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">wigner_D_matrices</span><span class="p">,</span> <span class="n">rotations</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">rotation</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;All the Wigner D matrices are the same as the rotation matrix for l=1.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>All the Wigner D matrices are the same as the rotation matrix for l=1.
+</pre></div>
+</div>
+<p>We can now apply the rotations to the equivariants. Since we are interested in the
+L = 2 case, we first evaluate the Wigner D matrices as above…</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">L</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">wigner_D_matrices</span> <span class="o">=</span> <span class="n">WignerD_calculator</span><span class="p">(</span><span class="n">rotations</span><span class="p">,</span> <span class="n">L</span><span class="p">)</span>
+
+<span class="c1"># ...and then we use them to rotate the equivariants. The results would be stored in a</span>
+<span class="c1"># list of TensorMaps, one for each rotation.</span>
+<span class="n">rotated_equivariants</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rotations</span><span class="p">):</span>
+    <span class="c1"># We obtain the new values by applying the Wigner D matrices from the right (and</span>
+    <span class="c1"># thus we use their transpose)</span>
+    <span class="n">new_values</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">equivariants</span><span class="o">.</span><span class="n">block</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span> <span class="o">@</span> <span class="n">wigner_D_matrices</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1"># We append the new TensorMap with the same metadata as the original but with the</span>
+    <span class="c1"># new, rotated, equivariants.</span>
+    <span class="n">rotated_equivariants</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="n">metatensor</span><span class="o">.</span><span class="n">TensorMap</span><span class="p">(</span>
+            <span class="n">keys</span><span class="o">=</span><span class="n">equivariants</span><span class="o">.</span><span class="n">keys</span><span class="p">,</span>
+            <span class="n">blocks</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">metatensor</span><span class="o">.</span><span class="n">TensorBlock</span><span class="p">(</span>
+                    <span class="n">values</span><span class="o">=</span><span class="n">new_values</span><span class="p">,</span>
+                    <span class="n">samples</span><span class="o">=</span><span class="n">equivariants</span><span class="o">.</span><span class="n">block</span><span class="p">()</span><span class="o">.</span><span class="n">samples</span><span class="p">,</span>
+                    <span class="n">components</span><span class="o">=</span><span class="n">equivariants</span><span class="o">.</span><span class="n">block</span><span class="p">()</span><span class="o">.</span><span class="n">components</span><span class="p">,</span>
+                    <span class="n">properties</span><span class="o">=</span><span class="n">equivariants</span><span class="o">.</span><span class="n">block</span><span class="p">()</span><span class="o">.</span><span class="n">properties</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">],</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+<span class="c1"># Having constructed the list of TensorMaps, the only exercise left is to check that the</span>
+<span class="c1"># rotations is correct.</span>
+</pre></div>
+</div>
+</section>
+<section id="check-the-correctness-of-the-rotation">
+<h2>Check the correctness of the rotation<a class="headerlink" href="#check-the-correctness-of-the-rotation" title="Link to this heading">¶</a></h2>
+<p>We will now check the correctness of the rotation by comparing the rotated
+equivariants with equivariants computed from the rotated structures.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># We follow the same procedure that we used when defining the TensorMap.</span>
+<span class="n">rotated_equivariants_reference</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">rotated_structures</span><span class="p">:</span>
+    <span class="c1"># We first compute the spherical expansion</span>
+    <span class="n">eq</span> <span class="o">=</span> <span class="n">spherical_expansion_calculator</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="c1"># We then send the center type labels to the samples and the neighbor type labels</span>
+    <span class="c1"># in order to have only o3_lambda and o3_sigma as keys</span>
+    <span class="n">eq</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">keys_to_samples</span><span class="p">(</span><span class="s2">&quot;center_type&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">keys_to_properties</span><span class="p">(</span><span class="s2">&quot;neighbor_type&quot;</span><span class="p">)</span>
+    <span class="c1"># We drop the L = 0 and L = 1 blocks, by dropping o3_lambda = 0 and o3_lambda = 1</span>
+    <span class="n">eq</span> <span class="o">=</span> <span class="n">metatensor</span><span class="o">.</span><span class="n">drop_blocks</span><span class="p">(</span>
+        <span class="n">eq</span><span class="p">,</span> <span class="n">metatensor</span><span class="o">.</span><span class="n">Labels</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;o3_lambda&quot;</span><span class="p">],</span> <span class="n">values</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">]]))</span>
+    <span class="p">)</span>
+    <span class="c1"># and finally we keep only the L = 2 blocks to a list</span>
+    <span class="n">rotated_equivariants_reference</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eq</span><span class="p">)</span>
+
+<span class="c1"># We can now check that the rotated equivariants are the same as the reference ones</span>
+<span class="k">for</span> <span class="n">re1</span><span class="p">,</span> <span class="n">re2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">rotated_equivariants</span><span class="p">,</span> <span class="n">rotated_equivariants_reference</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="n">metatensor</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">re1</span><span class="p">,</span> <span class="n">re2</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;All the rotated equivariants are the same as the reference ones!&quot;</span><span class="p">)</span>
+
+<span class="c1"># Which shows that our rotation are indeed correct!</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>All the rotated equivariants are the same as the reference ones!
+</pre></div>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 23.041 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-rotate-equivariants-rotate-equivariants-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/0fbe1ace43b6dc5c9eba9b09006bb707/rotate-equivariants.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">rotate-equivariants.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/de0cd7dc8787ee83c09b0fb3d2383f3d/rotate-equivariants.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">rotate-equivariants.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/6290459152e8b8e316ba102d6728a988/rotate-equivariants.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">recipe:</span> <span class="pre">rotate-equivariants.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../sample-selection/sample-selection.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Sample and Feature Selection with FPS and CUR</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../ring-polymer-instanton/rpi-rates.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Ring Polymer Instanton Rate Theory: Tunneling Rates</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; BSD 3-Clause License, Copyright (c) 2026, The atomistic cookbook team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Rotating equivariants</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#the-quaternionic-library">The quaternionic library</a></li>
+<li><a class="reference internal" href="#utility-functions">Utility functions</a></li>
+<li><a class="reference internal" href="#generating-equivariants">Generating equivariants</a></li>
+<li><a class="reference internal" href="#check-the-correctness-of-the-rotation">Check the correctness of the rotation</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script data-domain="atomistic-cookbook.org" defer="defer" src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"></script>
+    <script src="../../_static/all-examples-data.js?v=01c87ff6"></script>
+    <script src="../../_static/daily-recipe.js?v=b5e71911"></script>
+    </body>
+</html>

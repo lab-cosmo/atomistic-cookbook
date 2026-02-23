@@ -1,0 +1,797 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="search" title="Search" href="../../search.html"><link rel="next" title="Generalized Convex Hull construction for the polymorphs of ROY" href="../roy-gch/roy-gch.html"><link rel="prev" title="Finding Reaction Paths with eOn and a Metatomic Potential" href="../eon-pet-neb/eon-pet-neb.html">
+        <link rel="canonical" href="https://atomistic-cookbook.org/examples/pet-finetuning/pet-ft.html">
+        <link rel="prefetch" href="../../_static/cookbook-icon.svg" as="image">
+
+    <link rel="shortcut icon" href="../../_static/cookbook-icon.png"><!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>Fine-tuning the PET-MAD universal potential - The Atomistic Cookbook</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/cookbook.css?v=d86cfb60" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">The Atomistic Cookbook</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/cookbook-icon.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">The Atomistic Cookbook</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../topics/index.html">Recipes grouped by topic</a><input aria-label="Toggle navigation of Recipes grouped by topic" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/sampling.html">Statistical sampling and dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/analysis.html">Analysis and post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/ml-models.html">Machine learning models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/universal.html">Universal ML models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/nqes.html">Nuclear quantum effects</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../software/index.html">Recipes grouped by software used</a><input aria-label="Toggle navigation of Recipes grouped by software used" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../software/chemiscope.html">chemiscope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/cp2k.html">cp2k</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/eon.html">eon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/featomic.html">featomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/gromacs.html">GROMACS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/i-pi.html">i-PI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/lammps.html">LAMMPS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/metatensor.html">metatensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/plumed.html">PLUMED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/scikit-matter.html">scikit-matter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/torch-pme.html">torch-pme</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../all-examples.html">List of all recipes</a><input aria-label="Toggle navigation of List of all recipes" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../dos-align/dos-align.html">A ML model for the electron density of states</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-model/water-model.html">Atomistic Water Model for Molecular Dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../batch-cp2k/reference-trajectory.html">Batch run of CP2K calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../shiftml/shiftml-example.html">Computing NMR shielding tensors using ShiftML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pet-ft-nc.html">Conservative fine-tuning for a PET model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermostats/thermostats.html">Constant-temperature MD and thermostats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../polarizability/polarizability.html">Equivariant linear model for polarizability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../learn-tensors-with-mcov/learn-tensors-with-mcov.html">Equivariant model for tensorial properties based on scalar features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../eon-pet-neb/eon-pet-neb.html">Finding Reaction Paths with eOn and a Metatomic Potential</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Fine-tuning the PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../roy-gch/roy-gch.html">Generalized Convex Hull construction for the polymorphs of ROY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hamiltonian-qm7/hamiltonian-qm7.html">Hamiltonian Learning for Molecules with Indirect Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../torchpme/torchpme_learning.html">Learning Capabilities with torchpme</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lpr/lpr.html">Local Prediction Rigidity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lode-linear/lode-linear.html">Long-distance Equivariants: a tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flashmd/flashmd-demo.html">Long-stride trajectories with a universal FlashMD model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-nc/pet-mad-nc.html">MD using direct-force predictions with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metatomic-plumed/metatomic-plumed.html">ML collective variables in PLUMED with metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-mts-rpc/mts-rpc.html">Multiple time stepping and ring-polymer contraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../gaas-map/gaas-map.html">PCA/PCovR Visualization of a training dataset for a potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-metad/pi-metad.html">Path integral metadynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../path-integrals/path-integrals.html">Path integral molecular dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../periodic-hamiltonian/periodic-hamiltonian.html">Periodic Hamiltonian learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../heat-capacity/heat-capacity.html">Quantum heat capacity of water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ring-polymer-instanton/rpi-rates.html">Ring Polymer Instanton Rate Theory: Tunneling Rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rotate-equivariants/rotate-equivariants.html">Rotating equivariants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sample-selection/sample-selection.html">Sample and Feature Selection with FPS and CUR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad/pet-mad.html">The PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-uq/pet-mad-uq.html">Uncertainty Quantification with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-pulsed/water-pulsed.html">Water orientation in a pulsed electric field</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../downloading.html">Downloading and running the recipes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing a recipe</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-examples-pet-finetuning-pet-ft-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="fine-tuning-the-pet-mad-universal-potential">
+<span id="sphx-glr-examples-pet-finetuning-pet-ft-py"></span><h1>Fine-tuning the PET-MAD universal potential<a class="headerlink" href="#fine-tuning-the-pet-mad-universal-potential" title="Link to this heading">¶</a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Authors<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Davide Tisi <a class="reference external" href="https://github.com/DavideTisi">&#64;DavideTisi</a>,
+Zhiyi Wang <a class="reference external" href="https://github.com/0WellyWang0">&#64;0WellyWang0</a>,
+Cesare Malosso <a class="reference external" href="https://github.com/cesaremalosso">&#64;cesaremalosso</a>,
+Sofiia Chorna <a class="reference external" href="https://github.com/sofiia-chorna">&#64;sofiia-chorna</a></p>
+</dd>
+</dl>
+<p>This example demonstrates how to fine-tune the PET-MAD universal ML potential
+on a new dataset using <a class="reference external" href="https://github.com/metatensor/metatrain">metatrain</a>.
+This allows adapting the model to a specialized task by retraining it on a
+more focused, domain-specific dataset.</p>
+<p><a class="reference external" href="https://arxiv.org/abs/2503.14118">PET-MAD</a> is a universal machine-learning forcefield
+trained on <a class="reference external" href="https://arxiv.org/abs/2506.19674">the MAD dataset</a> that aims to
+incorporate a very high degree of structural diversity.
+The model itself is <a class="reference external" href="https://proceedings.neurips.cc/paper_files/paper/2023/file/fb4a7e3522363907b26a86cc5be627ac-Paper-Conference.pdf">the Point-Edge Transformer (PET)</a>,
+an unconstrained architecture that achieves symmetry compliance through data
+augmentation during training.
+You can see an overview of its usage in this <a class="reference external" href="https://atomistic-cookbook.org/examples/pet-mad/pet-mad.html">introductory example</a>.</p>
+<p>The goal of this recipe is to demonstrate the process, not to reach high accuracy.
+Adjust the dataset size and hyperparameters accordingly if adapting this for an actual
+application.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># sphinx_gallery_thumbnail_number = 2</span>
+</pre></div>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">Counter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">glob</span><span class="w"> </span><span class="kn">import</span> <span class="n">glob</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">urllib.request</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlretrieve</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">ase.io</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">metatrain.utils.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">model_from_checkpoint</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearRegression</span>
+
+
+<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="nb">__import__</span><span class="p">(</span><span class="s2">&quot;builtins&quot;</span><span class="p">),</span> <span class="s2">&quot;get_ipython&quot;</span><span class="p">):</span>
+    <span class="n">get_ipython</span><span class="p">()</span><span class="o">.</span><span class="n">run_line_magic</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">,</span> <span class="s2">&quot;inline&quot;</span><span class="p">)</span>  <span class="c1"># noqa: F821</span>
+</pre></div>
+</div>
+<section id="preparing-for-fine-tuning">
+<h2>Preparing for fine-tuning<a class="headerlink" href="#preparing-for-fine-tuning" title="Link to this heading">¶</a></h2>
+<p>While PET-MAD is trained as a universal model capable of handling a broad range of
+atomic environments, fine-tuning it allows to adapt this general-purpose model to a
+more specialized task. First, we need to get a checkpoint of the pre-trained PET-MAD
+model to start training from it. The checkpoint is stored in the
+<a class="reference external" href="https://huggingface.co/lab-cosmo/pet-mad">lab-codmo Hugging Face repository</a> and can be fetched using wget or curl:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget<span class="w"> </span>https://huggingface.co/lab-cosmo/pet-mad/resolve/v1.1.0/models/pet-mad-v1.1.0.ckpt
+</pre></div>
+</div>
+<p>We’ll download it directly:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">url</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;https://huggingface.co/lab-cosmo/pet-mad/resolve/v1.1.0/models/pet-mad-v1.1.0.ckpt&quot;</span>
+<span class="p">)</span>
+<span class="n">checkpoint_path</span> <span class="o">=</span> <span class="s2">&quot;pet-mad-v1.1.0.ckpt&quot;</span>
+
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">):</span>
+    <span class="n">urlretrieve</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">checkpoint_path</span><span class="p">)</span>
+</pre></div>
+</div>
+<section id="applying-an-atomic-energy-correction">
+<h3>Applying an atomic energy correction<a class="headerlink" href="#applying-an-atomic-energy-correction" title="Link to this heading">¶</a></h3>
+<p>DFT-calculated energies often contain systematic shifts due to the choice of
+functional, basis set, or pseudopotentials. If left uncorrected, such shifts can
+mislead the fine-tuning process.</p>
+<p>On this example we use the sampled subset of ethanol structures from <a class="reference external" href="https://doi.org/10.48550/arXiv.2007.09593">rMD17 dataset</a> with PBE/def2-SVP level of theory which
+is different from the MAD which uses PBEsol and a plane-waves basis set.
+We apply a linear correction based on
+atomic compositions to align our fine-tuning dataset with PET-MAD energy reference.
+First, we define a helper function to load reference energies from PET-MAD.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">load_reference_energies</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract atomic reference energies from the PET-MAD checkpoint.</span>
+
+<span class="sd">    It returns a mapping of elements to their reference energies (eV), e.g.: {&#39;1&#39;:</span>
+<span class="sd">    -1.23, &#39;2&#39;: -5.67, ...}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">checkpoint</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">,</span> <span class="n">weights_only</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">pet_model</span> <span class="o">=</span> <span class="n">model_from_checkpoint</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">,</span> <span class="s2">&quot;finetune&quot;</span><span class="p">)</span>
+
+    <span class="n">energy_values</span> <span class="o">=</span> <span class="n">pet_model</span><span class="o">.</span><span class="n">additive_models</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;energy&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">block</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">atomic_numbers</span> <span class="o">=</span> <span class="n">checkpoint</span><span class="p">[</span><span class="s2">&quot;model_data&quot;</span><span class="p">][</span><span class="s2">&quot;dataset_info&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">atomic_types</span>
+
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">atomic_numbers</span><span class="p">,</span> <span class="n">energy_values</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>For demonstration, the dataset is composed only of 100 structures of ethanol. We fit a
+linear model based on atomic compositions that we use as the energy correction.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;data/ethanol.xyz&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;extxyz&quot;</span><span class="p">)</span>
+
+<span class="c1"># Extract DFT energies and compositions</span>
+<span class="n">dft_energies</span> <span class="o">=</span> <span class="p">[</span><span class="n">atoms</span><span class="o">.</span><span class="n">get_potential_energy</span><span class="p">()</span> <span class="k">for</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">dataset</span><span class="p">]</span>
+<span class="n">compositions</span> <span class="o">=</span> <span class="p">[</span><span class="n">Counter</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">get_atomic_numbers</span><span class="p">())</span> <span class="k">for</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">dataset</span><span class="p">]</span>
+<span class="n">elements</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">element</span> <span class="k">for</span> <span class="n">composition</span> <span class="ow">in</span> <span class="n">compositions</span> <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">composition</span><span class="p">})</span>
+
+<span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">comp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">elements</span><span class="p">]</span> <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">compositions</span><span class="p">])</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dft_energies</span><span class="p">)</span>
+
+<span class="c1"># Fit linear model to estimate DFT per-element energy</span>
+<span class="n">correction_model</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span>
+<span class="n">correction_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+<span class="n">coeffs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">elements</span><span class="p">,</span> <span class="n">correction_model</span><span class="o">.</span><span class="n">coef_</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Apply a correction to each structure</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">get_compositional_energy</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">energy_per_atom</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates total energy from atomic composition and per-atom energies&quot;&quot;&quot;</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">get_atomic_numbers</span><span class="p">())</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">energy_per_atom</span><span class="p">[</span><span class="n">Z</span><span class="p">]</span> <span class="o">*</span> <span class="n">count</span> <span class="k">for</span> <span class="n">Z</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+
+
+<span class="c1"># Get reference energies from PET-MAD</span>
+<span class="n">ref_energies</span> <span class="o">=</span> <span class="n">load_reference_energies</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">)</span>
+
+<span class="c1"># Apply correction</span>
+<span class="k">for</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">E_dft</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">dft_energies</span><span class="p">):</span>
+    <span class="n">E_comp_dft</span> <span class="o">=</span> <span class="n">get_compositional_energy</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">)</span>
+    <span class="n">E_comp_ref</span> <span class="o">=</span> <span class="n">get_compositional_energy</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">ref_energies</span><span class="p">)</span>
+
+    <span class="n">corrected_energy</span> <span class="o">=</span> <span class="n">E_dft</span> <span class="o">-</span> <span class="n">E_comp_dft</span> <span class="o">+</span> <span class="n">E_comp_ref</span> <span class="o">-</span> <span class="n">correction_model</span><span class="o">.</span><span class="n">intercept_</span>
+
+    <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;energy-corrected&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">corrected_energy</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+
+<span class="c1"># Split corrected dataset and save it</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">))</span>
+<span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+<span class="n">n_val</span> <span class="o">=</span> <span class="n">n_test</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
+<span class="n">n_train</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="n">n_val</span> <span class="o">-</span> <span class="n">n_test</span>
+
+<span class="n">train</span> <span class="o">=</span> <span class="p">[</span><span class="n">dataset</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">[:</span><span class="n">n_train</span><span class="p">]]</span>
+<span class="n">val</span> <span class="o">=</span> <span class="p">[</span><span class="n">dataset</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">[</span><span class="n">n_train</span> <span class="p">:</span> <span class="n">n_train</span> <span class="o">+</span> <span class="n">n_val</span><span class="p">]]</span>
+<span class="n">test</span> <span class="o">=</span> <span class="p">[</span><span class="n">dataset</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">[</span><span class="n">n_train</span> <span class="o">+</span> <span class="n">n_val</span> <span class="p">:]]</span>
+
+<span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;data/ethanol_train.xyz&quot;</span><span class="p">,</span> <span class="n">train</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;extxyz&quot;</span><span class="p">)</span>
+<span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;data/ethanol_val.xyz&quot;</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;extxyz&quot;</span><span class="p">)</span>
+<span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;data/ethanol_test.xyz&quot;</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;extxyz&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/pet-finetuning/lib/python3.12/site-packages/metatrain/utils/io.py:211: UserWarning: trying to upgrade an old model checkpoint with unknown version, this might fail and require manual modifications
+  warnings.warn(
+</pre></div>
+</div>
+</section>
+<section id="defines-some-helper-functions">
+<h3>Defines some helper functions<a class="headerlink" href="#defines-some-helper-functions" title="Link to this heading">¶</a></h3>
+<p>We also define a few helper functions to visualize the training results.
+Each training run generates a log, stored in CSV format in the outputs folder.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">parse_training_log</span><span class="p">(</span><span class="n">csv_file</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">csv_file</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+
+    <span class="n">cleaned_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">h</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">headers</span><span class="p">]</span>
+
+    <span class="n">train_log</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span>
+        <span class="n">csv_file</span><span class="p">,</span>
+        <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span>
+        <span class="n">skip_header</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">names</span><span class="o">=</span><span class="n">cleaned_names</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">train_log</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">display_training_curves</span><span class="p">(</span><span class="n">train_log</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plots training and validation losses from the training log&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span> <span class="o">=</span> <span class="n">ax</span>
+
+    <span class="n">ax1</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span>
+        <span class="n">train_log</span><span class="p">[</span><span class="s2">&quot;Epoch&quot;</span><span class="p">],</span>
+        <span class="n">train_log</span><span class="p">[</span><span class="s2">&quot;training_energy_MAE_per_atom&quot;</span><span class="p">],</span>
+        <span class="sa">f</span><span class="s2">&quot;r</span><span class="si">{</span><span class="n">style</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Train. </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span>
+        <span class="n">train_log</span><span class="p">[</span><span class="s2">&quot;Epoch&quot;</span><span class="p">],</span>
+        <span class="n">train_log</span><span class="p">[</span><span class="s2">&quot;validation_energy_MAE_per_atom&quot;</span><span class="p">],</span>
+        <span class="sa">f</span><span class="s2">&quot;b</span><span class="si">{</span><span class="n">style</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Valid. </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">ax2</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span>
+        <span class="n">train_log</span><span class="p">[</span><span class="s2">&quot;Epoch&quot;</span><span class="p">],</span>
+        <span class="n">train_log</span><span class="p">[</span><span class="s2">&quot;training_forces_MAE&quot;</span><span class="p">],</span>
+        <span class="sa">f</span><span class="s2">&quot;r</span><span class="si">{</span><span class="n">style</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Training, F&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span>
+        <span class="n">train_log</span><span class="p">[</span><span class="s2">&quot;Epoch&quot;</span><span class="p">],</span>
+        <span class="n">train_log</span><span class="p">[</span><span class="s2">&quot;validation_forces_MAE&quot;</span><span class="p">],</span>
+        <span class="sa">f</span><span class="s2">&quot;b</span><span class="si">{</span><span class="n">style</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Validation, F&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Epoch&quot;</span><span class="p">)</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Epoch&quot;</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Energy MAE (meV)&quot;</span><span class="p">)</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Force MAE (meV/Å)&quot;</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="train-a-model-from-scratch">
+<h2>Train a model from scratch<a class="headerlink" href="#train-a-model-from-scratch" title="Link to this heading">¶</a></h2>
+<p>We first fit a PET model to the corrected dataset to establish a baseline.
+We use the <cite>metatrain</cite> utility to train the model. The training is configured
+in a YAML file, which specifies training, validation and test set, model
+architecture, optimizer settings, etc. You can learn more about
+the different settings in the <a class="reference external" href="https://metatensor.github.io/metatrain/">metatrain documentation</a>.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+
+<span class="nt">architecture</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pet</span>
+
+<span class="w">  </span><span class="nt">training</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+<span class="w">    </span><span class="nt">num_epochs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span>
+<span class="w">    </span><span class="nt">learning_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1e-4</span>
+<span class="w">    </span>
+
+<span class="c1"># this needs specifying based on the specific dataset</span>
+<span class="nt">training_set</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">systems</span><span class="p">:</span><span class="w"> </span>
+<span class="w">    </span><span class="nt">read_from</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;data/ethanol_train.xyz&quot;</span><span class="w">  </span><span class="c1"># path to the finetuning dataset</span>
+<span class="w">    </span><span class="nt">length_unit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">angstrom</span>
+<span class="w">  </span><span class="nt">targets</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">energy</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;energy-corrected&quot;</span><span class="w">  </span><span class="c1"># name of the target value</span>
+<span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;eV&quot;</span>
+
+<span class="nt">validation_set</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">systems</span><span class="p">:</span><span class="w"> </span>
+<span class="w">    </span><span class="nt">read_from</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;data/ethanol_val.xyz&quot;</span>
+<span class="w">    </span><span class="nt">length_unit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">angstrom</span>
+<span class="w">  </span><span class="nt">targets</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">energy</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;energy-corrected&quot;</span>
+<span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;eV&quot;</span>
+
+<span class="nt">test_set</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">systems</span><span class="p">:</span><span class="w"> </span>
+<span class="w">    </span><span class="nt">read_from</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;data/ethanol_test.xyz&quot;</span>
+<span class="w">    </span><span class="nt">length_unit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">angstrom</span>
+<span class="w">  </span><span class="nt">targets</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">energy</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;energy-corrected&quot;</span>
+<span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;eV&quot;</span>
+</pre></div>
+</div>
+<p>To launch training, you just need to run the following command in the terminal:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mtt<span class="w"> </span>train<span class="w"> </span>&lt;options.yaml&gt;<span class="w"> </span><span class="o">[</span>-o<span class="w"> </span>&lt;output.pt&gt;<span class="o">]</span>
+</pre></div>
+</div>
+<p>Or from Python:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="p">[</span><span class="s2">&quot;mtt&quot;</span><span class="p">,</span> <span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;from_scratch_options.yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="s2">&quot;from_scratch-model.pt&quot;</span><span class="p">],</span>
+    <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>CompletedProcess(args=[&#39;mtt&#39;, &#39;train&#39;, &#39;from_scratch_options.yaml&#39;, &#39;-o&#39;, &#39;from_scratch-model.pt&#39;], returncode=0)
+</pre></div>
+</div>
+<p>The training logs are stored in the <code class="docutils literal notranslate"><span class="pre">outputs/</span></code> directory, with a subdirectory
+named by the date and time of the training run. The model checkpoint is saved as
+<code class="docutils literal notranslate"><span class="pre">model.ckpt</span></code> and the exported model as <code class="docutils literal notranslate"><span class="pre">model.pt</span></code>, unless specified otherwise
+with the <code class="docutils literal notranslate"><span class="pre">-o</span></code> option.</p>
+<p>We can load the latest training log and visualize the training curves
+- we will use them later to compare the fine-tuning results.
+It is clear that training is not converged, and the learning rate is not
+optimal – you can try to adjust the parameters and run for longer.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">csv_file</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;outputs/*/*/train.csv&quot;</span><span class="p">))[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">from_scratch_log</span> <span class="o">=</span> <span class="n">parse_training_log</span><span class="p">(</span><span class="n">csv_file</span><span class="p">)</span>
+<span class="n">display_training_curves</span><span class="p">(</span><span class="n">from_scratch_log</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_pet-ft_001.png" srcset="../../_images/sphx_glr_pet-ft_001.png" alt="pet ft" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>(&lt;Axes: xlabel=&#39;Epoch&#39;, ylabel=&#39;Energy MAE (meV)&#39;&gt;, &lt;Axes: xlabel=&#39;Epoch&#39;, ylabel=&#39;Force MAE (meV/Å)&#39;&gt;)
+</pre></div>
+</div>
+</section>
+<section id="simple-model-fine-tuning">
+<h2>Simple model fine-tuning<a class="headerlink" href="#simple-model-fine-tuning" title="Link to this heading">¶</a></h2>
+<p>Having prepared the dataset and fitted a baseline model “from scratch”,
+we proceed with the training of a fine-tuned model. To this end, we also use the
+<code class="docutils literal notranslate"><span class="pre">metatrain</span></code> package. There are multiple strategies to apply
+fine-tuning, each described in the <a class="reference external" href="https://metatensor.github.io/metatrain/latest/advanced-concepts/fine-tuning.html">documentation</a>.
+In this example we demonstrate a basic full fine-tuning strategy, which adapts all
+model weights to the new dataset starting from the pre-trained PET-MAD checkpoint. The
+process is configured by setting appropriate settings in the YAML options file.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+
+<span class="nt">architecture</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;pet&quot;</span>
+<span class="w">  </span><span class="nt">training</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+<span class="w">    </span><span class="nt">num_epochs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span><span class="w">  </span><span class="c1"># very short period for demonstration</span>
+<span class="w">    </span><span class="nt">learning_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1e-5</span><span class="w">  </span><span class="c1"># small learning rate to stabilize training</span>
+<span class="w">    </span><span class="nt">finetune</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;full&quot;</span><span class="w">  </span><span class="c1"># use fine-tuning strategy</span>
+<span class="w">      </span><span class="nt">read_from</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pet-mad-v1.1.0.ckpt</span><span class="w">  </span><span class="c1"># path to the pretrained checkpoint to start from</span>
+
+<span class="nt">training_set</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">systems</span><span class="p">:</span><span class="w"> </span>
+<span class="w">    </span><span class="nt">read_from</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;data/ethanol_train.xyz&quot;</span><span class="w">  </span><span class="c1"># path to the finetuning dataset</span>
+<span class="w">    </span><span class="nt">length_unit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">angstrom</span>
+<span class="w">  </span><span class="nt">targets</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">energy</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;energy-corrected&quot;</span><span class="w">  </span><span class="c1"># name of the target value</span>
+<span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;eV&quot;</span>
+
+<span class="nt">validation_set</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">systems</span><span class="p">:</span><span class="w"> </span>
+<span class="w">    </span><span class="nt">read_from</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;data/ethanol_val.xyz&quot;</span>
+<span class="w">    </span><span class="nt">length_unit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">angstrom</span>
+<span class="w">  </span><span class="nt">targets</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">energy</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;energy-corrected&quot;</span>
+<span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;eV&quot;</span>
+
+<span class="nt">test_set</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">systems</span><span class="p">:</span><span class="w"> </span>
+<span class="w">    </span><span class="nt">read_from</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;data/ethanol_test.xyz&quot;</span>
+<span class="w">    </span><span class="nt">length_unit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">angstrom</span>
+<span class="w">  </span><span class="nt">targets</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">energy</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;energy-corrected&quot;</span>
+<span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;eV&quot;</span>
+</pre></div>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="p">[</span><span class="s2">&quot;mtt&quot;</span><span class="p">,</span> <span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;full_ft_options.yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="s2">&quot;fine_tune-model.pt&quot;</span><span class="p">],</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>CompletedProcess(args=[&#39;mtt&#39;, &#39;train&#39;, &#39;full_ft_options.yaml&#39;, &#39;-o&#39;, &#39;fine_tune-model.pt&#39;], returncode=0)
+</pre></div>
+</div>
+<p>Comparing the model tranined from scratch (dashed lines) and the fine-tuned one
+(full lines), it is clear that fine-tuning from PET-MAD weights
+leads to much better zero-shot accuracy, and more consistent learning dynamics.
+Obviously it may be possible to tweak differently, and it is not unlikely that
+a large single-purpose training set and long training time might lead to better
+validation error than performing fine tuning.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">csv_file</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;outputs/*/*/train.csv&quot;</span><span class="p">))[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">fine_tune_log</span> <span class="o">=</span> <span class="n">parse_training_log</span><span class="p">(</span><span class="n">csv_file</span><span class="p">)</span>
+
+<span class="n">ax</span> <span class="o">=</span> <span class="n">display_training_curves</span><span class="p">(</span><span class="n">fine_tune_log</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Fine tuning&quot;</span><span class="p">)</span>
+<span class="n">display_training_curves</span><span class="p">(</span><span class="n">from_scratch_log</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;From scratch&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_pet-ft_002.png" srcset="../../_images/sphx_glr_pet-ft_002.png" alt="pet ft" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>(1, 1000)
+</pre></div>
+</div>
+<section id="model-evaluation">
+<h3>Model evaluation<a class="headerlink" href="#model-evaluation" title="Link to this heading">¶</a></h3>
+<p>After the training, <code class="docutils literal notranslate"><span class="pre">mtt</span> <span class="pre">train</span></code> outputs the <code class="docutils literal notranslate"><span class="pre">fine_tune-model.ckpt</span></code>
+and <code class="docutils literal notranslate"><span class="pre">fine_tune-model.pt</span></code> (exported fine-tuned model) files in both the
+current directory and in <code class="docutils literal notranslate"><span class="pre">output/YYYY-MM-DD/HH-MM-SS/</span></code>.</p>
+<p>These can be used together with <cite>metatrain</cite> to evaluate the model on a
+(potentially different) dataset. The evaluation is configured in a YAML file,
+which specifies the dataset to use, and the metrics to compute.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">systems</span><span class="p">:</span><span class="w"> </span>
+<span class="w">  </span><span class="nt">read_from</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">data/ethanol_test.xyz</span>
+<span class="nt">targets</span><span class="p">:</span><span class="w"> </span>
+<span class="w">  </span><span class="nt">energy</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">energy-corrected</span>
+<span class="w">    </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">eV</span>
+</pre></div>
+</div>
+<p>The evaluation can be run from the command line:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mtt<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>fine_tune-model.pt<span class="w"> </span>model_eval.yaml
+</pre></div>
+</div>
+<p>Or from Python:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;mtt&quot;</span><span class="p">,</span> <span class="s2">&quot;eval&quot;</span><span class="p">,</span> <span class="s2">&quot;fine_tune-model.pt&quot;</span><span class="p">,</span> <span class="s2">&quot;model_eval.yaml&quot;</span><span class="p">],</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>CompletedProcess(args=[&#39;mtt&#39;, &#39;eval&#39;, &#39;fine_tune-model.pt&#39;, &#39;model_eval.yaml&#39;], returncode=0)
+</pre></div>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (3 minutes 27.591 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-pet-finetuning-pet-ft-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/b78d6177dacf8738780e6096938179a9/pet-ft.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">pet-ft.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/55f87ac60b353ea9e58b96dcd5c4421a/pet-ft.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">pet-ft.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/27bce914752f4a578d824ec75f40af76/pet-ft.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">recipe:</span> <span class="pre">pet-ft.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../roy-gch/roy-gch.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Generalized Convex Hull construction for the polymorphs of ROY</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../eon-pet-neb/eon-pet-neb.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Finding Reaction Paths with eOn and a Metatomic Potential</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; BSD 3-Clause License, Copyright (c) 2026, The atomistic cookbook team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Fine-tuning the PET-MAD universal potential</a><ul>
+<li><a class="reference internal" href="#preparing-for-fine-tuning">Preparing for fine-tuning</a><ul>
+<li><a class="reference internal" href="#applying-an-atomic-energy-correction">Applying an atomic energy correction</a></li>
+<li><a class="reference internal" href="#defines-some-helper-functions">Defines some helper functions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#train-a-model-from-scratch">Train a model from scratch</a></li>
+<li><a class="reference internal" href="#simple-model-fine-tuning">Simple model fine-tuning</a><ul>
+<li><a class="reference internal" href="#model-evaluation">Model evaluation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script data-domain="atomistic-cookbook.org" defer="defer" src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"></script>
+    <script src="../../_static/all-examples-data.js?v=01c87ff6"></script>
+    <script src="../../_static/daily-recipe.js?v=b5e71911"></script>
+    </body>
+</html>

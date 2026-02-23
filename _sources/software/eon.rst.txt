@@ -1,0 +1,29 @@
+eon
+===
+
+eOn is a distributed client-server architecture for rare event simulations,
+specifically designed for finding saddle points and exploring potential energy
+surfaces over long time scales. It implements methods such as Adaptive Kinetic
+Monte Carlo (AKMC), Nudged Elastic Band (NEB), and dimer searches. The core
+client is written in C++ for performance, while the server and Python interface
+manage the state. Learn more about it on its `homepage <https://eondocs.org>`_
+or `the github repository <https://github.com/TheochemUI/EONgit>`_.
+
+
+
+.. grid:: 1 2 2 3
+    :gutter: 1 1 2 3
+
+    .. grid-item::
+
+        .. card:: Finding Reaction Paths with eOn and a Metatomic Potential
+            :link: ../examples/eon-pet-neb/eon-pet-neb
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/eon-pet-neb/images/thumb/sphx_glr_eon-pet-neb_thumb.png
+                :alt: This example describes how to find the reaction pathway for oxadiazole formation from N₂O and ethylene. We will use the PET-MAD metatomic model to calculate the potential energy and forces.
+                :class: gallery-img
+
+                

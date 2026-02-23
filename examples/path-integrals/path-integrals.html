@@ -1,0 +1,889 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="search" title="Search" href="../../search.html"><link rel="next" title="Periodic Hamiltonian learning" href="../periodic-hamiltonian/periodic-hamiltonian.html"><link rel="prev" title="Path integral metadynamics" href="../pi-metad/pi-metad.html">
+        <link rel="canonical" href="https://atomistic-cookbook.org/examples/path-integrals/path-integrals.html">
+        <link rel="prefetch" href="../../_static/cookbook-icon.svg" as="image">
+
+    <link rel="shortcut icon" href="../../_static/cookbook-icon.png"><!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>Path integral molecular dynamics - The Atomistic Cookbook</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/cookbook.css?v=d86cfb60" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">The Atomistic Cookbook</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/cookbook-icon.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">The Atomistic Cookbook</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../topics/index.html">Recipes grouped by topic</a><input aria-label="Toggle navigation of Recipes grouped by topic" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/sampling.html">Statistical sampling and dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/analysis.html">Analysis and post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/ml-models.html">Machine learning models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/universal.html">Universal ML models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/nqes.html">Nuclear quantum effects</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../software/index.html">Recipes grouped by software used</a><input aria-label="Toggle navigation of Recipes grouped by software used" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../software/chemiscope.html">chemiscope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/cp2k.html">cp2k</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/eon.html">eon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/featomic.html">featomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/gromacs.html">GROMACS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/i-pi.html">i-PI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/lammps.html">LAMMPS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/metatensor.html">metatensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/plumed.html">PLUMED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/scikit-matter.html">scikit-matter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/torch-pme.html">torch-pme</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../all-examples.html">List of all recipes</a><input aria-label="Toggle navigation of List of all recipes" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../dos-align/dos-align.html">A ML model for the electron density of states</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-model/water-model.html">Atomistic Water Model for Molecular Dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../batch-cp2k/reference-trajectory.html">Batch run of CP2K calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../shiftml/shiftml-example.html">Computing NMR shielding tensors using ShiftML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft-nc.html">Conservative fine-tuning for a PET model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermostats/thermostats.html">Constant-temperature MD and thermostats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../polarizability/polarizability.html">Equivariant linear model for polarizability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../learn-tensors-with-mcov/learn-tensors-with-mcov.html">Equivariant model for tensorial properties based on scalar features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../eon-pet-neb/eon-pet-neb.html">Finding Reaction Paths with eOn and a Metatomic Potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft.html">Fine-tuning the PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../roy-gch/roy-gch.html">Generalized Convex Hull construction for the polymorphs of ROY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hamiltonian-qm7/hamiltonian-qm7.html">Hamiltonian Learning for Molecules with Indirect Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../torchpme/torchpme_learning.html">Learning Capabilities with torchpme</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lpr/lpr.html">Local Prediction Rigidity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lode-linear/lode-linear.html">Long-distance Equivariants: a tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flashmd/flashmd-demo.html">Long-stride trajectories with a universal FlashMD model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-nc/pet-mad-nc.html">MD using direct-force predictions with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metatomic-plumed/metatomic-plumed.html">ML collective variables in PLUMED with metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-mts-rpc/mts-rpc.html">Multiple time stepping and ring-polymer contraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../gaas-map/gaas-map.html">PCA/PCovR Visualization of a training dataset for a potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-metad/pi-metad.html">Path integral metadynamics</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Path integral molecular dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../periodic-hamiltonian/periodic-hamiltonian.html">Periodic Hamiltonian learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../heat-capacity/heat-capacity.html">Quantum heat capacity of water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ring-polymer-instanton/rpi-rates.html">Ring Polymer Instanton Rate Theory: Tunneling Rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rotate-equivariants/rotate-equivariants.html">Rotating equivariants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sample-selection/sample-selection.html">Sample and Feature Selection with FPS and CUR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad/pet-mad.html">The PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-uq/pet-mad-uq.html">Uncertainty Quantification with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-pulsed/water-pulsed.html">Water orientation in a pulsed electric field</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../downloading.html">Downloading and running the recipes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing a recipe</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-examples-path-integrals-path-integrals-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="path-integral-molecular-dynamics">
+<span id="sphx-glr-examples-path-integrals-path-integrals-py"></span><h1>Path integral molecular dynamics<a class="headerlink" href="#path-integral-molecular-dynamics" title="Link to this heading">¶</a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Authors<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Michele Ceriotti <a class="reference external" href="https://github.com/ceriottm/">&#64;ceriottm</a></p>
+</dd>
+</dl>
+<p>This example shows how to run a path integral molecular dynamics
+simulation using <code class="docutils literal notranslate"><span class="pre">i-PI</span></code>, analyze the output and visualize the
+trajectory in <code class="docutils literal notranslate"><span class="pre">chemiscope</span></code>. It uses <a class="reference external" href="http://lammps.org">LAMMPS</a>
+as the driver to simulate the <a class="reference external" href="http://doi.org/10.1063/1.3167790">q-TIP4P/f water
+model</a>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">chemiscope</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ipi</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</pre></div>
+</div>
+<section id="quantum-nuclear-effects-and-path-integral-methods">
+<h2>Quantum nuclear effects and path integral methods<a class="headerlink" href="#quantum-nuclear-effects-and-path-integral-methods" title="Link to this heading">¶</a></h2>
+<p>The Born-Oppenheimer approximation separates the joint quantum mechanical
+problem for electrons and nuclei into two independent problems. Even though
+often one makes the additional approximation of treating nuclei as classical
+particles, this is not necessary, and in some cases (typically when H atoms are
+present) can add considerable error.</p>
+<figure class="align-center" id="id2">
+<a class="reference internal image-reference" href="../../_images/pimd-slices-round.png"><img alt="../../_images/pimd-slices-round.png" src="../../_images/pimd-slices-round.png" style="width: 600px;" />
+</a>
+<figcaption>
+<p><span class="caption-text">A representation of the ring-polymer Hamiltonian for a water molecule.</span><a class="headerlink" href="#id2" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>In order to describe the quantum mechanical nature of light nuclei
+(nuclear quantum effects) one of the most widely-applicable methods uses
+the <em>path integral formalism</em>  to map the quantum partition function of a
+set of distinguishable particles onto the classical partition function of
+<em>ring polymers</em> composed by multiple beads (replicas) with
+corresponding atoms in adjacent replicas being connected by harmonic
+springs.
+<a class="reference external" href="https://tinyurl.com/bdfhk2tx">The textbook by Tuckerman</a>
+contains a pedagogic introduction to the topic, while
+<a class="reference external" href="https://doi.org/10.1063/1.3489925">this paper</a> outlines the implementation
+used in <code class="docutils literal notranslate"><span class="pre">i-PI</span></code>.</p>
+<p>The classical partition function of the path converges to quantum statistics
+in the limit of a large number of replicas. In this example, we will use a
+technique based on generalized Langevin dynamics, known as
+<a class="reference external" href="http://doi.org/10.1103/PhysRevLett.109.100604">PIGLET</a> to accelerate the
+convergence.</p>
+</section>
+<section id="running-pimd-calculations-with-i-pi">
+<h2>Running PIMD calculations with <code class="docutils literal notranslate"><span class="pre">i-PI</span></code><a class="headerlink" href="#running-pimd-calculations-with-i-pi" title="Link to this heading">¶</a></h2>
+<p><a class="reference external" href="http://ipi-code.org">i-PI</a> is based on a client-server model, with <code class="docutils literal notranslate"><span class="pre">i-PI</span></code>
+controlling the nuclear dynamics (in this case sampling the path Hamiltonian using
+molecular dynamics) while the calculation of energies and forces is delegated to
+an external client program, in this example <code class="docutils literal notranslate"><span class="pre">LAMMPS</span></code>.</p>
+<p>An i-PI calculation is specified by an XML file.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Open and read the XML file</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;data/input_pimd.xml&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+    <span class="n">xml_content</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">xml_content</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;simulation verbosity=&#39;medium&#39; safe_stride=&#39;100&#39;&gt;
+  &lt;output prefix=&#39;simulation&#39;&gt;
+    &lt;properties stride=&#39;1&#39; filename=&#39;out&#39;&gt;  [ step, time{picosecond}, conserved{electronvolt}, temperature{kelvin}, kinetic_cv{electronvolt}, potential{electronvolt}, pressure_cv{megapascal}, kinetic_td{electronvolt} ] &lt;/properties&gt;
+    &lt;trajectory filename=&#39;pos&#39; stride=&#39;20&#39;&gt; positions &lt;/trajectory&gt;
+    &lt;trajectory filename=&#39;kin&#39; stride=&#39;20&#39;&gt; kinetic_cv &lt;/trajectory&gt;
+    &lt;trajectory filename=&#39;kod&#39; stride=&#39;20&#39;&gt; kinetic_od &lt;/trajectory&gt;
+  &lt;/output&gt;
+  &lt;total_steps&gt; 200 &lt;/total_steps&gt;
+  &lt;prng&gt;
+    &lt;seed&gt; 32342 &lt;/seed&gt;
+  &lt;/prng&gt;
+  &lt;ffsocket name=&#39;lmpserial&#39; mode=&#39;unix&#39; pbc=&#39;false&#39;&gt;
+      &lt;address&gt;h2o-lammps&lt;/address&gt; &lt;latency&gt; 1e-4 &lt;/latency&gt;
+  &lt;/ffsocket&gt;
+  &lt;system&gt;
+    &lt;initialize nbeads=&#39;8&#39;&gt;
+      &lt;file mode=&#39;pdb&#39; units=&#39;angstrom&#39;&gt; data/water_32.pdb &lt;/file&gt;
+      &lt;velocities mode=&#39;thermal&#39; units=&#39;kelvin&#39;&gt; 298 &lt;/velocities&gt;
+    &lt;/initialize&gt;
+    &lt;forces&gt;
+      &lt;force forcefield=&#39;lmpserial&#39;&gt; lmpserial &lt;/force&gt;
+    &lt;/forces&gt;
+    &lt;ensemble&gt;
+      &lt;temperature units=&#39;kelvin&#39;&gt;298&lt;/temperature&gt;
+    &lt;/ensemble&gt;
+    &lt;motion mode=&#39;dynamics&#39;&gt;
+      &lt;dynamics mode=&#39;nvt&#39;&gt;
+        &lt;thermostat mode=&#39;pile_g&#39;&gt;
+          &lt;tau units=&quot;femtosecond&quot;&gt; 5.0 &lt;/tau&gt;
+        &lt;/thermostat&gt;
+        &lt;timestep units=&#39;femtosecond&#39;&gt; 0.5 &lt;/timestep&gt;
+      &lt;/dynamics&gt;
+    &lt;/motion&gt;
+  &lt;/system&gt;
+&lt;/simulation&gt;
+</pre></div>
+</div>
+<p>NB1: In a realistic simulation you may want to increase the field
+<code class="docutils literal notranslate"><span class="pre">total_steps</span></code>, to simulate at least a few 100s of picoseconds.</p>
+<p>NB2: To converge a simulation of water at room temperature, you
+typically need at least 32 beads. We will see later how to accelerate
+convergence using a colored-noise thermostat, but you can try to
+modify the input to check convergence with conventional PIMD</p>
+<p>i-PI and lammps should be run separately, and it is possible to
+launch separate lammps processes to parallelize the evaluation over
+the beads. On the the command line, this amounts to launching</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>i-pi<span class="w"> </span>data/input_pimd.xml<span class="w"> </span>&gt;<span class="w"> </span>log<span class="w"> </span><span class="p">&amp;</span>
+sleep<span class="w"> </span><span class="m">2</span>
+lmp<span class="w"> </span>-in<span class="w"> </span>data/in.lmp<span class="w"> </span><span class="p">&amp;</span>
+lmp<span class="w"> </span>-in<span class="w"> </span>data/in.lmp<span class="w"> </span><span class="p">&amp;</span>
+</pre></div>
+</div>
+<p>Note how <code class="docutils literal notranslate"><span class="pre">i-PI</span></code> and <code class="docutils literal notranslate"><span class="pre">LAMMPS</span></code> are completely independent, and
+therefore need a separate set of input files. The client-side communication
+in <code class="docutils literal notranslate"><span class="pre">LAMMPS</span></code> is described in the <code class="docutils literal notranslate"><span class="pre">fix_ipi</span></code> section, that matches the socket
+name and mode defined in the <code class="docutils literal notranslate"><span class="pre">ffsocket</span></code> field in the <code class="docutils literal notranslate"><span class="pre">i-PI</span></code> file.</p>
+<p>We can launch the external processes from a Python script as follows</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ipi_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;i-pi&quot;</span><span class="p">,</span> <span class="s2">&quot;data/input_pimd.xml&quot;</span><span class="p">])</span>
+<span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># wait for i-PI to start</span>
+<span class="n">lmp_process</span> <span class="o">=</span> <span class="p">[</span><span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;lmp&quot;</span><span class="p">,</span> <span class="s2">&quot;-in&quot;</span><span class="p">,</span> <span class="s2">&quot;data/in.lmp&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>If you run this in a notebook, you can go ahead and start loading
+output files <em>before</em> i-PI and lammps have finished running, by
+skipping this cell</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ipi_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+<span class="n">lmp_process</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+<span class="n">lmp_process</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>1
+</pre></div>
+</div>
+<section id="analyzing-the-simulation">
+<h3>Analyzing the simulation<a class="headerlink" href="#analyzing-the-simulation" title="Link to this heading">¶</a></h3>
+<p>After the simulation has run, you can visualize and post-process the trajectory data.
+Note that i-PI prints a separate trajectory for each bead, as structural properties
+can be computed averaging over the configurations of any of the beads.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># drops first frame where all atoms overlap</span>
+<span class="n">output_data</span><span class="p">,</span> <span class="n">output_desc</span> <span class="o">=</span> <span class="n">ipi</span><span class="o">.</span><span class="n">read_output</span><span class="p">(</span><span class="s2">&quot;simulation.out&quot;</span><span class="p">)</span>
+<span class="n">traj_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">ipi</span><span class="o">.</span><span class="n">read_trajectory</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;simulation.pos_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.xyz&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>The simulation parameters are pushed at the limits: with the aggressive stochastic
+thermostatting and the high-frequency normal modes of the ring polymer, there are
+fairly large fluctuations of the conserved quantity. This is usually not affecting
+physical observables, but if you see this level of drift in a production run, check
+carefully for convergence and stability with a reduced time step.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fix</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;potential&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;potential&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+    <span class="s2">&quot;b-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Potential, $V$&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;conserved&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;conserved&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+    <span class="s2">&quot;r-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Conserved, $H$&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$t$ / ps&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;energy / eV&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_path-integrals_001.png" srcset="../../_images/sphx_glr_path-integrals_001.png" alt="path integrals" class = "sphx-glr-single-img"/><p>While the potential energy is simply the mean over the beads of the
+energy of individual replicas, computing the kinetic energy requires
+averaging special quantities that involve also the correlations between beads.
+Here we compare two of these <em>estimators</em>: the ‘thermodynamic’ estimator becomes
+statistically inefficient when increasing the number of beads, whereas the
+‘centroid virial’ estimator remains well-behaved. Note how quickly these estimators
+equilibrate to roughly their stationary value, much faster than the equilibration
+of the potential energy above. This is thanks to the <code class="docutils literal notranslate"><span class="pre">pile_g</span></code> thermostat
+(see <a class="reference external" href="http://doi.org/10.1063/1.3489925">DOI:10.1063/1.3489925</a>) that is
+optimally coupled to the normal modes of the ring polymer.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fix</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;kinetic_cv&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;b-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Centroid virial, $K_</span><span class="si">{CV}</span><span class="s2">$&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;kinetic_td&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;r-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Thermodynamic, $K_</span><span class="si">{TD}</span><span class="s2">$&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$t$ / ps&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;energy / eV&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_path-integrals_002.png" srcset="../../_images/sphx_glr_path-integrals_002.png" alt="path integrals" class = "sphx-glr-single-img"/><p>You can also visualize the (very short) trajectory in a way that highlights the fast
+spreading out of the beads of the ring polymer. We use <code class="docutils literal notranslate"><span class="pre">chemiscope</span></code>’s ability to
+visualize custom shaped to interleave the trajectories of the beads, forming a
+trajectory that shows the connections between the replicas of each atom. Each atom
+and its connections are color-coded.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">nbeads</span><span class="p">,</span> <span class="n">nframes</span><span class="p">,</span> <span class="n">natoms</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="nb">len</span><span class="p">(</span><span class="n">traj_data</span><span class="p">),</span>
+    <span class="nb">len</span><span class="p">(</span><span class="n">traj_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+    <span class="nb">len</span><span class="p">(</span><span class="n">traj_data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]),</span>
+<span class="p">)</span>
+
+<span class="c1"># creates frames with all beads, so we can use periodic boundary conditions when</span>
+<span class="c1"># computing distances</span>
+<span class="n">full_frames</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nframes</span><span class="p">):</span>
+    <span class="n">struc</span> <span class="o">=</span> <span class="n">traj_data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nbeads</span><span class="p">):</span>
+        <span class="n">struc</span> <span class="o">+=</span> <span class="n">traj_data</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">full_frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">struc</span><span class="p">)</span>
+
+<span class="n">distance_vectors</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">full_frames</span><span class="p">[</span><span class="n">frame_i</span><span class="p">]</span><span class="o">.</span><span class="n">get_distance</span><span class="p">(</span>
+        <span class="n">bead_i</span> <span class="o">*</span> <span class="n">natoms</span> <span class="o">+</span> <span class="n">atom_i</span><span class="p">,</span>
+        <span class="p">((</span><span class="n">bead_i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="n">nbeads</span><span class="p">)</span> <span class="o">*</span> <span class="n">natoms</span> <span class="o">+</span> <span class="n">atom_i</span><span class="p">,</span>
+        <span class="n">mic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">vector</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">frame_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nframes</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">bead_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nbeads</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">atom_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">natoms</span><span class="p">)</span>
+<span class="p">]</span>
+
+<span class="n">paths_shapes</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;cylinder&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;global&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">},</span>
+        <span class="s2">&quot;atom&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;vector&quot;</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">tolist</span><span class="p">()}</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">distance_vectors</span><span class="p">],</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+<span class="n">properties</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;atom_id&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="n">atom_i</span>
+        <span class="k">for</span> <span class="n">frame_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nframes</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">bead_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nbeads</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">atom_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">natoms</span><span class="p">)</span>
+    <span class="p">],</span>
+    <span class="s2">&quot;bead_id&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="n">bead_i</span>
+        <span class="k">for</span> <span class="n">frame_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nframes</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">bead_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nbeads</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">atom_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">natoms</span><span class="p">)</span>
+    <span class="p">],</span>
+<span class="p">}</span>
+
+<span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;structure&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;atoms&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;keepOrientation&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;property&quot;</span><span class="p">:</span> <span class="s2">&quot;bead_id&quot;</span><span class="p">,</span> <span class="s2">&quot;palette&quot;</span><span class="p">:</span> <span class="s2">&quot;hsv (periodic)&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;bonds&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="s2">&quot;paths&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;environments&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;activated&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+            <span class="s2">&quot;unitCell&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+
+<span class="n">chemiscope</span><span class="o">.</span><span class="n">show</span><span class="p">(</span>
+    <span class="n">full_frames</span><span class="p">,</span>
+    <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span>
+    <span class="n">environments</span><span class="o">=</span><span class="n">chemiscope</span><span class="o">.</span><span class="n">all_atomic_environments</span><span class="p">(</span><span class="n">full_frames</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">),</span>
+    <span class="n">shapes</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;paths&quot;</span><span class="p">:</span> <span class="n">paths_shapes</span><span class="p">},</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;structure&quot;</span><span class="p">,</span>
+    <span class="n">settings</span><span class="o">=</span><span class="n">settings</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<!-- begin headers -->
+<!-- Load all dependencies -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
+
+<!-- JS scripts -->
+<script src="../../_static/chemiscope.min.js"></script>
+<script src="../../_static/chemiscope-sphinx.js"></script>
+
+<!-- CSS styles -->
+<link rel="stylesheet" href="../../_static/chemiscope-sphinx.css" type="text/css" />
+<!-- end headers -->
+
+<!-- Error display -->
+<div id="chsp-713c5737-9d34-4a03-96c2-c8b6811a4a00-error-display" class="chemiscope-sphinx-error">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-713c5737-9d34-4a03-96c2-c8b6811a4a00-error-display')">
+        &times;
+    </button>
+</div>
+
+<!-- Warning Display -->
+<div id="chsp-713c5737-9d34-4a03-96c2-c8b6811a4a00-warning-display" class="chemiscope-sphinx-warning">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-713c5737-9d34-4a03-96c2-c8b6811a4a00-warning-display')">
+        &times;
+    </button>
+</div>
+<div style="padding: 0.5rem 1.25rem" />
+
+<!-- Loading Spinner -->
+<div id="chsp-713c5737-9d34-4a03-96c2-c8b6811a4a00-loading" class="chemiscope-sphinx-spinner">
+    <img src="../../_static/chemiscope-loading.svg" alt="Loading icon" />
+</div>
+
+<!-- Chemiscope Visualization -->
+<div id="chsp-713c5737-9d34-4a03-96c2-c8b6811a4a00">
+    <!-- This will be replaced by the chemiscope HTML -->
+</div>
+
+<!-- Load Visualization Script -->
+<script>
+    loadChemiscopeSphinx('chsp-713c5737-9d34-4a03-96c2-c8b6811a4a00', '../../_datasets/c5bcad5ccda10a3aa027b276aa6b62aa4613dcebdb63394d3fc16258cfcce32b-fig_path-integrals_001.json.gz', 'structure', '2000.0');
+</script>
+<div class="output_subarea output_html rendered_html output_result">
+
+</div>
+<br />
+<br /></section>
+</section>
+<section id="accelerating-pimd-with-a-piglet-thermostat">
+<h2>Accelerating PIMD with a PIGLET thermostat<a class="headerlink" href="#accelerating-pimd-with-a-piglet-thermostat" title="Link to this heading">¶</a></h2>
+<p>The simulations in the previous sections are very far from converged – typically
+one would need approximately 32 replicas to converge a simulation of
+room-temperature water. To address this problem we will use a method based on
+generalized Langevin equations, called
+<a class="reference external" href="http://doi.org/10.1103/PhysRevLett.109.100604">PIGLET</a></p>
+<p>The input file is <code class="docutils literal notranslate"><span class="pre">input_piglet.xml</span></code>, that only differs by the definition of
+the thermostat, that uses a <code class="docutils literal notranslate"><span class="pre">nm_gle</span></code> mode in which each normal mode
+of the ring polymer is attached to a different colored-noise Generalized Langevin
+equation. This makes it possible to converge exactly the simulation results with
+a small number of replicas, and to accelerate greatly convergence for realistic
+systems such as this. The thermostat parameters can be generated on
+<a class="reference external" href="https://tinyurl.com/4y2e45jx">the GLE4MD website</a></p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ipi_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;i-pi&quot;</span><span class="p">,</span> <span class="s2">&quot;data/input_piglet.xml&quot;</span><span class="p">])</span>
+<span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># wait for i-PI to start</span>
+<span class="n">lmp_process</span> <span class="o">=</span> <span class="p">[</span><span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;lmp&quot;</span><span class="p">,</span> <span class="s2">&quot;-in&quot;</span><span class="p">,</span> <span class="s2">&quot;data/in.lmp&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">)]</span>
+
+<span class="n">ipi_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+<span class="n">lmp_process</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+<span class="n">lmp_process</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>1
+</pre></div>
+</div>
+<p>The mean potential energy from the PIGLET trajectory is higher than that for the
+PIMD one, because it is closer to the converged value (try to run a PIMD trajectory
+with 64 beads for comparison)</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># drops first frame</span>
+<span class="n">output_gle</span><span class="p">,</span> <span class="n">desc_gle</span> <span class="o">=</span> <span class="n">ipi</span><span class="o">.</span><span class="n">read_output</span><span class="p">(</span><span class="s2">&quot;simulation_piglet.out&quot;</span><span class="p">)</span>
+<span class="n">traj_gle</span> <span class="o">=</span> <span class="p">[</span><span class="n">ipi</span><span class="o">.</span><span class="n">read_trajectory</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;simulation_piglet.pos_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.xyz&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">)]</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;potential&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;potential&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+    <span class="s2">&quot;b--&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;PIMD&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">output_gle</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+    <span class="n">output_gle</span><span class="p">[</span><span class="s2">&quot;potential&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">output_gle</span><span class="p">[</span><span class="s2">&quot;potential&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+    <span class="s2">&quot;b-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;PIGLET&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$t$ / ps&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;energy / eV&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_path-integrals_003.png" srcset="../../_images/sphx_glr_path-integrals_003.png" alt="path integrals" class = "sphx-glr-single-img"/><p>However, you should be somewhat careful: PIGLET converges <em>some</em> but not all the
+correlations within a path. For instance, it is designed to converge the
+centroid-virial estimator for the kinetic energy, but not the thermodynamic
+estimator. For the same reason, don’t try to look at equilibration in terms of
+the mean temperature: it won’t match the target value, because PIGLET uses a
+Langevin equation that breaks the classical fluctuation-dissipation theorem, and
+generates a steady-state distribution that mimics quantum fluctuations.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fix</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;kinetic_cv&quot;</span><span class="p">],</span> <span class="s2">&quot;b--&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;PIMD, $K_</span><span class="si">{CV}</span><span class="s2">$&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">output_gle</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span> <span class="n">output_gle</span><span class="p">[</span><span class="s2">&quot;kinetic_cv&quot;</span><span class="p">],</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;PIGLET, $K_</span><span class="si">{CV}</span><span class="s2">$&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;kinetic_td&quot;</span><span class="p">],</span> <span class="s2">&quot;r--&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;PIMD, $K_</span><span class="si">{TD}</span><span class="s2">$&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">output_gle</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span> <span class="n">output_gle</span><span class="p">[</span><span class="s2">&quot;kinetic_td&quot;</span><span class="p">],</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;PIGLET, $K_</span><span class="si">{TD}</span><span class="s2">$&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$t$ / ps&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;energy / eV&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_path-integrals_004.png" srcset="../../_images/sphx_glr_path-integrals_004.png" alt="path integrals" class = "sphx-glr-single-img"/><section id="kinetic-energy-tensors">
+<h3>Kinetic energy tensors<a class="headerlink" href="#kinetic-energy-tensors" title="Link to this heading">¶</a></h3>
+<p>While we’re at it, let’s do something more complicated (and instructive).
+Classically, the momentum distribution of any atom is isotropic, so the
+kinetic energy tensor (KET) <span class="math notranslate nohighlight">\(\mathbf{p}\mathbf{p}^T/2m\)</span> is a constant
+times the identity matrix. Quantum mechanically, the kinetic energy tensor
+has more structure, that reflects the higher kinetic energy of particles
+along directions with stiff bonds. We can compute a moving average of the
+centroid virial estimator of the KET, and plot it to show the direction
+of anisotropy. Note that there are some subtleties connected with the
+evaluation of the moving average, see e.g.
+<a class="reference external" href="http://doi.org/10.1103/PhysRevLett.109.100604">DOI:10.1103/PhysRevLett.109.100604</a></p>
+<p>We first need to postprocess the components of the kinetic energy tensors
+(that i-PI prints out separating the diagonal and off-diagonal bits), averaging
+them over the last 10 frames and combining them with the centroid configuration
+from the last frame in the trajectory.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">kinetic_cv</span> <span class="o">=</span> <span class="n">ipi</span><span class="o">.</span><span class="n">read_trajectory</span><span class="p">(</span><span class="s2">&quot;simulation_piglet.kin.xyz&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+<span class="n">kinetic_od</span> <span class="o">=</span> <span class="n">ipi</span><span class="o">.</span><span class="n">read_trajectory</span><span class="p">(</span><span class="s2">&quot;simulation_piglet.kod.xyz&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+<span class="n">kinetic_tens</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">k</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="s2">&quot;kinetic_cv&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kinetic_cv</span><span class="p">[</span><span class="o">-</span><span class="mi">10</span><span class="p">:]])</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">k</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="s2">&quot;kinetic_od&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kinetic_od</span><span class="p">[</span><span class="o">-</span><span class="mi">10</span><span class="p">:]])</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">centroid</span> <span class="o">=</span> <span class="n">traj_gle</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">centroid</span><span class="o">.</span><span class="n">positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">positions</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">traj_gle</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">centroid</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="s2">&quot;kinetic_cv&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kinetic_tens</span>
+</pre></div>
+</div>
+<p>We can then view these in <code class="docutils literal notranslate"><span class="pre">chemiscope</span></code>, setting the proper parameters to
+visualize the ellipsoids associated with the KET. Note that some KETs have
+negative eigenvalues, because we are averaging over a few frames, which is
+insufficient to converge the estimator fully.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ellipsoids</span> <span class="o">=</span> <span class="n">chemiscope</span><span class="o">.</span><span class="n">ase_tensors_to_ellipsoids</span><span class="p">(</span>
+    <span class="p">[</span><span class="n">centroid</span><span class="p">],</span> <span class="s2">&quot;kinetic_cv&quot;</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">force_positive</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="n">chemiscope</span><span class="o">.</span><span class="n">show</span><span class="p">(</span>
+    <span class="p">[</span><span class="n">centroid</span><span class="p">],</span>
+    <span class="n">shapes</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;kinetic_cv&quot;</span><span class="p">:</span> <span class="n">ellipsoids</span><span class="p">},</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;structure&quot;</span><span class="p">,</span>
+    <span class="n">settings</span><span class="o">=</span><span class="n">chemiscope</span><span class="o">.</span><span class="n">quick_settings</span><span class="p">(</span>
+        <span class="n">structure_settings</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;kinetic_cv&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;unitCell&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+
+
+<!-- Error display -->
+<div id="chsp-ff531df2-48c7-408b-9b8d-ca8bf0089237-error-display" class="chemiscope-sphinx-error">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-ff531df2-48c7-408b-9b8d-ca8bf0089237-error-display')">
+        &times;
+    </button>
+</div>
+
+<!-- Warning Display -->
+<div id="chsp-ff531df2-48c7-408b-9b8d-ca8bf0089237-warning-display" class="chemiscope-sphinx-warning">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-ff531df2-48c7-408b-9b8d-ca8bf0089237-warning-display')">
+        &times;
+    </button>
+</div>
+<div style="padding: 0.5rem 1.25rem" />
+
+<!-- Loading Spinner -->
+<div id="chsp-ff531df2-48c7-408b-9b8d-ca8bf0089237-loading" class="chemiscope-sphinx-spinner">
+    <img src="../../_static/chemiscope-loading.svg" alt="Loading icon" />
+</div>
+
+<!-- Chemiscope Visualization -->
+<div id="chsp-ff531df2-48c7-408b-9b8d-ca8bf0089237">
+    <!-- This will be replaced by the chemiscope HTML -->
+</div>
+
+<!-- Load Visualization Script -->
+<script>
+    loadChemiscopeSphinx('chsp-ff531df2-48c7-408b-9b8d-ca8bf0089237', '../../_datasets/39fdb1f29d4e9af602ee514405057ba7fb555e9684c1046cd084e645ee6f4642-fig_path-integrals_002.json.gz', 'structure', '2000.0');
+</script>
+<div class="output_subarea output_html rendered_html output_result">
+
+</div>
+<br />
+<br /><p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 17.154 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-path-integrals-path-integrals-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/fece03724daaa69643cea3d483b9c18e/path-integrals.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">path-integrals.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/e7554e760ee8c061289c684f5c666feb/path-integrals.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">path-integrals.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/e389cfcd09e1fc1fab157bbb32fe0788/path-integrals.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">recipe:</span> <span class="pre">path-integrals.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../periodic-hamiltonian/periodic-hamiltonian.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Periodic Hamiltonian learning</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../pi-metad/pi-metad.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Path integral metadynamics</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; BSD 3-Clause License, Copyright (c) 2026, The atomistic cookbook team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Path integral molecular dynamics</a><ul>
+<li><a class="reference internal" href="#quantum-nuclear-effects-and-path-integral-methods">Quantum nuclear effects and path integral methods</a></li>
+<li><a class="reference internal" href="#running-pimd-calculations-with-i-pi">Running PIMD calculations with <code class="docutils literal notranslate"><span class="pre">i-PI</span></code></a><ul>
+<li><a class="reference internal" href="#analyzing-the-simulation">Analyzing the simulation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#accelerating-pimd-with-a-piglet-thermostat">Accelerating PIMD with a PIGLET thermostat</a><ul>
+<li><a class="reference internal" href="#kinetic-energy-tensors">Kinetic energy tensors</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script data-domain="atomistic-cookbook.org" defer="defer" src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"></script>
+    <script src="../../_static/all-examples-data.js?v=01c87ff6"></script>
+    <script src="../../_static/daily-recipe.js?v=b5e71911"></script>
+    </body>
+</html>

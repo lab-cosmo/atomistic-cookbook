@@ -1,0 +1,92 @@
+LAMMPS
+======
+
+LAMMPS is a classical molecular dynamics (MD) code, with a focus on materials
+simulations. It includes a wealth of interatomic potentials, and of basic and
+advanced molecular simulations techniques, and is highly parallelized using an
+efficient domain decomposition scheme. Learn more about LAMMPS on its `homepage
+<https://www.lammps.org>`_.
+
+
+
+.. grid:: 1 2 2 3
+    :gutter: 1 1 2 3
+
+    .. grid-item::
+
+        .. card:: Constant-temperature MD and thermostats
+            :link: ../examples/thermostats/thermostats
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/thermostats/images/thumb/sphx_glr_thermostats_thumb.png
+                :alt: This recipe gives a practical introduction to finite-temperature molecular dynamics simulations, and provides a guide to choose the most appropriate thermostat for the simulation at hand.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Path integral molecular dynamics
+            :link: ../examples/path-integrals/path-integrals
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/path-integrals/images/thumb/sphx_glr_path-integrals_thumb.png
+                :alt: This example shows how to run a path integral molecular dynamics simulation using i-PI, analyze the output and visualize the trajectory in chemiscope. It uses LAMMPS as the driver to simulate the q-TIP4P/f water model.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Quantum heat capacity of water
+            :link: ../examples/heat-capacity/heat-capacity
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/heat-capacity/images/thumb/sphx_glr_heat-capacity_thumb.png
+                :alt: This example shows how to estimate the heat capacity of liquid water from a path integral molecular dynamics simulation. The dynamics are run with i-PI, and LAMMPS is used as the driver to simulate the q-TIP4P/f water model.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Atomistic Water Model for Molecular Dynamics
+            :link: ../examples/water-model/water-model
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/water-model/images/thumb/sphx_glr_water-model_thumb.png
+                :alt: In this example, we demonstrate how to construct a metatomic model for flexible three and four-point water model, with parameters optimized for use together with quantum-nuclear-effects-aware path integral simulations (cf. Habershon et al., JCP (2009)). The model also demonstrates the use of torch-pme, a Torch library for long-range interactions, and uses the resulting model to perform demonstrative molecular dynamics simulations.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: The PET-MAD universal potential
+            :link: ../examples/pet-mad/pet-mad
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/pet-mad/images/thumb/sphx_glr_pet-mad_thumb.png
+                :alt: This example demonstrates how to use the PET-MAD model with ASE, i-PI and LAMMPS. PET-MAD is a "universal" machine-learning forcefield trained on a dataset that aims to incorporate a very high degree of structural diversity.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: ML collective variables in PLUMED with metatomic
+            :link: ../examples/metatomic-plumed/metatomic-plumed
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/metatomic-plumed/images/thumb/sphx_glr_metatomic-plumed_thumb.png
+                :alt: This example shows how to build a metatomic model that computes order parameters for a Lennard-Jones cluster, and how to use it with the PLUMED package to run a metadynamics simulation.
+                :class: gallery-img
+
+                

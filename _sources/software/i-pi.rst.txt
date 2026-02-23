@@ -1,0 +1,158 @@
+i-PI
+====
+
+i-PI is a universal force engine interface written in Python, designed to be
+used together with an ab-initio, machine-learned, or force-field based
+evaluation of the interactions between the atoms. You can see learn more about
+it on the `ipi-code website <http://ipi-code.org>`_, the `documentation pages
+<http://ipi-code.org/i-pi>`_ or `the github repository
+<https://github.com/i-pi/i-pi>`_.
+
+
+
+.. grid:: 1 2 2 3
+    :gutter: 1 1 2 3
+
+    .. grid-item::
+
+        .. card:: Constant-temperature MD and thermostats
+            :link: ../examples/thermostats/thermostats
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/thermostats/images/thumb/sphx_glr_thermostats_thumb.png
+                :alt: This recipe gives a practical introduction to finite-temperature molecular dynamics simulations, and provides a guide to choose the most appropriate thermostat for the simulation at hand.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Path integral molecular dynamics
+            :link: ../examples/path-integrals/path-integrals
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/path-integrals/images/thumb/sphx_glr_path-integrals_thumb.png
+                :alt: This example shows how to run a path integral molecular dynamics simulation using i-PI, analyze the output and visualize the trajectory in chemiscope. It uses LAMMPS as the driver to simulate the q-TIP4P/f water model.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Path integral metadynamics
+            :link: ../examples/pi-metad/pi-metad
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/pi-metad/images/thumb/sphx_glr_pi-metad_thumb.png
+                :alt: This example shows how to run a free-energy sampling calculation that combines path integral molecular dynamics to model nuclear quantum effects and metadynamics to accelerate sampling of the high-free-energy regions.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Quantum heat capacity of water
+            :link: ../examples/heat-capacity/heat-capacity
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/heat-capacity/images/thumb/sphx_glr_heat-capacity_thumb.png
+                :alt: This example shows how to estimate the heat capacity of liquid water from a path integral molecular dynamics simulation. The dynamics are run with i-PI, and LAMMPS is used as the driver to simulate the q-TIP4P/f water model.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Multiple time stepping and ring-polymer contraction
+            :link: ../examples/pi-mts-rpc/mts-rpc
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/pi-mts-rpc/images/thumb/sphx_glr_mts-rpc_thumb.png
+                :alt: This notebook provides an introduction to multiple time stepping and ring polymer contraction, two closely-related techniques, that are geared towards reducing the cost of calculations by separating slowly-varying (and computationally-expensive) components of the potential energy from the fast-varying (and hopefully cheaper) ones.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Atomistic Water Model for Molecular Dynamics
+            :link: ../examples/water-model/water-model
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/water-model/images/thumb/sphx_glr_water-model_thumb.png
+                :alt: In this example, we demonstrate how to construct a metatomic model for flexible three and four-point water model, with parameters optimized for use together with quantum-nuclear-effects-aware path integral simulations (cf. Habershon et al., JCP (2009)). The model also demonstrates the use of torch-pme, a Torch library for long-range interactions, and uses the resulting model to perform demonstrative molecular dynamics simulations.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: The PET-MAD universal potential
+            :link: ../examples/pet-mad/pet-mad
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/pet-mad/images/thumb/sphx_glr_pet-mad_thumb.png
+                :alt: This example demonstrates how to use the PET-MAD model with ASE, i-PI and LAMMPS. PET-MAD is a "universal" machine-learning forcefield trained on a dataset that aims to incorporate a very high degree of structural diversity.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: MD using direct-force predictions with PET-MAD
+            :link: ../examples/pet-mad-nc/pet-mad-nc
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/pet-mad-nc/images/thumb/sphx_glr_pet-mad-nc_thumb.png
+                :alt: Evaluating forces as a direct output of a ML model accelerates their evaluation, by up to a factor of 3 in comparison to the traditional approach that evaluates them as derivatives of the interatomic potential. Unfortunately, as discussed e.g. in this paper, doing so means that forces are not conservative, leading to instabilities and artefacts in many modeling tasks, such as constant-energy molecular dynamics. Here we demonstrate the issues associated with direct force predictions, and ways to mitigate them, using the generally-applicable PET-MAD potential. See also this recipe for examples of using PET-MAD for basic tasks such as geometry optimization and conservative MD, and this for an example of how to use direct forces to accelerate training.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Long-stride trajectories with a universal FlashMD model
+            :link: ../examples/flashmd/flashmd-demo
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/flashmd/images/thumb/sphx_glr_flashmd-demo_thumb.png
+                :alt: For a quickstart on how to use FlashMD with ASE, you can go here.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: ML collective variables in PLUMED with metatomic
+            :link: ../examples/metatomic-plumed/metatomic-plumed
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/metatomic-plumed/images/thumb/sphx_glr_metatomic-plumed_thumb.png
+                :alt: This example shows how to build a metatomic model that computes order parameters for a Lennard-Jones cluster, and how to use it with the PLUMED package to run a metadynamics simulation.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Ring Polymer Instanton Rate Theory: Tunneling Rates
+            :link: ../examples/ring-polymer-instanton/rpi-rates
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/ring-polymer-instanton/images/thumb/sphx_glr_rpi-rates_thumb.png
+                :alt: This notebook introduces the calculation of tunneling rates using ring-polymer instanton rate theory. A comprehensive presentation of the instanton formalism can be found in the review article by J. Richardson, Int. Rev. Phys. Chem., 37, 171, 2018, while the implementation within i-PI is described in V. Kapil et al., Comp. Phys. Commun., 236, 214, 2020. Additional practical details are available in Yair Litman's doctoral thesis.
+                :class: gallery-img
+
+                

@@ -1,0 +1,1351 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="search" title="Search" href="../../search.html"><link rel="next" title="Path integral molecular dynamics" href="../path-integrals/path-integrals.html"><link rel="prev" title="PCA/PCovR Visualization of a training dataset for a potential" href="../gaas-map/gaas-map.html">
+        <link rel="canonical" href="https://atomistic-cookbook.org/examples/pi-metad/pi-metad.html">
+        <link rel="prefetch" href="../../_static/cookbook-icon.svg" as="image">
+
+    <link rel="shortcut icon" href="../../_static/cookbook-icon.png"><!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>Path integral metadynamics - The Atomistic Cookbook</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/cookbook.css?v=d86cfb60" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">The Atomistic Cookbook</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/cookbook-icon.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">The Atomistic Cookbook</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../topics/index.html">Recipes grouped by topic</a><input aria-label="Toggle navigation of Recipes grouped by topic" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/sampling.html">Statistical sampling and dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/analysis.html">Analysis and post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/ml-models.html">Machine learning models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/universal.html">Universal ML models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/nqes.html">Nuclear quantum effects</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../software/index.html">Recipes grouped by software used</a><input aria-label="Toggle navigation of Recipes grouped by software used" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../software/chemiscope.html">chemiscope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/cp2k.html">cp2k</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/eon.html">eon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/featomic.html">featomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/gromacs.html">GROMACS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/i-pi.html">i-PI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/lammps.html">LAMMPS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/metatensor.html">metatensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/plumed.html">PLUMED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/scikit-matter.html">scikit-matter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/torch-pme.html">torch-pme</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../all-examples.html">List of all recipes</a><input aria-label="Toggle navigation of List of all recipes" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../dos-align/dos-align.html">A ML model for the electron density of states</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-model/water-model.html">Atomistic Water Model for Molecular Dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../batch-cp2k/reference-trajectory.html">Batch run of CP2K calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../shiftml/shiftml-example.html">Computing NMR shielding tensors using ShiftML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft-nc.html">Conservative fine-tuning for a PET model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermostats/thermostats.html">Constant-temperature MD and thermostats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../polarizability/polarizability.html">Equivariant linear model for polarizability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../learn-tensors-with-mcov/learn-tensors-with-mcov.html">Equivariant model for tensorial properties based on scalar features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../eon-pet-neb/eon-pet-neb.html">Finding Reaction Paths with eOn and a Metatomic Potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft.html">Fine-tuning the PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../roy-gch/roy-gch.html">Generalized Convex Hull construction for the polymorphs of ROY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hamiltonian-qm7/hamiltonian-qm7.html">Hamiltonian Learning for Molecules with Indirect Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../torchpme/torchpme_learning.html">Learning Capabilities with torchpme</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lpr/lpr.html">Local Prediction Rigidity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lode-linear/lode-linear.html">Long-distance Equivariants: a tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flashmd/flashmd-demo.html">Long-stride trajectories with a universal FlashMD model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-nc/pet-mad-nc.html">MD using direct-force predictions with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metatomic-plumed/metatomic-plumed.html">ML collective variables in PLUMED with metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-mts-rpc/mts-rpc.html">Multiple time stepping and ring-polymer contraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../gaas-map/gaas-map.html">PCA/PCovR Visualization of a training dataset for a potential</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Path integral metadynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../path-integrals/path-integrals.html">Path integral molecular dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../periodic-hamiltonian/periodic-hamiltonian.html">Periodic Hamiltonian learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../heat-capacity/heat-capacity.html">Quantum heat capacity of water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ring-polymer-instanton/rpi-rates.html">Ring Polymer Instanton Rate Theory: Tunneling Rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rotate-equivariants/rotate-equivariants.html">Rotating equivariants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sample-selection/sample-selection.html">Sample and Feature Selection with FPS and CUR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad/pet-mad.html">The PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-uq/pet-mad-uq.html">Uncertainty Quantification with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-pulsed/water-pulsed.html">Water orientation in a pulsed electric field</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../downloading.html">Downloading and running the recipes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing a recipe</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-examples-pi-metad-pi-metad-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="path-integral-metadynamics">
+<span id="sphx-glr-examples-pi-metad-pi-metad-py"></span><h1>Path integral metadynamics<a class="headerlink" href="#path-integral-metadynamics" title="Link to this heading">¶</a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Authors<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Michele Ceriotti <a class="reference external" href="https://github.com/ceriottm/">&#64;ceriottm</a>,
+Guillaume Fraux <a class="reference external" href="https://github.com/luthaf/">&#64;luthaf</a></p>
+</dd>
+</dl>
+<p>This example shows how to run a free-energy sampling calculation that
+combines path integral molecular dynamics to model nuclear quantum effects
+and metadynamics to accelerate sampling of the high-free-energy regions.</p>
+<p>The rather complicated setup combines <a class="reference external" href="http://ipi-code.org">i-PI</a>
+to perform path integral
+MD, its built-in driver to compute energy and forces for the Zundel
+<span class="math notranslate nohighlight">\(\mathrm{H_5O_2^+}\)</span> cation, and <a class="reference external" href="http://plumed.org/">PLUMED</a>
+to perform metadynamics.
+If you want to see an example in a more realistic scenario, you can look at
+<a class="reference external" href="http://doi.org/10.1021/acs.jctc.0c00362">this paper (Rossi et al., JCTC (2020))</a>,
+in which this
+methodology is used to simulate the decomposition of methanesulphonic
+acid in a solution of phenol and hydrogen peroxide.</p>
+<p>Note also that, in order to keep the execution time of this example as
+low as possible, several parameters are set to values that would not be
+suitable for an accurate, converged simulation.
+They will be highlighted and more reasonable values will be provided.
+“High-quality” runs can also be realized substituting the input files
+used in this example with those labeled with the <code class="docutils literal notranslate"><span class="pre">_hiq</span></code> suffix, that
+are also provided in the <code class="docutils literal notranslate"><span class="pre">data/</span></code> folder.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">bz2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xml.etree.ElementTree</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ET</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">ase</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ase.io</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">chemiscope</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ipi</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</pre></div>
+</div>
+<section id="metadynamics-for-the-zundel-cation">
+<h2>Metadynamics for the Zundel cation<a class="headerlink" href="#metadynamics-for-the-zundel-cation" title="Link to this heading">¶</a></h2>
+<p>Metadynamics is a method to accelerate sampling of rare events - microscopic processes
+that are too infrequent to be observed over the time scale (ns-µs) accessible to
+molecular dynamics simulations. You can read one of the many excellent reviews
+on metadynamics (see e.g.
+<a class="reference external" href="https://doi.org/10.1002/9781118889886.ch1">Bussi and Branduardi (2015)</a>),
+or follow a
+<a class="reference external" href="https://www.plumed-tutorials.org/lessons/21/004/data/NAVIGATION.html">lecture from the PLUMED masterclass</a>.
+In short, during a metadynamics simulation an adaptive biasing potential is
+built as a superimposition of Gaussians centered over configurations that have
+been previously visited by the trajectory. This discourages the system from remaining
+in high-probability configurations and accelerates sampling of free-energy barriers.</p>
+<figure class="align-center" id="id3">
+<a class="reference internal image-reference" href="../../_images/metad-scheme.png"><img alt="../../_images/metad-scheme.png" src="../../_images/metad-scheme.png" style="width: 600px;" />
+</a>
+<figcaption>
+<p><span class="caption-text">A schematic representation of how metadynamics work by adaptively building
+a repulsive bias based on the trajectory of a molecule, compensating for
+low-energy regions in the free energy surface.</span><a class="headerlink" href="#id3" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>Crucially, the bias is <em>not</em> built relative to the Cartesian coordinates of the atoms,
+but relative to a lower-dimensional description of the system (so-called collective
+variables) that are suited to describe the processes being studied.</p>
+<p>The Zundel cation <span class="math notranslate nohighlight">\(\mathrm{H_5O_2^+}\)</span> is one of the limiting
+structures of the solvated proton, and in the gas phase leads to a
+stable structure, with the additional proton shared between two water
+molecules (see the structure below).
+We will use a potential fitted on high-end quantum-chemistry calculations
+<a class="reference external" href="http://doi.org/10.1063/1.1834500">Huang et al. (2005)</a> to compute energy
+and forces acting on the atoms.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">zundel</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;data/h5o2+.xyz&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">)</span>
+<span class="n">chemiscope</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">structures</span><span class="o">=</span><span class="n">zundel</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;structure&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<!-- begin headers -->
+<!-- Load all dependencies -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
+
+<!-- JS scripts -->
+<script src="../../_static/chemiscope.min.js"></script>
+<script src="../../_static/chemiscope-sphinx.js"></script>
+
+<!-- CSS styles -->
+<link rel="stylesheet" href="../../_static/chemiscope-sphinx.css" type="text/css" />
+<!-- end headers -->
+
+<!-- Error display -->
+<div id="chsp-a4794f54-c997-4dc0-a2c2-d6616a946617-error-display" class="chemiscope-sphinx-error">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-a4794f54-c997-4dc0-a2c2-d6616a946617-error-display')">
+        &times;
+    </button>
+</div>
+
+<!-- Warning Display -->
+<div id="chsp-a4794f54-c997-4dc0-a2c2-d6616a946617-warning-display" class="chemiscope-sphinx-warning">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-a4794f54-c997-4dc0-a2c2-d6616a946617-warning-display')">
+        &times;
+    </button>
+</div>
+<div style="padding: 0.5rem 1.25rem" />
+
+<!-- Loading Spinner -->
+<div id="chsp-a4794f54-c997-4dc0-a2c2-d6616a946617-loading" class="chemiscope-sphinx-spinner">
+    <img src="../../_static/chemiscope-loading.svg" alt="Loading icon" />
+</div>
+
+<!-- Chemiscope Visualization -->
+<div id="chsp-a4794f54-c997-4dc0-a2c2-d6616a946617">
+    <!-- This will be replaced by the chemiscope HTML -->
+</div>
+
+<!-- Load Visualization Script -->
+<script>
+    loadChemiscopeSphinx('chsp-a4794f54-c997-4dc0-a2c2-d6616a946617', '../../_datasets/e52afa5ea915a75af45f9df2e7350939d1d64c1732bd5558bacaa842cfbcd495-fig_pi-metad_001.json.gz', 'structure', '2000.0');
+</script>
+<div class="output_subarea output_html rendered_html output_result">
+
+</div>
+<br />
+<br /><p>As the two water molecules are separated, the proton remains attached
+to one of the two, effectively leading to a dissociated
+<span class="math notranslate nohighlight">\(\mathrm{H_2O+H_3O^+}\)</span> configuration. Thus, two natural
+coordinates to describe the physics of this system are the distance
+between the O atoms, and the difference in coordination number of
+the two O atoms, which is 0 for a shared proton and ±1 for the
+dissociated system.</p>
+</section>
+<section id="running-metadynamics-calculations-with-i-pi-and-plumed">
+<h2>Running metadynamics calculations with <code class="docutils literal notranslate"><span class="pre">i-PI</span></code> and <code class="docutils literal notranslate"><span class="pre">PLUMED</span></code><a class="headerlink" href="#running-metadynamics-calculations-with-i-pi-and-plumed" title="Link to this heading">¶</a></h2>
+<p>The client-server architecture <a class="reference external" href="http://ipi-code.org">i-PI</a> is based on makes it easy
+to combine multiple programs to realize complicated simulation workflows.
+In this case we will use an implementation of the Zundel potential in a simple
+driver code that is available in the i-PI repository, and use
+<a class="reference external" href="http://plumed.org/">PLUMED</a> to compute collective variables and build
+the adaptive bias. We will then perform some post-processing to
+estimate the free energy.</p>
+<section id="installing-the-python-driver">
+<h3>Installing the Python driver<a class="headerlink" href="#installing-the-python-driver" title="Link to this heading">¶</a></h3>
+<p>i-PI comes with a FORTRAN driver, which however has to be installed
+from source. We use a utility function to compile it. Note that this requires
+a functioning build system with <cite>gfortran</cite> and <cite>make</cite>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ipi</span><span class="o">.</span><span class="n">install_driver</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="defining-the-molecular-dynamics-setup">
+<h3>Defining the molecular dynamics setup<a class="headerlink" href="#defining-the-molecular-dynamics-setup" title="Link to this heading">¶</a></h3>
+<p>The <cite>input-md.xml</cite> file defines the way the MD simulation is performed.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">xmlroot</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;data/input-md.xml&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">getroot</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The <cite>&lt;ffsocket&gt;</cite> block describe the way communication will occur with the
+driver code</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   &quot;</span> <span class="o">+</span> <span class="n">ET</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">xmlroot</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;ffsocket&quot;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;unicode&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;ffsocket mode=&quot;unix&quot; name=&quot;driver&quot;&gt;
+      &lt;latency&gt;  1.00000000e-04&lt;/latency&gt; &lt;address&gt;zundel&lt;/address&gt;
+&lt;/ffsocket&gt;
+</pre></div>
+</div>
+<p>… and the <cite>&lt;motion&gt;</cite> section describes the MD setup.
+This is a relatively standard NVT setup, with an efficient
+generalized Langevin equation thermostat (important to
+compensate for the non-equilibrium nature of metadynamics).
+Note that the time step is rather long (the recommended value for
+aqueous systems is around 0.5 fs). This is done to improve
+efficiency for this example, but you should check if it
+affects results in a realistic scenario.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;      &quot;</span> <span class="o">+</span> <span class="n">ET</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">xmlroot</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;.//motion&quot;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;unicode&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;motion mode=&quot;dynamics&quot;&gt;
+  &lt;fixcom&gt; False &lt;/fixcom&gt;
+  &lt;dynamics mode=&quot;nvt&quot; splitting=&quot;baoab&quot;&gt;
+   &lt;timestep units=&quot;femtosecond&quot;&gt; 1.0 &lt;/timestep&gt;
+
+      &lt;thermostat mode=&quot;gle&quot;&gt;
+        &lt;A shape=&quot;(7,7)&quot;&gt;
+          [   8.191023526179e-4,    8.328506066524e-3,    1.657771834013e-3,    9.736989925341e-4,    2.841803794895e-4,   -3.176846864198e-5,   -2.967010478210e-4,
+      -8.389856546341e-4,    2.405526974742e-2,   -1.507872374848e-2,    2.589784240185e-3,    1.516783633362e-3,   -5.958833418565e-4,    4.198422349789e-4,
+      7.798710586406e-4,    1.507872374848e-2,    8.569039501219e-3,    6.001000899602e-3,    1.062029383877e-3,    1.093939147968e-3,   -2.661575532976e-3,
+      -9.676783161546e-4,   -2.589784240185e-3,   -6.001000899602e-3,    2.680459336535e-5,   -5.214694469742e-5,    4.231304910751e-4,   -2.104894919743e-5,
+      -2.841997149166e-4,   -1.516783633362e-3,   -1.062029383877e-3,    5.214694469742e-5,    1.433903506353e-9,   -4.241574212449e-5,    7.910178912362e-5,
+      3.333208286893e-5,    5.958833418565e-4,   -1.093939147968e-3,   -4.231304910751e-4,    4.241574212449e-5,    2.385554468441e-8,   -3.139255482869e-5,
+      2.967533789056e-4,   -4.198422349789e-4,    2.661575532976e-3,    2.104894919743e-5,   -7.910178912362e-5,    3.139255482869e-5,   2.432567259684e-11
+        ]
+        &lt;/A&gt;
+      &lt;/thermostat&gt;
+  &lt;/dynamics&gt;
+&lt;/motion&gt;
+</pre></div>
+</div>
+<p>The metadynamics setup requires three ingredients:
+a <cite>&lt;ffplumed&gt;</cite> forcefield that defines what input to use
+(more on that later) and the file from which to initialize
+the structural information (number of atoms, …);
+<cite>&lt;plumed_extras&gt;</cite> is an advanced feature, available from
+PLUMED 2.10, that allows extracting internal variables
+from plumed and integrate them into the outputs of
+i-PI.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   &quot;</span> <span class="o">+</span> <span class="n">ET</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">xmlroot</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;ffplumed&quot;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;unicode&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;ffplumed name=&quot;plumed&quot;&gt;
+      &lt;file mode=&quot;xyz&quot;&gt;data/h5o2+.xyz&lt;/file&gt;
+      &lt;plumed_dat&gt; data/plumed-md.dat &lt;/plumed_dat&gt;
+      &lt;plumed_extras&gt; [doo, co1.lessthan, co2.lessthan, dc, mtd.bias ] &lt;/plumed_extras&gt;
+&lt;/ffplumed&gt;
+</pre></div>
+</div>
+<p>The <cite>&lt;ensemble&gt;</cite> section contains a <cite>&lt;bias&gt;</cite> key that
+specifies that energy and forces from PLUMED should be
+treated as a bias (so that e.g. are not included in the
+potential, even though they’re used to propagate the
+trajectory).</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;      &quot;</span> <span class="o">+</span> <span class="n">ET</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">xmlroot</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;.//ensemble&quot;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;unicode&quot;</span><span class="p">))</span>
+
+<span class="c1"># The `&lt;smotion&gt;` section contains a `&lt;metad&gt;` class that</span>
+<span class="c1"># instructs i-PI to call the PLUMED action that adds hills</span>
+<span class="c1"># along the trajectory.</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  &quot;</span> <span class="o">+</span> <span class="n">ET</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">xmlroot</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;smotion&quot;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;unicode&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>    &lt;ensemble&gt;
+       &lt;temperature units=&quot;kelvin&quot;&gt; 300.0 &lt;/temperature&gt;
+       &lt;bias&gt;
+          &lt;force forcefield=&quot;plumed&quot; /&gt;
+       &lt;/bias&gt;
+    &lt;/ensemble&gt;
+
+&lt;smotion mode=&quot;metad&quot;&gt;
+   &lt;metad&gt; &lt;metaff&gt; [ plumed ] &lt;/metaff&gt; &lt;/metad&gt;
+&lt;/smotion&gt;
+</pre></div>
+</div>
+</section>
+<section id="cvs-and-metadynamics">
+<h3>CVs and metadynamics<a class="headerlink" href="#cvs-and-metadynamics" title="Link to this heading">¶</a></h3>
+<p>The calculation of the collective variables and the
+metadynamics bias is delegated to PLUMED, and controlled by
+a separate <cite>plumed-md.dat</cite> input file.
+Without going in detail into the syntax, one can recognize the
+calculation of the distance between the O atoms <cite>doo</cite>,
+the coordination of the two oxygens <cite>co1</cite> and <cite>co2</cite>,
+and the difference between the two, <cite>dc</cite>.
+The <cite>METAD</cite> action specifies the CVs to be used, the pace of
+hill depositon (which is way too frequent here, but suitable for
+this example), the width along the two CVs and the initial
+height of the repulsive Gaussians (which are both too large to
+guarantee high resolution in CV and energy). The <cite>BIASFACTOR</cite> keyword specifies
+that the height of the hills will be progressively reduced
+according to the “well-tempered metadynamics” protocol, see
+<a class="reference external" href="http://doi.org/10.1103/PhysRevLett.100.020603">Barducci et al., Phys. Rev. Lett. (2008)</a>.
+A repulsive static bias (<cite>UPPER_WALLS</cite>) prevents complete dissociation of the
+cation by limiting the range of the O-O distance.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;data/plumed-md.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+    <span class="n">plumed_dat</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">plumed_dat</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span># default units are LENGTH=nm ENERGY=kJ/mol TIME=ps
+doo: DISTANCE ATOMS=1,2
+co1: DISTANCES GROUPA=1 GROUPB=3-7 LESS_THAN={RATIONAL R_0=0.14}
+co2: DISTANCES GROUPA=2 GROUPB=3-7 LESS_THAN={RATIONAL R_0=0.14}
+dc: COMBINE ARG=co1.lessthan,co2.lessthan COEFFICIENTS=1,-1 PERIODIC=NO
+mtd:   METAD ARG=doo,dc PACE=10 SIGMA=0.005,0.05 HEIGHT=4 FILE=HILLS-md BIASFACTOR=10 TEMP=300
+uwall: UPPER_WALLS ARG=doo AT=0.4 KAPPA=250
+
+PRINT ARG=doo,co1.*,co2.*,dc,mtd.*,uwall.* STRIDE=10 FILE=COLVAR-md
+FLUSH STRIDE=1
+</pre></div>
+</div>
+</section>
+<section id="running-the-simulations">
+<h3>Running the simulations<a class="headerlink" href="#running-the-simulations" title="Link to this heading">¶</a></h3>
+<p>Now we can launch the actual calculations. On the the command line,
+this requires launching i-PI first, and then the built-in driver,
+specifying the appropriate communication mode, and the <cite>zundel</cite> potential.
+PLUMED is called from within i-PI as a library, so there is no need to
+launch a separate process. Note that the Zundel potential requires some data
+files, with a hard-coded location in the current working directory,
+which is why the driver should be run from within the <code class="docutils literal notranslate"><span class="pre">data/</span></code> folder.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>i-pi<span class="w"> </span>data/input-md.xml<span class="w"> </span>&gt;<span class="w"> </span>log<span class="w"> </span><span class="p">&amp;</span>
+sleep<span class="w"> </span><span class="m">2</span>
+<span class="nb">cd</span><span class="w"> </span>data<span class="p">;</span><span class="w"> </span>i-pi-driver<span class="w"> </span>-u<span class="w"> </span>-a<span class="w"> </span>zundel<span class="w"> </span>-m<span class="w"> </span>zundel
+</pre></div>
+</div>
+<p>The same can be achieved from Python using <code class="docutils literal notranslate"><span class="pre">subprocess.Popen</span></code></p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ipi_process</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">&quot;meta-md.out&quot;</span><span class="p">):</span>
+    <span class="c1"># don&#39;t rerun if the outputs already exist</span>
+    <span class="n">ipi_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;i-pi&quot;</span><span class="p">,</span> <span class="s2">&quot;data/input-md.xml&quot;</span><span class="p">])</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># wait for i-PI to start</span>
+    <span class="n">driver_process</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">&quot;i-pi-driver&quot;</span><span class="p">,</span> <span class="s2">&quot;-u&quot;</span><span class="p">,</span> <span class="s2">&quot;-a&quot;</span><span class="p">,</span> <span class="s2">&quot;zundel&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;zundel&quot;</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="s2">&quot;data/&quot;</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">]</span>
+</pre></div>
+</div>
+<p>If you run this in a notebook, you can go ahead and start loading
+output files <em>before</em> i-PI has finished running by skipping this cell</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># wait for simulations to finish</span>
+<span class="k">if</span> <span class="n">ipi_process</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">ipi_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">process</span> <span class="ow">in</span> <span class="n">driver_process</span><span class="p">:</span>
+        <span class="n">process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="trajectory-post-processing">
+<h3>Trajectory post-processing<a class="headerlink" href="#trajectory-post-processing" title="Link to this heading">¶</a></h3>
+<p>We can now post-process the simulation to see metadynamics in action.</p>
+<p>First, we read the trajectory outputs. Note that these have all been
+printed with the same stride</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">output_data</span><span class="p">,</span> <span class="n">output_desc</span> <span class="o">=</span> <span class="n">ipi</span><span class="o">.</span><span class="n">read_output</span><span class="p">(</span><span class="s2">&quot;meta-md.out&quot;</span><span class="p">)</span>
+<span class="n">colvar_data</span> <span class="o">=</span> <span class="n">ipi</span><span class="o">.</span><span class="n">read_trajectory</span><span class="p">(</span><span class="s2">&quot;meta-md.colvar_0&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;extras&quot;</span><span class="p">)[</span>
+    <span class="s2">&quot;doo,dc,mtd.bias&quot;</span>
+<span class="p">]</span>
+<span class="n">traj_data</span> <span class="o">=</span> <span class="n">ipi</span><span class="o">.</span><span class="n">read_trajectory</span><span class="p">(</span><span class="s2">&quot;meta-md.pos_0.xyz&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>then, assemble a visualization</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">chemiscope</span><span class="o">.</span><span class="n">show</span><span class="p">(</span>
+    <span class="n">structures</span><span class="o">=</span><span class="n">traj_data</span><span class="p">,</span>
+    <span class="n">properties</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">d_OO</span><span class="o">=</span><span class="mi">10</span> <span class="o">*</span> <span class="n">colvar_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># nm to Å</span>
+        <span class="n">delta_coord</span><span class="o">=</span><span class="n">colvar_data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+        <span class="n">bias</span><span class="o">=</span><span class="mf">27.211386</span> <span class="o">*</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;ensemble_bias&quot;</span><span class="p">],</span>  <span class="c1"># Ha to eV</span>
+        <span class="n">time</span><span class="o">=</span><span class="mf">2.4188843e-05</span> <span class="o">*</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>  <span class="c1"># atomictime to ps</span>
+    <span class="p">),</span>  <span class="c1"># attime to ps</span>
+    <span class="n">settings</span><span class="o">=</span><span class="n">chemiscope</span><span class="o">.</span><span class="n">quick_settings</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="s2">&quot;d_OO&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;delta_coord&quot;</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="s2">&quot;bias&quot;</span><span class="p">,</span> <span class="n">map_color</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">trajectory</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">),</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;default&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+
+
+<!-- Error display -->
+<div id="chsp-99f43c1e-21a5-46a4-bf50-2c99ec0df484-error-display" class="chemiscope-sphinx-error">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-99f43c1e-21a5-46a4-bf50-2c99ec0df484-error-display')">
+        &times;
+    </button>
+</div>
+
+<!-- Warning Display -->
+<div id="chsp-99f43c1e-21a5-46a4-bf50-2c99ec0df484-warning-display" class="chemiscope-sphinx-warning">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-99f43c1e-21a5-46a4-bf50-2c99ec0df484-warning-display')">
+        &times;
+    </button>
+</div>
+<div style="padding: 0.5rem 1.25rem" />
+
+<!-- Loading Spinner -->
+<div id="chsp-99f43c1e-21a5-46a4-bf50-2c99ec0df484-loading" class="chemiscope-sphinx-spinner">
+    <img src="../../_static/chemiscope-loading.svg" alt="Loading icon" />
+</div>
+
+<!-- Chemiscope Visualization -->
+<div id="chsp-99f43c1e-21a5-46a4-bf50-2c99ec0df484">
+    <!-- This will be replaced by the chemiscope HTML -->
+</div>
+
+<!-- Load Visualization Script -->
+<script>
+    loadChemiscopeSphinx('chsp-99f43c1e-21a5-46a4-bf50-2c99ec0df484', '../../_datasets/9a12e9af38a3397e739de4934e204442faa345c30786b6fb1ecfa261db76cb34-fig_pi-metad_002.json.gz', 'default', '2000.0');
+</script>
+<div class="output_subarea output_html rendered_html output_result">
+
+</div>
+<br />
+<br /><p>The visualization above shows how the growing metadynamics bias pushes
+progressively the atoms towards geometries with larger O-O separations,
+and that for these distorted configurations the proton is not shared
+symmetrically between the O atoms, but is preferentially attached to
+one of the two water molecules.</p>
+<section id="trajectory-diagnostics">
+<h4>Trajectory diagnostics<a class="headerlink" href="#trajectory-diagnostics" title="Link to this heading">¶</a></h4>
+<p>The time history of the bias is instructive, as it shows how the
+bias grows until the trajectory gets pushed in a new region (where the
+bias is zero) and then grows again. The envelope of the bias increase
+slows down over time, because the “well-tempered” deposition strategy
+reduces the height of the hills deposited in high-bias regions.</p>
+<p>Note that the potential energy has fluctuations that are larger than
+the magnitude of the bias, although it shows a tendency to reach higher
+values as the simulation progresses. This is because only two degrees
+of freedom are affected by the bias, while all degrees of freedom
+undergo thermal fluctuations, which are dominant even for this
+small system.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="mf">2.4188843e-05</span> <span class="o">*</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+    <span class="mf">27.211386</span> <span class="o">*</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;potential&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;r&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;potential&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="mf">2.4188843e-05</span> <span class="o">*</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+    <span class="mf">27.211386</span> <span class="o">*</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;ensemble_bias&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;b&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;bias&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$t$ / ps&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;energy / eV&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper left&quot;</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_pi-metad_001.png" srcset="../../_images/sphx_glr_pi-metad_001.png" alt="pi metad" class = "sphx-glr-single-img"/><p>It’s important to keep in mind that the growing metadynamics bias can
+lead to deviations from the quasi-equilibrium sampling that is necessary
+to recover the correct properties of the rare event. It is not easy
+to verify this condition, but one simple diagnostics that can highlight
+the most evident problems is looking at the kinetic temperature of different
+portions of the system, computing a moving average to have a clearer signal.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">moving_average</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">window_size</span><span class="p">):</span>
+    <span class="c1"># Create a window of the specified size with equal weights</span>
+    <span class="n">window</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">window_size</span><span class="p">)</span> <span class="o">/</span> <span class="n">window_size</span>
+    <span class="c1"># Use the &#39;valid&#39; mode to only return elements where the window fully</span>
+    <span class="c1"># overlaps with the data</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">window</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;valid&quot;</span><span class="p">)</span>
+
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="mf">2.4188843e-05</span> <span class="o">*</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">][</span><span class="mi">50</span><span class="p">:</span><span class="o">-</span><span class="mi">49</span><span class="p">],</span>
+    <span class="n">moving_average</span><span class="p">(</span><span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;temperature(O)&quot;</span><span class="p">],</span> <span class="mi">100</span><span class="p">),</span>
+    <span class="s2">&quot;r&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;$T_\mathrm</span><span class="si">{O}</span><span class="s2">$&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="mf">2.4188843e-05</span> <span class="o">*</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">][</span><span class="mi">50</span><span class="p">:</span><span class="o">-</span><span class="mi">49</span><span class="p">],</span>
+    <span class="n">moving_average</span><span class="p">(</span><span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;temperature(H)&quot;</span><span class="p">],</span> <span class="mi">100</span><span class="p">),</span>
+    <span class="s2">&quot;gray&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;$T_\mathrm</span><span class="si">{H}</span><span class="s2">$&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="mf">2.4188843e-05</span> <span class="o">*</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">][</span><span class="mi">50</span><span class="p">:</span><span class="o">-</span><span class="mi">49</span><span class="p">],</span>
+    <span class="n">moving_average</span><span class="p">(</span><span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;temperature&quot;</span><span class="p">],</span> <span class="mi">100</span><span class="p">),</span>
+    <span class="s2">&quot;b&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$t$ / ps&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;temperature / K&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper left&quot;</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_pi-metad_002.png" srcset="../../_images/sphx_glr_pi-metad_002.png" alt="pi metad" class = "sphx-glr-single-img"/><p>It is clear that the very high rate of biasing used in this demonstrative
+example leads to a temperature that is consistently higher than the target,
+with spikes up to 380 K and O and H atoms reaching different temperatures
+(i.e. equipartition is broken). While this does not affect the qualitative
+nature of the results, these parameters are unsuitable for a production run.
+NB: especially for small systems, the instantaneous kinetic temperature
+can deviate by a large amount from the target temperature: only the mean
+value has actual meaning. However, a kinetic temperature that is consistently
+above the target value indicates that the thermostat cannot dissipate
+efficiently the energy due to the growing bias.</p>
+</section>
+<section id="free-energy-profiles">
+<h4>Free energy profiles<a class="headerlink" href="#free-energy-profiles" title="Link to this heading">¶</a></h4>
+<p>One of the advantages of metadynamics is that it allows one to easily
+estimate the free-energy associated with the collective variables
+that are used to accelerate sampling by summing the repulsive hills
+that have been deposited during the run and taking the negative of
+the total bias at the end of the trajectory.</p>
+<p>Even though more sophisticated strategies exist that provide explicit
+weighting factors to estimate the unbiased Boltzmann distribution
+(see e.g.
+<a class="reference external" href="http://doi.org/10.1021/acs.jctc.9b00907">Giberti et al., JCTC 2020</a>),
+this simple approach is good enough for this example, and can be
+realized as a post-processing step using the <code class="docutils literal notranslate"><span class="pre">plumed</span> <span class="pre">sum_hills</span></code> module,
+that also applies a (simple) correction to the negative bias that
+is needed when using the well-tempered bias scaling protocol.
+On the command line,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>plumed<span class="w"> </span>sum_hills<span class="w"> </span>--hills<span class="w"> </span>HILLS-md<span class="w"> </span>--min<span class="w"> </span><span class="m">0</span>.21,-1<span class="w"> </span>--max<span class="w"> </span><span class="m">0</span>.31,1<span class="w"> </span>--bin<span class="w"> </span><span class="m">100</span>,100<span class="w"> </span><span class="se">\</span>
+<span class="w">       </span>--outfile<span class="w"> </span>FES-md<span class="w"> </span>--stride<span class="w"> </span><span class="m">100</span><span class="w"> </span>--mintozero<span class="w"> </span>&lt;<span class="w"> </span>data/plumed-md.dat
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">--stride</span></code> option generates a series of files showing the estimates
+of <span class="math notranslate nohighlight">\(F\)</span> at different times along the trajectory.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;data/plumed-md.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="s2">&quot;plumed&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;sum_hills&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;--hills&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;HILLS-md&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;--min&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;0.21,-1&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;--max&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;0.31,1&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;--bin&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;100,100&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;--outfile&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;FES-md&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;--stride&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;100&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;--mintozero&quot;</span><span class="p">,</span>
+        <span class="p">],</span>
+        <span class="n">stdin</span><span class="o">=</span><span class="n">file</span><span class="p">,</span>
+        <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<span class="c1"># rearrange data and converts to Å and eV</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="s2">&quot;FES-md0.dat&quot;</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="s2">&quot;#&quot;</span><span class="p">)[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+<span class="n">xyz_0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.01036427</span><span class="p">])[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> <span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+    <span class="mi">3</span><span class="p">,</span> <span class="mi">101</span><span class="p">,</span> <span class="mi">101</span>
+<span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="s2">&quot;FES-md2.dat&quot;</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="s2">&quot;#&quot;</span><span class="p">)[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+<span class="n">xyz_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.01036427</span><span class="p">])[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> <span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+    <span class="mi">3</span><span class="p">,</span> <span class="mi">101</span><span class="p">,</span> <span class="mi">101</span>
+<span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="s2">&quot;FES-md5.dat&quot;</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="s2">&quot;#&quot;</span><span class="p">)[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+<span class="n">xyz_5</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.01036427</span><span class="p">])[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> <span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+    <span class="mi">3</span><span class="p">,</span> <span class="mi">101</span><span class="p">,</span> <span class="mi">101</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The plots show, left-to-right, the accumulation of the
+metadynamics bias as simulation progresses.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span>
+    <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="n">cf_0</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">contourf</span><span class="p">(</span><span class="o">*</span><span class="n">xyz_0</span><span class="p">)</span>
+<span class="n">cf_1</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">contourf</span><span class="p">(</span><span class="o">*</span><span class="n">xyz_2</span><span class="p">)</span>
+<span class="n">cf_2</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">contourf</span><span class="p">(</span><span class="o">*</span><span class="n">xyz_5</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">cf_2</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s2">&quot;vertical&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;$F$ / eV&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\Delta C_\mathrm</span><span class="si">{H}</span><span class="s2">$&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$d_\mathrm</span><span class="si">{OO}</span><span class="s2">$ / Å&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$d_\mathrm</span><span class="si">{OO}</span><span class="s2">$ / Å&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$d_\mathrm</span><span class="si">{OO}</span><span class="s2">$ / Å&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$t=0.8$ ps&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$t=2.5$ ps&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$t=5.0$ ps&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_pi-metad_003.png" srcset="../../_images/sphx_glr_pi-metad_003.png" alt="$t=0.8$ ps, $t=2.5$ ps, $t=5.0$ ps" class = "sphx-glr-single-img"/></section>
+</section>
+</section>
+<section id="biasing-a-path-integral-calculation">
+<h2>Biasing a path integral calculation<a class="headerlink" href="#biasing-a-path-integral-calculation" title="Link to this heading">¶</a></h2>
+<p>You can see <a class="reference external" href="http://lab-cosmo.github.io/atomistic-cookbook/examples/latest/path-integrals">this recipe</a>
+for a brief introduction to path integral simulations with <cite>i-PI</cite>.
+From a practical perspective, very little needs to change with respect
+to the classical case.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">xmlroot</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;data/input-pimd.xml&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">getroot</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The <cite>nbeads</cite> option determines the number of path integral
+replicas. The value of 8 used here is not sufficient to converge
+quantum statistics at 300 K (a more typical value would be
+around 32). There are methods to reduce the number of replicas
+needed for convergence, see e.g.
+<a class="reference external" href="http://doi.org/10.1038/s41570-017-0109">Ceriotti and Markland, Nat. Rev. Chem. (2018)</a>
+but we keep it simple here.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">ET</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">xmlroot</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;.//initialize&quot;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;unicode&quot;</span><span class="p">)[:</span><span class="mi">23</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;initialize nbeads=&quot;8&quot;&gt;
+</pre></div>
+</div>
+<section id="centroid-bias">
+<h3>Centroid bias<a class="headerlink" href="#centroid-bias" title="Link to this heading">¶</a></h3>
+<p>Another detail worth discussing is that the metadynamics bias
+is computed exclusively on the <em>centroid</em>, the mean position of
+the ring-polymer beads. This is an extreme form of
+ring polymer contraction
+<a class="reference external" href="http://doi.org/10.1063/1.2953308">(Markland and Manolopoulos, J. Chem. Phys. (2008)</a>
+that avoids computing for each replica the slowly-varying
+parts of the potential, but is not applied for computational
+savings. When performing a quantum free-energy calculation it
+is important to distinguish between the free-energy computed
+as the logarithm of the probability of observing a given
+configuration (that depends on the distribution of the
+replicas) and the free-energy taken as a tool to estimate
+reaction  rates <span class="math notranslate nohighlight">\(k\)</span> in a transition-state theory
+fashion <span class="math notranslate nohighlight">\(k\propto e^{-\Delta E^\ddagger/kT}\)</span>,
+where the energy barrier <span class="math notranslate nohighlight">\(\Delta E^\ddagger\)</span>
+is better estimated from the distribution of the centroid.
+See e.g.
+<a class="reference external" href="http://doi.org/10.1146/annurev-physchem-040412-110122">Habershon et al., Annu. Rev. Phys. Chem. (2013)</a>
+for a discussion of the subtleties involved in estimating
+transition rates.
+In practice, performing this contraction step is very easy
+in <cite>i-PI</cite>, because for each <cite>&lt;force&gt;</cite> section - including
+that corresponding to the bias - it is possible to specify
+a different number of replicas. The configurations will
+be automatically computed by Fourier interpolation.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;         &quot;</span> <span class="o">+</span> <span class="n">ET</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">xmlroot</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;.//bias&quot;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;unicode&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;bias&gt;
+  &lt;force forcefield=&quot;plumed&quot; nbeads=&quot;1&quot;&gt;
+    &lt;interpolate_extras&gt; [ doo, dc, mtd.bias ] &lt;/interpolate_extras&gt;
+  &lt;/force&gt;
+&lt;/bias&gt;
+</pre></div>
+</div>
+</section>
+<section id="running-the-calculation">
+<h3>Running the calculation<a class="headerlink" href="#running-the-calculation" title="Link to this heading">¶</a></h3>
+<p>The other changes are purely cosmetic, and the calculation
+can be launched very easily, using several drivers to parallelize
+the energy evaluation over the beads (although this kind of calculations
+is not limited by the evaluation of the forces).</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># don&#39;t rerun if the outputs already exist</span>
+<span class="n">ipi_process</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">&quot;meta-pimd.out&quot;</span><span class="p">):</span>
+    <span class="n">ipi_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;i-pi&quot;</span><span class="p">,</span> <span class="s2">&quot;data/input-pimd.xml&quot;</span><span class="p">])</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># wait for i-PI to start</span>
+    <span class="n">driver_process</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">&quot;i-pi-driver&quot;</span><span class="p">,</span> <span class="s2">&quot;-u&quot;</span><span class="p">,</span> <span class="s2">&quot;-a&quot;</span><span class="p">,</span> <span class="s2">&quot;zundel&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;zundel&quot;</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="s2">&quot;data/&quot;</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+    <span class="p">]</span>
+</pre></div>
+</div>
+<p>If you run this in a notebook, you can go ahead and start loading
+output files _before_ i-PI has finished running by skipping this cell</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># wait for simulations to finish</span>
+<span class="k">if</span> <span class="n">ipi_process</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">ipi_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">process</span> <span class="ow">in</span> <span class="n">driver_process</span><span class="p">:</span>
+        <span class="n">process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="analysis-of-the-simulation">
+<h3>Analysis of the simulation<a class="headerlink" href="#analysis-of-the-simulation" title="Link to this heading">¶</a></h3>
+<p>A path integral simulation evolves multiple configurations at the same time, forming a
+<cite>ring polymer</cite>. Each replica provides a sample of the quantum mechanical configuration
+distribution of the atoms. To provide an overall visualization of the path integral
+dynamics, we can use chemiscope and define custom shapes to represent the different
+rings.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">output_data</span><span class="p">,</span> <span class="n">output_desc</span> <span class="o">=</span> <span class="n">ipi</span><span class="o">.</span><span class="n">read_output</span><span class="p">(</span><span class="s2">&quot;meta-pimd.out&quot;</span><span class="p">)</span>
+<span class="n">colvar_data</span> <span class="o">=</span> <span class="n">ipi</span><span class="o">.</span><span class="n">read_trajectory</span><span class="p">(</span><span class="s2">&quot;meta-pimd.colvar_0&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;extras&quot;</span><span class="p">)[</span>
+    <span class="s2">&quot;doo,dc,mtd.bias&quot;</span>
+<span class="p">]</span>
+<span class="n">pimd_traj_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">ipi</span><span class="o">.</span><span class="n">read_trajectory</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;meta-pimd.pos_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.xyz&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">)]</span>
+
+
+<span class="n">nbeads</span><span class="p">,</span> <span class="n">nframes</span><span class="p">,</span> <span class="n">natoms</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="nb">len</span><span class="p">(</span><span class="n">pimd_traj_data</span><span class="p">),</span>
+    <span class="nb">len</span><span class="p">(</span><span class="n">pimd_traj_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+    <span class="nb">len</span><span class="p">(</span><span class="n">pimd_traj_data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]),</span>
+<span class="p">)</span>
+
+<span class="c1"># creates frames with all beads, so we can use periodic boundary conditions when</span>
+<span class="c1"># computing distances. skips first frame so beads have spread out a tiny bit</span>
+<span class="n">full_frames</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nframes</span><span class="p">):</span>
+    <span class="n">struc</span> <span class="o">=</span> <span class="n">pimd_traj_data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nbeads</span><span class="p">):</span>
+        <span class="n">struc</span> <span class="o">+=</span> <span class="n">pimd_traj_data</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">full_frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">struc</span><span class="p">)</span>
+
+<span class="n">distance_vectors</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">full_frames</span><span class="p">[</span><span class="n">frame_i</span><span class="p">]</span><span class="o">.</span><span class="n">get_distance</span><span class="p">(</span>
+        <span class="n">bead_i</span> <span class="o">*</span> <span class="n">natoms</span> <span class="o">+</span> <span class="n">atom_i</span><span class="p">,</span>
+        <span class="p">((</span><span class="n">bead_i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="n">nbeads</span><span class="p">)</span> <span class="o">*</span> <span class="n">natoms</span> <span class="o">+</span> <span class="n">atom_i</span><span class="p">,</span>
+        <span class="n">mic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">vector</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">frame_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nframes</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">bead_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nbeads</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">atom_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">natoms</span><span class="p">)</span>
+<span class="p">]</span>
+
+<span class="n">paths_shapes</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;cylinder&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;global&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">},</span>
+        <span class="s2">&quot;atom&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;vector&quot;</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">tolist</span><span class="p">()}</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">distance_vectors</span><span class="p">],</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+<span class="n">properties</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;d_OO&quot;</span><span class="p">:</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">colvar_data</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># nm to Å</span>
+    <span class="s2">&quot;delta_coord&quot;</span><span class="p">:</span> <span class="n">colvar_data</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">1</span><span class="p">],</span>
+    <span class="s2">&quot;bias&quot;</span><span class="p">:</span> <span class="mf">27.211386</span> <span class="o">*</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;ensemble_bias&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">:],</span>  <span class="c1"># Ha to eV</span>
+    <span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="mf">2.4188843e-05</span> <span class="o">*</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">:],</span>
+<span class="p">}</span>
+
+<span class="n">settings</span> <span class="o">=</span> <span class="n">chemiscope</span><span class="o">.</span><span class="n">quick_settings</span><span class="p">(</span>
+    <span class="n">x</span><span class="o">=</span><span class="s2">&quot;d_OO&quot;</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;delta_coord&quot;</span><span class="p">,</span>
+    <span class="n">z</span><span class="o">=</span><span class="s2">&quot;bias&quot;</span><span class="p">,</span>
+    <span class="n">map_color</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">,</span>
+    <span class="n">trajectory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">structure_settings</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">bonds</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">atoms</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">keepOrientation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">unitCell</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">shape</span><span class="o">=</span><span class="p">[</span>
+            <span class="s2">&quot;paths&quot;</span><span class="p">,</span>
+        <span class="p">],</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="n">settings</span><span class="p">[</span><span class="s2">&quot;target&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;structure&quot;</span>
+</pre></div>
+</div>
+<p>Visualize the trajectory. Note the similar behavior as for the classical
+trajectory, and the delocalization of the protons</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">chemiscope</span><span class="o">.</span><span class="n">show</span><span class="p">(</span>
+    <span class="n">full_frames</span><span class="p">,</span>
+    <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span>
+    <span class="n">shapes</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;paths&quot;</span><span class="p">:</span> <span class="n">paths_shapes</span><span class="p">},</span>
+    <span class="n">settings</span><span class="o">=</span><span class="n">settings</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+
+
+<!-- Error display -->
+<div id="chsp-44ce4d37-b512-4475-b494-2650737066a1-error-display" class="chemiscope-sphinx-error">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-44ce4d37-b512-4475-b494-2650737066a1-error-display')">
+        &times;
+    </button>
+</div>
+
+<!-- Warning Display -->
+<div id="chsp-44ce4d37-b512-4475-b494-2650737066a1-warning-display" class="chemiscope-sphinx-warning">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-44ce4d37-b512-4475-b494-2650737066a1-warning-display')">
+        &times;
+    </button>
+</div>
+<div style="padding: 0.5rem 1.25rem" />
+
+<!-- Loading Spinner -->
+<div id="chsp-44ce4d37-b512-4475-b494-2650737066a1-loading" class="chemiscope-sphinx-spinner">
+    <img src="../../_static/chemiscope-loading.svg" alt="Loading icon" />
+</div>
+
+<!-- Chemiscope Visualization -->
+<div id="chsp-44ce4d37-b512-4475-b494-2650737066a1">
+    <!-- This will be replaced by the chemiscope HTML -->
+</div>
+
+<!-- Load Visualization Script -->
+<script>
+    loadChemiscopeSphinx('chsp-44ce4d37-b512-4475-b494-2650737066a1', '../../_datasets/badb15a51a0eb5c1e5a9c2a1f66293390e780eec896f16d035edbf7c07043a67-fig_pi-metad_003.json.gz', 'default', '2000.0');
+</script>
+<div class="output_subarea output_html rendered_html output_result">
+
+</div>
+<br />
+<br /></section>
+<section id="free-energy-plots">
+<h3>Free energy plots<a class="headerlink" href="#free-energy-plots" title="Link to this heading">¶</a></h3>
+<p>The free energy profiles relative to <span class="math notranslate nohighlight">\(\Delta C_\mathrm{H}\)</span>
+and <span class="math notranslate nohighlight">\(d_\mathrm{OO}\)</span> can be computed exactly as for the
+classical trajectory, using the <cite>sum_hills</cite> module.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;data/plumed-pimd.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="s2">&quot;plumed&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;sum_hills&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;--hills&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;HILLS-pimd&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;--min&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;0.21,-1&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;--max&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;0.31,1&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;--bin&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;100,100&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;--outfile&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;FES-pimd&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;--stride&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;100&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;--mintozero&quot;</span><span class="p">,</span>
+        <span class="p">],</span>
+        <span class="n">stdin</span><span class="o">=</span><span class="n">file</span><span class="p">,</span>
+        <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<span class="c1"># rearrange data and converts to Å and eV</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="s2">&quot;FES-pimd0.dat&quot;</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="s2">&quot;#&quot;</span><span class="p">)[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+<span class="n">xyz_pi_0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.01036427</span><span class="p">])[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> <span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+    <span class="mi">3</span><span class="p">,</span> <span class="mi">101</span><span class="p">,</span> <span class="mi">101</span>
+<span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="s2">&quot;FES-pimd2.dat&quot;</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="s2">&quot;#&quot;</span><span class="p">)[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+<span class="n">xyz_pi_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.01036427</span><span class="p">])[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> <span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+    <span class="mi">3</span><span class="p">,</span> <span class="mi">101</span><span class="p">,</span> <span class="mi">101</span>
+<span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="s2">&quot;FES-pimd5.dat&quot;</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="s2">&quot;#&quot;</span><span class="p">)[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+<span class="n">xyz_pi_5</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.01036427</span><span class="p">])[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> <span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+    <span class="mi">3</span><span class="p">,</span> <span class="mi">101</span><span class="p">,</span> <span class="mi">101</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Just as for a classical run, the metadynamics bias progressively
+pushes the centroid (and the beads that are distributed around it)
+to sample a wider portion of the collective-variable space.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span>
+    <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="n">cf_0</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">contourf</span><span class="p">(</span><span class="o">*</span><span class="n">xyz_pi_0</span><span class="p">)</span>
+<span class="n">cf_1</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">contourf</span><span class="p">(</span><span class="o">*</span><span class="n">xyz_pi_2</span><span class="p">)</span>
+<span class="n">cf_2</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">contourf</span><span class="p">(</span><span class="o">*</span><span class="n">xyz_pi_5</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">cf_2</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s2">&quot;vertical&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;$F$ / eV&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\Delta C_\mathrm</span><span class="si">{H}</span><span class="s2">$&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$d_\mathrm</span><span class="si">{OO}</span><span class="s2">$ / Å&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$d_\mathrm</span><span class="si">{OO}</span><span class="s2">$ / Å&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$d_\mathrm</span><span class="si">{OO}</span><span class="s2">$ / Å&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$t=0.8$ ps&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$t=2.5$ ps&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$t=5.0$ ps&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_pi-metad_004.png" srcset="../../_images/sphx_glr_pi-metad_004.png" alt="$t=0.8$ ps, $t=2.5$ ps, $t=5.0$ ps" class = "sphx-glr-single-img"/></section>
+<section id="assessing-quantum-nuclear-effects">
+<h3>Assessing quantum nuclear effects<a class="headerlink" href="#assessing-quantum-nuclear-effects" title="Link to this heading">¶</a></h3>
+<p>The effect of nuclear quantization on the centroid free-energy
+is relatively small, despite the large delocalization of the
+protons in the PIMD calculation. Looking more
+carefully at the two distributions, one can notice that
+in the high-<span class="math notranslate nohighlight">\(d_\mathrm{OO}\)</span> region there is higher
+delocalisation of the proton.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span>
+    <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="n">levels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="n">cp1</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="o">*</span><span class="n">xyz_5</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">levels</span><span class="p">)</span>
+<span class="n">cp2</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="o">*</span><span class="n">xyz_pi_5</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">levels</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\Delta C_\mathrm</span><span class="si">{H}</span><span class="s2">$&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$d_\mathrm</span><span class="si">{OO}</span><span class="s2">$ / Å&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span>
+    <span class="n">handles</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;MD&quot;</span><span class="p">),</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;PIMD&quot;</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_pi-metad_005.png" srcset="../../_images/sphx_glr_pi-metad_005.png" alt="pi metad" class = "sphx-glr-single-img"/><p>To get a clear signal, we need better-converged calculations;
+the <cite>data/</cite> folder contains inputs for these “high quality” runs,
+and free-energies obtained from them.
+The results confirm the lowering of the free-energy barrier for
+the <span class="math notranslate nohighlight">\(\mathrm{H_3O^+ + H_2O} \rightarrow \mathrm{H_2O + H_3O^+}\)</span>
+transition.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">bz2</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;data/FES-md_hiq.bz2&quot;</span><span class="p">,</span> <span class="s2">&quot;rt&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="s2">&quot;#&quot;</span><span class="p">)[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+<span class="n">xyz_md_hiq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.01036427</span><span class="p">])[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> <span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+    <span class="mi">3</span><span class="p">,</span> <span class="mi">101</span><span class="p">,</span> <span class="mi">101</span>
+<span class="p">)</span>
+<span class="k">with</span> <span class="n">bz2</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;data/FES-pimd_hiq.bz2&quot;</span><span class="p">,</span> <span class="s2">&quot;rt&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="s2">&quot;#&quot;</span><span class="p">)[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+<span class="n">xyz_pi_hiq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.01036427</span><span class="p">])[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> <span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+    <span class="mi">3</span><span class="p">,</span> <span class="mi">101</span><span class="p">,</span> <span class="mi">101</span>
+<span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span>
+    <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="n">levels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="n">cp1</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="o">*</span><span class="n">xyz_md_hiq</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">levels</span><span class="p">)</span>
+<span class="n">cp2</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="o">*</span><span class="n">xyz_pi_hiq</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">levels</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\Delta C_\mathrm</span><span class="si">{H}</span><span class="s2">$&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$d_\mathrm</span><span class="si">{OO}</span><span class="s2">$ / Å&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span>
+    <span class="n">handles</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;MD&quot;</span><span class="p">),</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;PIMD&quot;</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_pi-metad_006.png" srcset="../../_images/sphx_glr_pi-metad_006.png" alt="pi metad" class = "sphx-glr-single-img"/><p>The lowering of the barrier for proton hopping is clearly
+seen by taking 1D slices of the free energy at different O-O separations.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span>
+    <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">xyz_md_hiq</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">50</span><span class="p">],</span> <span class="n">xyz_md_hiq</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">50</span><span class="p">],</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;MD, $d_\mathrm</span><span class="si">{OO}</span><span class="s2">=2.6 $Å&quot;</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">xyz_pi_hiq</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">50</span><span class="p">],</span>
+    <span class="n">xyz_pi_hiq</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">50</span><span class="p">],</span>
+    <span class="s2">&quot;r&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;PIMD, $d_\mathrm</span><span class="si">{OO}</span><span class="s2">=2.6 $Å&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">xyz_md_hiq</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">60</span><span class="p">],</span>
+    <span class="n">xyz_md_hiq</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">60</span><span class="p">],</span>
+    <span class="s2">&quot;b--&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;MD, $d_\mathrm</span><span class="si">{OO}</span><span class="s2">=2.7 $Å&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">xyz_pi_hiq</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">60</span><span class="p">],</span>
+    <span class="n">xyz_pi_hiq</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">60</span><span class="p">],</span>
+    <span class="s2">&quot;r--&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;PIMD, $d_\mathrm</span><span class="si">{OO}</span><span class="s2">=2.7 $Å&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mf">0.08</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper right&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$F$ / eV&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\Delta C_\mathrm</span><span class="si">{H}</span><span class="s2">$&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_pi-metad_007.png" srcset="../../_images/sphx_glr_pi-metad_007.png" alt="pi metad" class = "sphx-glr-single-img"/><p>This model system is representative of the behavior of protons
+along a hydrogen bond in different conditions, where the environment
+determines the typical O-O separation, and whether the proton is shared
+(as in high pressure ice X) or preferentially attached to one of the two
+molecules. Zero-point energy (and to a lesser extent tunneling)
+increases the delocalization, and reduces the barrier for an excess
+proton to hop between water molecues.</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (1 minutes 49.838 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-pi-metad-pi-metad-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/360e0a4751205a155ce4949942081de0/pi-metad.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">pi-metad.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/58f311a250ec4f9cd7abf17b492ae2f6/pi-metad.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">pi-metad.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/9686437d3cc3327b109d561fa42242c0/pi-metad.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">recipe:</span> <span class="pre">pi-metad.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../path-integrals/path-integrals.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Path integral molecular dynamics</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../gaas-map/gaas-map.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">PCA/PCovR Visualization of a training dataset for a potential</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; BSD 3-Clause License, Copyright (c) 2026, The atomistic cookbook team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Path integral metadynamics</a><ul>
+<li><a class="reference internal" href="#metadynamics-for-the-zundel-cation">Metadynamics for the Zundel cation</a></li>
+<li><a class="reference internal" href="#running-metadynamics-calculations-with-i-pi-and-plumed">Running metadynamics calculations with <code class="docutils literal notranslate"><span class="pre">i-PI</span></code> and <code class="docutils literal notranslate"><span class="pre">PLUMED</span></code></a><ul>
+<li><a class="reference internal" href="#installing-the-python-driver">Installing the Python driver</a></li>
+<li><a class="reference internal" href="#defining-the-molecular-dynamics-setup">Defining the molecular dynamics setup</a></li>
+<li><a class="reference internal" href="#cvs-and-metadynamics">CVs and metadynamics</a></li>
+<li><a class="reference internal" href="#running-the-simulations">Running the simulations</a></li>
+<li><a class="reference internal" href="#trajectory-post-processing">Trajectory post-processing</a><ul>
+<li><a class="reference internal" href="#trajectory-diagnostics">Trajectory diagnostics</a></li>
+<li><a class="reference internal" href="#free-energy-profiles">Free energy profiles</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#biasing-a-path-integral-calculation">Biasing a path integral calculation</a><ul>
+<li><a class="reference internal" href="#centroid-bias">Centroid bias</a></li>
+<li><a class="reference internal" href="#running-the-calculation">Running the calculation</a></li>
+<li><a class="reference internal" href="#analysis-of-the-simulation">Analysis of the simulation</a></li>
+<li><a class="reference internal" href="#free-energy-plots">Free energy plots</a></li>
+<li><a class="reference internal" href="#assessing-quantum-nuclear-effects">Assessing quantum nuclear effects</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script data-domain="atomistic-cookbook.org" defer="defer" src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"></script>
+    <script src="../../_static/all-examples-data.js?v=01c87ff6"></script>
+    <script src="../../_static/daily-recipe.js?v=b5e71911"></script>
+    </body>
+</html>

@@ -1,0 +1,175 @@
+.. _chemiscope:
+
+chemiscope
+==========
+
+Chemiscope is a tool for interactive exploration of databases of materials and
+molecules, correlating local and global structural representations with the
+properties of the systems. Chemiscope files can be viewed `online
+<https://chemiscope.org/>`_, generated using a `python library
+<https://pypi.org/project/chemiscope/>`_ and used inside jupyter notebooks or
+sphinx documentations, which is how it's used in the cookbook examples. You can
+check the `documentation <https://chemiscope.org/docs/>`_ and the `github
+repository <https://github.com/lab-cosmo/chemiscope>`_.
+
+
+
+.. grid:: 1 2 2 3
+    :gutter: 1 1 2 3
+
+    .. grid-item::
+
+        .. card:: Generalized Convex Hull construction for the polymorphs of ROY
+            :link: ../examples/roy-gch/roy-gch
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/roy-gch/images/thumb/sphx_glr_roy-gch_thumb.png
+                :alt: This notebook analyzes the structures of 264 polymorphs of ROY, from Beran et Al, Chemical Science (2022), comparing the conventional density-energy convex hull with a Generalized Convex Hull (GCH) analysis (see Anelli et al., Phys. Rev. Materials (2018)). It uses features computed with featomic and uses the directional convex hull function from scikit-matter to make the figure.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: PCA/PCovR Visualization of a training dataset for a potential
+            :link: ../examples/gaas-map/gaas-map
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/gaas-map/images/thumb/sphx_glr_gaas-map_thumb.png
+                :alt: This example uses featomic and metatensor to compute structural properties for the structures in a training dataset for a ML potential. These are then used with simple dimensionality reduction algorithms (implemented in sklearn and skmatter) to obtain a simplified description of the dataset, that is then visualized using chemiscope.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Path integral metadynamics
+            :link: ../examples/pi-metad/pi-metad
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/pi-metad/images/thumb/sphx_glr_pi-metad_thumb.png
+                :alt: This example shows how to run a free-energy sampling calculation that combines path integral molecular dynamics to model nuclear quantum effects and metadynamics to accelerate sampling of the high-free-energy regions.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Path integral molecular dynamics
+            :link: ../examples/path-integrals/path-integrals
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/path-integrals/images/thumb/sphx_glr_path-integrals_thumb.png
+                :alt: This example shows how to run a path integral molecular dynamics simulation using i-PI, analyze the output and visualize the trajectory in chemiscope. It uses LAMMPS as the driver to simulate the q-TIP4P/f water model.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Constant-temperature MD and thermostats
+            :link: ../examples/thermostats/thermostats
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/thermostats/images/thumb/sphx_glr_thermostats_thumb.png
+                :alt: This recipe gives a practical introduction to finite-temperature molecular dynamics simulations, and provides a guide to choose the most appropriate thermostat for the simulation at hand.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Multiple time stepping and ring-polymer contraction
+            :link: ../examples/pi-mts-rpc/mts-rpc
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/pi-mts-rpc/images/thumb/sphx_glr_mts-rpc_thumb.png
+                :alt: This notebook provides an introduction to multiple time stepping and ring polymer contraction, two closely-related techniques, that are geared towards reducing the cost of calculations by separating slowly-varying (and computationally-expensive) components of the potential energy from the fast-varying (and hopefully cheaper) ones.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Atomistic Water Model for Molecular Dynamics
+            :link: ../examples/water-model/water-model
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/water-model/images/thumb/sphx_glr_water-model_thumb.png
+                :alt: In this example, we demonstrate how to construct a metatomic model for flexible three and four-point water model, with parameters optimized for use together with quantum-nuclear-effects-aware path integral simulations (cf. Habershon et al., JCP (2009)). The model also demonstrates the use of torch-pme, a Torch library for long-range interactions, and uses the resulting model to perform demonstrative molecular dynamics simulations.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Equivariant linear model for polarizability
+            :link: ../examples/polarizability/polarizability
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/polarizability/images/thumb/sphx_glr_polarizability_thumb.png
+                :alt: In this example, we demonstrate how to construct a metatensor atomistic model for the polarizability tensor of molecular systems. This example uses the featomic library to compute equivariant descriptors, and scikit-learn to train a linear regression model. The model can then be used in an ASE calculator. You could also have a look at this recipe based on scalar/tensorial models, which provides an alternative approach for equivariant learning of tensors.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Equivariant model for tensorial properties based on scalar features
+            :link: ../examples/learn-tensors-with-mcov/learn-tensors-with-mcov
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/learn-tensors-with-mcov/images/thumb/sphx_glr_learn-tensors-with-mcov_thumb.png
+                :alt: In this example, we demonstrate how to train a metatensor atomistic model on dipole moments and polarizabilities of small molecular systems, using a model that combines scalar descriptors with equivariant tensorial components that depend in a simple way from the molecular geometry. You may also want to read this recipe for a linear polarizability model, which provides an alternative approach for tensorial learning. The model is trained with metatrain and can then be used in an ASE calculator.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: The PET-MAD universal potential
+            :link: ../examples/pet-mad/pet-mad
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/pet-mad/images/thumb/sphx_glr_pet-mad_thumb.png
+                :alt: This example demonstrates how to use the PET-MAD model with ASE, i-PI and LAMMPS. PET-MAD is a "universal" machine-learning forcefield trained on a dataset that aims to incorporate a very high degree of structural diversity.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Long-stride trajectories with a universal FlashMD model
+            :link: ../examples/flashmd/flashmd-demo
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/flashmd/images/thumb/sphx_glr_flashmd-demo_thumb.png
+                :alt: For a quickstart on how to use FlashMD with ASE, you can go here.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: ML collective variables in PLUMED with metatomic
+            :link: ../examples/metatomic-plumed/metatomic-plumed
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/metatomic-plumed/images/thumb/sphx_glr_metatomic-plumed_thumb.png
+                :alt: This example shows how to build a metatomic model that computes order parameters for a Lennard-Jones cluster, and how to use it with the PLUMED package to run a metadynamics simulation.
+                :class: gallery-img
+
+                

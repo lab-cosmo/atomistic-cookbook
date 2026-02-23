@@ -1,0 +1,669 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="search" title="Search" href="../search.html"><link rel="next" title="Statistical sampling and dynamics" href="sampling.html"><link rel="prev" title="The Atomistic Cookbook" href="../index.html">
+        <link rel="canonical" href="https://atomistic-cookbook.org/topics/index.html">
+        <link rel="prefetch" href="../_static/cookbook-icon.svg" as="image">
+
+    <link rel="shortcut icon" href="../_static/cookbook-icon.png"><!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>Recipes grouped by topic - The Atomistic Cookbook</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/cookbook.css?v=d86cfb60" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">The Atomistic Cookbook</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../_static/cookbook-icon.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">The Atomistic Cookbook</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Recipes grouped by topic</a><input aria-label="Toggle navigation of Recipes grouped by topic" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="sampling.html">Statistical sampling and dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.html">Analysis and post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ml-models.html">Machine learning models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="universal.html">Universal ML models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nqes.html">Nuclear quantum effects</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../software/index.html">Recipes grouped by software used</a><input aria-label="Toggle navigation of Recipes grouped by software used" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../software/chemiscope.html">chemiscope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../software/cp2k.html">cp2k</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../software/eon.html">eon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../software/featomic.html">featomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../software/gromacs.html">GROMACS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../software/i-pi.html">i-PI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../software/lammps.html">LAMMPS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../software/metatensor.html">metatensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../software/plumed.html">PLUMED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../software/scikit-matter.html">scikit-matter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../software/torch-pme.html">torch-pme</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../all-examples.html">List of all recipes</a><input aria-label="Toggle navigation of List of all recipes" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples/dos-align/dos-align.html">A ML model for the electron density of states</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/water-model/water-model.html">Atomistic Water Model for Molecular Dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/batch-cp2k/reference-trajectory.html">Batch run of CP2K calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/shiftml/shiftml-example.html">Computing NMR shielding tensors using ShiftML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/pet-finetuning/pet-ft-nc.html">Conservative fine-tuning for a PET model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/thermostats/thermostats.html">Constant-temperature MD and thermostats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/polarizability/polarizability.html">Equivariant linear model for polarizability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/learn-tensors-with-mcov/learn-tensors-with-mcov.html">Equivariant model for tensorial properties based on scalar features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/eon-pet-neb/eon-pet-neb.html">Finding Reaction Paths with eOn and a Metatomic Potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/pet-finetuning/pet-ft.html">Fine-tuning the PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/roy-gch/roy-gch.html">Generalized Convex Hull construction for the polymorphs of ROY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/hamiltonian-qm7/hamiltonian-qm7.html">Hamiltonian Learning for Molecules with Indirect Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/torchpme/torchpme_learning.html">Learning Capabilities with torchpme</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/lpr/lpr.html">Local Prediction Rigidity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/lode-linear/lode-linear.html">Long-distance Equivariants: a tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/flashmd/flashmd-demo.html">Long-stride trajectories with a universal FlashMD model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/pet-mad-nc/pet-mad-nc.html">MD using direct-force predictions with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/metatomic-plumed/metatomic-plumed.html">ML collective variables in PLUMED with metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/pi-mts-rpc/mts-rpc.html">Multiple time stepping and ring-polymer contraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/gaas-map/gaas-map.html">PCA/PCovR Visualization of a training dataset for a potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/pi-metad/pi-metad.html">Path integral metadynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/path-integrals/path-integrals.html">Path integral molecular dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/periodic-hamiltonian/periodic-hamiltonian.html">Periodic Hamiltonian learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/heat-capacity/heat-capacity.html">Quantum heat capacity of water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/ring-polymer-instanton/rpi-rates.html">Ring Polymer Instanton Rate Theory: Tunneling Rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/rotate-equivariants/rotate-equivariants.html">Rotating equivariants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/sample-selection/sample-selection.html">Sample and Feature Selection with FPS and CUR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/pet-mad/pet-mad.html">The PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/pet-mad-uq/pet-mad-uq.html">Uncertainty Quantification with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/water-pulsed/water-pulsed.html">Water orientation in a pulsed electric field</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../downloading.html">Downloading and running the recipes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing a recipe</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="recipes-grouped-by-topic">
+<h1>Recipes grouped by topic<a class="headerlink" href="#recipes-grouped-by-topic" title="Link to this heading">¶</a></h1>
+<p>You can navigate through the various recipes grouped
+in thematic areas, including classes of simulation problems
+and of modeling techniques. Recipes may be listed in
+more than one area, when relevant.</p>
+<div class="toctree-wrapper compound">
+</div>
+<section id="sampling">
+<h2><a class="reference internal" href="sampling.html"><span class="doc">Statistical sampling and dynamics</span></a><a class="headerlink" href="#sampling" title="Link to this heading">¶</a></h2>
+<div class="sd-sphinx-override sd-cards-carousel sd-card-cols-3 docutils">
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Constant-temperature MD and thermostats</div>
+<img alt="This recipe gives a practical introduction to finite-temperature molecular dynamics simulations, and provides a guide to choose the most appropriate thermostat for the simulation at hand." class="gallery-img" src="../_images/sphx_glr_thermostats_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/thermostats/thermostats.html"><span class="doc">Constant-temperature MD and thermostats</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Path integral molecular dynamics</div>
+<img alt="This example shows how to run a path integral molecular dynamics simulation using i-PI, analyze the output and visualize the trajectory in chemiscope. It uses LAMMPS as the driver to simulate the q-TIP4P/f water model." class="gallery-img" src="../_images/sphx_glr_path-integrals_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/path-integrals/path-integrals.html"><span class="doc">Path integral molecular dynamics</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Path integral metadynamics</div>
+<img alt="This example shows how to run a free-energy sampling calculation that combines path integral molecular dynamics to model nuclear quantum effects and metadynamics to accelerate sampling of the high-free-energy regions." class="gallery-img" src="../_images/sphx_glr_pi-metad_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/pi-metad/pi-metad.html"><span class="doc">Path integral metadynamics</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Batch run of CP2K calculations</div>
+<img alt="This is an example how to perform single point calculations based on list of structures using CP2K using its reftraj functionality. The inputs are a set of structures in :download:`example.xyz` using the DFT parameters defined in :download:`reftraj_template.cp2k`. The reference DFT parameters are taken from Cheng et al. Ab initio thermodynamics of liquid and solid water 2019. Due to the small size of the test structure and convergence issues, we have decreased the size of the CUTOFF_RADIUS from 6.0\,\mathrm{Å} to 3.0\,\mathrm{Å}. For actual production calculations adapt the template!" class="gallery-img" src="../_images/sphx_glr_reference-trajectory_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/batch-cp2k/reference-trajectory.html"><span class="doc">Batch run of CP2K calculations</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Quantum heat capacity of water</div>
+<img alt="This example shows how to estimate the heat capacity of liquid water from a path integral molecular dynamics simulation. The dynamics are run with i-PI, and LAMMPS is used as the driver to simulate the q-TIP4P/f water model." class="gallery-img" src="../_images/sphx_glr_heat-capacity_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/heat-capacity/heat-capacity.html"><span class="doc">Quantum heat capacity of water</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Multiple time stepping and ring-polymer contraction</div>
+<img alt="This notebook provides an introduction to multiple time stepping and ring polymer contraction, two closely-related techniques, that are geared towards reducing the cost of calculations by separating slowly-varying (and computationally-expensive) components of the potential energy from the fast-varying (and hopefully cheaper) ones." class="gallery-img" src="../_images/sphx_glr_mts-rpc_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/pi-mts-rpc/mts-rpc.html"><span class="doc">Multiple time stepping and ring-polymer contraction</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Atomistic Water Model for Molecular Dynamics</div>
+<img alt="In this example, we demonstrate how to construct a metatomic model for flexible three and four-point water model, with parameters optimized for use together with quantum-nuclear-effects-aware path integral simulations (cf. Habershon et al., JCP (2009)). The model also demonstrates the use of torch-pme, a Torch library for long-range interactions, and uses the resulting model to perform demonstrative molecular dynamics simulations." class="gallery-img" src="../_images/sphx_glr_water-model_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/water-model/water-model.html"><span class="doc">Atomistic Water Model for Molecular Dynamics</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+ML collective variables in PLUMED with metatomic</div>
+<img alt="This example shows how to build a metatomic model that computes order parameters for a Lennard-Jones cluster, and how to use it with the PLUMED package to run a metadynamics simulation." class="gallery-img" src="../_images/sphx_glr_metatomic-plumed_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/metatomic-plumed/metatomic-plumed.html"><span class="doc">ML collective variables in PLUMED with metatomic</span></a></div>
+</div>
+</section>
+<section id="analysis">
+<h2><a class="reference internal" href="analysis.html"><span class="doc">Analysis and post-processing</span></a><a class="headerlink" href="#analysis" title="Link to this heading">¶</a></h2>
+<div class="sd-sphinx-override sd-cards-carousel sd-card-cols-3 docutils">
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+PCA/PCovR Visualization of a training dataset for a potential</div>
+<img alt="This example uses featomic and metatensor to compute structural properties for the structures in a training dataset for a ML potential. These are then used with simple dimensionality reduction algorithms (implemented in sklearn and skmatter) to obtain a simplified description of the dataset, that is then visualized using chemiscope." class="gallery-img" src="../_images/sphx_glr_gaas-map_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/gaas-map/gaas-map.html"><span class="doc">PCA/PCovR Visualization of a training dataset for a potential</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Local Prediction Rigidity analysis</div>
+<img alt="In this tutorial, we calculate the SOAP descriptors of an amorphous silicon dataset using featomic, then compute the local prediction rigidity (LPR) for the atoms of a &quot;test&quot; set before and after modifications to the &quot;training&quot; dataset has been made." class="gallery-img" src="../_images/sphx_glr_lpr_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/lpr/lpr.html"><span class="doc">Local Prediction Rigidity analysis</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Generalized Convex Hull construction for the polymorphs of ROY</div>
+<img alt="This notebook analyzes the structures of 264 polymorphs of ROY, from Beran et Al, Chemical Science (2022), comparing the conventional density-energy convex hull with a Generalized Convex Hull (GCH) analysis (see Anelli et al., Phys. Rev. Materials (2018)). It uses features computed with featomic and uses the directional convex hull function from scikit-matter to make the figure." class="gallery-img" src="../_images/sphx_glr_roy-gch_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/roy-gch/roy-gch.html"><span class="doc">Generalized Convex Hull construction for the polymorphs of ROY</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Rotating equivariants</div>
+<img alt="This example shows how to rotate equivariant properties of atomic structures using the scipy and quaternionic libraries. The equivariant properties for this example are computed by the featomic library." class="gallery-img" src="../_images/sphx_glr_rotate-equivariants_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/rotate-equivariants/rotate-equivariants.html"><span class="doc">Rotating equivariants</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Water orientation in a pulsed electric field</div>
+<img alt="Energy dissipation in water is very fast and more efficient than in many other liquids. This behavior is commonly attributed to the intermolecular interactions associated with hydrogen bonding. This effect has been studied intensively by experiments, ab initio, and classical simulations in the work by Elgabarty et al.. Here, we will re run some of the classical force field molecular dynamics (MD) simulations of the paper using the GROMACS package to compute the timeseries of the dipole moments as well as the energy." class="gallery-img" src="../_images/sphx_glr_water-pulsed_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/water-pulsed/water-pulsed.html"><span class="doc">Water orientation in a pulsed electric field</span></a></div>
+</div>
+</section>
+<section id="ml-models">
+<h2><a class="reference internal" href="ml-models.html"><span class="doc">Machine learning models</span></a><a class="headerlink" href="#ml-models" title="Link to this heading">¶</a></h2>
+<div class="sd-sphinx-override sd-cards-carousel sd-card-cols-3 docutils">
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+A ML model for the electron density of states</div>
+<img alt="This tutorial would go through the entire machine learning framework for the electronic density of states (DOS). It will cover the construction of the DOS and SOAP descriptors from ase Atoms and eigenenergy results. A simple neural network will then be constructed and the model parameters, along with the energy reference will be optimized during training. A total of three energy reference will be used, the average Hartree potential, the Fermi level, and an optimized energy reference starting from the Fermi level energy reference. The performance of each model is then compared." class="gallery-img" src="../_images/sphx_glr_dos-align_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/dos-align/dos-align.html"><span class="doc">A ML model for the electron density of states</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Long-distance Equivariants: a tutorial</div>
+<img alt="This tutorial explains how Long range equivariant descriptors can be constructed using featomic and the resulting descriptors be used to construct a linear model with equisolve" class="gallery-img" src="../_images/sphx_glr_lode-linear_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/lode-linear/lode-linear.html"><span class="doc">Long-distance Equivariants: a tutorial</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Sample and Feature Selection with FPS and CUR</div>
+<img alt="In this tutorial we generate descriptors using featomic, then select a subset of structures using both the farthest-point sampling (FPS) and CUR algorithms implemented in scikit-matter. Finally, we also generate a selection of the most important features using the same techniques." class="gallery-img" src="../_images/sphx_glr_sample-selection_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/sample-selection/sample-selection.html"><span class="doc">Sample and Feature Selection with FPS and CUR</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Periodic Hamiltonian learning</div>
+<img alt="This tutorial explains how to train a machine learning model for the electronic Hamiltonian of a periodic system. Even though we focus on periodic systems, the code and techniques presented here can be directly transferred to molecules." class="gallery-img" src="../_images/sphx_glr_periodic-hamiltonian_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/periodic-hamiltonian/periodic-hamiltonian.html"><span class="doc">Periodic Hamiltonian learning</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Equivariant linear model for polarizability</div>
+<img alt="In this example, we demonstrate how to construct a metatensor atomistic model for the polarizability tensor of molecular systems. This example uses the featomic library to compute equivariant descriptors, and scikit-learn to train a linear regression model. The model can then be used in an ASE calculator. You could also have a look at this recipe based on scalar/tensorial models, which provides an alternative approach for equivariant learning of tensors." class="gallery-img" src="../_images/sphx_glr_polarizability_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/polarizability/polarizability.html"><span class="doc">Equivariant linear model for polarizability</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Equivariant model for tensorial properties based on scalar features</div>
+<img alt="In this example, we demonstrate how to train a metatensor atomistic model on dipole moments and polarizabilities of small molecular systems, using a model that combines scalar descriptors with equivariant tensorial components that depend in a simple way from the molecular geometry. You may also want to read this recipe for a linear polarizability model, which provides an alternative approach for tensorial learning. The model is trained with metatrain and can then be used in an ASE calculator." class="gallery-img" src="../_images/sphx_glr_learn-tensors-with-mcov_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/learn-tensors-with-mcov/learn-tensors-with-mcov.html"><span class="doc">Equivariant model for tensorial properties based on scalar features</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+The PET-MAD universal potential</div>
+<img alt="This example demonstrates how to use the PET-MAD model with ASE, i-PI and LAMMPS. PET-MAD is a &quot;universal&quot; machine-learning forcefield trained on a dataset that aims to incorporate a very high degree of structural diversity." class="gallery-img" src="../_images/sphx_glr_pet-mad_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/pet-mad/pet-mad.html"><span class="doc">The PET-MAD universal potential</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+MD using direct-force predictions with PET-MAD</div>
+<img alt="Evaluating forces as a direct output of a ML model accelerates their evaluation, by up to a factor of 3 in comparison to the traditional approach that evaluates them as derivatives of the interatomic potential. Unfortunately, as discussed e.g. in this paper, doing so means that forces are not conservative, leading to instabilities and artefacts in many modeling tasks, such as constant-energy molecular dynamics. Here we demonstrate the issues associated with direct force predictions, and ways to mitigate them, using the generally-applicable PET-MAD potential. See also this recipe for examples of using PET-MAD for basic tasks such as geometry optimization and conservative MD, and this for an example of how to use direct forces to accelerate training." class="gallery-img" src="../_images/sphx_glr_pet-mad-nc_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/pet-mad-nc/pet-mad-nc.html"><span class="doc">MD using direct-force predictions with PET-MAD</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Fine-tuning the PET-MAD universal potential</div>
+<img alt="This example demonstrates how to fine-tune the PET-MAD universal ML potential on a new dataset using metatrain. This allows adapting the model to a specialized task by retraining it on a more focused, domain-specific dataset." class="gallery-img" src="../_images/sphx_glr_pet-ft_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/pet-finetuning/pet-ft.html"><span class="doc">Fine-tuning the PET-MAD universal potential</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Conservative fine-tuning for a PET model</div>
+<img alt="This example demonstrates a &quot;conservative fine-tuning&quot; (or equivalently, &quot;non-conservative pre-training&quot;) strategy. This consists in training a model using (faster) direct, non-conservative force predictions, and then fine-tuning it with backpropagated forces to achieve an accurate conservative model." class="gallery-img" src="../_images/sphx_glr_pet-ft-nc_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/pet-finetuning/pet-ft-nc.html"><span class="doc">Conservative fine-tuning for a PET model</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Long-stride trajectories with a universal FlashMD model</div>
+<img alt="For a quickstart on how to use FlashMD with ASE, you can go here." class="gallery-img" src="../_images/sphx_glr_flashmd-demo_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/flashmd/flashmd-demo.html"><span class="doc">Long-stride trajectories with a universal FlashMD model</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Computing NMR shielding tensors using ShiftML</div>
+<img alt="This example shows how to compute NMR shielding tensors using a point-edge transformer model trained on the ShiftML dataset." class="gallery-img" src="../_images/sphx_glr_shiftml-example_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/shiftml/shiftml-example.html"><span class="doc">Computing NMR shielding tensors using ShiftML</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Hamiltonian Learning for Molecules with Indirect Targets</div>
+<img alt="This tutorial introduces a machine learning (ML) framework that predicts Hamiltonians for molecular systems. Another one of our cookbook examples demonstrates an ML model that predicts real-space Hamiltonians for periodic systems. While we use the same model here to predict a molecular Hamiltonians, we further finetune these models to optimise predictions of different quantum mechanical (QM) properties of interest, thereby treating the Hamiltonian predictions as an intermediate component of the ML framework. More details on this hybrid or indirect learning framework can be found in ACS Cent. Sci. 2024, 10, 637−648. and our preprint arXiv:2504.01187." class="gallery-img" src="../_images/sphx_glr_hamiltonian-qm7_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/hamiltonian-qm7/hamiltonian-qm7.html"><span class="doc">Hamiltonian Learning for Molecules with Indirect Targets</span></a></div>
+</div>
+</section>
+<section id="universal">
+<h2><a class="reference internal" href="universal.html"><span class="doc">Universal ML models</span></a><a class="headerlink" href="#universal" title="Link to this heading">¶</a></h2>
+<div class="sd-sphinx-override sd-cards-carousel sd-card-cols-3 docutils">
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+The PET-MAD universal potential</div>
+<img alt="This example demonstrates how to use the PET-MAD model with ASE, i-PI and LAMMPS. PET-MAD is a &quot;universal&quot; machine-learning forcefield trained on a dataset that aims to incorporate a very high degree of structural diversity." class="gallery-img" src="../_images/sphx_glr_pet-mad_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/pet-mad/pet-mad.html"><span class="doc">The PET-MAD universal potential</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+MD using direct-force predictions with PET-MAD</div>
+<img alt="Evaluating forces as a direct output of a ML model accelerates their evaluation, by up to a factor of 3 in comparison to the traditional approach that evaluates them as derivatives of the interatomic potential. Unfortunately, as discussed e.g. in this paper, doing so means that forces are not conservative, leading to instabilities and artefacts in many modeling tasks, such as constant-energy molecular dynamics. Here we demonstrate the issues associated with direct force predictions, and ways to mitigate them, using the generally-applicable PET-MAD potential. See also this recipe for examples of using PET-MAD for basic tasks such as geometry optimization and conservative MD, and this for an example of how to use direct forces to accelerate training." class="gallery-img" src="../_images/sphx_glr_pet-mad-nc_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/pet-mad-nc/pet-mad-nc.html"><span class="doc">MD using direct-force predictions with PET-MAD</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Fine-tuning the PET-MAD universal potential</div>
+<img alt="This example demonstrates how to fine-tune the PET-MAD universal ML potential on a new dataset using metatrain. This allows adapting the model to a specialized task by retraining it on a more focused, domain-specific dataset." class="gallery-img" src="../_images/sphx_glr_pet-ft_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/pet-finetuning/pet-ft.html"><span class="doc">Fine-tuning the PET-MAD universal potential</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Uncertainty Quantification with PET-MAD</div>
+<img alt="This recipe demonstrates three ways of computing errors on the outputs of ML potential-driven simulations, using as an example the PET-MAD model and its built-in uncertainty quantification (UQ) capabilities." class="gallery-img" src="../_images/sphx_glr_pet-mad-uq_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/pet-mad-uq/pet-mad-uq.html"><span class="doc">Uncertainty Quantification with PET-MAD</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Long-stride trajectories with a universal FlashMD model</div>
+<img alt="For a quickstart on how to use FlashMD with ASE, you can go here." class="gallery-img" src="../_images/sphx_glr_flashmd-demo_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/flashmd/flashmd-demo.html"><span class="doc">Long-stride trajectories with a universal FlashMD model</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Finding Reaction Paths with eOn and a Metatomic Potential</div>
+<img alt="This example describes how to find the reaction pathway for oxadiazole formation from N₂O and ethylene. We will use the PET-MAD metatomic model to calculate the potential energy and forces." class="gallery-img" src="../_images/sphx_glr_eon-pet-neb_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/eon-pet-neb/eon-pet-neb.html"><span class="doc">Finding Reaction Paths with eOn and a Metatomic Potential</span></a></div>
+</div>
+</section>
+<section id="nqes">
+<h2><a class="reference internal" href="nqes.html"><span class="doc">Nuclear quantum effects</span></a><a class="headerlink" href="#nqes" title="Link to this heading">¶</a></h2>
+<div class="sd-sphinx-override sd-cards-carousel sd-card-cols-3 docutils">
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Path integral molecular dynamics</div>
+<img alt="This example shows how to run a path integral molecular dynamics simulation using i-PI, analyze the output and visualize the trajectory in chemiscope. It uses LAMMPS as the driver to simulate the q-TIP4P/f water model." class="gallery-img" src="../_images/sphx_glr_path-integrals_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/path-integrals/path-integrals.html"><span class="doc">Path integral molecular dynamics</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Path integral metadynamics</div>
+<img alt="This example shows how to run a free-energy sampling calculation that combines path integral molecular dynamics to model nuclear quantum effects and metadynamics to accelerate sampling of the high-free-energy regions." class="gallery-img" src="../_images/sphx_glr_pi-metad_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/pi-metad/pi-metad.html"><span class="doc">Path integral metadynamics</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Quantum heat capacity of water</div>
+<img alt="This example shows how to estimate the heat capacity of liquid water from a path integral molecular dynamics simulation. The dynamics are run with i-PI, and LAMMPS is used as the driver to simulate the q-TIP4P/f water model." class="gallery-img" src="../_images/sphx_glr_heat-capacity_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/heat-capacity/heat-capacity.html"><span class="doc">Quantum heat capacity of water</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Multiple time stepping and ring-polymer contraction</div>
+<img alt="This notebook provides an introduction to multiple time stepping and ring polymer contraction, two closely-related techniques, that are geared towards reducing the cost of calculations by separating slowly-varying (and computationally-expensive) components of the potential energy from the fast-varying (and hopefully cheaper) ones." class="gallery-img" src="../_images/sphx_glr_mts-rpc_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/pi-mts-rpc/mts-rpc.html"><span class="doc">Multiple time stepping and ring-polymer contraction</span></a></div>
+<div class="sd-card sd-sphinx-override sd-mb-3 sd-shadow-md sd-card-hover sd-text-center docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Ring Polymer Instanton Rate Theory: Tunneling Rates</div>
+<img alt="This notebook introduces the calculation of tunneling rates using ring-polymer instanton rate theory. A comprehensive presentation of the instanton formalism can be found in the review article by J. Richardson, Int. Rev. Phys. Chem., 37, 171, 2018, while the implementation within i-PI is described in V. Kapil et al., Comp. Phys. Commun., 236, 214, 2020. Additional practical details are available in Yair Litman's doctoral thesis." class="gallery-img" src="../_images/sphx_glr_rpi-rates_thumb.png" />
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="../examples/ring-polymer-instanton/rpi-rates.html"><span class="doc">Ring Polymer Instanton Rate Theory: Tunneling Rates</span></a></div>
+</div>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="sampling.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Statistical sampling and dynamics</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../index.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Home</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; BSD 3-Clause License, Copyright (c) 2026, The atomistic cookbook team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Recipes grouped by topic</a><ul>
+<li><a class="reference internal" href="#sampling"><span class="xref std std-doc">sampling</span></a></li>
+<li><a class="reference internal" href="#analysis"><span class="xref std std-doc">analysis</span></a></li>
+<li><a class="reference internal" href="#ml-models"><span class="xref std std-doc">ml-models</span></a></li>
+<li><a class="reference internal" href="#universal"><span class="xref std std-doc">universal</span></a></li>
+<li><a class="reference internal" href="#nqes"><span class="xref std std-doc">nqes</span></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script data-domain="atomistic-cookbook.org" defer="defer" src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"></script>
+    <script src="../_static/all-examples-data.js?v=01c87ff6"></script>
+    <script src="../_static/daily-recipe.js?v=b5e71911"></script>
+    </body>
+</html>

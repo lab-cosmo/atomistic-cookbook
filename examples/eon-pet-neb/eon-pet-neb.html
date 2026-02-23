@@ -1,0 +1,1473 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="search" title="Search" href="../../search.html"><link rel="next" title="Fine-tuning the PET-MAD universal potential" href="../pet-finetuning/pet-ft.html"><link rel="prev" title="Equivariant model for tensorial properties based on scalar features" href="../learn-tensors-with-mcov/learn-tensors-with-mcov.html">
+        <link rel="canonical" href="https://atomistic-cookbook.org/examples/eon-pet-neb/eon-pet-neb.html">
+        <link rel="prefetch" href="../../_static/cookbook-icon.svg" as="image">
+
+    <link rel="shortcut icon" href="../../_static/cookbook-icon.png"><!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>Finding Reaction Paths with eOn and a Metatomic Potential - The Atomistic Cookbook</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/cookbook.css?v=d86cfb60" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">The Atomistic Cookbook</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/cookbook-icon.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">The Atomistic Cookbook</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../topics/index.html">Recipes grouped by topic</a><input aria-label="Toggle navigation of Recipes grouped by topic" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/sampling.html">Statistical sampling and dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/analysis.html">Analysis and post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/ml-models.html">Machine learning models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/universal.html">Universal ML models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/nqes.html">Nuclear quantum effects</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../software/index.html">Recipes grouped by software used</a><input aria-label="Toggle navigation of Recipes grouped by software used" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../software/chemiscope.html">chemiscope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/cp2k.html">cp2k</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/eon.html">eon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/featomic.html">featomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/gromacs.html">GROMACS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/i-pi.html">i-PI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/lammps.html">LAMMPS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/metatensor.html">metatensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/plumed.html">PLUMED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/scikit-matter.html">scikit-matter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/torch-pme.html">torch-pme</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../all-examples.html">List of all recipes</a><input aria-label="Toggle navigation of List of all recipes" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../dos-align/dos-align.html">A ML model for the electron density of states</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-model/water-model.html">Atomistic Water Model for Molecular Dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../batch-cp2k/reference-trajectory.html">Batch run of CP2K calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../shiftml/shiftml-example.html">Computing NMR shielding tensors using ShiftML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft-nc.html">Conservative fine-tuning for a PET model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermostats/thermostats.html">Constant-temperature MD and thermostats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../polarizability/polarizability.html">Equivariant linear model for polarizability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../learn-tensors-with-mcov/learn-tensors-with-mcov.html">Equivariant model for tensorial properties based on scalar features</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Finding Reaction Paths with eOn and a Metatomic Potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft.html">Fine-tuning the PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../roy-gch/roy-gch.html">Generalized Convex Hull construction for the polymorphs of ROY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hamiltonian-qm7/hamiltonian-qm7.html">Hamiltonian Learning for Molecules with Indirect Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../torchpme/torchpme_learning.html">Learning Capabilities with torchpme</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lpr/lpr.html">Local Prediction Rigidity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lode-linear/lode-linear.html">Long-distance Equivariants: a tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flashmd/flashmd-demo.html">Long-stride trajectories with a universal FlashMD model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-nc/pet-mad-nc.html">MD using direct-force predictions with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metatomic-plumed/metatomic-plumed.html">ML collective variables in PLUMED with metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-mts-rpc/mts-rpc.html">Multiple time stepping and ring-polymer contraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../gaas-map/gaas-map.html">PCA/PCovR Visualization of a training dataset for a potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-metad/pi-metad.html">Path integral metadynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../path-integrals/path-integrals.html">Path integral molecular dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../periodic-hamiltonian/periodic-hamiltonian.html">Periodic Hamiltonian learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../heat-capacity/heat-capacity.html">Quantum heat capacity of water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ring-polymer-instanton/rpi-rates.html">Ring Polymer Instanton Rate Theory: Tunneling Rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rotate-equivariants/rotate-equivariants.html">Rotating equivariants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sample-selection/sample-selection.html">Sample and Feature Selection with FPS and CUR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad/pet-mad.html">The PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-uq/pet-mad-uq.html">Uncertainty Quantification with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-pulsed/water-pulsed.html">Water orientation in a pulsed electric field</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../downloading.html">Downloading and running the recipes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing a recipe</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-examples-eon-pet-neb-eon-pet-neb-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="finding-reaction-paths-with-eon-and-a-metatomic-potential">
+<span id="sphx-glr-examples-eon-pet-neb-eon-pet-neb-py"></span><h1>Finding Reaction Paths with eOn and a Metatomic Potential<a class="headerlink" href="#finding-reaction-paths-with-eon-and-a-metatomic-potential" title="Link to this heading">¶</a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Authors<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Rohit Goswami <a class="reference external" href="https://github.com/haozeke/">&#64;HaoZeke</a>,
+Hanna Tuerk <a class="reference external" href="https://github.com/HannaTuerk">&#64;HannaTuerk</a>,
+Arslan Mazitov <a class="reference external" href="https://github.com/abmazitov">&#64;abmazitov</a>,
+Michele Ceriotti <a class="reference external" href="https://github.com/ceriottim/">&#64;ceriottim</a></p>
+</dd>
+</dl>
+<p>This example describes how to find the reaction pathway for oxadiazole
+formation from N₂O and ethylene. We will use the <strong>PET-MAD</strong> <a class="reference external" href="https://docs.metatensor.org/metatomic/latest/overview.html">metatomic
+model</a> to
+calculate the potential energy and forces.</p>
+<p>The primary goal is to contrast a standard Nudged Elastic Band (NEB) calculation
+using the <a class="reference external" href="https://databases.fysik.dtu.dk/ase/">atomic simulation environment (ASE)</a> with more sophisticated methods
+available in the <a class="reference external" href="https://eondocs.org/">eOn package</a>. For even a relatively
+simple reaction like this, a basic NEB implementation can struggle to converge
+or may time out. We will show how eOn’s advanced features, such as
+<strong>energy-weighted springs</strong> and mixing in <strong>single-ended dimer search steps</strong>,
+can efficiently locate and refine the transition state along the path.</p>
+<p>Our approach will be:</p>
+<ol class="arabic simple">
+<li><p>Set up the <strong>PET-MAD metatomic calculator</strong>.</p></li>
+<li><p>Use ASE to generate an initial IDPP reaction path.</p></li>
+<li><p>Illustrate the limitations of a standard NEB calculation in ASE.</p></li>
+<li><p>Refine the path and locate the transition state saddle point using
+eOn’s optimizers, including energy-weighted springs and the dimer
+method.</p></li>
+<li><p>Visualize the final converged pathway.</p></li>
+<li><p>Demonstrate endpoint relaxation with eOn</p></li>
+</ol>
+<section id="importing-required-packages">
+<h2>Importing Required Packages<a class="headerlink" href="#importing-required-packages" title="Link to this heading">¶</a></h2>
+<p>First, we import all the necessary python packages for this task.
+By convention, all <code class="docutils literal notranslate"><span class="pre">import</span></code>
+statements are at the top of the file.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">ase</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ase.io</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">aseio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ira_mod</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.image</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpimg</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ase.mep</span><span class="w"> </span><span class="kn">import</span> <span class="n">NEB</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ase.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">LBFGS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ase.visualize</span><span class="w"> </span><span class="kn">import</span> <span class="n">view</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ase.visualize.plot</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_atoms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">metatomic.torch.ase_calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetatomicCalculator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rgpycrumbs.eon.helpers</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_eon_config</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rgpycrumbs.run.jupyter</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_command_or_exit</span>
+
+
+<span class="c1"># sphinx_gallery_thumbnail_number = 4</span>
+</pre></div>
+</div>
+</section>
+<section id="obtaining-the-foundation-model-pet-mad">
+<h2>Obtaining the Foundation Model - PET-MAD<a class="headerlink" href="#obtaining-the-foundation-model-pet-mad" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">PET-MAD</span></code> is an instance of a point edge transformer model trained on
+the diverse <a class="reference external" href="https://arxiv.org/abs/2506.19674">MAD dataset</a>
+which learns equivariance through data driven measures
+instead of having equivariance baked in [1]. In turn, this enables
+the PET model to have greater design space to learn over. Integration in
+Python and the C++ eOn client occurs through the <code class="docutils literal notranslate"><span class="pre">metatomic</span></code> software [2],
+which in turn relies on the atomistic machine learning toolkit build
+over <code class="docutils literal notranslate"><span class="pre">metatensor</span></code>. Essentially using any of the metatomic models involves
+grabbing weights off of HuggingFace and loading them with
+<code class="docutils literal notranslate"><span class="pre">metatomic</span></code> before running the
+<a class="reference external" href="https://docs.metatensor.org/metatomic/latest/engines/index.html">engine of choice</a>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">repo_id</span> <span class="o">=</span> <span class="s2">&quot;lab-cosmo/upet&quot;</span>
+<span class="n">tag</span> <span class="o">=</span> <span class="s2">&quot;v1.1.0&quot;</span>
+<span class="n">url_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;models/pet-mad-s-</span><span class="si">{</span><span class="n">tag</span><span class="si">}</span><span class="s2">.ckpt&quot;</span>
+<span class="n">fname</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">url_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.ckpt&quot;</span><span class="p">,</span> <span class="s2">&quot;.pt&quot;</span><span class="p">))</span>
+<span class="n">url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://huggingface.co/</span><span class="si">{</span><span class="n">repo_id</span><span class="si">}</span><span class="s2">/resolve/main/</span><span class="si">{</span><span class="n">url_path</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="n">fname</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;mtt&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;export&quot;</span><span class="p">,</span>
+        <span class="n">url</span><span class="p">,</span>
+        <span class="s2">&quot;-o&quot;</span><span class="p">,</span>
+        <span class="n">fname</span><span class="p">,</span>
+    <span class="p">],</span>
+    <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully exported </span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Successfully exported models/pet-mad-s-v1.1.0.pt.
+</pre></div>
+</div>
+</section>
+<section id="nudged-elastic-band-neb">
+<h2>Nudged Elastic Band (NEB)<a class="headerlink" href="#nudged-elastic-band-neb" title="Link to this heading">¶</a></h2>
+<p>Given two known configurations on a potential energy surface (PES),
+often one wishes to determine the path of highest probability between
+the two. Under the harmonic approximation to transition state theory,
+connecting the configurations (each point representing a full molecular
+structure) by a discrete set of images allows one to evolve the path
+under an optimization algorithm, and allows approximating the reaction to
+three states: the reactant, product, and transition state.</p>
+<p>The location of this transition state (≈ the point with the highest energy
+along this path) determines the barrier height of the reaction. This saddle
+point can be found by transforming the second derivatives (Hessian) to step
+along the softest mode. However, an approximation which is free from
+explicitly finding this mode involves moving the highest image of a NEB path:
+the “climbing” image.</p>
+<p>Mathematically, the saddle point has zero first derivatives and a single
+negative eigenvalue. The climbing image technique moves the highest energy
+image along the reversed NEB tangent force, avoiding the cost of full
+Hessian diagonalization used in single-ended methods [3].</p>
+<p>Concretely, in this example, we will
+consider a reactant and product state, for oxadiazole
+formation, namely N₂O and ethylene.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">reactant</span> <span class="o">=</span> <span class="n">aseio</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;data/min_reactant.con&quot;</span><span class="p">)</span>
+<span class="n">product</span> <span class="o">=</span> <span class="n">aseio</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;data/min_product.con&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We can visualize these structures using ASE.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">plot_atoms</span><span class="p">(</span><span class="n">reactant</span><span class="p">,</span> <span class="n">ax1</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;-90x,0y,0z&quot;</span><span class="p">))</span>
+<span class="n">plot_atoms</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">ax2</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;-90x,0y,0z&quot;</span><span class="p">))</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;reactant&quot;</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;product&quot;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_eon-pet-neb_001.png" srcset="../../_images/sphx_glr_eon-pet-neb_001.png" alt="eon pet neb" class = "sphx-glr-single-img"/><section id="endpoint-minimization">
+<h3>Endpoint minimization<a class="headerlink" href="#endpoint-minimization" title="Link to this heading">¶</a></h3>
+<p>For finding reaction pathways, the endpoints should be minimized. We provide
+initial configurations which are already minimized, but in order to see how to
+relax endpoints with eOn, please have a look at the end of this tutorial.</p>
+</section>
+<section id="initial-path-generation">
+<h3>Initial path generation<a class="headerlink" href="#initial-path-generation" title="Link to this heading">¶</a></h3>
+<p>To begin an NEB method, an initial path is required, the optimal construction
+of which still forms an active area of research. The simplest approximation to
+an initial path for NEB methods linearly interpolate between the two known
+configurations building on intuition developed from “drag coordinate” methods.
+This may break bonds or otherwise also unphysically pass atoms through each
+other, similar to the effect of incorrect permutations. To ameliorate this
+effect, the NEB algorithm is often started from the linear interpolation but
+then the path is optimized on a surrogate potential energy surface, commonly
+something cheap and analytic, like the IDPP (Image dependent pair potential,
+[5]) which provides a surface based on bond distances, and thus preventing
+atom-in-atom collisions.</p>
+<p>Here we use the IDPP from ASE to setup the initial path. You can find
+more information about this method in the corresponding
+<a class="reference external" href="https://ase-lib.org/examples_generated/tutorials/neb_idpp.html">ASE tutorial</a>
+or in the original IDPP publication by
+<a class="reference external" href="https://doi.org/10.1063/1.4878664">S. Smidstru et al.</a> .
+A brief pedagogical discussion of the transition state methods may be found on
+the <a class="reference external" href="https://rowansci.com/blog/guessing-transition-states">Rowan blog</a>,
+though the software is proprietary there.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">N_INTERMEDIATE_IMGS</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="c1"># total includes the endpoints</span>
+<span class="n">TOTAL_IMGS</span> <span class="o">=</span> <span class="n">N_INTERMEDIATE_IMGS</span> <span class="o">+</span> <span class="mi">2</span>
+<span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">reactant</span><span class="p">]</span>
+<span class="n">images</span> <span class="o">+=</span> <span class="p">[</span><span class="n">reactant</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_INTERMEDIATE_IMGS</span><span class="p">)]</span>
+<span class="n">images</span> <span class="o">+=</span> <span class="p">[</span><span class="n">product</span><span class="p">]</span>
+
+<span class="n">neb</span> <span class="o">=</span> <span class="n">NEB</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+<span class="n">neb</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="s2">&quot;idpp&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We don’t cover subtleties in setting the number of images, typically too many
+intermediate images may cause kinks but too few will be unable to resolve the
+tangent to any reasonable quality.</p>
+<p>For eOn, we write the initial path to a file called <code class="docutils literal notranslate"><span class="pre">idppPath.dat</span></code>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">output_dir</span> <span class="o">=</span> <span class="s2">&quot;path&quot;</span>
+<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">output_files</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_dir</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">num</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">.con&quot;</span> <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">TOTAL_IMGS</span><span class="p">)]</span>
+
+<span class="k">for</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">img</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">output_files</span><span class="p">,</span> <span class="n">images</span><span class="p">):</span>
+    <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="n">img</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Wrote </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">output_files</span><span class="p">)</span><span class="si">}</span><span class="s2"> IDPP images to &#39;</span><span class="si">{</span><span class="n">output_dir</span><span class="si">}</span><span class="s2">/&#39;.&quot;</span><span class="p">)</span>
+
+<span class="n">summary_file_path</span> <span class="o">=</span> <span class="s2">&quot;idppPath.dat&quot;</span>
+
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">summary_file_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">filepath</span> <span class="ow">in</span> <span class="n">output_files</span><span class="p">:</span>
+        <span class="n">abs_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">abs_path</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Wrote absolute paths to &#39;</span><span class="si">{</span><span class="n">summary_file_path</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Wrote 12 IDPP images to &#39;path/&#39;.
+Wrote absolute paths to &#39;idppPath.dat&#39;.
+</pre></div>
+</div>
+</section>
+</section>
+<section id="running-nebs">
+<h2>Running NEBs<a class="headerlink" href="#running-nebs" title="Link to this heading">¶</a></h2>
+<p>We will now consider actually running the Nudged Elastic Band with different
+codes.</p>
+<section id="ase-and-metatomic">
+<h3>ASE and Metatomic<a class="headerlink" href="#ase-and-metatomic" title="Link to this heading">¶</a></h3>
+<p>We first consider using metatomic with the ASE calculator.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># define the calculator</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">mk_mta_calc</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">MetatomicCalculator</span><span class="p">(</span>
+        <span class="n">fname</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span>
+        <span class="n">non_conservative</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">uncertainty_threshold</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="c1"># set calculators for images</span>
+<span class="n">ipath</span> <span class="o">=</span> <span class="p">[</span><span class="n">reactant</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">reactant</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[</span><span class="n">product</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="n">ipath</span><span class="p">:</span>
+    <span class="n">img</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="n">mk_mta_calc</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">calc</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">capabilities</span><span class="p">()</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span>
+
+<span class="n">neb</span> <span class="o">=</span> <span class="n">NEB</span><span class="p">(</span><span class="n">ipath</span><span class="p">,</span> <span class="n">climb</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;improvedtangent&quot;</span><span class="p">)</span>
+<span class="n">neb</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="s2">&quot;idpp&quot;</span><span class="p">)</span>
+
+<span class="c1"># store initial path guess for plotting</span>
+<span class="n">initial_energies</span> <span class="o">=</span> <span class="p">[</span><span class="n">img</span><span class="o">.</span><span class="n">get_potential_energy</span><span class="p">()</span> <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="n">ipath</span><span class="p">]</span>
+
+<span class="c1"># setup the NEB clalculation</span>
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">LBFGS</span><span class="p">(</span><span class="n">neb</span><span class="p">,</span> <span class="n">trajectory</span><span class="o">=</span><span class="s2">&quot;A2B.traj&quot;</span><span class="p">,</span> <span class="n">logfile</span><span class="o">=</span><span class="s2">&quot;opt.log&quot;</span><span class="p">)</span>
+<span class="n">conv</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">fmax</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Check if calculation has converged:&quot;</span><span class="p">,</span> <span class="n">conv</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">conv</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">neb</span><span class="p">)</span>
+
+<span class="n">final_energies</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">get_potential_energy</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ipath</span><span class="p">]</span>
+
+<span class="c1"># Plot initial and final path</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="c1"># Initial Path (Blue)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">initial_energies</span> <span class="o">-</span> <span class="n">initial_energies</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="s2">&quot;o-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Initial Path (IDPP)&quot;</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;xkcd:blue&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="c1"># Final Path (Orange)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">final_energies</span> <span class="o">-</span> <span class="n">initial_energies</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="s2">&quot;o-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Optimized Path (LBFGS)&quot;</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;xkcd:orange&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="c1"># Metadata</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Image number&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Potential Energy (eV)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;NEB Path Evolution&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_eon-pet-neb_002.png" srcset="../../_images/sphx_glr_eon-pet-neb_002.png" alt="NEB Path Evolution" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>{&#39;energy&#39;: &lt;torch.ScriptObject object at 0x56303ff192f0&gt;, &#39;features&#39;: &lt;torch.ScriptObject object at 0x56303c9482b0&gt;, &#39;mtt::aux::energy_last_layer_features&#39;: &lt;torch.ScriptObject object at 0x56303fc0f320&gt;, &#39;mtt::aux::non_conservative_forces_last_layer_features&#39;: &lt;torch.ScriptObject object at 0x563040560fe0&gt;, &#39;mtt::aux::non_conservative_stress_last_layer_features&#39;: &lt;torch.ScriptObject object at 0x5630404ef6e0&gt;, &#39;non_conservative_forces&#39;: &lt;torch.ScriptObject object at 0x56303e0a9ee0&gt;, &#39;non_conservative_stress&#39;: &lt;torch.ScriptObject object at 0x56303f15dbe0&gt;}
+Check if calculation has converged: True
+&lt;ase.mep.neb.NEB object at 0x7f8cb9ce6e90&gt;
+</pre></div>
+</div>
+<p>In the 100 NEB steps we took, the structure did unfortunately not converge.
+The metatomic calculator for PET-MAD v1.0.2 provides <a class="reference external" href="https://atomistic-cookbook.org/examples/pet-mad-uq/pet-mad-uq.html">LLPR based energy
+uncertainties</a>.
+As we obtain a warning that the uncertainty of the path structure sampled is
+very high, we stop after 100 steps.
+The ASE algorithm with LBFGS optimizer does not
+find good intermediate structures and does not converge
+at all. Our test showed that the FIRE optimizer works better in this context,
+but still takes over 500 steps to converge, and since second order methods are
+faster, we consider the LBFGS routine throughout this notebook.</p>
+<p>We thus want to
+look at a different code, which manages to compute a NEB for this simple
+system more efficiently.</p>
+</section>
+<section id="eon-and-metatomic">
+<h3>eOn and Metatomic<a class="headerlink" href="#eon-and-metatomic" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="https://eondocs.org">eOn</a> has two improvements to accurately locate the
+saddle point.</p>
+<ol class="arabic simple">
+<li><p>Energy weighting for improving tangent resolution
+near the climbing image</p></li>
+<li><p>The Off-path climbing image (6) which involves
+iteratively switching to the dimer method for
+faster convergence by the climbing image.</p></li>
+</ol>
+<p>To use eOn, we setup a function that writes the desired eOn input for us and
+runs the <code class="docutils literal notranslate"><span class="pre">eonclient</span></code> binary. Since we are in a notebook environment, we will
+use several abstractions over raw <code class="docutils literal notranslate"><span class="pre">subprocess</span></code> calls. In practice, writing
+and using eOn involves a configuration file, which we define as a dictionary
+to be used with a helper to generate the final output.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define configuration as a dictionary for clarity</span>
+<span class="n">neb_settings</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;Main&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;job&quot;</span><span class="p">:</span> <span class="s2">&quot;nudged_elastic_band&quot;</span><span class="p">,</span> <span class="s2">&quot;random_seed&quot;</span><span class="p">:</span> <span class="mi">706253457</span><span class="p">},</span>
+    <span class="s2">&quot;Potential&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;potential&quot;</span><span class="p">:</span> <span class="s2">&quot;Metatomic&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;Metatomic&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;model_path&quot;</span><span class="p">:</span> <span class="n">fname</span><span class="o">.</span><span class="n">absolute</span><span class="p">()},</span>
+    <span class="s2">&quot;Nudged Elastic Band&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;images&quot;</span><span class="p">:</span> <span class="n">N_INTERMEDIATE_IMGS</span><span class="p">,</span>
+        <span class="c1"># initialization</span>
+        <span class="s2">&quot;initializer&quot;</span><span class="p">:</span> <span class="s2">&quot;file&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;initial_path_in&quot;</span><span class="p">:</span> <span class="s2">&quot;idppPath.dat&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;minimize_endpoints&quot;</span><span class="p">:</span> <span class="s2">&quot;false&quot;</span><span class="p">,</span>
+        <span class="c1"># CI-NEB settings</span>
+        <span class="s2">&quot;climbing_image_method&quot;</span><span class="p">:</span> <span class="s2">&quot;true&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;climbing_image_converged_only&quot;</span><span class="p">:</span> <span class="s2">&quot;true&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ci_after&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+        <span class="s2">&quot;ci_after_rel&quot;</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">,</span>
+        <span class="c1"># energy weighing</span>
+        <span class="s2">&quot;energy_weighted&quot;</span><span class="p">:</span> <span class="s2">&quot;true&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ew_ksp_min&quot;</span><span class="p">:</span> <span class="mf">0.972</span><span class="p">,</span>
+        <span class="s2">&quot;ew_ksp_max&quot;</span><span class="p">:</span> <span class="mf">9.72</span><span class="p">,</span>
+        <span class="c1"># OCI-NEB settings</span>
+        <span class="s2">&quot;ci_mmf&quot;</span><span class="p">:</span> <span class="s2">&quot;true&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ci_mmf_after&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span>
+        <span class="s2">&quot;ci_mmf_after_rel&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+        <span class="s2">&quot;ci_mmf_penalty_strength&quot;</span><span class="p">:</span> <span class="mf">1.5</span><span class="p">,</span>
+        <span class="s2">&quot;ci_mmf_penalty_base&quot;</span><span class="p">:</span> <span class="mf">0.4</span><span class="p">,</span>
+        <span class="s2">&quot;ci_mmf_angle&quot;</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">,</span>
+        <span class="s2">&quot;ci_mmf_nsteps&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;Optimizer&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;max_iterations&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
+        <span class="s2">&quot;opt_method&quot;</span><span class="p">:</span> <span class="s2">&quot;lbfgs&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;max_move&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span>
+        <span class="s2">&quot;converged_force&quot;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;Debug&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;write_movies&quot;</span><span class="p">:</span> <span class="s2">&quot;true&quot;</span><span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Which now let’s us write out the final triplet of reactant, product, and
+configuration of the eOn-NEB.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">write_eon_config</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">),</span> <span class="n">neb_settings</span><span class="p">)</span>
+<span class="n">aseio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;reactant.con&quot;</span><span class="p">,</span> <span class="n">reactant</span><span class="p">)</span>
+<span class="n">aseio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;product.con&quot;</span><span class="p">,</span> <span class="n">product</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Wrote eOn config to &#39;config.ini&#39;
+</pre></div>
+</div>
+</section>
+<section id="run-the-main-c-client">
+<h3>Run the main C++ client<a class="headerlink" href="#run-the-main-c-client" title="Link to this heading">¶</a></h3>
+<p>This runs ‘eonclient’ and streams output live.
+If it fails, the notebook execution stops here.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">run_command_or_exit</span><span class="p">([</span><span class="s2">&quot;eonclient&quot;</span><span class="p">],</span> <span class="n">capture</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>EON Client
+VERSION: 2.10.2
+BUILD DATE: Sun Feb 22 04:00:02 AM GMT 2026
+
+OS: linux
+Arch: x86_64
+Hostname: runnervmwffz4
+PID: 2651
+DIR: /home/runner/work/atomistic-cookbook/atomistic-cookbook/examples/eon-pet-neb
+Loading parameter file config.ini
+* [Main] job: nudged_elastic_band
+* [Main] random_seed: 706253457
+* [Potential] potential: Metatomic
+* [Debug] write_movies: true
+* [Optimizer] opt_method: lbfgs
+* [Optimizer] converged_force: 0.01
+* [Optimizer] max_iterations: 1000
+* [Optimizer] max_move: 0.1
+* [Metatomic] model_path: /home/runner/work/atomistic-cookbook/atomistic-cookbook/examples/eon-pet-neb/models/pet-mad-s-v1.1.0.pt
+* [Nudged Elastic Band] images: 10
+* [Nudged Elastic Band] energy_weighted: true
+* [Nudged Elastic Band] ew_ksp_min: 0.972
+* [Nudged Elastic Band] ew_ksp_max: 9.72
+* [Nudged Elastic Band] climbing_image_method: true
+* [Nudged Elastic Band] climbing_image_converged_only: true
+* [Nudged Elastic Band] ci_after: 0.5
+* [Nudged Elastic Band] ci_after_rel: 0.8
+* [Nudged Elastic Band] ci_mmf: true
+* [Nudged Elastic Band] ci_mmf_after: 0.1
+* [Nudged Elastic Band] ci_mmf_after_rel: 0.5
+* [Nudged Elastic Band] ci_mmf_nsteps: 1000
+* [Nudged Elastic Band] ci_mmf_angle: 0.9
+* [Nudged Elastic Band] ci_mmf_penalty_strength: 1.5
+* [Nudged Elastic Band] ci_mmf_penalty_base: 0.4
+* [Nudged Elastic Band] initializer: file
+* [Nudged Elastic Band] initial_path_in: idppPath.dat
+* [Nudged Elastic Band] minimize_endpoints: false
+minimize_endpoints == false: not minimizing endpoints.
+Nudged elastic band calculation started.
+===============================================================
+ NEB Optimization Configuration
+===============================================================
+ Baseline Force            : 5.7337
+ Climbing Image (CI)       : ENABLED
+   - Relative Trigger      : 4.5869 (Factor: 0.80)
+   - Absolute Trigger      : 0.5000
+   - Converged Only        : true
+ Hybrid MMF (RONEB)        : ENABLED
+   - Initial Threshold     : 2.8668 (Factor: 0.50)
+   - Absolute Floor        : 0.1000
+   - Penalty Scheme        : 0.40 (Base: 0.40, Str: 1.50)
+   - Angle Tolerance       : 0.9000
+---------------------------------------------------------------
+ iteration    step size      ||Force||   max image   max energy
+---------------------------------------------------------------
+
+         1   0.0000e+00     5.7337e+00           7        1.128
+         2   3.2053e-02     3.8769e+00           7       0.9612
+         3   3.0213e-02     2.6346e+00           7       0.8915
+         4   8.7707e-02     2.6746e+00           7       0.7651
+         5   4.3540e-02     3.5079e+00           8       0.7264
+         6   2.2422e-02     2.0698e+00           8       0.6829
+         7   1.1595e-02     1.4502e+00           8       0.6673
+         8   4.3391e-02     2.5206e+00           8       0.6494
+         9   4.0043e-02     1.7329e+00           8       0.5828
+        10   3.3714e-02     1.2527e+00           8       0.5409
+        11   1.3163e-02     8.6038e-01           8       0.5278
+Triggering MMF.  Force: 0.8604, Threshold: 2.8668 (0.50x baseline)
+Saddle point search started from reactant with energy -53.52205276489258 eV.
+[Dimer]  Step        Step Size   Delta E      ||Force||            Curvature   Torque    Angle    Rots
+
+[IDimerRot]  -----   ---------   ----------   ----------     -2.4748     4.398     4.83      1   1.000
+[Dimer]          1   0.0146922      -0.0061          1.03149e+00     -2.4748     4.398    4.831      1
+
+[IDimerRot]  -----   ---------   ----------   ----------     -3.1533     3.106     5.82      1   0.996
+[IDimerRot]  -----   ---------   ----------   ----------     -3.4280     2.632     8.41      2   0.986
+[IDimerRot]  -----   ---------   ----------   ----------     -3.4819     1.970     2.52      3   0.960
+[Dimer]          2   0.0095207      -0.0124          8.34226e-01     -3.4819     1.970    2.516      3
+
+[IDimerRot]  -----   ---------   ----------   ----------     -3.2994     1.805     2.87      1   0.952
+[Dimer]          3   0.0728679      -0.0429          7.44260e-01     -3.2994     1.805    2.871      1
+
+[IDimerRot]  -----   ---------   ----------   ----------     -2.0746     2.747     1.69      1   0.942
+[Dimer]          4   0.0750879      -0.0608          6.48813e-01     -2.0746     2.747    1.689      1
+
+[IDimerRot]  -----   ---------   ----------   ----------     -0.8945     2.572     2.11      1   0.943
+[Dimer]          5   0.0591419      -0.0616          1.14013e+00     -0.8945     2.572    2.109      1
+
+[IDimerRot]  -----   ---------   ----------   ----------     -0.6226     2.395     4.37      1   0.946
+[Dimer]          6   0.0137169      -0.0684          3.62446e-01     -0.6226     2.395    4.369      1
+
+[IDimerRot]  -----   ---------   ----------   ----------     -0.5521     3.204     4.34      1   0.952
+[Dimer]          7   0.0085159      -0.0693          2.20628e-01     -0.5521     3.204    4.343      1
+
+[IDimerRot]  -----   ---------   ----------   ----------     -0.8078     2.003     4.29      1   0.952
+[Dimer]          8   0.0100765      -0.0704          2.27475e-01     -0.8078     2.003    4.289      1
+
+[IDimerRot]  -----   ---------   ----------   ----------     -0.9852     1.230     1.27      1   0.954
+[Dimer]          9   0.0280292      -0.0720          3.03556e-01     -0.9852     1.230    1.268      1
+
+[IDimerRot]  -----   ---------   ----------   ----------     -1.3565     1.640     1.12      1   0.956
+[Dimer]         10   0.0266030      -0.0728          1.78914e-01     -1.3565     1.640    1.123      1
+
+[IDimerRot]  -----   ---------   ----------   ----------     -1.6963     2.221     1.46      1   0.957
+[Dimer]         11   0.0171125      -0.0729          1.12288e-01     -1.6963     2.221    1.462      1
+
+[IDimerRot]  -----   ---------   ----------   ----------     -1.9653     1.712     3.91      1   0.957
+[Dimer]         12   0.0035260      -0.0730          3.53023e-02     -1.9653     1.712    3.913      1
+
+[IDimerRot]  -----   ---------   ----------   ----------     -1.8913     1.002     1.20      1   0.958
+[Dimer]         13   0.0012492      -0.0731          2.66803e-02     -1.8913     1.002    1.203      1
+
+[IDimerRot]  -----   ---------   ----------   ----------     -1.8976     0.947     1.98      1   0.958
+[Dimer]         14   0.0018259      -0.0731          2.38627e-02     -1.8976     0.947    1.981      1
+
+[IDimerRot]  -----   ---------   ----------   ----------     -1.9244     0.730     0.68      1   0.958
+[Dimer]         15   0.0036333      -0.0730          3.69023e-02     -1.9244     0.730    0.681      1
+
+[IDimerRot]  -----   ---------   ----------   ----------     -2.0448     0.485     0.88      1   0.958
+[Dimer]         16   0.0025971      -0.0730          2.91452e-02     -2.0448     0.485    0.883      1
+
+[IDimerRot]  -----   ---------   ----------   ----------     -2.1021     0.898   ------   ----   0.959
+[Dimer]         17   0.0007511      -0.0730          1.18950e-02     -2.1021     0.449    4.761      0
+
+[IDimerRot]  -----   ---------   ----------   ----------     -2.1157     0.434     0.26      1   0.959
+[Dimer]         18   0.0005182      -0.0730          8.32518e-03     -2.1157     0.434    0.257      1
+
+NEB converged after MMF. Force: 0.0083
+  0     0.000000     0.000000    -0.001429
+  1     0.266349     0.026955    -0.167200
+  2     0.528690     0.051476    -0.069607
+  3     0.794314     0.073551    -0.085873
+  4     1.067267     0.106941    -0.138350
+  5     1.368503     0.167992    -0.231369
+  6     1.689298     0.282486    -0.457521
+  7     1.931783     0.447067    -0.132935
+  8     2.181116     0.454792     0.000911
+  9     2.575458     0.392960     1.029227
+ 10     2.793776    -0.218628     2.425631
+ 11     3.201166    -0.756573     0.000388
+Found 3 extrema
+Energy reference: -54.04987335205078
+extrema #1 at image position 7.625245420431922 with energy 0.45529426595621914 and curvature -0.02024511157255182
+extrema #2 at image position 8.520815251174174 with energy 0.4746572982503139 and curvature -0.44079793423305635
+extrema #3 at image position 8.000813575746095 with energy 0.4547918766696313 and curvature 0.44079793423305635
+Final state:
+Nudged elastic band, successful.
+Generated MMF peak 00 at position 7.625 (Energy: 0.455 eV)
+Generated MMF peak 01 at position 8.521 (Energy: 0.475 eV)
+Timing Information:
+  Real time: 3.958 seconds
+  User time: 7.153 seconds
+  System time: 0.233 seconds
+
+CompletedProcess(args=[&#39;eonclient&#39;], returncode=0, stdout=&#39;EON Client\nVERSION: 2.10.2\nBUILD DATE: Sun Feb 22 04:00:02 AM GMT 2026\n\nOS: linux\nArch: x86_64\nHostname: runnervmwffz4\nPID: 2651\nDIR: /home/runner/work/atomistic-cookbook/atomistic-cookbook/examples/eon-pet-neb\nLoading parameter file config.ini\n* [Main] job: nudged_elastic_band\n* [Main] random_seed: 706253457\n* [Potential] potential: Metatomic\n* [Debug] write_movies: true\n* [Optimizer] opt_method: lbfgs\n* [Optimizer] converged_force: 0.01\n* [Optimizer] max_iterations: 1000\n* [Optimizer] max_move: 0.1\n* [Metatomic] model_path: /home/runner/work/atomistic-cookbook/atomistic-cookbook/examples/eon-pet-neb/models/pet-mad-s-v1.1.0.pt\n* [Nudged Elastic Band] images: 10\n* [Nudged Elastic Band] energy_weighted: true\n* [Nudged Elastic Band] ew_ksp_min: 0.972\n* [Nudged Elastic Band] ew_ksp_max: 9.72\n* [Nudged Elastic Band] climbing_image_method: true\n* [Nudged Elastic Band] climbing_image_converged_only: true\n* [Nudged Elastic Band] ci_after: 0.5\n* [Nudged Elastic Band] ci_after_rel: 0.8\n* [Nudged Elastic Band] ci_mmf: true\n* [Nudged Elastic Band] ci_mmf_after: 0.1\n* [Nudged Elastic Band] ci_mmf_after_rel: 0.5\n* [Nudged Elastic Band] ci_mmf_nsteps: 1000\n* [Nudged Elastic Band] ci_mmf_angle: 0.9\n* [Nudged Elastic Band] ci_mmf_penalty_strength: 1.5\n* [Nudged Elastic Band] ci_mmf_penalty_base: 0.4\n* [Nudged Elastic Band] initializer: file\n* [Nudged Elastic Band] initial_path_in: idppPath.dat\n* [Nudged Elastic Band] minimize_endpoints: false\nminimize_endpoints == false: not minimizing endpoints.\nNudged elastic band calculation started.\n===============================================================\n NEB Optimization Configuration\n===============================================================\n Baseline Force            : 5.7337\n Climbing Image (CI)       : ENABLED\n   - Relative Trigger      : 4.5869 (Factor: 0.80)\n   - Absolute Trigger      : 0.5000\n   - Converged Only        : true\n Hybrid MMF (RONEB)        : ENABLED\n   - Initial Threshold     : 2.8668 (Factor: 0.50)\n   - Absolute Floor        : 0.1000\n   - Penalty Scheme        : 0.40 (Base: 0.40, Str: 1.50)\n   - Angle Tolerance       : 0.9000\n---------------------------------------------------------------\n iteration    step size      ||Force||   max image   max energy\n---------------------------------------------------------------\n\n         1   0.0000e+00     5.7337e+00           7        1.128\n         2   3.2053e-02     3.8769e+00           7       0.9612\n         3   3.0213e-02     2.6346e+00           7       0.8915\n         4   8.7707e-02     2.6746e+00           7       0.7651\n         5   4.3540e-02     3.5079e+00           8       0.7264\n         6   2.2422e-02     2.0698e+00           8       0.6829\n         7   1.1595e-02     1.4502e+00           8       0.6673\n         8   4.3391e-02     2.5206e+00           8       0.6494\n         9   4.0043e-02     1.7329e+00           8       0.5828\n        10   3.3714e-02     1.2527e+00           8       0.5409\n        11   1.3163e-02     8.6038e-01           8       0.5278\nTriggering MMF.  Force: 0.8604, Threshold: 2.8668 (0.50x baseline)\nSaddle point search started from reactant with energy -53.52205276489258 eV.\n[Dimer]  Step        Step Size   Delta E      ||Force||            Curvature   Torque    Angle    Rots\n\n[IDimerRot]  -----   ---------   ----------   ----------     -2.4748     4.398     4.83      1   1.000\n[Dimer]          1   0.0146922      -0.0061          1.03149e+00     -2.4748     4.398    4.831      1\n\n[IDimerRot]  -----   ---------   ----------   ----------     -3.1533     3.106     5.82      1   0.996\n[IDimerRot]  -----   ---------   ----------   ----------     -3.4280     2.632     8.41      2   0.986\n[IDimerRot]  -----   ---------   ----------   ----------     -3.4819     1.970     2.52      3   0.960\n[Dimer]          2   0.0095207      -0.0124          8.34226e-01     -3.4819     1.970    2.516      3\n\n[IDimerRot]  -----   ---------   ----------   ----------     -3.2994     1.805     2.87      1   0.952\n[Dimer]          3   0.0728679      -0.0429          7.44260e-01     -3.2994     1.805    2.871      1\n\n[IDimerRot]  -----   ---------   ----------   ----------     -2.0746     2.747     1.69      1   0.942\n[Dimer]          4   0.0750879      -0.0608          6.48813e-01     -2.0746     2.747    1.689      1\n\n[IDimerRot]  -----   ---------   ----------   ----------     -0.8945     2.572     2.11      1   0.943\n[Dimer]          5   0.0591419      -0.0616          1.14013e+00     -0.8945     2.572    2.109      1\n\n[IDimerRot]  -----   ---------   ----------   ----------     -0.6226     2.395     4.37      1   0.946\n[Dimer]          6   0.0137169      -0.0684          3.62446e-01     -0.6226     2.395    4.369      1\n\n[IDimerRot]  -----   ---------   ----------   ----------     -0.5521     3.204     4.34      1   0.952\n[Dimer]          7   0.0085159      -0.0693          2.20628e-01     -0.5521     3.204    4.343      1\n\n[IDimerRot]  -----   ---------   ----------   ----------     -0.8078     2.003     4.29      1   0.952\n[Dimer]          8   0.0100765      -0.0704          2.27475e-01     -0.8078     2.003    4.289      1\n\n[IDimerRot]  -----   ---------   ----------   ----------     -0.9852     1.230     1.27      1   0.954\n[Dimer]          9   0.0280292      -0.0720          3.03556e-01     -0.9852     1.230    1.268      1\n\n[IDimerRot]  -----   ---------   ----------   ----------     -1.3565     1.640     1.12      1   0.956\n[Dimer]         10   0.0266030      -0.0728          1.78914e-01     -1.3565     1.640    1.123      1\n\n[IDimerRot]  -----   ---------   ----------   ----------     -1.6963     2.221     1.46      1   0.957\n[Dimer]         11   0.0171125      -0.0729          1.12288e-01     -1.6963     2.221    1.462      1\n\n[IDimerRot]  -----   ---------   ----------   ----------     -1.9653     1.712     3.91      1   0.957\n[Dimer]         12   0.0035260      -0.0730          3.53023e-02     -1.9653     1.712    3.913      1\n\n[IDimerRot]  -----   ---------   ----------   ----------     -1.8913     1.002     1.20      1   0.958\n[Dimer]         13   0.0012492      -0.0731          2.66803e-02     -1.8913     1.002    1.203      1\n\n[IDimerRot]  -----   ---------   ----------   ----------     -1.8976     0.947     1.98      1   0.958\n[Dimer]         14   0.0018259      -0.0731          2.38627e-02     -1.8976     0.947    1.981      1\n\n[IDimerRot]  -----   ---------   ----------   ----------     -1.9244     0.730     0.68      1   0.958\n[Dimer]         15   0.0036333      -0.0730          3.69023e-02     -1.9244     0.730    0.681      1\n\n[IDimerRot]  -----   ---------   ----------   ----------     -2.0448     0.485     0.88      1   0.958\n[Dimer]         16   0.0025971      -0.0730          2.91452e-02     -2.0448     0.485    0.883      1\n\n[IDimerRot]  -----   ---------   ----------   ----------     -2.1021     0.898   ------   ----   0.959\n[Dimer]         17   0.0007511      -0.0730          1.18950e-02     -2.1021     0.449    4.761      0\n\n[IDimerRot]  -----   ---------   ----------   ----------     -2.1157     0.434     0.26      1   0.959\n[Dimer]         18   0.0005182      -0.0730          8.32518e-03     -2.1157     0.434    0.257      1\n\nNEB converged after MMF. Force: 0.0083\n  0     0.000000     0.000000    -0.001429\n  1     0.266349     0.026955    -0.167200\n  2     0.528690     0.051476    -0.069607\n  3     0.794314     0.073551    -0.085873\n  4     1.067267     0.106941    -0.138350\n  5     1.368503     0.167992    -0.231369\n  6     1.689298     0.282486    -0.457521\n  7     1.931783     0.447067    -0.132935\n  8     2.181116     0.454792     0.000911\n  9     2.575458     0.392960     1.029227\n 10     2.793776    -0.218628     2.425631\n 11     3.201166    -0.756573     0.000388\nFound 3 extrema\nEnergy reference: -54.04987335205078\nextrema #1 at image position 7.625245420431922 with energy 0.45529426595621914 and curvature -0.02024511157255182\nextrema #2 at image position 8.520815251174174 with energy 0.4746572982503139 and curvature -0.44079793423305635\nextrema #3 at image position 8.000813575746095 with energy 0.4547918766696313 and curvature 0.44079793423305635\nFinal state: \nNudged elastic band, successful.\nGenerated MMF peak 00 at position 7.625 (Energy: 0.455 eV)\nGenerated MMF peak 01 at position 8.521 (Energy: 0.475 eV)\nTiming Information:\n  Real time: 3.958 seconds\n  User time: 7.153 seconds\n  System time: 0.233 seconds\n&#39;)
+</pre></div>
+</div>
+</section>
+</section>
+<section id="visual-interpretation">
+<h2>Visual interpretation<a class="headerlink" href="#visual-interpretation" title="Link to this heading">¶</a></h2>
+<p><a class="reference external" href="http://pypi.org/project/rgpycrumbs">rgpycrumbs</a> is a visualization toolkit
+designed to bridge the gap between raw computational output and physical
+intuition, mapping high-dimensional NEB trajectories onto interpretable 1D
+energy profiles and 2D RMSD landscapes.  As it is normally used from the
+command-line, here we define a helper.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">run_neb_plot</span><span class="p">(</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">con_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;neb.con&quot;</span><span class="p">,</span>
+    <span class="n">output_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;plot.png&quot;</span><span class="p">,</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">rotation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;90x,0y,0z&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Constructs the CLI command for rgpycrumbs plotting to avoid clutter in notebooks.</span>
+<span class="sd">    mode: &#39;profile&#39; (1D) or &#39;landscape&#39; (2D)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">base_cmd</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span>
+        <span class="s2">&quot;-m&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;rgpycrumbs.cli&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;eon&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;plt_neb&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--con-file&quot;</span><span class="p">,</span>
+        <span class="n">con_file</span><span class="p">,</span>
+        <span class="s2">&quot;--output-file&quot;</span><span class="p">,</span>
+        <span class="n">output_file</span><span class="p">,</span>
+        <span class="s2">&quot;--ase-rotation&quot;</span><span class="p">,</span>
+        <span class="n">rotation</span><span class="p">,</span>
+        <span class="s2">&quot;--facecolor&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;white&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--figsize&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;5.37&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;5.37&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--plot-structures&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;crit_points&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">title</span><span class="p">:</span>
+        <span class="n">base_cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--title&quot;</span><span class="p">,</span> <span class="n">title</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;profile&quot;</span><span class="p">:</span>
+        <span class="n">base_cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="s2">&quot;--plot-type&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;profile&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;--zoom-ratio&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;0.15&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;landscape&quot;</span><span class="p">:</span>
+        <span class="n">base_cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="s2">&quot;--plot-type&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;landscape&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;--rc-mode&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;path&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;--fontsize-base&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;16&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;--landscape-mode&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;surface&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;--landscape-path&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;all&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;--show-pts&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;--zoom-ratio&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;0.35&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;--surface-type&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;grad_imq&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown plot mode: </span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Run the generated command</span>
+    <span class="n">run_command_or_exit</span><span class="p">(</span><span class="n">base_cmd</span><span class="p">,</span> <span class="n">capture</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We check both the standard 1D profile against the path reaction
+coordinate, or the distance between intermediate images:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clean env to prevent backend conflicts in notebooks</span>
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;MPLBACKEND&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+<span class="c1"># Run the 1D plotting command using the helper</span>
+<span class="n">run_neb_plot</span><span class="p">(</span><span class="s2">&quot;profile&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;NEB Path Optimization&quot;</span><span class="p">,</span> <span class="n">output_file</span><span class="o">=</span><span class="s2">&quot;1D_oxad.png&quot;</span><span class="p">)</span>
+
+<span class="c1"># Display the result</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">mpimg</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;1D_oxad.png&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">5.37</span><span class="p">,</span> <span class="mf">5.37</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_eon-pet-neb_003.png" srcset="../../_images/sphx_glr_eon-pet-neb_003.png" alt="eon pet neb" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>--&gt; Dispatching to: uv run /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/eon-pet-neb/lib/python3.13/site-packages/rgpycrumbs/eon/plt_neb.py --con-file neb.con --output-file 1D_oxad.png --ase-rotation 90x,0y,0z --facecolor white --figsize 5.37 5.37 --plot-structures crit_points --title NEB Path Optimization --plot-type profile --zoom-ratio 0.15
+Downloading polars-runtime-32 (43.6MiB)
+Downloading pillow (6.7MiB)
+Downloading numpy (15.8MiB)
+Downloading fonttools (4.7MiB)
+Downloading pygments (1.2MiB)
+Downloading jax (2.8MiB)
+Downloading scipy (33.6MiB)
+Downloading matplotlib (8.3MiB)
+Downloading ml-dtypes (4.8MiB)
+Downloading jaxlib (76.6MiB)
+Downloading kiwisolver (1.4MiB)
+Downloading ase (2.8MiB)
+ Downloaded kiwisolver
+ Downloaded pygments
+ Downloaded ml-dtypes
+ Downloaded fonttools
+ Downloaded pillow
+ Downloaded jax
+ Downloaded matplotlib
+ Downloaded polars-runtime-32
+ Downloaded numpy
+ Downloaded ase
+ Downloaded jaxlib
+ Downloaded scipy
+Installed 33 packages in 68ms
+[02/23/26 14:53:21] INFO     INFO - Setting global rcParams for ruhi theme
+                    WARNING  WARNING - Font &#39;Atkinson Hyperlegible&#39; not found.
+                             Falling back to &#39;sans-serif&#39;.
+                    INFO     INFO - Reading structures from neb.con
+                    INFO     INFO - Loaded 12 structures.
+                    INFO     INFO - Loading explicit saddle point from sp.con
+                    INFO     INFO - Searching for files with pattern:
+                             &#39;neb_*.dat&#39;
+                    INFO     INFO - Found 12 file(s).
+</pre></div>
+</div>
+<p>Also, the PES 2D landscape profile as a function of the RMSD [3] which shows
+the relative distance between the endpoints as the optimization takes place:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Run the 2D plotting command using the helper</span>
+<span class="n">run_neb_plot</span><span class="p">(</span><span class="s2">&quot;landscape&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;NEB-RMSD Surface&quot;</span><span class="p">,</span> <span class="n">output_file</span><span class="o">=</span><span class="s2">&quot;2D_oxad.png&quot;</span><span class="p">)</span>
+
+<span class="c1"># Display the result</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">mpimg</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;2D_oxad.png&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">5.37</span><span class="p">,</span> <span class="mf">5.37</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_eon-pet-neb_004.png" srcset="../../_images/sphx_glr_eon-pet-neb_004.png" alt="eon pet neb" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>--&gt; Dispatching to: uv run /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/eon-pet-neb/lib/python3.13/site-packages/rgpycrumbs/eon/plt_neb.py --con-file neb.con --output-file 2D_oxad.png --ase-rotation 90x,0y,0z --facecolor white --figsize 5.37 5.37 --plot-structures crit_points --title NEB-RMSD Surface --plot-type landscape --rc-mode path --fontsize-base 16 --landscape-mode surface --landscape-path all --show-pts --zoom-ratio 0.35 --surface-type grad_imq
+[02/23/26 14:53:24] INFO     INFO - Setting global rcParams for ruhi theme
+                    WARNING  WARNING - Font &#39;Atkinson Hyperlegible&#39; not found.
+                             Falling back to &#39;sans-serif&#39;.
+                    INFO     INFO - Reading structures from neb.con
+                    INFO     INFO - Loaded 12 structures.
+                    INFO     INFO - Loading explicit saddle point from sp.con
+                    INFO     INFO - Searching for files with pattern:
+                             &#39;neb_*.dat&#39;
+                    INFO     INFO - Found 12 file(s).
+                    INFO     INFO - Searching for files with pattern:
+                             &#39;neb_path_*.con&#39;
+                    INFO     INFO - Found 12 file(s).
+                    INFO     INFO - Computing Landscape data...
+                    INFO     INFO - Saving Landscape cache to
+                             .neb_landscape.parquet...
+                    INFO     INFO - Calculated heuristic RBF smoothing: 0.1008
+                    INFO     INFO - Generating 2D surface using grad_imq...
+                    INFO     INFO - Optimizing hyperparameters on subset of 12
+                             points...
+INFO:2026-02-23 14:53:24,508:jax._src.xla_bridge:834: Unable to initialize backend &#39;tpu&#39;: INTERNAL: Failed to open libtpu.so: libtpu.so: cannot open shared object file: No such file or directory
+                    INFO     INFO - Unable to initialize backend &#39;tpu&#39;:
+                             INTERNAL: Failed to open libtpu.so: libtpu.so:
+                             cannot open shared object file: No such file or
+                             directory
+[02/23/26 14:53:30] INFO     INFO - Learned Params :: LS/Eps: 0.6678, Noise:
+                             0.0173
+                    INFO     INFO - Fitting final surface on 144 points...
+[02/23/26 14:53:31] INFO     INFO - Plotting explicit SP at R=0.682, P=0.609
+                    WARNING  WARNING - Looks like you are using a tranform that
+                             doesn&#39;t support FancyArrowPatch, using ax.annotate
+                             instead. The arrows might strike through texts.
+                             Increasing shrinkA in arrowprops might help.
+/home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/eon-pet-neb/lib/python3.13/site-packages/rgpycrumbs/eon/plt_neb.py:891: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  plt.tight_layout(pad=0.5)
+</pre></div>
+</div>
+<p>Where each black dot represents a configuration at which the energy and forces
+are calculated during the NEB optimization run, and the RMSD is the
+“permutation corrected” distance from the reactant and product. The
+interpolated relative energy surface is generated by a Gaussian approximation
+with a radial basis function kernel interpolation over the energy and forces
+of all the black dots. See [3, Chapter 4] for more details of this
+visualization.</p>
+</section>
+<section id="relaxing-the-endpoints-with-eon">
+<h2>Relaxing the endpoints with eOn<a class="headerlink" href="#relaxing-the-endpoints-with-eon" title="Link to this heading">¶</a></h2>
+<p>In this final part we come back to an essential
+point of performing NEB calculations, and that is the
+relaxation of the initial states. In the tutorials above
+we used directly relaxed structures, and here we are
+demonstrating how these can be relaxed.
+We first load structures which are not relaxed.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">reactant</span> <span class="o">=</span> <span class="n">aseio</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;data/reactant.con&quot;</span><span class="p">)</span>
+<span class="n">product</span> <span class="o">=</span> <span class="n">aseio</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;data/product.con&quot;</span><span class="p">)</span>
+
+
+<span class="c1"># For compatibility with eOn, we also need to provide</span>
+<span class="c1"># a unit cell</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">center_cell</span><span class="p">(</span><span class="n">atoms</span><span class="p">):</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">set_cell</span><span class="p">([</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">])</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">atoms</span>
+
+
+<span class="n">reactant</span> <span class="o">=</span> <span class="n">center_cell</span><span class="p">(</span><span class="n">reactant</span><span class="p">)</span>
+<span class="n">product</span> <span class="o">=</span> <span class="n">center_cell</span><span class="p">(</span><span class="n">product</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The resulting reactant has a larger box:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">plot_atoms</span><span class="p">(</span><span class="n">reactant</span><span class="p">,</span> <span class="n">ax1</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;-90x,0y,0z&quot;</span><span class="p">))</span>
+<span class="n">plot_atoms</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">ax2</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;-90x,0y,0z&quot;</span><span class="p">))</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;reactant&quot;</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;product&quot;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+
+<span class="c1"># Reactant setup</span>
+<span class="n">dir_reactant</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;min_reactant&quot;</span><span class="p">)</span>
+<span class="n">dir_reactant</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">aseio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">dir_reactant</span> <span class="o">/</span> <span class="s2">&quot;pos.con&quot;</span><span class="p">,</span> <span class="n">reactant</span><span class="p">)</span>
+
+<span class="c1"># Product setup</span>
+<span class="n">dir_product</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;min_product&quot;</span><span class="p">)</span>
+<span class="n">dir_product</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">aseio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">dir_product</span> <span class="o">/</span> <span class="s2">&quot;pos.con&quot;</span><span class="p">,</span> <span class="n">product</span><span class="p">)</span>
+
+<span class="c1"># Shared minimization settings</span>
+<span class="n">min_settings</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;Main&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;job&quot;</span><span class="p">:</span> <span class="s2">&quot;minimization&quot;</span><span class="p">,</span> <span class="s2">&quot;random_seed&quot;</span><span class="p">:</span> <span class="mi">706253457</span><span class="p">},</span>
+    <span class="s2">&quot;Potential&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;potential&quot;</span><span class="p">:</span> <span class="s2">&quot;Metatomic&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;Metatomic&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;model_path&quot;</span><span class="p">:</span> <span class="n">fname</span><span class="o">.</span><span class="n">absolute</span><span class="p">()},</span>
+    <span class="s2">&quot;Optimizer&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;max_iterations&quot;</span><span class="p">:</span> <span class="mi">2000</span><span class="p">,</span>
+        <span class="s2">&quot;opt_method&quot;</span><span class="p">:</span> <span class="s2">&quot;lbfgs&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;max_move&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span>
+        <span class="s2">&quot;converged_force&quot;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+<span class="n">write_eon_config</span><span class="p">(</span><span class="n">dir_reactant</span><span class="p">,</span> <span class="n">min_settings</span><span class="p">)</span>
+<span class="n">write_eon_config</span><span class="p">(</span><span class="n">dir_product</span><span class="p">,</span> <span class="n">min_settings</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_eon-pet-neb_005.png" srcset="../../_images/sphx_glr_eon-pet-neb_005.png" alt="eon pet neb" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Wrote eOn config to &#39;min_reactant/config.ini&#39;
+Wrote eOn config to &#39;min_product/config.ini&#39;
+</pre></div>
+</div>
+<section id="run-the-minimization">
+<h3>Run the minimization<a class="headerlink" href="#run-the-minimization" title="Link to this heading">¶</a></h3>
+<p>The ‘eonclient’ will use the correct configuration within the folder.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">work_in_dir</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Context manager to safely change directory and return to previous</span>
+<span class="sd">    one afterwards. Crucial for notebooks to avoid path drift.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">prev_cwd</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">prev_cwd</span><span class="p">)</span>
+
+
+<span class="k">with</span> <span class="n">work_in_dir</span><span class="p">(</span><span class="n">dir_reactant</span><span class="p">):</span>
+    <span class="n">run_command_or_exit</span><span class="p">([</span><span class="s2">&quot;eonclient&quot;</span><span class="p">],</span> <span class="n">capture</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+
+
+<span class="k">with</span> <span class="n">work_in_dir</span><span class="p">(</span><span class="n">dir_product</span><span class="p">):</span>
+    <span class="n">run_command_or_exit</span><span class="p">([</span><span class="s2">&quot;eonclient&quot;</span><span class="p">],</span> <span class="n">capture</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>EON Client
+VERSION: 2.10.2
+BUILD DATE: Sun Feb 22 04:00:02 AM GMT 2026
+
+OS: linux
+Arch: x86_64
+Hostname: runnervmwffz4
+PID: 2737
+DIR: /home/runner/work/atomistic-cookbook/atomistic-cookbook/examples/eon-pet-neb/min_reactant
+Loading parameter file config.ini
+* [Main] job: minimization
+* [Main] random_seed: 706253457
+* [Potential] potential: Metatomic
+* [Optimizer] opt_method: lbfgs
+* [Optimizer] converged_force: 0.01
+* [Optimizer] max_iterations: 2000
+* [Optimizer] max_move: 0.1
+* [Metatomic] model_path: /home/runner/work/atomistic-cookbook/atomistic-cookbook/examples/eon-pet-neb/models/pet-mad-s-v1.1.0.pt
+
+Beginning minimization of pos.con
+[Matter] Iter        Step size       ||Force||           Energy
+
+[Matter]          0     0.00000e+00         2.59520e+00      -53.87877
+
+[Matter]          1     2.66992e-02         1.68092e+00      -53.92310
+[Matter]          2     1.08483e-02         4.96385e-01      -53.93404
+[Matter]          3     1.38089e-03         3.48320e-01      -53.93533
+[Matter]          4     6.07345e-03         1.98165e-01      -53.93784
+[Matter]          5     2.36828e-03         1.59983e-01      -53.93839
+[Matter]          6     3.42056e-03         1.48596e-01      -53.93892
+[Matter]          7     8.11227e-03         2.15941e-01      -53.93988
+[Matter]          8     2.03965e-02         2.47212e-01      -53.94168
+[Matter]          9     4.77717e-02         3.64414e-01      -53.94519
+[Matter]         10     1.47141e-02         3.06734e+00      -53.92278
+[Matter]         11     1.27314e-02         2.21770e-01      -53.94609
+[Matter]         12     7.08847e-04         2.05288e-01      -53.94638
+[Matter]         13     1.48015e-02         3.05469e-01      -53.94891
+[Matter]         14     9.82532e-03         6.73808e-01      -53.94783
+[Matter]         15     5.09977e-03         1.50975e-01      -53.94987
+[Matter]         16     1.32262e-03         1.12460e-01      -53.95013
+[Matter]         17     8.90625e-03         1.63704e-01      -53.95098
+[Matter]         18     9.25617e-03         2.02164e-01      -53.95173
+[Matter]         19     5.29550e-02         3.43750e-01      -53.95536
+[Matter]         20     1.35627e-02         1.61682e+00      -53.94640
+[Matter]         21     9.79583e-03         2.62714e-01      -53.95738
+[Matter]         22     1.13147e-03         1.65790e-01      -53.95789
+[Matter]         23     4.29818e-03         1.66260e-01      -53.95872
+[Matter]         24     4.52047e-03         1.87267e-01      -53.95936
+[Matter]         25     1.26368e-02         2.55349e-01      -53.96045
+[Matter]         26     5.55203e-03         1.41866e-01      -53.96107
+[Matter]         27     4.08616e-03         1.59605e-01      -53.96147
+[Matter]         28     1.33865e-02         2.18876e-01      -53.96261
+[Matter]         29     3.77650e-02         3.29042e-01      -53.96535
+[Matter]         30     8.59714e-02         7.44650e-01      -53.96917
+[Matter]         31     5.04710e-02         6.64991e-01      -53.97663
+[Matter]         32     3.69682e-02         4.10949e+00      -53.90312
+[Matter]         33     2.87599e-02         3.14422e-01      -53.98344
+[Matter]         34     2.88141e-03         2.67154e-01      -53.98453
+[Matter]         35     1.37297e-02         2.19371e-01      -53.98670
+[Matter]         36     4.81951e-03         4.20783e-01      -53.98696
+[Matter]         37     1.91695e-03         1.98191e-01      -53.98748
+[Matter]         38     2.10754e-03         1.17685e-01      -53.98796
+[Matter]         39     8.15326e-03         2.31078e-01      -53.98887
+[Matter]         40     1.27299e-02         2.84339e-01      -53.98985
+[Matter]         41     3.07522e-02         4.83939e-01      -53.99188
+[Matter]         42     3.49682e-02         3.29192e-01      -53.99386
+[Matter]         43     2.49536e-02         3.07211e-01      -53.99615
+[Matter]         44     4.85786e-02         5.20686e-01      -53.99976
+[Matter]         45     5.88919e-03         8.85896e-01      -53.99939
+[Matter]         46     3.24126e-03         2.54372e-01      -54.00129
+[Matter]         47     9.70424e-04         1.91442e-01      -54.00170
+[Matter]         48     5.18517e-03         1.92997e-01      -54.00282
+[Matter]         49     3.45113e-03         1.64120e-01      -54.00334
+[Matter]         50     1.13291e-02         2.63960e-01      -54.00426
+[Matter]         51     8.49570e-03         2.45105e-01      -54.00480
+[Matter]         52     1.73564e-03         1.28128e-01      -54.00521
+[Matter]         53     2.45755e-03         1.14930e-01      -54.00560
+[Matter]         54     5.24882e-03         1.71644e-01      -54.00615
+[Matter]         55     1.62326e-02         2.76084e-01      -54.00761
+[Matter]         56     3.61017e-02         3.83907e-01      -54.01062
+[Matter]         57     1.37241e-02         2.41345e+00      -53.99088
+[Matter]         58     9.90436e-03         2.70475e-01      -54.01271
+[Matter]         59     1.10170e-03         1.82381e-01      -54.01321
+[Matter]         60     5.59272e-03         1.65504e-01      -54.01412
+[Matter]         61     2.55440e-03         1.80643e-01      -54.01450
+[Matter]         62     3.44077e-03         1.89051e-01      -54.01492
+[Matter]         63     8.38758e-03         1.67298e-01      -54.01582
+[Matter]         64     1.39183e-02         2.31744e-01      -54.01682
+[Matter]         65     1.17298e-02         1.78750e-01      -54.01796
+[Matter]         66     1.83273e-02         1.80299e-01      -54.01976
+[Matter]         67     5.39491e-02         3.59595e-01      -54.02549
+[Matter]         68     1.00000e-01         1.83215e+01      -53.09299
+[Matter]         69     9.47820e-02         3.75731e-01      -54.02852
+[Matter]         70     1.65122e-03         3.29281e-01      -54.02928
+[Matter]         71     2.44672e-02         4.45117e-01      -54.03323
+[Matter]         72     8.65813e-03         7.17782e-01      -54.03351
+[Matter]         73     2.98885e-03         2.91043e-01      -54.03562
+[Matter]         74     3.76614e-03         1.78583e-01      -54.03678
+[Matter]         75     1.69609e-02         2.60541e-01      -54.03914
+[Matter]         76     1.12326e-02         2.68892e-01      -54.04039
+[Matter]         77     1.97634e-02         3.72802e-01      -54.04080
+[Matter]         78     4.18606e-03         1.42868e-01      -54.04169
+[Matter]         79     2.28994e-03         1.41043e-01      -54.04208
+[Matter]         80     8.15268e-03         1.99380e-01      -54.04312
+[Matter]         81     2.14537e-02         2.13221e-01      -54.04433
+[Matter]         82     1.54533e-02         2.50699e-01      -54.04527
+[Matter]         83     1.43606e-02         9.90599e-02      -54.04632
+[Matter]         84     5.22693e-03         8.29255e-02      -54.04667
+[Matter]         85     6.77061e-03         8.62247e-02      -54.04701
+[Matter]         86     1.64103e-02         1.74262e-01      -54.04739
+[Matter]         87     5.21523e-03         8.45465e-02      -54.04772
+[Matter]         88     2.33663e-03         7.25062e-02      -54.04788
+[Matter]         89     5.62010e-03         7.64859e-02      -54.04821
+[Matter]         90     1.49492e-02         8.00489e-02      -54.04877
+[Matter]         91     4.39810e-02         8.26332e-01      -54.04655
+[Matter]         92     2.65137e-02         7.55921e-02      -54.04941
+[Matter]         93     3.01922e-03         6.11931e-02      -54.04952
+[Matter]         94     8.64540e-03         5.84156e-02      -54.04972
+[Matter]         95     2.67894e-03         6.71808e-02      -54.04970
+[Matter]         96     1.36744e-03         1.40823e-02      -54.04976
+[Matter]         97     3.81149e-04         1.28090e-02      -54.04976
+[Matter]         98     1.08826e-03         1.76208e-02      -54.04977
+[Matter]         99     2.16379e-03         2.17760e-02      -54.04979
+[Matter]        100     6.85528e-03         4.67164e-02      -54.04983
+[Matter]        101     6.47437e-03         2.67711e-02      -54.04986
+[Matter]        102     2.97434e-03         1.99054e-02      -54.04988
+[Matter]        103     1.13123e-03         1.91474e-02      -54.04988
+[Matter]        104     4.35915e-04         1.46577e-02      -54.04989
+[Matter]        105     1.30106e-03         1.99583e-02      -54.04990
+[Matter]        106     3.36394e-03         2.06340e-02      -54.04992
+[Matter]        107     4.31728e-03         2.90261e-02      -54.04992
+[Matter]        108     8.35306e-04         1.07014e-02      -54.04993
+[Matter]        109     5.74216e-04         3.30885e-03      -54.04993
+Minimization converged within tolerence
+Saving result to min.con
+Final Energy: -54.049930572509766
+Timing Information:
+  Real time: 4.584 seconds
+  User time: 8.404 seconds
+  System time: 0.231 seconds
+EON Client
+VERSION: 2.10.2
+BUILD DATE: Sun Feb 22 04:00:02 AM GMT 2026
+
+OS: linux
+Arch: x86_64
+Hostname: runnervmwffz4
+PID: 2740
+DIR: /home/runner/work/atomistic-cookbook/atomistic-cookbook/examples/eon-pet-neb/min_product
+Loading parameter file config.ini
+* [Main] job: minimization
+* [Main] random_seed: 706253457
+* [Potential] potential: Metatomic
+* [Optimizer] opt_method: lbfgs
+* [Optimizer] converged_force: 0.01
+* [Optimizer] max_iterations: 2000
+* [Optimizer] max_move: 0.1
+* [Metatomic] model_path: /home/runner/work/atomistic-cookbook/atomistic-cookbook/examples/eon-pet-neb/models/pet-mad-s-v1.1.0.pt
+
+Beginning minimization of pos.con
+[Matter] Iter        Step size       ||Force||           Energy
+
+[Matter]          0     0.00000e+00         1.81086e+00      -54.74133
+
+[Matter]          1     3.53440e-02         1.14322e+00      -54.78707
+[Matter]          2     1.14535e-02         3.97479e-01      -54.80053
+[Matter]          3     9.53215e-03         2.21687e-01      -54.80446
+[Matter]          4     6.45762e-03         1.01501e-01      -54.80579
+[Matter]          5     1.86501e-03         5.29620e-02      -54.80604
+[Matter]          6     2.50612e-03         4.05540e-02      -54.80619
+[Matter]          7     1.92328e-03         2.81717e-02      -54.80624
+[Matter]          8     1.55185e-03         1.87605e-02      -54.80627
+[Matter]          9     4.02005e-04         1.11695e-02      -54.80627
+[Matter]         10     4.61101e-04         7.53657e-03      -54.80628
+Minimization converged within tolerence
+Saving result to min.con
+Final Energy: -54.80628204345703
+Timing Information:
+  Real time: 1.480 seconds
+  User time: 2.291 seconds
+  System time: 0.133 seconds
+</pre></div>
+</div>
+<p>Additionally, the relative ordering must be preserved, for which we use
+IRA [4].</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">reactant</span> <span class="o">=</span> <span class="n">aseio</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">dir_reactant</span> <span class="o">/</span> <span class="s2">&quot;min.con&quot;</span><span class="p">)</span>
+<span class="n">product</span> <span class="o">=</span> <span class="n">aseio</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">dir_product</span> <span class="o">/</span> <span class="s2">&quot;min.con&quot;</span><span class="p">)</span>
+
+<span class="n">ira</span> <span class="o">=</span> <span class="n">ira_mod</span><span class="o">.</span><span class="n">IRA</span><span class="p">()</span>
+<span class="c1"># Default value</span>
+<span class="n">kmax_factor</span> <span class="o">=</span> <span class="mf">1.8</span>
+
+<span class="n">nat1</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">reactant</span><span class="p">)</span>
+<span class="n">typ1</span> <span class="o">=</span> <span class="n">reactant</span><span class="o">.</span><span class="n">get_atomic_numbers</span><span class="p">()</span>
+<span class="n">coords1</span> <span class="o">=</span> <span class="n">reactant</span><span class="o">.</span><span class="n">get_positions</span><span class="p">()</span>
+
+<span class="n">nat2</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">product</span><span class="p">)</span>
+<span class="n">typ2</span> <span class="o">=</span> <span class="n">product</span><span class="o">.</span><span class="n">get_atomic_numbers</span><span class="p">()</span>
+<span class="n">coords2</span> <span class="o">=</span> <span class="n">product</span><span class="o">.</span><span class="n">get_positions</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running ira.match to find rotation, translation, AND permutation...&quot;</span><span class="p">)</span>
+<span class="c1"># r = rotation, t = translation, p = permutation, hd = Hausdorff distance</span>
+<span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">hd</span> <span class="o">=</span> <span class="n">ira</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">nat1</span><span class="p">,</span> <span class="n">typ1</span><span class="p">,</span> <span class="n">coords1</span><span class="p">,</span> <span class="n">nat2</span><span class="p">,</span> <span class="n">typ2</span><span class="p">,</span> <span class="n">coords2</span><span class="p">,</span> <span class="n">kmax_factor</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Matching complete. Hausdorff Distance (hd) = </span><span class="si">{</span><span class="n">hd</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> Angstrom&quot;</span><span class="p">)</span>
+
+<span class="c1"># Apply rotation (r) and translation (t) to the original product coordinates</span>
+<span class="c1"># This aligns the product&#39;s orientation to the reactant&#39;s</span>
+<span class="n">coords2_aligned</span> <span class="o">=</span> <span class="p">(</span><span class="n">coords2</span> <span class="o">@</span> <span class="n">r</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">+</span> <span class="n">t</span>
+
+<span class="c1"># Apply the permutation (p)</span>
+<span class="c1"># This re-orders the aligned product atoms to match the reactant&#39;s atom order</span>
+<span class="c1"># p[i] = j means reactant atom &#39;i&#39; matches product atom &#39;j&#39;</span>
+<span class="c1"># So, the new coordinate array&#39;s i-th element should be coords2_aligned[j]</span>
+<span class="n">coords2_aligned_permuted</span> <span class="o">=</span> <span class="n">coords2_aligned</span><span class="p">[</span><span class="n">p</span><span class="p">]</span>
+
+<span class="c1"># Save the new aligned-and-permuted structure</span>
+<span class="c1"># CRUCIAL: Use chemical symbols from the reactant,</span>
+<span class="c1"># because we have now permuted the product coordinates to match the reactant order.</span>
+<span class="n">product</span> <span class="o">=</span> <span class="n">reactant</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">product</span><span class="o">.</span><span class="n">positions</span> <span class="o">=</span> <span class="n">coords2_aligned_permuted</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Running ira.match to find rotation, translation, AND permutation...
+Matching complete. Hausdorff Distance (hd) = 1.925488 Angstrom
+</pre></div>
+</div>
+<p>Finally we can visualize these with ASE.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">view</span><span class="p">(</span><span class="n">reactant</span><span class="p">,</span> <span class="n">viewer</span><span class="o">=</span><span class="s2">&quot;x3d&quot;</span><span class="p">)</span>
+<span class="n">view</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">viewer</span><span class="o">=</span><span class="s2">&quot;x3d&quot;</span><span class="p">)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">plot_atoms</span><span class="p">(</span><span class="n">reactant</span><span class="p">,</span> <span class="n">ax1</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;-90x,0y,0z&quot;</span><span class="p">))</span>
+<span class="n">plot_atoms</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">ax2</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;-90x,0y,0z&quot;</span><span class="p">))</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;reactant&quot;</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;product&quot;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_eon-pet-neb_006.png" srcset="../../_images/sphx_glr_eon-pet-neb_006.png" alt="eon pet neb" class = "sphx-glr-single-img"/></section>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Mazitov, A.; Bigi, F.; Kellner, M.; Pegolo, P.; Tisi, D.; Fraux, G.;
+Pozdnyakov, S.; Loche, P.; Ceriotti, M. PET-MAD, a Universal
+Interatomic Potential for Advanced Materials Modeling. arXiv March
+18, 2025. <a class="reference external" href="https://doi.org/10.48550/arXiv.2503.14118">https://doi.org/10.48550/arXiv.2503.14118</a>.</p></li>
+<li><p>Bigi, F.; Abbott, J. W.; Loche, P.; Mazitov, A.; Tisi, D.; Langer,
+M. F.; Goscinski, A.; Pegolo, P.; Chong, S.; Goswami, R.; Chorna,
+S.; Kellner, M.; Ceriotti, M.; Fraux, G. Metatensor and Metatomic:
+Foundational Libraries for Interoperable Atomistic Machine Learning.
+arXiv August 21, 2025. <a class="reference external" href="https://doi.org/10.48550/arXiv.2508.15704">https://doi.org/10.48550/arXiv.2508.15704</a>.</p></li>
+<li><p>Goswami, R. Efficient Exploration of Chemical Kinetics. arXiv
+October 24, 2025. <a class="reference external" href="https://doi.org/10.48550/arXiv.2510.21368">https://doi.org/10.48550/arXiv.2510.21368</a>.</p></li>
+<li><p>Gunde, M.; Salles, N.; Hémeryck, A.; Martin-Samos, L. IRA: A Shape
+Matching Approach for Recognition and Comparison of Generic Atomic
+Patterns. J. Chem. Inf. Model. 2021, 61 (11), 5446–5457.
+<a class="reference external" href="https://doi.org/10.1021/acs.jcim.1c00567">https://doi.org/10.1021/acs.jcim.1c00567</a>.</p></li>
+<li><p>Smidstrup, S.; Pedersen, A.; Stokbro, K.; Jónsson, H. Improved
+Initial Guess for Minimum Energy Path Calculations. J. Chem. Phys.
+2014, 140 (21), 214106. <a class="reference external" href="https://doi.org/10.1063/1.4878664">https://doi.org/10.1063/1.4878664</a>.</p></li>
+<li><p>Goswami, R; Gunde, M; Jónsson, H. Enhanced climbing image nudged elastic
+band method with hessian eigenmode alignment, Jan. 22, 2026, arXiv:
+arXiv:2601.12630. doi: 10.48550/arXiv.2601.12630.</p></li>
+</ol>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (1 minutes 4.906 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-eon-pet-neb-eon-pet-neb-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/8290cae113771221802a615f2d555f82/eon-pet-neb.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">eon-pet-neb.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/ee97840b9cb5d30eb15ab5ddf5eb4be4/eon-pet-neb.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">eon-pet-neb.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/72b9bec1c6e219fe3a0fb83fa52b668b/eon-pet-neb.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">recipe:</span> <span class="pre">eon-pet-neb.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../pet-finetuning/pet-ft.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Fine-tuning the PET-MAD universal potential</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../learn-tensors-with-mcov/learn-tensors-with-mcov.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Equivariant model for tensorial properties based on scalar features</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; BSD 3-Clause License, Copyright (c) 2026, The atomistic cookbook team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Finding Reaction Paths with eOn and a Metatomic Potential</a><ul>
+<li><a class="reference internal" href="#importing-required-packages">Importing Required Packages</a></li>
+<li><a class="reference internal" href="#obtaining-the-foundation-model-pet-mad">Obtaining the Foundation Model - PET-MAD</a></li>
+<li><a class="reference internal" href="#nudged-elastic-band-neb">Nudged Elastic Band (NEB)</a><ul>
+<li><a class="reference internal" href="#endpoint-minimization">Endpoint minimization</a></li>
+<li><a class="reference internal" href="#initial-path-generation">Initial path generation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#running-nebs">Running NEBs</a><ul>
+<li><a class="reference internal" href="#ase-and-metatomic">ASE and Metatomic</a></li>
+<li><a class="reference internal" href="#eon-and-metatomic">eOn and Metatomic</a></li>
+<li><a class="reference internal" href="#run-the-main-c-client">Run the main C++ client</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#visual-interpretation">Visual interpretation</a></li>
+<li><a class="reference internal" href="#relaxing-the-endpoints-with-eon">Relaxing the endpoints with eOn</a><ul>
+<li><a class="reference internal" href="#run-the-minimization">Run the minimization</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script data-domain="atomistic-cookbook.org" defer="defer" src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"></script>
+    <script src="../../_static/all-examples-data.js?v=01c87ff6"></script>
+    <script src="../../_static/daily-recipe.js?v=b5e71911"></script>
+    </body>
+</html>

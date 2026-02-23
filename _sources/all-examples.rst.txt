@@ -1,0 +1,406 @@
+
+List of all recipes
+===================
+
+This section contains the list of all compiled recipes, including those
+that are not part of any of the other sections.
+
+
+.. grid:: 1 2 2 3
+    :gutter: 1 1 2 3
+
+    .. grid-item::
+        .. card:: A ML model for the electron density of states
+            :link: examples/dos-align/dos-align
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/dos-align/images/thumb/sphx_glr_dos-align_thumb.png
+                :alt: This tutorial would go through the entire machine learning framework for the electronic density of states (DOS). It will cover the construction of the DOS and SOAP descriptors from ase Atoms and eigenenergy results. A simple neural network will then be constructed and the model parameters, along with the energy reference will be optimized during training. A total of three energy reference will be used, the average Hartree potential, the Fermi level, and an optimized energy reference starting from the Fermi level energy reference. The performance of each model is then compared.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Atomistic Water Model for Molecular Dynamics
+            :link: examples/water-model/water-model
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/water-model/images/thumb/sphx_glr_water-model_thumb.png
+                :alt: In this example, we demonstrate how to construct a metatomic model for flexible three and four-point water model, with parameters optimized for use together with quantum-nuclear-effects-aware path integral simulations (cf. Habershon et al., JCP (2009)). The model also demonstrates the use of torch-pme, a Torch library for long-range interactions, and uses the resulting model to perform demonstrative molecular dynamics simulations.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Batch run of CP2K calculations
+            :link: examples/batch-cp2k/reference-trajectory
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/batch-cp2k/images/thumb/sphx_glr_reference-trajectory_thumb.png
+                :alt: This is an example how to perform single point calculations based on list of structures using CP2K using its reftraj functionality. The inputs are a set of structures in :download:`example.xyz` using the DFT parameters defined in :download:`reftraj_template.cp2k`. The reference DFT parameters are taken from Cheng et al. Ab initio thermodynamics of liquid and solid water 2019. Due to the small size of the test structure and convergence issues, we have decreased the size of the CUTOFF_RADIUS from 6.0\,\mathrm{Å} to 3.0\,\mathrm{Å}. For actual production calculations adapt the template!
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Computing NMR shielding tensors using ShiftML
+            :link: examples/shiftml/shiftml-example
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/shiftml/images/thumb/sphx_glr_shiftml-example_thumb.png
+                :alt: This example shows how to compute NMR shielding tensors using a point-edge transformer model trained on the ShiftML dataset.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Conservative fine-tuning for a PET model
+            :link: examples/pet-finetuning/pet-ft-nc
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/pet-finetuning/images/thumb/sphx_glr_pet-ft-nc_thumb.png
+                :alt: This example demonstrates a "conservative fine-tuning" (or equivalently, "non-conservative pre-training") strategy. This consists in training a model using (faster) direct, non-conservative force predictions, and then fine-tuning it with backpropagated forces to achieve an accurate conservative model.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Constant-temperature MD and thermostats
+            :link: examples/thermostats/thermostats
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/thermostats/images/thumb/sphx_glr_thermostats_thumb.png
+                :alt: This recipe gives a practical introduction to finite-temperature molecular dynamics simulations, and provides a guide to choose the most appropriate thermostat for the simulation at hand.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Equivariant linear model for polarizability
+            :link: examples/polarizability/polarizability
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/polarizability/images/thumb/sphx_glr_polarizability_thumb.png
+                :alt: In this example, we demonstrate how to construct a metatensor atomistic model for the polarizability tensor of molecular systems. This example uses the featomic library to compute equivariant descriptors, and scikit-learn to train a linear regression model. The model can then be used in an ASE calculator. You could also have a look at this recipe based on scalar/tensorial models, which provides an alternative approach for equivariant learning of tensors.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Equivariant model for tensorial properties based on scalar features
+            :link: examples/learn-tensors-with-mcov/learn-tensors-with-mcov
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/learn-tensors-with-mcov/images/thumb/sphx_glr_learn-tensors-with-mcov_thumb.png
+                :alt: In this example, we demonstrate how to train a metatensor atomistic model on dipole moments and polarizabilities of small molecular systems, using a model that combines scalar descriptors with equivariant tensorial components that depend in a simple way from the molecular geometry. You may also want to read this recipe for a linear polarizability model, which provides an alternative approach for tensorial learning. The model is trained with metatrain and can then be used in an ASE calculator.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Finding Reaction Paths with eOn and a Metatomic Potential
+            :link: examples/eon-pet-neb/eon-pet-neb
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/eon-pet-neb/images/thumb/sphx_glr_eon-pet-neb_thumb.png
+                :alt: This example describes how to find the reaction pathway for oxadiazole formation from N₂O and ethylene. We will use the PET-MAD metatomic model to calculate the potential energy and forces.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Fine-tuning the PET-MAD universal potential
+            :link: examples/pet-finetuning/pet-ft
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/pet-finetuning/images/thumb/sphx_glr_pet-ft_thumb.png
+                :alt: This example demonstrates how to fine-tune the PET-MAD universal ML potential on a new dataset using metatrain. This allows adapting the model to a specialized task by retraining it on a more focused, domain-specific dataset.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Generalized Convex Hull construction for the polymorphs of ROY
+            :link: examples/roy-gch/roy-gch
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/roy-gch/images/thumb/sphx_glr_roy-gch_thumb.png
+                :alt: This notebook analyzes the structures of 264 polymorphs of ROY, from Beran et Al, Chemical Science (2022), comparing the conventional density-energy convex hull with a Generalized Convex Hull (GCH) analysis (see Anelli et al., Phys. Rev. Materials (2018)). It uses features computed with featomic and uses the directional convex hull function from scikit-matter to make the figure.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Hamiltonian Learning for Molecules with Indirect Targets
+            :link: examples/hamiltonian-qm7/hamiltonian-qm7
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/hamiltonian-qm7/images/thumb/sphx_glr_hamiltonian-qm7_thumb.png
+                :alt: This tutorial introduces a machine learning (ML) framework that predicts Hamiltonians for molecular systems. Another one of our cookbook examples demonstrates an ML model that predicts real-space Hamiltonians for periodic systems. While we use the same model here to predict a molecular Hamiltonians, we further finetune these models to optimise predictions of different quantum mechanical (QM) properties of interest, thereby treating the Hamiltonian predictions as an intermediate component of the ML framework. More details on this hybrid or indirect learning framework can be found in ACS Cent. Sci. 2024, 10, 637−648. and our preprint arXiv:2504.01187.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Learning Capabilities with torchpme
+            :link: examples/torchpme/torchpme_learning
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/torchpme/images/thumb/sphx_glr_torchpme_learning_thumb.png
+                :alt: This example demonstrates the capabilities of the torchpme package, focusing on learning target charges and utilizing the :class:`CombinedPotential` class to evaluate potentials that combine multiple pairwise interactions with optimizable weights.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Local Prediction Rigidity analysis
+            :link: examples/lpr/lpr
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/lpr/images/thumb/sphx_glr_lpr_thumb.png
+                :alt: In this tutorial, we calculate the SOAP descriptors of an amorphous silicon dataset using featomic, then compute the local prediction rigidity (LPR) for the atoms of a "test" set before and after modifications to the "training" dataset has been made.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Long-distance Equivariants: a tutorial
+            :link: examples/lode-linear/lode-linear
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/lode-linear/images/thumb/sphx_glr_lode-linear_thumb.png
+                :alt: This tutorial explains how Long range equivariant descriptors can be constructed using featomic and the resulting descriptors be used to construct a linear model with equisolve
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Long-stride trajectories with a universal FlashMD model
+            :link: examples/flashmd/flashmd-demo
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/flashmd/images/thumb/sphx_glr_flashmd-demo_thumb.png
+                :alt: For a quickstart on how to use FlashMD with ASE, you can go here.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: MD using direct-force predictions with PET-MAD
+            :link: examples/pet-mad-nc/pet-mad-nc
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/pet-mad-nc/images/thumb/sphx_glr_pet-mad-nc_thumb.png
+                :alt: Evaluating forces as a direct output of a ML model accelerates their evaluation, by up to a factor of 3 in comparison to the traditional approach that evaluates them as derivatives of the interatomic potential. Unfortunately, as discussed e.g. in this paper, doing so means that forces are not conservative, leading to instabilities and artefacts in many modeling tasks, such as constant-energy molecular dynamics. Here we demonstrate the issues associated with direct force predictions, and ways to mitigate them, using the generally-applicable PET-MAD potential. See also this recipe for examples of using PET-MAD for basic tasks such as geometry optimization and conservative MD, and this for an example of how to use direct forces to accelerate training.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: ML collective variables in PLUMED with metatomic
+            :link: examples/metatomic-plumed/metatomic-plumed
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/metatomic-plumed/images/thumb/sphx_glr_metatomic-plumed_thumb.png
+                :alt: This example shows how to build a metatomic model that computes order parameters for a Lennard-Jones cluster, and how to use it with the PLUMED package to run a metadynamics simulation.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Multiple time stepping and ring-polymer contraction
+            :link: examples/pi-mts-rpc/mts-rpc
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/pi-mts-rpc/images/thumb/sphx_glr_mts-rpc_thumb.png
+                :alt: This notebook provides an introduction to multiple time stepping and ring polymer contraction, two closely-related techniques, that are geared towards reducing the cost of calculations by separating slowly-varying (and computationally-expensive) components of the potential energy from the fast-varying (and hopefully cheaper) ones.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: PCA/PCovR Visualization of a training dataset for a potential
+            :link: examples/gaas-map/gaas-map
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/gaas-map/images/thumb/sphx_glr_gaas-map_thumb.png
+                :alt: This example uses featomic and metatensor to compute structural properties for the structures in a training dataset for a ML potential. These are then used with simple dimensionality reduction algorithms (implemented in sklearn and skmatter) to obtain a simplified description of the dataset, that is then visualized using chemiscope.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Path integral metadynamics
+            :link: examples/pi-metad/pi-metad
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/pi-metad/images/thumb/sphx_glr_pi-metad_thumb.png
+                :alt: This example shows how to run a free-energy sampling calculation that combines path integral molecular dynamics to model nuclear quantum effects and metadynamics to accelerate sampling of the high-free-energy regions.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Path integral molecular dynamics
+            :link: examples/path-integrals/path-integrals
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/path-integrals/images/thumb/sphx_glr_path-integrals_thumb.png
+                :alt: This example shows how to run a path integral molecular dynamics simulation using i-PI, analyze the output and visualize the trajectory in chemiscope. It uses LAMMPS as the driver to simulate the q-TIP4P/f water model.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Periodic Hamiltonian learning
+            :link: examples/periodic-hamiltonian/periodic-hamiltonian
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/periodic-hamiltonian/images/thumb/sphx_glr_periodic-hamiltonian_thumb.png
+                :alt: This tutorial explains how to train a machine learning model for the electronic Hamiltonian of a periodic system. Even though we focus on periodic systems, the code and techniques presented here can be directly transferred to molecules.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Quantum heat capacity of water
+            :link: examples/heat-capacity/heat-capacity
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/heat-capacity/images/thumb/sphx_glr_heat-capacity_thumb.png
+                :alt: This example shows how to estimate the heat capacity of liquid water from a path integral molecular dynamics simulation. The dynamics are run with i-PI, and LAMMPS is used as the driver to simulate the q-TIP4P/f water model.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Ring Polymer Instanton Rate Theory: Tunneling Rates
+            :link: examples/ring-polymer-instanton/rpi-rates
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/ring-polymer-instanton/images/thumb/sphx_glr_rpi-rates_thumb.png
+                :alt: This notebook introduces the calculation of tunneling rates using ring-polymer instanton rate theory. A comprehensive presentation of the instanton formalism can be found in the review article by J. Richardson, Int. Rev. Phys. Chem., 37, 171, 2018, while the implementation within i-PI is described in V. Kapil et al., Comp. Phys. Commun., 236, 214, 2020. Additional practical details are available in Yair Litman's doctoral thesis.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Rotating equivariants
+            :link: examples/rotate-equivariants/rotate-equivariants
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/rotate-equivariants/images/thumb/sphx_glr_rotate-equivariants_thumb.png
+                :alt: This example shows how to rotate equivariant properties of atomic structures using the scipy and quaternionic libraries. The equivariant properties for this example are computed by the featomic library.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Sample and Feature Selection with FPS and CUR
+            :link: examples/sample-selection/sample-selection
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/sample-selection/images/thumb/sphx_glr_sample-selection_thumb.png
+                :alt: In this tutorial we generate descriptors using featomic, then select a subset of structures using both the farthest-point sampling (FPS) and CUR algorithms implemented in scikit-matter. Finally, we also generate a selection of the most important features using the same techniques.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: The PET-MAD universal potential
+            :link: examples/pet-mad/pet-mad
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/pet-mad/images/thumb/sphx_glr_pet-mad_thumb.png
+                :alt: This example demonstrates how to use the PET-MAD model with ASE, i-PI and LAMMPS. PET-MAD is a "universal" machine-learning forcefield trained on a dataset that aims to incorporate a very high degree of structural diversity.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Uncertainty Quantification with PET-MAD
+            :link: examples/pet-mad-uq/pet-mad-uq
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/pet-mad-uq/images/thumb/sphx_glr_pet-mad-uq_thumb.png
+                :alt: This recipe demonstrates three ways of computing errors on the outputs of ML potential-driven simulations, using as an example the PET-MAD model and its built-in uncertainty quantification (UQ) capabilities.
+                :class: gallery-img
+
+                
+    .. grid-item::
+        .. card:: Water orientation in a pulsed electric field
+            :link: examples/water-pulsed/water-pulsed
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: examples/water-pulsed/images/thumb/sphx_glr_water-pulsed_thumb.png
+                :alt: Energy dissipation in water is very fast and more efficient than in many other liquids. This behavior is commonly attributed to the intermolecular interactions associated with hydrogen bonding. This effect has been studied intensively by experiments, ab initio, and classical simulations in the work by Elgabarty et al.. Here, we will re run some of the classical force field molecular dynamics (MD) simulations of the paper using the GROMACS package to compute the timeseries of the dipole moments as well as the energy.
+                :class: gallery-img
+
+                
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :titlesonly:
+
+   examples/dos-align/dos-align
+   examples/water-model/water-model
+   examples/batch-cp2k/reference-trajectory
+   examples/shiftml/shiftml-example
+   examples/pet-finetuning/pet-ft-nc
+   examples/thermostats/thermostats
+   examples/polarizability/polarizability
+   examples/learn-tensors-with-mcov/learn-tensors-with-mcov
+   examples/eon-pet-neb/eon-pet-neb
+   examples/pet-finetuning/pet-ft
+   examples/roy-gch/roy-gch
+   examples/hamiltonian-qm7/hamiltonian-qm7
+   examples/torchpme/torchpme_learning
+   examples/lpr/lpr
+   examples/lode-linear/lode-linear
+   examples/flashmd/flashmd-demo
+   examples/pet-mad-nc/pet-mad-nc
+   examples/metatomic-plumed/metatomic-plumed
+   examples/pi-mts-rpc/mts-rpc
+   examples/gaas-map/gaas-map
+   examples/pi-metad/pi-metad
+   examples/path-integrals/path-integrals
+   examples/periodic-hamiltonian/periodic-hamiltonian
+   examples/heat-capacity/heat-capacity
+   examples/ring-polymer-instanton/rpi-rates
+   examples/rotate-equivariants/rotate-equivariants
+   examples/sample-selection/sample-selection
+   examples/pet-mad/pet-mad
+   examples/pet-mad-uq/pet-mad-uq
+   examples/water-pulsed/water-pulsed

@@ -1,0 +1,1274 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="search" title="Search" href="../../search.html"><link rel="next" title="Rotating equivariants" href="../rotate-equivariants/rotate-equivariants.html"><link rel="prev" title="Quantum heat capacity of water" href="../heat-capacity/heat-capacity.html">
+        <link rel="canonical" href="https://atomistic-cookbook.org/examples/ring-polymer-instanton/rpi-rates.html">
+        <link rel="prefetch" href="../../_static/cookbook-icon.svg" as="image">
+
+    <link rel="shortcut icon" href="../../_static/cookbook-icon.png"><!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>Ring Polymer Instanton Rate Theory: Tunneling Rates - The Atomistic Cookbook</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/cookbook.css?v=d86cfb60" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">The Atomistic Cookbook</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/cookbook-icon.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">The Atomistic Cookbook</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../topics/index.html">Recipes grouped by topic</a><input aria-label="Toggle navigation of Recipes grouped by topic" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/sampling.html">Statistical sampling and dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/analysis.html">Analysis and post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/ml-models.html">Machine learning models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/universal.html">Universal ML models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/nqes.html">Nuclear quantum effects</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../software/index.html">Recipes grouped by software used</a><input aria-label="Toggle navigation of Recipes grouped by software used" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../software/chemiscope.html">chemiscope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/cp2k.html">cp2k</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/eon.html">eon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/featomic.html">featomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/gromacs.html">GROMACS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/i-pi.html">i-PI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/lammps.html">LAMMPS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/metatensor.html">metatensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/plumed.html">PLUMED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/scikit-matter.html">scikit-matter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/torch-pme.html">torch-pme</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../all-examples.html">List of all recipes</a><input aria-label="Toggle navigation of List of all recipes" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../dos-align/dos-align.html">A ML model for the electron density of states</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-model/water-model.html">Atomistic Water Model for Molecular Dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../batch-cp2k/reference-trajectory.html">Batch run of CP2K calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../shiftml/shiftml-example.html">Computing NMR shielding tensors using ShiftML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft-nc.html">Conservative fine-tuning for a PET model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermostats/thermostats.html">Constant-temperature MD and thermostats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../polarizability/polarizability.html">Equivariant linear model for polarizability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../learn-tensors-with-mcov/learn-tensors-with-mcov.html">Equivariant model for tensorial properties based on scalar features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../eon-pet-neb/eon-pet-neb.html">Finding Reaction Paths with eOn and a Metatomic Potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft.html">Fine-tuning the PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../roy-gch/roy-gch.html">Generalized Convex Hull construction for the polymorphs of ROY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hamiltonian-qm7/hamiltonian-qm7.html">Hamiltonian Learning for Molecules with Indirect Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../torchpme/torchpme_learning.html">Learning Capabilities with torchpme</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lpr/lpr.html">Local Prediction Rigidity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lode-linear/lode-linear.html">Long-distance Equivariants: a tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flashmd/flashmd-demo.html">Long-stride trajectories with a universal FlashMD model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-nc/pet-mad-nc.html">MD using direct-force predictions with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metatomic-plumed/metatomic-plumed.html">ML collective variables in PLUMED with metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-mts-rpc/mts-rpc.html">Multiple time stepping and ring-polymer contraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../gaas-map/gaas-map.html">PCA/PCovR Visualization of a training dataset for a potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-metad/pi-metad.html">Path integral metadynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../path-integrals/path-integrals.html">Path integral molecular dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../periodic-hamiltonian/periodic-hamiltonian.html">Periodic Hamiltonian learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../heat-capacity/heat-capacity.html">Quantum heat capacity of water</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Ring Polymer Instanton Rate Theory: Tunneling Rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rotate-equivariants/rotate-equivariants.html">Rotating equivariants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sample-selection/sample-selection.html">Sample and Feature Selection with FPS and CUR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad/pet-mad.html">The PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-uq/pet-mad-uq.html">Uncertainty Quantification with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-pulsed/water-pulsed.html">Water orientation in a pulsed electric field</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../downloading.html">Downloading and running the recipes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing a recipe</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-examples-ring-polymer-instanton-rpi-rates-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="ring-polymer-instanton-rate-theory-tunneling-rates">
+<span id="sphx-glr-examples-ring-polymer-instanton-rpi-rates-py"></span><h1>Ring Polymer Instanton Rate Theory: Tunneling Rates<a class="headerlink" href="#ring-polymer-instanton-rate-theory-tunneling-rates" title="Link to this heading">¶</a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Authors<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Yair Litman <a class="reference external" href="https://github.com/litman90">&#64;litman90</a></p>
+</dd>
+</dl>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># sphinx_gallery_thumbnail_number = 2</span>
+</pre></div>
+</div>
+<p>This notebook introduces the calculation of tunneling rates using
+ring-polymer instanton rate theory. A comprehensive presentation of the
+instanton formalism can be found in the review article by
+<a class="reference external" href="https://doi.org/10.1080/0144235X.2018.1472353">J. Richardson, Int. Rev. Phys. Chem., 37, 171, 2018</a>,
+while the implementation within i-PI is described in
+<a class="reference external" href="https://doi.org/10.1016/j.cpc.2018.09.020">V. Kapil et al., Comp. Phys. Commun., 236, 214, 2020</a>.
+Additional practical details are available in <a class="reference external" href="https://pure.mpg.de/rest/items/item_3246769_3/component/file_3246770/content">Yair Litman’s doctoral thesis</a>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">chemiscope</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ipi</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">constants</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipi.utils.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">interpolate_instanton</span>
+</pre></div>
+</div>
+<section id="instanton-calculations-using-i-pi">
+<h2>Instanton calculations using i-PI<a class="headerlink" href="#instanton-calculations-using-i-pi" title="Link to this heading">¶</a></h2>
+<p>In these exercises, i-PI will be used not for molecular dynamics simulations,
+but to optimize stationary points on the ring-polymer potential-energy surface.
+From these stationary points, the ring-polymer instanton can be obtained and
+employed to evaluate thermal reaction rates that include tunneling contributions.</p>
+<p>As a working example, we consider the gas-phase bimolecular reaction
+H + CH4 –&gt;CH3 + H2. The calculations are performed using the CBE
+potential-energy surface reported in
+<a class="reference external" href="https://doi.org/10.1063/1.3132223">J. C. Corchado et al., J. Chem. Phys., 130, 184314, 2009</a>.</p>
+<p>If you are new to path-integral simulations or to the use of
+<a class="reference external" href="http://ipi-code.org">i-PI</a>, which is the
+software which will be used to perform simulations,
+you can see <a class="reference external" href="https://atomistic-cookbook.org/examples/path-integrals/path-integrals.html">this introductory recipe</a>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ipi_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">ipi</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
+</pre></div>
+</div>
+<section id="installing-the-python-driver">
+<h3>Installing the Python driver<a class="headerlink" href="#installing-the-python-driver" title="Link to this heading">¶</a></h3>
+<p>i-PI provides a FORTRAN driver that includes the CBE potential-energy
+surface. However, the driver must be compiled from source.
+We use a utility function to compile it.</p>
+<p>Note that this requires a working build environment with
+<cite>gfortran</cite> and <cite>make</cite> available.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ipi</span><span class="o">.</span><span class="n">install_driver</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="calculation-workflow">
+<h2>Calculation Workflow<a class="headerlink" href="#calculation-workflow" title="Link to this heading">¶</a></h2>
+<p>The calculation of tunneling rates using ring-polymer instanton theory
+is a multi-step procedure that requires the optimization of several
+stationary points on the system’s potential-energy surface.
+The workflow is not fully automated and therefore involves multiple
+independent runs of i-PI.</p>
+<p>A typical workflow is summarized below:</p>
+<p>1. Locate the minima on the physical potential-energy surface to identify
+the reactant and product states. Compute their Hessians, normal-mode
+frequencies, and eigenvectors.</p>
+<p>2. Find the first-order saddle point corresponding to the transition
+state and evaluate its Hessian.</p>
+<p>3. Obtain an “unconverged” instanton by locating the first-order saddle
+point of the ring-polymer Hamiltonian using N replicas. The chosen
+N should be large enough that the instanton provides a reasonable
+initial guess for a more converged calculation with a larger number
+of replicas, but small enough to keep the computational cost moderate.
+This step also provides an approximate Hessian for each replica.</p>
+<p>4. Use ring-polymer interpolation to construct an instanton with a
+larger number of replicas. As a rule of thumb, the number of replicas
+can be doubled.</p>
+<p>5. Re-optimize the instanton by locating the corresponding first-order
+saddle point.</p>
+<p>6. Repeat steps 4 and 5 until the instanton is converged with respect
+to the number of replicas.</p>
+<p>7. Recompute the Hessian for each replica accurately and evaluate
+the reaction rate.</p>
+<p>If rates are required at multiple temperatures, it is recommended to
+start with temperatures close to the crossover temperature and then
+cool sequentially, using the optimized instanton from the previous
+temperature as the initial guess for the next calculation.</p>
+<section id="step-1-optimizing-and-analyzing-the-reactant">
+<h3>Step 1 - Optimizing and Analyzing the Reactant<a class="headerlink" href="#step-1-optimizing-and-analyzing-the-reactant" title="Link to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p>We begin by performing a geometry optimization of the reactant.</p></li>
+</ol>
+<p>The relevant sections of the input file that control the geometry
+optimization are highlighted below.</p>
+<p>Open and inspect the XML input file:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;data/input_vibrations_reactant.xml&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="mi">18</span><span class="p">:</span><span class="mi">23</span><span class="p">]:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;vibrations mode=&quot;fd&quot;&gt;
+    &lt;pos_shift&gt; 0.01  &lt;/pos_shift&gt;  &lt;!-- Displacment length --&gt;
+    &lt;prefix&gt; vib &lt;/prefix&gt;
+    &lt;asr&gt; none &lt;/asr&gt;               &lt;!-- Apply acoustic sume rule: none, crystal (translation) or poly(rotation and translation) --&gt;
+ &lt;/vibrations&gt;
+</pre></div>
+</div>
+<p>We can launch i-pi and the driver from a Python script as follows</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ipi_process</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">ipi_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;i-pi&quot;</span><span class="p">,</span> <span class="s2">&quot;data/input_geop_reactant.xml&quot;</span><span class="p">])</span>
+<span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>  <span class="c1"># wait for i-PI to start</span>
+
+<span class="n">FF_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;i-pi-driver&quot;</span><span class="p">,</span> <span class="s2">&quot;-u&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;ch4hcbe&quot;</span><span class="p">])</span>
+<span class="n">FF_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+<span class="n">ipi_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>0
+</pre></div>
+</div>
+<p>The simulation converges in 31 steps, and the optimized geometry can
+be found in the last frame of <code class="docutils literal notranslate"><span class="pre">min.xc.xyz</span></code>. After completing this
+exercise, you may return to this point and attempt to reduce the number
+of optimization steps, for example by replacing <code class="docutils literal notranslate"><span class="pre">sd</span></code> with one of the
+alternative optimizers.</p>
+<p>Since this is a bimolecular reaction, the H atom and CH<span class="math notranslate nohighlight">\(_4\)</span>
+molecule must remain well separated. For this reason, a very large
+simulation box has been used.</p>
+<ol class="arabic simple" start="2">
+<li><p>Extract the final frame of the geometry optimization trajectory
+and use it to compute the harmonic vibrational frequencies.</p></li>
+</ol>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;min_reactant.xyz&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[</span><span class="s2">&quot;tail&quot;</span><span class="p">,</span> <span class="s2">&quot;-n&quot;</span><span class="p">,</span> <span class="s2">&quot;8&quot;</span><span class="p">,</span> <span class="s2">&quot;geop_reactant.xc.xyz&quot;</span><span class="p">],</span> <span class="n">stdout</span><span class="o">=</span><span class="n">outfile</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+
+
+<span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>  <span class="c1"># wait for i-PI to start</span>
+<span class="c1">#    We will now compute the hessian of this  minimum eneryg geometry</span>
+
+<span class="n">ipi_process</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">ipi_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;i-pi&quot;</span><span class="p">,</span> <span class="s2">&quot;data/input_vibrations_reactant.xml&quot;</span><span class="p">])</span>
+<span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>  <span class="c1"># wait for i-PI to start</span>
+
+<span class="n">FF_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;i-pi-driver&quot;</span><span class="p">,</span> <span class="s2">&quot;-u&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;ch4hcbe&quot;</span><span class="p">])</span>
+<span class="n">FF_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+<span class="n">ipi_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>0
+</pre></div>
+</div>
+<p>The hessian is saved in <code class="docutils literal notranslate"><span class="pre">vib_reactant.hess</span></code> and
+its eigenvalues in <code class="docutils literal notranslate"><span class="pre">vib_reactant.eigval</span></code>.</p>
+<p>Check that it has the required number (9) of  almost zero eigenvalues. Why?</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">eigvals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span><span class="s2">&quot;vib_reactant.vib.eigval&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">eigvals</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;mode number&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Eigenvalues (a.u.)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;RESTART&quot;</span><span class="p">,</span> <span class="s2">&quot;RESTART_reactant&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_rpi-rates_001.png" srcset="../../_images/sphx_glr_rpi-rates_001.png" alt="rpi rates" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&#39;RESTART_reactant&#39;
+</pre></div>
+</div>
+</section>
+<section id="step-2-optimizing-and-analyzing-the-transition-state">
+<h3>Step 2 - Optimizing and Analyzing the Transition State<a class="headerlink" href="#step-2-optimizing-and-analyzing-the-transition-state" title="Link to this heading">¶</a></h3>
+<p>We now optimize the transition-state (TS) geometry.
+The procedure is analogous to that used for the reactant, but we
+employ a different input file configured specifically for a
+transition-state optimization.</p>
+<p>The relevant sections of the input file that define the
+transition-state optimization are highlighted below:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;data/input_geop_TS.xml&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="mi">18</span><span class="p">:</span><span class="mi">31</span><span class="p">]:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;instanton mode=&#39;rate&#39;&gt;                      &lt;!-- This option implies that we are looking a transition state --&gt;
+    &lt;tolerances&gt;
+        &lt;energy&gt; 5e-6 &lt;/energy&gt;
+        &lt;force&gt; 5e-6 &lt;/force&gt;
+        &lt;position&gt; 1e-3 &lt;/position&gt;
+    &lt;/tolerances&gt;
+    &lt;alt_out&gt;-1&lt;/alt_out&gt;                    &lt;!-- Print frequency of alternative output. --&gt;
+    &lt;hessian_update&gt;powell&lt;/hessian_update&gt;  &lt;!-- Specify the way we update our hessian. Options: powell or recompute. --&gt;
+    &lt;hessian_asr&gt;poly&lt;/hessian_asr&gt;          &lt;!-- Type of acoustic sum rule applied --&gt;
+    &lt;hessian_init&gt;true&lt;/hessian_init&gt;        &lt;!-- Boolean that specifies if the initial hessian is going to be computed from scratch or not --&gt;
+    &lt;hessian_final&gt;true&lt;/hessian_final&gt;      &lt;!-- Boolean that specifies if after the optimization is converged a hessian should be computed or not --&gt;
+    &lt;biggest_step&gt;0.3&lt;/biggest_step&gt;
+&lt;/instanton&gt;
+</pre></div>
+</div>
+<p>Note that Here i-PI treats the TS search as a one-bead instanton
+optimization.</p>
+<p>We now launch i-PI together with the driver using commands analogous
+to those used in the previous step:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ipi_process</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">ipi_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;i-pi&quot;</span><span class="p">,</span> <span class="s2">&quot;data/input_geop_TS.xml&quot;</span><span class="p">])</span>
+<span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>  <span class="c1"># wait for i-PI to start</span>
+
+<span class="n">FF_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;i-pi-driver&quot;</span><span class="p">,</span> <span class="s2">&quot;-u&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;ch4hcbe&quot;</span><span class="p">])</span>
+<span class="n">FF_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+<span class="n">ipi_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+<span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;RESTART&quot;</span><span class="p">,</span> <span class="s2">&quot;RESTART_ts&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&#39;RESTART_ts&#39;
+</pre></div>
+</div>
+<p>The simulation typically converges in 11–12 steps and writes the
+optimized geometry to <code class="docutils literal notranslate"><span class="pre">ts.instanton_FINAL_xx.xyz</span></code> and the corresponding
+Hessian to <code class="docutils literal notranslate"><span class="pre">ts.instanton_FINAL.hess_xx</span></code>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ts_energy_ev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="s2">&quot;ts.out&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="step-3-first-instanton-optimization">
+<h3>Step 3 - First instanton optimization<a class="headerlink" href="#step-3-first-instanton-optimization" title="Link to this heading">¶</a></h3>
+<p>We now continue with the optimization of the ring-polymer instanton. This is a
+first-order saddle point of the ring-polymer Hamiltonian, and therefore
+the optimization procedure is analogous to that used for the transition state.
+To generate the initial guess for the instanton optimization, we use the
+transition state geometry and hessian obtained in the previous step. The</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Retrieve the Hessian and geometry files from the converged</span>
+<span class="c1"># transition-state calculation and rename them as required.</span>
+
+<span class="n">final_step</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+    <span class="nb">int</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;hess_(\d+)$&quot;</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;ts.instanton_FINAL.hess_*&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">ts_hess_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;ts.instanton_FINAL.hess_</span><span class="si">{</span><span class="n">final_step</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="n">ts_xyz_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;ts.instanton_FINAL_</span><span class="si">{</span><span class="n">final_step</span><span class="si">}</span><span class="s2">.xyz&quot;</span>
+
+
+<span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">ts_xyz_file</span><span class="p">,</span> <span class="s2">&quot;init_inst_geop.xyz&quot;</span><span class="p">)</span>
+<span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">ts_hess_file</span><span class="p">,</span> <span class="s2">&quot;init_inst_geop.hess&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&#39;init_inst_geop.hess&#39;
+</pre></div>
+</div>
+<p>We run i-PI in the usual way, but here we launch four
+driver instances simultaneously using:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ipi_process</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">ipi_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;i-pi&quot;</span><span class="p">,</span> <span class="s2">&quot;data/input_geop_RPI_40.xml&quot;</span><span class="p">])</span>
+<span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>  <span class="c1"># wait for i-PI to start</span>
+
+<span class="n">FF_process</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;i-pi-driver&quot;</span><span class="p">,</span> <span class="s2">&quot;-u&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;ch4hcbe&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="p">]</span>
+
+<span class="n">ipi_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+<span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;RESTART&quot;</span><span class="p">,</span> <span class="s2">&quot;RESTART_RPI_40&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&#39;RESTART_RPI_40&#39;
+</pre></div>
+</div>
+<p>The program first generates an initial instanton guess by placing
+replicas around the transition state along the direction of the
+imaginary mode. It then performs a saddle-point optimization.
+The optimized instanton geometry is written to
+<code class="docutils literal notranslate"><span class="pre">ts.instanton_FINAL_X.xyz</span></code> and can be visualized using <code class="docutils literal notranslate"><span class="pre">vmd</span></code>.
+Finally, the Hessians for each bead are computed and saved in
+<code class="docutils literal notranslate"><span class="pre">ts.instanton_FINAL.hess_X</span></code> with dimensions (3n, 3Nn), where n
+is the number of atoms and N the number of beads.</p>
+<p>Let’s visualize the instanton geometry.
+We first retrieve the filename of the optimized geometry
+and then use chemiscope to visualize it.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">final_step</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+    <span class="nb">int</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;hess_(\d+)$&quot;</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;inst.instanton_FINAL.hess_*&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">inst_xyz_file_40</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;inst.instanton_FINAL_</span><span class="si">{</span><span class="n">final_step</span><span class="si">}</span><span class="s2">.xyz&quot;</span>
+
+
+<span class="c1"># NB: there is a parsing bug in i-PI 3.1 that causes the units to be</span>
+<span class="c1"># converted incorrectly. The following code is a workaround to convert</span>
+<span class="c1"># the units back to angstroms.</span>
+<span class="n">pi_frames</span> <span class="o">=</span> <span class="n">ipi</span><span class="o">.</span><span class="n">read_trajectory</span><span class="p">(</span>
+    <span class="n">inst_xyz_file_40</span><span class="p">,</span> <span class="n">dimension</span><span class="o">=</span><span class="s2">&quot;length&quot;</span><span class="p">,</span> <span class="n">cell_units</span><span class="o">=</span><span class="s2">&quot;atomic_unit&quot;</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">&quot;angstrom&quot;</span>
+<span class="p">)</span>
+<span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">pi_frames</span><span class="p">:</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">positions</span> <span class="o">*=</span> <span class="mf">0.529177</span>  <span class="c1"># convert from bohr to angstrom</span>
+
+<span class="n">chemiscope</span><span class="o">.</span><span class="n">show</span><span class="p">(</span>
+    <span class="n">structures</span><span class="o">=</span><span class="n">pi_frames</span><span class="p">,</span>
+    <span class="n">settings</span><span class="o">=</span><span class="n">chemiscope</span><span class="o">.</span><span class="n">quick_settings</span><span class="p">(</span>
+        <span class="n">trajectory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;structure&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<!-- begin headers -->
+<!-- Load all dependencies -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
+
+<!-- JS scripts -->
+<script src="../../_static/chemiscope.min.js"></script>
+<script src="../../_static/chemiscope-sphinx.js"></script>
+
+<!-- CSS styles -->
+<link rel="stylesheet" href="../../_static/chemiscope-sphinx.css" type="text/css" />
+<!-- end headers -->
+
+<!-- Error display -->
+<div id="chsp-15330fd2-8d61-40c2-ab51-a7f0bd9839d4-error-display" class="chemiscope-sphinx-error">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-15330fd2-8d61-40c2-ab51-a7f0bd9839d4-error-display')">
+        &times;
+    </button>
+</div>
+
+<!-- Warning Display -->
+<div id="chsp-15330fd2-8d61-40c2-ab51-a7f0bd9839d4-warning-display" class="chemiscope-sphinx-warning">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-15330fd2-8d61-40c2-ab51-a7f0bd9839d4-warning-display')">
+        &times;
+    </button>
+</div>
+<div style="padding: 0.5rem 1.25rem" />
+
+<!-- Loading Spinner -->
+<div id="chsp-15330fd2-8d61-40c2-ab51-a7f0bd9839d4-loading" class="chemiscope-sphinx-spinner">
+    <img src="../../_static/chemiscope-loading.svg" alt="Loading icon" />
+</div>
+
+<!-- Chemiscope Visualization -->
+<div id="chsp-15330fd2-8d61-40c2-ab51-a7f0bd9839d4">
+    <!-- This will be replaced by the chemiscope HTML -->
+</div>
+
+<!-- Load Visualization Script -->
+<script>
+    loadChemiscopeSphinx('chsp-15330fd2-8d61-40c2-ab51-a7f0bd9839d4', '../../_datasets/a9d9bbe748f706a2eb80702aebd5523e82a78f8a3c0f88823faa70c463c14fc9-fig_rpi-rates_001.json.gz', 'structure', '2000.0');
+</script>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+!W! cell is not a known trajectory type. Will apply no units conversion
+</pre></div>
+</div>
+<div class="output_subarea output_html rendered_html output_result">
+
+</div>
+<br />
+<br /></section>
+<section id="step-4-second-and-subsequent-instanton-optimizations">
+<h3>Step 4 - Second and subsequent instanton optimizations<a class="headerlink" href="#step-4-second-and-subsequent-instanton-optimizations" title="Link to this heading">¶</a></h3>
+<p>The instanton obtained in the previous step might not be fully converged with
+respect to the number of beads. To obtain a more converged instanton, we can
+interpolate the geometry and the Hessian to a larger number of beads and then
+re-optimize. This procedure can be repeated until the instanton is converged</p>
+<p>The procedure would be as follows:
+1. Let’s retrieve the filenames of the Hessian and geometry
+corresponding to the converged instanton.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">inst_hess_file_40</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;inst.instanton_FINAL.hess_</span><span class="si">{</span><span class="n">final_step</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<span class="c1">#</span>
+</pre></div>
+</div>
+<p>2. The utility function <code class="docutils literal notranslate"><span class="pre">interpolate_instanton</span></code> can now be used to
+interpolate both the geometry and the Hessian to a larger number
+of beads. For example, to increase the number of beads from 40 to 80,
+you could run the script inside ${ipi-path}/uitls/tools/:</p>
+<p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">onstanton_interpolation.py</span> <span class="pre">-m</span> <span class="pre">-xyz</span> <span class="pre">init0</span> <span class="pre">-hess</span> <span class="pre">hess0</span> <span class="pre">-n</span> <span class="pre">80</span></code></p>
+<p>Here, however, we import and use the corresponding function directly
+within Python.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">interpolate_instanton</span><span class="p">(</span>
+    <span class="n">input_geo</span><span class="o">=</span><span class="n">inst_xyz_file_40</span><span class="p">,</span>
+    <span class="n">input_hess</span><span class="o">=</span><span class="n">inst_hess_file_40</span><span class="p">,</span>
+    <span class="n">nbeadsNew</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span>
+    <span class="n">manual</span><span class="o">=</span><span class="s2">&quot;True&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>We have a half ring polymer made of 40 beads and 6 atoms.
+We will expand the ring polymer to get a half polymer of 80 beads.
+The new Instanton geometry (half polymer) was generated
+Check new_instanton.xyz
+
+Don&#39;t forget to change the number of beads to the new value (80) in your input file
+when starting your new simulation with an increased number of beads.
+
+The new hessian is 18 x 1440.
+Creating matrix...
+The new physical Hessian (half polymer) was generated
+Check new_hessian.dat
+
+Remeber to adapt/add the following line in your input file:
+
+ &lt;hessian mode=&#39;file&#39; shape=&#39;(18, 1440)&#39; &gt;hessian.dat&lt;/hessian&gt;
+</pre></div>
+</div>
+<p>3. The previous function generates the interpolated geometry and hessian.
+we now rename the new files as required by new input.xml</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;new_instanton.xyz&quot;</span><span class="p">,</span> <span class="s2">&quot;init_inst_80beads.xyz&quot;</span><span class="p">)</span>
+<span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;new_hessian.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;init_inst_80beads.hess&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&#39;init_inst_80beads.hess&#39;
+</pre></div>
+</div>
+<ol class="arabic simple" start="4">
+<li><p>We now run the instanton optimization with 80 beads.</p></li>
+</ol>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ipi_process</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">ipi_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;i-pi&quot;</span><span class="p">,</span> <span class="s2">&quot;data/input_geop_RPI_80.xml&quot;</span><span class="p">])</span>
+<span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>  <span class="c1"># wait for i-PI to start</span>
+
+<span class="n">FF_process</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;i-pi-driver&quot;</span><span class="p">,</span> <span class="s2">&quot;-u&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;ch4hcbe&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="p">]</span>
+<span class="c1"># FF_process.wait()</span>
+<span class="n">ipi_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+<span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;RESTART&quot;</span><span class="p">,</span> <span class="s2">&quot;RESTART_RPI_80&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&#39;RESTART_RPI_80&#39;
+</pre></div>
+</div>
+</section>
+<section id="step-5-postprocessing-for-the-rate-calculation">
+<h3>Step 5 -  Postprocessing for the rate calculation<a class="headerlink" href="#step-5-postprocessing-for-the-rate-calculation" title="Link to this heading">¶</a></h3>
+<p>In the remainder of this step, we use the Instanton postprocessing
+tool to compute the partition functions and the tunneling factor.
+This Python script evaluates the different contributions to the rate,
+including the partition functions and the instanton action, from the
+outputs generated in the previous steps. It is located in the
+<code class="docutils literal notranslate"><span class="pre">utils/tools/instanton_postproc.py</span></code> directory of the i-PI installation.</p>
+<p>Note that we optimize only half of the ring polymer, since the forward
+and backward imaginary-time paths between reactant and product are
+identical. As a result, optimizing a ring polymer with 80 replicas
+corresponds to a full instanton containing 160 replicas.
+(This convention is currently somewhat confusing and  may change in future versions.)
+When using the Instanton postprocessing tool, always consult the
+help option (<code class="docutils literal notranslate"><span class="pre">-h</span></code>) to verify the expected inputs.</p>
+<ol class="arabic simple">
+<li><p>Compute the CH<span class="math notranslate nohighlight">\(_4\)</span> partition function.</p></li>
+</ol>
+<p>We compute the partition function at 300 K using 160 beads.
+Although within the harmonic approximation the exact value could
+be obtained analytically, it is preferable to use the finite-bead
+representation in order to remain consistent with the instanton
+calculation and benefit from error cancellation.</p>
+<p>This can be done using the standalone script located in
+${ipi-path}/tools/py/</p>
+<p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">instanton_postproc.py</span> <span class="pre">RESTART_reactant</span> <span class="pre">-c</span> <span class="pre">reactant</span> <span class="pre">-t</span> <span class="pre">300</span> <span class="pre">-n</span> <span class="pre">160</span> <span class="pre">-f</span> <span class="pre">5</span></code></p>
+<p>which computes the ring polymer parition function for CH<span class="math notranslate nohighlight">\(_4\)</span>
+with N = 160. Look at the output and make a note of the
+translational, rotational and vibrational partition functions. You
+may also want to put &gt; data.out after the command to save the text
+directly to a file.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">RESTART_filename</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;RESTART_reactant&quot;</span>  <span class="c1"># this is the restart file from the reactant calculation.</span>
+<span class="p">)</span>
+<span class="n">case</span> <span class="o">=</span> <span class="s2">&quot;reactant&quot;</span>
+<span class="n">temperature</span> <span class="o">=</span> <span class="mi">300</span>
+<span class="n">nbeadsR</span> <span class="o">=</span> <span class="mi">160</span>  <span class="c1"># number of beads in the reactant calculation.</span>
+<span class="c1"># This should be consistent with the number of beads used in the instanton calculation.</span>
+
+<span class="n">asr</span> <span class="o">=</span> <span class="s2">&quot;poly&quot;</span>
+<span class="c1"># we are treating the system as a polyatomic molecule,</span>
+<span class="c1"># so we need to use the corresponding acoustic sum rule (ASR)</span>
+
+<span class="n">index_to_filter</span> <span class="o">=</span> <span class="mi">5</span>  <span class="c1"># we need to filter the H free atom.</span>
+<span class="n">V00</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># This can be used to shift the energy.</span>
+<span class="c1"># Since we are interested in the partition function of the reactant,</span>
+<span class="c1"># we can set it to zero.</span>
+<span class="c1"># However, when analyzing the transition state and the instanton in the manual mode,</span>
+<span class="c1"># it is important to use the corresponding value of V00</span>
+<span class="c1"># in order to ensure that the partition functions are computed consistently.</span>
+
+<span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;python&quot;</span><span class="p">,</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ipi_path</span><span class="si">}</span><span class="s2">/utils/tools/instanton_postproc.py&quot;</span><span class="p">,</span>
+    <span class="n">RESTART_filename</span><span class="p">,</span>
+    <span class="s2">&quot;-c&quot;</span><span class="p">,</span>
+    <span class="n">case</span><span class="p">,</span>
+    <span class="s2">&quot;-t&quot;</span><span class="p">,</span>
+    <span class="nb">str</span><span class="p">(</span><span class="n">temperature</span><span class="p">),</span>
+    <span class="s2">&quot;-n&quot;</span><span class="p">,</span>
+    <span class="nb">str</span><span class="p">(</span><span class="n">nbeadsR</span><span class="p">),</span>
+    <span class="s2">&quot;-asr&quot;</span><span class="p">,</span>
+    <span class="n">asr</span><span class="p">,</span>
+    <span class="s2">&quot;-f&quot;</span><span class="p">,</span>
+    <span class="nb">str</span><span class="p">(</span><span class="n">index_to_filter</span><span class="p">),</span>
+    <span class="s2">&quot;--energy_shift&quot;</span><span class="p">,</span>
+    <span class="nb">str</span><span class="p">(</span><span class="n">V00</span><span class="p">),</span>
+<span class="p">]</span>
+
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;data_reactant.out&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">outfile</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Let’s read the output</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;data_reactant.out&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">21</span><span class="p">]:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>We are ready to start. Reading RESTART_reactant ... (This can take a while)
+
+Temperature: 300.0 K
+NBEADS: 1
+atoms:  5
+ASR:    poly
+1/(betaP*hbar) =  0.00095
+Diagonalization ...
+
+
+Lowest 10 frequencies (cm^-1)
+[1383.00 1383.02 1383.13 1550.10 1550.18 2991.87 3164.13 3164.29 3164.37]
+We saved the frequencies in freq.dat
+
+We are done. Reactants. Nbeads 160
+Qtras(bohr^-3) | Qrot     | logQvib_rp
+         9.298 |  438.764 | -47.337
+
+A file with the eigenvalues in atomic units was generated
+</pre></div>
+</div>
+<p>2. Compute the TS partition function.  This can be done using the standalone script
+located in ${ipi-path}/tools/py/ as follows:</p>
+<p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">instanton_postproc.py</span> <span class="pre">RESTART_ts</span> <span class="pre">-c</span> <span class="pre">TS</span> <span class="pre">-t</span> <span class="pre">300</span> <span class="pre">-n</span> <span class="pre">160</span></code></p>
+<p>which computes the ring polymer parition function for the TS with
+<span class="math notranslate nohighlight">\(N = 160\)</span>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">RESTART_filename</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;RESTART_ts&quot;</span>  <span class="c1"># this is the restart file from the reactant calculation.</span>
+<span class="p">)</span>
+<span class="n">case</span> <span class="o">=</span> <span class="s2">&quot;TS&quot;</span>
+<span class="n">temperature</span> <span class="o">=</span> <span class="mi">300</span>
+<span class="n">nbeadsR</span> <span class="o">=</span> <span class="mi">160</span>
+
+<span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;python&quot;</span><span class="p">,</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ipi_path</span><span class="si">}</span><span class="s2">/utils/tools/instanton_postproc.py&quot;</span><span class="p">,</span>
+    <span class="n">RESTART_filename</span><span class="p">,</span>
+    <span class="s2">&quot;-c&quot;</span><span class="p">,</span>
+    <span class="n">case</span><span class="p">,</span>
+    <span class="s2">&quot;-t&quot;</span><span class="p">,</span>
+    <span class="nb">str</span><span class="p">(</span><span class="n">temperature</span><span class="p">),</span>
+    <span class="s2">&quot;-n&quot;</span><span class="p">,</span>
+    <span class="nb">str</span><span class="p">(</span><span class="n">nbeadsR</span><span class="p">),</span>
+    <span class="s2">&quot;-asr&quot;</span><span class="p">,</span>
+    <span class="n">asr</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;data_ts.out&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">outfile</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Let’s read the output</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;data_ts.out&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>We are ready to start. Reading RESTART_ts ... (This can take a while)
+324
+
+Temperature: 300.0 K
+NBEADS: 1
+atoms:  6
+ASR:    poly
+1/(betaP*hbar) =  0.00095
+Diagonalization ...
+
+
+Lowest 10 frequencies (cm^-1)
+[-1486.89 541.88 541.89 1084.08 1084.13 1182.15 1441.55 1441.56 1831.15 3034.03]
+We saved the frequencies in freq.dat
+
+We are done. TS
+Partition functions at 300.0 K
+
+Qtras: 10.187982156996487
+Qrot: 1206.1516001364798
+logQvib: -44.278348028965425
+Potential energy at TS:  0.6505827861985822 eV, V/kBT 25.165639493793847
+</pre></div>
+</div>
+<p>Look for the value of the imaginary frequency and
+use this to compute the crossover temperature defined by</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\beta_c = \dfrac{2 \pi}{\omega_b}.\]</div>
+</div>
+<p>Be careful of units! You should find that it is about 340 K. In the
+cell below we define a quick function that helps you with the
+necessary unit conversions.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Physical Constants ###########</span>
+<span class="n">cm2hartree</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">physical_constants</span><span class="p">[</span><span class="s2">&quot;hartree-inverse meter relationship&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">100</span>
+<span class="p">)</span>
+<span class="n">Boltzmannau</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">physical_constants</span><span class="p">[</span><span class="s2">&quot;Boltzmann constant in eV/K&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="o">*</span> <span class="n">constants</span><span class="o">.</span><span class="n">physical_constants</span><span class="p">[</span><span class="s2">&quot;electron volt-hartree relationship&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<span class="p">)</span>
+
+
+<span class="c1"># Temperature &lt;-&gt; beta conversion ############</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">beta2K</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">B</span> <span class="o">/</span> <span class="n">Boltzmannau</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">omb2Trecr</span><span class="p">(</span><span class="n">omega</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">beta2K</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">cm2hartree</span><span class="p">))</span>
+
+
+<span class="n">omega</span> <span class="o">=</span> <span class="mf">1486.88</span>  <span class="c1"># given in reciprocal cm</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="p">(</span>
+        <span class="s2">&quot;The barrier frequency is </span><span class="si">%.2f</span><span class="s2"> cm^-1.</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;The first recrossing temperature is ~ </span><span class="si">%.2f</span><span class="s2"> K.&quot;</span>
+    <span class="p">)</span>
+    <span class="o">%</span> <span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">omb2Trecr</span><span class="p">(</span><span class="n">omega</span><span class="p">))</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The barrier frequency is 1486.88 cm^-1.
+The first recrossing temperature is ~ 340.48 K.
+</pre></div>
+</div>
+<p>3. To compute the instanton partition function, <span class="math notranslate nohighlight">\(B_N\)</span> and action,
+we continue by calling the instanton postprocessing script
+located ${ipi-path}/utils/tools</p>
+<p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">instanton_postproc.py</span> <span class="pre">RESTART_RPI_80</span> <span class="pre">-c</span> <span class="pre">instanton</span> <span class="pre">-t</span> <span class="pre">300</span></code></p>
+<p>We don’t need to specify the number of beads here, since the script can read this
+from the restart file.
+The script will read the optimized instanton geometry and
+the corresponding Hessians, and use these to compute the partition functions
+and the action.
+Make a note of the different contributions to the rate that are printed
+in the output.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">RESTART_filename</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;RESTART_RPI_80&quot;</span>  <span class="c1"># this is the restart file from the reactant calculation.</span>
+<span class="p">)</span>
+<span class="n">case</span> <span class="o">=</span> <span class="s2">&quot;instanton&quot;</span>
+<span class="n">temperature</span> <span class="o">=</span> <span class="mi">300</span>
+
+<span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;python&quot;</span><span class="p">,</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ipi_path</span><span class="si">}</span><span class="s2">/utils/tools/instanton_postproc.py&quot;</span><span class="p">,</span>
+    <span class="n">RESTART_filename</span><span class="p">,</span>
+    <span class="s2">&quot;-c&quot;</span><span class="p">,</span>
+    <span class="n">case</span><span class="p">,</span>
+    <span class="s2">&quot;-t&quot;</span><span class="p">,</span>
+    <span class="nb">str</span><span class="p">(</span><span class="n">temperature</span><span class="p">),</span>
+    <span class="s2">&quot;-asr&quot;</span><span class="p">,</span>
+    <span class="n">asr</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;data_RPI_80.out&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">outfile</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Let’s read the output</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;data_RPI_80.out&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>We are ready to start. Reading RESTART_RPI_80 ... (This can take a while)
+25920
+
+Temperature: 300.0 K
+NBEADS: 160
+atoms:  6
+ASR:    poly
+1/(betaP*hbar) =  0.15201
+Diagonalization ...
+
+
+Lowest 10 frequencies (cm^-1)
+[-1606.56 9.12 515.86 515.86 594.78 1007.47 1007.47 1155.57 1308.31 1308.31]
+We saved the frequencies in freq.dat
+Deleted frequency:    9.117 cm^-1
+
+We are done. Instanton rate. Nbeads 160 (diff only 80.0)
+   BN       (BN*N)    | Qt(bohr^-3) | Qrot        | log(Qvib*N) | S/hbar   ( S1/hbar ,S2/hbar  ) |
+  14.280 ( 2284.847 ) |      10.188 |    1251.028 |     -43.477 |   25.026 (   23.940    1.085 ) |
+</pre></div>
+</div>
+<p>Then it is a simple matter to combine the partition functions,
+<span class="math notranslate nohighlight">\(B_N\)</span>, <span class="math notranslate nohighlight">\(S\)</span>, etc. into the formula given for the rate.
+Compare the instanton results with those of the transition state in
+order to compute the tunnelling factor.</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\kappa = f_{\mathrm{trans}}\ f_{\mathrm{rot}}\
+f_{\mathrm{vib}}\ e^{-S/\hbar + \beta V^{\dagger}}\]</div>
+</div>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[f_{\mathrm{trans}} =
+\dfrac{Q^{\mathrm{inst}}_{\mathrm{trans}}}
+      {Q^{\mathrm{TS}}_{\mathrm{trans}}}\]</div>
+</div>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[f_{\mathrm{rot}} =
+\dfrac{Q^{\mathrm{inst}}_{\mathrm{rot}}}
+      {Q^{\mathrm{TS}}_{\mathrm{rot}}}\]</div>
+</div>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[f_{\mathrm{vib}} =
+\sqrt{\dfrac{2 \pi N B_N}{\beta \hbar^2}}
+\dfrac{Q^{\mathrm{inst}}_{\mathrm{vib}}}
+      {Q^{\mathrm{TS}}_{\mathrm{vib}}}\]</div>
+</div>
+<p>Note that it is the log of the vibrational partition function which
+is printed, so you will have to convert this. In this way, you should
+find that the rate is about 9.8 times faster due to tunnelling. Which
+is the major contributing factor?</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">Q_trn_TS</span> <span class="o">=</span> <span class="mf">10.187982157</span>
+<span class="n">Q_rot_TS</span> <span class="o">=</span> <span class="mf">1206.15097078</span>
+<span class="n">Q_vib_TS</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">44.2783849573</span><span class="p">)</span>
+<span class="n">Q_trn_inst</span> <span class="o">=</span> <span class="mf">10.188</span>
+<span class="n">Q_rot_inst</span> <span class="o">=</span> <span class="mf">1251.044</span>
+<span class="n">Q_vib_inst</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">43.478</span><span class="p">)</span>
+<span class="n">BN</span> <span class="o">=</span> <span class="mf">14.289</span>
+<span class="n">recip_betan_hbar</span> <span class="o">=</span> <span class="mf">0.15201</span>
+<span class="n">N</span> <span class="o">=</span> <span class="mi">160</span>
+<span class="n">Soverhbar</span> <span class="o">=</span> <span class="o">-</span><span class="mf">25.026</span>
+<span class="n">VoverBeta</span> <span class="o">=</span> <span class="mf">25.1656385465</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">kappa</span><span class="p">(</span>
+    <span class="n">Q_trn_TS</span><span class="p">,</span>
+    <span class="n">Q_rot_TS</span><span class="p">,</span>
+    <span class="n">Q_vib_TS</span><span class="p">,</span>
+    <span class="n">Q_trn_inst</span><span class="p">,</span>
+    <span class="n">Q_rot_inst</span><span class="p">,</span>
+    <span class="n">Q_vib_inst</span><span class="p">,</span>
+    <span class="n">BN</span><span class="p">,</span>
+    <span class="n">recip_betan_hbar</span><span class="p">,</span>
+    <span class="n">N</span><span class="p">,</span>
+    <span class="n">Soverhbar</span><span class="p">,</span>
+    <span class="n">VoverBeta</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="n">f_trn</span> <span class="o">=</span> <span class="n">Q_trn_inst</span> <span class="o">/</span> <span class="n">Q_trn_TS</span>
+    <span class="n">f_rot</span> <span class="o">=</span> <span class="n">Q_rot_inst</span> <span class="o">/</span> <span class="n">Q_rot_TS</span>
+    <span class="n">f_vib</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">BN</span> <span class="o">*</span> <span class="n">recip_betan_hbar</span><span class="p">)</span> <span class="o">*</span> <span class="n">Q_vib_inst</span> <span class="o">/</span> <span class="n">Q_vib_TS</span>
+
+    <span class="n">kappa</span> <span class="o">=</span> <span class="n">f_trn</span> <span class="o">*</span> <span class="n">f_rot</span> <span class="o">*</span> <span class="n">f_vib</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">Soverhbar</span> <span class="o">+</span> <span class="n">VoverBeta</span><span class="p">)</span>
+
+    <span class="c1"># printing out the transmission factor and the relevant contributions.</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;f_trans = </span><span class="si">%8.5e</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">f_trn</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;f_rot = </span><span class="si">%8.5e</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">f_rot</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;f_vib = </span><span class="si">%8.5e</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">f_vib</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;exp(-S/hbar) = </span><span class="si">%8.5e</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">Soverhbar</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;exp(V/beta) = </span><span class="si">%8.5e</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">VoverBeta</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=============================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;kappa = </span><span class="si">%8.5e</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">kappa</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">kappa</span>
+
+
+<span class="n">kappa</span><span class="p">(</span>
+    <span class="n">Q_trn_TS</span><span class="p">,</span>
+    <span class="n">Q_rot_TS</span><span class="p">,</span>
+    <span class="n">Q_vib_TS</span><span class="p">,</span>
+    <span class="n">Q_trn_inst</span><span class="p">,</span>
+    <span class="n">Q_rot_inst</span><span class="p">,</span>
+    <span class="n">Q_vib_inst</span><span class="p">,</span>
+    <span class="n">BN</span><span class="p">,</span>
+    <span class="n">recip_betan_hbar</span><span class="p">,</span>
+    <span class="n">N</span><span class="p">,</span>
+    <span class="n">Soverhbar</span><span class="p">,</span>
+    <span class="n">VoverBeta</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>f_trans = 1.00000e+00
+f_rot = 1.03722e+00
+f_vib = 8.22488e+00
+exp(-S/hbar) = 1.35315e-11
+exp(V/beta) = 8.49763e+10
+=============================
+kappa = 9.80947e+00
+
+np.float64(9.809471881328884)
+</pre></div>
+</div>
+<ol class="arabic simple" start="4">
+<li><p>In this tutorial, the number of beads used in the example is much
+more than necessary. Please try the instanton calculation with 10 or
+20 beads, and see how the results <span class="math notranslate nohighlight">\(\kappa\)</span> compare.</p></li>
+</ol>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">kappadat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mf">18.486247675370873</span><span class="p">],</span>
+        <span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mf">11.481103709870357</span><span class="p">],</span>
+        <span class="p">[</span><span class="mi">40</span><span class="p">,</span> <span class="mf">10.127813329699068</span><span class="p">],</span>
+        <span class="p">[</span><span class="mi">80</span><span class="p">,</span> <span class="mf">9.809437521247709</span><span class="p">],</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">kappadat</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">kappadat</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;ro--&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;number of instanton beads&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\kappa$&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_rpi-rates_002.png" srcset="../../_images/sphx_glr_rpi-rates_002.png" alt="rpi rates" class = "sphx-glr-single-img"/><p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (1 minutes 14.680 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-ring-polymer-instanton-rpi-rates-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/355f99a0ab2a07340a840bcfd6d3560e/rpi-rates.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">rpi-rates.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/37c30b7bc5bcb73832c767f3d213af10/rpi-rates.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">rpi-rates.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/d6ee60f586ae3dbc204be032f0cd8a75/rpi-rates.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">recipe:</span> <span class="pre">rpi-rates.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../rotate-equivariants/rotate-equivariants.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Rotating equivariants</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../heat-capacity/heat-capacity.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Quantum heat capacity of water</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; BSD 3-Clause License, Copyright (c) 2026, The atomistic cookbook team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Ring Polymer Instanton Rate Theory: Tunneling Rates</a><ul>
+<li><a class="reference internal" href="#instanton-calculations-using-i-pi">Instanton calculations using i-PI</a><ul>
+<li><a class="reference internal" href="#installing-the-python-driver">Installing the Python driver</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#calculation-workflow">Calculation Workflow</a><ul>
+<li><a class="reference internal" href="#step-1-optimizing-and-analyzing-the-reactant">Step 1 - Optimizing and Analyzing the Reactant</a></li>
+<li><a class="reference internal" href="#step-2-optimizing-and-analyzing-the-transition-state">Step 2 - Optimizing and Analyzing the Transition State</a></li>
+<li><a class="reference internal" href="#step-3-first-instanton-optimization">Step 3 - First instanton optimization</a></li>
+<li><a class="reference internal" href="#step-4-second-and-subsequent-instanton-optimizations">Step 4 - Second and subsequent instanton optimizations</a></li>
+<li><a class="reference internal" href="#step-5-postprocessing-for-the-rate-calculation">Step 5 -  Postprocessing for the rate calculation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script data-domain="atomistic-cookbook.org" defer="defer" src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"></script>
+    <script src="../../_static/all-examples-data.js?v=01c87ff6"></script>
+    <script src="../../_static/daily-recipe.js?v=b5e71911"></script>
+    </body>
+</html>

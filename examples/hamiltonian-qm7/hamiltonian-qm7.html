@@ -1,0 +1,1490 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="search" title="Search" href="../../search.html"><link rel="next" title="Learning Capabilities with torchpme" href="../torchpme/torchpme_learning.html"><link rel="prev" title="Generalized Convex Hull construction for the polymorphs of ROY" href="../roy-gch/roy-gch.html">
+        <link rel="canonical" href="https://atomistic-cookbook.org/examples/hamiltonian-qm7/hamiltonian-qm7.html">
+        <link rel="prefetch" href="../../_static/cookbook-icon.svg" as="image">
+
+    <link rel="shortcut icon" href="../../_static/cookbook-icon.png"><!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>Hamiltonian Learning for Molecules with Indirect Targets - The Atomistic Cookbook</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/cookbook.css?v=d86cfb60" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">The Atomistic Cookbook</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/cookbook-icon.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">The Atomistic Cookbook</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../topics/index.html">Recipes grouped by topic</a><input aria-label="Toggle navigation of Recipes grouped by topic" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/sampling.html">Statistical sampling and dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/analysis.html">Analysis and post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/ml-models.html">Machine learning models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/universal.html">Universal ML models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/nqes.html">Nuclear quantum effects</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../software/index.html">Recipes grouped by software used</a><input aria-label="Toggle navigation of Recipes grouped by software used" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../software/chemiscope.html">chemiscope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/cp2k.html">cp2k</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/eon.html">eon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/featomic.html">featomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/gromacs.html">GROMACS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/i-pi.html">i-PI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/lammps.html">LAMMPS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/metatensor.html">metatensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/plumed.html">PLUMED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/scikit-matter.html">scikit-matter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/torch-pme.html">torch-pme</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../all-examples.html">List of all recipes</a><input aria-label="Toggle navigation of List of all recipes" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../dos-align/dos-align.html">A ML model for the electron density of states</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-model/water-model.html">Atomistic Water Model for Molecular Dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../batch-cp2k/reference-trajectory.html">Batch run of CP2K calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../shiftml/shiftml-example.html">Computing NMR shielding tensors using ShiftML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft-nc.html">Conservative fine-tuning for a PET model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermostats/thermostats.html">Constant-temperature MD and thermostats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../polarizability/polarizability.html">Equivariant linear model for polarizability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../learn-tensors-with-mcov/learn-tensors-with-mcov.html">Equivariant model for tensorial properties based on scalar features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../eon-pet-neb/eon-pet-neb.html">Finding Reaction Paths with eOn and a Metatomic Potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft.html">Fine-tuning the PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../roy-gch/roy-gch.html">Generalized Convex Hull construction for the polymorphs of ROY</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Hamiltonian Learning for Molecules with Indirect Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../torchpme/torchpme_learning.html">Learning Capabilities with torchpme</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lpr/lpr.html">Local Prediction Rigidity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lode-linear/lode-linear.html">Long-distance Equivariants: a tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flashmd/flashmd-demo.html">Long-stride trajectories with a universal FlashMD model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-nc/pet-mad-nc.html">MD using direct-force predictions with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metatomic-plumed/metatomic-plumed.html">ML collective variables in PLUMED with metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-mts-rpc/mts-rpc.html">Multiple time stepping and ring-polymer contraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../gaas-map/gaas-map.html">PCA/PCovR Visualization of a training dataset for a potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-metad/pi-metad.html">Path integral metadynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../path-integrals/path-integrals.html">Path integral molecular dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../periodic-hamiltonian/periodic-hamiltonian.html">Periodic Hamiltonian learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../heat-capacity/heat-capacity.html">Quantum heat capacity of water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ring-polymer-instanton/rpi-rates.html">Ring Polymer Instanton Rate Theory: Tunneling Rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rotate-equivariants/rotate-equivariants.html">Rotating equivariants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sample-selection/sample-selection.html">Sample and Feature Selection with FPS and CUR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad/pet-mad.html">The PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-uq/pet-mad-uq.html">Uncertainty Quantification with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-pulsed/water-pulsed.html">Water orientation in a pulsed electric field</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../downloading.html">Downloading and running the recipes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing a recipe</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-examples-hamiltonian-qm7-hamiltonian-qm7-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="hamiltonian-learning-for-molecules-with-indirect-targets">
+<span id="sphx-glr-examples-hamiltonian-qm7-hamiltonian-qm7-py"></span><h1>Hamiltonian Learning for Molecules with Indirect Targets<a class="headerlink" href="#hamiltonian-learning-for-molecules-with-indirect-targets" title="Link to this heading">¶</a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Authors<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Divya Suman <a class="reference external" href="https://github.com/DivyaSuman14">&#64;DivyaSuman14</a>,
+Hanna Tuerk <a class="reference external" href="https://github.com/HannaTuerk">&#64;HannaTuerk</a></p>
+</dd>
+</dl>
+<p>This tutorial introduces a machine learning (ML) framework
+that predicts Hamiltonians for molecular systems. Another
+one of our <a class="reference external" href="https://atomistic-cookbook.org/examples/periodic-hamiltonian/periodic-hamiltonian.html">cookbook examples</a>
+demonstrates an ML model that predicts real-space Hamiltonians
+for periodic systems. While we use the same model here to predict
+a molecular Hamiltonians, we further finetune these models to
+optimise predictions of different quantum mechanical (QM)
+properties of interest, thereby treating the Hamiltonian
+predictions as an intermediate component of the ML
+framework. More details on this hybrid or indirect learning
+framework can be found in <a class="reference external" href="https://pubs.acs.org/doi/full/10.1021/acscentsci.3c01480">ACS Cent. Sci. 2024, 10, 637−648.</a>
+and our preprint <a class="reference external" href="https://doi.org/10.48550/arXiv.2504.01187">arXiv:2504.01187</a>.</p>
+<p>Within a Hamiltonian learning framework, one could chose to learn
+a target that corresponds to the matrix representation for an
+existing electronic structure method, but in a finite AO basis,
+such a representation will lead to a finite basis set error.
+The parity plot below illustrates this error by showing the
+discrepancy between molecular orbital (MO) energies of an ethane
+molecule obtained from a self-consistent calculation on a minimal
+STO-3G basis and the larger def2-TZVP basis, especially for the
+high energy, unoccupied MOs.</p>
+<figure class="align-default">
+<a class="reference internal image-reference" href="../../_images/minimal_vs_lb.png"><img alt="Parity plot comparing the MO energies of ethane from a DFT calculation with the STO-3G and the def2-TZVP basis." src="../../_images/minimal_vs_lb.png" style="width: 600px;" />
+</a>
+</figure>
+<p>The choice of basis set plays a crucial role in determining
+the accuracy of the observables derived from the predicted
+Hamiltonian. Although the larger basis sets generally provide
+more reliable results, the computational cost to compute the electronic
+structure in a larger basis or to train such a
+model is notably higher compared to a smaller basis.
+Using the indirect learning framework, one
+could instead learn a reduced effective Hamiltonian that reproduces
+calculations from a much larger basis while using a significantly
+simpler and smaller model consistent with a smaller basis.</p>
+<p>We first show an example where we predict the reduced effective
+Hamiltonians for a homogeneous dataset of ethane molecule while
+targeting the MO energies of the def2-TZVP basis. In a second example
+we will then target multiple properties for a organic molecule dataset,
+similar to our results described in our preprint
+<a class="reference external" href="https://doi.org/10.48550/arXiv.2504.01187">arXiv:2504.01187</a>.</p>
+<section id="example-of-learning-mo-energies-for-ethane">
+<h2>1. Example of Learning MO Energies for Ethane<a class="headerlink" href="#example-of-learning-mo-energies-for-ethane" title="Link to this heading">¶</a></h2>
+<section id="python-environment-and-used-packages">
+<h3>Python Environment and Used Packages<a class="headerlink" href="#python-environment-and-used-packages" title="Link to this heading">¶</a></h3>
+<p>We start by creating a virtual environment and installing
+all necessary packages. The required packages are provided
+in the environment.yml file that can be downloaded at the end.
+We can then import the necessary packages.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">zipfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZipFile</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ase.units</span><span class="w"> </span><span class="kn">import</span> <span class="n">Hartree</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">io</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mlelec.features.acdc</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_features_for_target</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mlelec.targets</span><span class="w"> </span><span class="kn">import</span> <span class="n">drop_zero_blocks</span>  <span class="c1"># noqa: F401</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mlelec.utils.plot_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_losses</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">urllib3.util.retry</span><span class="w"> </span><span class="kn">import</span> <span class="n">Retry</span>
+
+
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PYSCFAD_BACKEND&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;torch&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mlelec.metrics</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mlmetrics</span>  <span class="c1"># noqa: E402</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mlelec.data.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLDataset</span><span class="p">,</span> <span class="n">MoleculeDataset</span><span class="p">,</span> <span class="n">get_dataloader</span>  <span class="c1"># noqa: E402</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mlelec.models.linear</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearTargetModel</span>  <span class="c1"># noqa: E402</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mlelec.train</span><span class="w"> </span><span class="kn">import</span> <span class="n">Trainer</span>  <span class="c1"># noqa: E402</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mlelec.utils.property_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: E402, F401</span>
+    <span class="n">compute_dipole_moment</span><span class="p">,</span>
+    <span class="n">compute_eigvals</span><span class="p">,</span>
+    <span class="n">compute_polarisability</span><span class="p">,</span>
+    <span class="n">instantiate_mf</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="n">torch</span><span class="o">.</span><span class="n">set_default_dtype</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/hamiltonian-qm7/lib/python3.11/site-packages/pyscf/dft/libxc.py:772: UserWarning: Since PySCF-2.3, B3LYP (and B3P86) are changed to the VWN-RPA variant, the same to the B3LYP functional in Gaussian and ORCA (issue 1480). To restore the VWN5 definition, you can put the setting &quot;B3LYP_WITH_VWN5 = True&quot; in pyscf_conf.py
+  warnings.warn(&#39;Since PySCF-2.3, B3LYP (and B3P86) are changed to the VWN-RPA variant, &#39;
+Using PyTorch backend.
+</pre></div>
+</div>
+</section>
+<section id="set-parameters-for-training">
+<h3>Set Parameters for Training<a class="headerlink" href="#set-parameters-for-training" title="Link to this heading">¶</a></h3>
+<p>Before we begin our training we can decide on a set the parameters,
+including the dataset set size, splitting fractions, the batch size,
+learning rate, number of epochs, and the early stop criterion in case of
+early stopping.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">NUM_FRAMES</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">BATCH_SIZE</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">NUM_EPOCHS</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">SHUFFLE_SEED</span> <span class="o">=</span> <span class="mi">42</span>
+<span class="n">TRAIN_FRAC</span> <span class="o">=</span> <span class="mf">0.7</span>
+<span class="n">TEST_FRAC</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">VALIDATION_FRAC</span> <span class="o">=</span> <span class="mf">0.2</span>
+<span class="n">EARLY_STOP_CRITERION</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">VERBOSE</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">DUMP_HIST</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="n">LR</span> <span class="o">=</span> <span class="mf">1e-1</span>
+<span class="n">VAL_INTERVAL</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">DEVICE</span> <span class="o">=</span> <span class="s2">&quot;cpu&quot;</span>
+
+<span class="n">ORTHOGONAL</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># set to &#39;FALSE&#39; if working in the non-orthogonal basis</span>
+<span class="n">FOLDER_NAME</span> <span class="o">=</span> <span class="s2">&quot;output/ethane_eva&quot;</span>
+<span class="n">NOISE</span> <span class="o">=</span> <span class="kc">False</span>
+</pre></div>
+</div>
+</section>
+<section id="create-folders-and-save-parameters">
+<h3>Create Folders and Save Parameters<a class="headerlink" href="#create-folders-and-save-parameters" title="Link to this heading">¶</a></h3>
+<p>We can save the parameters we just defined for our reference later.
+For this, we create a folder (defined as FOLDER_NAME above)
+in which all parameters
+and the generated data for this example are stored.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">FOLDER_NAME</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">FOLDER_NAME</span><span class="si">}</span><span class="s2">/model_output&quot;</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">save_parameters</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="c1"># Call the function with your parameters</span>
+<span class="n">save_parameters</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">FOLDER_NAME</span><span class="si">}</span><span class="s2">/parameters.txt&quot;</span><span class="p">,</span>
+    <span class="n">NUM_FRAMES</span><span class="o">=</span><span class="n">NUM_FRAMES</span><span class="p">,</span>
+    <span class="n">BATCH_SIZE</span><span class="o">=</span><span class="n">BATCH_SIZE</span><span class="p">,</span>
+    <span class="n">NUM_EPOCHS</span><span class="o">=</span><span class="n">NUM_EPOCHS</span><span class="p">,</span>
+    <span class="n">SHUFFLE_SEED</span><span class="o">=</span><span class="n">SHUFFLE_SEED</span><span class="p">,</span>
+    <span class="n">TRAIN_FRAC</span><span class="o">=</span><span class="n">TRAIN_FRAC</span><span class="p">,</span>
+    <span class="n">TEST_FRAC</span><span class="o">=</span><span class="n">TEST_FRAC</span><span class="p">,</span>
+    <span class="n">VALIDATION_FRAC</span><span class="o">=</span><span class="n">VALIDATION_FRAC</span><span class="p">,</span>
+    <span class="n">LR</span><span class="o">=</span><span class="n">LR</span><span class="p">,</span>
+    <span class="n">VAL_INTERVAL</span><span class="o">=</span><span class="n">VAL_INTERVAL</span><span class="p">,</span>
+    <span class="n">DEVICE</span><span class="o">=</span><span class="n">DEVICE</span><span class="p">,</span>
+    <span class="n">ORTHOGONAL</span><span class="o">=</span><span class="n">ORTHOGONAL</span><span class="p">,</span>
+    <span class="n">FOLDER_NAME</span><span class="o">=</span><span class="n">FOLDER_NAME</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="generate-reference-data">
+<h3>Generate Reference Data<a class="headerlink" href="#generate-reference-data" title="Link to this heading">¶</a></h3>
+<p>In principle one can generate the training data of reference
+Hamiltonians from a given set of structures, using any
+electronic structure code. Here we provide a pre-computed,
+homogeneous dataset that contains 100 different
+configurations of ethane molecule. For all structures, we
+performed Kohn-Sham density functional theory (DFT)
+calculations with <a class="reference external" href="https://github.com/pyscf/pyscf">PySCF</a>,
+using the B3LYP functional. For each molecular geometry, we
+computed the Fock and overlap matrices along with other
+molecular properties of interest, using both STO-3G and def2-TZVP
+basis sets.</p>
+<section id="download-the-dataset-from-zenodo">
+<h4>Download the Dataset from Zenodo<a class="headerlink" href="#download-the-dataset-from-zenodo" title="Link to this heading">¶</a></h4>
+<p>We first download the data for the two examples from Zenodo
+and unzip the downloaded datafile.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">fetch_dataset</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">base_url</span><span class="p">,</span> <span class="n">local_path</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper function to load data with retries on errors.&quot;&quot;&quot;</span>
+
+    <span class="n">local_file</span> <span class="o">=</span> <span class="n">local_path</span> <span class="o">+</span> <span class="n">filename</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">local_file</span><span class="p">):</span>
+        <span class="k">return</span>
+
+    <span class="c1"># Retry strategy: wait 1s, 2s, 4s, 8s, 16s on 429/5xx errors</span>
+    <span class="n">retry_strategy</span> <span class="o">=</span> <span class="n">Retry</span><span class="p">(</span>
+        <span class="n">total</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">backoff_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">status_forcelist</span><span class="o">=</span><span class="p">[</span><span class="mi">429</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">502</span><span class="p">,</span> <span class="mi">503</span><span class="p">,</span> <span class="mi">504</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">session</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
+    <span class="n">session</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="s2">&quot;https://&quot;</span><span class="p">,</span> <span class="n">requests</span><span class="o">.</span><span class="n">adapters</span><span class="o">.</span><span class="n">HTTPAdapter</span><span class="p">(</span><span class="n">max_retries</span><span class="o">=</span><span class="n">retry_strategy</span><span class="p">))</span>
+
+    <span class="c1"># Fetch with automatic retry and error raising</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">base_url</span> <span class="o">+</span> <span class="n">filename</span><span class="p">)</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">local_file</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+
+
+<span class="n">fetch_dataset</span><span class="p">(</span><span class="s2">&quot;hamiltonian-qm7-data.zip&quot;</span><span class="p">,</span> <span class="s2">&quot;https://zenodo.org/records/15524259/files/&quot;</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="n">ZipFile</span><span class="p">(</span><span class="s2">&quot;hamiltonian-qm7-data.zip&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">zObject</span><span class="p">:</span>
+    <span class="n">zObject</span><span class="o">.</span><span class="n">extractall</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="prepare-the-dataset-for-ml-training">
+<h4>Prepare the Dataset for ML Training<a class="headerlink" href="#prepare-the-dataset-for-ml-training" title="Link to this heading">¶</a></h4>
+<p>In this section, we will prepare the dataset required to
+train our machine learning model using the <code class="docutils literal notranslate"><span class="pre">MoleculeDataset</span></code>
+and <code class="docutils literal notranslate"><span class="pre">MLDataset</span></code> classes. These classes help format and store
+the DFT data in a way compatible with our ML package,
+<a class="reference external" href="https://github.com/curiosity54/mlelec/tree/qm7">mlelec</a>.
+In this section we initialise the <code class="docutils literal notranslate"><span class="pre">MoleculeDataset</span></code> where
+we specify the molecule name, file paths and the desired targets
+and auxiliary data to be used for training for the minimal
+(STO-3G), as well as a larger basis (lb, def2-TZVP).
+Once the molecular data is prepared, we wrap it into an
+<code class="docutils literal notranslate"><span class="pre">MLDataset</span></code> instance. This class structures the dataset
+into a format that is optimal for ML the Hamiltonians. The
+Hamiltonian matrix elements depend on specific pairs of
+orbitals involved in the interaction. When these orbitals
+are centered on atoms, as is the case for localized AO
+bases, the Hamiltonian matrix elements can be viewed
+as objects labeled by pairs of atoms, as well as multiple
+quantum numbers, namely the radial (<cite>n</cite>) and the angular
+(<cite>l</cite>, <cite>m</cite>) quantum numbers characterizing each AO. These
+angular functions are typically chosen to be real spherical
+harmonics, and determine the equivariant behavior of the
+matrix elements under rotations and inversions. <code class="docutils literal notranslate"><span class="pre">MLDataset</span></code>
+leverages this equivariant structure of the Hamiltonians,
+which is discussed in further detail in the <a class="reference external" href="https://atomistic-cookbook.org/examples/periodic-hamiltonian/periodic-hamiltonian.html">Periodic Hamiltonian Model Example</a>
+. Finally, we split the loaded dataset into training,
+validation and test datasets using <code class="docutils literal notranslate"><span class="pre">_split_indices</span></code>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">molecule_data</span> <span class="o">=</span> <span class="n">MoleculeDataset</span><span class="p">(</span>
+    <span class="n">mol_name</span><span class="o">=</span><span class="s2">&quot;ethane&quot;</span><span class="p">,</span>
+    <span class="n">use_precomputed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">path</span><span class="o">=</span><span class="s2">&quot;hamiltonian-qm7-data/ethane&quot;</span><span class="p">,</span>
+    <span class="n">aux_path</span><span class="o">=</span><span class="s2">&quot;hamiltonian-qm7-data/ethane/sto-3g&quot;</span><span class="p">,</span>
+    <span class="n">frame_slice</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">NUM_FRAMES</span><span class="p">),</span>
+    <span class="n">device</span><span class="o">=</span><span class="n">DEVICE</span><span class="p">,</span>
+    <span class="n">aux</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;overlap&quot;</span><span class="p">,</span> <span class="s2">&quot;orbitals&quot;</span><span class="p">],</span>
+    <span class="n">lb_aux</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;overlap&quot;</span><span class="p">,</span> <span class="s2">&quot;orbitals&quot;</span><span class="p">],</span>
+    <span class="n">target</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;fock&quot;</span><span class="p">,</span> <span class="s2">&quot;eva&quot;</span><span class="p">],</span>
+    <span class="n">lb_target</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;fock&quot;</span><span class="p">,</span> <span class="s2">&quot;eva&quot;</span><span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">ml_data</span> <span class="o">=</span> <span class="n">MLDataset</span><span class="p">(</span>
+    <span class="n">molecule_data</span><span class="o">=</span><span class="n">molecule_data</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="n">DEVICE</span><span class="p">,</span>
+    <span class="n">model_strategy</span><span class="o">=</span><span class="s2">&quot;coupled&quot;</span><span class="p">,</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">shuffle_seed</span><span class="o">=</span><span class="n">SHUFFLE_SEED</span><span class="p">,</span>
+    <span class="n">orthogonal</span><span class="o">=</span><span class="n">ORTHOGONAL</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ml_data</span><span class="o">.</span><span class="n">_split_indices</span><span class="p">(</span>
+    <span class="n">train_frac</span><span class="o">=</span><span class="n">TRAIN_FRAC</span><span class="p">,</span> <span class="n">val_frac</span><span class="o">=</span><span class="n">VALIDATION_FRAC</span><span class="p">,</span> <span class="n">test_frac</span><span class="o">=</span><span class="n">TEST_FRAC</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Loading structures
+hamiltonian-qm7-data/ethane/sto-3g/fock.hickle
+hamiltonian-qm7-data/ethane/sto-3g/eva.hickle
+hamiltonian-qm7-data/ethane/def2-tzvp/fock.hickle
+hamiltonian-qm7-data/ethane/def2-tzvp/eva.hickle
+/home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/hamiltonian-qm7/lib/python3.11/site-packages/mlelec/utils/twocenter_utils.py:78: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.detach().clone() or sourceTensor.detach().clone().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  return torch.tensor(matrix)[idx][:, idx]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="computing-features-that-can-learn-hamiltonian-targets">
+<h3>Computing Features that can Learn Hamiltonian Targets<a class="headerlink" href="#computing-features-that-can-learn-hamiltonian-targets" title="Link to this heading">¶</a></h3>
+<p>As discussed above, the Hamiltonian matrix elements
+are dependent on single atom centers and two centers
+for pairwise interactions.
+To address this, we extend the equivariant SOAP-based
+features for the atom-centered descriptors
+to a descriptor capable of describing multiple atomic centers and
+their connectivities, giving rise to the equivariant pairwise descriptor
+which simultaneously characterizes the environments for pairs of atoms
+in a given system. Our <a class="reference external" href="https://atomistic-cookbook.org/examples/periodic-hamiltonian/periodic-hamiltonian.html">Periodic Hamiltonian Model Example</a>
+discusses the construction of these descriptors in greater detail.
+To construct these atom- and pair-centered features we use our
+in house library <a class="reference external" href="https://github.com/metatensor/featomic/">featomic</a>
+for each structure in the our dataset using the hyperparameters
+defined below. The features are constructed starting from a
+description of a structure in terms of atom density, for which we
+define the width of the overlaying Gaussians in the
+<code class="docutils literal notranslate"><span class="pre">density</span></code> hyperparameter. The features are
+discretized on a basis of spherical harmonics,
+which consist of a radial and an angular part,
+which can be specified in the <code class="docutils literal notranslate"><span class="pre">basis</span></code> hyperparameter. The <code class="docutils literal notranslate"><span class="pre">cutoff</span></code>
+hyperparameter controls the extent of the atomic environment.
+For the simple example we demonstrate here,
+the atom and pairwise features have very similar hyperparameters,
+except for the cutoff radius, which is larger for pairwise
+features to include many pairs that describe the individual
+atom-atom interaction.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">hypers</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;cutoff&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="mf">2.5</span><span class="p">,</span> <span class="s2">&quot;smoothing&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;ShiftedCosine&quot;</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">}},</span>
+    <span class="s2">&quot;density&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Gaussian&quot;</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">},</span>
+    <span class="s2">&quot;basis&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;TensorProduct&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;max_angular&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="s2">&quot;radial&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Gto&quot;</span><span class="p">,</span> <span class="s2">&quot;max_radial&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+<span class="n">hypers_pair</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;cutoff&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">,</span> <span class="s2">&quot;smoothing&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;ShiftedCosine&quot;</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">}},</span>
+    <span class="s2">&quot;density&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Gaussian&quot;</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">},</span>
+    <span class="s2">&quot;basis&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;TensorProduct&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;max_angular&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="s2">&quot;radial&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Gto&quot;</span><span class="p">,</span> <span class="s2">&quot;max_radial&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+<span class="n">features</span> <span class="o">=</span> <span class="n">compute_features_for_target</span><span class="p">(</span>
+    <span class="n">ml_data</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">DEVICE</span><span class="p">,</span> <span class="n">hypers</span><span class="o">=</span><span class="n">hypers</span><span class="p">,</span> <span class="n">hypers_pair</span><span class="o">=</span><span class="n">hypers_pair</span>
+<span class="p">)</span>
+<span class="n">ml_data</span><span class="o">.</span><span class="n">_set_features</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="prepare-dataloaders">
+<h3>Prepare Dataloaders<a class="headerlink" href="#prepare-dataloaders" title="Link to this heading">¶</a></h3>
+<p>To efficiently feed data into the model during training,
+we use data loaders. These handle batching and shuffling
+to optimize training performance. <code class="docutils literal notranslate"><span class="pre">get_dataloader</span></code>
+creates data loaders for training, validation and testing.
+The <code class="docutils literal notranslate"><span class="pre">model_return=&quot;blocks&quot;</span></code> argument determines that the
+model targets the different blocks that the Hamiltonian is
+decomposed into and the <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> argument defines the
+number of samples per batch for the batch-wise training.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">train_dl</span><span class="p">,</span> <span class="n">val_dl</span><span class="p">,</span> <span class="n">test_dl</span> <span class="o">=</span> <span class="n">get_dataloader</span><span class="p">(</span>
+    <span class="n">ml_data</span><span class="p">,</span> <span class="n">model_return</span><span class="o">=</span><span class="s2">&quot;blocks&quot;</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">BATCH_SIZE</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="prepare-training">
+<h3>Prepare Training<a class="headerlink" href="#prepare-training" title="Link to this heading">¶</a></h3>
+<p>Next, we set up our linear model that predicts the Hamiltonian
+matrices, using <code class="docutils literal notranslate"><span class="pre">LinerTargetModel</span></code>. To improve the model
+convergence, we first start with a symmetry-adapted ridge regression
+targeting the Hamiltonian matrices from the STO-3G basis QM
+calculation using the <code class="docutils literal notranslate"><span class="pre">fit_ridge_analytical</span></code> function.
+This provides us a more reliable set of weights to initialise the
+fine-tuning rather than starting from any random guess,
+effectively saving us training time by starting the training process
+closer to the desired minimum.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">LinearTargetModel</span><span class="p">(</span>
+    <span class="n">dataset</span><span class="o">=</span><span class="n">ml_data</span><span class="p">,</span> <span class="n">nlayers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">nhidden</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">DEVICE</span>
+<span class="p">)</span>
+
+<span class="n">pred_ridges</span><span class="p">,</span> <span class="n">ridges</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit_ridge_analytical</span><span class="p">(</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="o">-</span><span class="mi">8</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span>
+    <span class="n">cv</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">set_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">pred_fock</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span>
+    <span class="n">ml_data</span><span class="o">.</span><span class="n">feat_train</span><span class="p">,</span>
+    <span class="n">return_type</span><span class="o">=</span><span class="s2">&quot;tensor&quot;</span><span class="p">,</span>
+    <span class="n">batch_indices</span><span class="o">=</span><span class="n">ml_data</span><span class="o">.</span><span class="n">train_idx</span><span class="p">,</span>
+    <span class="n">ridge_fit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">add_noise</span><span class="o">=</span><span class="n">NOISE</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">capture_output</span><span class="p">()</span> <span class="k">as</span> <span class="n">captured</span><span class="p">:</span>
+    <span class="n">all_mfs</span><span class="p">,</span> <span class="n">fockvars</span> <span class="o">=</span> <span class="n">instantiate_mf</span><span class="p">(</span>
+        <span class="n">ml_data</span><span class="p">,</span>
+        <span class="n">fock_predictions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">batch_indices</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ml_data</span><span class="o">.</span><span class="n">structures</span><span class="p">))),</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="training-indirect-learning-of-the-mo-energies">
+<h3>Training: Indirect learning of the MO energies<a class="headerlink" href="#training-indirect-learning-of-the-mo-energies" title="Link to this heading">¶</a></h3>
+<p>Now rather than explicitly targeting the Hamiltonian matrix,
+we instead treat it as an intermediate layer in our framework, where
+the model predicts the Hamiltonian, the model weights, however,
+are subsequently fine-tuned by backpropagating
+a loss on a derived molecular property of the Hamiltonian such as
+the MO energies but from the larger def-TZVP basis instead of the
+STO-3G basis.</p>
+<p>Before fine-tuning the model we preconditioned
+by a ridge regression fit of our data,
+we set up the loss function to target the MO energies,
+as well as the optimizer
+and the learning rate scheduler for our model. We use a customized
+mean squared error (MSE) loss function that guides the learning and
+<code class="docutils literal notranslate"><span class="pre">Adam</span></code> optimizer that performs a stochastic gradient descent
+that minimizes the error. The scheduler reduces the learning
+rate by the given factor if the validation loss plateaus.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">loss_fn</span> <span class="o">=</span> <span class="n">mlmetrics</span><span class="o">.</span><span class="n">mse_per_atom</span>
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">LR</span><span class="p">)</span>
+<span class="n">scheduler</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="o">.</span><span class="n">ReduceLROnPlateau</span><span class="p">(</span>
+    <span class="n">optimizer</span><span class="p">,</span>
+    <span class="n">factor</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">patience</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>  <span class="c1"># 20,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>We use a <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class to encapsulate all training logic.
+It manages the training and validation loops.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">trainer</span> <span class="o">=</span> <span class="n">Trainer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">scheduler</span><span class="p">,</span> <span class="n">DEVICE</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Define necessary arguments for the training and validation process.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fit_args</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;ml_data&quot;</span><span class="p">:</span> <span class="n">ml_data</span><span class="p">,</span>
+    <span class="s2">&quot;all_mfs&quot;</span><span class="p">:</span> <span class="n">all_mfs</span><span class="p">,</span>
+    <span class="s2">&quot;loss_fn&quot;</span><span class="p">:</span> <span class="n">loss_fn</span><span class="p">,</span>
+    <span class="s2">&quot;weight_eva&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">&quot;weight_dipole&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s2">&quot;weight_polar&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s2">&quot;ORTHOGONAL&quot;</span><span class="p">:</span> <span class="n">ORTHOGONAL</span><span class="p">,</span>
+    <span class="s2">&quot;upscale&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>With these steps complete, we can now train the model.
+It begins training and validation
+using the structured molecular data, features, and defined parameters.
+The <code class="docutils literal notranslate"><span class="pre">fit</span></code> function returns the training and validation losses for
+each epoch, which we can then use to plot the <cite>loss versus epoch</cite> curve.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">history</span> <span class="o">=</span> <span class="n">trainer</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">train_dl</span><span class="p">,</span>
+    <span class="n">val_dl</span><span class="p">,</span>
+    <span class="n">NUM_EPOCHS</span><span class="p">,</span>
+    <span class="n">EARLY_STOP_CRITERION</span><span class="p">,</span>
+    <span class="n">FOLDER_NAME</span><span class="p">,</span>
+    <span class="n">VERBOSE</span><span class="p">,</span>
+    <span class="n">DUMP_HIST</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">fit_args</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">FOLDER_NAME</span><span class="si">}</span><span class="s2">/model_output/loss_stats.npy&quot;</span><span class="p">,</span> <span class="n">history</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>  0%|                                                                                           | 0/100 [00:00&lt;?, ?it/s]
+  0%|                                              | 0/100 [00:02&lt;?, ?it/s, train_loss=0.0448, Val_loss=0.00855, lr=0.1]Checkpoint saved to output/ethane_eva/model_output/model_epoch0.pt
+
+  1%|▍                                     | 1/100 [00:02&lt;03:31,  2.14s/it, train_loss=0.0448, Val_loss=0.00855, lr=0.1]
+  2%|▊                                     | 2/100 [00:04&lt;03:17,  2.01s/it, train_loss=0.0448, Val_loss=0.00855, lr=0.1]
+  3%|█▏                                    | 3/100 [00:06&lt;03:12,  1.99s/it, train_loss=0.0448, Val_loss=0.00855, lr=0.1]
+  4%|█▌                                    | 4/100 [00:07&lt;03:08,  1.96s/it, train_loss=0.0448, Val_loss=0.00855, lr=0.1]
+  5%|█▉                                    | 5/100 [00:10&lt;03:13,  2.03s/it, train_loss=0.0448, Val_loss=0.00855, lr=0.1]
+  6%|██▎                                   | 6/100 [00:12&lt;03:08,  2.01s/it, train_loss=0.0448, Val_loss=0.00855, lr=0.1]
+  7%|██▋                                   | 7/100 [00:14&lt;03:06,  2.01s/it, train_loss=0.0448, Val_loss=0.00855, lr=0.1]
+  8%|███                                   | 8/100 [00:16&lt;03:04,  2.00s/it, train_loss=0.0448, Val_loss=0.00855, lr=0.1]
+  9%|███▍                                  | 9/100 [00:18&lt;03:08,  2.07s/it, train_loss=0.0448, Val_loss=0.00855, lr=0.1]
+ 10%|███▋                                 | 10/100 [00:20&lt;03:03,  2.03s/it, train_loss=0.0448, Val_loss=0.00855, lr=0.1]
+ 10%|███▌                                | 10/100 [00:22&lt;03:03,  2.03s/it, train_loss=9.03e-6, Val_loss=1.05e-5, lr=0.1]
+ 11%|███▉                                | 11/100 [00:22&lt;02:59,  2.01s/it, train_loss=9.03e-6, Val_loss=1.05e-5, lr=0.1]
+ 12%|████▎                               | 12/100 [00:24&lt;02:56,  2.00s/it, train_loss=9.03e-6, Val_loss=1.05e-5, lr=0.1]
+ 13%|████▋                               | 13/100 [00:26&lt;02:58,  2.05s/it, train_loss=9.03e-6, Val_loss=1.05e-5, lr=0.1]
+ 14%|█████                               | 14/100 [00:28&lt;02:53,  2.02s/it, train_loss=9.03e-6, Val_loss=1.05e-5, lr=0.1]
+ 15%|█████▍                              | 15/100 [00:30&lt;02:49,  2.00s/it, train_loss=9.03e-6, Val_loss=1.05e-5, lr=0.1]
+ 16%|█████▊                              | 16/100 [00:32&lt;02:47,  1.99s/it, train_loss=9.03e-6, Val_loss=1.05e-5, lr=0.1]
+ 17%|██████                              | 17/100 [00:34&lt;02:51,  2.06s/it, train_loss=9.03e-6, Val_loss=1.05e-5, lr=0.1]
+ 18%|██████▍                             | 18/100 [00:36&lt;02:46,  2.03s/it, train_loss=9.03e-6, Val_loss=1.05e-5, lr=0.1]
+ 19%|██████▊                             | 19/100 [00:38&lt;02:42,  2.01s/it, train_loss=9.03e-6, Val_loss=1.05e-5, lr=0.1]
+ 20%|███████▏                            | 20/100 [00:40&lt;02:39,  1.99s/it, train_loss=9.03e-6, Val_loss=1.05e-5, lr=0.1]
+ 20%|███████                            | 20/100 [00:42&lt;02:39,  1.99s/it, train_loss=5.28e-6, Val_loss=5.52e-6, lr=0.05]
+ 21%|███████▎                           | 21/100 [00:42&lt;02:42,  2.06s/it, train_loss=5.28e-6, Val_loss=5.52e-6, lr=0.05]
+ 22%|███████▋                           | 22/100 [00:44&lt;02:38,  2.03s/it, train_loss=5.28e-6, Val_loss=5.52e-6, lr=0.05]
+ 23%|████████                           | 23/100 [00:46&lt;02:35,  2.02s/it, train_loss=5.28e-6, Val_loss=5.52e-6, lr=0.05]
+ 24%|████████▍                          | 24/100 [00:48&lt;02:32,  2.01s/it, train_loss=5.28e-6, Val_loss=5.52e-6, lr=0.05]
+ 25%|████████▊                          | 25/100 [00:50&lt;02:35,  2.07s/it, train_loss=5.28e-6, Val_loss=5.52e-6, lr=0.05]
+ 26%|█████████                          | 26/100 [00:52&lt;02:32,  2.06s/it, train_loss=5.28e-6, Val_loss=5.52e-6, lr=0.05]
+ 27%|█████████▍                         | 27/100 [00:54&lt;02:28,  2.03s/it, train_loss=5.28e-6, Val_loss=5.52e-6, lr=0.05]
+ 28%|█████████▊                         | 28/100 [00:56&lt;02:25,  2.03s/it, train_loss=5.28e-6, Val_loss=5.52e-6, lr=0.05]
+ 29%|██████████▏                        | 29/100 [00:58&lt;02:26,  2.07s/it, train_loss=5.28e-6, Val_loss=5.52e-6, lr=0.05]
+ 30%|██████████▌                        | 30/100 [01:00&lt;02:21,  2.03s/it, train_loss=5.28e-6, Val_loss=5.52e-6, lr=0.05]
+ 30%|██████████▏                       | 30/100 [01:02&lt;02:21,  2.03s/it, train_loss=4.02e-6, Val_loss=3.55e-6, lr=0.025]
+ 31%|██████████▌                       | 31/100 [01:02&lt;02:18,  2.00s/it, train_loss=4.02e-6, Val_loss=3.55e-6, lr=0.025]
+ 32%|██████████▉                       | 32/100 [01:04&lt;02:15,  1.99s/it, train_loss=4.02e-6, Val_loss=3.55e-6, lr=0.025]
+ 33%|███████████▏                      | 33/100 [01:06&lt;02:17,  2.05s/it, train_loss=4.02e-6, Val_loss=3.55e-6, lr=0.025]
+ 34%|███████████▌                      | 34/100 [01:08&lt;02:13,  2.02s/it, train_loss=4.02e-6, Val_loss=3.55e-6, lr=0.025]
+ 35%|███████████▉                      | 35/100 [01:10&lt;02:10,  2.00s/it, train_loss=4.02e-6, Val_loss=3.55e-6, lr=0.025]
+ 36%|████████████▏                     | 36/100 [01:12&lt;02:07,  1.99s/it, train_loss=4.02e-6, Val_loss=3.55e-6, lr=0.025]
+ 37%|████████████▌                     | 37/100 [01:14&lt;02:09,  2.05s/it, train_loss=4.02e-6, Val_loss=3.55e-6, lr=0.025]
+ 38%|████████████▉                     | 38/100 [01:16&lt;02:05,  2.02s/it, train_loss=4.02e-6, Val_loss=3.55e-6, lr=0.025]
+ 39%|█████████████▎                    | 39/100 [01:18&lt;02:02,  2.00s/it, train_loss=4.02e-6, Val_loss=3.55e-6, lr=0.025]
+ 40%|█████████████▌                    | 40/100 [01:20&lt;01:59,  1.99s/it, train_loss=4.02e-6, Val_loss=3.55e-6, lr=0.025]
+ 40%|█████████████▏                   | 40/100 [01:22&lt;01:59,  1.99s/it, train_loss=3.78e-6, Val_loss=2.91e-6, lr=0.0125]
+ 41%|█████████████▌                   | 41/100 [01:22&lt;02:00,  2.04s/it, train_loss=3.78e-6, Val_loss=2.91e-6, lr=0.0125]
+ 42%|█████████████▊                   | 42/100 [01:24&lt;01:57,  2.02s/it, train_loss=3.78e-6, Val_loss=2.91e-6, lr=0.0125]
+ 43%|██████████████▏                  | 43/100 [01:26&lt;01:53,  2.00s/it, train_loss=3.78e-6, Val_loss=2.91e-6, lr=0.0125]
+ 44%|██████████████▌                  | 44/100 [01:28&lt;01:51,  1.99s/it, train_loss=3.78e-6, Val_loss=2.91e-6, lr=0.0125]
+ 45%|██████████████▊                  | 45/100 [01:31&lt;01:52,  2.04s/it, train_loss=3.78e-6, Val_loss=2.91e-6, lr=0.0125]
+ 46%|███████████████▏                 | 46/100 [01:32&lt;01:48,  2.02s/it, train_loss=3.78e-6, Val_loss=2.91e-6, lr=0.0125]
+ 47%|███████████████▌                 | 47/100 [01:34&lt;01:45,  2.00s/it, train_loss=3.78e-6, Val_loss=2.91e-6, lr=0.0125]
+ 48%|███████████████▊                 | 48/100 [01:36&lt;01:43,  2.00s/it, train_loss=3.78e-6, Val_loss=2.91e-6, lr=0.0125]
+ 49%|████████████████▏                | 49/100 [01:39&lt;01:44,  2.05s/it, train_loss=3.78e-6, Val_loss=2.91e-6, lr=0.0125]
+ 50%|████████████████▌                | 50/100 [01:41&lt;01:41,  2.02s/it, train_loss=3.78e-6, Val_loss=2.91e-6, lr=0.0125]
+ 50%|████████████████                | 50/100 [01:43&lt;01:41,  2.02s/it, train_loss=3.55e-6, Val_loss=2.78e-6, lr=0.00625]Checkpoint saved to output/ethane_eva/model_output/model_epoch50.pt
+
+ 51%|████████████████▎               | 51/100 [01:43&lt;01:38,  2.01s/it, train_loss=3.55e-6, Val_loss=2.78e-6, lr=0.00625]
+ 52%|████████████████▋               | 52/100 [01:44&lt;01:35,  1.99s/it, train_loss=3.55e-6, Val_loss=2.78e-6, lr=0.00625]
+ 53%|████████████████▉               | 53/100 [01:47&lt;01:36,  2.06s/it, train_loss=3.55e-6, Val_loss=2.78e-6, lr=0.00625]
+ 54%|█████████████████▎              | 54/100 [01:49&lt;01:33,  2.02s/it, train_loss=3.55e-6, Val_loss=2.78e-6, lr=0.00625]
+ 55%|█████████████████▌              | 55/100 [01:51&lt;01:30,  2.00s/it, train_loss=3.55e-6, Val_loss=2.78e-6, lr=0.00625]
+ 56%|█████████████████▉              | 56/100 [01:53&lt;01:27,  1.99s/it, train_loss=3.55e-6, Val_loss=2.78e-6, lr=0.00625]
+ 57%|██████████████████▏             | 57/100 [01:55&lt;01:27,  2.04s/it, train_loss=3.55e-6, Val_loss=2.78e-6, lr=0.00625]
+ 58%|██████████████████▌             | 58/100 [01:57&lt;01:24,  2.02s/it, train_loss=3.55e-6, Val_loss=2.78e-6, lr=0.00625]
+ 59%|██████████████████▉             | 59/100 [01:59&lt;01:22,  2.00s/it, train_loss=3.55e-6, Val_loss=2.78e-6, lr=0.00625]
+ 60%|███████████████████▏            | 60/100 [02:01&lt;01:19,  1.99s/it, train_loss=3.55e-6, Val_loss=2.78e-6, lr=0.00625]
+ 60%|███████████████████▏            | 60/100 [02:03&lt;01:19,  1.99s/it, train_loss=3.34e-6, Val_loss=2.92e-6, lr=0.00313]
+ 61%|███████████████████▌            | 61/100 [02:03&lt;01:19,  2.04s/it, train_loss=3.34e-6, Val_loss=2.92e-6, lr=0.00313]
+ 62%|███████████████████▊            | 62/100 [02:05&lt;01:16,  2.02s/it, train_loss=3.34e-6, Val_loss=2.92e-6, lr=0.00313]
+ 63%|████████████████████▏           | 63/100 [02:07&lt;01:13,  1.99s/it, train_loss=3.34e-6, Val_loss=2.92e-6, lr=0.00313]
+ 64%|████████████████████▍           | 64/100 [02:09&lt;01:11,  1.98s/it, train_loss=3.34e-6, Val_loss=2.92e-6, lr=0.00313]
+ 65%|████████████████████▊           | 65/100 [02:11&lt;01:10,  2.03s/it, train_loss=3.34e-6, Val_loss=2.92e-6, lr=0.00313]
+ 66%|█████████████████████           | 66/100 [02:13&lt;01:08,  2.00s/it, train_loss=3.34e-6, Val_loss=2.92e-6, lr=0.00313]
+ 67%|█████████████████████▍          | 67/100 [02:15&lt;01:05,  1.99s/it, train_loss=3.34e-6, Val_loss=2.92e-6, lr=0.00313]
+ 68%|█████████████████████▊          | 68/100 [02:17&lt;01:03,  1.98s/it, train_loss=3.34e-6, Val_loss=2.92e-6, lr=0.00313]
+ 69%|██████████████████████          | 69/100 [02:19&lt;01:03,  2.04s/it, train_loss=3.34e-6, Val_loss=2.92e-6, lr=0.00313]
+ 70%|██████████████████████▍         | 70/100 [02:21&lt;01:00,  2.01s/it, train_loss=3.34e-6, Val_loss=2.92e-6, lr=0.00313]
+ 70%|██████████████████████▍         | 70/100 [02:23&lt;01:00,  2.01s/it, train_loss=3.28e-6, Val_loss=2.72e-6, lr=0.00156]
+ 71%|██████████████████████▋         | 71/100 [02:23&lt;00:57,  1.99s/it, train_loss=3.28e-6, Val_loss=2.72e-6, lr=0.00156]
+ 72%|███████████████████████         | 72/100 [02:25&lt;00:55,  1.99s/it, train_loss=3.28e-6, Val_loss=2.72e-6, lr=0.00156]
+ 73%|███████████████████████▎        | 73/100 [02:27&lt;00:55,  2.05s/it, train_loss=3.28e-6, Val_loss=2.72e-6, lr=0.00156]
+ 74%|███████████████████████▋        | 74/100 [02:29&lt;00:52,  2.03s/it, train_loss=3.28e-6, Val_loss=2.72e-6, lr=0.00156]
+ 75%|████████████████████████        | 75/100 [02:31&lt;00:50,  2.00s/it, train_loss=3.28e-6, Val_loss=2.72e-6, lr=0.00156]
+ 76%|████████████████████████▎       | 76/100 [02:33&lt;00:47,  1.99s/it, train_loss=3.28e-6, Val_loss=2.72e-6, lr=0.00156]
+ 77%|████████████████████████▋       | 77/100 [02:35&lt;00:47,  2.06s/it, train_loss=3.28e-6, Val_loss=2.72e-6, lr=0.00156]
+ 78%|████████████████████████▉       | 78/100 [02:37&lt;00:44,  2.02s/it, train_loss=3.28e-6, Val_loss=2.72e-6, lr=0.00156]
+ 79%|█████████████████████████▎      | 79/100 [02:39&lt;00:42,  2.00s/it, train_loss=3.28e-6, Val_loss=2.72e-6, lr=0.00156]
+ 80%|█████████████████████████▌      | 80/100 [02:41&lt;00:39,  2.00s/it, train_loss=3.28e-6, Val_loss=2.72e-6, lr=0.00156]
+ 80%|████████████████████████▊      | 80/100 [02:43&lt;00:39,  2.00s/it, train_loss=3.32e-6, Val_loss=2.67e-6, lr=0.000391]
+ 81%|█████████████████████████      | 81/100 [02:43&lt;00:39,  2.06s/it, train_loss=3.32e-6, Val_loss=2.67e-6, lr=0.000391]
+ 82%|█████████████████████████▍     | 82/100 [02:45&lt;00:36,  2.02s/it, train_loss=3.32e-6, Val_loss=2.67e-6, lr=0.000391]
+ 83%|█████████████████████████▋     | 83/100 [02:47&lt;00:34,  2.00s/it, train_loss=3.32e-6, Val_loss=2.67e-6, lr=0.000391]
+ 84%|██████████████████████████     | 84/100 [02:49&lt;00:31,  1.99s/it, train_loss=3.32e-6, Val_loss=2.67e-6, lr=0.000391]
+ 85%|██████████████████████████▎    | 85/100 [02:51&lt;00:30,  2.04s/it, train_loss=3.32e-6, Val_loss=2.67e-6, lr=0.000391]
+ 86%|██████████████████████████▋    | 86/100 [02:53&lt;00:28,  2.01s/it, train_loss=3.32e-6, Val_loss=2.67e-6, lr=0.000391]
+ 87%|██████████████████████████▉    | 87/100 [02:55&lt;00:25,  1.99s/it, train_loss=3.32e-6, Val_loss=2.67e-6, lr=0.000391]
+ 88%|███████████████████████████▎   | 88/100 [02:57&lt;00:23,  1.99s/it, train_loss=3.32e-6, Val_loss=2.67e-6, lr=0.000391]
+ 89%|███████████████████████████▌   | 89/100 [02:59&lt;00:22,  2.04s/it, train_loss=3.32e-6, Val_loss=2.67e-6, lr=0.000391]
+ 90%|███████████████████████████▉   | 90/100 [03:01&lt;00:20,  2.01s/it, train_loss=3.32e-6, Val_loss=2.67e-6, lr=0.000391]
+ 90%|███████████████████████████▉   | 90/100 [03:03&lt;00:20,  2.01s/it, train_loss=3.27e-6, Val_loss=2.76e-6, lr=0.000195]
+ 91%|████████████████████████████▏  | 91/100 [03:03&lt;00:17,  1.98s/it, train_loss=3.27e-6, Val_loss=2.76e-6, lr=0.000195]
+ 92%|████████████████████████████▌  | 92/100 [03:05&lt;00:15,  1.98s/it, train_loss=3.27e-6, Val_loss=2.76e-6, lr=0.000195]
+ 93%|████████████████████████████▊  | 93/100 [03:07&lt;00:14,  2.03s/it, train_loss=3.27e-6, Val_loss=2.76e-6, lr=0.000195]
+ 94%|█████████████████████████████▏ | 94/100 [03:09&lt;00:12,  2.01s/it, train_loss=3.27e-6, Val_loss=2.76e-6, lr=0.000195]
+ 95%|█████████████████████████████▍ | 95/100 [03:11&lt;00:09,  1.98s/it, train_loss=3.27e-6, Val_loss=2.76e-6, lr=0.000195]
+ 96%|█████████████████████████████▊ | 96/100 [03:13&lt;00:07,  1.98s/it, train_loss=3.27e-6, Val_loss=2.76e-6, lr=0.000195]
+ 97%|██████████████████████████████ | 97/100 [03:15&lt;00:06,  2.03s/it, train_loss=3.27e-6, Val_loss=2.76e-6, lr=0.000195]
+ 98%|██████████████████████████████▍| 98/100 [03:17&lt;00:03,  2.00s/it, train_loss=3.27e-6, Val_loss=2.76e-6, lr=0.000195]
+ 99%|██████████████████████████████▋| 99/100 [03:19&lt;00:01,  1.99s/it, train_loss=3.27e-6, Val_loss=2.76e-6, lr=0.000195]
+100%|██████████████████████████████| 100/100 [03:21&lt;00:00,  1.98s/it, train_loss=3.27e-6, Val_loss=2.76e-6, lr=0.000195]
+100%|██████████████████████████████| 100/100 [03:21&lt;00:00,  2.01s/it, train_loss=3.27e-6, Val_loss=2.76e-6, lr=0.000195]
+</pre></div>
+</div>
+</section>
+<section id="plot-loss">
+<h3>Plot Loss<a class="headerlink" href="#plot-loss" title="Link to this heading">¶</a></h3>
+<p>With the help of <code class="docutils literal notranslate"><span class="pre">plot_losses</span></code> function we can conveniently
+plot the training and validation losses.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">plot_losses</span><span class="p">(</span><span class="n">history</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">savename</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">FOLDER_NAME</span><span class="si">}</span><span class="s2">/loss_vs_epoch.pdf&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_hamiltonian-qm7_001.png" srcset="../../_images/sphx_glr_hamiltonian-qm7_001.png" alt="Training Losses, Validation Losses" class = "sphx-glr-single-img"/></section>
+<section id="parity-plot">
+<h3>Parity Plot<a class="headerlink" href="#parity-plot" title="Link to this heading">¶</a></h3>
+<p>We then evaluate the prediction of the fine-tuned model on
+the MO energies by comparing it the with the MO energies
+from the reference def2-TZVP calculation.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">f_pred</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span>
+    <span class="n">ml_data</span><span class="o">.</span><span class="n">feat_test</span><span class="p">,</span>
+    <span class="n">return_type</span><span class="o">=</span><span class="s2">&quot;tensor&quot;</span><span class="p">,</span>
+    <span class="n">batch_indices</span><span class="o">=</span><span class="n">ml_data</span><span class="o">.</span><span class="n">test_idx</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">test_eva_pred</span> <span class="o">=</span> <span class="n">compute_eigvals</span><span class="p">(</span>
+    <span class="n">ml_data</span><span class="p">,</span> <span class="n">f_pred</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ml_data</span><span class="o">.</span><span class="n">test_idx</span><span class="p">)),</span> <span class="n">orthogonal</span><span class="o">=</span><span class="n">ORTHOGONAL</span>
+<span class="p">)</span>
+
+<span class="c1"># The parity plot</span>
+<span class="c1"># below shows the performance of our model on the test</span>
+<span class="c1"># dataset. ML predictions are shown with blue points and</span>
+<span class="c1"># the corresponding MO energies from the STO-3G basis are</span>
+<span class="c1"># are shown in grey.</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_parity_properties</span><span class="p">(</span>
+    <span class="n">molecule_data</span><span class="p">,</span>
+    <span class="n">ml_data</span><span class="p">,</span>
+    <span class="n">Hartree</span><span class="p">,</span>
+    <span class="n">properties</span><span class="o">=</span><span class="s2">&quot;eva&quot;</span><span class="p">,</span>  <span class="c1"># can be single string or list of strings</span>
+    <span class="n">predictions_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># dictionary with keys: &quot;eva&quot;, &quot;dip&quot;, &quot;pol&quot;</span>
+<span class="p">):</span>
+    <span class="c1"># Labels, units, and axis ranges</span>
+    <span class="n">prop_info_map</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;eva&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;MO Energies&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;eV&quot;</span><span class="p">,</span> <span class="s2">&quot;range&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mi">35</span><span class="p">,</span> <span class="mi">30</span><span class="p">]},</span>
+        <span class="s2">&quot;dip&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;dipoles&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;a.u.&quot;</span><span class="p">,</span> <span class="s2">&quot;range&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">2.5</span><span class="p">,</span> <span class="mi">3</span><span class="p">]},</span>
+        <span class="s2">&quot;pol&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;polarisability&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;a.u.&quot;</span><span class="p">,</span> <span class="s2">&quot;range&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mi">25</span><span class="p">,</span> <span class="mi">150</span><span class="p">]},</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">properties</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">properties</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">properties</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">properties</span> <span class="o">=</span> <span class="p">[</span><span class="n">properties</span><span class="p">]</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Properties input should be string or list&quot;</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span> <span class="o">*</span> <span class="n">n</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="p">[</span><span class="n">axes</span><span class="p">]</span>  <span class="c1"># Make iterable</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">propert</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">properties</span><span class="p">):</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">prop_info_map</span><span class="p">[</span><span class="n">propert</span><span class="p">][</span><span class="s2">&quot;label&quot;</span><span class="p">]</span>
+        <span class="n">unit</span> <span class="o">=</span> <span class="n">prop_info_map</span><span class="p">[</span><span class="n">propert</span><span class="p">][</span><span class="s2">&quot;unit&quot;</span><span class="p">]</span>
+        <span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span> <span class="o">=</span> <span class="n">prop_info_map</span><span class="p">[</span><span class="n">propert</span><span class="p">][</span><span class="s2">&quot;range&quot;</span><span class="p">]</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_axisbelow</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span><span class="p">],</span>
+            <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+            <span class="n">linewidth</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Reference vs low-basis</span>
+        <span class="n">target_vals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">lb_vals</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">ml_data</span><span class="o">.</span><span class="n">test_idx</span><span class="p">:</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">molecule_data</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="n">propert</span><span class="p">][</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">lb</span> <span class="o">=</span> <span class="n">molecule_data</span><span class="o">.</span><span class="n">lb_target</span><span class="p">[</span><span class="n">propert</span><span class="p">][</span><span class="n">idx</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">propert</span> <span class="o">==</span> <span class="s2">&quot;eva&quot;</span><span class="p">:</span>
+                <span class="n">lb</span> <span class="o">=</span> <span class="n">lb</span><span class="p">[:</span> <span class="n">target</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="n">target_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+            <span class="n">lb_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lb</span><span class="p">)</span>
+
+        <span class="n">target_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">target_vals</span><span class="p">)</span>
+        <span class="n">lb_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">lb_vals</span><span class="p">)</span>
+        <span class="n">x_vals</span> <span class="o">=</span> <span class="n">lb_tensor</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="n">y_vals</span> <span class="o">=</span> <span class="n">target_tensor</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">propert</span> <span class="o">==</span> <span class="s2">&quot;eva&quot;</span><span class="p">:</span>
+            <span class="n">x_vals</span> <span class="o">*=</span> <span class="n">Hartree</span>
+            <span class="n">y_vals</span> <span class="o">*=</span> <span class="n">Hartree</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+            <span class="n">x_vals</span><span class="p">,</span>
+            <span class="n">y_vals</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+            <span class="n">s</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+            <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span>
+            <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+            <span class="n">label</span><span class="o">=</span><span class="s2">&quot;STO-3G&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Use saved predictions</span>
+        <span class="n">pred_array</span> <span class="o">=</span> <span class="n">predictions_dict</span><span class="p">[</span><span class="n">propert</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">propert</span> <span class="o">==</span> <span class="s2">&quot;eva&quot;</span><span class="p">:</span>
+            <span class="n">pred_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">p</span><span class="p">[:</span> <span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pred_array</span><span class="p">,</span> <span class="n">target_vals</span><span class="p">)]</span>
+            <span class="p">)</span>
+            <span class="n">y_model</span> <span class="o">=</span> <span class="n">pred_array</span> <span class="o">*</span> <span class="n">Hartree</span>
+            <span class="n">x_model</span> <span class="o">=</span> <span class="n">x_vals</span>
+        <span class="k">elif</span> <span class="n">propert</span> <span class="o">==</span> <span class="s2">&quot;dip&quot;</span><span class="p">:</span>
+            <span class="n">y_model</span> <span class="o">=</span> <span class="n">pred_array</span>
+            <span class="n">x_model</span> <span class="o">=</span> <span class="n">x_vals</span>
+        <span class="k">elif</span> <span class="n">propert</span> <span class="o">==</span> <span class="s2">&quot;pol&quot;</span><span class="p">:</span>
+            <span class="n">y_model</span> <span class="o">=</span> <span class="n">pred_array</span>
+            <span class="n">x_model</span> <span class="o">=</span> <span class="n">x_vals</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown property: </span><span class="si">{</span><span class="n">propert</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+            <span class="n">x_model</span><span class="p">,</span>
+            <span class="n">y_model</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="s2">&quot;royalblue&quot;</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+            <span class="n">s</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+            <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span>
+            <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+            <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;indirect $\mathbf</span><span class="si">{H}</span><span class="s2">$ model&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Target </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Predicted </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="c1"># plt.savefig(f&quot;{FOLDER_NAME}/parity_combined.png&quot;, bbox_inches=&quot;tight&quot;, dpi=300)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+
+<span class="n">predictions_dict</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;eva&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">test_eva_pred</span><span class="p">],</span>
+<span class="p">}</span>
+<span class="n">plot_parity_properties</span><span class="p">(</span>
+    <span class="n">molecule_data</span><span class="p">,</span>
+    <span class="n">ml_data</span><span class="p">,</span>
+    <span class="n">Hartree</span><span class="p">,</span>
+    <span class="n">properties</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;eva&quot;</span><span class="p">],</span>
+    <span class="n">predictions_dict</span><span class="o">=</span><span class="n">predictions_dict</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_hamiltonian-qm7_002.png" srcset="../../_images/sphx_glr_hamiltonian-qm7_002.png" alt="hamiltonian qm7" class = "sphx-glr-single-img"/><p>We can observe from the parity plot that even with a
+minimal basis parametrisation, the model is able to reproduce
+the large basis MO energies with good accuracy. Thus, using
+an indirect model, makes it possible to promote the model
+accuracy to a higher level of theory, at no additional cost.</p>
+</section>
+</section>
+<section id="example-of-targeting-multiple-properties">
+<h2>2. Example of Targeting Multiple Properties<a class="headerlink" href="#example-of-targeting-multiple-properties" title="Link to this heading">¶</a></h2>
+<p>In principle we can also target multiple properties for
+the indirect training. While MO energies can be computed
+by simply diagonalizing the Hamiltonian matrix, some
+properties like the dipole moment require
+the position operator integral and its derivative if
+we want to backpropagate the loss. We therefore interface
+our ML model with an electronic structure code that supports
+automatic differentiation, <a class="reference external" href="https://github.com/fishjojo/pyscfad">PySCFAD</a>,
+an end-to-end auto-differentiable version of PySCF. By
+doing so we delegate the computation of properties to PySCFAD,
+which provides automatic differentiation of observables with
+respect to the intermediate Hamiltonian. In particular, we will now
+indirectly target the dipole moment and polarisability along
+with the MO energies from a large basis reference calculation</p>
+<section id="get-data-and-prepare-data-set">
+<h3>Get Data and Prepare Data Set<a class="headerlink" href="#get-data-and-prepare-data-set" title="Link to this heading">¶</a></h3>
+<p>In our last example even though we show an indirect ML model
+that was trained on a homogeneous dataset of different
+configurations of ethane, we can also easily extend the
+framework to use  a much diverse dataset such as the
+<a class="reference external" href="http://quantum-machine.org/datasets/">QM7 dataset</a>.
+For our next example we select a subset of 150 structures from
+this dataset that consists of only C, H, N and O atoms.</p>
+</section>
+<section id="id2">
+<h3>Set parameters for training<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<p>Set the parameters for the training, including the dataset set size
+and split, the batch size, learning rate and weights for the individual
+components of eigenvalues, dipole and polarisability.
+We additionally define a folder name, in which the results are saved.
+Optionally, noise can be added to the ridge regression fit.</p>
+<p>Here, we now need to provide different weights
+for the different targets (eigenvalues
+<span class="math notranslate nohighlight">\(\epsilon\)</span>, the dipole moment
+<span class="math notranslate nohighlight">\(\mu\)</span>, and polarisability
+<span class="math notranslate nohighlight">\(\alpha\)</span>), which we will use when computing the loss <span class="math notranslate nohighlight">\(\mathcal{L}\)</span>.</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathcal{L}_{\epsilon,\mu,\alpha} = &amp; \;
+\frac{\omega_{\epsilon}}{N} \sum_{n=1}^{N} \frac{1}{O_n} \
+\sum_{o=1}^{O_n} \left( \epsilon_{no} - \tilde{\epsilon}_{no} \right)^2 \
+ + \frac{\omega_{\mu}}{N} \sum_{n=1}^{N} \frac{1}{N_A^2} \
+\sum_{m=1}^{N_A} \left( \mu_{nm} - \tilde{\mu}_{nm} \right)^2 \\
+&amp; + \frac{\omega_{\alpha}}{N} \sum_{n=1}^{N} \frac{1}{N_A^2} \
+\sum_{m=1}^{N_A} \left( \alpha_{nm} - \tilde{\alpha}_{nm} \right)^2\end{split}\]</div>
+</div>
+<p>where
+<span class="math notranslate nohighlight">\(N\)</span> is the number of training points,
+<span class="math notranslate nohighlight">\(O_n\)</span> is the number of MO orbitals in the nth molecule,
+<span class="math notranslate nohighlight">\(N_A\)</span> is the number of atoms <span class="math notranslate nohighlight">\(i\)</span>.</p>
+<p>The weights
+<span class="math notranslate nohighlight">\(\omega\)</span> in the loss are based on the magnitude of errors
+for different properties, where at the end we want each of them to
+contribute equally to the loss.
+The following values worked well for the QM7 example, but of
+course depending on the system that one investigates another set
+of weights might work better.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">NUM_FRAMES</span> <span class="o">=</span> <span class="mi">150</span>
+<span class="n">LR</span> <span class="o">=</span> <span class="mf">1e-3</span>
+<span class="n">W_EVA</span> <span class="o">=</span> <span class="mf">1e4</span>
+<span class="n">W_DIP</span> <span class="o">=</span> <span class="mf">1e3</span>
+<span class="n">W_POL</span> <span class="o">=</span> <span class="mf">1e2</span>
+
+<span class="n">FOLDER_NAME</span> <span class="o">=</span> <span class="s2">&quot;output/qm7&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="create-datasets">
+<h3>Create Datasets<a class="headerlink" href="#create-datasets" title="Link to this heading">¶</a></h3>
+<p>We use the dataloader of the
+<a class="reference external" href="https://github.com/curiosity54/mlelec/tree/qm7">mlelec package (qm7 branch)</a>,
+and load the QM7
+dataset we downloaded above from zenodo
+for the defined number of frames.
+First, we load all relevant data (geometric structures,
+auxiliary matrices -overlap and orbitals-, and
+targets -fock, dipole moment, and polarisablity-) into a molecule dataset.
+We do this for the minimal (STO-3G), as well as a larger basis (lb, def2-TZVP).
+The larger basis has additional basis functions on the valence electrons.
+The dataset, we can then load into our dataloader <code class="docutils literal notranslate"><span class="pre">`ml_data`</span></code>, together with some
+settings on how we want to sample data from the dataloader.
+Finally, we define the desired dataset split for training, validation,
+and testing from the parameters defined in example 1.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">molecule_data</span> <span class="o">=</span> <span class="n">MoleculeDataset</span><span class="p">(</span>
+    <span class="n">mol_name</span><span class="o">=</span><span class="s2">&quot;qm7&quot;</span><span class="p">,</span>
+    <span class="n">use_precomputed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">path</span><span class="o">=</span><span class="s2">&quot;hamiltonian-qm7-data/qm7&quot;</span><span class="p">,</span>
+    <span class="n">aux_path</span><span class="o">=</span><span class="s2">&quot;hamiltonian-qm7-data/qm7/sto-3g&quot;</span><span class="p">,</span>
+    <span class="n">frame_slice</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">NUM_FRAMES</span><span class="p">),</span>
+    <span class="n">device</span><span class="o">=</span><span class="n">DEVICE</span><span class="p">,</span>
+    <span class="n">aux</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;overlap&quot;</span><span class="p">,</span> <span class="s2">&quot;orbitals&quot;</span><span class="p">],</span>
+    <span class="n">lb_aux</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;overlap&quot;</span><span class="p">,</span> <span class="s2">&quot;orbitals&quot;</span><span class="p">],</span>
+    <span class="n">target</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;fock&quot;</span><span class="p">,</span> <span class="s2">&quot;eva&quot;</span><span class="p">,</span> <span class="s2">&quot;dip&quot;</span><span class="p">,</span> <span class="s2">&quot;pol&quot;</span><span class="p">],</span>
+    <span class="n">lb_target</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;fock&quot;</span><span class="p">,</span> <span class="s2">&quot;eva&quot;</span><span class="p">,</span> <span class="s2">&quot;dip&quot;</span><span class="p">,</span> <span class="s2">&quot;pol&quot;</span><span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">ml_data</span> <span class="o">=</span> <span class="n">MLDataset</span><span class="p">(</span>
+    <span class="n">molecule_data</span><span class="o">=</span><span class="n">molecule_data</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="n">DEVICE</span><span class="p">,</span>
+    <span class="n">model_strategy</span><span class="o">=</span><span class="s2">&quot;coupled&quot;</span><span class="p">,</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">shuffle_seed</span><span class="o">=</span><span class="n">SHUFFLE_SEED</span><span class="p">,</span>
+    <span class="n">orthogonal</span><span class="o">=</span><span class="n">ORTHOGONAL</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ml_data</span><span class="o">.</span><span class="n">_split_indices</span><span class="p">(</span>
+    <span class="n">train_frac</span><span class="o">=</span><span class="n">TRAIN_FRAC</span><span class="p">,</span> <span class="n">val_frac</span><span class="o">=</span><span class="n">VALIDATION_FRAC</span><span class="p">,</span> <span class="n">test_frac</span><span class="o">=</span><span class="n">TEST_FRAC</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Loading structures
+hamiltonian-qm7-data/qm7/sto-3g/fock.hickle
+hamiltonian-qm7-data/qm7/sto-3g/eva.hickle
+hamiltonian-qm7-data/qm7/sto-3g/dip.hickle
+hamiltonian-qm7-data/qm7/sto-3g/pol.hickle
+hamiltonian-qm7-data/qm7/def2-tzvp/fock.hickle
+hamiltonian-qm7-data/qm7/def2-tzvp/eva.hickle
+hamiltonian-qm7-data/qm7/def2-tzvp/dip.hickle
+hamiltonian-qm7-data/qm7/def2-tzvp/pol.hickle
+/home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/hamiltonian-qm7/lib/python3.11/site-packages/mlelec/utils/twocenter_utils.py:78: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.detach().clone() or sourceTensor.detach().clone().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  return torch.tensor(matrix)[idx][:, idx]
+</pre></div>
+</div>
+</section>
+<section id="compute-features">
+<h3>Compute Features<a class="headerlink" href="#compute-features" title="Link to this heading">¶</a></h3>
+<p>The feature hyperparameters here are similar to the
+ones we used for our previous training, except the <cite>cutoff</cite>.
+For a dataset like QM7 which contains molecules with over
+15 atoms, we need a slightly larger cutoff than the ones
+we used in case of ethane. We choose a cutoff of 3 and 5
+for the atom-centred and pair-centred features, respectively.
+Note that the computation of the features takes some time and
+requires a large amount of memory.</p>
+<p>This is why in the following
+of this example, we are not executing the commands related to
+the features (that is feature computation, training, and evaluation),
+but provide all python commands necessary if one
+would want to do this.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">hypers</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;cutoff&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;smoothing&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;ShiftedCosine&quot;</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">}},</span>
+    <span class="s2">&quot;density&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Gaussian&quot;</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">},</span>
+    <span class="s2">&quot;basis&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;TensorProduct&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;max_angular&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="s2">&quot;radial&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Gto&quot;</span><span class="p">,</span> <span class="s2">&quot;max_radial&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+<span class="n">hypers_pair</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;cutoff&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;smoothing&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;ShiftedCosine&quot;</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">}},</span>
+    <span class="s2">&quot;density&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Gaussian&quot;</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">},</span>
+    <span class="s2">&quot;basis&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;TensorProduct&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;max_angular&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="s2">&quot;radial&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Gto&quot;</span><span class="p">,</span> <span class="s2">&quot;max_radial&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">features</span> <span class="o">=</span> <span class="n">compute_features_for_target</span><span class="p">(</span>
+    <span class="n">ml_data</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">DEVICE</span><span class="p">,</span> <span class="n">hypers</span><span class="o">=</span><span class="n">hypers</span><span class="p">,</span> <span class="n">hypers_pair</span><span class="o">=</span><span class="n">hypers_pair</span>
+<span class="p">)</span>
+<span class="n">ml_data</span><span class="o">.</span><span class="n">_set_features</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+
+<span class="n">train_dl</span><span class="p">,</span> <span class="n">val_dl</span><span class="p">,</span> <span class="n">test_dl</span> <span class="o">=</span> <span class="n">get_dataloader</span><span class="p">(</span>
+    <span class="n">ml_data</span><span class="p">,</span> <span class="n">model_return</span><span class="o">=</span><span class="s2">&quot;blocks&quot;</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">BATCH_SIZE</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Depending on the diversity of the structures in the datasets, it may
+happen that some blocks are empty, because certain structural
+features are only present in certain structures (e.g. if we
+would have some organic molecules with oxygen and some without).
+As this is the case for the QM7 example,
+we drop these blocks, so that the dataloader does not
+try to load them during training.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ml_data</span><span class="o">.</span><span class="n">target_train</span><span class="p">,</span> <span class="n">ml_data</span><span class="o">.</span><span class="n">target_val</span><span class="p">,</span> <span class="n">ml_data</span><span class="o">.</span><span class="n">target_test</span> <span class="o">=</span> <span class="n">drop_zero_blocks</span><span class="p">(</span>
+<span class="n">ml_data</span><span class="o">.</span><span class="n">target_train</span><span class="p">,</span> <span class="n">ml_data</span><span class="o">.</span><span class="n">target_val</span><span class="p">,</span> <span class="n">ml_data</span><span class="o">.</span><span class="n">target_test</span><span class="p">)</span>
+
+<span class="n">ml_data</span><span class="o">.</span><span class="n">feat_train</span><span class="p">,</span> <span class="n">ml_data</span><span class="o">.</span><span class="n">feat_val</span><span class="p">,</span> <span class="n">ml_data</span><span class="o">.</span><span class="n">feat_test</span> <span class="o">=</span> <span class="n">drop_zero_blocks</span><span class="p">(</span>
+<span class="n">ml_data</span><span class="o">.</span><span class="n">feat_train</span><span class="p">,</span> <span class="n">ml_data</span><span class="o">.</span><span class="n">feat_val</span><span class="p">,</span> <span class="n">ml_data</span><span class="o">.</span><span class="n">feat_test</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Prepare training<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<p>Here again we first fit a ridge regression model to the data.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">LinearTargetModel</span><span class="p">(</span>
+    <span class="n">dataset</span><span class="o">=</span><span class="n">ml_data</span><span class="p">,</span> <span class="n">nlayers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">nhidden</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">DEVICE</span>
+<span class="p">)</span>
+
+<span class="n">pred_ridges</span><span class="p">,</span> <span class="n">ridges</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit_ridge_analytical</span><span class="p">(</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="o">-</span><span class="mi">8</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span>
+    <span class="n">cv</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">set_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">pred_fock</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span>
+    <span class="n">ml_data</span><span class="o">.</span><span class="n">feat_train</span><span class="p">,</span>
+    <span class="n">return_type</span><span class="o">=</span><span class="s2">&quot;tensor&quot;</span><span class="p">,</span>
+    <span class="n">batch_indices</span><span class="o">=</span><span class="n">ml_data</span><span class="o">.</span><span class="n">train_idx</span><span class="p">,</span>
+    <span class="n">ridge_fit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">add_noise</span><span class="o">=</span><span class="n">NOISE</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">capture_output</span><span class="p">()</span> <span class="k">as</span> <span class="n">captured</span><span class="p">:</span>
+    <span class="n">all_mfs</span><span class="p">,</span> <span class="n">fockvars</span> <span class="o">=</span> <span class="n">instantiate_mf</span><span class="p">(</span>
+        <span class="n">ml_data</span><span class="p">,</span>
+        <span class="n">fock_predictions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">batch_indices</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ml_data</span><span class="o">.</span><span class="n">structures</span><span class="p">))),</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="training-parameters-and-training">
+<h3>Training parameters and training<a class="headerlink" href="#training-parameters-and-training" title="Link to this heading">¶</a></h3>
+<p>For finetuning on multiple targets we again
+define a loss function, optimizer and scheduler.
+We also define the necessary arguments for training
+and validation.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">loss_fn</span> <span class="o">=</span> <span class="n">mlmetrics</span><span class="o">.</span><span class="n">mse_per_atom</span>
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">LR</span><span class="p">)</span>
+<span class="n">scheduler</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="o">.</span><span class="n">ReduceLROnPlateau</span><span class="p">(</span>
+    <span class="n">optimizer</span><span class="p">,</span>
+    <span class="n">factor</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">patience</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Initialize trainer</span>
+<span class="n">trainer</span> <span class="o">=</span> <span class="n">Trainer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">scheduler</span><span class="p">,</span> <span class="n">DEVICE</span><span class="p">)</span>
+
+<span class="c1"># Define necessary arguments for the training and validation process</span>
+<span class="n">fit_args</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;ml_data&quot;</span><span class="p">:</span> <span class="n">ml_data</span><span class="p">,</span>
+    <span class="s2">&quot;all_mfs&quot;</span><span class="p">:</span> <span class="n">all_mfs</span><span class="p">,</span>
+    <span class="s2">&quot;loss_fn&quot;</span><span class="p">:</span> <span class="n">loss_fn</span><span class="p">,</span>
+    <span class="s2">&quot;weight_eva&quot;</span><span class="p">:</span> <span class="n">W_EVA</span><span class="p">,</span>
+    <span class="s2">&quot;weight_dipole&quot;</span><span class="p">:</span> <span class="n">W_DIP</span><span class="p">,</span>
+    <span class="s2">&quot;weight_polar&quot;</span><span class="p">:</span> <span class="n">W_POL</span><span class="p">,</span>
+    <span class="s2">&quot;ORTHOGONAL&quot;</span><span class="p">:</span> <span class="n">ORTHOGONAL</span><span class="p">,</span>
+    <span class="s2">&quot;upscale&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="c1"># Train and validate</span>
+<span class="n">history</span> <span class="o">=</span> <span class="n">trainer</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">train_dl</span><span class="p">,</span>
+    <span class="n">val_dl</span><span class="p">,</span>
+    <span class="mi">200</span><span class="p">,</span>
+    <span class="n">EARLY_STOP_CRITERION</span><span class="p">,</span>
+    <span class="n">FOLDER_NAME</span><span class="p">,</span>
+    <span class="n">VERBOSE</span><span class="p">,</span>
+    <span class="n">DUMP_HIST</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">fit_args</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Save the loss history</span>
+<span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">FOLDER_NAME</span><span class="si">}</span><span class="s2">/model_output/loss_stats.npy&quot;</span><span class="p">,</span> <span class="n">history</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This training can take some time to converge fully.
+Thus, for this example,
+we load a previously trained model to continue.</p>
+</section>
+<section id="evaluating-the-trained-model">
+<h3>Evaluating the trained model<a class="headerlink" href="#evaluating-the-trained-model" title="Link to this heading">¶</a></h3>
+<p>A previously trained model for the QM7 dataset we are using here
+is also part of the data
+downloaded from Zenodo.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;hamiltonian-qm7-data/qm7/output/qm7_eva_dip_pol/best_model.pt&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>We can then compute different properties from the trained model.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">batch_indices</span> <span class="o">=</span> <span class="n">ml_data</span><span class="o">.</span><span class="n">test_idx</span>
+<span class="n">test_fock_predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span>
+    <span class="n">ml_data</span><span class="o">.</span><span class="n">feat_test</span><span class="p">,</span>
+    <span class="n">return_type</span><span class="o">=</span><span class="s2">&quot;tensor&quot;</span><span class="p">,</span>
+    <span class="n">batch_indices</span><span class="o">=</span><span class="n">ml_data</span><span class="o">.</span><span class="n">test_idx</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">test_dip_pred</span><span class="p">,</span> <span class="n">test_polar_pred</span><span class="p">,</span> <span class="n">test_eva_pred</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">compute_batch_polarisability</span><span class="p">(</span>
+         <span class="n">ml_data</span><span class="p">,</span>
+        <span class="n">test_fock_predictions</span><span class="p">,</span>
+        <span class="n">batch_indices</span><span class="o">=</span><span class="n">batch_indices</span><span class="p">,</span>
+        <span class="n">mfs</span><span class="o">=</span><span class="n">all_mfs</span><span class="p">,</span>
+        <span class="n">orthogonal</span><span class="o">=</span><span class="n">ORTHOGONAL</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Plot loss<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<p>As we have not performed training, we cannot plot the
+training and validation losses
+from the history, as we did for example 1. In principle,
+if training would have been performed,
+the python command would be the same:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">plot_losses</span><span class="p">(</span><span class="n">history</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">savename</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">FOLDER_NAME</span><span class="si">}</span><span class="s2">/loss_vs_epoch.pdf&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For reference, we provide the loss plot we obtained during training of the
+saved model that we load above.</p>
+<figure class="align-default">
+<img alt="loss versus epoch curves for training and validation losses.  The MSE on MO energies, dipole moments and polarisability are shown separately." src="../../_images/loss_vs_epoch.png" />
+</figure>
+<p>The plot shows the Loss versus Epoch curves
+for training and validation losses. The MSE on
+MO energies, dipole moments and polarisability
+are shown separately.</p>
+</section>
+<section id="id5">
+<h3>Parity plot<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<p>We finally want to investigate the performance of the finetuned model
+that target the MO energies, dipole moments and polarisibaility
+of from a def2-TZVP calculation on the QM7 test dataset.
+This can be done with the following python command:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">predictions_dict</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;eva&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">test_eva_pred</span><span class="p">],</span>
+    <span class="s2">&quot;dip&quot;</span><span class="p">:</span> <span class="n">test_dip_pred</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span>
+    <span class="s2">&quot;pol&quot;</span><span class="p">:</span> <span class="n">test_polar_pred</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span>
+<span class="p">}</span>
+
+<span class="n">plot_parity_properties</span><span class="p">(</span>
+    <span class="n">molecule_data</span><span class="p">,</span>
+    <span class="n">ml_data</span><span class="p">,</span>
+    <span class="n">Hartree</span><span class="p">,</span>
+    <span class="n">properties</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;eva&quot;</span><span class="p">,</span> <span class="s2">&quot;dip&quot;</span><span class="p">,</span> <span class="s2">&quot;pol&quot;</span><span class="p">],</span>
+    <span class="n">predictions_dict</span><span class="o">=</span><span class="n">predictions_dict</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>This command generates a parity plot for the desired properties.
+As we did not compute
+the features of the QM7 dataset for time and memory reasons,
+we do here not execute the python command above but provide directly the
+parity plot as Figure.</p>
+<figure class="align-default">
+<img alt="Performance of the indirect model on the QM7 test dataset, for the (a) MO energy (b) dipole moments and (c) polarizability. Targets are computed with the def2-TZVP basis. Gray circles correspond to the values obtained from STO-3G calculations, while the blue ones correspond to val- ues computed from minimal-basis Hamiltonians predicted by the ML model." src="../../_images/parity_plots_combined.png" />
+</figure>
+<p>Gray circles correspond to the values obtained from
+STO-3G calculations, while the blue ones correspond to values
+computed from the reduced-basis Hamiltonians predicted by
+the ML model.</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (4 minutes 15.441 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-hamiltonian-qm7-hamiltonian-qm7-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/02b97650765168f1ec07f63db3b6f4a7/hamiltonian-qm7.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">hamiltonian-qm7.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/57767ffe73ed72c7562faeb46590e444/hamiltonian-qm7.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">hamiltonian-qm7.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/62d16eaa7ca157c8c514038253990b26/hamiltonian-qm7.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">recipe:</span> <span class="pre">hamiltonian-qm7.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../torchpme/torchpme_learning.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Learning Capabilities with torchpme</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../roy-gch/roy-gch.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Generalized Convex Hull construction for the polymorphs of ROY</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; BSD 3-Clause License, Copyright (c) 2026, The atomistic cookbook team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Hamiltonian Learning for Molecules with Indirect Targets</a><ul>
+<li><a class="reference internal" href="#example-of-learning-mo-energies-for-ethane">1. Example of Learning MO Energies for Ethane</a><ul>
+<li><a class="reference internal" href="#python-environment-and-used-packages">Python Environment and Used Packages</a></li>
+<li><a class="reference internal" href="#set-parameters-for-training">Set Parameters for Training</a></li>
+<li><a class="reference internal" href="#create-folders-and-save-parameters">Create Folders and Save Parameters</a></li>
+<li><a class="reference internal" href="#generate-reference-data">Generate Reference Data</a><ul>
+<li><a class="reference internal" href="#download-the-dataset-from-zenodo">Download the Dataset from Zenodo</a></li>
+<li><a class="reference internal" href="#prepare-the-dataset-for-ml-training">Prepare the Dataset for ML Training</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#computing-features-that-can-learn-hamiltonian-targets">Computing Features that can Learn Hamiltonian Targets</a></li>
+<li><a class="reference internal" href="#prepare-dataloaders">Prepare Dataloaders</a></li>
+<li><a class="reference internal" href="#prepare-training">Prepare Training</a></li>
+<li><a class="reference internal" href="#training-indirect-learning-of-the-mo-energies">Training: Indirect learning of the MO energies</a></li>
+<li><a class="reference internal" href="#plot-loss">Plot Loss</a></li>
+<li><a class="reference internal" href="#parity-plot">Parity Plot</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#example-of-targeting-multiple-properties">2. Example of Targeting Multiple Properties</a><ul>
+<li><a class="reference internal" href="#get-data-and-prepare-data-set">Get Data and Prepare Data Set</a></li>
+<li><a class="reference internal" href="#id2">Set parameters for training</a></li>
+<li><a class="reference internal" href="#create-datasets">Create Datasets</a></li>
+<li><a class="reference internal" href="#compute-features">Compute Features</a></li>
+<li><a class="reference internal" href="#id3">Prepare training</a></li>
+<li><a class="reference internal" href="#training-parameters-and-training">Training parameters and training</a></li>
+<li><a class="reference internal" href="#evaluating-the-trained-model">Evaluating the trained model</a></li>
+<li><a class="reference internal" href="#id4">Plot loss</a></li>
+<li><a class="reference internal" href="#id5">Parity plot</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script data-domain="atomistic-cookbook.org" defer="defer" src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"></script>
+    <script src="../../_static/all-examples-data.js?v=01c87ff6"></script>
+    <script src="../../_static/daily-recipe.js?v=b5e71911"></script>
+    </body>
+</html>

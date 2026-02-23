@@ -1,0 +1,1358 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="search" title="Search" href="../../search.html"><link rel="next" title="Atomistic Water Model for Molecular Dynamics" href="../water-model/water-model.html"><link rel="prev" title="List of all recipes" href="../../all-examples.html">
+        <link rel="canonical" href="https://atomistic-cookbook.org/examples/dos-align/dos-align.html">
+        <link rel="prefetch" href="../../_static/cookbook-icon.svg" as="image">
+
+    <link rel="shortcut icon" href="../../_static/cookbook-icon.png"><!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>A ML model for the electron density of states - The Atomistic Cookbook</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/cookbook.css?v=d86cfb60" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">The Atomistic Cookbook</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/cookbook-icon.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">The Atomistic Cookbook</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../topics/index.html">Recipes grouped by topic</a><input aria-label="Toggle navigation of Recipes grouped by topic" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/sampling.html">Statistical sampling and dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/analysis.html">Analysis and post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/ml-models.html">Machine learning models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/universal.html">Universal ML models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/nqes.html">Nuclear quantum effects</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../software/index.html">Recipes grouped by software used</a><input aria-label="Toggle navigation of Recipes grouped by software used" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../software/chemiscope.html">chemiscope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/cp2k.html">cp2k</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/eon.html">eon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/featomic.html">featomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/gromacs.html">GROMACS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/i-pi.html">i-PI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/lammps.html">LAMMPS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/metatensor.html">metatensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/plumed.html">PLUMED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/scikit-matter.html">scikit-matter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/torch-pme.html">torch-pme</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../all-examples.html">List of all recipes</a><input aria-label="Toggle navigation of List of all recipes" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">A ML model for the electron density of states</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-model/water-model.html">Atomistic Water Model for Molecular Dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../batch-cp2k/reference-trajectory.html">Batch run of CP2K calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../shiftml/shiftml-example.html">Computing NMR shielding tensors using ShiftML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft-nc.html">Conservative fine-tuning for a PET model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermostats/thermostats.html">Constant-temperature MD and thermostats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../polarizability/polarizability.html">Equivariant linear model for polarizability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../learn-tensors-with-mcov/learn-tensors-with-mcov.html">Equivariant model for tensorial properties based on scalar features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../eon-pet-neb/eon-pet-neb.html">Finding Reaction Paths with eOn and a Metatomic Potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft.html">Fine-tuning the PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../roy-gch/roy-gch.html">Generalized Convex Hull construction for the polymorphs of ROY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hamiltonian-qm7/hamiltonian-qm7.html">Hamiltonian Learning for Molecules with Indirect Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../torchpme/torchpme_learning.html">Learning Capabilities with torchpme</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lpr/lpr.html">Local Prediction Rigidity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lode-linear/lode-linear.html">Long-distance Equivariants: a tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flashmd/flashmd-demo.html">Long-stride trajectories with a universal FlashMD model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-nc/pet-mad-nc.html">MD using direct-force predictions with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metatomic-plumed/metatomic-plumed.html">ML collective variables in PLUMED with metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-mts-rpc/mts-rpc.html">Multiple time stepping and ring-polymer contraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../gaas-map/gaas-map.html">PCA/PCovR Visualization of a training dataset for a potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-metad/pi-metad.html">Path integral metadynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../path-integrals/path-integrals.html">Path integral molecular dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../periodic-hamiltonian/periodic-hamiltonian.html">Periodic Hamiltonian learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../heat-capacity/heat-capacity.html">Quantum heat capacity of water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ring-polymer-instanton/rpi-rates.html">Ring Polymer Instanton Rate Theory: Tunneling Rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rotate-equivariants/rotate-equivariants.html">Rotating equivariants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sample-selection/sample-selection.html">Sample and Feature Selection with FPS and CUR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad/pet-mad.html">The PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-uq/pet-mad-uq.html">Uncertainty Quantification with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-pulsed/water-pulsed.html">Water orientation in a pulsed electric field</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../downloading.html">Downloading and running the recipes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing a recipe</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-examples-dos-align-dos-align-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="a-ml-model-for-the-electron-density-of-states">
+<span id="sphx-glr-examples-dos-align-dos-align-py"></span><h1>A ML model for the electron density of states<a class="headerlink" href="#a-ml-model-for-the-electron-density-of-states" title="Link to this heading">¶</a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Authors<span class="colon">:</span></dt>
+<dd class="field-odd"><p>How Wei Bin <a class="reference external" href="https://github.com/HowWeiBin/">&#64;HowWeiBin</a></p>
+</dd>
+</dl>
+<p>This tutorial would go through the entire machine learning framework for the electronic
+density of states (DOS). It will cover the construction of the DOS and SOAP
+descriptors from ase Atoms and eigenenergy results. A simple neural network will
+then be constructed and the model parameters, along with the energy reference will be
+optimized during training. A total of three energy reference will be used, the average
+Hartree potential, the Fermi level, and an optimized energy reference starting from
+the Fermi level energy reference. The performance of each model is then compared.</p>
+<p>First, lets begin by importing the necessary packages and helper functions</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">zipfile</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">ase</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ase.io</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">featomic</span><span class="w"> </span><span class="kn">import</span> <span class="n">SoapPowerSpectrum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.interpolate</span><span class="w"> </span><span class="kn">import</span> <span class="n">CubicHermiteSpline</span><span class="p">,</span> <span class="n">interp1d</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">brentq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">BatchSampler</span><span class="p">,</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">RandomSampler</span>
+</pre></div>
+</div>
+<section id="step-0-load-structures-and-eigenenergies">
+<h2>Step 0: Load Structures and Eigenenergies<a class="headerlink" href="#step-0-load-structures-and-eigenenergies" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Downloading and Extracting Data</p></li>
+<li><p>Loading Data</p></li>
+<li><p>Find range of eigenenergies</p></li>
+</ol>
+<p>We take a small subset of 104 structures in the Si dataset from <cite>Bartok et al.,
+2018 &lt;https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.041048&gt;</cite>.
+Each structure in the dataset contains two atoms.</p>
+<section id="downloading-and-extracting-data">
+<h3>1) Downloading and Extracting Data<a class="headerlink" href="#downloading-and-extracting-data" title="Link to this heading">¶</a></h3>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;dataset.zip&quot;</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://github.com/HowWeiBin/datasets/archive/refs/tags/Silicon-Diamonds.zip&quot;</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="s2">&quot;./dataset.zip&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">zip_ref</span><span class="p">:</span>
+    <span class="n">zip_ref</span><span class="o">.</span><span class="n">extractall</span><span class="p">(</span><span class="s2">&quot;./&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="loading-data">
+<h3>2) Loading Data<a class="headerlink" href="#loading-data" title="Link to this heading">¶</a></h3>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">structures</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;./datasets-Silicon-Diamonds/diamonds.xyz&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">)</span>
+<span class="n">n_structures</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">structures</span><span class="p">)</span>
+<span class="n">n_atoms</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">structures</span><span class="p">])</span>
+<span class="n">eigenenergies</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;./datasets-Silicon-Diamonds/diamond_energies.pt&quot;</span><span class="p">)</span>
+<span class="n">k_normalization</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
+    <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">eigenenergies</span><span class="p">]</span>
+<span class="p">)</span>  <span class="c1"># Calculates number of kpoints sampled per structure</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total number of structures: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">structures</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Total number of structures: 104
+</pre></div>
+</div>
+</section>
+<section id="find-range-of-eigenenergies">
+<h3>3) Find range of eigenenergies<a class="headerlink" href="#find-range-of-eigenenergies" title="Link to this heading">¶</a></h3>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Process eigenenergies to flattened torch tensors</span>
+
+<span class="n">total_eigenenergies</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">eigenenergies</span><span class="p">]</span>
+
+<span class="c1"># Get lowest and highest value of eigenenergies to know the range of eigenenergies</span>
+
+<span class="n">all_eigenenergies</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">total_eigenenergies</span><span class="p">)</span>
+<span class="n">minE</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">all_eigenenergies</span><span class="p">)</span>
+<span class="n">maxE</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">all_eigenenergies</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The lowest eigenenergy in the dataset is </span><span class="si">{</span><span class="n">minE</span><span class="si">:</span><span class="s2">.3</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The highest eigenenergy in the dataset is </span><span class="si">{</span><span class="n">maxE</span><span class="si">:</span><span class="s2">.3</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The lowest eigenenergy in the dataset is -20.5
+The highest eigenenergy in the dataset is 8.65
+</pre></div>
+</div>
+</section>
+</section>
+<section id="step-1-constructing-the-dos-with-different-energy-references">
+<h2>Step 1: Constructing the DOS with different energy references<a class="headerlink" href="#step-1-constructing-the-dos-with-different-energy-references" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Construct the DOS using the original reference</p></li>
+<li><p>Calculate the Fermi level from the DOS</p></li>
+<li><p>Build a set of eigenenergies, with the energy reference set to the fermi level</p></li>
+<li><p>Truncate the DOS energy window so that the DOS is well-defined at each point</p></li>
+<li><p>Construct the DOS in the truncated energy window under both references</p></li>
+<li><p>Construct Splines for the DOS to facilitate interpolation during model training</p></li>
+</ol>
+<hr class="docutils" />
+<section id="construct-the-dos-using-the-original-reference">
+<h3>1) Construct the DOS using the original reference<a class="headerlink" href="#construct-the-dos-using-the-original-reference" title="Link to this heading">¶</a></h3>
+<p>The DOS will first be constructed from the full set of eigenenergies to
+determine the Fermi level of each structure. The original reference is the
+Average Hartree Potential in this example.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># To ensure that all the eigenenergies are fully represented after</span>
+<span class="c1"># gaussian broadening, the energy axis of the DOS extends</span>
+<span class="c1"># 3eV wider than the range of values for the eigenenergies</span>
+<span class="n">energy_lower_bound</span> <span class="o">=</span> <span class="n">minE</span> <span class="o">-</span> <span class="mf">1.5</span>
+<span class="n">energy_upper_bound</span> <span class="o">=</span> <span class="n">maxE</span> <span class="o">+</span> <span class="mf">1.5</span>
+
+<span class="c1"># Gaussian Smearing for the eDOS, 0.3eV is the appropriate value for this dataset</span>
+
+<span class="n">sigma</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.3</span><span class="p">)</span>
+<span class="n">energy_interval</span> <span class="o">=</span> <span class="mf">0.05</span>
+<span class="c1"># energy axis, with a grid interval of 0.05 eV</span>
+
+<span class="n">x_dos</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">energy_lower_bound</span><span class="p">,</span> <span class="n">energy_upper_bound</span><span class="p">,</span> <span class="n">energy_interval</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;The energy axis ranges from </span><span class="si">{</span><span class="n">energy_lower_bound</span><span class="si">:</span><span class="s2">.3</span><span class="si">}</span><span class="s2"> to </span><span class="se">\</span>
+<span class="si">{</span><span class="n">energy_upper_bound</span><span class="si">:</span><span class="s2">.3</span><span class="si">}</span><span class="s2">, consisting of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">x_dos</span><span class="p">)</span><span class="si">}</span><span class="s2"> grid points&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># normalization factor for each DOS, factor of 2 is included</span>
+<span class="c1"># because each eigenenergy can be occupied by 2 electrons</span>
+
+<span class="n">normalization</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span>
+    <span class="mi">1</span> <span class="o">/</span> <span class="n">torch</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_atoms</span> <span class="o">/</span> <span class="n">k_normalization</span>
+<span class="p">)</span>
+
+<span class="n">total_edos</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">structure_eigenenergies</span> <span class="ow">in</span> <span class="n">total_eigenenergies</span><span class="p">:</span>
+    <span class="n">e_dos</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+        <span class="c1"># Builds a gaussian on each eigenenergy</span>
+        <span class="c1"># and calculates the value on each grid point</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">((</span><span class="n">x_dos</span> <span class="o">-</span> <span class="n">structure_eigenenergies</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="n">sigma</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span>
+        <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">total_edos</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e_dos</span><span class="p">)</span>
+
+<span class="n">total_edos</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">total_edos</span><span class="p">)</span>
+<span class="n">total_edos</span> <span class="o">=</span> <span class="p">(</span><span class="n">total_edos</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">normalization</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The final shape of all the DOS in the dataset is: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">total_edos</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The energy axis ranges from -22.0 to 10.1, consisting of 644 grid points
+The final shape of all the DOS in the dataset is: [104, 644]
+</pre></div>
+</div>
+</section>
+<section id="calculate-the-fermi-level-from-the-dos">
+<h3>2) Calculate the Fermi level from the DOS<a class="headerlink" href="#calculate-the-fermi-level-from-the-dos" title="Link to this heading">¶</a></h3>
+<p>Now we integration the DOS, and then use cubic interpolation and brentq
+to calculate the fermi level. Since only the 4 valence electrons in Silicon
+are represented in this energy range, we take the point where the DOS integrates
+to 4 as the fermi level.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fermi_levels</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">total_i_edos</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cumulative_trapezoid</span><span class="p">(</span>
+    <span class="n">total_edos</span><span class="p">,</span> <span class="n">x_dos</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+<span class="p">)</span>  <span class="c1"># Integrate the DOS along the energy axis</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">total_i_edos</span><span class="p">:</span>
+    <span class="n">interpolated</span> <span class="o">=</span> <span class="n">interp1d</span><span class="p">(</span>
+        <span class="n">x_dos</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;cubic&quot;</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">assume_sorted</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>  <span class="c1"># We use i-4 because Silicon has 4 electrons in this energy range</span>
+    <span class="n">Ef</span> <span class="o">=</span> <span class="n">brentq</span><span class="p">(</span>
+        <span class="n">interpolated</span><span class="p">,</span> <span class="n">x_dos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">x_dos</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.1</span>
+    <span class="p">)</span>  <span class="c1"># Fermi Level is the point where the (integrated DOS - 4) = 0</span>
+    <span class="c1"># 0.1 is added and subtracted to prevent brentq from going out of range</span>
+    <span class="n">fermi_levels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Ef</span><span class="p">)</span>
+<span class="n">fermi_levels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">fermi_levels</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="build-a-set-of-eigenenergies-with-the-energy-reference-set-to-the-fermi-level">
+<h3>3) Build a set of eigenenergies, with the energy reference set to the fermi level<a class="headerlink" href="#build-a-set-of-eigenenergies-with-the-energy-reference-set-to-the-fermi-level" title="Link to this heading">¶</a></h3>
+<p>Using the fermi levels, we are now able to change the energy reference
+of the eigenenergies to the fermi level</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">total_eigenenergies_Ef</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">energies</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">total_eigenenergies</span><span class="p">):</span>
+    <span class="n">total_eigenenergies_Ef</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">energies</span> <span class="o">-</span> <span class="n">fermi_levels</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+
+<span class="n">all_eigenenergies_Ef</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">total_eigenenergies_Ef</span><span class="p">)</span>
+
+<span class="n">minE_Ef</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">all_eigenenergies_Ef</span><span class="p">)</span>
+<span class="n">maxE_Ef</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">all_eigenenergies_Ef</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The lowest eigenenergy using the fermi level energy reference is </span><span class="si">{</span><span class="n">minE_Ef</span><span class="si">:</span><span class="s2">.3</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The highest eigenenergy using the fermi level energy reference is </span><span class="si">{</span><span class="n">maxE_Ef</span><span class="si">:</span><span class="s2">.3</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The lowest eigenenergy using the fermi level energy reference is -13.8
+The highest eigenenergy using the fermi level energy reference is 14.9
+</pre></div>
+</div>
+</section>
+<section id="truncate-the-dos-energy-window-so-that-the-dos-is-well-defined-at-each-point">
+<h3>4) Truncate the DOS energy window so that the DOS is well-defined at each point<a class="headerlink" href="#truncate-the-dos-energy-window-so-that-the-dos-is-well-defined-at-each-point" title="Link to this heading">¶</a></h3>
+<p>With the fermi levels, we can also truncate the energy window for DOS prediction.
+In this example, we truncate the energy window such that it is 3eV above
+the highest Fermi level in the dataset.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># For the Average Hartree Potential energy reference</span>
+<span class="n">x_dos_H</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">minE</span> <span class="o">-</span> <span class="mf">1.5</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">fermi_levels</span><span class="p">)</span> <span class="o">+</span> <span class="mi">3</span><span class="p">,</span> <span class="n">energy_interval</span><span class="p">)</span>
+
+<span class="c1"># For the Fermi Level Energy Reference, all the Fermi levels in the dataset is 0eV</span>
+<span class="n">x_dos_Ef</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">minE_Ef</span> <span class="o">-</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">energy_interval</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="construct-the-dos-in-the-truncated-energy-window-under-both-references">
+<h3>5) Construct the DOS in the truncated energy window under both references<a class="headerlink" href="#construct-the-dos-in-the-truncated-energy-window-under-both-references" title="Link to this heading">¶</a></h3>
+<p>Here we construct 2 different targets where they differ in the energy reference
+chosen. These targets will then be treated as different datasets for the model
+to learn on.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># For the Average Hartree Potential energy reference</span>
+
+<span class="n">total_edos_H</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">structure_eigenenergies_H</span> <span class="ow">in</span> <span class="n">total_eigenenergies</span><span class="p">:</span>
+    <span class="n">e_dos</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span>
+            <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">((</span><span class="n">x_dos_H</span> <span class="o">-</span> <span class="n">structure_eigenenergies_H</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="n">sigma</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="p">),</span>
+        <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">total_edos_H</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e_dos</span><span class="p">)</span>
+
+<span class="n">total_edos_H</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">total_edos_H</span><span class="p">)</span>
+<span class="n">total_edos_H</span> <span class="o">=</span> <span class="p">(</span><span class="n">total_edos_H</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">normalization</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+
+<span class="c1"># For the Fermi Level Energy Reference</span>
+
+<span class="n">total_edos_Ef</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">structure_eigenenergies_Ef</span> <span class="ow">in</span> <span class="n">total_eigenenergies_Ef</span><span class="p">:</span>
+    <span class="n">e_dos</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span>
+            <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">((</span><span class="n">x_dos_Ef</span> <span class="o">-</span> <span class="n">structure_eigenenergies_Ef</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="n">sigma</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="p">),</span>
+        <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">total_edos_Ef</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e_dos</span><span class="p">)</span>
+
+<span class="n">total_edos_Ef</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">total_edos_Ef</span><span class="p">)</span>
+<span class="n">total_edos_Ef</span> <span class="o">=</span> <span class="p">(</span><span class="n">total_edos_Ef</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">normalization</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+</pre></div>
+</div>
+</section>
+<section id="construct-splines-for-the-dos-to-facilitate-interpolation-during-model-training">
+<h3>6) Construct Splines for the DOS to facilitate interpolation during model training<a class="headerlink" href="#construct-splines-for-the-dos-to-facilitate-interpolation-during-model-training" title="Link to this heading">¶</a></h3>
+<p>Building Cubic Hermite Splines on the DOS on the truncated energy window
+to facilitate interpolation during training. Cubic Hermite Splines takes
+in information on the value and derivative of a function at a point to build splines.
+Thus, we will have to compute both the value and derivative at each spline position</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Functions to compute the value and derivative of the DOS at each energy value, x</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">edos_value</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">eigenenergies</span><span class="p">,</span> <span class="n">normalization</span><span class="p">):</span>
+    <span class="n">e_dos_E</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">eigenenergies</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="n">sigma</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span>
+        <span class="p">)</span>
+        <span class="o">*</span> <span class="n">normalization</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">e_dos_E</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">edos_derivative</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">eigenenergies</span><span class="p">,</span> <span class="n">normalization</span><span class="p">):</span>
+    <span class="n">dfn_dos_E</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">eigenenergies</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="n">sigma</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">eigenenergies</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="n">sigma</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span>
+            <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">*</span> <span class="n">normalization</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dfn_dos_E</span>
+
+
+<span class="n">total_splines_H</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="c1"># the splines have a higher energy range in case the shift is high</span>
+<span class="n">spline_positions_H</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">minE</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">fermi_levels</span><span class="p">)</span> <span class="o">+</span> <span class="mi">6</span><span class="p">,</span> <span class="n">energy_interval</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">structure_eigenenergies_H</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">total_eigenenergies</span><span class="p">):</span>
+    <span class="n">e_dos_H</span> <span class="o">=</span> <span class="n">edos_value</span><span class="p">(</span>
+        <span class="n">spline_positions_H</span><span class="p">,</span> <span class="n">structure_eigenenergies_H</span><span class="p">,</span> <span class="n">normalization</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">e_dos_H_grad</span> <span class="o">=</span> <span class="n">edos_derivative</span><span class="p">(</span>
+        <span class="n">spline_positions_H</span><span class="p">,</span> <span class="n">structure_eigenenergies_H</span><span class="p">,</span> <span class="n">normalization</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">spliner</span> <span class="o">=</span> <span class="n">CubicHermiteSpline</span><span class="p">(</span><span class="n">spline_positions_H</span><span class="p">,</span> <span class="n">e_dos_H</span><span class="p">,</span> <span class="n">e_dos_H_grad</span><span class="p">)</span>
+    <span class="n">total_splines_H</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">spliner</span><span class="o">.</span><span class="n">c</span><span class="p">))</span>
+
+<span class="n">total_splines_H</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">total_splines_H</span><span class="p">)</span>
+
+<span class="n">total_splines_Ef</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">spline_positions_Ef</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">minE_Ef</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="n">energy_interval</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">structure_eigenenergies_Ef</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">total_eigenenergies_Ef</span><span class="p">):</span>
+    <span class="n">e_dos_Ef</span> <span class="o">=</span> <span class="n">edos_value</span><span class="p">(</span>
+        <span class="n">spline_positions_Ef</span><span class="p">,</span> <span class="n">structure_eigenenergies_Ef</span><span class="p">,</span> <span class="n">normalization</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">e_dos_Ef_grad</span> <span class="o">=</span> <span class="n">edos_derivative</span><span class="p">(</span>
+        <span class="n">spline_positions_Ef</span><span class="p">,</span> <span class="n">structure_eigenenergies_Ef</span><span class="p">,</span> <span class="n">normalization</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">spliner</span> <span class="o">=</span> <span class="n">CubicHermiteSpline</span><span class="p">(</span><span class="n">spline_positions_Ef</span><span class="p">,</span> <span class="n">e_dos_Ef</span><span class="p">,</span> <span class="n">e_dos_Ef_grad</span><span class="p">)</span>
+    <span class="n">total_splines_Ef</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">spliner</span><span class="o">.</span><span class="n">c</span><span class="p">))</span>
+
+<span class="n">total_splines_Ef</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">total_splines_Ef</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We have stored the splines coefficients (spliner.c) as torch tensors,
+as such as we will need to write a function to evaluate the DOS from
+the splines positions and coefficients.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">evaluate_spline</span><span class="p">(</span><span class="n">spline_coefs</span><span class="p">,</span> <span class="n">spline_positions</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    spline_coefs: shape of (n x 4 x spline_positions)</span>
+
+<span class="sd">    return value: shape of (n x x)</span>
+
+<span class="sd">    x : shape of (n x n_points)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">interval</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">round</span><span class="p">(</span>
+        <span class="n">spline_positions</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">spline_positions</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">4</span>
+    <span class="p">)</span>  <span class="c1"># get spline grid intervals</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="n">spline_positions</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">max</span><span class="o">=</span><span class="n">spline_positions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.0005</span>
+    <span class="p">)</span>  <span class="c1"># restrict x to fall within the spline interval</span>
+    <span class="c1"># 0.0005 is subtracted to combat errors arising from precision</span>
+    <span class="n">indexes</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">spline_positions</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">interval</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>  <span class="c1"># Obtain the index for the appropriate spline coefficients</span>
+    <span class="n">expanded_index</span> <span class="o">=</span> <span class="n">indexes</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">x_1</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">spline_positions</span><span class="p">[</span><span class="n">indexes</span><span class="p">]</span>
+    <span class="n">x_2</span> <span class="o">=</span> <span class="n">x_1</span> <span class="o">*</span> <span class="n">x_1</span>
+    <span class="n">x_3</span> <span class="o">=</span> <span class="n">x_2</span> <span class="o">*</span> <span class="n">x_1</span>
+    <span class="n">x_0</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">x_1</span><span class="p">)</span>
+    <span class="n">x_powers</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">x_3</span><span class="p">,</span> <span class="n">x_2</span><span class="p">,</span> <span class="n">x_1</span><span class="p">,</span> <span class="n">x_0</span><span class="p">])</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="n">x_powers</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">spline_coefs</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">expanded_index</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">value</span>  <span class="c1"># returns the value of the DOS at the energy positions, x.</span>
+</pre></div>
+</div>
+<p>Lets look at the accuracy of the splines.
+Test 1: Ability to reproduce the correct values at the default x_dos positions</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">shifts</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_structures</span><span class="p">)</span>
+<span class="n">x_dos_splines</span> <span class="o">=</span> <span class="n">x_dos_H</span> <span class="o">+</span> <span class="n">shifts</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">spline_dos_H</span> <span class="o">=</span> <span class="n">evaluate_spline</span><span class="p">(</span><span class="n">total_splines_H</span><span class="p">,</span> <span class="n">spline_positions_H</span><span class="p">,</span> <span class="n">x_dos_splines</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_dos_H</span><span class="p">,</span> <span class="n">total_edos_H</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;True DOS&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_dos_H</span><span class="p">,</span> <span class="n">spline_dos_H</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Spline DOS&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Energy [eV]&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;DOS&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Both lines lie on each other&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_dos-align_001.png" srcset="../../_images/sphx_glr_dos-align_001.png" alt="dos align" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Both lines lie on each other
+</pre></div>
+</div>
+<p>Test 2: Ability to reproduce the correct values at the shifted x_dos positions</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">shifts</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_structures</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.3</span>
+<span class="n">x_dos_splines</span> <span class="o">=</span> <span class="n">x_dos_Ef</span> <span class="o">+</span> <span class="n">shifts</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">spline_dos_Ef</span> <span class="o">=</span> <span class="n">evaluate_spline</span><span class="p">(</span><span class="n">total_splines_Ef</span><span class="p">,</span> <span class="n">spline_positions_Ef</span><span class="p">,</span> <span class="n">x_dos_splines</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_dos_Ef</span><span class="p">,</span> <span class="n">total_edos_Ef</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;True DOS&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_dos_Ef</span><span class="p">,</span> <span class="n">spline_dos_Ef</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Spline DOS&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Energy [eV]&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;DOS&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Both spectras look very similar&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_dos-align_002.png" srcset="../../_images/sphx_glr_dos-align_002.png" alt="dos align" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Both spectras look very similar
+</pre></div>
+</div>
+</section>
+</section>
+<section id="step-2-compute-soap-power-spectrum-for-the-dataset">
+<h2>Step 2: Compute SOAP power spectrum for the dataset<a class="headerlink" href="#step-2-compute-soap-power-spectrum-for-the-dataset" title="Link to this heading">¶</a></h2>
+<p>We first define the hyperparameters to compute the
+SOAP power spectrum using featomic.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">HYPER_PARAMETERS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;cutoff&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span> <span class="s2">&quot;smoothing&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Step&quot;</span><span class="p">}},</span>
+    <span class="s2">&quot;density&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Gaussian&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mf">0.45</span><span class="p">,</span>
+        <span class="s2">&quot;scaling&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Willatt2018&quot;</span><span class="p">,</span> <span class="s2">&quot;exponent&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;rate&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;basis&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;TensorProduct&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;max_angular&quot;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+        <span class="s2">&quot;radial&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Gto&quot;</span><span class="p">,</span> <span class="s2">&quot;max_radial&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>We feed the Hyperparameters into featomic to compute the SOAP Power spectrum</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">calculator</span> <span class="o">=</span> <span class="n">SoapPowerSpectrum</span><span class="p">(</span><span class="o">**</span><span class="n">HYPER_PARAMETERS</span><span class="p">)</span>
+<span class="n">R_total_soap</span> <span class="o">=</span> <span class="n">calculator</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">structures</span><span class="p">)</span>
+<span class="c1"># Transform the tensormap to a single block containing a dense representation</span>
+<span class="n">R_total_soap</span><span class="o">.</span><span class="n">keys_to_samples</span><span class="p">(</span><span class="s2">&quot;center_type&quot;</span><span class="p">)</span>
+<span class="n">R_total_soap</span><span class="o">.</span><span class="n">keys_to_properties</span><span class="p">([</span><span class="s2">&quot;neighbor_1_type&quot;</span><span class="p">,</span> <span class="s2">&quot;neighbor_2_type&quot;</span><span class="p">])</span>
+
+<span class="c1"># Now we extract the data tensor from the single block</span>
+<span class="n">total_atom_soap</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">structure_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_structures</span><span class="p">):</span>
+    <span class="n">a_i</span> <span class="o">=</span> <span class="n">R_total_soap</span><span class="o">.</span><span class="n">block</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">samples</span><span class="p">[</span><span class="s2">&quot;system&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">structure_i</span>
+    <span class="n">total_atom_soap</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">R_total_soap</span><span class="o">.</span><span class="n">block</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">a_i</span><span class="p">,</span> <span class="p">:]))</span>
+
+<span class="n">total_soap</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">total_atom_soap</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="step-3-building-a-simple-mlp-model">
+<h2>Step 3: Building a Simple MLP Model<a class="headerlink" href="#step-3-building-a-simple-mlp-model" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Split the data into Training, Validation and Test</p></li>
+<li><p>Define the dataloader and the Model Architecture</p></li>
+<li><p>Define relevant loss functions for training and inference</p></li>
+<li><p>Define the training loop</p></li>
+<li><p>Evaluate the model</p></li>
+</ol>
+<hr class="docutils" />
+<section id="split-the-data-into-training-validation-and-test">
+<h3>1) Split the data into Training, Validation and Test<a class="headerlink" href="#split-the-data-into-training-validation-and-test" title="Link to this heading">¶</a></h3>
+<p>We will first split the data in a 7:1:2 manner, corresponding to train, val and test.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">train_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_structures</span><span class="p">)</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">train_index</span><span class="p">)</span>
+<span class="n">test_mark</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.8</span> <span class="o">*</span> <span class="n">n_structures</span><span class="p">)</span>
+<span class="n">val_mark</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.7</span> <span class="o">*</span> <span class="n">n_structures</span><span class="p">)</span>
+<span class="n">test_index</span> <span class="o">=</span> <span class="n">train_index</span><span class="p">[</span><span class="n">test_mark</span><span class="p">:]</span>
+<span class="n">val_index</span> <span class="o">=</span> <span class="n">train_index</span><span class="p">[</span><span class="n">val_mark</span><span class="p">:</span><span class="n">test_mark</span><span class="p">]</span>
+<span class="n">train_index</span> <span class="o">=</span> <span class="n">train_index</span><span class="p">[:</span><span class="n">val_mark</span><span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="define-the-dataloader-and-the-model-architecture">
+<h3>2) Define the dataloader and the Model Architecture<a class="headerlink" href="#define-the-dataloader-and-the-model-architecture" title="Link to this heading">¶</a></h3>
+<p>We will now build a dataloader and dataset to facilitate training the model batchwise</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">generate_atomstructure_index</span><span class="p">(</span><span class="n">n_atoms_per_structure</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a sequence of indices for each atom in the structure.</span>
+<span class="sd">    The indices correspond to index of the structure that the atom belongs to</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        n_atoms_per_structure ([array]):</span>
+<span class="sd">        [Array containing the number of atoms each structure contains]</span>
+
+<span class="sd">    Return s:</span>
+<span class="sd">        [tensor]: [Total index, matching atoms to structure]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># n_structures = len(n_atoms_per_structure)</span>
+    <span class="n">total_index</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">n_atoms_per_structure</span><span class="p">):</span>
+        <span class="n">indiv_index</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span> <span class="o">+</span> <span class="n">i</span>
+        <span class="n">total_index</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">indiv_index</span><span class="p">)</span>
+    <span class="n">total_index</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">total_index</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">total_index</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">AtomicDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">n_atoms_per_structure</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="n">features</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_structures</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">n_atoms_per_structure</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_atoms_per_structure</span> <span class="o">=</span> <span class="n">n_atoms_per_structure</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">generate_atomstructure_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_atoms_per_structure</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">n_atoms_per_structure</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_structures</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>  <span class="c1"># If a list of indexes is given</span>
+            <span class="n">feature_indexes</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">idx</span><span class="p">:</span>
+                <span class="n">feature_indexes</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">==</span> <span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">as_tuple</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="n">feature_indexes</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">feature_indexes</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="n">feature_indexes</span><span class="p">],</span>
+                <span class="n">idx</span><span class="p">,</span>
+                <span class="n">generate_atomstructure_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_atoms_per_structure</span><span class="p">[</span><span class="n">idx</span><span class="p">]),</span>
+            <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">feature_indexes</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">==</span> <span class="n">idx</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">as_tuple</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="n">feature_indexes</span><span class="p">],</span>
+                <span class="n">idx</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n_atoms_per_structure</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span>
+            <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">collate</span><span class="p">(</span>
+    <span class="n">batch</span><span class="p">,</span>
+<span class="p">):</span>  <span class="c1"># Defines how to collate the outputs of the __getitem__ function at each batch</span>
+    <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+
+
+<span class="n">x_train</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">total_soap</span><span class="p">[</span><span class="n">train_index</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+<span class="n">total_atomic_soaps</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">total_atom_soap</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+<span class="n">train_features</span> <span class="o">=</span> <span class="n">AtomicDataset</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">n_atoms</span><span class="p">[</span><span class="n">train_index</span><span class="p">])</span>
+<span class="n">full_atomstructure_index</span> <span class="o">=</span> <span class="n">generate_atomstructure_index</span><span class="p">(</span><span class="n">n_atoms</span><span class="p">)</span>
+<span class="c1"># Will be required later to collate atomic predictions into structural predictions</span>
+
+<span class="c1"># Build a Dataloader that samples from the AtomicDataset in random batches</span>
+<span class="n">Sampler</span> <span class="o">=</span> <span class="n">RandomSampler</span><span class="p">(</span><span class="n">train_features</span><span class="p">)</span>
+<span class="n">BSampler</span> <span class="o">=</span> <span class="n">BatchSampler</span><span class="p">(</span><span class="n">Sampler</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">drop_last</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">traindata_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">train_features</span><span class="p">,</span> <span class="n">sampler</span><span class="o">=</span><span class="n">BSampler</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">collate</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We will now define a simple three layer MLP model, consisting of three layers.
+The align keyword is used to indicate that the energy reference will be optimized
+during training. The alignment parameter refers to the adjustments made to the
+initial energy referenced and will be initialized as zeros.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SOAP_NN</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dims</span><span class="p">,</span> <span class="n">L1</span><span class="p">,</span> <span class="n">n_train</span><span class="p">,</span> <span class="n">target_dims</span><span class="p">,</span> <span class="n">align</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SOAP_NN</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_dims</span> <span class="o">=</span> <span class="n">target_dims</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fc1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">input_dims</span><span class="p">,</span> <span class="n">L1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fc2</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">L1</span><span class="p">,</span> <span class="n">target_dims</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">silu</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">SiLU</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">align</span> <span class="o">=</span> <span class="n">align</span>
+        <span class="k">if</span> <span class="n">align</span><span class="p">:</span>
+            <span class="n">initial_alignment</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_train</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">alignment</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">parameter</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">initial_alignment</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fc1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">silu</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fc2</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+</pre></div>
+</div>
+<p>We will use a small network architecture, whereby the input layer corresponds
+to the size of the SOAP features, 448, the intermediate layer corresponds to
+a tenth size of the input layer and the final layer corresponds
+to the number of outputs.</p>
+<p>As a shorthand, the model that optimizes the energy reference during
+training will be called the alignment model</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">n_outputs_H</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_dos_H</span><span class="p">)</span>
+<span class="n">n_outputs_Ef</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_dos_Ef</span><span class="p">)</span>
+
+
+<span class="n">Model_H</span> <span class="o">=</span> <span class="n">SOAP_NN</span><span class="p">(</span>
+    <span class="n">x_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+    <span class="n">x_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="nb">len</span><span class="p">(</span><span class="n">train_index</span><span class="p">),</span>
+    <span class="n">n_outputs_H</span><span class="p">,</span>
+    <span class="n">align</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">Model_Ef</span> <span class="o">=</span> <span class="n">SOAP_NN</span><span class="p">(</span>
+    <span class="n">x_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+    <span class="n">x_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="nb">len</span><span class="p">(</span><span class="n">train_index</span><span class="p">),</span>
+    <span class="n">n_outputs_Ef</span><span class="p">,</span>
+    <span class="n">align</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">Model_Align</span> <span class="o">=</span> <span class="n">SOAP_NN</span><span class="p">(</span>
+    <span class="n">x_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+    <span class="n">x_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="nb">len</span><span class="p">(</span><span class="n">train_index</span><span class="p">),</span>
+    <span class="n">n_outputs_Ef</span><span class="p">,</span>
+    <span class="n">align</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="c1"># The alignment model takes the fermi level energy reference as the starting point</span>
+</pre></div>
+</div>
+</section>
+<section id="define-relevant-loss-functions-for-training-and-inference">
+<h3>3) Define relevant loss functions for training and inference<a class="headerlink" href="#define-relevant-loss-functions-for-training-and-inference" title="Link to this heading">¶</a></h3>
+<p>We will now define some loss functions that will be useful when we implement
+the model training loop later and during model evaluation on the test set.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">t_get_mse</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">xdos</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute mean error between two Density of States.</span>
+<span class="sd">    The mean error is integrated across the entire energy grid</span>
+<span class="sd">    to provide a single value to characterize the error</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        a ([tensor]): [Predicted DOS]</span>
+<span class="sd">        b ([tensor]): [True DOS]</span>
+<span class="sd">        xdos ([tensor], optional): [Energy axis of DOS]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        [float]: [MSE]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">size</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">mse</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">trapezoid</span><span class="p">((</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">xdos</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mse</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">trapezoid</span><span class="p">((</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">xdos</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">mse</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">t_get_rmse</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">xdos</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute root mean squared error between two Density of States .</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        a ([tensor]): [Predicted DOS]</span>
+<span class="sd">        b ([tensor]): [True DOS]</span>
+<span class="sd">        xdos ([tensor], optional): [Energy axis of DOS]</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: [Occurs if tensor shapes are mismatched]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        [float]: [RMSE or %RMSE]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">size</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">rmse</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">torch</span><span class="o">.</span><span class="n">trapezoid</span><span class="p">((</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">xdos</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">rmse</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">torch</span><span class="o">.</span><span class="n">trapezoid</span><span class="p">((</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">xdos</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">rmse</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">Opt_RMSE_spline</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">xdos</span><span class="p">,</span> <span class="n">target_splines</span><span class="p">,</span> <span class="n">spline_positions</span><span class="p">,</span> <span class="n">n_epochs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluates RMSE on the optimal shift of energy axis.</span>
+<span class="sd">    The optimal shift is found via gradient descent after a gridsearch is performed.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        y_pred ([tensor]): [Prediction/s of DOS]</span>
+<span class="sd">        xdos ([tensor]): [Energy axis]</span>
+<span class="sd">        target_splines ([tensor]): [Contains spline coefficients]</span>
+<span class="sd">        spline_positions ([tensor]): [Contains spline positions]</span>
+<span class="sd">        n_epochs ([int]): [Number of epochs to run for Gradient Descent]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        [rmse([float]), optimal_shift[tensor]]:</span>
+<span class="sd">        [RMSE on optimal shift, the optimal shift itself]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">optim_search_mse</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">offsets</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+    <span class="c1"># Grid-search is first done to reduce number of epochs needed for</span>
+    <span class="c1"># gradient descent, typically 50 epochs will be sufficient</span>
+    <span class="c1"># if searching within 0.1</span>
+    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">offset</span> <span class="ow">in</span> <span class="n">offsets</span><span class="p">:</span>
+            <span class="n">shifts</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">y_pred</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="n">offset</span>
+            <span class="n">shifted_target</span> <span class="o">=</span> <span class="n">evaluate_spline</span><span class="p">(</span>
+                <span class="n">target_splines</span><span class="p">,</span> <span class="n">spline_positions</span><span class="p">,</span> <span class="n">xdos</span> <span class="o">+</span> <span class="n">shifts</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">loss_i</span> <span class="o">=</span> <span class="p">((</span><span class="n">y_pred</span> <span class="o">-</span> <span class="n">shifted_target</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">optim_search_mse</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss_i</span><span class="p">)</span>
+        <span class="n">optim_search_mse</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">optim_search_mse</span><span class="p">)</span>
+        <span class="n">min_index</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">optim_search_mse</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">optimal_offset</span> <span class="o">=</span> <span class="n">offsets</span><span class="p">[</span><span class="n">min_index</span><span class="p">]</span>
+
+    <span class="n">offset</span> <span class="o">=</span> <span class="n">optimal_offset</span>
+
+    <span class="n">shifts</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">parameter</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">offset</span><span class="o">.</span><span class="n">float</span><span class="p">())</span>
+    <span class="n">opt_adam</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">([</span><span class="n">shifts</span><span class="p">],</span> <span class="n">lr</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">)</span>
+    <span class="n">best_error</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">shifts</span><span class="p">))</span> <span class="o">+</span> <span class="mi">100</span>
+    <span class="n">best_shifts</span> <span class="o">=</span> <span class="n">shifts</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_epochs</span><span class="p">):</span>
+        <span class="n">shifted_target</span> <span class="o">=</span> <span class="n">evaluate_spline</span><span class="p">(</span>
+            <span class="n">target_splines</span><span class="p">,</span> <span class="n">spline_positions</span><span class="p">,</span> <span class="n">xdos</span> <span class="o">+</span> <span class="n">shifts</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">closure</span><span class="p">():</span>
+            <span class="n">opt_adam</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+            <span class="n">shifted_target</span> <span class="o">=</span> <span class="n">evaluate_spline</span><span class="p">(</span>
+                <span class="n">target_splines</span><span class="p">,</span> <span class="n">spline_positions</span><span class="p">,</span> <span class="n">xdos</span> <span class="o">+</span> <span class="n">shifts</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">loss_i</span> <span class="o">=</span> <span class="p">((</span><span class="n">y_pred</span> <span class="o">-</span> <span class="n">shifted_target</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="n">loss_i</span><span class="o">.</span><span class="n">backward</span><span class="p">(</span><span class="n">gradient</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">inputs</span><span class="o">=</span><span class="n">shifts</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">loss_i</span>
+
+        <span class="n">opt_adam</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">closure</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="n">each_loss</span> <span class="o">=</span> <span class="p">((</span><span class="n">y_pred</span> <span class="o">-</span> <span class="n">shifted_target</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">each_loss</span> <span class="o">&lt;</span> <span class="n">best_error</span>
+            <span class="n">best_error</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">each_loss</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+            <span class="n">best_shifts</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">shifts</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+
+    <span class="c1"># Evaluate</span>
+
+    <span class="n">optimal_shift</span> <span class="o">=</span> <span class="n">best_shifts</span>
+    <span class="n">shifted_target</span> <span class="o">=</span> <span class="n">evaluate_spline</span><span class="p">(</span>
+        <span class="n">target_splines</span><span class="p">,</span> <span class="n">spline_positions</span><span class="p">,</span> <span class="n">xdos</span> <span class="o">+</span> <span class="n">optimal_shift</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">rmse</span> <span class="o">=</span> <span class="n">t_get_rmse</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">shifted_target</span><span class="p">,</span> <span class="n">xdos</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rmse</span><span class="p">,</span> <span class="n">optimal_shift</span>
+</pre></div>
+</div>
+</section>
+<section id="define-the-training-loop">
+<h3>4) Define the training loop<a class="headerlink" href="#define-the-training-loop" title="Link to this heading">¶</a></h3>
+<p>We will now define the model training loop, for simplicity we will only
+train each model for a fixed number of epochs, learning rate, and batch_size.
+The training and validation error at each epoch will be saved.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">train_model</span><span class="p">(</span><span class="n">model_to_train</span><span class="p">,</span> <span class="n">fixed_DOS</span><span class="p">,</span> <span class="n">structure_splines</span><span class="p">,</span> <span class="n">spline_positions</span><span class="p">,</span> <span class="n">x_dos</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Trains a model for 500 epochs</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model_to_train ([torch.nn.Module]): [ML Model]</span>
+<span class="sd">        fixed_DOS ([tensor]): [Contains the DOS at a fixed energy reference,</span>
+<span class="sd">        useful for models that don&#39;t optimize the energy reference]</span>
+<span class="sd">        structure_splines ([tensor]): [Contains spline coefficients]</span>
+<span class="sd">        spline_positions ([tensor]): [Contains spline positions]</span>
+<span class="sd">        x_dos ([tensor]): [Energy axis for the prediction]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        [train_loss_history([tensor]),</span>
+<span class="sd">        val_loss_history[tensor],</span>
+<span class="sd">        structure_results[tensor]]:</span>
+
+<span class="sd">        [Respective loss histories and final structure predictions]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lr</span> <span class="o">=</span> <span class="mf">1e-2</span>
+    <span class="n">n_epochs</span> <span class="o">=</span> <span class="mi">500</span>
+
+    <span class="n">opt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">model_to_train</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">lr</span><span class="p">)</span>
+
+    <span class="n">train_loss_history</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">val_loss_history</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">_epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_epochs</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">x_data</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">traindata_loader</span><span class="p">:</span>
+            <span class="n">opt</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+            <span class="n">predictions</span> <span class="o">=</span> <span class="n">model_to_train</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">x_data</span><span class="p">)</span>
+            <span class="n">structure_results</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span> <span class="n">model_to_train</span><span class="o">.</span><span class="n">target_dims</span><span class="p">])</span>
+            <span class="c1"># Sum atomic predictions in each structure</span>
+            <span class="n">structure_results</span> <span class="o">=</span> <span class="n">structure_results</span><span class="o">.</span><span class="n">index_add_</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">predictions</span>
+            <span class="p">)</span> <span class="o">/</span> <span class="n">n_atoms</span><span class="p">[</span><span class="n">train_index</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">model_to_train</span><span class="o">.</span><span class="n">align</span><span class="p">:</span>
+                <span class="n">alignment</span> <span class="o">=</span> <span class="n">model_to_train</span><span class="o">.</span><span class="n">alignment</span>
+                <span class="n">alignment</span> <span class="o">=</span> <span class="n">alignment</span> <span class="o">-</span> <span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">alignment</span><span class="p">)</span>
+                <span class="c1"># Enforce that the alignments have a mean of zero since a constant</span>
+                <span class="c1"># value across the dataset is meaningless when optimizing the</span>
+                <span class="c1"># relative energy reference</span>
+                <span class="n">target</span> <span class="o">=</span> <span class="n">evaluate_spline</span><span class="p">(</span>
+                    <span class="n">structure_splines</span><span class="p">[</span><span class="n">train_index</span><span class="p">[</span><span class="n">idx</span><span class="p">]],</span>
+                    <span class="n">spline_positions</span><span class="p">,</span>
+                    <span class="n">x_dos</span> <span class="o">+</span> <span class="n">alignment</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="p">)</span>  <span class="c1"># Shifts the target based on the alignment value</span>
+                <span class="n">pred_loss</span> <span class="o">=</span> <span class="n">t_get_mse</span><span class="p">(</span><span class="n">structure_results</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">x_dos</span><span class="p">)</span>
+                <span class="n">pred_loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">pred_loss</span> <span class="o">=</span> <span class="n">t_get_mse</span><span class="p">(</span>
+                    <span class="n">structure_results</span><span class="p">,</span> <span class="n">fixed_DOS</span><span class="p">[</span><span class="n">train_index</span><span class="p">[</span><span class="n">idx</span><span class="p">]],</span> <span class="n">x_dos</span>
+                <span class="p">)</span>
+                <span class="n">pred_loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+
+            <span class="n">opt</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="n">all_pred</span> <span class="o">=</span> <span class="n">model_to_train</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">total_atomic_soaps</span><span class="o">.</span><span class="n">float</span><span class="p">())</span>
+            <span class="n">structure_results</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">n_structures</span><span class="p">,</span> <span class="n">model_to_train</span><span class="o">.</span><span class="n">target_dims</span><span class="p">])</span>
+            <span class="n">structure_results</span> <span class="o">=</span> <span class="n">structure_results</span><span class="o">.</span><span class="n">index_add_</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span> <span class="n">full_atomstructure_index</span><span class="p">,</span> <span class="n">all_pred</span>
+            <span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">n_atoms</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">model_to_train</span><span class="o">.</span><span class="n">align</span><span class="p">:</span>
+                <span class="c1"># Evaluate model on optimal shift as there is no information</span>
+                <span class="c1"># regarding the shift from the fermi level energy reference</span>
+                <span class="c1"># during inference</span>
+
+                <span class="n">alignment</span> <span class="o">=</span> <span class="n">model_to_train</span><span class="o">.</span><span class="n">alignment</span>
+                <span class="n">alignment</span> <span class="o">=</span> <span class="n">alignment</span> <span class="o">-</span> <span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">alignment</span><span class="p">)</span>
+                <span class="n">target</span> <span class="o">=</span> <span class="n">evaluate_spline</span><span class="p">(</span>
+                    <span class="n">structure_splines</span><span class="p">[</span><span class="n">train_index</span><span class="p">],</span>
+                    <span class="n">spline_positions</span><span class="p">,</span>
+                    <span class="n">x_dos</span> <span class="o">+</span> <span class="n">alignment</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="p">)</span>
+
+                <span class="n">train_loss</span> <span class="o">=</span> <span class="n">t_get_rmse</span><span class="p">(</span><span class="n">structure_results</span><span class="p">[</span><span class="n">train_index</span><span class="p">],</span> <span class="n">target</span><span class="p">,</span> <span class="n">x_dos</span><span class="p">)</span>
+                <span class="n">val_loss</span><span class="p">,</span> <span class="n">val_shifts</span> <span class="o">=</span> <span class="n">Opt_RMSE_spline</span><span class="p">(</span>
+                    <span class="n">structure_results</span><span class="p">[</span><span class="n">val_index</span><span class="p">],</span>
+                    <span class="n">x_dos</span><span class="p">,</span>
+                    <span class="n">structure_splines</span><span class="p">[</span><span class="n">val_index</span><span class="p">],</span>
+                    <span class="n">spline_positions</span><span class="p">,</span>
+                    <span class="mi">50</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">train_loss</span> <span class="o">=</span> <span class="n">t_get_rmse</span><span class="p">(</span>
+                    <span class="n">structure_results</span><span class="p">[</span><span class="n">train_index</span><span class="p">],</span> <span class="n">fixed_DOS</span><span class="p">[</span><span class="n">train_index</span><span class="p">],</span> <span class="n">x_dos</span>
+                <span class="p">)</span>
+                <span class="n">val_loss</span> <span class="o">=</span> <span class="n">t_get_rmse</span><span class="p">(</span>
+                    <span class="n">structure_results</span><span class="p">[</span><span class="n">val_index</span><span class="p">],</span> <span class="n">fixed_DOS</span><span class="p">[</span><span class="n">val_index</span><span class="p">],</span> <span class="n">x_dos</span>
+                <span class="p">)</span>
+
+            <span class="n">train_loss_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">train_loss</span><span class="p">)</span>
+            <span class="n">val_loss_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val_loss</span><span class="p">)</span>
+    <span class="n">train_loss_history</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">train_loss_history</span><span class="p">)</span>
+    <span class="n">val_loss_history</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">val_loss_history</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">train_loss_history</span><span class="p">,</span>
+        <span class="n">val_loss_history</span><span class="p">,</span>
+        <span class="n">structure_results</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="c1"># returns the loss history and the final set of predictions</span>
+</pre></div>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">H_trainloss</span><span class="p">,</span> <span class="n">H_valloss</span><span class="p">,</span> <span class="n">H_predictions</span> <span class="o">=</span> <span class="n">train_model</span><span class="p">(</span>
+    <span class="n">Model_H</span><span class="p">,</span> <span class="n">total_edos_H</span><span class="p">,</span> <span class="n">total_splines_H</span><span class="p">,</span> <span class="n">spline_positions_H</span><span class="p">,</span> <span class="n">x_dos_H</span>
+<span class="p">)</span>
+
+<span class="n">Ef_trainloss</span><span class="p">,</span> <span class="n">Ef_valloss</span><span class="p">,</span> <span class="n">Ef_predictions</span> <span class="o">=</span> <span class="n">train_model</span><span class="p">(</span>
+    <span class="n">Model_Ef</span><span class="p">,</span> <span class="n">total_edos_Ef</span><span class="p">,</span> <span class="n">total_splines_Ef</span><span class="p">,</span> <span class="n">spline_positions_Ef</span><span class="p">,</span> <span class="n">x_dos_Ef</span>
+<span class="p">)</span>
+
+<span class="n">Align_trainloss</span><span class="p">,</span> <span class="n">Align_valloss</span><span class="p">,</span> <span class="n">Align_predictions</span> <span class="o">=</span> <span class="n">train_model</span><span class="p">(</span>
+    <span class="n">Model_Align</span><span class="p">,</span> <span class="n">total_edos_Ef</span><span class="p">,</span> <span class="n">total_splines_Ef</span><span class="p">,</span> <span class="n">spline_positions_Ef</span><span class="p">,</span> <span class="n">x_dos_Ef</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Lets plot the train loss histories to compare their learning behaviour</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">epochs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
+
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">epochs</span><span class="p">,</span> <span class="n">H_trainloss</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Avg Hartree Potential&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">epochs</span><span class="p">,</span> <span class="n">Ef_trainloss</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Fermi Level&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">epochs</span><span class="p">,</span> <span class="n">Align_trainloss</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Optimized Reference&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Epochs&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;RMSE&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Train Loss vs Epoch&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_dos-align_003.png" srcset="../../_images/sphx_glr_dos-align_003.png" alt="Train Loss vs Epoch" class = "sphx-glr-single-img"/><p>Lets plot the val loss histories to compare their learning behaviour</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">epochs</span><span class="p">,</span> <span class="n">H_valloss</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Avg Hartree Potential&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">epochs</span><span class="p">,</span> <span class="n">Ef_valloss</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Fermi Level&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">epochs</span><span class="p">,</span> <span class="n">Align_valloss</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Optimized Reference&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Epochs&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;RMSE&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Validation Loss vs Epoch&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_dos-align_004.png" srcset="../../_images/sphx_glr_dos-align_004.png" alt="Validation Loss vs Epoch" class = "sphx-glr-single-img"/></section>
+<section id="evaluate-the-model">
+<h3>5) Evaluate the model<a class="headerlink" href="#evaluate-the-model" title="Link to this heading">¶</a></h3>
+<p>We will now evaluate the model performance on the test set
+based on the model predictions we obtained previously</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">H_testloss</span> <span class="o">=</span> <span class="n">Opt_RMSE_spline</span><span class="p">(</span>
+    <span class="n">H_predictions</span><span class="p">[</span><span class="n">test_index</span><span class="p">],</span>
+    <span class="n">x_dos_H</span><span class="p">,</span>
+    <span class="n">total_splines_H</span><span class="p">[</span><span class="n">test_index</span><span class="p">],</span>
+    <span class="n">spline_positions_H</span><span class="p">,</span>
+    <span class="mi">200</span><span class="p">,</span>
+<span class="p">)</span>  <span class="c1"># We use 200 epochs just so it the error a little bit more converged</span>
+<span class="n">Ef_testloss</span> <span class="o">=</span> <span class="n">Opt_RMSE_spline</span><span class="p">(</span>
+    <span class="n">Ef_predictions</span><span class="p">[</span><span class="n">test_index</span><span class="p">],</span>
+    <span class="n">x_dos_Ef</span><span class="p">,</span>
+    <span class="n">total_splines_Ef</span><span class="p">[</span><span class="n">test_index</span><span class="p">],</span>
+    <span class="n">spline_positions_Ef</span><span class="p">,</span>
+    <span class="mi">200</span><span class="p">,</span>
+<span class="p">)</span>  <span class="c1"># We use 200 epochs just so it the error a little bit more converged</span>
+<span class="n">Align_testloss</span> <span class="o">=</span> <span class="n">Opt_RMSE_spline</span><span class="p">(</span>
+    <span class="n">Align_predictions</span><span class="p">[</span><span class="n">test_index</span><span class="p">],</span>
+    <span class="n">x_dos_Ef</span><span class="p">,</span>
+    <span class="n">total_splines_Ef</span><span class="p">[</span><span class="n">test_index</span><span class="p">],</span>
+    <span class="n">spline_positions_Ef</span><span class="p">,</span>
+    <span class="mi">200</span><span class="p">,</span>
+<span class="p">)</span>  <span class="c1"># We use 200 epochs just so it the error a little bit more converged</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Test RMSE for average Hartree Potential: </span><span class="si">{</span><span class="n">H_testloss</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">:</span><span class="s2">.3</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Test RMSE for Fermi Level: </span><span class="si">{</span><span class="n">Ef_testloss</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">:</span><span class="s2">.3</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Test RMSE for Optimized Reference: </span><span class="si">{</span><span class="n">Align_testloss</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">:</span><span class="s2">.3</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span>
+    <span class="s2">&quot;The difference in effectiveness between the Optimized Reference </span><span class="se">\</span>
+<span class="s2">and the Fermi Level will increase with more epochs&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Test RMSE for average Hartree Potential: 0.0548
+Test RMSE for Fermi Level: 0.0462
+Test RMSE for Optimized Reference: 0.0381
+The difference in effectiveness between the Optimized Reference and the Fermi Level will increase with more epochs
+</pre></div>
+</div>
+<p>Plot Training DOSes at different energy reference to visualize
+the impact of the energy reference. From the plots we can see
+that the optimized energy reference has better alignment of
+common spectral patterns across the dataset</p>
+<hr class="docutils" />
+<p>Average Hartree Energy Reference</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">total_edos_H</span><span class="p">[</span><span class="n">train_index</span><span class="p">]:</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_dos_H</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;C0&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Energy Reference - Average Hartree Potential&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Energy [eV]&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;DOS&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The DOSes, despite looking similar, are offset along the energy axis&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_dos-align_005.png" srcset="../../_images/sphx_glr_dos-align_005.png" alt="Energy Reference - Average Hartree Potential" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The DOSes, despite looking similar, are offset along the energy axis
+</pre></div>
+</div>
+<p>Fermi Level Energy Reference</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">total_edos_Ef</span><span class="p">[</span><span class="n">train_index</span><span class="p">]:</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_dos_Ef</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;C0&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Energy Reference - Fermi Level&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Energy [eV]&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;DOS&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;It is better aligned but still quite some offset&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_dos-align_006.png" srcset="../../_images/sphx_glr_dos-align_006.png" alt="Energy Reference - Fermi Level" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>It is better aligned but still quite some offset
+</pre></div>
+</div>
+<p>Optimized Energy Reference</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">shifts</span> <span class="o">=</span> <span class="n">Model_Align</span><span class="o">.</span><span class="n">alignment</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+<span class="n">shifts</span> <span class="o">=</span> <span class="n">shifts</span> <span class="o">-</span> <span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">shifts</span><span class="p">)</span>
+<span class="n">x_dos_splines</span> <span class="o">=</span> <span class="n">x_dos_Ef</span> <span class="o">+</span> <span class="n">shifts</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">total_edos_align</span> <span class="o">=</span> <span class="n">evaluate_spline</span><span class="p">(</span>
+    <span class="n">total_splines_Ef</span><span class="p">[</span><span class="n">train_index</span><span class="p">],</span> <span class="n">spline_positions_Ef</span><span class="p">,</span> <span class="n">x_dos_splines</span>
+<span class="p">)</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">total_edos_align</span><span class="p">:</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_dos_Ef</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;C0&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Energy Reference - Optimized&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Energy [eV]&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;DOS&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The DOS alignment is better under the optimized energy reference&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The difference will increase with more training epochs&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_dos-align_007.png" srcset="../../_images/sphx_glr_dos-align_007.png" alt="Energy Reference - Optimized" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The DOS alignment is better under the optimized energy reference
+The difference will increase with more training epochs
+</pre></div>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (1 minutes 26.490 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-dos-align-dos-align-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/62b1217b7f64a94ea92cd43a62433b84/dos-align.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">dos-align.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/ecc5d2823a1b00229494ffc2024c524d/dos-align.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">dos-align.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/09625016882c3624ff36e3486ce6c8c2/dos-align.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">recipe:</span> <span class="pre">dos-align.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../water-model/water-model.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Atomistic Water Model for Molecular Dynamics</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../../all-examples.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">List of all recipes</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; BSD 3-Clause License, Copyright (c) 2026, The atomistic cookbook team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">A ML model for the electron density of states</a><ul>
+<li><a class="reference internal" href="#step-0-load-structures-and-eigenenergies">Step 0: Load Structures and Eigenenergies</a><ul>
+<li><a class="reference internal" href="#downloading-and-extracting-data">1) Downloading and Extracting Data</a></li>
+<li><a class="reference internal" href="#loading-data">2) Loading Data</a></li>
+<li><a class="reference internal" href="#find-range-of-eigenenergies">3) Find range of eigenenergies</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#step-1-constructing-the-dos-with-different-energy-references">Step 1: Constructing the DOS with different energy references</a><ul>
+<li><a class="reference internal" href="#construct-the-dos-using-the-original-reference">1) Construct the DOS using the original reference</a></li>
+<li><a class="reference internal" href="#calculate-the-fermi-level-from-the-dos">2) Calculate the Fermi level from the DOS</a></li>
+<li><a class="reference internal" href="#build-a-set-of-eigenenergies-with-the-energy-reference-set-to-the-fermi-level">3) Build a set of eigenenergies, with the energy reference set to the fermi level</a></li>
+<li><a class="reference internal" href="#truncate-the-dos-energy-window-so-that-the-dos-is-well-defined-at-each-point">4) Truncate the DOS energy window so that the DOS is well-defined at each point</a></li>
+<li><a class="reference internal" href="#construct-the-dos-in-the-truncated-energy-window-under-both-references">5) Construct the DOS in the truncated energy window under both references</a></li>
+<li><a class="reference internal" href="#construct-splines-for-the-dos-to-facilitate-interpolation-during-model-training">6) Construct Splines for the DOS to facilitate interpolation during model training</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#step-2-compute-soap-power-spectrum-for-the-dataset">Step 2: Compute SOAP power spectrum for the dataset</a></li>
+<li><a class="reference internal" href="#step-3-building-a-simple-mlp-model">Step 3: Building a Simple MLP Model</a><ul>
+<li><a class="reference internal" href="#split-the-data-into-training-validation-and-test">1) Split the data into Training, Validation and Test</a></li>
+<li><a class="reference internal" href="#define-the-dataloader-and-the-model-architecture">2) Define the dataloader and the Model Architecture</a></li>
+<li><a class="reference internal" href="#define-relevant-loss-functions-for-training-and-inference">3) Define relevant loss functions for training and inference</a></li>
+<li><a class="reference internal" href="#define-the-training-loop">4) Define the training loop</a></li>
+<li><a class="reference internal" href="#evaluate-the-model">5) Evaluate the model</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script data-domain="atomistic-cookbook.org" defer="defer" src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"></script>
+    <script src="../../_static/all-examples-data.js?v=01c87ff6"></script>
+    <script src="../../_static/daily-recipe.js?v=b5e71911"></script>
+    </body>
+</html>

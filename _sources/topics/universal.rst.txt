@@ -1,0 +1,90 @@
+Universal ML models
+===================
+
+This section contains recipes based on "universal" ML models - i.e. models that 
+are trained to make prediction across a a substantial fraction of chemical and 
+structural space.
+
+
+
+.. grid:: 1 2 2 3
+    :gutter: 1 1 2 3
+
+    .. grid-item::
+
+        .. card:: The PET-MAD universal potential
+            :link: ../examples/pet-mad/pet-mad
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/pet-mad/images/thumb/sphx_glr_pet-mad_thumb.png
+                :alt: This example demonstrates how to use the PET-MAD model with ASE, i-PI and LAMMPS. PET-MAD is a "universal" machine-learning forcefield trained on a dataset that aims to incorporate a very high degree of structural diversity.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: MD using direct-force predictions with PET-MAD
+            :link: ../examples/pet-mad-nc/pet-mad-nc
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/pet-mad-nc/images/thumb/sphx_glr_pet-mad-nc_thumb.png
+                :alt: Evaluating forces as a direct output of a ML model accelerates their evaluation, by up to a factor of 3 in comparison to the traditional approach that evaluates them as derivatives of the interatomic potential. Unfortunately, as discussed e.g. in this paper, doing so means that forces are not conservative, leading to instabilities and artefacts in many modeling tasks, such as constant-energy molecular dynamics. Here we demonstrate the issues associated with direct force predictions, and ways to mitigate them, using the generally-applicable PET-MAD potential. See also this recipe for examples of using PET-MAD for basic tasks such as geometry optimization and conservative MD, and this for an example of how to use direct forces to accelerate training.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Fine-tuning the PET-MAD universal potential
+            :link: ../examples/pet-finetuning/pet-ft
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/pet-finetuning/images/thumb/sphx_glr_pet-ft_thumb.png
+                :alt: This example demonstrates how to fine-tune the PET-MAD universal ML potential on a new dataset using metatrain. This allows adapting the model to a specialized task by retraining it on a more focused, domain-specific dataset.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Uncertainty Quantification with PET-MAD
+            :link: ../examples/pet-mad-uq/pet-mad-uq
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/pet-mad-uq/images/thumb/sphx_glr_pet-mad-uq_thumb.png
+                :alt: This recipe demonstrates three ways of computing errors on the outputs of ML potential-driven simulations, using as an example the PET-MAD model and its built-in uncertainty quantification (UQ) capabilities.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Long-stride trajectories with a universal FlashMD model
+            :link: ../examples/flashmd/flashmd-demo
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/flashmd/images/thumb/sphx_glr_flashmd-demo_thumb.png
+                :alt: For a quickstart on how to use FlashMD with ASE, you can go here.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Finding Reaction Paths with eOn and a Metatomic Potential
+            :link: ../examples/eon-pet-neb/eon-pet-neb
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/eon-pet-neb/images/thumb/sphx_glr_eon-pet-neb_thumb.png
+                :alt: This example describes how to find the reaction pathway for oxadiazole formation from N₂O and ethylene. We will use the PET-MAD metatomic model to calculate the potential energy and forces.
+                :class: gallery-img
+
+                

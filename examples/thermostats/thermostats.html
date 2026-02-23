@@ -1,0 +1,1384 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="search" title="Search" href="../../search.html"><link rel="next" title="Equivariant linear model for polarizability" href="../polarizability/polarizability.html"><link rel="prev" title="Conservative fine-tuning for a PET model" href="../pet-finetuning/pet-ft-nc.html">
+        <link rel="canonical" href="https://atomistic-cookbook.org/examples/thermostats/thermostats.html">
+        <link rel="prefetch" href="../../_static/cookbook-icon.svg" as="image">
+
+    <link rel="shortcut icon" href="../../_static/cookbook-icon.png"><!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>Constant-temperature MD and thermostats - The Atomistic Cookbook</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/cookbook.css?v=d86cfb60" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">The Atomistic Cookbook</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/cookbook-icon.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">The Atomistic Cookbook</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../topics/index.html">Recipes grouped by topic</a><input aria-label="Toggle navigation of Recipes grouped by topic" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/sampling.html">Statistical sampling and dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/analysis.html">Analysis and post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/ml-models.html">Machine learning models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/universal.html">Universal ML models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/nqes.html">Nuclear quantum effects</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../software/index.html">Recipes grouped by software used</a><input aria-label="Toggle navigation of Recipes grouped by software used" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../software/chemiscope.html">chemiscope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/cp2k.html">cp2k</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/eon.html">eon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/featomic.html">featomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/gromacs.html">GROMACS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/i-pi.html">i-PI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/lammps.html">LAMMPS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/metatensor.html">metatensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/plumed.html">PLUMED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/scikit-matter.html">scikit-matter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/torch-pme.html">torch-pme</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../all-examples.html">List of all recipes</a><input aria-label="Toggle navigation of List of all recipes" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../dos-align/dos-align.html">A ML model for the electron density of states</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-model/water-model.html">Atomistic Water Model for Molecular Dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../batch-cp2k/reference-trajectory.html">Batch run of CP2K calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../shiftml/shiftml-example.html">Computing NMR shielding tensors using ShiftML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft-nc.html">Conservative fine-tuning for a PET model</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Constant-temperature MD and thermostats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../polarizability/polarizability.html">Equivariant linear model for polarizability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../learn-tensors-with-mcov/learn-tensors-with-mcov.html">Equivariant model for tensorial properties based on scalar features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../eon-pet-neb/eon-pet-neb.html">Finding Reaction Paths with eOn and a Metatomic Potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft.html">Fine-tuning the PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../roy-gch/roy-gch.html">Generalized Convex Hull construction for the polymorphs of ROY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hamiltonian-qm7/hamiltonian-qm7.html">Hamiltonian Learning for Molecules with Indirect Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../torchpme/torchpme_learning.html">Learning Capabilities with torchpme</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lpr/lpr.html">Local Prediction Rigidity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lode-linear/lode-linear.html">Long-distance Equivariants: a tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flashmd/flashmd-demo.html">Long-stride trajectories with a universal FlashMD model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-nc/pet-mad-nc.html">MD using direct-force predictions with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metatomic-plumed/metatomic-plumed.html">ML collective variables in PLUMED with metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-mts-rpc/mts-rpc.html">Multiple time stepping and ring-polymer contraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../gaas-map/gaas-map.html">PCA/PCovR Visualization of a training dataset for a potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-metad/pi-metad.html">Path integral metadynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../path-integrals/path-integrals.html">Path integral molecular dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../periodic-hamiltonian/periodic-hamiltonian.html">Periodic Hamiltonian learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../heat-capacity/heat-capacity.html">Quantum heat capacity of water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ring-polymer-instanton/rpi-rates.html">Ring Polymer Instanton Rate Theory: Tunneling Rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rotate-equivariants/rotate-equivariants.html">Rotating equivariants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sample-selection/sample-selection.html">Sample and Feature Selection with FPS and CUR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad/pet-mad.html">The PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-uq/pet-mad-uq.html">Uncertainty Quantification with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-pulsed/water-pulsed.html">Water orientation in a pulsed electric field</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../downloading.html">Downloading and running the recipes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing a recipe</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-examples-thermostats-thermostats-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="constant-temperature-md-and-thermostats">
+<span id="sphx-glr-examples-thermostats-thermostats-py"></span><h1>Constant-temperature MD and thermostats<a class="headerlink" href="#constant-temperature-md-and-thermostats" title="Link to this heading">¶</a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Authors<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Michele Ceriotti <a class="reference external" href="https://github.com/ceriottm/">&#64;ceriottm</a></p>
+</dd>
+</dl>
+<p>This recipe gives a practical introduction to finite-temperature
+molecular dynamics simulations, and provides a guide to choose the
+most appropriate thermostat for the simulation at hand.</p>
+<p>As for other examples in the cookbook, a small simulation of liquid
+water is used as an archetypal example. Molecular dynamics, sampling,
+and constant-temperature simulations are discussed in much detail in
+the book “Understanding Molecular Simulations” by Daan Frenkel and Berend Smit.
+This
+<a class="reference external" href="https://doi.org/10.1063/1.439486">seminal paper by H.C.Andersen</a>
+provides a good historical introduction to the problem of
+thermostatting, and this
+<a class="reference external" href="https://www.research-collection.ethz.ch/handle/20.500.11850/152344">PhD thesis</a>
+provides a more detailed background to several of the techniques
+discussed in this recipe.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</pre></div>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xml.etree.ElementTree</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ET</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">chemiscope</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ipi</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpl</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipi.utils.tools.acf_xyz</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_acf_xyz</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipi.utils.tools.gle</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_gle_matrices</span><span class="p">,</span> <span class="n">gle_frequency_kernel</span><span class="p">,</span> <span class="n">isra_deconvolute</span>
+</pre></div>
+</div>
+<section id="constant-temperature-sampling-of-thermo-dynamics">
+<h2>Constant-temperature sampling of (thermo)dynamics<a class="headerlink" href="#constant-temperature-sampling-of-thermo-dynamics" title="Link to this heading">¶</a></h2>
+<p>Even though Hamilton’s equations in classical mechanics conserve the total
+energy of the group of atoms in a simulation, experimental boundary conditions
+usually involve exchange of heat with the surroundings, especially when considering
+the relatively small supercells that are often used in simulations.</p>
+<p>The goal of a constant-temperature MD simulation is to compute efficiently thermal
+averages of the form <span class="math notranslate nohighlight">\(\langle A(q,p)\rangle_\beta\)</span>, where the average
+of the observable <span class="math notranslate nohighlight">\(A(q,p)\)</span> is
+evaluated over the Boltzmann distribution at inverse temperature
+<span class="math notranslate nohighlight">\(\beta=1/k_\mathrm{B}T\)</span>,
+<span class="math notranslate nohighlight">\(P(q,p)=Q^{-1} \exp(-\beta(p^2/2m + V(q)))\)</span>
+In all these scenarios, optimizing the simulation involves reducing as much as
+possible the <em>autocorrelation time</em> of the observable.</p>
+<p>Constant-temperature sampling is also important when one wants to compute
+<em>dynamical</em> properties. In principle these would require
+constant-energy trajectories, as any thermostatting procedure modifies
+the dynamics of the system. However, the initial conditions
+should usually be determined from constant-temperature conditions,
+averaging over multiple constant-energy trajectories.
+As we shall see, this protocol can often be simplified greatly, by choosing
+thermostats that don’t interfere with the natural microscopic dynamics.</p>
+<section id="running-simulations">
+<h3>Running simulations<a class="headerlink" href="#running-simulations" title="Link to this heading">¶</a></h3>
+<p>We use <a class="reference external" href="http://ipi-code.org">i-PI</a> together with a <code class="docutils literal notranslate"><span class="pre">LAMMPS</span></code> driver to run
+all the simulations in this recipe. The two codes need to be run separately,
+and communicate atomic positions, energy and forces through a socket interface.</p>
+<p>The LAMMPS input defines the parameters of the
+<a class="reference external" href="http://doi.org/10.1063/1.3167790">q-TIP4P/f water model</a>,
+while the XML-formatted input of i-PI describes the setup of the
+MD simulation.</p>
+<p>We begin running a constant-energy calculation, that
+we will use to illustrate the metrics that can be applied to
+assess the performance of a thermostatting scheme. If it is the
+first time you see an <code class="docutils literal notranslate"><span class="pre">i-PI</span></code> input, you may want to look at
+the input file side-by-sidewith the
+<a class="reference external" href="https://docs.ipi-code.org/input-tags.html">input reference</a>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Open and read the XML file</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;data/input_nve.xml&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+    <span class="n">xml_content</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">xml_content</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;simulation verbosity=&#39;medium&#39; safe_stride=&#39;100&#39;&gt;
+  &lt;output prefix=&#39;simulation_nve&#39;&gt;
+      &lt;properties stride=&#39;1&#39; filename=&#39;out&#39;&gt;
+      [ step, time{picosecond}, conserved{electronvolt},
+      temperature{kelvin}, kinetic_md{electronvolt}, potential{electronvolt},
+      temperature(H){kelvin}, temperature(O){kelvin} ] &lt;/properties&gt;
+    &lt;trajectory filename=&#39;pos&#39; stride=&#39;10&#39;&gt; positions &lt;/trajectory&gt;
+    &lt;trajectory filename=&#39;vel&#39; stride=&#39;1&#39;&gt; velocities &lt;/trajectory&gt;
+  &lt;/output&gt;
+  &lt;total_steps&gt; 2000 &lt;/total_steps&gt;
+  &lt;prng&gt;
+    &lt;seed&gt; 32342 &lt;/seed&gt;
+  &lt;/prng&gt;
+  &lt;ffsocket name=&#39;lmpserial&#39; mode=&#39;unix&#39; pbc=&#39;false&#39;&gt;
+      &lt;address&gt;h2o-lammps&lt;/address&gt; &lt;latency&gt; 1e-4 &lt;/latency&gt;
+  &lt;/ffsocket&gt;
+  &lt;system&gt;
+    &lt;initialize nbeads=&#39;1&#39;&gt;
+      &lt;file mode=&#39;pdb&#39; units=&#39;angstrom&#39;&gt; data/water_32.pdb &lt;/file&gt;
+      &lt;velocities mode=&#39;thermal&#39; units=&#39;kelvin&#39;&gt; 300 &lt;/velocities&gt;
+    &lt;/initialize&gt;
+    &lt;forces&gt;
+      &lt;force forcefield=&#39;lmpserial&#39;&gt; lmpserial &lt;/force&gt;
+    &lt;/forces&gt;
+    &lt;ensemble&gt;
+      &lt;temperature units=&#39;kelvin&#39;&gt;300&lt;/temperature&gt;
+    &lt;/ensemble&gt;
+    &lt;motion mode=&#39;dynamics&#39;&gt;
+      &lt;dynamics mode=&#39;nve&#39;&gt;
+        &lt;timestep units=&#39;femtosecond&#39;&gt; 1.0 &lt;/timestep&gt;
+      &lt;/dynamics&gt;
+    &lt;/motion&gt;
+  &lt;/system&gt;
+&lt;/simulation&gt;
+</pre></div>
+</div>
+<p>The part of the input that describes the molecular dynamics integrator
+is the <code class="docutils literal notranslate"><span class="pre">motion</span></code> class. For this run, it specifies an <em>NVE</em> ensemble, and
+a <code class="docutils literal notranslate"><span class="pre">timestep</span></code> of 1 fs for the integrator.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">xmlroot</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;data/input_nve.xml&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">getroot</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    &quot;</span> <span class="o">+</span> <span class="n">ET</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">xmlroot</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;.//motion&quot;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;unicode&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;motion mode=&quot;dynamics&quot;&gt;
+  &lt;dynamics mode=&quot;nve&quot;&gt;
+    &lt;timestep units=&quot;femtosecond&quot;&gt; 1.0 &lt;/timestep&gt;
+  &lt;/dynamics&gt;
+&lt;/motion&gt;
+</pre></div>
+</div>
+<p>Note that this – and other runs in this example – are too short to
+provide quantitative results, and you may want to increase the
+<code class="docutils literal notranslate"><span class="pre">&lt;total_steps&gt;</span></code> parameter so that the simulation runs for at least
+a few tens of ps. The time step of 1 fs is also at the limit of what
+is acceptable for running simulations of water. 0.5 fs would be a
+safer, stabler value.</p>
+<p>To launch i-PI and LAMMPS from the command line you can just
+execute the following commands</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>i-pi<span class="w"> </span>data/input_nve.xml<span class="w"> </span>&gt;<span class="w"> </span>log<span class="w"> </span><span class="p">&amp;</span>
+sleep<span class="w"> </span><span class="m">2</span>
+lmp<span class="w"> </span>-in<span class="w"> </span>data/in.lmp<span class="w"> </span><span class="p">&amp;</span>
+</pre></div>
+</div>
+<p>To launch the external processes from a Python script
+proceed as follows:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ipi_process</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">&quot;simulation_nve.out&quot;</span><span class="p">):</span>
+    <span class="n">ipi_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;i-pi&quot;</span><span class="p">,</span> <span class="s2">&quot;data/input_nve.xml&quot;</span><span class="p">])</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>  <span class="c1"># wait for i-PI to start</span>
+    <span class="n">lmp_process</span> <span class="o">=</span> <span class="p">[</span><span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;lmp&quot;</span><span class="p">,</span> <span class="s2">&quot;-in&quot;</span><span class="p">,</span> <span class="s2">&quot;data/in.lmp&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>If you run this in a notebook, you can go ahead and start loading
+output files <em>before</em> i-PI and LAMMPS have finished running, by
+skipping this cell</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">ipi_process</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">ipi_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+    <span class="n">lmp_process</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="analyzing-the-simulation">
+<h3>Analyzing the simulation<a class="headerlink" href="#analyzing-the-simulation" title="Link to this heading">¶</a></h3>
+<p>After the simulation is finished, we can look at the outputs.
+The outputs include the trajectory of positions, the velocities
+and a number of energetic observables</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">output_data</span><span class="p">,</span> <span class="n">output_desc</span> <span class="o">=</span> <span class="n">ipi</span><span class="o">.</span><span class="n">read_output</span><span class="p">(</span><span class="s2">&quot;simulation_nve.out&quot;</span><span class="p">)</span>
+<span class="n">traj_data</span> <span class="o">=</span> <span class="n">ipi</span><span class="o">.</span><span class="n">read_trajectory</span><span class="p">(</span><span class="s2">&quot;simulation_nve.pos_0.xyz&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The trajectory shows mostly local vibrations on this short time scale,
+but if you re-run with a longer <code class="docutils literal notranslate"><span class="pre">&lt;total_steps&gt;</span></code> settings you should be
+able to observe diffusing molecules in the liquid.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">chemiscope</span><span class="o">.</span><span class="n">show</span><span class="p">(</span>
+    <span class="n">traj_data</span><span class="p">,</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;structure&quot;</span><span class="p">,</span>
+    <span class="n">settings</span><span class="o">=</span><span class="n">chemiscope</span><span class="o">.</span><span class="n">quick_settings</span><span class="p">(</span>
+        <span class="n">trajectory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">structure_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;unitCell&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<!-- begin headers -->
+<!-- Load all dependencies -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
+
+<!-- JS scripts -->
+<script src="../../_static/chemiscope.min.js"></script>
+<script src="../../_static/chemiscope-sphinx.js"></script>
+
+<!-- CSS styles -->
+<link rel="stylesheet" href="../../_static/chemiscope-sphinx.css" type="text/css" />
+<!-- end headers -->
+
+<!-- Error display -->
+<div id="chsp-278a9570-5fbe-4b56-a9dd-70fbb37ec717-error-display" class="chemiscope-sphinx-error">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-278a9570-5fbe-4b56-a9dd-70fbb37ec717-error-display')">
+        &times;
+    </button>
+</div>
+
+<!-- Warning Display -->
+<div id="chsp-278a9570-5fbe-4b56-a9dd-70fbb37ec717-warning-display" class="chemiscope-sphinx-warning">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-278a9570-5fbe-4b56-a9dd-70fbb37ec717-warning-display')">
+        &times;
+    </button>
+</div>
+<div style="padding: 0.5rem 1.25rem" />
+
+<!-- Loading Spinner -->
+<div id="chsp-278a9570-5fbe-4b56-a9dd-70fbb37ec717-loading" class="chemiscope-sphinx-spinner">
+    <img src="../../_static/chemiscope-loading.svg" alt="Loading icon" />
+</div>
+
+<!-- Chemiscope Visualization -->
+<div id="chsp-278a9570-5fbe-4b56-a9dd-70fbb37ec717">
+    <!-- This will be replaced by the chemiscope HTML -->
+</div>
+
+<!-- Load Visualization Script -->
+<script>
+    loadChemiscopeSphinx('chsp-278a9570-5fbe-4b56-a9dd-70fbb37ec717', '../../_datasets/79542371d740392af38ac65389e371312126fea4586af503a8dd8b1a7be6e5e5-fig_thermostats_001.json.gz', 'structure', '2000.0');
+</script>
+<div class="output_subarea output_html rendered_html output_result">
+
+</div>
+<br />
+<br /><p>Potential and kinetic energy fluctuate, but the total energy is
+(almost) constant, the small fluctuations being due to integration
+errors, that are quite large with the long time step used for this
+example. If you run with smaller <code class="docutils literal notranslate"><span class="pre">&lt;timestep&gt;</span></code> values, you should
+see that the energy conservation condition is fulfilled with higher
+accuracy.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;potential&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;potential&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+    <span class="s2">&quot;b-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Potential, $V$&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;kinetic_md&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;r-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Kinetic, $K$&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;conserved&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;conserved&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+    <span class="s2">&quot;k-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Conserved, $H$&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$t$ / ps&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;energy / eV&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_thermostats_001.png" srcset="../../_images/sphx_glr_thermostats_001.png" alt="thermostats" class = "sphx-glr-single-img"/><p>In a classical MD simulation, based on the momentum <span class="math notranslate nohighlight">\(\mathbf{p}\)</span>
+of each atom, it is possible to evaluate its <em>kinetic temperature
+estimator</em> <span class="math notranslate nohighlight">\(T=\langle \mathbf{p}^2/m \rangle /3k_B\)</span> the average is to
+be intended over a converged trajectory. Keep in mind that</p>
+<ol class="arabic simple">
+<li><p>The <em>instantaneous</em> value of this estimator is meaningless</p></li>
+<li><p>It is only well-defined in a constant-temperature simulation, so here
+it only gives a sense of whether atomic momenta are close to what one
+would expect at 300 K.</p></li>
+</ol>
+<p>With these caveats in mind, we can observe that the simulation has higher
+velocities than expected at 300 K, and that there is no equipartition, the
+O atoms having on average a higher energy than the H atoms.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;temperature(O)&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;r-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;O atoms&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;temperature(H)&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;c-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;H atoms&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;temperature&quot;</span><span class="p">],</span> <span class="s2">&quot;k-&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;All atoms&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$t$ / ps&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\tilde</span><span class="si">{T}</span><span class="s2">$ / K&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_thermostats_002.png" srcset="../../_images/sphx_glr_thermostats_002.png" alt="thermostats" class = "sphx-glr-single-img"/><p>In order to investigate the dynamics more carefully, we
+compute the velocity-velocity autocorrelation function
+<span class="math notranslate nohighlight">\(c_{vv}(t)=\sum_i \langle \mathbf{v}_i(t) \cdot \mathbf{v}_i(0) \rangle\)</span>.
+We use a utility function that reads the outputs of <code class="docutils literal notranslate"><span class="pre">i-PI</span></code>
+and computes both the autocorrelation function and its Fourier
+transform.
+<span class="math notranslate nohighlight">\(c_{vv}(t)\)</span> contains information on the time scale and amplitude
+of molecular motion, and is closely related to the vibrational density
+of states and to spectroscopic observables such as IR and Raman spectra.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">acf_nve</span> <span class="o">=</span> <span class="n">compute_acf_xyz</span><span class="p">(</span>
+    <span class="s2">&quot;simulation_nve.vel_0.xyz&quot;</span><span class="p">,</span>
+    <span class="n">maximum_lag</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
+    <span class="n">length_zeropadding</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span>
+    <span class="n">spectral_windowing</span><span class="o">=</span><span class="s2">&quot;cosine-blackman&quot;</span><span class="p">,</span>
+    <span class="n">timestep</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">time_units</span><span class="o">=</span><span class="s2">&quot;femtosecond&quot;</span><span class="p">,</span>
+    <span class="n">skip</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">acf_nve</span><span class="p">[</span><span class="mi">0</span><span class="p">][:</span><span class="mi">1200</span><span class="p">]</span> <span class="o">*</span> <span class="mf">2.4188843e-05</span><span class="p">,</span>  <span class="c1"># atomic time to ps</span>
+    <span class="n">acf_nve</span><span class="p">[</span><span class="mi">1</span><span class="p">][:</span><span class="mi">1200</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span>
+    <span class="s2">&quot;r-&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$t$ / ps$&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$c_</span><span class="si">{vv}</span><span class="s2">$ / arb. units&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_thermostats_003.png" srcset="../../_images/sphx_glr_thermostats_003.png" alt="thermostats" class = "sphx-glr-single-img"/><p>The power spectrum (that can be computed as the Fourier transform of
+<span class="math notranslate nohighlight">\(c_{vv}\)</span>) reveals the frequencies of stretching, bending and libration
+modes of water; the <span class="math notranslate nohighlight">\(\omega\rightarrow 0\)</span> limit is proportional
+to the diffusion coefficient.
+We also load the results from a reference calculation (average of 8
+trajectories initiated from NVT-equilibrated samples, shown as the
+confidence interval). You can see how to run these reference calculations
+from the script <code class="docutils literal notranslate"><span class="pre">data/run_traj.sh</span></code>.
+The differences are due to the short trajectory, and to the fact that the
+NVE trajectory is not equilibrated at 300 K.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ha2cm1</span> <span class="o">=</span> <span class="mf">219474.63</span>
+
+<span class="c1"># Loads reference trajectory</span>
+<span class="n">acf_ref</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="s2">&quot;data/traj-all_facf.data&quot;</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span>
+    <span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">ha2cm1</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;reference&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">acf_nve</span><span class="p">[</span><span class="mi">3</span><span class="p">][:</span><span class="mi">1200</span><span class="p">]</span> <span class="o">*</span> <span class="n">ha2cm1</span><span class="p">,</span> <span class="n">acf_nve</span><span class="p">[</span><span class="mi">4</span><span class="p">][:</span><span class="mi">1200</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span> <span class="s2">&quot;r-&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;NVE&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\omega$ / cm$^{-1}$&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\hat</span><span class="si">{c}</span><span class="s2">_</span><span class="si">{vv}</span><span class="s2">$ / arb. units&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_thermostats_004.png" srcset="../../_images/sphx_glr_thermostats_004.png" alt="thermostats" class = "sphx-glr-single-img"/></section>
+</section>
+<section id="langevin-thermostatting">
+<h2>Langevin thermostatting<a class="headerlink" href="#langevin-thermostatting" title="Link to this heading">¶</a></h2>
+<p>In order to perform a simulations that samples configurations
+consistent with a Boltzmann distribution <span class="math notranslate nohighlight">\(e^{-V(x)/k_B T}\)</span>
+one needs to modify the equations of motion. There are many
+different approaches to do this, some of which lead to deterministic
+dynamics; the two more widely used deterministic thermostats
+are the
+<a class="reference external" href="https://doi.org/10.1063/1.448118">Berendsen thermostat</a>
+which does not sample the Boltzmann distribution exactly and
+should never be used given the many more rigorous alternatives,
+and the Nosé-Hoover thermostat, that requires a
+<a class="reference external" href="https://doi.org/10.1063/1.463940">“chain” implementation</a>
+to be ergodic, which amounts essentially to a complicated way
+to generate poor-quality pseudo-random numbers.</p>
+<p>Given the limitations of deterministic thermostats, in this
+recipe we focus on stochastic thermostats, that model the
+coupling to the chaotic dynamics of an external bath through
+explicit random numbers. Langevin dynamics amounts to adding
+to Hamilton’s equations of motion, for each degree of freedom,
+a term of the form</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\dot{p} =  -\gamma p + \sqrt{2\gamma m k_B T} \, \xi(t)\]</div>
+</div>
+<p>where :math:`
+gamma` is a friction coefficient, and <span class="math notranslate nohighlight">\(\xi\)</span>
+uncorrelated random numbers that mimic collisions with the bath
+particles. The friction can be seen as the inverse of a
+characteristic <em>coupling time scale</em>
+<span class="math notranslate nohighlight">\(\tau=1/\gamma\)</span> that describes how strongly the bath
+interacts with the system.</p>
+<section id="setting-up-a-thermostat-in-i-pi">
+<h3>Setting up a thermostat in <code class="docutils literal notranslate"><span class="pre">i-PI</span></code><a class="headerlink" href="#setting-up-a-thermostat-in-i-pi" title="Link to this heading">¶</a></h3>
+<p>In order to set up a thermostat in <code class="docutils literal notranslate"><span class="pre">i-PI</span></code>, one simply needs
+to adjust the <code class="docutils literal notranslate"><span class="pre">&lt;dynamics&gt;</span></code> block, to perform <code class="docutils literal notranslate"><span class="pre">nvt</span></code> dynamics
+and include an appropriate <code class="docutils literal notranslate"><span class="pre">&lt;thermostat&gt;</span></code> section.
+Here we use a very-strongly coupled Langevin thermostat,
+with <span class="math notranslate nohighlight">\(\tau=10~fs\)</span>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">xmlroot</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;data/input_higamma.xml&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">getroot</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;      &quot;</span> <span class="o">+</span> <span class="n">ET</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">xmlroot</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;.//dynamics&quot;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;unicode&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;dynamics mode=&quot;nvt&quot;&gt;
+  &lt;timestep units=&quot;femtosecond&quot;&gt; 1.0 &lt;/timestep&gt;
+  &lt;thermostat mode=&quot;langevin&quot;&gt;
+    &lt;tau units=&quot;femtosecond&quot;&gt; 10 &lt;/tau&gt;
+  &lt;/thermostat&gt;
+&lt;/dynamics&gt;
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">i-PI</span></code> and <code class="docutils literal notranslate"><span class="pre">LAMMPS</span></code> are launched as above …</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ipi_process</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">&quot;simulation_higamma.out&quot;</span><span class="p">):</span>
+    <span class="n">ipi_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;i-pi&quot;</span><span class="p">,</span> <span class="s2">&quot;data/input_higamma.xml&quot;</span><span class="p">])</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>  <span class="c1"># wait for i-PI to start</span>
+    <span class="n">lmp_process</span> <span class="o">=</span> <span class="p">[</span><span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;lmp&quot;</span><span class="p">,</span> <span class="s2">&quot;-in&quot;</span><span class="p">,</span> <span class="s2">&quot;data/in.lmp&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>… and you should probably wait until they’re done,
+it’ll take less than a minute.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">ipi_process</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">ipi_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+    <span class="n">lmp_process</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="analysis-of-the-trajectory">
+<h3>Analysis of the trajectory<a class="headerlink" href="#analysis-of-the-trajectory" title="Link to this heading">¶</a></h3>
+<p>The temperature converges very quickly to the target value
+(fluctuations are to be expected, given that as discussed above
+the temperature estimator is just the instantaneous kinetic energy,
+that is not constant). There is also equipartition between O and H.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">output_data</span><span class="p">,</span> <span class="n">output_desc</span> <span class="o">=</span> <span class="n">ipi</span><span class="o">.</span><span class="n">read_output</span><span class="p">(</span><span class="s2">&quot;simulation_higamma.out&quot;</span><span class="p">)</span>
+<span class="n">traj_data</span> <span class="o">=</span> <span class="n">ipi</span><span class="o">.</span><span class="n">read_trajectory</span><span class="p">(</span><span class="s2">&quot;simulation_higamma.pos_0.xyz&quot;</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;temperature(O)&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;r-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;O atoms&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;temperature(H)&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;c-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;H atoms&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;temperature&quot;</span><span class="p">],</span> <span class="s2">&quot;k-&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;All atoms&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$t$ / ps&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\tilde</span><span class="si">{T}</span><span class="s2">$ / K&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_thermostats_005.png" srcset="../../_images/sphx_glr_thermostats_005.png" alt="thermostats" class = "sphx-glr-single-img"/><p>The velocity-velocity correlation function shows how much
+this thermostat affects the system dynamics. The high-frequency peaks,
+corresponding to stretches and bending, are
+greatly broadened, and the <span class="math notranslate nohighlight">\(\omega\rightarrow 0\)</span>
+limit of <span class="math notranslate nohighlight">\(\hat{c}_{vv}\)</span>, corresponding to the
+diffusion coefficient, is reduced by almost a factor of 5.
+This last observation highlights that a too-aggressive
+thermostat is not only disrupting the dynamics:
+it also slows down diffusion through phase space,
+making the dynamics less efficient at sampling slow,
+collective motions. We shall see further down various
+methods to counteract this effect, but in general one should
+use a weaker coupling, that improves the sampling of configuration
+space even though it slows down the convergence of the
+kinetic energy. If you want a thermostat that equilibrates
+aggressively the temperature while disturbing less the diffusive
+modes, you may try the <em>fast-forward Langevin</em> thermostat
+<a class="reference external" href="https://doi.org/10.1063/1.5029833">(Hijazi et al., JCP (2018))</a>
+that can be activated with the option <code class="docutils literal notranslate"><span class="pre">mode=&quot;ffl&quot;</span></code>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># compute the v-v acf</span>
+<span class="n">acf_higamma</span> <span class="o">=</span> <span class="n">compute_acf_xyz</span><span class="p">(</span>
+    <span class="s2">&quot;simulation_higamma.vel_0.xyz&quot;</span><span class="p">,</span>
+    <span class="n">maximum_lag</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
+    <span class="n">length_zeropadding</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span>
+    <span class="n">spectral_windowing</span><span class="o">=</span><span class="s2">&quot;cosine-blackman&quot;</span><span class="p">,</span>
+    <span class="n">timestep</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">time_units</span><span class="o">=</span><span class="s2">&quot;femtosecond&quot;</span><span class="p">,</span>
+    <span class="n">skip</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># and plot</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span>
+    <span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">ha2cm1</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;reference&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span>
+    <span class="n">acf_higamma</span><span class="p">[</span><span class="mi">3</span><span class="p">][:</span><span class="mi">1200</span><span class="p">]</span> <span class="o">*</span> <span class="n">ha2cm1</span><span class="p">,</span>
+    <span class="n">acf_higamma</span><span class="p">[</span><span class="mi">4</span><span class="p">][:</span><span class="mi">1200</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span>
+    <span class="s2">&quot;b-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;Langevin, $\tau=10$fs&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\omega$ / cm$^{-1}$&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\hat</span><span class="si">{c}</span><span class="s2">_</span><span class="si">{vv}</span><span class="s2">$ / arb. units&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_thermostats_006.png" srcset="../../_images/sphx_glr_thermostats_006.png" alt="thermostats" class = "sphx-glr-single-img"/></section>
+</section>
+<section id="global-thermostats-stochastic-velocity-rescaling">
+<h2>Global thermostats: stochastic velocity rescaling<a class="headerlink" href="#global-thermostats-stochastic-velocity-rescaling" title="Link to this heading">¶</a></h2>
+<p>An alternative approach to sample the canonical Boltzmann
+distribution while introducing fewer disturbances to the system
+dynamics is to use a <em>global</em> thermostat, i.e. a scheme that
+targets the <em>total</em> kinetic energy of the system, rather than that
+of individual degrees of freedom.
+We recommend the “stochastic velocity rescaling” thermostat
+<a class="reference external" href="https://doi.org/10.1063/1.2408420">(Bussi, Donadio, Parrinello, JCP (2007))</a>
+that acts by rescaling the total momentum vector, adding a
+suitably distributed random noise term.</p>
+<section id="id1">
+<h3>Setting up a thermostat in <code class="docutils literal notranslate"><span class="pre">i-PI</span></code><a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<p>Stochastic velocity rescaling is implemented in <code class="docutils literal notranslate"><span class="pre">i-PI</span></code>
+can be selected by setting <code class="docutils literal notranslate"><span class="pre">mode=&quot;svr&quot;</span></code>,  and has a
+<code class="docutils literal notranslate"><span class="pre">tau</span></code> parameter that corresponds to the time scale of the
+coupling.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">xmlroot</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;data/input_svr.xml&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">getroot</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;        &quot;</span> <span class="o">+</span> <span class="n">ET</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">xmlroot</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;.//thermostat&quot;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;unicode&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;thermostat mode=&quot;svr&quot;&gt;
+  &lt;tau units=&quot;femtosecond&quot;&gt; 10 &lt;/tau&gt;
+&lt;/thermostat&gt;
+</pre></div>
+</div>
+<p>We run a simulation with the usual set up …</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ipi_process</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">&quot;simulation_svr.out&quot;</span><span class="p">):</span>
+    <span class="n">ipi_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;i-pi&quot;</span><span class="p">,</span> <span class="s2">&quot;data/input_svr.xml&quot;</span><span class="p">])</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>  <span class="c1"># wait for i-PI to start</span>
+    <span class="n">lmp_process</span> <span class="o">=</span> <span class="p">[</span><span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;lmp&quot;</span><span class="p">,</span> <span class="s2">&quot;-in&quot;</span><span class="p">,</span> <span class="s2">&quot;data/in.lmp&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>… and wait for it to finish.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">ipi_process</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">ipi_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+    <span class="n">lmp_process</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Analysis of the trajectory<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<p>The kinetic temperature of the  trajectory equilibrates very
+rapidly to the target value. However, it takes a bit longer
+(approximately 0.5 ps) to reach equipartition between O and H
+atoms. This is an important shortcoming of global thermostats:
+since they only target the total kinetic energy, they must rely
+on internal energy redistribution to reach equilibrium between
+different degrees of freedom.
+Liquid water is a very ergodic system, in which all degrees of
+freedom are strongly coupled, so this is not a major issue. However
+care must be taken when modeling a quasi-harmonic crystal (e.g.
+diamond, a metal, or an inorganic crystal), or a molecular system
+in which the coupling between molecules is weaker (e.g. methane,
+or another apolar compound).</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">output_data</span><span class="p">,</span> <span class="n">output_desc</span> <span class="o">=</span> <span class="n">ipi</span><span class="o">.</span><span class="n">read_output</span><span class="p">(</span><span class="s2">&quot;simulation_svr.out&quot;</span><span class="p">)</span>
+<span class="n">traj_data</span> <span class="o">=</span> <span class="n">ipi</span><span class="o">.</span><span class="n">read_trajectory</span><span class="p">(</span><span class="s2">&quot;simulation_svr.pos_0.xyz&quot;</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;temperature(O)&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;r-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;O atoms&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;temperature(H)&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;c-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;H atoms&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;temperature&quot;</span><span class="p">],</span> <span class="s2">&quot;k-&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;All atoms&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$t$ / ps&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\tilde</span><span class="si">{T}</span><span class="s2">$ / K&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_thermostats_007.png" srcset="../../_images/sphx_glr_thermostats_007.png" alt="thermostats" class = "sphx-glr-single-img"/><p>The velocity-velocity autocorrelation function is
+essentially indistinguishable from the reference, computed
+with an ensemble of NVE trajectories starting from canonical
+samples. In fact, the small discrepancies are mostly due to
+incomplete convergence of the averages in the short trajectory.</p>
+<p>This highlights the advantages of a global thermostat, that
+does not disrupt the natural diffusion in configuration space,
+and can often be used to compute dynamical, time-dependent
+observables out of a single trajectory – which is far more
+practical than performing a collection of NVE trajectories.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">acf_svr</span> <span class="o">=</span> <span class="n">compute_acf_xyz</span><span class="p">(</span>
+    <span class="s2">&quot;simulation_svr.vel_0.xyz&quot;</span><span class="p">,</span>
+    <span class="n">maximum_lag</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
+    <span class="n">length_zeropadding</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span>
+    <span class="n">spectral_windowing</span><span class="o">=</span><span class="s2">&quot;cosine-blackman&quot;</span><span class="p">,</span>
+    <span class="n">timestep</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">time_units</span><span class="o">=</span><span class="s2">&quot;femtosecond&quot;</span><span class="p">,</span>
+    <span class="n">skip</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span>
+    <span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">ha2cm1</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;reference&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span>
+    <span class="n">acf_svr</span><span class="p">[</span><span class="mi">3</span><span class="p">][:</span><span class="mi">1200</span><span class="p">]</span> <span class="o">*</span> <span class="n">ha2cm1</span><span class="p">,</span>
+    <span class="n">acf_svr</span><span class="p">[</span><span class="mi">4</span><span class="p">][:</span><span class="mi">1200</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span>
+    <span class="s2">&quot;b-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;SVR, $\tau=10$fs&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\omega$ / cm$^{-1}$&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\hat</span><span class="si">{c}</span><span class="s2">_</span><span class="si">{vv}</span><span class="s2">$ / arb. units&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_thermostats_008.png" srcset="../../_images/sphx_glr_thermostats_008.png" alt="thermostats" class = "sphx-glr-single-img"/></section>
+</section>
+<section id="generalized-langevin-equation-thermostat">
+<h2>Generalized Langevin Equation thermostat<a class="headerlink" href="#generalized-langevin-equation-thermostat" title="Link to this heading">¶</a></h2>
+<p>The issue with a Langevin thermostat is that, for a given coupling
+time <span class="math notranslate nohighlight">\(\tau\)</span>, only molecular motions with a comparable time scale
+are sampled efficiently: faster modes are <em>underdamped</em>, and slower modes
+are <em>overdamped</em>, cf. the slowing down of diffusive behavior.</p>
+<p>A possible solution to this problem is using a
+<em>Generalized Langevin Equation (GLE)</em> thermostat. A GLE
+thermostat uses a matrix generalization of the Langevin term,
+in which the physical momentum is supplemented by a few fictitious
+momenta <span class="math notranslate nohighlight">\(\mathbf{s}\)</span>, i.e.</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[(\dot{p},\dot{\mathbf{s}}) = -\mathbf{A}_p (p,\mathbf{s})\
++\mathbf{B}_p (\xi,\boldsymbol{\xi})\]</div>
+</div>
+<p>Here <span class="math notranslate nohighlight">\(\mathbf{A}_p\)</span> is the <em>drift matrix</em> and  <span class="math notranslate nohighlight">\(\mathbf{B}_p\)</span>
+is a diffusion matrix which, for canonical sampling, is determined by the target
+temperature and the drift matrix through a fluctuation-dissipation relation.
+The key idea is that <span class="math notranslate nohighlight">\(\mathbf{A}_p\)</span> provides a lot of flexibility in defining
+the behavior of the GLE, that can be tuned to achieve near-optimal sampling
+for every degree of freedom (effectively acting as if the coupling constant was
+tuned separately for slow and fast molecular motions).
+The general idea and the practical implementation are discussed in
+<a class="reference external" href="http://doi.org/10.1021/ct900563s">(Ceriotti et al. JCTC (2010))</a>
+which also discusses other applications of the same principle, including
+performing simulations with a non-equilibrium <em>quantum thermostat</em> that
+mimics the quantum the quantum mechanical behavior of light nuclei.</p>
+<section id="id3">
+<h3>Setting up a thermostat in <code class="docutils literal notranslate"><span class="pre">i-PI</span></code><a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<p>A GLE thermostat can be activated using <code class="docutils literal notranslate"><span class="pre">mode=&quot;gle&quot;</span></code>.
+The drift matrix used here has been generated from the
+<a class="reference external" href="http://gle4md.org">GLE4MD website</a>, using parameters that
+aim for the most efficient sampling possible with the short
+simulation time (2 ps). The <a class="reference external" href="https://gle4md.org/index.html?page=matrix&amp;kind=smart&amp;tslow=1&amp;utslow=ps&amp;smrange=6-2&amp;outmode=ipi&amp;aunits=ps">online generator</a>
+can be tuned to provide the best possible sampling for the system
+of interest, the most important parameter being the slowest time scale
+that one is interested in sampling (typically a fraction of the total
+simulation time). The range of frequencies that is optimized can then
+be tuned so as to reach, roughly, the maximum frequency present in the
+system.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">xmlroot</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;data/input_gle.xml&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">getroot</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  &quot;</span> <span class="o">+</span> <span class="n">ET</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">xmlroot</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;.//thermostat&quot;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;unicode&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;thermostat mode=&quot;gle&quot;&gt;
+  &lt;A shape=&quot;(7,7)&quot;&gt;
+    [   8.191023526179e-4,    8.328506066524e-3,    1.657771834013e-3,    9.736989925341e-4,    2.841803794895e-4,   -3.176846864198e-5,   -2.967010478210e-4,
+-8.389856546341e-4,    2.405526974742e-2,   -1.507872374848e-2,    2.589784240185e-3,    1.516783633362e-3,   -5.958833418565e-4,    4.198422349789e-4,
+ 7.798710586406e-4,    1.507872374848e-2,    8.569039501219e-3,    6.001000899602e-3,    1.062029383877e-3,    1.093939147968e-3,   -2.661575532976e-3,
+-9.676783161546e-4,   -2.589784240185e-3,   -6.001000899602e-3,    2.680459336535e-5,   -5.214694469742e-5,    4.231304910751e-4,   -2.104894919743e-5,
+-2.841997149166e-4,   -1.516783633362e-3,   -1.062029383877e-3,    5.214694469742e-5,    1.433903506353e-9,   -4.241574212449e-5,    7.910178912362e-5,
+ 3.333208286893e-5,    5.958833418565e-4,   -1.093939147968e-3,   -4.231304910751e-4,    4.241574212449e-5,    2.385554468441e-8,   -3.139255482869e-5,
+ 2.967533789056e-4,   -4.198422349789e-4,    2.661575532976e-3,    2.104894919743e-5,   -7.910178912362e-5,    3.139255482869e-5,   2.432567259684e-11
+   ]
+  &lt;/A&gt;
+&lt;/thermostat&gt;
+</pre></div>
+</div>
+<p>We launch <code class="docutils literal notranslate"><span class="pre">i-PI</span></code> as usual …</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ipi_process</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">&quot;simulation_gle.out&quot;</span><span class="p">):</span>
+    <span class="n">ipi_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;i-pi&quot;</span><span class="p">,</span> <span class="s2">&quot;data/input_gle.xml&quot;</span><span class="p">])</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>  <span class="c1"># wait for i-PI to start</span>
+    <span class="n">lmp_process</span> <span class="o">=</span> <span class="p">[</span><span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;lmp&quot;</span><span class="p">,</span> <span class="s2">&quot;-in&quot;</span><span class="p">,</span> <span class="s2">&quot;data/in.lmp&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>… and wait for simulations to finish.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">ipi_process</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">ipi_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+    <span class="n">lmp_process</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Analysis of the trajectory<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<p>The kinetic temperature equilibrates quickly to the target value.
+Since the GLE is a local thermostat, targeting each degree of freedom
+separately, equipartition is also reached quickly. Sampling is less
+fast than with an aggressive Langevin thermostat, because the GLE targets
+each vibrational frequency separately, to minimize the impact on diffusion.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">output_data</span><span class="p">,</span> <span class="n">output_desc</span> <span class="o">=</span> <span class="n">ipi</span><span class="o">.</span><span class="n">read_output</span><span class="p">(</span><span class="s2">&quot;simulation_gle.out&quot;</span><span class="p">)</span>
+<span class="n">traj_data</span> <span class="o">=</span> <span class="n">ipi</span><span class="o">.</span><span class="n">read_trajectory</span><span class="p">(</span><span class="s2">&quot;simulation_gle.pos_0.xyz&quot;</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;temperature(O)&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;r-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;O atoms&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+    <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;temperature(H)&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;c-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;H atoms&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span> <span class="n">output_data</span><span class="p">[</span><span class="s2">&quot;temperature&quot;</span><span class="p">],</span> <span class="s2">&quot;k-&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;All atoms&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$t$ / ps&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\tilde</span><span class="si">{T}</span><span class="s2">$ / K&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_thermostats_009.png" srcset="../../_images/sphx_glr_thermostats_009.png" alt="thermostats" class = "sphx-glr-single-img"/><p><span class="math notranslate nohighlight">\(\hat{c}_{vv}\)</span> reflects the adaptive behavior of the GLE.
+The fast modes are damped aggressively, leading to a large
+broadening of the high frequency peaks, but librations and diffusive
+modes are much less dampened than in the high-coupling Langevin case.
+An optimal-coupling GLE is a safe choice to sample any system, from
+molecular liquids to harmonic crystals, although a stochastic velocity
+rescaling is preferable if one is interested in preserving the natural
+dynamics.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">acf_gle</span> <span class="o">=</span> <span class="n">compute_acf_xyz</span><span class="p">(</span>
+    <span class="s2">&quot;simulation_gle.vel_0.xyz&quot;</span><span class="p">,</span>
+    <span class="n">maximum_lag</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
+    <span class="n">length_zeropadding</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span>
+    <span class="n">spectral_windowing</span><span class="o">=</span><span class="s2">&quot;cosine-blackman&quot;</span><span class="p">,</span>
+    <span class="n">timestep</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">time_units</span><span class="o">=</span><span class="s2">&quot;femtosecond&quot;</span><span class="p">,</span>
+    <span class="n">skip</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span>
+    <span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">ha2cm1</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;reference&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span>
+    <span class="n">acf_gle</span><span class="p">[</span><span class="mi">3</span><span class="p">][:</span><span class="mi">1200</span><span class="p">]</span> <span class="o">*</span> <span class="n">ha2cm1</span><span class="p">,</span>
+    <span class="n">acf_gle</span><span class="p">[</span><span class="mi">4</span><span class="p">][:</span><span class="mi">1200</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span>
+    <span class="s2">&quot;b-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;GLE&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\omega$ / cm$^{-1}$&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\hat</span><span class="si">{c}</span><span class="s2">_</span><span class="si">{vv}</span><span class="s2">$ / arb. units&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_thermostats_010.png" srcset="../../_images/sphx_glr_thermostats_010.png" alt="thermostats" class = "sphx-glr-single-img"/></section>
+<section id="r-l-purification">
+<h3>R-L purification<a class="headerlink" href="#r-l-purification" title="Link to this heading">¶</a></h3>
+<p>What if you also want to extract dynamical information from a GLE
+(or Langevin) trajectory? It is actually possible to post-process the
+power spectrum, performing a deconvolution based on the amount of
+disturbance introduced by the GLE, that can be predicted analytically
+in the harmonic limit.
+The idea, discussed in <a class="reference external" href="http://doi.org/10.1063/1.499053610.1063/1.4990536">(Rossi et al., JCP (2018))</a>
+is that if <span class="math notranslate nohighlight">\(\hat{y}(\omega)\)</span> is the “natural” NVE power
+spectrum, and <span class="math notranslate nohighlight">\(k_{\mathrm{GLE}}(\omega_0, \omega)\)</span> is the power
+spectrum predicted for a harmonic oscillator of frequency <span class="math notranslate nohighlight">\(\omega_0\)</span>,
+then the spectrum from the GLE dynamics will be approximately</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\hat{y}_{\mathrm{GLE}}(\omega) = \int \mathrm{d}\omega'
+k_{\mathrm{GLE}}(\omega', \omega) \hat{y}(\omega')\]</div>
+</div>
+<p>The kernel can be computed analytically for all frequencies that
+are relevant for the power spectrum, based on the GLE parameters
+extracted from the input of <code class="docutils literal notranslate"><span class="pre">i-PI</span></code>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">n_omega</span> <span class="o">=</span> <span class="mi">1200</span>
+<span class="n">Ap</span><span class="p">,</span> <span class="n">Cp</span><span class="p">,</span> <span class="n">Dp</span> <span class="o">=</span> <span class="n">get_gle_matrices</span><span class="p">(</span><span class="s2">&quot;data/input_gle.xml&quot;</span><span class="p">)</span>
+<span class="n">gle_kernel</span> <span class="o">=</span> <span class="n">gle_frequency_kernel</span><span class="p">(</span><span class="n">acf_gle</span><span class="p">[</span><span class="mi">3</span><span class="p">][:</span><span class="n">n_omega</span><span class="p">],</span> <span class="n">Ap</span><span class="p">,</span> <span class="n">Dp</span><span class="p">)</span>
+
+
+<span class="n">lomega</span> <span class="o">=</span> <span class="n">acf_gle</span><span class="p">[</span><span class="mi">3</span><span class="p">][:</span><span class="n">n_omega</span><span class="p">]</span> <span class="o">*</span> <span class="n">ha2cm1</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">levels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">gle_kernel</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">gle_kernel</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span> <span class="n">num</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<span class="n">contour</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">contourf</span><span class="p">(</span><span class="n">lomega</span><span class="p">,</span> <span class="n">lomega</span><span class="p">,</span> <span class="n">gle_kernel</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">mpl</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">LogNorm</span><span class="p">())</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\omega_0$ / cm$^{-1}$&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\omega$ / cm$^{-1}$&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5000</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5000</span><span class="p">)</span>
+<span class="n">cbar</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">contour</span><span class="p">,</span> <span class="n">ticks</span><span class="o">=</span><span class="p">[</span><span class="mf">1e1</span><span class="p">,</span> <span class="mf">1e3</span><span class="p">,</span> <span class="mf">1e5</span><span class="p">,</span> <span class="mf">1e7</span><span class="p">])</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_thermostats_011.png" srcset="../../_images/sphx_glr_thermostats_011.png" alt="thermostats" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span> @system: Initializing system object
+ @simulation: Initializing simulation object
+@ RANDOM SEED: The seed used in this calculation was 32342
+ @init_file: Initializing from file data/water_32.pdb. Dimension: length, units: angstrom, cell_units: automatic
+ @init_file: Initializing from file data/water_32.pdb. Dimension: length, units: automatic, cell_units: automatic
+ @init_file: Initializing from file data/water_32.pdb. Dimension: length, units: automatic, cell_units: automatic
+ @init_file: Initializing from file data/water_32.pdb. Dimension: length, units: automatic, cell_units: automatic
+ @init_file: Initializing from file data/water_32.pdb. Dimension: length, units: automatic, cell_units: automatic
+ @initializer: Resampling velocities at temperature 300.0 kelvin
+</pre></div>
+</div>
+<p>The deconvolution is based on the Iterative Image Space
+Reconstruction Algorithm, which preserves the positive-definiteness
+of the spectrum</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">isra_acf</span><span class="p">,</span> <span class="n">history</span><span class="p">,</span> <span class="n">errors</span><span class="p">,</span> <span class="n">laplace</span> <span class="o">=</span> <span class="n">isra_deconvolute</span><span class="p">(</span>
+    <span class="n">acf_gle</span><span class="p">[</span><span class="mi">3</span><span class="p">][:</span><span class="n">n_omega</span><span class="p">],</span> <span class="n">acf_gle</span><span class="p">[</span><span class="mi">4</span><span class="p">][:</span><span class="n">n_omega</span><span class="p">],</span> <span class="n">gle_kernel</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">4</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span># error, laplacian =   2.003584422711218e-08, 5.5979243432528386e-11
+# error, laplacian =   2.2056065682049772e-08, 1.7376959093763714e-10
+# error, laplacian =   2.3108202455947157e-08, 4.097638626672861e-10
+# error, laplacian =   2.3691949074988034e-08, 7.780596938258321e-10
+# error, laplacian =   2.4035784182128285e-08, 1.2694751596779728e-09
+# error, laplacian =   2.4249396569392062e-08, 1.861351757372963e-09
+# error, laplacian =   2.4389091534014125e-08, 2.5265474789901312e-09
+# error, laplacian =   2.4485088512215447e-08, 3.2391093879531283e-09
+# error, laplacian =   2.455418992814817e-08, 3.976980779160915e-09
+# error, laplacian =   2.460605884936594e-08, 4.722774066397663e-09
+# error, laplacian =   2.464644566618402e-08, 5.463518998846859e-09
+# error, laplacian =   2.4678890226455718e-08, 6.189986589300899e-09
+# error, laplacian =   2.4705643657090066e-08, 6.8959202994722526e-09
+# error, laplacian =   2.4728182632746304e-08, 7.577329137028943e-09
+# error, laplacian =   2.4747505357273377e-08, 8.231898073229493e-09
+</pre></div>
+</div>
+<p>Even though the ISRA algorithm is less prone to enhancing noise than
+other deconvolution algorithms, successive iterations sharpen the spectrum
+but introduce higher and higher levles of noise, particularly on the
+low-frequency end of the spectrum so one has to choose when to stop.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span>
+    <span class="n">acf_gle</span><span class="p">[</span><span class="mi">3</span><span class="p">][:</span><span class="mi">1200</span><span class="p">]</span> <span class="o">*</span> <span class="n">ha2cm1</span><span class="p">,</span>
+    <span class="n">acf_gle</span><span class="p">[</span><span class="mi">4</span><span class="p">][:</span><span class="mi">1200</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span>
+    <span class="s2">&quot;b-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;GLE&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span>
+    <span class="n">acf_gle</span><span class="p">[</span><span class="mi">3</span><span class="p">][:</span><span class="mi">1200</span><span class="p">]</span> <span class="o">*</span> <span class="n">ha2cm1</span><span class="p">,</span>
+    <span class="n">history</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span>
+    <span class="s2">&quot;:&quot;</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#4000D0&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;iter[1]&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span>
+    <span class="n">acf_gle</span><span class="p">[</span><span class="mi">3</span><span class="p">][:</span><span class="mi">1200</span><span class="p">]</span> <span class="o">*</span> <span class="n">ha2cm1</span><span class="p">,</span>
+    <span class="n">history</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span>
+    <span class="s2">&quot;:&quot;</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#A000A0&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;iter[9]&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span>
+    <span class="n">acf_gle</span><span class="p">[</span><span class="mi">3</span><span class="p">][:</span><span class="mi">1200</span><span class="p">]</span> <span class="o">*</span> <span class="n">ha2cm1</span><span class="p">,</span>
+    <span class="n">history</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span>
+    <span class="s2">&quot;:&quot;</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#D00040&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;iter[17]&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span>
+    <span class="n">acf_gle</span><span class="p">[</span><span class="mi">3</span><span class="p">][:</span><span class="mi">1200</span><span class="p">]</span> <span class="o">*</span> <span class="n">ha2cm1</span><span class="p">,</span>
+    <span class="n">history</span><span class="p">[</span><span class="mi">12</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span>
+    <span class="s2">&quot;:&quot;</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#FF0000&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;iter[49]&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\omega$ / cm$^{-1}$&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\hat</span><span class="si">{c}</span><span class="s2">_</span><span class="si">{vv}</span><span class="s2">$ / arb. units&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_thermostats_012.png" srcset="../../_images/sphx_glr_thermostats_012.png" alt="thermostats" class = "sphx-glr-single-img"/><p>Especially in the high-frequency region, the deconvolution
+algorithm succeeds in recovering the underlying NVE dynamics,
+which can be useful whenever one wants to optimize statistical
+efficiency while still being able to estimate dynamical
+properties.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span>
+    <span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">ha2cm1</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">acf_ref</span><span class="p">[:</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;reference&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span>
+    <span class="n">acf_gle</span><span class="p">[</span><span class="mi">3</span><span class="p">][:</span><span class="mi">1200</span><span class="p">]</span> <span class="o">*</span> <span class="n">ha2cm1</span><span class="p">,</span>
+    <span class="n">acf_gle</span><span class="p">[</span><span class="mi">4</span><span class="p">][:</span><span class="mi">1200</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span>
+    <span class="s2">&quot;b-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;GLE&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span>
+    <span class="n">acf_gle</span><span class="p">[</span><span class="mi">3</span><span class="p">][:</span><span class="mi">1200</span><span class="p">]</span> <span class="o">*</span> <span class="n">ha2cm1</span><span class="p">,</span>
+    <span class="n">history</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e5</span><span class="p">,</span>
+    <span class="s2">&quot;r-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;GLE$\rightarrow$ NVE (iter[5])&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\omega$ / cm$^{-1}$&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\hat</span><span class="si">{c}</span><span class="s2">_</span><span class="si">{vv}</span><span class="s2">$ / arb. units&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_thermostats_013.png" srcset="../../_images/sphx_glr_thermostats_013.png" alt="thermostats" class = "sphx-glr-single-img"/></section>
+<section id="running-with-lammps">
+<h3>Running with LAMMPS<a class="headerlink" href="#running-with-lammps" title="Link to this heading">¶</a></h3>
+<p>GLE thermostats (as well as conventional Langevin, and
+stochastic velocity rescaling) are also implemented natively
+in <code class="docutils literal notranslate"><span class="pre">LAMMPS</span></code>.</p>
+<p>An example of <code class="docutils literal notranslate"><span class="pre">LAMMPS</span></code> input containing a GLE thermostat can
+be found in <code class="docutils literal notranslate"><span class="pre">data/gle.lmp</span></code>. See also the
+<a class="reference external" href="https://docs.lammps.org/fix_gle.html">documentation of the fix gle command</a></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>fix 1 all gle 6 300 300 31415 data/smart.A
+</pre></div>
+</div>
+<p>The drift matrix can be obtained from the same website, simply
+asking to output the matrix in raw format, choosing units consistent
+with the <code class="docutils literal notranslate"><span class="pre">LAMMPS</span></code> settings,  e.g. for this <a class="reference external" href="https://gle4md.org/index.html?page=matrix&amp;kind=smart&amp;tslow=1&amp;utslow=ps&amp;smrange=6-2&amp;outmode=raw&amp;aunits=fs">optimal sampling setup</a></p>
+<p>We can run <code class="docutils literal notranslate"><span class="pre">LAMMPS</span></code> from the command line</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>lmp<span class="w"> </span>-in<span class="w"> </span>data/gle.lmp<span class="w"> </span><span class="p">&amp;</span>
+</pre></div>
+</div>
+<p>or from Python</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">lmp_process</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">&quot;lammps_out.dat&quot;</span><span class="p">):</span>
+    <span class="n">lmp_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;lmp&quot;</span><span class="p">,</span> <span class="s2">&quot;-in&quot;</span><span class="p">,</span> <span class="s2">&quot;data/gle.lmp&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>… and wait</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">lmp_process</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">lmp_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The simulation is much faster (for such a small system and
+cheap potential the overhead of <code class="docutils literal notranslate"><span class="pre">i-PI</span></code>’s client-server mechanism
+is substantial) and leads to similar results for the kinetic temperature</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">traj_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="s2">&quot;lammps_out.dat&quot;</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">traj_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e-3</span><span class="p">,</span>
+    <span class="n">traj_data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+    <span class="s2">&quot;k-&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;All atoms&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$t$ / ps&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\tilde</span><span class="si">{T}</span><span class="s2">$ / K&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_thermostats_014.png" srcset="../../_images/sphx_glr_thermostats_014.png" alt="thermostats" class = "sphx-glr-single-img"/><p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (1 minutes 16.579 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-thermostats-thermostats-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/58547081d5f0a1a26f167e9bb3a01b2c/thermostats.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">thermostats.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/5277b730cb28e8c8301658e8d74988d3/thermostats.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">thermostats.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/184bee2944e6bfa0af8580936f246718/thermostats.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">recipe:</span> <span class="pre">thermostats.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../polarizability/polarizability.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Equivariant linear model for polarizability</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../pet-finetuning/pet-ft-nc.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Conservative fine-tuning for a PET model</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; BSD 3-Clause License, Copyright (c) 2026, The atomistic cookbook team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Constant-temperature MD and thermostats</a><ul>
+<li><a class="reference internal" href="#constant-temperature-sampling-of-thermo-dynamics">Constant-temperature sampling of (thermo)dynamics</a><ul>
+<li><a class="reference internal" href="#running-simulations">Running simulations</a></li>
+<li><a class="reference internal" href="#analyzing-the-simulation">Analyzing the simulation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#langevin-thermostatting">Langevin thermostatting</a><ul>
+<li><a class="reference internal" href="#setting-up-a-thermostat-in-i-pi">Setting up a thermostat in <code class="docutils literal notranslate"><span class="pre">i-PI</span></code></a></li>
+<li><a class="reference internal" href="#analysis-of-the-trajectory">Analysis of the trajectory</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#global-thermostats-stochastic-velocity-rescaling">Global thermostats: stochastic velocity rescaling</a><ul>
+<li><a class="reference internal" href="#id1">Setting up a thermostat in <code class="docutils literal notranslate"><span class="pre">i-PI</span></code></a></li>
+<li><a class="reference internal" href="#id2">Analysis of the trajectory</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#generalized-langevin-equation-thermostat">Generalized Langevin Equation thermostat</a><ul>
+<li><a class="reference internal" href="#id3">Setting up a thermostat in <code class="docutils literal notranslate"><span class="pre">i-PI</span></code></a></li>
+<li><a class="reference internal" href="#id4">Analysis of the trajectory</a></li>
+<li><a class="reference internal" href="#r-l-purification">R-L purification</a></li>
+<li><a class="reference internal" href="#running-with-lammps">Running with LAMMPS</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script data-domain="atomistic-cookbook.org" defer="defer" src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"></script>
+    <script src="../../_static/all-examples-data.js?v=01c87ff6"></script>
+    <script src="../../_static/daily-recipe.js?v=b5e71911"></script>
+    </body>
+</html>
