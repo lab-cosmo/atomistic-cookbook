@@ -11,3 +11,4 @@ dependencies:
     - ipi>=3.1.7,<4
     - git+https://github.com/metatensor/metatrain.git
     - git+https://github.com/metatensor/metatomic.git
+    - vesin>=0.5.0,<0.6.0  
