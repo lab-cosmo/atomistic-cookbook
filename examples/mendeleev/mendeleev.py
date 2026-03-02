@@ -17,9 +17,11 @@ of temperatures.
 # %%
 # First, we import the required libraries.
 
+from copy import copy
 import ase.io
 import chemiscope
 import matplotlib.pyplot as plt
+from metatomic.torch.ase_calculator import MetatomicCalculator
 import upet
 
 # i-PI utilities
@@ -47,7 +49,7 @@ upet.save_upet(model="pet-mad", size="xs", version="1.5.0", output=model_path)
 #
 # .. code-block:: bash
 #
-#    puthon data/make_soup.py --model pet-mad-xs-v1.5.0.pt --n_soup 16
+#    python data/make_soup.py --model pet-mad-xs-v1.5.0.pt --n_soup 16
 #
 # In this example, we will use the pre-generated `soup_relaxed-*.xyz` files in the
 # `data` directory to save time, as geometry optimization of 16 dense 
@@ -65,8 +67,7 @@ for i in range(16):
 
 initial_structures = [ase.io.read(f"nano_soup-{i:02d}.xyz") for i in range(16)]
 chemiscope.show(initial_structures, mode="structure", settings=chemiscope.quick_settings(
-    trajectory=True,
-    structure_settings={"unitCell": True, "bonds": False, "spaceFilling": True},
+    structure_settings={"unitCell": True, "bonds": False, "spaceFilling": True, "keepOrientation": True},
 ))
 
 # %%
@@ -83,19 +84,27 @@ chemiscope.show(initial_structures, mode="structure", settings=chemiscope.quick_
 
 with open("data/input-remd.xml", "r") as f:
     xml_input = f.read()
-    
+
+# %%
 # We will use ``InteractiveSimulation`` to run i-PI directly from this Python script.
 #
 # .. warning::
-#     Running 16 replicas of a 108-atom system using a neural network potential 
-#     is computationally intensive! Here we run only 10 steps for demonstration.
-# In a real scenario, you would execute `i-pi data/input-remd.xml` via the command 
-# line or a batch script.
+#     Running 16 replicas of a 108-atom system using a ML potential 
+#     is computationally intensive. Here we run only 100 steps for demonstration.
+#
+# Look at `data/input-remd_production.xml` for a more realistic production setup, 
+# which uses a more accurate "S" sized model, a more conservative time step, 
+# and runs for 100 ps. You can run it from the command line with:
+#
+# .. code-block:: bash
+#
+#   i-pi input-remd_production.xml
+#
 
-# sim = InteractiveSimulation(xml_input)
+#sim = InteractiveSimulation(xml_input)
 
 # Run a very short simulation
-# sim.run(100)
+#sim.run(200)
 
 # %%
 # Analyzing the Results
@@ -114,10 +123,58 @@ for i in range(16):
     data_list.append(data)
 
 # %%
-# We then assemble them into a single trajectory where the 16 clusters
-# are offset to form a 4x4 grid. We will also use chemiscope's `shapes`
-# feature to put transparent spheres around each cluster, colored 
-# according to the temperature of the replica at that step.
+# We can now visualize the potential energy of all the replicas over time. 
+# The thin lines follow the continuous trajectory of each replica, while 
+# the points are colored by the current target temperature.
+# You can see the initial swaps that re-order replicas matching temperature
+# and potential energy, followed by slow relaxation of the structures and 
+# a few additional swaps.
+
+import matplotlib.colors as mcolors
+
+cmap_lines = plt.get_cmap('tab20')
+cmap_points = plt.get_cmap('coolwarm')
+norm = mcolors.LogNorm(vmin=300, vmax=3000)
+
+fig, ax = plt.subplots(1, 1, figsize=(8, 5))
+for i in range(16):
+    # Thin lines showing the continuous trajectory of a physical replica
+    ax.plot(
+        data_list[i]["time"], 
+        data_list[i]["potential"], 
+        "-", 
+        color=cmap_lines(i),
+        linewidth=0.8,
+        alpha=0.7
+    )
+    # Points colored by the current temperature of that replica
+    ax.scatter(
+        data_list[i]["time"], 
+        data_list[i]["potential"], 
+        c=data_list[i]["ensemble_temperature"], 
+        cmap=cmap_points, 
+        norm=norm,
+        s=15,
+        zorder=3
+    )
+
+ax.set_xlabel("Time (ps)")
+ax.set_ylabel("Potential Energy (eV)")
+
+# Add a colorbar for the temperature
+sm = plt.cm.ScalarMappable(cmap=cmap_points, norm=norm)
+sm.set_array([])
+cbar = fig.colorbar(sm, ax=ax)
+cbar.set_label("Target Temperature (K)")
+
+plt.show()
+
+# %%
+# To visualize the REMD trajectory, combine the 16 replicas into a single
+# trajectory. Each frame of this combined trajectory contain all 
+# 16 clusters, arranged to form a 4x4 grid. 
+# We also use chemiscope's `shapes` to put wireframe boxes around each 
+# cluster, colored according to the temperature of the replica at that step.
 
 import numpy as np
 import matplotlib.cm as cm
@@ -155,34 +212,57 @@ for f in range(n_frames):
 
 # Create shapes for each cluster
 shapes = {}
-cmap = cm.get_cmap('coolwarm')
-norm = mcolors.Normalize(vmin=300, vmax=3000)
+cmap = plt.get_cmap('coolwarm')
+norm = mcolors.LogNorm(vmin=300, vmax=3000)
+
+L = 38.0
+edges = [
+    ([-L/2, -L/2, -L/2], [L, 0, 0]),
+    ([-L/2, -L/2, -L/2], [0, L, 0]),
+    ([-L/2, -L/2, -L/2], [0, 0, L]),
+    ([ L/2, -L/2, -L/2], [0, L, 0]),
+    ([ L/2, -L/2, -L/2], [0, 0, L]),
+    ([-L/2,  L/2, -L/2], [L, 0, 0]),
+    ([-L/2,  L/2, -L/2], [0, 0, L]),
+    ([-L/2, -L/2,  L/2], [L, 0, 0]),
+    ([-L/2, -L/2,  L/2], [0, L, 0]),
+    ([ L/2,  L/2, -L/2], [0, 0, L]),
+    ([ L/2, -L/2,  L/2], [0, L, 0]),
+    ([-L/2,  L/2,  L/2], [L, 0, 0])
+]
 
 for i in range(16):
     row = i // 4
     col = i % 4
     
-    structure_params = []
+    # Pre-calculate colors for this cluster over all frames
+    colors = []
     for f in range(n_frames):
         T = temperatures_over_time[i][f]
-        # Get hex color and format it for chemiscope (e.g., 0xFF0000).
-        # We append an alpha channel to make the spheres transparent.
         rgba = cmap(norm(T))
-        hex_color = mcolors.to_hex(rgba, keep_alpha=True).upper().replace("#", "0x")
+        # 3dmol.js has limited support for alpha in shapes, so we drop it
+        hex_color = mcolors.to_hex(rgba, keep_alpha=False).upper().replace("#", "0x")
+        colors.append(hex_color)
         
-        # Center of the 40x40x40 box is at [20, 20, 20]
-        structure_params.append({
-            "position": [col * 40.0 + 20.0, row * 40.0 + 20.0, 20.0],
-            "color": hex_color
-        })
-        
-    shapes[f"cluster_{i}"] = {
-        "kind": "sphere",
-        "parameters": {
-            "global": {"radius": 19.0},
-            "structure": structure_params
+    for edge_idx, (start, vector) in enumerate(edges):
+        structure_params = []
+        for f in range(n_frames):
+            cx = col * 40.0 + 20.0
+            cy = row * 40.0 + 20.0
+            cz = 20.0
+            
+            structure_params.append({
+                "position": [cx + start[0], cy + start[1], cz + start[2]],
+                "color": colors[f]
+            })
+            
+        shapes[f"cluster_{i}_edge_{edge_idx}"] = {
+            "kind": "cylinder",
+            "parameters": {
+                "global": {"radius": 1.0, "vector": vector},
+                "structure": structure_params
+            }
         }
-    }
 
 # %%
 # Finally, we can use `chemiscope` to visualize the combined trajectory.
@@ -193,9 +273,77 @@ chemiscope.show(
     shapes=shapes,
     settings=chemiscope.quick_settings(
         structure_settings={
-            "unitCell": True,
+            "unitCell": False, "bonds": False, "spaceFilling": True, 
+            "keepOrientation": True,
             "shape": list(shapes.keys())
         },
-        trajectory=True,
     ),
 )
+
+# %%
+# Quantitative validation
+# -----------------------
+#
+# Stability of the simulation, and qualitative behavior (e.g. what atoms move to
+# the surface and the gas phase at different temperatures) can be visually inspected 
+# from the trajectory. In order to obtain more quantitative validation, one can 
+# compare the forces computed by the model to reference DFT calculations on a 
+# subset of the structures. 
+# 
+# Here we use a handful of frames obtained from the end of a 100ps-long REMD simulation,
+# recomputed with FHI-aims. Note that converging DFT calculations on these large, highly
+# unusual structures is challenging, and required slight modifications of the settings 
+# relative to those used for reference MAD-1.5 calculations, such as tighter integration
+# grids, or using open boundary conditions. 
+# This changes the reference energies, but has minimal effect on the forces.
+
+frames_aims = []
+frames_petmad = []
+r2scan_avail = {0 : "01", 3: "04", 7:"08", 9: "10", 4:"11"}
+calc = MetatomicCalculator(model=model_path)
+
+for i in r2scan_avail:
+    frame = ase.io.read(f"data/structure_{r2scan_avail[i]}.xyz")
+    frames_aims.append(frame)
+
+    frame = frame.copy()
+    frame.pbc = False
+    frame.calc = copy(calc)
+    frame.get_forces()
+    frames_petmad.append(frame)
+
+
+# %%
+# We visualize the structures and forces with chemiscope
+
+f_petmad = np.vstack([f.get_forces() for f in frames_petmad])
+f_aims = np.vstack([f.get_forces() for f in frames_aims])
+
+vec_petmad = chemiscope.ase_vectors_to_arrows(frames_petmad, "forces", scale=1)
+vec_aims = chemiscope.ase_vectors_to_arrows(frames_aims, "forces", scale=1)
+vec_petmad["parameters"]["global"]["color"] = "red"
+vec_aims["parameters"]["global"]["color"] = "black"
+
+chemiscope.show(
+    frames_petmad,
+    properties={
+        "aims-x":f_aims[:,0], "aims-y":f_aims[:,1], "aims-z":f_aims[:,2],
+        "petmad-x":f_petmad[:,0], "petmad-y":f_petmad[:,1], "petmad-z":f_petmad[:,2],
+    },
+    shapes={
+        "forces-aims": vec_aims,
+        "forces-petmad": vec_petmad,
+    },
+    environments=chemiscope.all_atomic_environments(frames_petmad),
+    settings=chemiscope.quick_settings(
+        x="aims-x", y="petmad-x",
+        periodic=True, target="atom",
+        structure_settings={
+            "environments":{'activated': False},
+            "keepOrientation": True,
+            "bonds":False,
+            'supercell': {'0': 1, '1': 1, '2': 1},
+            "shape": ["forces-aims", "forces-petmad"]},
+    )
+)
+

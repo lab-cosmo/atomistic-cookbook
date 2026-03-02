@@ -1,7 +1,7 @@
 <simulation verbosity='high' threading='true'>
   <output prefix='soup-nano'>
 	  <properties stride='2' filename='out'>  [ step, time{picosecond}, conserved, temperature{kelvin}, kinetic_md, potential, pressure_md{megapascal}, volume{angstrom3}, cell_h{angstrom}, ensemble_temperature{kelvin}] </properties>
-    <trajectory stride='10' filename='pos' format='ase' bead='0'> positions</trajectory>
+    <trajectory stride='100' filename='pos' format='ase' bead='0'> positions</trajectory>
     <checkpoint stride='2000'/>
   </output>
   <total_steps>200000</total_steps>
@@ -11,7 +11,7 @@
   <ffdirect name='pet-mad'>
         <pes>metatomic</pes>
         <parameters>
-            {template:nano_soup-00.xyz,model:pet-mad-xs-v1.5.0.pt,device:cpu,non_conservative:False} 
+            {template:nano_soup-00.xyz,model:pet-mad-s-v1.5.0.pt,device:cuda,non_conservative:False} 
         </parameters>  
     </ffdirect>
   <system_template>
@@ -64,7 +64,7 @@
     </A>
   </thermostat>        
       </thermostat>
-        <timestep units='femtosecond'> 2.0 </timestep>
+        <timestep units='femtosecond'> 0.5 </timestep>
     </dynamics>
     </motion>
     <motion mode='atomswap'>
