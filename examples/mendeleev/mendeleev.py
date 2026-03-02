@@ -3,7 +3,7 @@ Mendeleev's nano-clusters
 =========================
 
 This example demonstrates how to stress test universal machine learning potentials
-by simulating a complex nanoparticle containing a all the elements that are supported
+by simulating a complex nanoparticle containing all the elements that are supported
 by the target model. We will use the version 1.5.0 of the PET-MAD universal potential,
 which covers 102 elements, using ASE, and `i-PI <https://ipi-code.org>`_.
 
@@ -93,10 +93,18 @@ chemiscope.show(
 # integrator allows Monte Carlo swapping of chemical identities during
 # the dynamics.
 #
-# Let's inspect the `i-PI` input XML:
+# Let's inspect the `i-PI` input XML. Note the definition of the 16 replicas
+# using a ``<system_template>`` block, and the configuration of the REMD and
+# atomic swap moves. You may also note the thermostatting setup that combines
+# a stochastic velocity rescaling thermostat (that samples quickly changes in
+# total kinetic energy without slowing down diffusion) with an optimal-sampling
+# GLE thermostat, that improves sampling of local fluctuations. Small correlation
+# time of the energy is essential to quickly equilibrate the system, and maximize
+# the acceptance of the REMD swaps.
 
 with open("data/input-remd.xml", "r") as f:
     xml_input = f.read()
+print(xml_input)
 
 # %%
 # We will use ``InteractiveSimulation`` to run i-PI directly from this Python script.
