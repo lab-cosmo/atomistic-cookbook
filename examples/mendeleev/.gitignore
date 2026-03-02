@@ -1,0 +1,7 @@
+*.out
+*.pos_*xyz
+*.restart
+*.pt
+*.remd_idx
+RESTART
+\#*

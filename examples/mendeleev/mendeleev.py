@@ -309,6 +309,9 @@ chemiscope.show(
 # relative to those used for reference MAD-1.5 calculations, such as tighter integration
 # grids, or using open boundary conditions.
 # This changes the reference energies, but has minimal effect on the forces.
+# Also note that errors are larger than what would be obtained using the more accurate
+# "S" sized model, but they already indicate good semi-quantitative agreement despite
+# the challenging nature of the test.
 
 frames_aims = []
 frames_petmad = []
