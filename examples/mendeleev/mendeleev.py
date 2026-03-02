@@ -101,10 +101,10 @@ with open("data/input-remd.xml", "r") as f:
 #   i-pi input-remd_production.xml
 #
 
-#sim = InteractiveSimulation(xml_input)
+sim = InteractiveSimulation(xml_input)
 
-# Run a very short simulation
-#sim.run(200)
+# Run a short simulation (still these are > 4000 force evaluations, so it may take a while).
+sim.run(250)
 
 # %%
 # Analyzing the Results
