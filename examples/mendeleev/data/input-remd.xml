@@ -1,0 +1,87 @@
+<simulation verbosity='high' threading='true'>
+  <output prefix='soup-nano'>
+	  <properties stride='2' filename='out'>  [ step, time{picosecond}, conserved, temperature{kelvin}, kinetic_md, potential, pressure_md{megapascal}, volume{angstrom3}, cell_h{angstrom}, ensemble_temperature{kelvin}] </properties>
+    <trajectory stride='10' filename='pos' format='ase' bead='0'> positions</trajectory>
+    <checkpoint stride='2000'/>
+  </output>
+  <total_steps>200000</total_steps>
+  <prng>
+    <seed>31415</seed>
+  </prng>
+  <ffdirect name='pet-mad'>
+        <pes>metatomic</pes>
+        <parameters>
+            {template:nano_soup-00.xyz,model:pet-mad-xs-v1.5.0.pt,device:cpu,non_conservative:False} 
+        </parameters>  
+    </ffdirect>
+  <system_template>
+       <labels>   [ IDX, TEMP ] </labels>
+       <instance> [ 00,  300  ] </instance>   
+       <instance> [ 01,  350  ] </instance>
+       <instance> [ 02,  408  ] </instance>
+       <instance> [ 03,  475  ] </instance>
+       <instance> [ 04,  554  ] </instance>
+       <instance> [ 05,  646  ] </instance>
+       <instance> [ 06,  753  ] </instance>
+       <instance> [ 07,  878  ] </instance>
+       <instance> [ 08, 1024  ] </instance>
+       <instance> [ 09, 1194  ] </instance>
+       <instance> [ 10, 1392  ] </instance>
+       <instance> [ 11, 1624  ] </instance>
+       <instance> [ 12, 1893  ] </instance>
+       <instance> [ 13, 2207  ] </instance>
+       <instance> [ 14, 2573  ] </instance>
+       <instance> [ 15, 3000  ] </instance>
+  <template>
+  <system prefix='IDX'>
+    <initialize nbeads='1'>
+      <file mode='ase'> nano_soup-IDX.xyz </file>
+      <velocities mode='thermal' units='kelvin'> TEMP </velocities>
+    </initialize>
+    <forces>
+      <force name='pet-mad' forcefield='pet-mad'>  </force>
+    </forces>
+    <ensemble>
+      <temperature units='kelvin'> TEMP </temperature>
+    </ensemble>
+    <motion mode="multi">
+    <motion mode='dynamics'>
+      <dynamics mode='nvt'>
+      <thermostat mode='multi'>
+        <thermostat mode='svr'>
+            <tau units='femtosecond'> 1 </tau>
+        </thermostat>
+  <thermostat mode='gle'>
+    <A shape='(7,7)'>
+      [   3.066499733425e-4,    3.918645326758e-3,    3.970075856000e-4,    5.751233006221e-4,    1.951026735328e-4,   -7.608506711666e-6,   -1.210898210415e-4, 
+   1.184793718134e-4,    1.614857548113e-2,   -1.173222881437e-2,    1.841044550653e-3,    1.343912309414e-3,   -3.172717109634e-4,    6.002524263036e-4, 
+   5.750302446333e-4,    1.173222881437e-2,    5.400133459112e-3,    5.080790031328e-3,   -1.821095565240e-4,    1.157512054122e-3,   -2.399444162855e-3, 
+  -5.882696333479e-4,   -1.841044550653e-3,   -5.080790031328e-3,    5.323313874683e-5,   -1.512323974504e-5,    1.380014399158e-4,    1.857314941468e-4, 
+  -1.952182693579e-4,   -1.343912309414e-3,    1.821095565240e-4,    1.512323974504e-5,    2.805135356067e-7,   -4.569829279464e-5,   -1.582697298437e-5, 
+   7.599439450979e-6,    3.172717109634e-4,   -1.157512054122e-3,   -1.380014399158e-4,    4.569829279464e-5,    8.953463463337e-8,    1.048302791673e-4, 
+   1.210947553818e-4,   -6.002524263036e-4,    2.399444162855e-3,   -1.857314941468e-4,    1.582697298437e-5,   -1.048302791673e-4,   6.319906026701e-12
+     ]
+    </A>
+  </thermostat>        
+      </thermostat>
+        <timestep units='femtosecond'> 2.0 </timestep>
+    </dynamics>
+    </motion>
+    <motion mode='atomswap'>
+      <atomswap>
+        <nxc> 0.5 </nxc>
+        <names> [ 
+	H, He, Li, Be, B, C, N, O, F, Ne, Na, Mg, Al, Si, P, S, Cl, Ar, K, Ca, Sc, Ti, V, Cr, Mn, Fe, Co, Ni, Cu, Zn, Ga, Ge, As, Se, Br, Kr, Rb, Sr, Y, Zr, Nb, Mo, Tc, Ru, Rh, Pd, Ag, Cd, In, Sn, Sb, Te, I, Xe, Cs, Ba, La, Ce, Pr, Nd, Pm, Sm, Eu, Gd, Tb, Dy, Ho, Er, Tm, Yb, Lu, Hf, Ta, W, Re, Os, Ir, Pt, Au, Hg, Tl, Pb, Bi, Po, At, Rn, Fr, Ra, Ac, Th, Pa, U, Np, Pu, Am, Cm, Bk, Cf, Es, Fm, Md, No
+            ] </names>
+      </atomswap>
+    </motion>	    
+    </motion>
+   </system>
+   </template>
+   </system_template>
+   <smotion mode='remd'>
+      <remd>
+         <stride> 1 </stride>
+      </remd>
+   </smotion>   
+</simulation>
