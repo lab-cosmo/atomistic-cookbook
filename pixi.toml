@@ -4,10 +4,8 @@ version = "0.1.0"
 channels = ["conda-forge"]
 platforms = ["linux-64"]
 
-[dependencies]
-nim = ">=2.2.6,<3"
-
 [tasks]
-vault = { cmd = "nim r scripts/vault.nim", description = "Vault management interface" }
-seal = { cmd = "nim r scripts/vault.nim seal", description = "Encrypt all vault-tracked files" }
-unseal = { cmd = "nim r scripts/vault.nim unseal", description = "Decrypt all vault-tracked files" }
+seal = { cmd = "nimvault seal", description = "Encrypt all vault-tracked files" }
+unseal = { cmd = "nimvault unseal", description = "Decrypt all vault-tracked files" }
+vault-list = { cmd = "nimvault list", description = "List all vault entries" }
+vault-status = { cmd = "nimvault status", description = "Show sync status of vault entries" }
