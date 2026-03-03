@@ -54,7 +54,6 @@ import chemiscope
 import matplotlib.pyplot as plt
 
 # pet-mad ASE calculator
-import metatomic.torch as mta
 import numpy as np
 import requests
 import upet
