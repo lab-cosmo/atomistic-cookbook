@@ -37,11 +37,11 @@ in `this preprint <https://arxiv.org/abs/2503.14118>`_.
 #
 # Start by importing the required libraries. To use PET-MAD,
 # and obtain all the necessary dependencies, you can simply use pip
-# to install the `PET-MAD package <https://github.com/lab-cosmo/pet-mad>`_:
+# to install the `upet package <https://github.com/lab-cosmo/upet>`_:
 #
 # .. code-block:: bash
 #
-#     pip install pet-mad
+#     pip install upet
 #
 
 import os
@@ -57,7 +57,9 @@ import matplotlib.pyplot as plt
 import metatomic.torch as mta
 import numpy as np
 import requests
+import upet
 from ase.optimize import LBFGS
+from upet.calculator import UPETCalculator
 from ipi.utils.mathtools import get_rotation_quadrature_lebedev
 from ipi.utils.parsing import read_output, read_trajectory
 from ipi.utils.scripting import (
@@ -66,7 +68,6 @@ from ipi.utils.scripting import (
     motion_nvt_xml,
     simulation_xml,
 )
-from pet_mad.calculator import PETMADCalculator
 
 
 # %%
@@ -133,24 +134,26 @@ test_forces = np.array(test_forces, dtype=object)
 # <https://docs.metatensor.org/metatomic>`_.
 #
 # We now load the PET-MAD ASE calculator and calculate energy and forces.
+# We use the ``upet`` package, which provides a convenient interface
+# to download and use PET-MAD models. Here we use the small (s) model
+# at version 1.0.2, which was trained on PBEsol data matching the
+# reference level of theory of the MAD test set.
+# For general-purpose simulations, we recommend using version 1.5.0
+# (i.e. ``version="1.5.0"``) which is based on an improved architecture
+# and trained on r2SCAN meta-GGA references, unless PBEsol energetics is needed.
+# The extra-small (xs) model (``model="pet-mad-xs"``, available from
+# version 1.5.0) is faster but less accurate than -s.
 
-calculator = PETMADCalculator(version="1.0.2", device="cpu")
+calculator = UPETCalculator(model="pet-mad-s", version="1.0.2", device="cpu")
 
 # %%
 #
 # The model can also be exported in a format that can be used with
-# external MD engines. This is done by saving the model to a file,
-# which includes the model architecture and weights.
+# external MD engines, such as i-PI and LAMMPS. This is done by saving
+# the model to a file using ``upet.save_upet``.
 
-calculator.calculator._model.save("pet-mad-v1.0.2.pt")
-
-# %%
-# The model can also be loaded from this torchscript dump, which often
-# speeds up calculation as it involves compilation, and is functionally
-# equivalent unless you plan on fine-tuning, or otherwise modifying
-# the model.
-
-calculator = mta.ase_calculator.MetatomicCalculator("pet-mad-v1.0.2.pt", device="cpu")
+model_path = "pet-mad-s-v1.0.2.pt"
+upet.save_upet(model="pet-mad", size="s", version="1.0.2", output=model_path)
 
 # %%
 #
@@ -176,7 +179,7 @@ mad_forces = np.array(mad_forces, dtype=object)
 # A parity plot with the model predictions
 
 tab10 = plt.get_cmap("tab10")
-fig, ax = plt.subplots(1, 2, figsize=(6, 3), constrained_layout=True)
+fig, ax = plt.subplots(1, 2, figsize=(6, 3.5), constrained_layout=True)
 
 ax[0].plot([0, 1], [0, 1], "b:", transform=ax[0].transAxes)
 ax[1].plot([0, 1], [0, 1], "b:", transform=ax[1].transAxes)
@@ -202,7 +205,7 @@ ax[0].set_ylabel("Reference energy / eV/atom")
 ax[1].set_xlabel("MAD forces / eV/Å")
 ax[1].set_ylabel("Reference forces / eV/Å")
 
-fig.legend(loc="upper center", bbox_to_anchor=(0.55, 1.20), ncol=3)
+fig.legend(loc="outside upper center", ncol=3)
 
 
 # %%
@@ -312,14 +315,12 @@ chemiscope.show(
         "delta_energy": {
             "target": "structure",
             "values": 1e3 * (rot_energies - rot_energies.mean()),
-            "units": "eV/atom",
+            "units": "meV/atom",
         },
         "euler_angles": rot_angles,
     },
     shapes={
-        "forces": chemiscope.ase_vectors_to_arrows(
-            rot_structures, "forces", scale=50.0
-        ),
+        "forces": chemiscope.ase_vectors_to_arrows(rot_structures, "forces", scale=1),
     },
     settings=chemiscope.quick_settings(
         x="euler_angles[1]",
@@ -391,7 +392,12 @@ chemiscope.show(
         "energy": traj_energy,
     },
     mode="default",
-    settings=chemiscope.quick_settings(trajectory=True),
+    settings=chemiscope.quick_settings(
+        trajectory=True,
+        structure_settings={
+            "unitCell": True,
+        },
+    ),
 )
 
 # %%
@@ -440,7 +446,7 @@ input_xml = simulation_xml(
         name="pet-mad",
         mode="direct",
         pes="metatomic",
-        parameters={"model": "pet-mad-v1.0.2.pt", "template": "data/al6xxx-o2.xyz"},
+        parameters={"model": "pet-mad-s-v1.0.2.pt", "template": "data/al6xxx-o2.xyz"},
     ),
     motion=motion_xml,
     temperature=800,
