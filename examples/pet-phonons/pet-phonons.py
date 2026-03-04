@@ -12,7 +12,8 @@ The point-edge transformer (`PET
 <https://proceedings.neurips.cc/paper_files/paper/2023/file/fb4a7e3522363907b26a86cc5be627ac-Paper-Conference.pdf>`_)
 is an *unconstrained* architecture: it achieves a high degree of symmetry
 compliance through data augmentation during training, rather than enforcing
-equivariance by construction (see also the `PET-MAD recipe <pet-mad.html>`_
+equivariance by construction (see also the
+`PET-MAD recipe <https://atomistic-cookbook.org/examples/pet-mad/pet-mad.html>`_
 for more details). As a consequence, the predicted potential energy surface
 is slightly asymmetric, meaning that its minimum does not sit exactly at the ideal
 high-symmetry geometry.
@@ -36,7 +37,7 @@ confidence intervals on each phonon branch.
 
 The ensemble is based on the *last-layer prediction rigidity* (LLPR) approach
 (`Bigi et al., 2024 <https://arxiv.org/abs/2403.02251>`_; see also the `PET-MAD UQ
-recipe <pet-mad-uq.html>`_ for more
+recipe <https://atomistic-cookbook.org/examples/pet-mad-uq/pet-mad-uq.html>`_ for more
 details on LLPR uncertainty quantification).
 
 The `uqphonon` package wraps `phonopy <https://phonopy.github.io/phonopy/>`_
@@ -76,7 +77,7 @@ from uqphonon import PhononEnsemble
 # -----
 #
 # We use the extra-small (XS) variant of
-# `PET-MAD v1.5.0 <https://arxiv.org/abs/2503.14118>`_, which covers
+# `PET-MAD v1.5.0 <https://arxiv.org/abs/2603.02089>`_, which covers
 # 102 elements and is fast enough to run phonon calculations on CPU.
 # The ``upet`` package provides a convenient ASE calculator interface and
 # a utility to export ``metatomic`` models for use with ``i-PI``.
@@ -365,5 +366,6 @@ plt.show()
 #   going beyond simple benchmarking against reference data.
 #
 # For more information on PET-MAD and its uncertainty quantification
-# capabilities, see `Mazitov et al., 2025 <https://arxiv.org/abs/2503.14118>`_
-# and the `PET-MAD UQ recipe <pet-mad-uq.html>`_.
+# capabilities, see `Mazitov et al., 2025 <https://arxiv.org/abs/2503.14118>`_,
+# Malosso et al., 2026 <https://arxiv.org/abs/2603.02089>`_, and the `PET-MAD UQ recipe
+# <https://atomistic-cookbook.org/examples/pet-mad-uq/pet-mad-uq.html>`_.
