@@ -8,11 +8,14 @@ dependencies:
   - python=3.13
   - pip
   - uv
+  - jax
   - pip:
     - torch>=2.9,<2.10 
     - ase>=3.23
     - matplotlib
-    - metatrain  
+    # XXX: why does metatrain suddenly need this
+    - filelock
+    - metatrain @ git+https://github.com/metatensor/metatrain@492f0bfaeb3ea72fda4252b0dd6c055363cf199a  
     - requests
-    - rgpycrumbs>=0.1.3,<0.2
-    - chemparseplot>=0.1.0,<0.2
+    - rgpycrumbs>=1.1.0,<2
+    - chemparseplot>=1.1.0,<2
