@@ -163,9 +163,7 @@ def report_symmetry(atoms, label=""):
     sg_loose = spglib.get_spacegroup(spglib_cell, symprec=1e-2)
     sg_tight = spglib.get_spacegroup(spglib_cell, symprec=1e-6)
     print(
-        f"{label:20s}  "
-        f"loose (1e-2): {str(sg_loose):15s}  "
-        f"tight (1e-6): {str(sg_tight)}"
+        f"{label:20s}  loose (1e-2): {str(sg_loose):15s}  tight (1e-6): {str(sg_tight)}"
     )
 
 
