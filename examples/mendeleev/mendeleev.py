@@ -1,6 +1,6 @@
 """
-Mendeleev's nano-clusters
-=========================
+Mendeleev clusters
+==================
 
 This example demonstrates how to stress test universal machine learning potentials
 by simulating a complex nanoparticle containing all the elements that are supported
@@ -317,9 +317,6 @@ chemiscope.show(
 # relative to those used for reference MAD-1.5 calculations, such as tighter integration
 # grids, or using open boundary conditions.
 # This changes the reference energies, but has minimal effect on the forces.
-# Also note that errors are larger than what would be obtained using the more accurate
-# "S" sized model, but they already indicate good semi-quantitative agreement despite
-# the challenging nature of the test.
 
 frames_aims = []
 frames_petmad = []
@@ -338,7 +335,10 @@ for i in r2scan_avail:
 
 
 # %%
-# We visualize the structures and forces with chemiscope
+# We visualize the structures and forces with chemiscope.
+# Note that errors are larger than what would be obtained using the more accurate
+# "S" sized model, but they already indicate good semi-quantitative agreement despite
+# the challenging nature of the test.
 
 f_petmad = np.vstack([f.get_forces() for f in frames_petmad])
 f_aims = np.vstack([f.get_forces() for f in frames_aims])

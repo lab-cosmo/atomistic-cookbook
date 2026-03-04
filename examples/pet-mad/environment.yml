@@ -3,12 +3,12 @@ channels:
   - conda-forge
 dependencies:
   - python=3.12
-  - lammps-metatomic=2025.09.10.mta1
+  - lammps-metatomic=2025.09.10.mta3
   - pip
   - pip:
     - ase
-    - pet-mad>=1.2.0,<2.0
-    - ipi==3.1.5
+    - upet>=0.2.1
+    - ipi>=3.1.8
     - chemiscope>=1.0
     - matplotlib
     - metatomic-torch<=0.1.8
