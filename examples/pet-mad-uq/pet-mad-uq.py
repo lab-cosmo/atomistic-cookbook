@@ -87,6 +87,8 @@ import os
 import subprocess
 from urllib.request import urlretrieve
 
+import upet
+
 import ase.geometry.rdf
 import matplotlib.pyplot as plt
 import numpy as np
@@ -106,40 +108,50 @@ from metatrain.utils.data.system_to_ase import system_to_ase
 # %%
 # Model Loading
 # -------------
-# All examples require a PET-MAD model with ensemble and LLPR prediction. The
-# following
-# code loads a pre-trained model using the ASE-compatible calculator wrapper. Using the
-# calculator instead of calling the model directly conveniently hides computing
+# All examples require a PET-MAD model with ensemble and LLPR prediction.
+# PET-MAD v1.5.0 includes built-in LLPR uncertainty quantification, so we
+# can use it directly. Here we use the extra-small (xs) model for speed.
+# For production calculations, the small (s) model (``size="s"``) is far
+# more accurate and still very fast.
+# We use the ``upet`` package to download the model, and load it using the
+# ASE-compatible MetatomicCalculator wrapper, which conveniently hides computing
 # neighbor lists in the calculator.
-if not os.path.exists("models/pet-mad-latest-llpr.pt"):
-    os.makedirs("models", exist_ok=True)
-    urlretrieve(
-        "https://huggingface.co/jospies/pet-mad-llpr/resolve/main/"
-        "pet-mad-latest-llpr.pt?download=true",
-        "models/pet-mad-latest-llpr.pt",
-    )
 
-calculator = MetatomicCalculator("models/pet-mad-latest-llpr.pt", device="cpu")
+model_path = "models/pet-mad-xs-v1.5.0.pt"
+os.makedirs("models", exist_ok=True)
+upet.save_upet(model="pet-mad", size="xs", version="1.5.0", output=model_path)
+
+calculator = MetatomicCalculator(model_path, device="cpu")
 
 # %%
 # Uncertainties on a Dataset
 # ----------------------------------------------
 # This first example shows how to use PET-MAD to estimate uncertainties on a reference
-# dataset. We use a reduced version (because of limited compute power in the CI runner)
-# of the MAD validation set.
+# dataset. We use a reduced subset (100 structures, because of limited compute power
+# in the CI runner) of the MAD 1.5 validation set, which contains r2SCAN references
+# matching the level of theory used to train PET-MAD v1.5.0.
 #
-# For this, we first download the correspond MAD validation dataset record from
-# Materials Cloud. Then, we prepare the dataset and pass it through the model. In the
+# We download the full validation set from
+# `Materials Cloud <https://archive.materialscloud.org/records/18tke-tt476>`_
+# and extract 100 structures with a constant stride.
+# Then, we prepare the dataset and pass it through the model. In the
 # final step, we visualize the predicted uncertainties and compare them to a
 # ground truth method.
 
 if not os.path.exists("data/mad-val-100.xyz"):
     os.makedirs("data", exist_ok=True)
+    mad_val_full = "data/mad-1.5-r2scan-val.xyz"
     urlretrieve(
-        "https://huggingface.co/jospies/pet-mad-llpr/resolve/main/mad-val-100.xyz"
-        "?download=true",
-        "data/mad-val-100.xyz",
+        "https://archive.materialscloud.org/records/18tke-tt476/"
+        "files/mad-1.5-r2scan-val.xyz",
+        mad_val_full,
     )
+    # Extract 100 structures with constant stride from the full validation set
+    full_dataset = ase.io.read(mad_val_full, index=":")
+    stride = max(1, len(full_dataset) // 100)
+    subset = full_dataset[::stride][:100]
+    ase.io.write("data/mad-val-100.xyz", subset, format="extxyz")
+    os.remove(mad_val_full)
 
 # Read the dataset's structures.
 systems = read_systems("data/mad-val-100.xyz")
@@ -150,8 +162,8 @@ target_config = {
         "quantity": "energy",
         "read_from": "data/mad-val-100.xyz",
         "reader": "ase",
-        "key": "energy",
-        "unit": "kcal/mol",
+        "key": "atomization_energy",
+        "unit": "eV",
         "type": "scalar",
         "per_atom": False,
         "num_subtargets": 1,
@@ -373,7 +385,7 @@ for atoms in frames:
         + bins[3:-1] * 0.2
         + bins[4:] * 0.1
     )
-    rdfs_hh.append(bins * 3.0 / 2.0)  # correct ASE normalization
+    rdfs_hh.append(bins)
 
     # Compute O-O distances
     bins, xs = ase.geometry.rdf.get_rdf(  # type: ignore
@@ -386,7 +398,7 @@ for atoms in frames:
         + bins[3:-1] * 0.2
         + bins[4:] * 0.1
     )
-    rdfs_oo.append(bins * 3.0)  # correct ASE normalization
+    rdfs_oo.append(bins)
 
 rdfs_hh = np.stack(rdfs_hh, axis=0)
 rdfs_oo = np.stack(rdfs_oo, axis=0)
