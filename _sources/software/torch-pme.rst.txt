@@ -1,0 +1,42 @@
+torch-pme
+=========
+
+`torch-pme <https://lab-cosmo.github.io/torch-pme/>`_
+provides a modular implementation of classical algorithms
+for the evaluation of long-range interactions (e.g. Ewald,
+particle-mesh Ewald - PME, and P3M). 
+It can be used to build traditional electrostatic models,
+as well as long-range descriptors for machine-learning
+applications.
+
+
+
+.. grid:: 1 2 2 3
+    :gutter: 1 1 2 3
+
+    .. grid-item::
+
+        .. card:: Atomistic Water Model for Molecular Dynamics
+            :link: ../examples/water-model/water-model
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/water-model/images/thumb/sphx_glr_water-model_thumb.png
+                :alt: In this example, we demonstrate how to construct a metatomic model for flexible three and four-point water model, with parameters optimized for use together with quantum-nuclear-effects-aware path integral simulations (cf. Habershon et al., JCP (2009)). The model also demonstrates the use of torch-pme, a Torch library for long-range interactions, and uses the resulting model to perform demonstrative molecular dynamics simulations.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Learning Capabilities with torchpme
+            :link: ../examples/torchpme/torchpme_learning
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/torchpme/images/thumb/sphx_glr_torchpme_learning_thumb.png
+                :alt: This example demonstrates the capabilities of the torchpme package, focusing on learning target charges and utilizing the :class:`CombinedPotential` class to evaluate potentials that combine multiple pairwise interactions with optimizable weights.
+                :class: gallery-img
+
+                
