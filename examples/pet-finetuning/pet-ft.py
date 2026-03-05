@@ -37,10 +37,15 @@ from collections import Counter
 from glob import glob
 
 import ase.io
+import ase.units
+import chemiscope
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from ase.md.velocitydistribution import MaxwellBoltzmannDistribution
+from ase.md.verlet import VelocityVerlet
 from huggingface_hub import hf_hub_download
+from metatomic.torch.ase_calculator import MetatomicCalculator
 from metatrain.utils.io import model_from_checkpoint
 from sklearn.linear_model import LinearRegression
 
@@ -342,3 +347,83 @@ result = subprocess.run(
     text=True,
 )
 print(result.stdout)
+
+# %%
+# Running NVE molecular dynamics with the fine-tuned model
+# --------------------------------------------------------
+#
+# Having trained and evaluated the model, we can use it to run a short
+# molecular dynamics simulation. We use ASE's `VelocityVerlet` integrator
+# to propagate the system in the NVE (microcanonical) ensemble for 1 ps,
+# starting from one of the ethanol structures in the test set.
+#
+# We load the exported model using `MetatomicCalculator`, which wraps it
+# as an ASE calculator.
+
+atoms = test[0].copy()
+atoms.calc = MetatomicCalculator("fine_tune-model.pt", device="cpu")
+
+# %%
+# We initialize the velocities at 300 K and run NVE dynamics with a 0.5 fs
+# timestep, collecting snapshots every 10 steps.
+
+MaxwellBoltzmannDistribution(atoms, temperature_K=300)
+
+dt_fs = 0.5  # timestep in fs
+n_steps = 2000  # 2000 * 0.5 fs = 1 ps
+save_interval = 10
+
+dyn = VelocityVerlet(atoms, dt_fs * ase.units.fs)
+
+trajectory = []
+time_ps = []
+potential_energy = []
+kinetic_energy = []
+
+for step in range(n_steps // save_interval):
+    dyn.run(save_interval)
+    snapshot = atoms.copy()
+    snapshot.info["step"] = (step + 1) * save_interval
+    trajectory.append(snapshot)
+    time_ps.append((step + 1) * save_interval * dt_fs / 1000)
+    potential_energy.append(atoms.get_potential_energy())
+    kinetic_energy.append(atoms.get_kinetic_energy())
+
+total_energy = np.array(potential_energy) + np.array(kinetic_energy)
+
+# %%
+# We can verify energy conservation by plotting the potential and total energies.
+# In a well-behaved NVE simulation, the total energy should remain approximately
+# constant.
+
+fig, ax = plt.subplots(1, 1, figsize=(5, 3), constrained_layout=True)
+ax.plot(time_ps, potential_energy, label=r"$V$")
+ax.plot(time_ps, total_energy, label=r"$E_\mathrm{tot}$")
+ax.set_xlabel("t / ps")
+ax.set_ylabel("Energy / eV")
+ax.legend()
+
+# %%
+# Visualizing the trajectory with chemiscope
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# Finally, we visualize the trajectory interactively using
+# `chemiscope <https://chemiscope.org>`_.
+
+chemiscope.show(
+    trajectory,
+    mode="default",
+    properties={
+        "time / ps": time_ps,
+        "potential energy / eV": potential_energy,
+        "total energy / eV": total_energy.tolist(),
+    },
+    settings=chemiscope.quick_settings(
+        x="time / ps",
+        y="potential energy / eV",
+        trajectory=True,
+    ),
+    meta={
+        "name": "NVE MD of ethanol with fine-tuned PET model",
+    },
+)
