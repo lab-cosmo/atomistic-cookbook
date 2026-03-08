@@ -26,3 +26,4 @@ repository <https://github.com/lab-cosmo/chemiscope>`_.
 - examples/flashmd/flashmd-demo
 - examples/metatomic-plumed/metatomic-plumed
 - examples/mendeleev/mendeleev  
+- examples/pet-relaxation/pet-relaxation
