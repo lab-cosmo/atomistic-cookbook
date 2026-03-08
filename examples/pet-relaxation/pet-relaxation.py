@@ -226,7 +226,7 @@ for symprec in np.logspace(-4, np.log10(0.1), 10):
 #
 # The symmetrized model successfully protects the angular symmetry of the cell, keeping
 # the internal angles closer to 90 degrees. This replaces the messy triclinic noise with
-# a more structured :math:`Immm` (body-centered orthorhombic) footprint at tight 
+# a more structured :math:`Immm` (body-centered orthorhombic) footprint at tight
 # tolerances. As the tolerance expands, it still perfectly retraces the :math:`I4/mmm`
 # Bain path before reaching the :math:`Fm\bar{3}m` minimum, which is recovered at lower
 # tolerances than before thanks to the reduced noise.
@@ -337,7 +337,7 @@ print(f"E(cubic) - E(R3m): {dE * 1000:.1f} meV")
 cellpar_c = bto_const.cell.cellpar()
 cellpar_u = bto_unconst.cell.cellpar()
 print(f"  Cubic:         a = {cellpar_c[0]:.4f} Å")
-print(f"  Ferroelectric: a = {cellpar_u[0]:.4f} Å, " f"α = {cellpar_u[3]:.2f}°")
+print(f"  Ferroelectric: a = {cellpar_u[0]:.4f} Å, α = {cellpar_u[3]:.2f}°")
 
 # %%
 #
