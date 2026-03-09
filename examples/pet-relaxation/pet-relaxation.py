@@ -280,8 +280,8 @@ chemiscope.show(
 # can make symmetry detection tricky. When using a tight ``symprec`` value of ``1e-6``,
 # ``spglib`` detects the lowest-symmetry space group (:math:`P\bar{1}`).
 # A looser tolerance of ``0.02`` correctly identifies the high-symmetry
-# :math:`Fm\bar{3}m`. We recommend scanning the ``symprec`` parameter to find a "plateau"
-# that identifies the true symmetry of the relaxed structure.
+# :math:`Fm\bar{3}m`. We recommend scanning the ``symprec`` parameter to find a
+# "plateau" that identifies the true symmetry of the relaxed structure.
 
 spglib_cell = (
     atoms_al.get_cell(),
@@ -391,8 +391,8 @@ for symprec in np.logspace(-4, np.log10(0.1), 10):
 # the internal angles closer to 90 degrees. The resulting structure has higher symmetry
 # with space group :math:`Immm` (body-centered orthorhombic) at tight tolerances.
 # As the tolerance is increased, it still perfectly retraces the :math:`I4/mmm`
-# Bain path before reaching the :math:`Fm\bar{3}m` minimum, which is recovered at tighter
-# tolerances than before thanks to the reduced noise.
+# Bain path before reaching the :math:`Fm\bar{3}m` minimum, which is recovered at
+# tighter tolerances than before thanks to the reduced noise.
 
 # %%
 # BaTiO₃: spontaneous ferroelectric distortion
