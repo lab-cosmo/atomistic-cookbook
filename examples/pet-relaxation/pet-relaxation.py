@@ -6,9 +6,9 @@ Geometry relaxation with unconstrained MLIPs
 
 This recipe shows how to perform geometry optimization with *unconstrained*
 machine-learning interatomic potentials (MLIPs), and what tools are available
-to control symmetry during relaxation.
+to control symmetry during relaxation. 
 
-The `Point-Edge Transformer (PET)
+Unconstrained models, such as the `Point-Edge Transformer (PET)
 <https://proceedings.neurips.cc/paper_files/paper/2023/file/fb4a7e3522363907b26a86cc5be627ac-Paper-Conference.pdf>`_
 learns symmetry through data augmentation rather than having it encoded by
 construction (see also the
@@ -18,6 +18,14 @@ residual even on perfect high-symmetry structures. During optimization, this
 residual breaks degeneracies: if a structure sits on a saddle point, the
 optimizer will move off it toward a nearby minimum. The practical consequence
 is that a plain relaxation does not necessarily preserve the initial symmetry.
+When the starting configuration is close to a local minimum, this introduces 
+small distortions that could be problematic for some applications (e.g. when 
+automatically building brillouin zone paths for 
+`phonon calculations 
+<https://atomistic-cookbook.org/examples/pet-phonons/pet-phonons.html>`_).
+When the starting configuration is unstable, the unconstrained model will 
+naturally find the nearest minimum, which is often desirable but not always 
+(e.g., when you want to study a specific metastable or high-symmetry phase).
 
 This recipe covers the workflow for handling this behavior:
 
@@ -29,7 +37,8 @@ This recipe covers the workflow for handling this behavior:
    its symmetry before optimizing.
 3. **Rotational averaging**: a calculator-level option that reduces the
    symmetry-breaking residual by averaging predictions over a grid of
-   rotations.
+   rotations, and can be useful when one wants to reduce the residual 
+   distortion in unconstrained optimizations.
 
 We demonstrate these tools on two systems:
 
@@ -73,12 +82,17 @@ warnings.filterwarnings(
 # -----
 #
 # We use the small (S) variant of
-# `PET-MAD v1.5.0 <https://arxiv.org/abs/2603.02089>`_.
+# `PET-MAD v1.5.0 <https://arxiv.org/abs/2603.02089>`_, which is trained on
+# a dataset of approximately 200k structures computed at the r2SCAN level of theory.
 
 FMAX = 1e-4  # eV/Å, force convergence threshold
 STEPS = 500  # max optimization steps
 
 DEVICE = "cpu"
+
+# We suggest using double precison (``dtype="float64``) for geometry optimization, as
+# it allows smaller values of the ``fmax`` convergence threshold and more reliable
+# symmetry detection.
 
 calc = UPETCalculator(
     model="pet-mad-s",
@@ -87,14 +101,9 @@ calc = UPETCalculator(
     version="1.5.0",
 )
 
-# We suggest using double precison (``dtype="float64``) for geometry optimization, as
-# it allows smaller values of the ``fmax`` convergence threshold and more reliable
-# symmetry detection.
-
 # %%
-# Helper
-# ^^^^^^
-
+# Helper functions
+# ^^^^^^^^^^^^^^^^
 
 def report_symmetry(atoms, label="", loose_tol=0.02):
     """Detect and report space group using spglib."""
@@ -115,10 +124,16 @@ def report_symmetry(atoms, label="", loose_tol=0.02):
 # Al along the Bain path
 # -----------------------
 #
-# `Aluminum's ground state <https://next-gen.materialsproject.org/materials/mp-134>`_
-# is FCC (:math:`Fm\bar{3}m`). The BCC structure is a saddle point along the
+# The `ground state structure for Aluminum
+# <https://next-gen.materialsproject.org/materials/mp-134>`_ has FCC symmetry
+# :math:`Fm\bar{3}m`). The BCC structure is a saddle point along the
 # `Bain path <https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.78.3892>`_,
 # a continuous tetragonal deformation connecting BCC and FCC.
+
+
+# %%
+# Unconstrained relaxation
+# ^^^^^^^^^^^^^^^^^^^^^^^^^
 # Because PET does not enforce point-group symmetry, the predicted stress on the
 # perfect BCC cell has a small anisotropic residual. This is enough to push the
 # optimizer off the saddle, and the cell slides down to FCC.
@@ -145,7 +160,7 @@ cell_parameters = np.array([frame.cell.cellpar() for frame in traj])
 a, b, c, alpha, beta, gamma = cell_parameters.T
 steps = np.arange(len(traj))
 
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4), constrained_layout=True)
 
 ax1.plot(steps, a, label="a")
 ax1.plot(steps, b, label="b", ls="--")
@@ -162,19 +177,20 @@ ax2.set_ylabel("Angle (°)")
 ax2.legend()
 
 fig.suptitle("Al: BCC → FCC along the Bain path")
-plt.tight_layout()
 plt.show()
 
 
 # %%
-#
-# Another important point is that a tight ``symprec`` value of ``1e-6`` results in the
-# lowest-symmetry space group (:math:`P\bar{1}`) being detected for the final relaxed
-# structure, while a looser tolerance of ``0.02`` correctly identifies the high-symmetry
-# :math:`Fm\bar{3}m`. This is again a consequence of the unconstrained nature of PET.
-# We can also see what's the detected symmetry group for increasing values of
-# ``symprec`` to see the "plateau" that identifies the true symmetry of the relaxed
-# structure.
+# Detecting the relaxed symmetry
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# 
+# Even if the relaxed structure is very close to FCC and is converged to a very tight
+# force threshold, the small symmetry breaking due to the unconstrained nature of PET 
+# can make symmetry detection tricky. When using a tight ``symprec`` value of ``1e-6``,
+# ``spglib``  detexts the lowest-symmetry space group (:math:`P\bar{1}`).
+# A looser tolerance of ``0.02`` correctly identifies the high-symmetry
+# :math:`Fm\bar{3}m`. We recommend scanning the ``symprec`` parameter to find a "plateau" 
+# that identifies the true symmetry of the relaxed structure. 
 
 spglib_cell = (
     atoms_al.get_cell(),
@@ -186,6 +202,8 @@ for symprec in np.logspace(-4, np.log10(0.1), 10):
         f"  symprec={symprec:.4f}  "
         f"{spglib.get_spacegroup(spglib_cell, symprec=symprec)}"
     )
+
+    
 
 # %%
 #
