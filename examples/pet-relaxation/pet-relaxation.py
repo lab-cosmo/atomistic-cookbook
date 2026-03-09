@@ -6,7 +6,7 @@ Geometry relaxation with unconstrained MLIPs
 
 This recipe shows how to perform geometry optimization with *unconstrained*
 machine-learning interatomic potentials (MLIPs), and what tools are available
-to control symmetry during relaxation. 
+to control symmetry during relaxation.
 
 Unconstrained models, such as the `Point-Edge Transformer (PET)
 <https://proceedings.neurips.cc/paper_files/paper/2023/file/fb4a7e3522363907b26a86cc5be627ac-Paper-Conference.pdf>`_
@@ -18,13 +18,13 @@ residual even on perfect high-symmetry structures. During optimization, this
 residual breaks degeneracies: if a structure sits on a saddle point, the
 optimizer will move off it toward a nearby minimum. The practical consequence
 is that a plain relaxation does not necessarily preserve the initial symmetry.
-When the starting configuration is close to a local minimum, this introduces 
-small distortions that could be problematic for some applications (e.g. when 
-automatically building brillouin zone paths for 
-`phonon calculations 
+When the starting configuration is close to a local minimum, this introduces
+small distortions that could be problematic for some applications (e.g. when
+automatically building brillouin zone paths for
+`phonon calculations
 <https://atomistic-cookbook.org/examples/pet-phonons/pet-phonons.html>`_).
-When the starting configuration is unstable, the unconstrained model will 
-naturally find the nearest minimum, which is often desirable but not always 
+When the starting configuration is unstable, the unconstrained model will
+naturally find the nearest minimum, which is often desirable but not always
 (e.g., when you want to study a specific metastable or high-symmetry phase).
 
 This recipe covers the workflow for handling this behavior:
@@ -37,7 +37,7 @@ This recipe covers the workflow for handling this behavior:
    its symmetry before optimizing.
 3. **Rotational averaging**: a calculator-level option that reduces the
    symmetry-breaking residual by averaging predictions over a grid of
-   rotations, and can be useful when one wants to reduce the residual 
+   rotations, and can be useful when one wants to reduce the residual
    distortion in unconstrained optimizations.
 
 We demonstrate these tools on two systems:
@@ -90,7 +90,7 @@ STEPS = 500  # max optimization steps
 
 DEVICE = "cpu"
 
-# We suggest using double precison (``dtype="float64``) for geometry optimization, as
+# We suggest using double precison (``dtype="float64"``) for geometry optimization, as
 # it allows smaller values of the ``fmax`` convergence threshold and more reliable
 # symmetry detection.
 
@@ -104,6 +104,7 @@ calc = UPETCalculator(
 # %%
 # Helper functions
 # ^^^^^^^^^^^^^^^^
+
 
 def report_symmetry(atoms, label="", loose_tol=0.02):
     """Detect and report space group using spglib."""
@@ -126,7 +127,7 @@ def report_symmetry(atoms, label="", loose_tol=0.02):
 #
 # The `ground state structure for Aluminum
 # <https://next-gen.materialsproject.org/materials/mp-134>`_ has FCC symmetry
-# :math:`Fm\bar{3}m`). The BCC structure is a saddle point along the
+# (:math:`Fm\bar{3}m`). The BCC structure is a saddle point along the
 # `Bain path <https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.78.3892>`_,
 # a continuous tetragonal deformation connecting BCC and FCC.
 
@@ -179,18 +180,108 @@ ax2.legend()
 fig.suptitle("Al: BCC → FCC along the Bain path")
 plt.show()
 
+# %%
+#
+# The `chemiscope <http://chemiscope.org>`_ widget lets you inspect the
+# trajectory frame by frame. The BCC (red) and FCC (blue) conventional cells
+# are overlaid: watch the BCC cube deform as the FCC cube becomes regular.
+
+traj_frames = ase.io.read("al_bain.traj", index=":")
+al_energies = np.array([frame.get_potential_energy() for frame in traj_frames])
+
+
+def conventional_cell_edges(cell, kind):
+    """Return the 12 edges of a conventional cubic cell as (position, vector) pairs."""
+    a1, a2, a3 = np.array(cell)
+    # BCC conventional cell vectors from BCC primitive vectors
+    A_bcc, B_bcc, C_bcc = a2 + a3, a1 + a3, a1 + a2
+    if kind == "bcc":
+        A, B, C = A_bcc, B_bcc, C_bcc
+        origin = np.zeros(3)
+    else:  # fcc
+        # Bain correspondence: FCC shares one BCC edge, the other two are
+        # face diagonals of the BCC cube
+        A = B_bcc
+        B = A_bcc + C_bcc
+        C = A_bcc - C_bcc
+        origin = np.zeros(3)
+    corners = [
+        origin,
+        origin + A,
+        origin + B,
+        origin + C,
+        origin + A + B,
+        origin + A + C,
+        origin + B + C,
+        origin + A + B + C,
+    ]
+    edge_pairs = [
+        (0, 1),
+        (0, 2),
+        (0, 3),
+        (1, 4),
+        (1, 5),
+        (2, 4),
+        (2, 6),
+        (3, 5),
+        (3, 6),
+        (4, 7),
+        (5, 7),
+        (6, 7),
+    ]
+    return [
+        (corners[i].tolist(), (corners[j] - corners[i]).tolist()) for i, j in edge_pairs
+    ]
+
+
+conv_shapes = {}
+for edge_idx in range(12):
+    for kind, color in [("bcc", "0xFF0000"), ("fcc", "0x0000FF")]:
+        structure_params = []
+        for frame in traj_frames:
+            edges = conventional_cell_edges(frame.cell[:], kind)
+            pos, vec = edges[edge_idx]
+            structure_params.append({"position": pos, "vector": vec})
+        conv_shapes[f"{kind}_edge_{edge_idx}"] = {
+            "kind": "cylinder",
+            "parameters": {
+                "global": {"radius": 0.05, "color": color},
+                "structure": structure_params,
+            },
+        }
+
+chemiscope.show(
+    traj_frames,
+    properties={
+        "step": np.arange(len(traj_frames)),
+        "energy": al_energies,
+    },
+    shapes=conv_shapes,
+    settings=chemiscope.quick_settings(
+        x="step",
+        y="energy",
+        map_settings={"joinPoints": True},
+        structure_settings={
+            "unitCell": True,
+            "supercell": (4, 5, 6),
+            "shape": [f"bcc_edge_{i}" for i in range(12)]
+            + [f"fcc_edge_{i}" for i in range(12)],
+            "keepOrientation": True,
+        },
+    ),
+)
 
 # %%
 # Detecting the relaxed symmetry
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-# 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
 # Even if the relaxed structure is very close to FCC and is converged to a very tight
-# force threshold, the small symmetry breaking due to the unconstrained nature of PET 
+# force threshold, the small symmetry breaking due to the unconstrained nature of PET
 # can make symmetry detection tricky. When using a tight ``symprec`` value of ``1e-6``,
-# ``spglib``  detexts the lowest-symmetry space group (:math:`P\bar{1}`).
+# ``spglib`` detects the lowest-symmetry space group (:math:`P\bar{1}`).
 # A looser tolerance of ``0.02`` correctly identifies the high-symmetry
-# :math:`Fm\bar{3}m`. We recommend scanning the ``symprec`` parameter to find a "plateau" 
-# that identifies the true symmetry of the relaxed structure. 
+# :math:`Fm\bar{3}m`. We recommend scanning the ``symprec`` parameter to find a "plateau"
+# that identifies the true symmetry of the relaxed structure.
 
 spglib_cell = (
     atoms_al.get_cell(),
@@ -203,16 +294,51 @@ for symprec in np.logspace(-4, np.log10(0.1), 10):
         f"{spglib.get_spacegroup(spglib_cell, symprec=symprec)}"
     )
 
-    
-
 # %%
 #
 #  At tight tolerances, ``spglib`` detects the residual shear as a highly asymmetric
-# :math:`P\bar{1}` state. As the tolerance expands, it reveals an
+# :math:`P\bar{1}` state. As the tolerance is relaxed, it identifies an
 # :math:`I4/mmm` (body-centered tetragonal) intermediate state before recognizing the
 # "true" :math:`Fm\bar{3}m` (FCC) ground state.
+#
+# Once the plateau is identified, ``standardize_cell`` snaps the coordinates
+# onto ideal Wyckoff positions and the lattice vectors onto the exact
+# :math:`Fm\bar{3}m` cell, removing the residual numerical noise.
+
+std_data = spglib.standardize_cell(spglib_cell, to_primitive=True, symprec=0.05)
+
+al_fcc = Atoms(
+    numbers=std_data[2],
+    scaled_positions=std_data[1],
+    cell=std_data[0],
+    pbc=True,
+)
+
+report_symmetry(al_fcc, "FCC (spglib)")
 
 # %%
+# Constrained relaxation
+# ^^^^^^^^^^^^^^^^^^^^^^^
+#
+# The standardized cell from ``spglib`` has exact :math:`Fm\bar{3}m` symmetry,
+# but its lattice parameters may differ slightly from the model's true minimum.
+# We can refine them with ``FixSymmetry``, which projects forces and stresses
+# onto the symmetry-invariant subspace at every step, ensuring the cell stays
+# exactly FCC throughout the optimization.
+
+al_fcc.set_constraint(FixSymmetry(al_fcc))
+al_fcc.calc = calc
+
+opt_al_const = FIRE(FrechetCellFilter(al_fcc), trajectory="al_fcc_const.traj")
+opt_al_const.run(fmax=FMAX, steps=STEPS)
+
+report_symmetry(al_fcc, "Constrained FCC")
+
+al_fcc.set_constraint(None)
+
+# %%
+# Rotational averaging
+# ^^^^^^^^^^^^^^^^^^^^^
 #
 # A complementary approach to ``FixSymmetry`` is *rotational averaging*: the calculator
 # averages its predictions over a `grid
@@ -262,14 +388,14 @@ for symprec in np.logspace(-4, np.log10(0.1), 10):
 # %%
 #
 # The symmetrized model successfully protects the angular symmetry of the cell, keeping
-# the internal angles closer to 90 degrees. This replaces the messy triclinic noise with
-# a more structured :math:`Immm` (body-centered orthorhombic) footprint at tight
-# tolerances. As the tolerance expands, it still perfectly retraces the :math:`I4/mmm`
-# Bain path before reaching the :math:`Fm\bar{3}m` minimum, which is recovered at lower
+# the internal angles closer to 90 degrees. The resulting structure has higher symmetry
+# with space group :math:`Immm` (body-centered orthorhombic) at tight tolerances.
+# As the tolerance is increased, it still perfectly retraces the :math:`I4/mmm`
+# Bain path before reaching the :math:`Fm\bar{3}m` minimum, which is recovered at tighter
 # tolerances than before thanks to the reduced noise.
 
 # %%
-# BaTiO\ :math:`_3`: spontaneous ferroelectric distortion
+# BaTiO₃: spontaneous ferroelectric distortion
 # --------------------------------------------------------
 #
 # Barium titanate is a prototypical ferroelectric perovskite. At 0 K
@@ -277,6 +403,11 @@ for symprec in np.logspace(-4, np.log10(0.1), 10):
 # <https://next-gen.materialsproject.org/materials/mp-2998/>`_ is a saddle point:
 # Ti displaces off-center, breaking cubic symmetry and stabilizing the rhombohedral
 # :math:`R3m` `phase <https://next-gen.materialsproject.org/materials/mp-5020/>`_.
+# Contrary to the case of Al, which we simulated with a primitive cell so that
+# the deformation was entirely driven by the cell degrees of freedom, the
+# ferroelectric distortion in BaTiO₃ is primarily an internal displacement of Ti
+# relative to the oxygen cage, which involves primarily a distortion within the
+# cell, and only a small accompanying shear distortion of the cell itself.
 #
 # An unconstrained relaxation starting from the cubic cell will naturally
 # fall off the saddle and converge to the :math:`R3m` basin. We then use
@@ -304,24 +435,13 @@ bto_cubic = Atoms(
 report_symmetry(bto_cubic, "Initial (cubic)")
 
 # %%
-# Unconstrained relaxation
-# ^^^^^^^^^^^^^^^^^^^^^^^^^
-
-bto_unconst = bto_cubic.copy()
-bto_unconst.calc = calc
-
-opt_unconst = FIRE(FrechetCellFilter(bto_unconst), trajectory="bto_unconst.traj")
-opt_unconst.run(fmax=FMAX, steps=STEPS)
-
-report_symmetry(bto_unconst, "Unconstrained")
-
-# %%
 # Constrained relaxation
 # ^^^^^^^^^^^^^^^^^^^^^^^
 #
-# `FixSymmetry <https://ase-lib.org/ase/constraints.html#the-fixsymmetry-class>`_
-# reads the space group of the structure at the time it is created, and
-# projects forces and stresses onto the symmetry-invariant subspace at
+# As for the case of Al, we can use `FixSymmetry
+# <https://ase-lib.org/ase/constraints.html#the-fixsymmetry-class>`_
+# to lock in the cubic :math:`Pm\bar{3}m` phase, by projecting
+# forces and stresses onto the symmetry-invariant subspace at
 # every optimization step. It must therefore be instantiated from a cell
 # that already has the target symmetry---applying it to an already-distorted
 # cell would lock in the wrong (lower) symmetry.
@@ -343,8 +463,24 @@ report_symmetry(bto_const, "Constrained")
 bto_const.set_constraint(None)
 
 # %%
+# Unconstrained relaxation
+# ^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# By removing the constraint, we can run a relaxation using the raw PET model.
+# This allows breaking the cubic symmetry and finding the nearest minimum, triggering
+# the ferroelectric distortion.
+
+bto_unconst = bto_cubic.copy()
+bto_unconst.calc = calc
+
+opt_unconst = FIRE(FrechetCellFilter(bto_unconst), trajectory="bto_unconst.traj")
+opt_unconst.run(fmax=FMAX, steps=STEPS)
+
+report_symmetry(bto_unconst, "Unconstrained")
+
+# %%
 # Identifying the ferroelectric phase
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # The unconstrained structure has broken cubic symmetry, but the
 # detected space group depends on the ``spglib`` tolerance. We scan
@@ -384,7 +520,7 @@ report_symmetry(bto_r3m, "R3m (spglib)")
 
 # %%
 # Energy comparison
-# ^^^^^^^^^^^^^^^^^^
+# ~~~~~~~~~~~~~~~~~
 #
 # The unconstrained relaxation converges to a lower-energy structure.
 
@@ -446,9 +582,12 @@ chemiscope.show(
         map_settings={
             "x": {"property": "step"},
             "y": {"property": "energy"},
+            "joinPoints": True,
         },
         structure_settings={
             "unitCell": True,
+            "supercell": (2, 2, 2),
+            "keepOrientation": True,
         },
     ),
 )
