@@ -9,4 +9,4 @@ dependencies:
     - spglib
     - matplotlib
     - numpy
-    - git+https://github.com/ppegolo/uqphonon.git@main
+    - git+https://github.com/ppegolo/uqphonon.git@v0.1.0
