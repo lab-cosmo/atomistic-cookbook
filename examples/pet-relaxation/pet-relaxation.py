@@ -4,33 +4,41 @@ Geometry relaxation with unconstrained MLIPs
 
 :Authors: Paolo Pegolo `@ppegolo <https://github.com/ppegolo/>`_
 
-This recipe explores how *unconstrained* machine-learning interatomic
-potentials (MLIPs) behave during geometry optimization.
+This recipe shows how to perform geometry optimization with *unconstrained*
+machine-learning interatomic potentials (MLIPs), and what tools are available
+to control symmetry during relaxation.
 
-Equivariant models enforce strict rotational and inversion symmetry: if
-a structure sits on a high-symmetry saddle point, predicted forces and
-stresses are exactly zero by construction, and the optimizer cannot
-escape without a manual perturbation.
 The `Point-Edge Transformer (PET)
 <https://proceedings.neurips.cc/paper_files/paper/2023/file/fb4a7e3522363907b26a86cc5be627ac-Paper-Conference.pdf>`_
 learns symmetry through data augmentation rather than having it encoded by
 construction (see also the
 `PET-MAD recipe <https://atomistic-cookbook.org/examples/pet-mad/pet-mad.html>`_).
-The predicted potential energy surface therefore does not necessarily favour symmetrical
-configurations, and the predicted forces and stresses may have a small nonzero residual
-even on perfect high-symmetry structures. During optimization this noise acts as a
-perturbation that breaks degeneracies and pushes the system off saddle points toward the
-true minimum.
+This means that PET's predicted forces and stresses can have a small nonzero
+residual even on perfect high-symmetry structures. During optimization, this
+residual breaks degeneracies: if a structure sits on a saddle point, the
+optimizer will move off it toward a nearby minimum. The practical consequence
+is that a plain relaxation does not necessarily preserve the initial symmetry.
 
-We demonstrate two scenarios:
+This recipe covers the workflow for handling this behavior:
 
-1. **Al (Bain path)**: cell stress drives the structure from BCC to
-   FCC.
+1. **Unconstrained relaxation**: let the optimizer find the nearest minimum.
+   Use ``spglib`` to identify the symmetry of the result and ``standardize_cell``
+   to obtain a clean primitive cell.
+2. **Constrained relaxation with** ``FixSymmetry``: when you want to study a
+   *specific* phase (e.g., a metastable or high-symmetry structure), lock in
+   its symmetry before optimizing.
+3. **Rotational averaging**: a calculator-level option that reduces the
+   symmetry-breaking residual by averaging predictions over a grid of
+   rotations.
+
+We demonstrate these tools on two systems:
+
+1. **Al (Bain path)**: BCC aluminum is a saddle point. Unconstrained
+   relaxation drives the cell to FCC along the
+   `Bain path <https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.78.3892>`_.
 2. **BaTiO₃ (perovskite)**: unconstrained relaxation of the cubic
-   `:math:`Pm\bar{3}m`<https://next-gen.materialsproject.org/materials/mp-2998/>`_
-   structure spontaneously discovers the ferroelectric
-   `:math:`R3m`<https://next-gen.materialsproject.org/materials/mp-5020/>`_
-   (rhombohedral) ground state.
+   :math:`Pm\bar{3}m` structure converges to the ferroelectric
+   :math:`R3m` ground state.
 """
 
 # %%
@@ -50,6 +58,8 @@ from ase.optimize import FIRE
 import spglib
 from upet.calculator import UPETCalculator
 
+# Suppress warnings about matrix logarithm accuracy issued by scipy during geometry
+# optimization to avoid cluttering the output
 warnings.filterwarnings(
     "ignore",
     category=RuntimeWarning,
@@ -105,14 +115,13 @@ def report_symmetry(atoms, label="", loose_tol=0.02):
 # Al along the Bain path
 # -----------------------
 #
-# Aluminum's ground state is FCC
-# (`:math:`Fm\bar{3}m`<https://next-gen.materialsproject.org/materials/mp-134>`_). The
-# BCC structure is a saddle point along the
+# `Aluminum's ground state <https://next-gen.materialsproject.org/materials/mp-134>`_
+# is FCC (:math:`Fm\bar{3}m`). The BCC structure is a saddle point along the
 # `Bain path <https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.78.3892>`_,
 # a continuous tetragonal deformation connecting BCC and FCC.
-# An equivariant model would predict exactly zero stress on the perfect BCC cell. PET's
-# residual stress anisotropy instead triggers a spontaneous shear, and the cell slides
-# down to FCC.
+# Because PET does not enforce point-group symmetry, the predicted stress on the
+# perfect BCC cell has a small anisotropic residual. This is enough to push the
+# optimizer off the saddle, and the cell slides down to FCC.
 
 atoms_al = bulk("Al", "bcc", a=3.3, cubic=False)
 report_symmetry(atoms_al, "Initial (BCC)")
@@ -181,20 +190,30 @@ for symprec in np.logspace(-4, np.log10(0.1), 10):
 # %%
 #
 #  At tight tolerances, ``spglib`` detects the residual shear as a highly asymmetric
-# :math:`P\bar{1}` or :math:`C2/m` state. As the tolerance expands, it reveals an
+# :math:`P\bar{1}` state. As the tolerance expands, it reveals an
 # :math:`I4/mmm` (body-centered tetragonal) intermediate state before recognizing the
 # "true" :math:`Fm\bar{3}m` (FCC) ground state.
 
 # %%
 #
-# We can also repeat the optimization with a symmetrized version of the calculator,
-# which enforces O(3) symmetry via integration on a grid of rotations (plus inversion).
-# Since the group of rotatoins is infinite, the symmetrization is still approximate,
-# but the residual asymmetry can be controlled by the ``rotational_average_order``
-# parameter, which sets the number of rotations in the grid (formally, one can integrate
-# exactly spherical harmonic functions of order less than or equal to
-# ``rotational_average_order``). The cheapest choice is ``rotational_average_order=3``,
-# which averages predictions on a grid of 24 rotations :math:`\times` 2 inversions.
+# A complementary approach to ``FixSymmetry`` is *rotational averaging*: the calculator
+# averages its predictions over a `grid
+# <https://en.wikipedia.org/wiki/Lebedev_quadrature>`_ of rotations (plus inversion),
+# reducing the symmetry-breaking residual at the source. Since the group of rotations is
+# continuous, the averaging is approximate, but the residual can be controlled via the
+# ``rotational_average_order`` parameter, which sets the order of the integration grid
+# (formally, spherical harmonics up to this order are integrated exactly).
+# The cheapest choice is ``rotational_average_order=3``, which averages predictions on
+# a grid of 24 rotations :math:`\times` 2 inversions.
+#
+# Rotational averaging and ``FixSymmetry`` address different aspects: ``FixSymmetry``
+# projects forces and stresses onto the symmetry-invariant subspace of a
+# *specific* space group, while rotational averaging reduces the model's O(3)-breaking
+# noise for *any* structure. They can be combined. However, if the target space group is
+# known, ``FixSymmetry`` is generally preferred: it is exact, cheap, and sufficient.
+# Rotational averaging is most useful in exploratory settings where the
+# final symmetry is not known in advance, but it comes at a significant computational
+# and memory cost.
 
 calc_symm = UPETCalculator(
     model="pet-mad-s",
@@ -236,16 +255,19 @@ for symprec in np.logspace(-4, np.log10(0.1), 10):
 # --------------------------------------------------------
 #
 # Barium titanate is a prototypical ferroelectric perovskite. At 0 K
-# the cubic :math:`Pm\bar{3}m` phase is a saddle point: Ti displaces
-# off-center, breaking cubic symmetry and stabilizing the
-# rhombohedral :math:`R3m` phase.
+# the cubic :math:`Pm\bar{3}m` `phase
+# <https://next-gen.materialsproject.org/materials/mp-2998/>`_ is a saddle point:
+# Ti displaces off-center, breaking cubic symmetry and stabilizing the rhombohedral
+# :math:`R3m` `phase <https://next-gen.materialsproject.org/materials/mp-5020/>`_.
 #
-# An equivariant model would predict zero forces on the perfect cubic
-# structure. PET's residual noise provides the perturbation that
-# triggers the ferroelectric distortion spontaneously.
+# An unconstrained relaxation starting from the cubic cell will naturally
+# fall off the saddle and converge to the :math:`R3m` basin. We then use
+# ``spglib`` to identify the resulting symmetry and extract a clean primitive
+# cell.
 #
-# We compare unconstrained relaxation (which discovers :math:`R3m`)
-# with constrained relaxation (which preserves :math:`Pm\bar{3}m`).
+# We also show how ``FixSymmetry`` can lock in the cubic :math:`Pm\bar{3}m`
+# phase when that is the structure of interest (e.g., for computing phonons
+# at the saddle point).
 
 a_bto = 4.00
 bto_cubic = Atoms(
@@ -278,16 +300,28 @@ report_symmetry(bto_unconst, "Unconstrained")
 # %%
 # Constrained relaxation
 # ^^^^^^^^^^^^^^^^^^^^^^^
+#
+# `FixSymmetry <https://ase-lib.org/ase/constraints.html#the-fixsymmetry-class>`_
+# reads the space group of the structure at the time it is created, and
+# projects forces and stresses onto the symmetry-invariant subspace at
+# every optimization step. It must therefore be instantiated from a cell
+# that already has the target symmetry---applying it to an already-distorted
+# cell would lock in the wrong (lower) symmetry.
 
 bto_const = bto_cubic.copy()
 bto_const.set_constraint(FixSymmetry(bto_const))
 bto_const.calc = calc
 
+# The mask [True]*3 + [False]*3 allows the three lattice lengths to relax
+# while freezing the cell angles, preventing the filter from introducing
+# angular distortions that FixSymmetry does not constrain.
 opt_const = FIRE(FrechetCellFilter(bto_const, mask=[True] * 3 + [False] * 3))
 opt_const.run(fmax=FMAX, steps=STEPS)
 
 report_symmetry(bto_const, "Constrained")
 
+# Remove the constraint so that subsequent energy queries return the raw
+# model prediction rather than the symmetry-projected one.
 bto_const.set_constraint(None)
 
 # %%
@@ -311,8 +345,13 @@ for symprec in np.logspace(-3, np.log10(0.2), 10):
 
 # %%
 #
-# A clear :math:`R3m` plateau appears. We use a tolerance within this
-# plateau to extract the standardized primitive cell.
+# A clear :math:`R3m` plateau appears. The relaxed cell still carries
+# small numerical noise that breaks exact :math:`R3m` symmetry.
+# `standardize_cell
+# <https://spglib.readthedocs.io/en/stable/api.html#spg-standardize-cell>`_
+# snaps coordinates onto ideal Wyckoff positions and lattice vectors
+# onto the exact :math:`R3m` cell, giving a clean starting point for
+# further calculations (e.g., phonons).
 
 std_data = spglib.standardize_cell(spglib_cell, to_primitive=True, symprec=0.05)
 
@@ -342,7 +381,8 @@ print(f"  Ferroelectric: a = {cellpar_u[0]:.4f} Å, α = {cellpar_u[3]:.2f}°")
 # %%
 #
 # The energy and cell parameter evolution during the unconstrained
-# relaxation shows how the optimizer escapes the cubic saddle point.
+# relaxation shows how the optimizer moves away from the cubic saddle
+# point toward the :math:`R3m` minimum.
 
 traj_bto = ase.io.read("bto_unconst.traj", index=":")
 energies = np.array([frame.get_potential_energy() for frame in traj_bto])
@@ -399,12 +439,19 @@ chemiscope.show(
 # Conclusions
 # -----------
 #
-# * **Al (Bain path):** PET's residual stress anisotropy drives the
-#   structure from the BCC saddle to the FCC minimum.
-# * **BaTiO₃:** starting from cubic :math:`Pm\bar{3}m`, the
-#   unconstrained optimizer discovers the ferroelectric :math:`R3m`
-#   ground state without manual perturbation. ``FixSymmetry`` can
-#   lock in the cubic saddle for analysis.
+# In summary, geometry relaxation with unconstrained MLIPs requires
+# attention to symmetry, but the tools are straightforward:
+#
+# 1. **Unconstrained relaxation** finds the nearest minimum. Use
+#    ``spglib`` to identify the resulting symmetry and
+#    ``standardize_cell`` to obtain a clean primitive cell.
+# 2. **``FixSymmetry``** locks in a specific space group when you
+#    want to study a particular phase (stable or metastable). It is
+#    exact, cheap, and the recommended default when the target
+#    symmetry is known.
+# 3. **Rotational averaging** reduces the model's symmetry-breaking
+#    noise at the calculator level. It is useful in exploratory
+#    settings but expensive; prefer ``FixSymmetry`` when possible.
 #
 # To verify that the relaxed structures are true minima, one should
 # compute their phonon dispersions. This is the subject of the

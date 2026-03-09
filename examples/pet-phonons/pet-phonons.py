@@ -5,7 +5,7 @@ Phonon dispersions with uncertainty quantification
 :Authors: Paolo Pegolo `@ppegolo <https://github.com/ppegolo/>`_
 
 This recipe shows how to compute phonon band structures with uncertainty estimates from
-MLIP ensembles, using `uqphonon<https://github.com/ppegolo/uqphonon>`_.
+MLIP ensembles, using `uqphonon <https://github.com/ppegolo/uqphonon>`_.
 
 A converged geometry optimization does not guarantee stability: the structure may be a
 saddle point rather than a true minimum. A more telling test is the phonon dispersion:
@@ -19,15 +19,15 @@ We consider three systems:
 1. **Al (FCC)**: a simple, stable metal. We show that constrained and unconstrained
    relaxations yield the same phonon dispersion when evaluated along the same
    :math:`\mathbf{q}`-path.
-2. **BaTiO₃** :math:`R3m` **(ferroelectric)**: the 0 K ground state discovered by
-   unconstrained relaxation in the `geometry relaxation recipe
+2. **BaTiO₃ rhombohedral** :math:`R3m` (ferroelectric): the 0 K ground state discovered
+   by unconstrained relaxation in the `geometry relaxation recipe
    <https://atomistic-cookbook.org/examples/pet-relaxation/pet-relaxation.html>`_.
    All frequencies are real, confirming dynamical stability.
 3. **BaTiO₃ cubic** :math:`Pm\bar{3}m`: the high-symmetry paraelectric structure,
    dynamically unstable with imaginary modes at :math:`\Gamma` (ferroelectric soft
    mode).
 
-The ensemble is based on the *last-layer prediction rigidity* (LLPR approach (
+The ensemble is based on the *last-layer prediction rigidity* (LLPR,
 `Bigi et al., 2024 <https://arxiv.org/abs/2403.02251>`_; see also the `PET-MAD UQ recipe
 <https://atomistic-cookbook.org/examples/pet-mad-uq/pet-mad-uq.html>`_).
 `uqphonon` wraps `phonopy <https://phonopy.github.io/phonopy/>`_
@@ -54,6 +54,8 @@ import upet
 from upet.calculator import UPETCalculator
 from uqphonon import PhononEnsemble
 
+# Suppress warnings about matrix logarithm accuracy issued by scipy during geometry
+# optimization to avoid cluttering the output
 warnings.filterwarnings(
     "ignore",
     category=RuntimeWarning,
@@ -302,18 +304,20 @@ plt.show()
 # BaTiO\ :math:`_3` (:math:`R3m`)
 # --------------------------------
 #
-# In the `geometry relaxation recipe
+# As shown in the `geometry relaxation recipe
 # <https://atomistic-cookbook.org/examples/pet-relaxation/pet-relaxation.html>`_,
-# unconstrained relaxation of cubic BaTiO\ :math:`_3` spontaneously
-# discovers the ferroelectric :math:`R3m` phase. Here we verify that it is dynamically
-# stable.
+# unconstrained relaxation of cubic BaTiO\ :math:`_3` converges to the
+# ferroelectric :math:`R3m` phase. Here we verify that it is dynamically stable.
 #
-# We build the cubic perovskite cell, relax without constraints, snap the result to the
-# :math:`R3m` primitive cell with ``spglib``, and re-relax with ``FixSymmetry`` to keep
-# the desired symmetric state.
+# Following the workflow from the relaxation recipe: unconstrained relaxation,
+# symmetry identification with ``spglib``, cell standardization, and
+# re-relaxation with ``FixSymmetry`` to obtain a clean :math:`R3m` primitive
+# cell for the phonon calculation.
 
+# %%
 # A (2,2,2) supercell is used here to keep the example fast;
 # larger supercells [e.g., (6,6,6)] would give better-converged dispersions.
+
 SUPERCELL_BTO = (2, 2, 2)
 
 a_bto = 4.00
@@ -342,7 +346,8 @@ report_symmetry(bto_ferroelectric, "BTO unconstrained")
 
 # %%
 #
-# Scan ``spglib`` tolerance to identify the symmetry plateau.
+# Scan ``spglib`` tolerance to identify the symmetry plateau (the range of
+# tolerances over which ``spglib`` consistently reports the same space group).
 
 spglib_cell = (
     bto_ferroelectric.get_cell(),
@@ -355,8 +360,12 @@ for symprec in np.logspace(-3, np.log10(0.2), 10):
 
 # %%
 #
-# Extract the primitive :math:`R3m` cell at a tolerance that captures
-# the plateau, then re-relax with ``FixSymmetry``.
+# The relaxed cell still carries numerical noise that breaks exact
+# :math:`R3m` symmetry. We use
+# `standardize_cell
+# <https://spglib.readthedocs.io/en/stable/api.html#spg-standardize-cell>`_
+# to snap it onto ideal Wyckoff positions, then re-relax with
+# ``FixSymmetry``.
 
 std_data = spglib.standardize_cell(spglib_cell, to_primitive=True, symprec=0.05)
 
@@ -418,9 +427,10 @@ plt.show()
 # BaTiO\ :math:`_3` (cubic :math:`Pm\bar{3}m`)
 # ----------------------------------------------
 #
-# The cubic perovskite is the high-symmetry paraelectric structure. At 0 K it is
-# dynamically unstable: imaginary phonon modes at :math:`\Gamma` correspond to the
-# ferroelectric soft mode driving the :math:`Pm\bar{3}m \to R3m` transition.
+# The cubic perovskite is the high-symmetry paraelectric structure. At 0 K we
+# expect it to be dynamically unstable, with imaginary phonon modes at
+# :math:`\Gamma` corresponding to the ferroelectric soft mode that drives the
+# :math:`Pm\bar{3}m \to R3m` transition.
 #
 # We relax the cubic cell with ``FixSymmetry`` to keep it at
 # :math:`Pm\bar{3}m`.
@@ -461,12 +471,14 @@ ensemble_cubic.plot(
 )
 
 ax.set_title(r"BaTiO$_3$ (cubic $Pm\bar{3}m$)")
+ax.axhline(0, color="k", linestyle="--", linewidth=0.5)
+ax.set_ylim(-10, 25)
 
 plt.tight_layout()
 plt.show()
 
 # %%
 #
-# Clear imaginary frequencies appear at :math:`\Gamma`,the ferroelectric soft mode.
+# Clear imaginary frequencies appear at :math:`\Gamma`, the ferroelectric soft mode.
 # The uncertainty bands are well below the magnitude of the instability, confirming it
 # is a genuine prediction of the model.
