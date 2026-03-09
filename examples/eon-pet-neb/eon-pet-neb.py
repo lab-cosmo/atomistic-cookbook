@@ -41,17 +41,17 @@ By convention, all ``import``
 statements are at the top of the file.
 """
 
-import contextlib
 import os
 import subprocess
 import sys
+from contextlib import chdir
 from pathlib import Path
 
-import ase
 import ase.io as aseio
 import ira_mod
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
+import numpy as np
 from ase.mep import NEB
 from ase.optimize import LBFGS
 from ase.visualize import view
@@ -171,8 +171,7 @@ ax2.set_axis_off()
 # Here we use the IDPP from ASE to setup the initial path. You can find
 # more information about this method in the corresponding
 # `ASE tutorial <https://ase-lib.org/examples_generated/tutorials/neb_idpp.html>`_
-# or in the original IDPP publication by
-# `S. Smidstru et al. <https://doi.org/10.1063/1.4878664>`_ .
+# or in the original IDPP publication [5].
 # A brief pedagogical discussion of the transition state methods may be found on
 # the `Rowan blog <https://rowansci.com/blog/guessing-transition-states>`_,
 # though the software is proprietary there.
@@ -181,7 +180,7 @@ N_INTERMEDIATE_IMGS = 10
 # total includes the endpoints
 TOTAL_IMGS = N_INTERMEDIATE_IMGS + 2
 images = [reactant]
-images += [reactant.copy() for img in range(N_INTERMEDIATE_IMGS)]
+images += [reactant.copy() for _ in range(N_INTERMEDIATE_IMGS)]
 images += [product]
 
 neb = NEB(images)
@@ -195,24 +194,20 @@ neb.interpolate("idpp")
 # For eOn, we write the initial path to a file called ``idppPath.dat``.
 #
 
-output_dir = "path"
-os.makedirs(output_dir, exist_ok=True)
+output_dir = Path("path")
+output_dir.mkdir(exist_ok=True)
 
-output_files = [f"{output_dir}/{num:02d}.con" for num in range(TOTAL_IMGS)]
+output_files = [output_dir / f"{num:02d}.con" for num in range(TOTAL_IMGS)]
 
 for outfile, img in zip(output_files, images):
-    ase.io.write(outfile, img)
+    aseio.write(outfile, img)
 
 print(f"Wrote {len(output_files)} IDPP images to '{output_dir}/'.")
 
-summary_file_path = "idppPath.dat"
+summary_file = Path("idppPath.dat")
+summary_file.write_text("\n".join(str(f.resolve()) for f in output_files) + "\n")
 
-with open(summary_file_path, "w") as f:
-    for filepath in output_files:
-        abs_path = os.path.abspath(filepath)
-        f.write(f"{abs_path}\n")
-
-print(f"Wrote absolute paths to '{summary_file_path}'.")
+print(f"Wrote absolute paths to '{summary_file}'.")
 
 # %%
 # Running NEBs
@@ -238,7 +233,7 @@ def mk_mta_calc():
 
 
 # set calculators for images
-ipath = [reactant] + [reactant.copy() for img in range(10)] + [product]
+ipath = [reactant] + [reactant.copy() for _ in range(10)] + [product]
 for img in ipath:
     img.calc = mk_mta_calc()
 
@@ -248,9 +243,9 @@ neb = NEB(ipath, climb=True, k=5, method="improvedtangent")
 neb.interpolate("idpp")
 
 # store initial path guess for plotting
-initial_energies = [img.get_potential_energy() for img in ipath]
+initial_energies = np.array([img.get_potential_energy() for img in ipath])
 
-# setup the NEB clalculation
+# setup the NEB calculation
 optimizer = LBFGS(neb, trajectory="A2B.traj", logfile="opt.log")
 conv = optimizer.run(fmax=0.01, steps=100)
 
@@ -259,7 +254,7 @@ print("Check if calculation has converged:", conv)
 if conv:
     print(neb)
 
-final_energies = [i.get_potential_energy() for i in ipath]
+final_energies = np.array([img.get_potential_energy() for img in ipath])
 
 # Plot initial and final path
 plt.figure(figsize=(8, 6))
@@ -394,7 +389,7 @@ def run_neb_plot(
     output_file: str = "plot.png",
     title: str = "",
     rotation: str = "90x,0y,0z",
-) -> list[str]:
+) -> None:
     """
     Constructs the CLI command for rgpycrumbs plotting to avoid clutter in notebooks.
     mode: 'profile' (1D) or 'landscape' (2D)
@@ -477,7 +472,7 @@ plt.show()
 
 
 # %%
-# The 2D PES landscape is projected onto reaction-valley coordinates [3]:
+# The 2D PES landscape is projected onto reaction-valley coordinates [3, 7]:
 # *progress* along the path and *orthogonal deviation*, computed from
 # permutation-corrected RMSD distances to the reactant and product. The energy
 # surface is interpolated using a gradient-enhanced inverse multiquadric (IMQ)
@@ -495,7 +490,7 @@ plt.axis("off")
 plt.show()
 
 # %%
-# Each black dot is a configuration evaluated during NEB optimization. The
+# Each black dot is a configuration evaluated during NEB optimization [7]. The
 # horizontal axis measures progress along the converged path; the vertical axis
 # measures perpendicular displacement. Both coordinates derive from
 # permutation-corrected RMSD (via IRA [4]) to the reactant and product. The
@@ -573,25 +568,11 @@ write_eon_config(dir_product, min_settings)
 #
 # The 'eonclient' will use the correct configuration within the folder.
 #
-@contextlib.contextmanager
-def work_in_dir(path: Path):
-    """
-    Context manager to safely change directory and return to previous
-    one afterwards. Crucial for notebooks to avoid path drift.
-    """
-    prev_cwd = Path.cwd()
-    os.chdir(path)
-    try:
-        yield
-    finally:
-        os.chdir(prev_cwd)
-
-
-with work_in_dir(dir_reactant):
+with chdir(dir_reactant):
     run_command_or_exit(["eonclient"], capture=True, timeout=300)
 
 
-with work_in_dir(dir_product):
+with chdir(dir_product):
     run_command_or_exit(["eonclient"], capture=True, timeout=300)
 
 
@@ -678,4 +659,8 @@ ax2.set_axis_off()
 # (6) Goswami, R; Gunde, M; Jónsson, H. Enhanced climbing image nudged elastic
 #     band method with hessian eigenmode alignment, Jan. 22, 2026, arXiv:
 #     arXiv:2601.12630. doi: 10.48550/arXiv.2601.12630.
+#
+# (7) R. Goswami, Two-dimensional RMSD projections for reaction path
+#     visualization and validation, MethodsX, p. 103851, Mar. 2026, doi:
+#     10.1016/j.mex.2026.103851.
 #
