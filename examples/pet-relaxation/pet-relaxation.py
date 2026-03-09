@@ -572,11 +572,16 @@ plt.show()
 # displaces relative to the oxygen cage as the ferroelectric
 # distortion develops.
 
+vec_forces_bto = chemiscope.ase_vectors_to_arrows(traj_bto, "forces", scale=10)
+
 chemiscope.show(
     structures=traj_bto,
     properties={
         "step": np.arange(len(traj_bto)),
         "energy": energies,
+    },
+    shapes={
+        "forces": vec_forces_bto,
     },
     settings=chemiscope.quick_settings(
         map_settings={
@@ -587,7 +592,9 @@ chemiscope.show(
         structure_settings={
             "unitCell": True,
             "supercell": (2, 2, 2),
+            "bonds": False,
             "keepOrientation": True,
+            "shape": ["forces"],
         },
     ),
 )
