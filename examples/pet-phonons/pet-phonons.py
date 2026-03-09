@@ -5,20 +5,26 @@ Phonon dispersions with uncertainty quantification
 :Authors: Paolo Pegolo `@ppegolo <https://github.com/ppegolo/>`_
 
 This recipe shows how to compute phonon band structures with uncertainty estimates from
-MLIP ensembles, using `uqphonon <https://github.com/ppegolo/uqphonon>`_.
+MLIP ensembles, using `uqphonon <https://github.com/ppegolo/uqphonon>`_, a wrapper
+around `phonopy <https://phonopy.github.io/phonopy/>`_ and
+`i-PI <https://ipi-code.org>`_.
+Phonon dispersion curves are important experimental probes of the lattice dynamics of
+a material, and are commonly used to validate MLIPs. They are also crucial for computing
+temperature-dependent properties such as free energies and thermal conductivity.
 
-A converged geometry optimization does not guarantee stability: the structure may be a
-saddle point rather than a true minimum. A more telling test is the phonon dispersion:
-a stable structure has all real (positive) frequencies, while imaginary (negative)
-frequencies signal a dynamical instability. When the calculation is performed with a
-machine-learning potential, ensemble uncertainty quantification provides confidence
-intervals on each phonon branch.
+They are also used as a test of dynamical stability: a converged geometry optimization
+does not guarantee stability, as the structure may be a saddle point rather than a
+true minimum. A more telling test is the phonon dispersion: a stable structure has all
+real (positive) frequencies, while imaginary (negative) frequencies signal a dynamical
+instability, i.e. that a distortion of the structure (possibly accessible only for
+a larger cell) would lower the energy.
 
 We consider three systems:
 
 1. **Al (FCC)**: a simple, stable metal. We show that constrained and unconstrained
    relaxations yield the same phonon dispersion when evaluated along the same
-   :math:`\mathbf{q}`-path.
+   :math:`\mathbf{q}`-path - a subtlety that is important when using unconstrained
+   models that do not fulfill exactly the symmetries of the system.
 2. **BaTiO₃ rhombohedral** :math:`R3m` (ferroelectric): the 0 K ground state discovered
    by unconstrained relaxation in the `geometry relaxation recipe
    <https://atomistic-cookbook.org/examples/pet-relaxation/pet-relaxation.html>`_.
@@ -27,11 +33,13 @@ We consider three systems:
    dynamically unstable with imaginary modes at :math:`\Gamma` (ferroelectric soft
    mode).
 
-The ensemble is based on the *last-layer prediction rigidity* (LLPR,
-`Bigi et al., 2024 <https://arxiv.org/abs/2403.02251>`_; see also the `PET-MAD UQ recipe
+Uncertainty quantification is based on the construction of a shallow ensemble
+(cf. `Kellner and Ceriotti, 2024
+<https://iopscience.iop.org/article/10.1088/2632-2153/ad594a>`_), with the
+committee member obtained using the *last-layer prediction rigidity* framework
+(LLPR, `Bigi et al., 2024 <https://arxiv.org/abs/2403.02251>`_; see also the
+`PET-MAD UQ recipe
 <https://atomistic-cookbook.org/examples/pet-mad-uq/pet-mad-uq.html>`_).
-`uqphonon` wraps `phonopy <https://phonopy.github.io/phonopy/>`_
-and `i-PI <https://ipi-code.org>`_ to automate the workflow.
 """
 
 # %%
@@ -69,7 +77,8 @@ warnings.filterwarnings(
 # -----
 #
 # We use the extra-small (XS) variant of
-# `PET-MAD v1.5.0 <https://arxiv.org/abs/2603.02089>`_.
+# `PET-MAD v1.5.0 <https://arxiv.org/abs/2603.02089>`_. For production calculations,
+# the S model would be a more accurate choice.
 
 FMAX = 1e-4  # eV/Å, force convergence threshold
 STEPS = 500  # max optimization steps
@@ -157,8 +166,9 @@ print(f"Model saved to {model_path}")
 # Al (FCC)
 # --------
 #
-# FCC aluminum is dynamically stable. We use it to illustrate a subtlety: as already
-# seen in the `geometry relaxation recipe
+# FCC aluminum is dynamically stable. We use it to illustrate a subtlety that is
+# relevant when using an unconstrained model to find the minimum energy structure and
+# compute the phonons: as already seen in the `geometry relaxation recipe
 # <https://atomistic-cookbook.org/examples/pet-relaxation/pet-relaxation.html>`_,
 # unconstrained relaxation slightly breaks the :math:`Fm\bar{3}m` symmetry, which causes
 # automatic :math:`\mathbf{q}`-path finders to detect a different (lower-symmetry) path.
@@ -166,6 +176,9 @@ print(f"Model saved to {model_path}")
 # the same.
 #
 # Constrained relaxation
+# ^^^^^^^^^^^^^^^^^^^^^^
+#
+# We first relax the cell with ``FixSymmetry`` to keep it at perfect FCC symmetry.
 
 SUPERCELL_AL = (4, 4, 4)
 
@@ -182,6 +195,10 @@ atoms_al_const.set_constraint(None)
 
 # %%
 # Unconstrained relaxation
+# ^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# Because of the small symmetry breaking, unconstrained relaxation converges to a
+# slightly distorted cell with lower symmetry.
 
 atoms_al_unconst = bulk("Al", "fcc", a=4.05)
 atoms_al_unconst.calc = calc
@@ -195,7 +212,8 @@ report_symmetry(atoms_al_unconst, "Al FCC unconstrained")
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # Because the unconstrained cell has slightly broken symmetry, the automatically chosen
-# path is that for :math:`P\bar{1}` rather than the standard FCC one.
+# path is that for :math:`P\bar{1}` rather than the standard FCC path that is
+# computed for the constrained optimization.
 
 ensemble_al_const_auto = compute_phonons(
     atoms_al_const,
@@ -297,7 +315,8 @@ plt.show()
 # On the same :math:`\mathbf{q}`-path, the two dispersions almost overlap, and they are
 # fully compatible within uncertainty bands. The apparent discrepancy from the automatic
 # path comparison was due to the different reciprocal-space trajectories, not to
-# physical difference.
+# physical difference. In practice the safest bet is to perform a constrained
+# relaxation, or to use ``spglib.standardize_cell`` to symmetrize the relaxed cell.
 
 
 # %%
@@ -309,7 +328,7 @@ plt.show()
 # unconstrained relaxation of cubic BaTiO\ :math:`_3` converges to the
 # ferroelectric :math:`R3m` phase. Here we verify that it is dynamically stable.
 #
-# Following the workflow from the relaxation recipe: unconstrained relaxation,
+# We follow the workflow from the relaxation recipe: unconstrained relaxation,
 # symmetry identification with ``spglib``, cell standardization, and
 # re-relaxation with ``FixSymmetry`` to obtain a clean :math:`R3m` primitive
 # cell for the phonon calculation.
@@ -335,7 +354,11 @@ bto_cubic = Atoms(
 )
 
 # %%
-# Unconstrained relaxation
+# Geometry optimization and symmetry constraints
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# We first relax the structure without constraints, to find the
+# ferroelectric ground state.
 
 bto_ferroelectric = bto_cubic.copy()
 bto_ferroelectric.calc = calc
@@ -364,8 +387,7 @@ for symprec in np.logspace(-3, np.log10(0.2), 10):
 # :math:`R3m` symmetry. We use
 # `standardize_cell
 # <https://spglib.readthedocs.io/en/stable/api.html#spg-standardize-cell>`_
-# to snap it onto ideal Wyckoff positions, then re-relax with
-# ``FixSymmetry``.
+# to snap it onto ideal Wyckoff positions ...
 
 std_data = spglib.standardize_cell(spglib_cell, to_primitive=True, symprec=0.05)
 
@@ -379,6 +401,8 @@ bto_r3m = Atoms(
 report_symmetry(bto_r3m, "BTO R3m (spglib)")
 
 # %%
+# ... and then we re-relax with ``FixSymmetry`` to get a clean :math:`R3m` cell with
+# zero forces and stresses, which is ideal for phonon calculations.
 
 bto_r3m.set_constraint(FixSymmetry(bto_r3m))
 bto_r3m.calc = calc
