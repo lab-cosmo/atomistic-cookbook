@@ -19,7 +19,7 @@ We consider three systems:
 
 1. **Al (FCC)**: a simple, stable metal. We show that constrained and unconstrained
    relaxations yield the same phonon dispersion when evaluated along the same
-   :math:`\mathbf{q}`-path - a subtlety that is important when using unconstrained
+   :math:`\mathbf{q}`-path---a subtlety that is important when using unconstrained
    models that do not fulfill exactly the symmetries of the system.
 2. **BaTiO₃ rhombohedral** :math:`R3m` (ferroelectric): the 0 K ground state discovered
    by unconstrained relaxation in the `geometry relaxation recipe
@@ -382,11 +382,11 @@ plt.show()
 
 # %%
 #
-# On the same :math:`\mathbf{q}`-path, the two dispersions almost overlap, and they are
-# fully compatible within uncertainty bands. The apparent discrepancy from the automatic
-# path comparison was due to the different reciprocal-space trajectories, not to
-# physical difference. In practice the safest workflow is to perform a constrained
-# relaxation, or to use ``spglib.standardize_cell`` to symmetrize the relaxed cell.
+# On the same :math:`\mathbf{q}`-path, the two dispersions almost overlap. The apparent
+# discrepancy from the automatic path comparison was due to the different
+# reciprocal-space trajectories, not to physical difference. In practice the safest
+# workflow is to perform a constrained relaxation, or to use ``spglib.standardize_cell``
+# to symmetrize the relaxed cell.
 
 # %%
 # Phonons with uncertainty quantification
