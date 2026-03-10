@@ -192,7 +192,7 @@ print(f"Training time (conservative fine-tuning): {time_c_ft:.2f} seconds")
 #
 # Or from Python:
 
-subprocess.run("mtt eval nc_model.pt nc_model_eval.yaml".split(), check=True)
+subprocess.run("mtt eval c_ft_model.pt nc_model_eval.yaml".split(), check=True)
 
 # %%
 # Converged results
