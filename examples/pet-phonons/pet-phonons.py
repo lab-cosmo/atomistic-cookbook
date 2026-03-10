@@ -539,6 +539,9 @@ bto_r3m.set_constraint(None)
 # %%
 # Phonon dispersion
 # ^^^^^^^^^^^^^^^^^
+#
+# We compute the phonon dispersion with the XS model, to verify the stability
+# of the R3m phase.
 
 ensemble_ferro = compute_phonons(
     bto_r3m,
@@ -597,6 +600,9 @@ bto_cubic_relax.set_constraint(None)
 # %%
 # Phonon dispersion
 # ^^^^^^^^^^^^^^^^^
+#
+# We use the enseble mode of the model to generate phonon bands with
+# uncertainty estimates.
 
 ensemble_cubic = compute_phonons_with_uq(
     bto_cubic_relax,
@@ -605,7 +611,6 @@ ensemble_cubic = compute_phonons_with_uq(
     label="BTO cubic",
 )
 
-# %%
 
 fig, ax = plt.subplots(figsize=(8, 5))
 
@@ -638,7 +643,7 @@ plt.show()
 # larger PET-MAD S model (single prediction, no UQ) and overlay it on the XS
 # ensemble bands. The cubic cell is re-relaxed with the S model before
 # computing phonons, so the force constants are evaluated at the S model's
-# own equilibrium.
+# own (constrained) equilibrium.
 
 calc_s = UPETCalculator(
     model="pet-mad-s",
@@ -691,5 +696,4 @@ plt.show()
 #
 # The S model (green) falls within the XS ensemble bands, confirming that
 # the XS uncertainty estimates are well-calibrated and that both models
-# agree on the physics: stability of :math:`R3m` and the ferroelectric
-# soft mode in cubic :math:`Pm\bar{3}m`.
+# agree on the ferroelectric instability in cubic :math:`Pm\bar{3}m`.
