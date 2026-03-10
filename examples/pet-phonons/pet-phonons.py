@@ -3,6 +3,7 @@ Phonon dispersions with unconstrained models and uncertainty quantification
 ===========================================================================
 
 :Authors: Paolo Pegolo `@ppegolo <https://github.com/ppegolo/>`_
+          Michele Ceriotti `@ceriottm <https://github.com/ceriottm/>`_
 
 Phonon dispersion curves are important experimental probes of the lattice dynamics of
 a material, and are commonly used to validate MLIPs. They are also crucial for computing

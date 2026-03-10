@@ -3,6 +3,7 @@ Geometry relaxation with unconstrained MLIPs
 =============================================
 
 :Authors: Paolo Pegolo `@ppegolo <https://github.com/ppegolo/>`_
+          Michele Ceriotti `@ceriottm <https://github.com/ceriottm/>`_
 
 This recipe shows how to perform geometry optimization with *unconstrained*
 machine-learning interatomic potentials (MLIPs), and what tools are available
