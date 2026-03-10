@@ -1,23 +1,19 @@
 r"""
-Phonon dispersions with uncertainty quantification
-===================================================
+Phonon dispersions with unconstrained models and uncertainty quantification
+===========================================================================
 
 :Authors: Paolo Pegolo `@ppegolo <https://github.com/ppegolo/>`_
 
-This recipe shows how to compute phonon band structures with uncertainty estimates from
-MLIP ensembles, using `uqphonon <https://github.com/ppegolo/uqphonon>`_, a wrapper
-around `phonopy <https://phonopy.github.io/phonopy/>`_ and
-`i-PI <https://ipi-code.org>`_.
 Phonon dispersion curves are important experimental probes of the lattice dynamics of
 a material, and are commonly used to validate MLIPs. They are also crucial for computing
 temperature-dependent properties such as free energies and thermal conductivity.
 
-They are also used as a test of dynamical stability: a converged geometry optimization
-does not guarantee stability, as the structure may be a saddle point rather than a
-true minimum. A more telling test is the phonon dispersion: a stable structure has all
-real (positive) frequencies, while imaginary (negative) frequencies signal a dynamical
-instability, i.e. that a distortion of the structure (possibly accessible only for
-a larger cell) would lower the energy.
+Phonon bands are also used as a test of dynamical stability: a converged geometry
+optimization does not guarantee stability, as the structure may be a saddle point
+rather than a true minimum. A more telling test is the phonon dispersion: a stable
+structure has all real (positive) frequencies, while imaginary (negative) frequencies
+signal a dynamical instability, i.e. that a distortion of the structure (possibly
+accessible only for a larger cell) would lower the energy.
 
 We consider three systems:
 
@@ -33,10 +29,14 @@ We consider three systems:
    dynamically unstable with imaginary modes at :math:`\Gamma` (ferroelectric soft
    mode).
 
+This recipe also shows how to compute phonon band structures with uncertainty
+estimates from MLIP ensembles, using `uqphonon <https://github.com/ppegolo/uqphonon>`_,
+a wrapper around `phonopy <https://phonopy.github.io/phonopy/>`_ and
+`i-PI <https://ipi-code.org>`_.
 Uncertainty quantification is based on the construction of a shallow ensemble
 (cf. `Kellner and Ceriotti, 2024
 <https://iopscience.iop.org/article/10.1088/2632-2153/ad594a>`_), with the
-committee member obtained using the *last-layer prediction rigidity* framework
+committee members obtained using the *last-layer prediction rigidity* framework
 (LLPR, `Bigi et al., 2024 <https://arxiv.org/abs/2403.02251>`_; see also the
 `PET-MAD UQ recipe
 <https://atomistic-cookbook.org/examples/pet-mad-uq/pet-mad-uq.html>`_).
@@ -60,7 +60,14 @@ import tempfile
 import spglib
 import upet
 from upet.calculator import UPETCalculator
+from phonopy import Phonopy
+from phonopy.structure.atoms import PhonopyAtoms
+
+# helper functions from uqphonon
 from uqphonon import PhononEnsemble
+from uqphonon._core import _phonopy_to_ase
+from uqphonon._core import _resolve_bandpath
+from uqphonon._plot import plot_bands
 
 # Suppress warnings about matrix logarithm accuracy issued by scipy during geometry
 # optimization to avoid cluttering the output
@@ -97,6 +104,22 @@ calc = UPETCalculator(
     version=MODEL_VERSION,
 )
 
+# %%
+# Export model
+# ^^^^^^^^^^^^
+#
+# ``uqphonon`` drives force evaluations through ``i-PI``, which requires a
+# TorchScript-exported ``metatomic`` model.
+
+model_path = "model.pt"
+upet.save_upet(
+    model=MODEL_BASE,
+    size=MODEL_SIZE,
+    version=MODEL_VERSION,
+    output=model_path,
+)
+print(f"Model saved to {model_path}")
+
 
 # %%
 # Helpers
@@ -118,6 +141,74 @@ def report_symmetry(atoms, label=""):
 
 
 def compute_phonons(
+    atoms, model_path, supercell, bands=None, npoints=50, labels=None, label=""
+):
+    """Compute phonon band structure with phonopy and the ASE calculator."""
+    print(f"\n--- {label} ---")
+
+    phonopy_atoms = PhonopyAtoms(
+        symbols=atoms.get_chemical_symbols(),
+        cell=atoms.cell[:],
+        scaled_positions=atoms.get_scaled_positions(),
+    )
+
+    phonon = Phonopy(
+        phonopy_atoms,
+        supercell_matrix=np.diag(supercell),
+        primitive_matrix=np.eye(3),
+    )
+    phonon.generate_displacements(distance=DELTA)
+
+    supercells = phonon.supercells_with_displacements
+    forces = []
+    for sc in supercells:
+        sc_ase = Atoms(
+            symbols=sc.symbols,
+            cell=sc.cell,
+            scaled_positions=sc.scaled_positions,
+            pbc=True,
+        )
+        sc_ase.calc = atoms.calc
+        forces.append(sc_ase.get_forces())
+
+    phonon.forces = np.array(forces)
+    phonon.produce_force_constants()
+    phonon.symmetrize_force_constants()
+
+    n_disp = len(supercells)
+    n_atoms = len(supercells[0])
+    print(f"{n_disp} displacements, {n_atoms} atoms/cell")
+
+    # Resolve the band path using the same logic as uqphonon
+    prim_atoms = _phonopy_to_ase(phonon.primitive)
+    qpoints, connections, resolved_labels = _resolve_bandpath(
+        prim_atoms, bands, npoints, labels=labels
+    )
+    phonon.run_band_structure(
+        qpoints, path_connections=connections, labels=resolved_labels
+    )
+
+    # Wrap in a simple namespace so that .plot() and .compute_bands() work
+    # like PhononEnsemble
+    class _PhononResult:
+        def __init__(self, ph):
+            self._phonon = ph
+
+        def plot(self, ax=None, mode="ensemble", unit="cm-1", **kwargs):
+            return plot_bands(
+                [self._phonon], self._phonon, mode=mode, unit=unit, ax=ax, **kwargs
+            )
+
+        def compute_bands(self, bandpath=None, npoints=151, labels=None):
+            qpts, conns, lbls = _resolve_bandpath(
+                prim_atoms, bandpath, npoints, labels=labels
+            )
+            self._phonon.run_band_structure(qpts, path_connections=conns, labels=lbls)
+
+    return _PhononResult(phonon)
+
+
+def compute_phonons_with_uq(
     atoms, model_path, supercell, bands=None, npoints=50, labels=None, label=""
 ):
     """Compute phonon band structure with uqphonon ensemble."""
@@ -143,23 +234,6 @@ def compute_phonons(
         ensemble.compute_bands(npoints=npoints)
 
     return ensemble
-
-
-# %%
-# Export model
-# ^^^^^^^^^^^^
-#
-# ``uqphonon`` drives force evaluations through ``i-PI``, which requires a
-# TorchScript-exported ``metatomic`` model.
-
-model_path = "model.pt"
-upet.save_upet(
-    model=MODEL_BASE,
-    size=MODEL_SIZE,
-    version=MODEL_VERSION,
-    output=model_path,
-)
-print(f"Model saved to {model_path}")
 
 
 # %%
@@ -215,31 +289,29 @@ report_symmetry(atoms_al_unconst, "Al FCC unconstrained")
 # path is that for :math:`P\bar{1}` rather than the standard FCC path that is
 # computed for the constrained optimization.
 
-ensemble_al_const_auto = compute_phonons(
+phonons_al_const_auto = compute_phonons(
     atoms_al_const,
     model_path,
     supercell=SUPERCELL_AL,
     label="Al constrained (auto)",
 )
 
-ensemble_al_unconst_auto = compute_phonons(
+phonons_al_unconst_auto = compute_phonons(
     atoms_al_unconst,
     model_path,
     supercell=SUPERCELL_AL,
     label="Al unconstrained (auto)",
 )
 
-# %%
-
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
 
-ensemble_al_const_auto.plot(
-    ax=ax1, mode="ensemble", unit="THz", color="tab:blue", std_alpha=0.2
+phonons_al_const_auto.plot(
+    ax=ax1, mode="mean", unit="THz", color="tab:blue", std_alpha=0.2
 )
 ax1.set_title("Al (FCC), constrained")
 
-ensemble_al_unconst_auto.plot(
-    ax=ax2, mode="ensemble", unit="THz", color="tab:red", std_alpha=0.2
+phonons_al_unconst_auto.plot(
+    ax=ax2, mode="mean", unit="THz", color="tab:red", std_alpha=0.2
 )
 ax2.set_title("Al (FCC), unconstrained")
 
@@ -248,11 +320,11 @@ plt.show()
 
 # %%
 #
-# The two plots look different. To confirm that the physics is the same, we repeat the
-# calculation on both structures using the standard FCC path.
-#
 # Phonons with explicit FCC q-path
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# The two plots look different. To confirm that the physics is the same, we repeat the
+# calculation on both structures using the standard FCC path.
 
 G = np.array([0.0, 0.0, 0.0])
 X = np.array([0.5, 0.0, 0.5])
@@ -282,22 +354,20 @@ LABELS_FCC = ["$\\Gamma$", "X", "W", "K", "$\\Gamma$", "L"]
 # The force constants are already computed, so we only need to
 # Fourier-interpolate along the new path.
 
-ensemble_al_const_auto.compute_bands(
+phonons_al_const_auto.compute_bands(
     bandpath=BANDS_FCC, npoints=N_KPOINTS, labels=LABELS_FCC
 )
-ensemble_al_unconst_auto.compute_bands(
+phonons_al_unconst_auto.compute_bands(
     bandpath=BANDS_FCC, npoints=N_KPOINTS, labels=LABELS_FCC
 )
-
-# %%
 
 fig, ax = plt.subplots(figsize=(8, 5))
 
-ensemble_al_const_auto.plot(
-    ax=ax, mode="ensemble", unit="THz", color="tab:blue", std_alpha=0.2
+phonons_al_const_auto.plot(
+    ax=ax, mode="mean", unit="THz", color="tab:blue", std_alpha=0.2
 )
-ensemble_al_unconst_auto.plot(
-    ax=ax, mode="ensemble", unit="THz", color="tab:red", std_alpha=0.2
+phonons_al_unconst_auto.plot(
+    ax=ax, mode="mean", unit="THz", color="tab:red", std_alpha=0.2
 )
 
 legend_elements = [
@@ -315,9 +385,62 @@ plt.show()
 # On the same :math:`\mathbf{q}`-path, the two dispersions almost overlap, and they are
 # fully compatible within uncertainty bands. The apparent discrepancy from the automatic
 # path comparison was due to the different reciprocal-space trajectories, not to
-# physical difference. In practice the safest bet is to perform a constrained
+# physical difference. In practice the safest workflow is to perform a constrained
 # relaxation, or to use ``spglib.standardize_cell`` to symmetrize the relaxed cell.
 
+# %%
+# Phonons with uncertainty quantification
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# The phonon calculations above used a single model prediction for the forces.
+# To assess the model's confidence we can use an ensemble of predictions,
+# comparing the XS and S variants of PET-MAD. The S model is more accurate but
+# slower; the uncertainty bands show where predictions are reliable.
+
+model_path_s = "model_s.pt"
+upet.save_upet(
+    model=MODEL_BASE,
+    size="s",
+    version=MODEL_VERSION,
+    output=model_path_s,
+)
+
+ensemble_al_xs = compute_phonons_with_uq(
+    atoms_al_const,
+    model_path,
+    supercell=SUPERCELL_AL,
+    bands=BANDS_FCC,
+    labels=LABELS_FCC,
+    npoints=N_KPOINTS,
+    label="Al XS (UQ)",
+)
+
+ensemble_al_s = compute_phonons_with_uq(
+    atoms_al_const,
+    model_path_s,
+    supercell=SUPERCELL_AL,
+    bands=BANDS_FCC,
+    labels=LABELS_FCC,
+    npoints=N_KPOINTS,
+    label="Al S (UQ)",
+)
+
+# %%
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
+
+ensemble_al_xs.plot(
+    ax=ax1, mode="ensemble", unit="THz", color="tab:blue", std_alpha=0.2
+)
+ax1.set_title("Al (FCC) — PET-MAD XS")
+
+ensemble_al_s.plot(
+    ax=ax2, mode="ensemble", unit="THz", color="tab:green", std_alpha=0.2
+)
+ax2.set_title("Al (FCC) — PET-MAD S")
+
+plt.tight_layout()
+plt.show()
 
 # %%
 # BaTiO\ :math:`_3` (:math:`R3m`)
@@ -475,7 +598,7 @@ bto_cubic_relax.set_constraint(None)
 # Phonon dispersion
 # ^^^^^^^^^^^^^^^^^
 
-ensemble_cubic = compute_phonons(
+ensemble_cubic = compute_phonons_with_uq(
     bto_cubic_relax,
     model_path,
     supercell=SUPERCELL_BTO,
@@ -506,3 +629,67 @@ plt.show()
 # Clear imaginary frequencies appear at :math:`\Gamma`, the ferroelectric soft mode.
 # The uncertainty bands are well below the magnitude of the instability, confirming it
 # is a genuine prediction of the model.
+
+# %%
+# Validation with PET-MAD S
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# As a final check, we compute the cubic BaTiO₃ phonon dispersion with the
+# larger PET-MAD S model (single prediction, no UQ) and overlay it on the XS
+# ensemble bands. The cubic cell is re-relaxed with the S model before
+# computing phonons, so the force constants are evaluated at the S model's
+# own equilibrium.
+
+calc_s = UPETCalculator(
+    model="pet-mad-s",
+    device=DEVICE,
+    dtype="float32",
+    version=MODEL_VERSION,
+)
+
+bto_cubic_s = bto_cubic.copy()
+bto_cubic_s.set_constraint(FixSymmetry(bto_cubic_s))
+bto_cubic_s.calc = calc_s
+
+opt_cubic_s = LBFGS(
+    FrechetCellFilter(bto_cubic_s, mask=[True] * 3 + [False] * 3), logfile=None
+)
+opt_cubic_s.run(fmax=FMAX, steps=STEPS)
+report_symmetry(bto_cubic_s, "BTO cubic (S, re-relaxed)")
+bto_cubic_s.set_constraint(None)
+
+phonons_cubic_s = compute_phonons(
+    bto_cubic_s,
+    model_path_s,
+    supercell=SUPERCELL_BTO,
+    label="BTO cubic (S)",
+)
+
+# %%
+
+fig, ax = plt.subplots(figsize=(8, 5))
+
+ensemble_cubic.plot(
+    ax=ax, mode="ensemble", unit="THz", color="tab:blue", std_alpha=0.15
+)
+phonons_cubic_s.plot(
+    ax=ax, mode="mean", unit="THz", color="tab:green", mean_linewidth=2.0
+)
+ax.set_title(r"BaTiO$_3$ (cubic $Pm\bar{3}m$)")
+ax.axhline(0, color="k", linestyle="--", linewidth=0.5)
+ax.set_ylim(-10, 25)
+legend_elements = [
+    Patch(facecolor="tab:blue", alpha=0.5, label="XS (ensemble)"),
+    Patch(facecolor="tab:green", alpha=1.0, label="S"),
+]
+ax.legend(handles=legend_elements, fontsize=10)
+
+plt.tight_layout()
+plt.show()
+
+# %%
+#
+# The S model (green) falls within the XS ensemble bands, confirming that
+# the XS uncertainty estimates are well-calibrated and that both models
+# agree on the physics: stability of :math:`R3m` and the ferroelectric
+# soft mode in cubic :math:`Pm\bar{3}m`.
