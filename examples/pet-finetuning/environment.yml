@@ -8,3 +8,5 @@ dependencies:
     - metatrain[pet]>=2026.2
     - matplotlib
     - scikit-learn
+    - chemiscope
+    - metatomic-torch

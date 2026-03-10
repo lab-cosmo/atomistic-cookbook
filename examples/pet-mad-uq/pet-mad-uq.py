@@ -441,7 +441,7 @@ rdfs_oo_reweighted_err = rdfs_oo_reweighted[:, 1]
 rdfs_oo_reweighted_committees = rdfs_oo_reweighted[:, 2:]
 
 # Display results.
-fig, axs = plt.subplots(figsize=(6, 3), sharey=True, ncols=2)
+fig, axs = plt.subplots(figsize=(6, 3), sharey=True, ncols=2, constrained_layout=True)
 for title, ax, mus, std, xlim in [
     ("H-H", axs[0], rdfs_hh_reweighted_mu, rdfs_hh_reweighted_err, (1.0, 4.5)),
     ("O-O", axs[1], rdfs_oo_reweighted_mu, rdfs_oo_reweighted_err, (2.0, 4.5)),
