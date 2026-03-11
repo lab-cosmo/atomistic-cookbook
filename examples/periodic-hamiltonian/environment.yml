@@ -4,7 +4,6 @@ dependencies:
   - python>=3.11
   - graphviz
   - pyscf=2.3.0
-  - rust=1.88.*
   - pip
   - pip:
       - pyscfad @ git+https://github.com/fishjojo/pyscfad.git@ml#egg=pyscfad
@@ -16,4 +15,4 @@ dependencies:
       - keras_core
       - tensorboard
       - torchviz
-      - mlelec @ git+https://github.com/curiosity54/mlelec.git@tutorial_periodic#egg=mlelec
+      - mlelec @ git+https://github.com/ceriottm/mlelec.git@tutorial_periodic#egg=mlelec
