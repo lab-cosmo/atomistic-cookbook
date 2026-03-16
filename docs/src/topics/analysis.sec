@@ -10,3 +10,4 @@ for post-processing, diagnostics or visualization purposes.
 - examples/rotate-equivariants/rotate-equivariants
 - examples/water-pulsed/water-pulsed
 - examples/pet-phonons/pet-phonons
+- examples/kaldo-thermal-conductivity/kaldo-thermal-conductivity
