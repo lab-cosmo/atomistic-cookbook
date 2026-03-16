@@ -1,11 +1,28 @@
 import os
 import shutil
 import sys
+import traceback
 
 import chemiscope  # noqa: F401
 import sphinx_gallery.gen_gallery
 import sphinx_gallery.gen_rst
 from chemiscope.sphinx import ChemiscopeScraper
+
+
+# Monkey-patch _LoggingTee.write to echo captured output to sys.__stderr__.
+# sphinx-gallery's _LoggingTee replaces both sys.stdout and sys.stderr during
+# recipe execution, so all print output vanishes from CI. sys.__stderr__ is
+# the original fd preserved by Python at startup, immune to replacement.
+_orig_tee_write = sphinx_gallery.gen_rst._LoggingTee.write
+
+
+def _tee_write_with_ci(self, data):
+    _orig_tee_write(self, data)
+    sys.__stderr__.write(data)
+    sys.__stderr__.flush()
+
+
+sphinx_gallery.gen_rst._LoggingTee.write = _tee_write_with_ci
 
 
 ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__), "../"))
@@ -87,4 +104,9 @@ if __name__ == "__main__":
     app = PseudoSphinxApp(example=sys.argv[1])
     sphinx_gallery.gen_gallery.fill_gallery_conf_defaults(app, app.config)
     sphinx_gallery.gen_gallery.update_gallery_conf_builder_inited(app)
-    sphinx_gallery.gen_gallery.generate_gallery_rst(app)
+
+    try:
+        sphinx_gallery.gen_gallery.generate_gallery_rst(app)
+    except Exception:
+        traceback.print_exc(file=sys.__stderr__)
+        sys.exit(1)
