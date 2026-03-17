@@ -36,6 +36,9 @@ conductivity of natural Si at 300 K is ~150 W/(m·K).
 # `PET-MAD v1.5.0 <https://arxiv.org/abs/2603.02089>`_. For production
 # calculations, the S model (``pet-mad-s``) is recommended.
 
+import os
+import tempfile
+
 import numpy as np
 from ase.build import bulk
 from ase.constraints import FixSymmetry
@@ -45,6 +48,12 @@ from upet.calculator import UPETCalculator
 from kaldo.forceconstants import ForceConstants
 from kaldo.phonons import Phonons
 import kaldo.controllers.plotter as plotter
+
+workdir = tempfile.mkdtemp()
+
+# Override kaldo's default plot folder so output files go to a
+# temporary directory instead of the current working directory.
+plotter.DEFAULT_FOLDER = os.path.join(workdir, "plots")
 
 DEVICE = "cpu"
 
@@ -83,7 +92,7 @@ forceconstants = ForceConstants(
     atoms=atoms,
     supercell=supercell,
     third_supercell=supercell,
-    folder="fd_si/",
+    folder=os.path.join(workdir, "fd_si"),
 )
 
 forceconstants.second.calculate(calc, delta_shift=3e-2)
@@ -102,7 +111,7 @@ phonons = Phonons(
     kpts=kpts,
     is_classic=False,
     temperature=temperature,
-    folder="ald_si/",
+    folder=os.path.join(workdir, "ald_si"),
     storage="numpy",
 )
 
