@@ -1,8 +1,10 @@
 channels:
+  - metatensor
   - conda-forge
 dependencies:
   - chemiscope
-  - gromacs
+  - gromacs-metatomic
   - mdanalysis
   - metatrain
+  - metatomic-torch
   - python=3.12

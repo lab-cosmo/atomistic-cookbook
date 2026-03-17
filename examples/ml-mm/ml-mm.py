@@ -73,15 +73,15 @@ chemiscope.show(ala_initial, mode="structure")
 # To follow this tutorial, we download the PET-MAD model from HuggingFace that we list
 # as ``metatomic-modelfile`` in the MD parameters.
 
-# _ =subprocess.check_call(
-#     [
-#         "mtt",
-#         "export",
-#         "https://huggingface.co/lab-cosmo/pet-mad/resolve/v1.0.2/models/pet-mad-v1.0.2.ckpt",
-#         "-o",
-#         "pet-mad-v1.0.2.pt",
-#     ]
-# )
+_ = subprocess.check_call(
+    [
+        "mtt",
+        "export",
+        "https://huggingface.co/lab-cosmo/pet-mad/resolve/v1.0.2/models/pet-mad-v1.0.2.ckpt",
+        "-o",
+        "pet-mad-v1.0.2.pt",
+    ]
+)
 
 # %%
 #
