@@ -17,11 +17,11 @@ jobs:
       latest_docs_run: ${{ steps.gatherInfo.outputs.latest_docs_run }}
     permissions: read-all # Permissions for the GITHUB_TOKEN
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           # The checkout by default doesn't fetch any history, but for PR
           # we want to check which files have been modified.
-          # The action actions/checkout@v4 squashes the history of the PR,
+          # The action actions/checkout@v6 squashes the history of the PR,
           # into a single commit so we need to fetch with a depth of 2.
           fetch-depth: ${{ github.event_name == 'pull_request' && 2 || 0 }}
 
@@ -47,10 +47,10 @@ jobs:
         ${{ fromJson(needs.setup.outputs.examplesmatrix) }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -74,7 +74,7 @@ jobs:
           fi
 
       - name: store example as a github artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: example-${{ matrix.example-name }}
           path: docs/src/examples/*  # folders for each example will be merged later
@@ -89,10 +89,10 @@ jobs:
     needs: [setup, generate-example]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -100,7 +100,7 @@ jobs:
         run: python -m pip install -r requirements.txt
 
       - name: Download latest main branch built examples
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         if: ${{ github.event_name == 'pull_request' }}
         with:
           path: docs/src/examples
@@ -110,7 +110,7 @@ jobs:
           merge-multiple: true
 
       - name: Overwrite examples with the ones built in this run
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: docs/src/examples
           pattern: example-*
@@ -120,7 +120,7 @@ jobs:
         run: nox -e build_website
 
       - name: store documentation as github artifact to be downloaded by users
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: documentation
           path: docs/build/html/*
