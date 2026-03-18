@@ -16,6 +16,7 @@ in your own atomistic cooking.
     featomic
     gromacs
     i-pi
+    kaldo
     lammps
     metatensor
     plumed
