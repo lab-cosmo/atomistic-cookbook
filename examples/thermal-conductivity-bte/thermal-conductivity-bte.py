@@ -8,7 +8,7 @@ This recipe shows how to compute lattice thermal conductivity
 :math:`\kappa` by solving the phonon Boltzmann transport equation (BTE)
 with `kALDo <https://nanotheorygroup.github.io/kaldo/>`_ and the
 `PET-MAD <https://arxiv.org/abs/2603.02089>`_ universal machine-learning
-potential via the `UPET <https://github.com/lab-cosmo/pet>`_ calculator.
+potential via the `UPET <https://github.com/lab-cosmo/upet>`_ calculator.
 
 The workflow builds on two companion recipes:
 
@@ -37,6 +37,8 @@ conductivity of natural Si at 300 K is ~150 W/(m·K).
    recipe runs in CI in a few minutes.  See the convergence discussion at the
    end for production-quality settings.
 """
+# sphinx_gallery_thumbnail_number = 7
+
 
 # %%
 # Setup
@@ -48,6 +50,7 @@ conductivity of natural Si at 300 K is ~150 W/(m·K).
 
 import matplotlib.pyplot as plt
 import numpy as np
+import chemiscope
 from ase.build import bulk
 from ase.constraints import FixSymmetry
 from ase.filters import StrainFilter
@@ -57,6 +60,8 @@ from kaldo.conductivity import Conductivity
 from kaldo.forceconstants import ForceConstants
 from kaldo.phonons import Phonons
 from upet.calculator import UPETCalculator
+
+plt.rcParams["figure.autolayout"] = True
 
 DEVICE = "cpu"
 
@@ -112,6 +117,14 @@ print(f"Optimized lattice parameter: {a_opt:.3f} Å")
 # than :math:`O(N)`.
 
 supercell = np.array([3, 3, 3])
+
+chemiscope.show(
+    [atoms.repeat(supercell)],
+    mode="structure",
+    settings=chemiscope.quick_settings(periodic=True),
+)
+
+# %%
 
 forceconstants = ForceConstants(
     atoms=atoms,
@@ -220,7 +233,7 @@ fig, ax = plt.subplots()
 ax.plot(freq_sorted, kappa_cumulative)
 ax.set_xlabel("Frequency (THz)")
 ax.set_ylabel(r"Cumulative $\kappa$ [W/(m·K)]")
-ax.set_title("Cumulative thermal conductivity vs frequency")
+ax.set_title("Cumulative thermal conductivity")
 plt.tight_layout()
 plt.show()
 
