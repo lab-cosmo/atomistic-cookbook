@@ -1,0 +1,8 @@
+*.out
+*.pos_*xyz
+nano_soup-*.xyz
+*.restart
+*.pt
+*.remd_idx
+RESTART
+\#*

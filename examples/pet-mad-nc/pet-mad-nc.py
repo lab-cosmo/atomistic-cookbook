@@ -29,11 +29,11 @@ for an example of how to use direct forces to accelerate training.
 #
 # If you don't want to use the conda environment for this recipe,
 # you can get all dependencies installing
-# the `PET-MAD package <https://github.com/lab-cosmo/pet-mad>`_:
+# the `upet package <https://github.com/lab-cosmo/upet>`_:
 #
 # .. code-block:: bash
 #
-#     pip install pet-mad
+#     pip install upet
 #
 
 import linecache
@@ -45,6 +45,7 @@ import ase.io
 # visualization
 import chemiscope
 import matplotlib.pyplot as plt
+import upet
 
 # i-PI scripting utilities
 from ipi.utils.parsing import read_output, read_trajectory
@@ -52,32 +53,29 @@ from ipi.utils.scripting import InteractiveSimulation
 
 # metatomic ASE calculator
 from metatomic.torch.ase_calculator import MetatomicCalculator
+from upet.calculator import UPETCalculator
 
 
 # %%
-# Fetch PET-MAD and export the model
-# ----------------------------------
-# We first download a version of the PET-MAD model that includes non-conservative
-# forces, and export the model as a torchscript file.
+# Fetch PET-MAD and set up the calculators
+# -----------------------------------------
+# We use the ``upet`` package to download the PET-MAD model. Rather than the
+# original PET-MAD model, that was trained on PBESol data, we use a model
+# trained on the MAD-1.5 dataset, that is computed at the r2SCAN level of theory.
+# See `this preprint <https://arxiv.org/pdf/2603.02089>`_ for details on the
+# dataset and the training procedure. Here we use the
+# extra-small (xs) model for speed. For production calculations,
+# the small (s) model (``model="pet-mad-s"``) is far more accurate and
+# still very fast.
 
-# download the model checkpoint and export it, using metatrain from the command line:
-# mtt export https://huggingface.co/lab-cosmo/pet-mad/resolve/v1.1.0/models/pet-mad-v1.1.0.ckpt  # noqa: E501
-
-subprocess.run(
-    [
-        "mtt",
-        "export",
-        "https://huggingface.co/lab-cosmo/pet-mad/resolve/v1.1.0/models/pet-mad-v1.1.0.ckpt",  # noqa: E501
-    ]
-)
+calculator = UPETCalculator(model="pet-mad-xs", version="1.5.0", device="cpu")
 
 # %%
-# The model can also be loaded from this torchscript dump, which often
-# speeds up calculation as it involves compilation, and is functionally
-# equivalent unless you plan on fine-tuning, or otherwise modifying
-# the model.
+# We also save the model as a torchscript file, which is needed for
+# i-PI and LAMMPS integration.
 
-calculator = MetatomicCalculator("pet-mad-v1.1.0.pt", device="cpu")
+model_path = "pet-mad-xs-v1.5.0.pt"
+upet.save_upet(model="pet-mad", size="xs", version="1.5.0", output=model_path)
 
 # %%
 #
@@ -113,7 +111,7 @@ energy_c = structure.get_potential_energy()
 forces_c = structure.get_forces()
 
 calculator_nc = MetatomicCalculator(
-    "pet-mad-v1.1.0.pt", device="cpu", non_conservative=True
+    "pet-mad-xs-v1.5.0.pt", device="cpu", non_conservative=True
 )
 
 structure.calc = calculator_nc
@@ -287,14 +285,12 @@ time_nve_mts /= steps_nve_mts * nmts + 1
 # The MTS calculation recovers most of the speedup of direct forces
 #
 
-print(
-    f"""
+print(f"""
 Time per 0.5fs step:
 Conservative forces: {time_nve_c:.4f} s/step
 Direct forces:       {time_nve_nc:.4f} s/step
 MTS (M=8):           {time_nve_mts:.4f} s/step
-"""
-)
+""")
 
 # %%
 # ... and the energy conservation is on par with the conservative
@@ -419,14 +415,12 @@ time_lammps_mts += time.time()
 # outer loop, with the current implementation LAMMPS requires a separate
 # pair style, which reduces the MTS speedup slightly.
 
-print(
-    f"""
+print(f"""
 Time per 0.5fs step in LAMMPS:
 Conservative forces: {time_lammps_c / 16:.4f} s/step
 Direct forces:       {time_lammps_nc / 16:.4f} s/step
 MTS (M=8):           {time_lammps_mts / 16:.4f} s/step
-"""
-)
+""")
 
 # %%
 # Running LAMMPS on GPUs with KOKKOS
@@ -435,7 +429,7 @@ MTS (M=8):           {time_lammps_mts / 16:.4f} s/step
 # by running the `metatomic` model on the GPU, which you can achieve
 # by setting ``device cuda`` for the `metatomic` pair style in the LAMMPS input files.
 # The MD integration will however still be run on the CPU, which can become the
-# bottleneck - especially because atomic positions need to be transfered to the GPU
+# bottleneck - especially because atomic positions need to be transferred to the GPU
 # at each call. LAMMPS can also be run directly on the GPU using the KOKKOS package,
 # see `the installation instructions
 # <https://docs.metatensor.org/metatomic/latest/engines/lammps.html>`_ for

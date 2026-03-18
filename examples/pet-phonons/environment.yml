@@ -1,0 +1,12 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+    - ase>=3.23
+    - upet>=0.2.1
+    - spglib
+    - matplotlib
+    - numpy
+    - git+https://github.com/ppegolo/uqphonon.git@v0.1.0

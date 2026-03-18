@@ -213,7 +213,7 @@ print(equivariants)
 n_rotations = 100
 rotations = [get_random_rotation() for _ in range(n_rotations)]
 
-# This list containts the rotation matrices that we will use to rotate both the
+# This list contains the rotation matrices that we will use to rotate both the
 # atomic positions and to generate the Wigner D matrices to rotate also the associated
 # equavariants.
 #
@@ -244,7 +244,6 @@ for rotated_structure, rotation in zip(rotated_structures, rotations):
 # its real counterpart.
 # Putting all together, the function is
 def WignerD_calculator(rotations, L):
-
     # We initialize the Wigner calculator from the quaternionic library...
     wigner = spherical.Wigner(L)
     # ...and we also initialize the transformation matrix from complex to real
@@ -294,7 +293,7 @@ def WignerD_calculator(rotations, L):
 # rotation matrices that we generated. Importantly, we need to change convention using
 # the utility function ``rotation_matrix_conversion_order``.
 
-# Initiaize the L for the comparison with the rotation matrices
+# Initialize the L for the comparison with the rotation matrices
 L = 1
 # Generate the Wigner D matrices
 wigner_D_matrices = WignerD_calculator(rotations, L)
@@ -316,7 +315,7 @@ wigner_D_matrices = WignerD_calculator(rotations, L)
 # list of TensorMaps, one for each rotation.
 rotated_equivariants = []
 for idx, _ in enumerate(rotations):
-    # We obtaine the new values by applying the Wigner D matrices from the right (and
+    # We obtain the new values by applying the Wigner D matrices from the right (and
     # thus we use their transpose)
     new_values = (
         equivariants.block().values.swapaxes(-1, -2) @ wigner_D_matrices[idx].T

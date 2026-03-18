@@ -195,7 +195,7 @@ heat_capacity = (  # second formula
     )
 )
 heat_capacity_per_molecule = heat_capacity / 32  # 32 molecules in the simulation
-print(f"Heat capacity (per water molecule): {(heat_capacity_per_molecule/kB):.2f} kB")
+print(f"Heat capacity (per water molecule): {(heat_capacity_per_molecule / kB):.2f} kB")
 
 # %%
 # You may recognize that the first part of the estimator is reminiscent
@@ -244,13 +244,11 @@ autocorr_time_error_delta_eps_v = autocorrelation_time(
 )
 autocorr_time_error_eps_v_prime = autocorrelation_time(eps_v_prime[skip:])
 
-print(
-    f"""
+print(f"""
 Autocorrelation times (in number of samples):
 (eps-<eps>)^2: {autocorr_time_error_delta_eps_v:.2f}
 eps':          {autocorr_time_error_eps_v_prime:.2f}
-"""
-)
+""")
 
 # Effective number of samples
 effective_samples_delta_eps_v = len(eps_v[skip:]) / autocorr_time_error_delta_eps_v
@@ -273,7 +271,7 @@ error_heat_capacity_per_molecule = (
 
 print(
     "Error on the heat capacity (per water molecule): "
-    f"{(error_heat_capacity_per_molecule/kB):.2f} kB"
+    f"{(error_heat_capacity_per_molecule / kB):.2f} kB"
 )
 
 

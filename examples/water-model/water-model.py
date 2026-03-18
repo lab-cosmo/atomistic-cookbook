@@ -550,7 +550,7 @@ def get_molecular_geometry(
 
     # adjust neighbor lists to point at the m sites rather than O atoms. this assumes
     # this won't have atoms cross the cutoff, which is of course only approximately
-    # true, so one should use a slighlty larger-than-usual cutoff nb - this is reshaped
+    # true, so one should use a slightly larger-than-usual cutoff nb - this is reshaped
     # to match the values in a NL tensorblock
     nl = system.get_neighbor_list(nlo)
     i_idx = nl.samples.view(["first_atom"]).values.flatten()
@@ -657,7 +657,7 @@ class WaterModel(torch.nn.Module):
 
         # We use a half neighborlist and allow to have pairs farther than cutoff
         # (`strict=False`) since this is not problematic for PME and may speed up the
-        # computation of the neigbors.
+        # computation of the neighbors.
         self.nlo = NeighborListOptions(cutoff=cutoff, full_list=False, strict=False)
 
         self.register_buffer("cutoff", torch.tensor(cutoff))
@@ -709,7 +709,6 @@ class WaterModel(torch.nn.Module):
         outputs: Dict[str, ModelOutput],  # noqa
         selected_atoms: Optional[Labels] = None,
     ) -> Dict[str, TensorMap]:  # noqa
-
         if list(outputs.keys()) != ["energy"]:
             raise ValueError(
                 f"`outputs` keys ({', '.join(outputs.keys())}) contain unsupported "
@@ -828,8 +827,7 @@ outputs = {"energy": ModelOutput(quantity="energy", unit=energy_unit, per_atom=F
 nrg = qtip4pf_model.forward([system], outputs)
 nrg["energy"].block(0).values.backward()
 
-print(
-    f"""
+print(f"""
 Energy is {nrg["energy"].block(0).values[0].item()} kcal/mol
 
 The forces on the first molecule (in kcal/mol/Å) are
@@ -837,8 +835,7 @@ The forces on the first molecule (in kcal/mol/Å) are
 
 The stress is
 {system.cell.grad}
-"""
-)
+""")
 
 # %%
 #
@@ -855,7 +852,7 @@ The stress is
 #
 # .. note::
 #
-#   We neeed to specify that the model has infinite interaction range because of the
+#   We need to specify that the model has infinite interaction range because of the
 #   presence of a long-range term that means one cannot assume that forces decay to zero
 #   beyond the cutoff.
 
@@ -931,11 +928,9 @@ mta_calculator = MetatomicCalculator(atomistic_model)
 atoms.calc = mta_calculator
 nrg = atoms.get_potential_energy()
 
-print(
-    f"""
-Energy is {nrg} eV, corresponding to {nrg*23.060548} kcal/mol
-"""
-)
+print(f"""
+Energy is {nrg} eV, corresponding to {nrg * 23.060548} kcal/mol
+""")
 
 
 # %%
@@ -966,7 +961,7 @@ nrg_final = atoms.get_potential_energy()
 # together with the convergence of the energy to a local minimum.
 
 chemiscope.show(
-    frames=opt_trj,
+    structures=opt_trj,
     properties={
         "step": 1 + np.arange(0, len(opt_trj)),
         "energy": opt_nrg - nrg_final,
@@ -1046,7 +1041,7 @@ ax.legend()
 # %%
 
 chemiscope.show(
-    frames=trj,
+    structures=trj,
     properties={
         "time": data["time"][::10],
         "potential": data["potential"][::10],

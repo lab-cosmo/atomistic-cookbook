@@ -35,7 +35,7 @@ import numpy as np
 #    :align: center
 #    :width: 600px
 #
-#    A representation of ther ring-polymer Hamiltonian for a water molecule.
+#    A representation of the ring-polymer Hamiltonian for a water molecule.
 #
 # In order to describe the quantum mechanical nature of light nuclei
 # (nuclear quantum effects) one of the most widely-applicable methods uses
@@ -183,24 +183,85 @@ ax.legend()
 plt.show()
 
 # %%
-# You can also visualize the (very short) trajectory in a way that highlights the
-# fast spreading out of the beads of the ring polymer. ``chemiscope`` provides a
-# utility function to interleave the trajectories of the beads, forming a trajectory
-# that shows the connecttions between the replicas of each atom. Each atom and its
-# connections are color-coded.
+#
+# You can also visualize the (very short) trajectory in a way that highlights the fast
+# spreading out of the beads of the ring polymer. We use ``chemiscope``'s ability to
+# visualize custom shaped to interleave the trajectories of the beads, forming a
+# trajectory that shows the connections between the replicas of each atom. Each atom
+# and its connections are color-coded.
 
-traj_pimd = chemiscope.ase_merge_pi_frames(traj_data)
-# we also tweak the visualization options, and then show the viewer
-traj_pimd["shapes"]["paths"]["parameters"]["global"]["radius"] = 0.05
-traj_pimd["settings"]["structure"][0].update(
-    dict(
-        atoms=False,
-        keepOrientation=True,
-        color={"property": "bead_id", "palette": "hsv (periodic)"},
-    )
+nbeads, nframes, natoms = (
+    len(traj_data),
+    len(traj_data[0]),
+    len(traj_data[0][0]),
 )
 
-chemiscope.show(**traj_pimd, mode="structure")
+# creates frames with all beads, so we can use periodic boundary conditions when
+# computing distances
+full_frames = []
+for i in range(nframes):
+    struc = traj_data[0][i].copy()
+    for k in range(1, nbeads):
+        struc += traj_data[k][i]
+    full_frames.append(struc)
+
+distance_vectors = [
+    full_frames[frame_i].get_distance(
+        bead_i * natoms + atom_i,
+        ((bead_i + 1) % nbeads) * natoms + atom_i,
+        mic=True,
+        vector=True,
+    )
+    for frame_i in range(nframes)
+    for bead_i in range(nbeads)
+    for atom_i in range(natoms)
+]
+
+paths_shapes = {
+    "kind": "cylinder",
+    "parameters": {
+        "global": {"radius": 0.05},
+        "atom": [{"vector": d.tolist()} for d in distance_vectors],
+    },
+}
+
+properties = {
+    "atom_id": [
+        atom_i
+        for frame_i in range(nframes)
+        for bead_i in range(nbeads)
+        for atom_i in range(natoms)
+    ],
+    "bead_id": [
+        bead_i
+        for frame_i in range(nframes)
+        for bead_i in range(nbeads)
+        for atom_i in range(natoms)
+    ],
+}
+
+settings = {
+    "structure": [
+        {
+            "atoms": False,
+            "keepOrientation": True,
+            "color": {"property": "bead_id", "palette": "hsv (periodic)"},
+            "bonds": False,
+            "shape": "paths",
+            "environments": {"activated": False},
+            "unitCell": True,
+        }
+    ]
+}
+
+chemiscope.show(
+    full_frames,
+    properties=properties,
+    environments=chemiscope.all_atomic_environments(full_frames, 4.0),
+    shapes={"paths": paths_shapes},
+    mode="structure",
+    settings=settings,
+)
 
 # %%
 # Accelerating PIMD with a PIGLET thermostat
@@ -300,8 +361,8 @@ kinetic_cv = ipi.read_trajectory("simulation_piglet.kin.xyz")[1:]
 kinetic_od = ipi.read_trajectory("simulation_piglet.kod.xyz")[1:]
 kinetic_tens = np.hstack(
     [
-        np.asarray([k.positions for k in kinetic_cv[-10:]]).mean(axis=0),
-        np.asarray([k.positions for k in kinetic_od[-10:]]).mean(axis=0),
+        np.asarray([k.arrays["kinetic_cv"] for k in kinetic_cv[-10:]]).mean(axis=0),
+        np.asarray([k.arrays["kinetic_od"] for k in kinetic_od[-10:]]).mean(axis=0),
     ]
 )
 
@@ -316,7 +377,7 @@ centroid.arrays["kinetic_cv"] = kinetic_tens
 # insufficient to converge the estimator fully.
 
 ellipsoids = chemiscope.ase_tensors_to_ellipsoids(
-    [centroid], "kinetic_cv", scale=15, force_positive=True
+    [centroid], "kinetic_cv", scale=2, force_positive=True
 )
 
 chemiscope.show(

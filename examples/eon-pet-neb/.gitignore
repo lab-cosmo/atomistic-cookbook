@@ -26,3 +26,5 @@ min_reactant/
 config.ini
 # Ignore generated ASE trajectory
 A2B.traj
+# eOn potential call log
+_potcalls.json

@@ -7,7 +7,9 @@ dependencies:
   - matplotlib
   - pandas
   - pip:
-    - ase
-    - ipi>=3.1.7,<4
-    - git+https://github.com/metatensor/metatrain.git
-    - git+https://github.com/metatensor/metatomic.git
+    - ase>=3.27
+    - upet>=0.2.1
+    - ipi>=3.1.8,<4
+    - metatomic-torch<=0.1.8
+    - metatrain
+    - vesin>=0.4.2

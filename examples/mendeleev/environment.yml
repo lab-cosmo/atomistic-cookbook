@@ -1,0 +1,14 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+    - ase
+    - upet>=0.2.1
+    - ipi
+    - chemiscope>=1.0.1
+    - matplotlib
+    - metatomic-torch<=0.1.8
+    - vesin>=0.5
+    - requests

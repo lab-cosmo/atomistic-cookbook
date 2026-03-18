@@ -22,7 +22,6 @@ NIGHTLY_LINK = "https://nightly.link/lab-cosmo/atomistic-cookbook/workflows/docs
 
 
 def get_latest_successful_docs_run(api_token: Optional[str] = None) -> int:
-
     doc_runs_endpoint = GITHUB_ACTIONS_API + "/workflows/docs.yml/runs"
 
     headers = {}
@@ -71,7 +70,6 @@ def download_latest_examples(
     n_examples = len(examples)
     examples_dir = ROOT / "docs/src/examples"
     for i, example in enumerate(examples):
-
         # Skip examples that exist if overwrite is False
         if not overwrite and Path(examples_dir / example).exists():
             print(f"[{i + 1} / {n_examples}] Skipping {example} (already exists)")
@@ -95,7 +93,6 @@ def download_latest_examples(
 
 
 if __name__ == "__main__":
-
     import argparse
 
     parser = argparse.ArgumentParser(

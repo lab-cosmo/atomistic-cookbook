@@ -35,12 +35,17 @@ import os
 import subprocess
 from collections import Counter
 from glob import glob
-from urllib.request import urlretrieve
 
 import ase.io
+import ase.units
+import chemiscope
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from ase.md.velocitydistribution import MaxwellBoltzmannDistribution
+from ase.md.verlet import VelocityVerlet
+from huggingface_hub import hf_hub_download
+from metatomic.torch.ase_calculator import MetatomicCalculator
 from metatrain.utils.io import model_from_checkpoint
 from sklearn.linear_model import LinearRegression
 
@@ -56,23 +61,24 @@ if hasattr(__import__("builtins"), "get_ipython"):
 # While PET-MAD is trained as a universal model capable of handling a broad range of
 # atomic environments, fine-tuning it allows to adapt this general-purpose model to a
 # more specialized task. First, we need to get a checkpoint of the pre-trained PET-MAD
-# model to start training from it. The checkpoint is stored in the
-# `lab-codmo Hugging Face repository
-# <https://huggingface.co/lab-cosmo/pet-mad>`_ and can be fetched using wget or curl:
-#
-# .. code-block:: bash
-#
-#    wget https://huggingface.co/lab-cosmo/pet-mad/resolve/v1.1.0/models/pet-mad-v1.1.0.ckpt # noqa: E501
-#
-# We'll download it directly:
+# model to start training from it. The checkpoints are stored in the
+# `lab-cosmo/upet Hugging Face repository
+# <https://huggingface.co/lab-cosmo/upet>`_.
+# We use ``huggingface_hub`` to download it:
 
-url = (
-    "https://huggingface.co/lab-cosmo/pet-mad/resolve/v1.1.0/models/pet-mad-v1.1.0.ckpt"
+checkpoint_cache = hf_hub_download(
+    repo_id="lab-cosmo/upet",
+    filename="pet-mad-xs-v1.5.0.ckpt",
+    subfolder="models",
 )
-checkpoint_path = "pet-mad-v1.1.0.ckpt"
 
+# Copy the checkpoint to the local directory so that it can be referenced
+# in the metatrain YAML configuration files.
+checkpoint_path = "pet-mad-xs-v1.5.0.ckpt"
 if not os.path.exists(checkpoint_path):
-    urlretrieve(url, checkpoint_path)
+    import shutil
+
+    shutil.copy(checkpoint_cache, checkpoint_path)
 
 # %%
 # Applying an atomic energy correction
@@ -84,7 +90,7 @@ if not os.path.exists(checkpoint_path):
 #
 # On this example we use the sampled subset of ethanol structures from `rMD17 dataset
 # <https://doi.org/10.48550/arXiv.2007.09593>`_ with PBE/def2-SVP level of theory which
-# is different from the MAD which uses PBEsol and a plane-waves basis set.
+# is different from PET-MAD v1.5.0, which uses r2SCAN references.
 # We apply a linear correction based on
 # atomic compositions to align our fine-tuning dataset with PET-MAD energy reference.
 # First, we define a helper function to load reference energies from PET-MAD.
@@ -97,7 +103,7 @@ def load_reference_energies(checkpoint_path):
     It returns a mapping of elements to their reference energies (eV), e.g.: {'1':
     -1.23, '2': -5.67, ...}
     """
-    checkpoint = torch.load(checkpoint_path, weights_only=False)
+    checkpoint = torch.load(checkpoint_path, weights_only=False, map_location="cpu")
     pet_model = model_from_checkpoint(checkpoint, "finetune")
 
     energy_values = pet_model.additive_models[0].model.weights["energy"].block().values
@@ -193,7 +199,7 @@ def display_training_curves(train_log, ax=None, style="-", label=""):
     """Plots training and validation losses from the training log"""
 
     if ax is None:
-        _, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
+        _, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4), constrained_layout=True)
     else:
         ax1, ax2 = ax
 
@@ -284,7 +290,7 @@ display_training_curves(from_scratch_log)
 # ``metatrain`` package. There are multiple strategies to apply
 # fine-tuning, each described in the `documentation
 # <https://metatensor.github.io/metatrain/latest/advanced-concepts/fine-tuning.html>`_.
-# In this example we demostrate a basic full fine-tuning strategy, which adapts all
+# In this example we demonstrate a basic full fine-tuning strategy, which adapts all
 # model weights to the new dataset starting from the pre-trained PET-MAD checkpoint. The
 # process is configured by setting appropriate settings in the YAML options file.
 #
@@ -334,4 +340,90 @@ ax[0].set_ylim(1, 1000)
 #
 # Or from Python:
 
-subprocess.run(["mtt", "eval", "fine_tune-model.pt", "model_eval.yaml"], check=True)
+result = subprocess.run(
+    ["mtt", "eval", "fine_tune-model.pt", "model_eval.yaml"],
+    check=True,
+    capture_output=True,
+    text=True,
+)
+print(result.stdout)
+
+# %%
+# Running NVE molecular dynamics with the fine-tuned model
+# --------------------------------------------------------
+#
+# Having trained and evaluated the model, we can use it to run a short
+# molecular dynamics simulation. We use ASE's `VelocityVerlet` integrator
+# to propagate the system in the NVE (microcanonical) ensemble for 1 ps,
+# starting from one of the ethanol structures in the test set.
+#
+# We load the exported model using `MetatomicCalculator`, which wraps it
+# as an ASE calculator.
+
+atoms = test[0].copy()
+atoms.calc = MetatomicCalculator("fine_tune-model.pt", device="cpu")
+
+# %%
+# We initialize the velocities at 300 K and run NVE dynamics with a 0.5 fs
+# timestep, collecting snapshots every 10 steps.
+
+MaxwellBoltzmannDistribution(atoms, temperature_K=300)
+
+dt_fs = 0.5  # timestep in fs
+n_steps = 2000  # 2000 * 0.5 fs = 1 ps
+save_interval = 10
+
+dyn = VelocityVerlet(atoms, dt_fs * ase.units.fs)
+
+trajectory = []
+time_ps = []
+potential_energy = []
+kinetic_energy = []
+
+for step in range(n_steps // save_interval):
+    dyn.run(save_interval)
+    snapshot = atoms.copy()
+    snapshot.info["step"] = (step + 1) * save_interval
+    trajectory.append(snapshot)
+    time_ps.append((step + 1) * save_interval * dt_fs / 1000)
+    potential_energy.append(atoms.get_potential_energy())
+    kinetic_energy.append(atoms.get_kinetic_energy())
+
+total_energy = np.array(potential_energy) + np.array(kinetic_energy)
+
+# %%
+# We can verify energy conservation by plotting the potential and total energies.
+# In a well-behaved NVE simulation, the total energy should remain approximately
+# constant.
+
+fig, ax = plt.subplots(1, 1, figsize=(5, 3), constrained_layout=True)
+ax.plot(time_ps, potential_energy, label=r"$V$")
+ax.plot(time_ps, total_energy, label=r"$E_\mathrm{tot}$")
+ax.set_xlabel("t / ps")
+ax.set_ylabel("Energy / eV")
+ax.legend()
+
+# %%
+# Visualizing the trajectory with chemiscope
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# Finally, we visualize the trajectory interactively using
+# `chemiscope <https://chemiscope.org>`_.
+
+chemiscope.show(
+    trajectory,
+    mode="default",
+    properties={
+        "time / ps": time_ps,
+        "potential energy / eV": potential_energy,
+        "total energy / eV": total_energy.tolist(),
+    },
+    settings=chemiscope.quick_settings(
+        x="time / ps",
+        y="potential energy / eV",
+        trajectory=True,
+    ),
+    meta={
+        "name": "NVE MD of ethanol with fine-tuned PET model",
+    },
+)

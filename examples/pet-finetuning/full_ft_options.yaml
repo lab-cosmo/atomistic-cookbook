@@ -4,11 +4,11 @@ architecture:
   name: "pet"
   training:
     batch_size: 10
-    num_epochs: 50  # very short period for demostration
+    num_epochs: 50  # very short period for demonstration
     learning_rate: 1e-5  # small learning rate to stabilize training
     finetune:
       method: "full"  # use fine-tuning strategy
-      read_from: pet-mad-v1.1.0.ckpt  # path to the pretrained checkpoint to start from
+      read_from: pet-mad-xs-v1.5.0.ckpt  # path to the pretrained checkpoint to start from
 
 training_set:
   systems: 

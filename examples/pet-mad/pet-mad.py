@@ -37,11 +37,11 @@ in `this preprint <https://arxiv.org/abs/2503.14118>`_.
 #
 # Start by importing the required libraries. To use PET-MAD,
 # and obtain all the necessary dependencies, you can simply use pip
-# to install the `PET-MAD package <https://github.com/lab-cosmo/pet-mad>`_:
+# to install the `upet package <https://github.com/lab-cosmo/upet>`_:
 #
 # .. code-block:: bash
 #
-#     pip install pet-mad
+#     pip install upet
 #
 
 import os
@@ -54,10 +54,11 @@ import chemiscope
 import matplotlib.pyplot as plt
 
 # pet-mad ASE calculator
-import metatomic.torch as mta
 import numpy as np
 import requests
+import upet
 from ase.optimize import LBFGS
+from upet.calculator import UPETCalculator
 from ipi.utils.mathtools import get_rotation_quadrature_lebedev
 from ipi.utils.parsing import read_output, read_trajectory
 from ipi.utils.scripting import (
@@ -66,7 +67,6 @@ from ipi.utils.scripting import (
     motion_nvt_xml,
     simulation_xml,
 )
-from pet_mad.calculator import PETMADCalculator
 
 
 # %%
@@ -133,24 +133,26 @@ test_forces = np.array(test_forces, dtype=object)
 # <https://docs.metatensor.org/metatomic>`_.
 #
 # We now load the PET-MAD ASE calculator and calculate energy and forces.
+# We use the ``upet`` package, which provides a convenient interface
+# to download and use PET-MAD models. Here we use the small (s) model
+# at version 1.0.2, which was trained on PBEsol data matching the
+# reference level of theory of the MAD test set.
+# For general-purpose simulations, we recommend using version 1.5.0
+# (i.e. ``version="1.5.0"``) which is based on an improved architecture
+# and trained on r2SCAN meta-GGA references, unless PBEsol energetics is needed.
+# The extra-small (xs) model (``model="pet-mad-xs"``, available from
+# version 1.5.0) is faster but less accurate than -s.
 
-calculator = PETMADCalculator(version="1.0.1", device="cpu")
+calculator = UPETCalculator(model="pet-mad-s", version="1.0.2", device="cpu")
 
 # %%
 #
 # The model can also be exported in a format that can be used with
-# external MD engines. This is done by saving the model to a file,
-# which includes the model architecture and weights.
+# external MD engines, such as i-PI and LAMMPS. This is done by saving
+# the model to a file using ``upet.save_upet``.
 
-calculator._model.save("pet-mad-v1.1.0.pt")
-
-# %%
-# The model can also be loaded from this torchscript dump, which often
-# speeds up calculation as it involves compilation, and is functionally
-# equivalent unless you plan on fine-tuning, or otherwise modifying
-# the model.
-
-calculator = mta.ase_calculator.MetatomicCalculator("pet-mad-v1.1.0.pt", device="cpu")
+model_path = "pet-mad-s-v1.0.2.pt"
+upet.save_upet(model="pet-mad", size="s", version="1.0.2", output=model_path)
 
 # %%
 #
@@ -162,7 +164,7 @@ mad_forces = []
 mad_structures = []
 for structure in test_structures:
     tmp = deepcopy(structure)
-    tmp.calc = copy(calculator)  # avoids ovewriting results.
+    tmp.calc = copy(calculator)  # avoids overwriting results.
     mad_energy.append(tmp.get_potential_energy())
     mad_forces.append(tmp.get_forces())
     mad_structures.append(tmp)
@@ -176,7 +178,7 @@ mad_forces = np.array(mad_forces, dtype=object)
 # A parity plot with the model predictions
 
 tab10 = plt.get_cmap("tab10")
-fig, ax = plt.subplots(1, 2, figsize=(6, 3), constrained_layout=True)
+fig, ax = plt.subplots(1, 2, figsize=(6, 3.5), constrained_layout=True)
 
 ax[0].plot([0, 1], [0, 1], "b:", transform=ax[0].transAxes)
 ax[1].plot([0, 1], [0, 1], "b:", transform=ax[1].transAxes)
@@ -200,9 +202,9 @@ for i, sub in enumerate(subsets):
 ax[0].set_xlabel("MAD energy / eV/atom")
 ax[0].set_ylabel("Reference energy / eV/atom")
 ax[1].set_xlabel("MAD forces / eV/Å")
-ax[1].set_ylabel("Refrerence forces / eV/Å")
+ax[1].set_ylabel("Reference forces / eV/Å")
 
-fig.legend(loc="upper center", bbox_to_anchor=(0.55, 1.20), ncol=3)
+fig.legend(loc="outside upper center", ncol=3)
 
 
 # %%
@@ -296,13 +298,11 @@ erot_rms = 1e3 * np.sqrt(
     - (np.sum(rot_energies * rot_weights) / np.sum(rot_weights)) ** 2
 )
 erot_max = 1e3 * np.abs(rot_energies.max() - rot_energies.min())
-print(
-    f"""
+print(f"""
 Symmetry breaking, energy:
 RMS: {erot_rms:.3f} meV/at.
 Max: {erot_max:.3f} meV/at.
-"""
-)
+""")
 
 # %%
 # You can also inspect the rotational behavior visually
@@ -314,20 +314,18 @@ chemiscope.show(
         "delta_energy": {
             "target": "structure",
             "values": 1e3 * (rot_energies - rot_energies.mean()),
-            "units": "eV/atom",
+            "units": "meV/atom",
         },
         "euler_angles": rot_angles,
     },
     shapes={
-        "forces": chemiscope.ase_vectors_to_arrows(
-            rot_structures, "forces", scale=50.0
-        ),
+        "forces": chemiscope.ase_vectors_to_arrows(rot_structures, "forces", scale=1),
     },
     settings=chemiscope.quick_settings(
         x="euler_angles[1]",
         y="euler_angles[2]",
         z="euler_angles[3]",
-        color="delta_energy",
+        map_color="delta_energy",
         structure_settings={"unitCell": True, "shape": ["forces"]},
     ),
 )
@@ -387,13 +385,18 @@ opt.run(fmax=0.001, steps=20)
 # leads to a large energetic stabilization
 
 chemiscope.show(
-    frames=traj_atoms,
+    structures=traj_atoms,
     properties={
         "index": np.arange(0, len(traj_atoms)),
         "energy": traj_energy,
     },
     mode="default",
-    settings=chemiscope.quick_settings(trajectory=True),
+    settings=chemiscope.quick_settings(
+        trajectory=True,
+        structure_settings={
+            "unitCell": True,
+        },
+    ),
 )
 
 # %%
@@ -422,7 +425,7 @@ chemiscope.show(
 #
 # Here we use a ``<motion mode="multi">`` block to combine
 # a MD run with a ``<motion mode="atomswap">`` block that
-# attemts swapping atoms, with a Monte Carlo acceptance.
+# attempts swapping atoms, with a Monte Carlo acceptance.
 
 motion_xml = f"""
 <motion mode="multi">
@@ -442,7 +445,7 @@ input_xml = simulation_xml(
         name="pet-mad",
         mode="direct",
         pes="metatomic",
-        parameters={"model": "pet-mad-v1.1.0.pt", "template": "data/al6xxx-o2.xyz"},
+        parameters={"model": "pet-mad-s-v1.0.2.pt", "template": "data/al6xxx-o2.xyz"},
     ),
     motion=motion_xml,
     temperature=800,
@@ -483,7 +486,7 @@ ax.legend()
 # Mg and Si atoms tend to cluster together, and accumulate at the surface.
 
 chemiscope.show(
-    frames=trj,
+    structures=trj,
     properties={
         "time": data["time"][::10],
         "potential": data["potential"][::10],
@@ -543,4 +546,4 @@ subprocess.check_call(["lmp", "-in", "data/al6xxx-o2.in"])
 
 lmp_trj = ase.io.read("trajectory.xyz", ":")
 
-chemiscope.show(frames=lmp_trj, mode="structure")
+chemiscope.show(structures=lmp_trj, mode="structure")

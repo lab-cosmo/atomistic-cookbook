@@ -1,0 +1,10 @@
+\#*
+
+*.checkpoint
+*.out
+*.dat
+*.hess*
+*RESTART*
+*ener
+*.xyz
+*.vib.*

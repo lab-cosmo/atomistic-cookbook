@@ -1,4 +1,4 @@
-Running, analizing and visualizing a path integral MD simulation
+Running, analyzing and visualizing a path integral MD simulation
 ================================================================
 
 This example shows how to run a path integral molecular dynamics 

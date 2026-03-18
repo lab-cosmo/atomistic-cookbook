@@ -54,7 +54,7 @@ and our preprint `arXiv:2504.01187 <https://doi.org/10.48550/arXiv.2504.01187>`_
 
 # %%
 # We first show an example where we predict the reduced effective
-# Hamiltonians for a homogenous dataset of ethane molecule while
+# Hamiltonians for a homogeneous dataset of ethane molecule while
 # targeting the MO energies of the def2-TZVP basis. In a second example
 # we will then target multiple properties for a organic molecule dataset,
 # similar to our results described in our preprint
@@ -71,7 +71,7 @@ and our preprint `arXiv:2504.01187 <https://doi.org/10.48550/arXiv.2504.01187>`_
 # %%
 # We start by creating a virtual environment and installing
 # all necessary packages. The required packages are provided
-# in the environment.yml file that can be dowloaded at the end.
+# in the environment.yml file that can be downloaded at the end.
 # We can then import the necessary packages.
 #
 
@@ -87,6 +87,7 @@ from IPython.utils import io
 from mlelec.features.acdc import compute_features_for_target
 from mlelec.targets import drop_zero_blocks  # noqa: F401
 from mlelec.utils.plot_utils import plot_losses
+from urllib3.util.retry import Retry
 
 
 os.environ["PYSCFAD_BACKEND"] = "torch"
@@ -173,7 +174,7 @@ save_parameters(
 # In principle one can generate the training data of reference
 # Hamiltonians from a given set of structures, using any
 # electronic structure code. Here we provide a pre-computed,
-# homogenous dataset that contains 100 different
+# homogeneous dataset that contains 100 different
 # configurations of ethane molecule. For all structures, we
 # performed Kohn-Sham density functional theory (DFT)
 # calculations with `PySCF <https://github.com/pyscf/pyscf>`_,
@@ -188,15 +189,33 @@ save_parameters(
 # We first download the data for the two examples from Zenodo
 # and unzip the downloaded datafile.
 
-if not os.path.exists("hamiltonian-qm7-data"):
-    url = r"https://zenodo.org/records/15524259/files/hamiltonian-qm7-data.zip"
-    response = requests.get(url)
-    response.raise_for_status()
-    with open("hamiltonian-qm7-data.zip", "wb") as f:
-        f.write(response.content)
 
-    with ZipFile("hamiltonian-qm7-data.zip", "r") as zObject:
-        zObject.extractall(path=".")
+def fetch_dataset(filename, base_url, local_path=""):
+    """Helper function to load data with retries on errors."""
+
+    local_file = local_path + filename
+    if os.path.isfile(local_file):
+        return
+
+    # Retry strategy: wait 1s, 2s, 4s, 8s, 16s on 429/5xx errors
+    retry_strategy = Retry(
+        total=5, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504]
+    )
+    session = requests.Session()
+    session.mount("https://", requests.adapters.HTTPAdapter(max_retries=retry_strategy))
+
+    # Fetch with automatic retry and error raising
+    response = session.get(base_url + filename)
+    response.raise_for_status()
+
+    with open(local_file, "wb") as file:
+        file.write(response.content)
+
+
+fetch_dataset("hamiltonian-qm7-data.zip", "https://zenodo.org/records/15524259/files/")
+
+with ZipFile("hamiltonian-qm7-data.zip", "r") as zObject:
+    zObject.extractall(path=".")
 
 # %%
 # Prepare the Dataset for ML Training
@@ -209,7 +228,7 @@ if not os.path.exists("hamiltonian-qm7-data"):
 # `mlelec  <https://github.com/curiosity54/mlelec/tree/qm7>`_.
 # In this section we initialise the ``MoleculeDataset`` where
 # we specify the molecule name, file paths and the desired targets
-# and auxillary data to be used for training for the minimal
+# and auxiliary data to be used for training for the minimal
 # (STO-3G), as well as a larger basis (lb, def2-TZVP).
 # Once the molecular data is prepared, we wrap it into an
 # ``MLDataset`` instance. This class structures the dataset
@@ -264,7 +283,7 @@ ml_data._split_indices(
 # are dependent on single atom centers and two centers
 # for pairwise interactions.
 # To address this, we extend the equivariant SOAP-based
-# features for the atom-centered desciptors
+# features for the atom-centered descriptors
 # to a descriptor capable of describing multiple atomic centers and
 # their connectivities, giving rise to the equivariant pairwise descriptor
 # which simultaneously characterizes the environments for pairs of atoms
@@ -343,7 +362,7 @@ train_dl, val_dl, test_dl = get_dataloader(
 # This provides us a more reliable set of weights to initialise the
 # fine-tuning rather than starting from any random guess,
 # effectively saving us training time by starting the training process
-# closer to the desired minumum.
+# closer to the desired minimum.
 
 
 model = LinearTargetModel(
@@ -629,7 +648,7 @@ plot_parity_properties(
 # Get Data and Prepare Data Set
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 # In our last example even though we show an indirect ML model
-# that was trained on a homogenous dataset of different
+# that was trained on a homogeneous dataset of different
 # configurations of ethane, we can also easily extend the
 # framework to use  a much diverse dataset such as the
 # `QM7 dataset <http://quantum-machine.org/datasets/>`_.
@@ -692,7 +711,7 @@ FOLDER_NAME = "output/qm7"
 # and load the QM7
 # dataset we downloaded above from zenodo
 # for the defined number of frames.
-# First, we load all relavant data (geometric structures,
+# First, we load all relevant data (geometric structures,
 # auxiliary matrices -overlap and orbitals-, and
 # targets -fock, dipole moment, and polarisablity-) into a molecule dataset.
 # We do this for the minimal (STO-3G), as well as a larger basis (lb, def2-TZVP).

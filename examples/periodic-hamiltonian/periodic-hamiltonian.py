@@ -92,7 +92,7 @@ torch.set_default_dtype(torch.float64)
 # Start by importing all the modules from the `batch-cp2k
 # tutorial <https://tinyurl.com/cp2krun>`__ and run the cell to install
 # CP2K. Run also the cells up to the one defining ``write_cp2k_in``.
-# The following code snippet defines a slighly modified version of that function,
+# The following code snippet defines a slightly modified version of that function,
 # allowing for non-orthorombic supercell, and accounting for the reftraj file
 # name change.
 #
@@ -594,23 +594,37 @@ ani = FuncAnimation(fig, update, frames=len(images), interval=20, blit=True)
 #
 
 SC_HYPERS = {
-    "cutoff": 3.0,
-    "max_radial": 6,
-    "max_angular": 6,
-    "atomic_gaussian_width": 0.5,
-    "center_atom_weight": 1,
-    "radial_basis": {"Gto": {}},
-    "cutoff_function": {"ShiftedCosine": {"width": 0.5}},
+    "cutoff": {
+        "radius": 3.0,
+        "smoothing": {"type": "ShiftedCosine", "width": 0.5},
+    },
+    "density": {
+        "type": "Gaussian",
+        "width": 0.5,
+        "center_atom_weight": 1,
+    },
+    "basis": {
+        "type": "TensorProduct",
+        "max_angular": 6,
+        "radial": {"type": "Gto", "max_radial": 6},
+    },
 }
 
 TC_HYPERS = {
-    "cutoff": 6.0,
-    "max_radial": 6,
-    "max_angular": 6,
-    "atomic_gaussian_width": 0.3,
-    "center_atom_weight": 1.0,
-    "radial_basis": {"Gto": {}},
-    "cutoff_function": {"ShiftedCosine": {"width": 0.5}},
+    "cutoff": {
+        "radius": 6.0,
+        "smoothing": {"type": "ShiftedCosine", "width": 0.5},
+    },
+    "density": {
+        "type": "Gaussian",
+        "width": 0.3,
+        "center_atom_weight": 1.0,
+    },
+    "basis": {
+        "type": "TensorProduct",
+        "max_angular": 6,
+        "radial": {"type": "Gto", "max_radial": 6},
+    },
 }
 
 
@@ -823,7 +837,6 @@ for i, (idx, label) in enumerate(
         ["train", "validation", "test"],
     )
 ):
-
     target = (
         torch.stack([target_eigenvalues[i] for i in idx]).flatten().detach() * Hartree
     )

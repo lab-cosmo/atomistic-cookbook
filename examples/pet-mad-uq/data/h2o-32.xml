@@ -11,7 +11,7 @@
   <ffdirect name='nocons' pbc="true">
     <pes>metatomic</pes>
     <parameters>
-        { template:data/h2o-32.xyz,model:models/pet-mad-latest-llpr.pt,device:cpu,
+        { template:data/h2o-32.xyz,model:models/pet-mad-xs-v1.5.0.pt,device:cpu,
           non_conservative:False,energy_ensemble:True,
           check_consistency:False,
           uncertainty_threshold:7.0e-2
