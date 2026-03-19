@@ -13,6 +13,9 @@ nstlog                  = 10
 ; Neighborsearching
 cutoff-scheme           = Verlet
 pbc                     = xyz
+rlist                   = 1.6
+rcoulomb                = 1.5
+rvdw                    = 1.5
 
 ; Electrostatics
 coulombtype             = PME
@@ -26,5 +29,5 @@ ref-t                   = 300   300
 ; Metatomic interface
 metatomic-active        = yes
 metatomic-input-group   = protein  ; the group on which ML forces are applied
-metatomic-modelfile     = pet-mad-v1.0.2.pt  ; path to the ML model file
+metatomic-model         = models/pet-mad-xs-v1.5.0.pt  ; path to the ML model file
 metatomic-device        = cpu  ; device to run the ML model on (cpu or cuda)

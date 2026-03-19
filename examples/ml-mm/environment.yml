@@ -3,8 +3,14 @@ channels:
   - conda-forge
 dependencies:
   - chemiscope
-  - gromacs-metatomic
+  - metatensor::gromacs-metatomic=*=nompi_h*
+  - matplotlib
   - mdanalysis
-  - metatrain
-  - metatomic-torch
   - python=3.12
+  - pip
+  - uv
+  - pip:
+    - torch>=2.7,<2.8
+    - ase>=3.23
+    - metatrain
+    - metatomic-torch
