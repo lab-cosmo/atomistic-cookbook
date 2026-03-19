@@ -5,41 +5,41 @@ ML/MM Simulations with GROMACS and Metatomic
 :Authors: Philip Loche `@PicoCentauri <https://github.com/PicoCentauri>`_,
           Rohit Goswami `@HaoZeke <https://github.com/haozeke/>`_
 
-In this tutorial we simulate alanine dipeptide in water using a machine learning
-potential for the solute while the solvent is treated with a classical force field.
-This setup is commonly referred to as an ML/MM simulation and follows very similar
-ideas to QM/MM.
+In this tutorial we simulate and analyse a alanine dipeptide in water using a machine
+learning potential for the solute while the solvent is treated with a classical force
+field. This setup is commonly referred to as an ML/MM simulation and follows very
+similar ideas to QM/MM.
 
 .. hint ::
 
     **ML/MM vs QM/MM**
 
-    In QM/MM simulations, a small region of the system (typically the chemically
-    active part of a biomolecule) is treated with quantum mechanics, while the rest
-    of the environment is described using a classical force field.  The idea is that
-    only part of the system requires high accuracy, and using an expensive method
-    everywhere would be unnecessary.
+    In QM/MM simulations, a small region of the system (typically the chemically active
+    part of a biomolecule) is treated with quantum mechanics, while the rest of the
+    environment is described using a classical force field. The idea is that only part
+    of the system requires high accuracy, and using an expensive method everywhere would
+    be unnecessary.
 
-    ML/MM follows exactly the same principle.  Instead of a QM Hamiltonian, however,
-    we use a machine learning (ML) potential, trained on high-level reference data,
-    to provide accurate energies and forces for the solute.  This retains
+    ML/MM follows exactly the same principle.  Instead of a QM Hamiltonian, however, we
+    use a machine learning (ML) potential, trained on high-level reference data, to
+    provide accurate energies and forces for the solute.  This retains
     near-first-principles accuracy at a fraction of the cost.  Meanwhile, the
-    surrounding water molecules behave perfectly well with a classical model like
-    TIP3P, so we keep those as MM.
+    surrounding water molecules behave perfectly well with a classical model like TIP3P,
+    so we keep those as MM.
 
-We use the *metatomic* plugin to couple a pretrained ML model to GROMACS.  The ML
-region is alanine dipeptide (the "protein" group), and the water is kept as standard
-classical MM.
+We use the *Metatomic* plugin to couple a pretrained ML model to GROMACS. The ML region
+consists of an alanine dipeptide (the "protein" group), and the water is kept as
+standard classical MM.
 
-We will use the **PET-MAD XS** model (v1.5.0), a small but capable universal
-potential from the `uPET <https://huggingface.co/lab-cosmo/upet>`_ family.
+We will use the **PET-MAD XS** model (v1.5.0), a small but capable universal potential
+from the `uPET <https://huggingface.co/lab-cosmo/upet>`_ family.
 
 .. attention ::
 
-    PET-MAD is trained on a broad materials dataset (PBE-sol functional) and is
-    *not* specifically optimized for biomolecular systems.  It is used here to
-    demonstrate the ML/MM workflow.  For production work, consider a model
-    fine-tuned on relevant biochemical data.
+    PET-MAD is trained on a broad materials dataset (r2SCAN functional) and is *not*
+    specifically optimized for biomolecular systems.  It is used here to demonstrate the
+    ML/MM workflow.  For production work, consider a model fine-tuned on relevant
+    biochemical data.
 """
 
 # %%
@@ -64,10 +64,9 @@ from MDAnalysis.analysis.rms import RMSD
 # Initial structure
 # -----------------
 #
-# We load the initial alanine dipeptide + water structure.  We read it with
-# both ASE (for chemiscope visualization) and MDAnalysis (for trajectory
-# analysis later).  We select the non-water atoms (the protein) so we can
-# confirm the selections are correct.
+# We load the initial alanine dipeptide + water structure.  We read it with both ASE
+# (for chemiscope visualization) and MDAnalysis (for trajectory analysis later). We
+# select the non-water atoms (the protein) so we can confirm the selections are correct.
 
 initial_atoms = ase.io.read("data/conf.gro")
 u_initial = mda.Universe("data/conf.gro")
@@ -80,9 +79,9 @@ chemiscope.show([initial_atoms], mode="structure")
 # Model export
 # ------------
 #
-# Before running the simulation, we need to export the ML model into the
-# TorchScript format that GROMACS can load.  We download the PET-MAD XS
-# checkpoint from HuggingFace and export it using ``metatrain``.
+# Before running the simulation, we need to export the ML model into the TorchScript
+# format that GROMACS can load. We download the PET-MAD XS checkpoint from HuggingFace
+# and export it using ``Metatrain``.
 
 repo_id = "lab-cosmo/upet"
 tag = "v1.5.0"
@@ -90,6 +89,7 @@ url_path = f"models/pet-mad-xs-{tag}.ckpt"
 fname = Path(f"models/pet-mad-xs-{tag}.pt")
 url = f"https://huggingface.co/{repo_id}/resolve/main/{url_path}"
 fname.parent.mkdir(parents=True, exist_ok=True)
+
 subprocess.run(
     [
         "mtt",
@@ -106,20 +106,19 @@ print(f"Successfully exported {fname}.")
 # Running the simulation
 # ----------------------
 #
-# The MD parameter file (:download:`grompp.mdp`) controls the simulation.
-# The key section for ML/MM is the **Metatomic interface** at the bottom:
+# The MD parameter file (:download:`grompp.mdp`) controls the simulation. The key
+# section for ML/MM is the **Metatomic interface** at the bottom:
 #
 # .. literalinclude:: grompp.mdp
 #    :language: ini
 #    :lines: 26-31
 #
-# This tells GROMACS to load the exported PET-MAD model and apply ML
-# forces to the ``protein`` group.  All other atoms (water) use the
-# classical force field as usual.
+# This tells GROMACS to load the exported PET-MAD model and apply ML forces to the
+# ``protein`` group.  All other atoms (water) use the classical force field as usual.
 #
-# We run the GROMACS preprocessor (``grompp``) to combine the topology,
-# coordinates, and MDP settings into a single binary input (``.tpr``),
-# then execute the simulation with ``mdrun``.
+# We run the GROMACS preprocessor (``grompp``) to combine the topology, coordinates, and
+# MDP settings into a single binary input (``.tpr``), then execute the simulation with
+# ``mdrun``.
 
 _ = subprocess.check_call(
     [
@@ -146,11 +145,11 @@ _ = subprocess.check_call(["gmx", "mdrun"])
 #
 # .. hint ::
 #
-#   RMSD measures the average positional deviation of atoms from a reference
-#   structure.  It is commonly used to monitor structural stability and
-#   conformational changes in biomolecular simulations.  A low RMSD indicates
-#   the structure remains close to the starting conformation; larger RMSD
-#   values reflect changes in backbone or side-chain orientation.
+#   RMSD measures the average positional deviation of atoms from a reference structure.
+#   It is commonly used to monitor structural stability and conformational changes in
+#   biomolecular simulations. A low RMSD indicates the structure remains close to the
+#   starting conformation; larger RMSD values reflect changes in backbone or side-chain
+#   orientation.
 
 u = mda.Universe("data/conf.gro", "traj.trr")
 ala = u.select_atoms("not resname SOL")
@@ -171,13 +170,13 @@ plt.tight_layout()
 # Ramachandran plot
 # -----------------
 #
-# The Ramachandran plot shows the backbone dihedral angles phi and psi,
-# which characterize the conformational state of the peptide backbone.
-# These two angles determine the local geometry of each residue and are
-# a classic analysis target for peptide and protein simulations.
+# The Ramachandran plot shows the backbone dihedral angles phi and psi, which
+# characterize the conformational state of the peptide backbone. These two angles
+# determine the local geometry of each residue and are a classic analysis target for
+# peptide and protein simulations.
 #
-# For this short ML/MM trajectory we can see which region of Ramachandran
-# space the alanine dipeptide explores under the ML potential.
+# For this short ML/MM trajectory we can see which region of Ramachandran space the
+# alanine dipeptide explores under the ML potential.
 
 protein = u.select_atoms("protein")
 rama = Ramachandran(protein).run()
@@ -201,10 +200,9 @@ plt.tight_layout()
 # Trajectory visualization
 # ------------------------
 #
-# Finally, we convert the trajectory to PDB format so that ASE can read
-# it, and visualize it interactively with chemiscope.  Each frame is
-# colored by its RMSD value, letting us see how the structure evolves
-# over the course of the simulation.
+# Finally, we convert the trajectory to PDB format so that ASE can read it, and
+# visualize it interactively with chemiscope. Each frame is colored by its RMSD value,
+# letting us see how the structure evolves over the course of the simulation.
 
 subprocess.run(
     ["gmx", "trjconv", "-f", "traj.trr", "-s", "data/conf.gro", "-o", "traj.pdb"],
@@ -220,5 +218,3 @@ properties = {
 }
 
 chemiscope.show(structures=trajectory, properties=properties)
-
-# %%
