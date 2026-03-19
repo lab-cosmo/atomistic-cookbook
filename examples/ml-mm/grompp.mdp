@@ -1,7 +1,7 @@
 ; Run control
 integrator              = md
-dt                      = 0.0005
-nsteps                  = 500
+dt                      = 0.0001
+nsteps                  = 150
 
 ; Output control
 nstxout                 = 10

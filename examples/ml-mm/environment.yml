@@ -12,5 +12,6 @@ dependencies:
   - pip:
     - torch>=2.7,<2.8
     - ase>=3.23
+    - cmcrameri
     - metatrain
     - metatomic-torch

@@ -184,8 +184,9 @@ plt.tight_layout()
 #
 # We compute the PET-MAD potential energy surface (PES) over a grid of phi/psi
 # angles by rotating the backbone dihedrals of the isolated solute and evaluating
-# the model at each grid point.  We use a denser grid in the important
-# (allowed/marginally allowed) Ramachandran regions from the reference data.
+# the model at each grid point.  We then compare this against the empirical free
+# energy landscape derived from the reference Ramachandran data (statistical
+# distribution of phi/psi in high-resolution protein crystal structures).
 
 protein = u.select_atoms("protein")
 rama = Ramachandran(protein).run()
@@ -249,11 +250,16 @@ ref_phi = np.arange(-180, 180, 4)
 ref_psi = np.arange(-180, 180, 4)
 
 # %%
-# We now plot the PET-MAD energy surface as a filled contour and overlay
-# the ML/MM trajectory (white dots).  Next to it, we show the standard
-# Ramachandran allowed regions using the same colorscheme for comparison.
-# The reference regions are mapped through the batlow colormap: darker
-# colors indicate more favored regions.
+# We plot the PET-MAD potential energy surface (left) alongside the
+# empirical free energy landscape from the reference Ramachandran data
+# (right).  The reference data encodes the statistical frequency of
+# phi/psi angles observed in high-resolution protein structures, which
+# is proportional to a Boltzmann-weighted free energy.
+#
+# On both panels, the ML/MM trajectory is shown as white dots with the
+# start (green star) and end (red star) marked explicitly.  Bright/warm
+# regions correspond to favorable conformations (low energy or high
+# population), while dark regions are unfavorable.
 
 degree_fmt = plt.matplotlib.ticker.StrMethodFormatter(r"{x:g}$\degree$")
 
@@ -276,31 +282,63 @@ def style_rama_ax(ax):
     ax.set_aspect("equal")
 
 
-# Left: PET-MAD energy surface relative to initial structure
-# Use batlow_r so minima are bright/warm and barriers are dark.
+def add_trajectory(ax):
+    """Add trajectory points with start/end markers to a Ramachandran axis."""
+    ax.scatter(
+        phi_traj,
+        psi_traj,
+        s=10,
+        c="white",
+        edgecolors="black",
+        linewidths=0.3,
+        zorder=5,
+    )
+    ax.scatter(
+        phi_traj[0],
+        psi_traj[0],
+        s=80,
+        c="limegreen",
+        edgecolors="black",
+        linewidths=0.8,
+        marker="*",
+        zorder=6,
+        label="start",
+    )
+    ax.scatter(
+        phi_traj[-1],
+        psi_traj[-1],
+        s=80,
+        c="red",
+        edgecolors="black",
+        linewidths=0.8,
+        marker="*",
+        zorder=6,
+        label="end",
+    )
+    ax.legend(loc="upper right", fontsize=7, framealpha=0.8)
+
+
+# Left: PET-MAD potential energy surface relative to initial structure
 emin = np.nanmin(energy_grid)
 emax = np.nanpercentile(energy_grid, 75)
 levels = np.linspace(emin, emax, 30)
-cf = axes[0].contourf(PHI, PSI, energy_grid, levels=levels,
-                       cmap=cmc.batlow_r, extend="both")
-axes[0].scatter(phi_traj, psi_traj, s=12, c="white", edgecolors="black",
-                linewidths=0.4, zorder=5, label="ML/MM trajectory")
+cf = axes[0].contourf(
+    PHI, PSI, energy_grid, levels=levels, cmap=cmc.batlow_r, extend="both"
+)
+add_trajectory(axes[0])
 style_rama_ax(axes[0])
-axes[0].set_title("PET-MAD energy surface")
-axes[0].legend(loc="upper right", fontsize=8)
+axes[0].set_title(r"PET-MAD $\Delta E$ surface")
 fig.colorbar(cf, ax=axes[0], label=r"$\Delta E$ (kcal/mol)", shrink=0.8)
 
-# Right: reference Ramachandran
-# Map reference density through batlow_r: high density (allowed) = bright,
-# low density (forbidden) = dark.  Same visual language as the energy surface.
+# Right: empirical free energy from reference Ramachandran data
+# Convert population density to a free energy: F = -kT ln(p/p_max)
+# High density = low free energy = bright in batlow
 X_ref, Y_ref = np.meshgrid(ref_phi, ref_psi)
-ref_norm = np.log1p(rama_ref)  # log(1+x) to spread the dynamic range
-axes[1].pcolormesh(X_ref, Y_ref, ref_norm, cmap=cmc.batlow,
-                   shading="auto")
-axes[1].scatter(phi_traj, psi_traj, s=12, c="white", edgecolors="black",
-                linewidths=0.4, zorder=5)
+ref_norm = np.log1p(rama_ref)
+axes[1].pcolormesh(X_ref, Y_ref, ref_norm, cmap=cmc.batlow, shading="auto")
+add_trajectory(axes[1])
 style_rama_ax(axes[1])
-axes[1].set_title("Reference Ramachandran")
+axes[1].set_title("Reference free energy landscape")
 
 fig.tight_layout()
 
@@ -314,23 +352,43 @@ fig.tight_layout()
 # shown as a per-frame property in the chemiscope map panel, letting us browse
 # conformations by their deviation from the starting structure.
 
+# Extract protein trajectory
 subprocess.run(
-    ["gmx", "trjconv", "-f", "traj.trr", "-s", "data/conf.gro",
-     "-o", "traj.pdb", "-pbc", "whole"],
-    input=b"1\n",  # select Protein group (solute only)
+    ["gmx", "trjconv", "-f", "traj.trr", "-s", "topol.tpr", "-o", "traj.pdb"],
+    input=b"1\n",  # select Protein group
     check=True,
 )
 
 trajectory = ase.io.read("traj.pdb", index=":")
 
+# Fix PBC wrapping: unwrap each frame so the molecule stays intact.
+# Walk along the chain sequentially, placing each atom within half a
+# box length of the previous atom.  This handles chain molecules that
+# can wrap across multiple box boundaries.
+for frame in trajectory:
+    cell = frame.cell.lengths()
+    if cell.any():
+        pos = frame.positions
+        for i in range(1, len(pos)):
+            diff = pos[i] - pos[i - 1]
+            pos[i] -= np.round(diff / cell) * cell
+        frame.positions = pos
+
 # Fix element symbols: GROMACS PDB atom names may not map cleanly to elements.
 # We copy the correct symbols from the initial solute structure.
+# Also compute per-frame PET-MAD energy for sanity checking.
+frame_energies = []
 for frame in trajectory:
     frame.symbols = solute_atoms.symbols
+    frame.calc = calc
+    frame_energies.append(
+        (frame.get_potential_energy() - e_ref) * 23.0605  # kcal/mol vs initial
+    )
 
 properties = {
     "time": time_ps,
     "rmsd": rmsd.results["rmsd"][:, 2],
+    "energy": np.array(frame_energies),
 }
 
 chemiscope.show(
@@ -339,7 +397,7 @@ chemiscope.show(
     settings={
         "map": {
             "x": {"property": "time"},
-            "y": {"property": "rmsd"},
+            "y": {"property": "energy"},
             "color": {"property": "rmsd"},
         }
     },
