@@ -5,7 +5,7 @@ ML/MM Simulations with GROMACS and Metatomic
 :Authors: Philip Loche `@PicoCentauri <https://github.com/PicoCentauri>`_,
           Rohit Goswami `@HaoZeke <https://github.com/haozeke/>`_
 
-In this tutorial we simulate and analyse a alanine dipeptide in water using a machine
+In this tutorial we simulate and analyse an alanine dipeptide in water using a machine
 learning potential for the solute while the solvent is treated with a classical force
 field. This setup is commonly referred to as an ML/MM simulation and follows very
 similar ideas to QM/MM.
@@ -81,7 +81,7 @@ chemiscope.show([initial_atoms], mode="structure")
 #
 # Before running the simulation, we need to export the ML model into the TorchScript
 # format that GROMACS can load. We download the PET-MAD XS checkpoint from HuggingFace
-# and export it using ``Metatrain``.
+# and export it using ``metatrain``.
 
 repo_id = "lab-cosmo/upet"
 tag = "v1.5.0"
