@@ -68,12 +68,16 @@ from MDAnalysis.analysis.rms import RMSD
 # (for chemiscope visualization) and MDAnalysis (for trajectory analysis later). We
 # select the non-water atoms (the protein) so we can confirm the selections are correct.
 
-initial_atoms = ase.io.read("data/conf.gro")
+all_atoms = ase.io.read("data/conf.gro")
 u_initial = mda.Universe("data/conf.gro")
 ala_initial = u_initial.select_atoms("not resname SOL")
 
-print(f"System: {len(initial_atoms)} atoms total, {len(ala_initial)} solute atoms")
-chemiscope.show([initial_atoms], mode="structure")
+# Extract just the solute for visualization (22 atoms, not the 6787-atom water ball)
+solute_indices = ala_initial.indices
+solute_atoms = all_atoms[solute_indices]
+
+print(f"System: {len(all_atoms)} atoms total, {len(solute_atoms)} solute atoms")
+chemiscope.show([solute_atoms], mode="structure")
 
 # %%
 # Model export
@@ -200,21 +204,38 @@ plt.tight_layout()
 # Trajectory visualization
 # ------------------------
 #
-# Finally, we convert the trajectory to PDB format so that ASE can read it, and
-# visualize it interactively with chemiscope. Each frame is colored by its RMSD value,
-# letting us see how the structure evolves over the course of the simulation.
+# Finally, we extract the solute trajectory and visualize it interactively with
+# chemiscope.  We use ``trjconv`` to write only the protein group (group 1) to
+# PDB, then annotate each frame with its time and RMSD value.  The RMSD is
+# shown as a per-frame property in the chemiscope map panel, letting us browse
+# conformations by their deviation from the starting structure.
 
 subprocess.run(
     ["gmx", "trjconv", "-f", "traj.trr", "-s", "data/conf.gro", "-o", "traj.pdb"],
-    input=b"0\n",
+    input=b"1\n",  # select Protein group (solute only)
     check=True,
 )
 
 trajectory = ase.io.read("traj.pdb", index=":")
+
+# Fix element symbols: GROMACS PDB atom names may not map cleanly to elements.
+# We copy the correct symbols from the initial solute structure.
+for frame in trajectory:
+    frame.symbols = solute_atoms.symbols
 
 properties = {
     "time": time_ps,
     "rmsd": rmsd.results["rmsd"][:, 2],
 }
 
-chemiscope.show(structures=trajectory, properties=properties)
+chemiscope.show(
+    structures=trajectory,
+    properties=properties,
+    settings={
+        "map": {
+            "x": {"property": "time"},
+            "y": {"property": "rmsd"},
+            "color": {"property": "rmsd"},
+        }
+    },
+)
