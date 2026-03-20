@@ -49,7 +49,6 @@ from the `uPET <https://huggingface.co/lab-cosmo/upet>`_ family.
 # We begin by loading the required Python packages.
 
 import subprocess
-from copy import deepcopy
 from pathlib import Path
 
 import ase.io
@@ -61,7 +60,7 @@ import numpy as np
 from MDAnalysis.analysis.dihedrals import Ramachandran
 from MDAnalysis.analysis.rms import RMSD
 from metatomic.torch.ase_calculator import MetatomicCalculator
-
+from MDAnalysis.analysis.dihedrals import Rama_ref
 
 # %%
 # Initial structure
@@ -242,9 +241,7 @@ e_ref = ref_mol.get_potential_energy()
 energy_grid -= e_ref
 energy_grid *= 23.0605  # eV to kcal/mol
 
-# Load reference Ramachandran data for comparison
-from MDAnalysis.analysis.dihedrals import Rama_ref
-
+# Plots reference Ramachandran data for comparison
 rama_ref = np.load(Rama_ref)
 ref_phi = np.arange(-180, 180, 4)
 ref_psi = np.arange(-180, 180, 4)
@@ -394,11 +391,7 @@ properties = {
 chemiscope.show(
     structures=trajectory,
     properties=properties,
-    settings={
-        "map": {
-            "x": {"property": "time"},
-            "y": {"property": "energy"},
-            "color": {"property": "rmsd"},
-        }
-    },
+    settings=chemiscope.quick_settings(
+        x="time", y="energy", map_color="rmsd", trajectory=True
+    ),
 )
