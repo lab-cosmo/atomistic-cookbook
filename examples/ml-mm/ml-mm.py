@@ -12,34 +12,57 @@ similar ideas to QM/MM.
 
 .. hint ::
 
-    **ML/MM vs QM/MM**
+    **How ML/MM works in GROMACS**
 
-    In QM/MM simulations, a small region of the system (typically the chemically active
-    part of a biomolecule) is treated with quantum mechanics, while the rest of the
-    environment is described using a classical force field. The idea is that only part
-    of the system requires high accuracy, and using an expensive method everywhere would
-    be unnecessary.
+    In QM/MM simulations [1]_, a small region of the system is treated with quantum
+    mechanics, while the rest uses a classical force field.  ML/MM follows the same
+    principle, replacing the QM Hamiltonian with a machine learning potential.
 
-    ML/MM follows exactly the same principle.  Instead of a QM Hamiltonian, however, we
-    use a machine learning (ML) potential, trained on high-level reference data, to
-    provide accurate energies and forces for the solute.  This retains
-    near-first-principles accuracy at a fraction of the cost.  Meanwhile, the
-    surrounding water molecules behave perfectly well with a classical model like TIP3P,
-    so we keep those as MM.
+    The GROMACS *Metatomic* plugin implements **mechanical embedding**: the classical
+    bonded interactions (bonds, angles, dihedrals) and non-bonded interactions
+    (Lennard-Jones, Coulomb) *within* the ML region are removed from the force field
+    and replaced by the ML model's energy and forces.  Interactions between ML and MM
+    atoms (the coupling terms) are handled by the classical force field.  This is
+    closely related to the ONIOM subtractive scheme [2]_:
+
+    .. math::
+
+        E_\\text{tot} = E_\\text{MM}(\\text{full}) + E_\\text{ML}(\\text{solute})
+        - E_\\text{MM}(\\text{solute})
+
+    where the MM contribution of the solute is subtracted to avoid double-counting.
+    Currently, boundary interactions (angles and dihedrals spanning the ML/MM
+    interface) are kept in the MM evaluation, which introduces a small inconsistency
+    at the boundary.
+
+    .. [1] Warshel & Levitt, J. Mol. Biol. 103, 227 (1976).
+    .. [2] Chung et al., Chem. Rev. 115, 5678 (2015).
+       `DOI:10.1021/cr5004419 <https://doi.org/10.1021/cr5004419>`_
 
 We use the *Metatomic* plugin to couple a pretrained ML model to GROMACS. The ML region
 consists of an alanine dipeptide (the "protein" group), and the water is kept as
 standard classical MM.
 
 We will use the **PET-MAD XS** model (v1.5.0), a small but capable universal potential
-from the `uPET <https://huggingface.co/lab-cosmo/upet>`_ family.
+from the `UPET <https://huggingface.co/lab-cosmo/upet>`_ family.
 
-.. attention ::
+.. warning ::
 
-    PET-MAD is trained on a broad materials dataset (r2SCAN functional) and is *not*
-    specifically optimized for biomolecular systems.  It is used here to demonstrate the
-    ML/MM workflow.  For production work, consider a model fine-tuned on relevant
-    biochemical data.
+    **Limitations of the current implementation**
+
+    1. PET-MAD is trained on a broad materials dataset (r2SCAN functional) and is *not*
+       optimized for biomolecular systems.  It is used here to demonstrate the workflow.
+       For production work, use a model fine-tuned on relevant biochemical data.
+
+    2. The current GROMACS metatomic interface does not yet implement full ONIOM
+       subtractive correction at the ML/MM boundary.  Boundary bonded interactions
+       (angles and dihedrals that span the interface) are double-counted, which can
+       cause energy drift.  A proper ONIOM implementation is in progress.
+
+    3. Energy conservation holds in **conservative mode** (the default), where forces
+       are obtained via automatic differentiation of the ML energy.  The
+       **non-conservative** mode (direct force output) does not guarantee energy
+       conservation.
 """
 
 # %%
