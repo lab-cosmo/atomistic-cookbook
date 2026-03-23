@@ -199,7 +199,7 @@ output_dir.mkdir(exist_ok=True)
 
 output_files = [output_dir / f"{num:02d}.con" for num in range(TOTAL_IMGS)]
 
-for outfile, img in zip(output_files, images):
+for outfile, img in zip(output_files, images, strict=True):
     aseio.write(outfile, img)
 
 print(f"Wrote {len(output_files)} IDPP images to '{output_dir}/'.")
@@ -404,20 +404,24 @@ def run_neb_plot(
         con_file,
         "--output-file",
         output_file,
-        "--ase-rotation",
+        "--rotation",
         rotation,
         "--facecolor",
         "white",
         "--figsize",
-        "5.37",
-        "5.37",
+        "7",
+        "7",
         "--fontsize-base",
         "16",
         "--show-pts",
         "--zoom-ratio",
-        "0.25",
+        "0.4",
         "--plot-structures",
         "crit_points",
+        "--strip-renderer",
+        "xyzrender",
+        "--strip-dividers",
+        "--show-legend",
     ]
 
     if title:
@@ -443,6 +447,7 @@ def run_neb_plot(
                 "all",
                 "--surface-type",
                 "grad_imq",
+                "--project-path",
             ]
         )
     else:
@@ -465,7 +470,7 @@ run_neb_plot("profile", title="NEB Path Optimization", output_file="1D_oxad.png"
 
 # Display the result
 img = mpimg.imread("1D_oxad.png")
-plt.figure(figsize=(5.37, 5.37))
+plt.figure(figsize=(8, 8))
 plt.imshow(img)
 plt.axis("off")
 plt.show()
@@ -484,7 +489,7 @@ run_neb_plot("landscape", title="NEB-RMSD Surface", output_file="2D_oxad.png")
 
 # Display the result
 img = mpimg.imread("2D_oxad.png")
-plt.figure(figsize=(5.37, 5.37))
+plt.figure(figsize=(8, 8))
 plt.imshow(img)
 plt.axis("off")
 plt.show()
