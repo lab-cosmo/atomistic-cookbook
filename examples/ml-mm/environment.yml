@@ -6,6 +6,7 @@ dependencies:
   - metatensor::gromacs-metatomic=*=mpi_*
   - matplotlib
   - mdanalysis
+  - openblas
   - python=3.12
   - pip
   - uv
