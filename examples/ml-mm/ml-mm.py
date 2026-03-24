@@ -151,7 +151,7 @@ print(f"Successfully exported {fname}.")
 
 _ = subprocess.check_call(
     [
-        "gmx_mpi",
+        "gmx",
         "grompp",
         "-f",
         "grompp.mdp",
@@ -162,7 +162,7 @@ _ = subprocess.check_call(
     ]
 )
 
-_ = subprocess.check_call(["gmx_mpi", "mdrun"])
+_ = subprocess.check_call(["gmx", "mdrun"])
 
 # %%
 # RMSD analysis
@@ -374,7 +374,7 @@ fig.tight_layout()
 
 # Extract protein trajectory
 subprocess.run(
-    ["gmx_mpi", "trjconv", "-f", "traj.trr", "-s", "topol.tpr", "-o", "traj.pdb"],
+    ["gmx", "trjconv", "-f", "traj.trr", "-s", "topol.tpr", "-o", "traj.pdb"],
     input=b"1\n",  # select Protein group
     check=True,
 )

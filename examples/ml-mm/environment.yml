@@ -3,11 +3,9 @@ channels:
   - conda-forge
 dependencies:
   - chemiscope
-  - metatensor::gromacs-metatomic=*=mpi_*
+  - metatensor::gromacs-metatomic=*=nompi_h*
   - matplotlib
   - mdanalysis
-  - openblas
-  - openmpi
   - python=3.12
   - pip
   - uv
