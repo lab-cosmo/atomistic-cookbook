@@ -3,7 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - chemiscope
-  - metatensor::gromacs-metatomic=*=mpi_*
+  - metatensor::gromacs-metatomic=*=mpi_*_cuda_*
   - matplotlib
   - mdanalysis
   - openblas
