@@ -4,6 +4,7 @@ channels:
 dependencies:
   - chemiscope
   - metatensor::gromacs-metatomic=*=nompi_h*
+  - libopenblas
   - matplotlib
   - mdanalysis
   - python=3.12
