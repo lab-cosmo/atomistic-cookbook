@@ -4,6 +4,8 @@ channels:
 dependencies:
   - chemiscope
   - metatensor::gromacs-metatomic=*=mpi_*
+  - libtorch =*=cpu*
+  - pytorch-cpu
   - matplotlib
   - mdanalysis
   - python=3.12
