@@ -10,3 +10,4 @@ dependencies:
     - scikit-learn
     - chemiscope
     - metatomic-torch
+    - metatomic-ase

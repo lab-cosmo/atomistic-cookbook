@@ -10,5 +10,6 @@ dependencies:
     - chemiscope>=1.0.1
     - matplotlib
     - metatomic-torch<=0.1.8
+    - metatomic-ase
     - vesin>=0.5
     - requests

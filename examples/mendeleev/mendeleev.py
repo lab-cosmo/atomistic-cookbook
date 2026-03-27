@@ -21,7 +21,7 @@ from copy import copy
 import ase.io
 import chemiscope
 import matplotlib.pyplot as plt
-from metatomic.torch.ase_calculator import MetatomicCalculator
+from metatomic_ase import MetatomicCalculator
 import upet
 import numpy as np
 import matplotlib.colors as mcolors

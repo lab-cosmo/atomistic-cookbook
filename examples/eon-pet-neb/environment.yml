@@ -16,4 +16,5 @@ dependencies:
     - metatrain>=2026.2.1,<2027
     - requests
     - rgpycrumbs>=1.5.1,<2
+    - metatomic-ase
     - chemparseplot>=1.5.2,<2
