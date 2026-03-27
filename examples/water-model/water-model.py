@@ -55,7 +55,7 @@ from metatomic.torch import (
 )
 
 # Integration with ASE calculator for metatomic models
-from metatomic.torch.ase_calculator import MetatomicCalculator
+from metatomic_ase import MetatomicCalculator
 from vesin.metatomic import NeighborList
 
 

@@ -45,7 +45,7 @@ import torch
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution
 from ase.md.verlet import VelocityVerlet
 from huggingface_hub import hf_hub_download
-from metatomic.torch.ase_calculator import MetatomicCalculator
+from metatomic_ase import MetatomicCalculator
 from metatrain.utils.io import model_from_checkpoint
 from sklearn.linear_model import LinearRegression
 

@@ -100,7 +100,7 @@ from ase.io.cif import read_cif
 from ase.optimize.bfgs import BFGS
 from ipi.utils.scripting import InteractiveSimulation
 from metatomic.torch import ModelOutput
-from metatomic.torch.ase_calculator import MetatomicCalculator
+from metatomic_ase import MetatomicCalculator
 from metatrain.utils.data import Dataset, read_systems, read_targets
 from metatrain.utils.data.system_to_ase import system_to_ase
 

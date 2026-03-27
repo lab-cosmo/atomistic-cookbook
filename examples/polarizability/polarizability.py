@@ -46,7 +46,7 @@ from metatomic.torch import (
     load_atomistic_model,
     systems_to_torch,
 )
-from metatomic.torch.ase_calculator import MetatomicCalculator
+from metatomic_ase import MetatomicCalculator
 
 # Core libraries
 from sklearn.linear_model import RidgeCV

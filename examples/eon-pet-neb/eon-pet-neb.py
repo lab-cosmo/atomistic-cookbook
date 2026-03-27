@@ -56,7 +56,7 @@ from ase.mep import NEB
 from ase.optimize import LBFGS
 from ase.visualize import view
 from ase.visualize.plot import plot_atoms
-from metatomic.torch.ase_calculator import MetatomicCalculator
+from metatomic_ase import MetatomicCalculator
 from rgpycrumbs.eon.helpers import write_eon_config
 from rgpycrumbs.run.jupyter import run_command_or_exit
 

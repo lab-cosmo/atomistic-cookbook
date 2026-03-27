@@ -82,7 +82,7 @@ import MDAnalysis as mda
 import numpy as np
 from MDAnalysis.analysis.dihedrals import Ramachandran
 from MDAnalysis.analysis.rms import RMSD
-from metatomic.torch.ase_calculator import MetatomicCalculator
+from metatomic_ase import MetatomicCalculator
 from MDAnalysis.analysis.dihedrals import Rama_ref
 
 # %%
