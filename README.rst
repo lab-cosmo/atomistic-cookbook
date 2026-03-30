@@ -24,3 +24,12 @@ Contributing
 
 If you want contribute an example, recipe or tutorial that combines multiple software
 tools together, check out the `contributing guidelines <CONTRIBUTING.rst>`_ first.
+
+This project is `maintained
+<https://github.com/lab-cosmo/.github/blob/main/Maintainers.md>`_ by @pfebrer
+and @HaoZeke, who will reply to issues and pull requests opened on this
+repository as soon as possible. You can mention them directly if you did not
+receive an answer after a couple of days.
+
+It was previously maintained by @DavideTisi (2023 to 2026), many thanks to them
+for their work making the atomistic cookbook awesome!
