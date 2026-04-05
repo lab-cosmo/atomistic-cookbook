@@ -11,5 +11,6 @@ dependencies:
     - upet>=0.2.1
     - ipi>=3.1.8,<4
     - metatomic-torch<=0.1.8
+    - metatomic-ase
     - metatrain
     - vesin>=0.4.2

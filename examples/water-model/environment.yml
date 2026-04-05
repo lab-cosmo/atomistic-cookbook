@@ -13,5 +13,6 @@ dependencies:
     - metatensor-operations
     - matplotlib
     - metatomic-torch
+    - metatomic-ase
     - vesin-torch <=0.3.7
     - torch-pme>=0.3.1,<0.4

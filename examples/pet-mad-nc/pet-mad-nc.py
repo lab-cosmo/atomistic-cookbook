@@ -52,7 +52,7 @@ from ipi.utils.parsing import read_output, read_trajectory
 from ipi.utils.scripting import InteractiveSimulation
 
 # metatomic ASE calculator
-from metatomic.torch.ase_calculator import MetatomicCalculator
+from metatomic_ase import MetatomicCalculator
 from upet.calculator import UPETCalculator
 
 

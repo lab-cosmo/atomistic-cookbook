@@ -4,7 +4,7 @@ import ase.optimize
 import ase.filters
 import ase.io
 import random
-from metatomic.torch.ase_calculator import MetatomicCalculator
+from metatomic_ase import MetatomicCalculator
 
 
 # create a fcc cell with 108 atoms, remove missing atom types
