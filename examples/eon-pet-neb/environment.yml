@@ -8,7 +8,6 @@ dependencies:
   - python=3.13
   - pip
   - uv
-  - jax
   - pip:
     - torch>=2.9,<2.10 
     - ase>=3.23
