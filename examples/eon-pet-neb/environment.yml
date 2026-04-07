@@ -15,5 +15,5 @@ dependencies:
     - matplotlib
     - metatrain>=2026.2.1,<2027
     - requests
-    - rgpycrumbs>=1.5.1,<2
-    - chemparseplot>=1.5.2,<2
+    - rgpycrumbs>=1.7.0,<2
+    - chemparseplot>=1.7.0,<2
