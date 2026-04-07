@@ -8,12 +8,11 @@ dependencies:
   - python=3.13
   - pip
   - uv
-  - jax
   - pip:
     - torch>=2.9,<2.10 
     - ase>=3.23
     - matplotlib
     - metatrain>=2026.2.1,<2027
     - requests
-    - rgpycrumbs>=1.5.1,<2
-    - chemparseplot>=1.5.2,<2
+    - rgpycrumbs>=1.7.0,<2
+    - chemparseplot>=1.7.0,<2
