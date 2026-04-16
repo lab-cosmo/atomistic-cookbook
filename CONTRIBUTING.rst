@@ -70,7 +70,7 @@ the notebook generated from it, but it won't give direct access to additional
 files. If your example needs such data files, there are a few options available:
 
 - (preferred) have the data file stored in a publicly accessible location, e.g.
-  a Zotero record, and download the data file from the script
+  a Zenodo record, and download the data file from the script
 - if the data files are small (few 10s of Kb) you may also include them in a
   ``data/`` folder within the example folder. A zip file will be generated that
   can be downloaded from the example page.
