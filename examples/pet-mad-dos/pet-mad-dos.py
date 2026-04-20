@@ -29,6 +29,7 @@ import numpy as np
 import torch
 from huggingface_hub import hf_hub_download
 import shutil
+import urllib.request
 import os
 import subprocess
 
@@ -280,8 +281,16 @@ the training of PET-MAD-DOS.
 # %%
 n_extra_targets = 200  # PET-MAD-DOS predicts 200 more DOS
 # values per structure (4806 - 4606 = 200)
+# Load the GaAs sample structures with eigenvalues and k-point weights. These 
+# files are hosted on zenodo due to their large size
 
-GaAs_sample_structures = ase.io.read("data/GaAs_sample_structures.xyz", ":")
+url = (
+    "https://zenodo.org/records/19655792/files/"
+    "GaAs_sample_structures.xyz?download=1"
+)
+filename = "GaAs_sample_structures.xyz"
+urllib.request.urlretrieve(url, filename)
+GaAs_sample_structures = ase.io.read("GaAs_sample_structures.xyz", ":")
 
 eigenvalues = []
 kweights = []
