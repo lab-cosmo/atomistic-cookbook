@@ -51,6 +51,7 @@ import subprocess
 
 
 # %%
+
 # Load the structures
 sample_MAD_structures = ase.io.read("data/MAD_sample_structures.xyz", ":")
 
@@ -75,7 +76,7 @@ print(f"The shape of true_energy_grid is: {true_energy_grid.shape}")
 
 # %%
 # The true DOS is computed based on eigenvalaues obtained from DFT calculations
-# and projected on an energy grid (`true_energy_grid`) of size 4606. # However,
+# and projected on an energy grid (``true_energy_grid``) of size 4606. However,
 # due to eigenvalue truncation in the dataset, the DOS is not necessarily
 # well-defined at every point on the energy grid. For instance, if the highest
 # computed eigenvalue of a structure A is at 3eV, the computed DOS would
@@ -103,6 +104,8 @@ plt.tick_params(axis="both", which="major", labelsize=14, width=2, length=6)
 plt.xlabel(r"Energy - $\mathrm{E_F}$ [eV]", size=16)
 plt.ylabel(r"DOS [$\mathrm{states}/eV$]", size=16)
 plt.legend(fontsize=16)
+plt.tight_layout()
+plt.show()
 # %%
 # Here, we see a visualization of the DOS and the mask for the first sample
 # structure. In this case, the mask is multiplied by 10 so that it is more
@@ -116,7 +119,7 @@ plt.legend(fontsize=16)
 # in order to accomodate the energy reference agnostic loss function,
 # PET-MAD-DOS predicts on a larger energy grid (`energies`) of size 4806.
 
-# %%
+
 # Load the calculator
 pet_mad_dos_calculator = PETMADDOSCalculator(version="latest", device="cpu")
 
@@ -135,7 +138,6 @@ print(f"The shape of energies is: {energies.shape}")
 # the energy reference that minimizes the error between them.
 
 
-# %%
 # Define a function that minimizes the RMSE between the predicted and true DOS
 # by shifting the energy axis
 def get_dynamic_shift_agnostic_mse(predictions, targets, cutoff_mask):
@@ -212,7 +214,8 @@ plt.tick_params(axis="both", which="major", labelsize=14, width=2, length=6)
 plt.xlabel(r"Energy - $\mathrm{E_F}$ [eV]", size=16)
 plt.ylabel(r"DOS [$\mathrm{states}/eV$]", size=16)
 plt.legend(fontsize=16)
-
+plt.tight_layout()
+plt.show()
 # %%
 # Step 4: Predicting the Bandgap
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -222,7 +225,6 @@ plt.legend(fontsize=16)
 # bandgap via a CNN model is more robust than deriving it from the predicted DOS.
 
 
-# %%
 pred_bandgap = pet_mad_dos_calculator.calculate_bandgap(
     sample_MAD_structures, dos=pred_DOS
 )
@@ -238,14 +240,14 @@ print(f"The DFT bandgaps are : {(true_bandgap)}")
 # %%
 # Visualze the predicted and true bandgaps on a parity plot
 
-# %%
 plt.scatter(pred_bandgap, true_bandgap, color="blue")
 plt.plot([0, 1.4], [0, 1.4], label="y=x", color="red")
 plt.tick_params(axis="both", which="major", labelsize=14, width=2, length=6)
 plt.xlabel(r"Predicted Gap [eV]", size=16)
 plt.ylabel(r"DFT Gap [eV]", size=16)
 plt.legend(fontsize=16)
-
+plt.tight_layout()
+plt.show()
 # %%
 # Finetuning PET-MAD-DOS on specific applications
 # --------------------------------------------------
@@ -265,7 +267,6 @@ plt.legend(fontsize=16)
 # the training of PET-MAD-DOS.
 
 
-# %%
 n_extra_targets = 200  # PET-MAD-DOS predicts 200 more DOS
 # values per structure (4806 - 4606 = 200)
 # Load the GaAs sample structures with eigenvalues and k-point weights. These
@@ -331,7 +332,7 @@ for index in range(len(GaAs_sample_structures)):
 # <https://archive.materialscloud.org/records/8ee9k-b7865>`_, one can skip to
 # the end of the data processing pipeline as follows
 
-# %%
+
 GaAs_sample_train_structures = ase.io.read("data/GaAs_sample_train_structures.xyz", ":")
 GaAs_sample_val_structures = ase.io.read("data/GaAs_sample_val_structures.xyz", ":")
 GaAs_sample_test_structures = ase.io.read("data/GaAs_sample_test_structures.xyz", ":")
@@ -370,7 +371,7 @@ ase.io.write("GaAs_processed_test.xyz", GaAs_sample_test_structures)
 # local directory so that it can be referenced in the metatrain YAML
 # configuration files for fine-tuning.
 
-# %%
+
 # Download the checkpoint from Zenodo and copy it to the local directory
 url = "https://zenodo.org/records/19655792/files/pet-mad-dos-v1.0.ckpt?download=1"
 
@@ -391,7 +392,6 @@ if not os.path.exists(checkpoint_path):
 #   :language: yaml
 
 
-# %%
 # Begin finetuning
 subprocess.run(
     ["mtt", "train", "finetune.yaml", "-o", "fine_tune-model.pt"], check=True
@@ -403,13 +403,12 @@ subprocess.run(
 # After training, we can evaluate the model on the test set using the `mtt eval`
 # command, alongside with a supporting YAML configuration file that specifies the
 # evaluation hyperparameters.
+
 # %%
 # .. literalinclude:: eval.yaml
 #   :language: yaml
 #
 
-
-# %%
 subprocess.run(
     ["mtt", "eval", "fine_tune-model.pt", "eval.yaml", "-o", "pred.xyz"], check=True
 )
@@ -463,3 +462,5 @@ plt.tick_params(axis="both", which="major", labelsize=14, width=2, length=6)
 plt.xlabel(r"Energy - $\mathrm{E_F}$ [eV]", size=16)
 plt.ylabel(r"DOS [$\mathrm{states}/eV$]", size=16)
 plt.legend(fontsize=16)
+plt.tight_layout()
+plt.show()
