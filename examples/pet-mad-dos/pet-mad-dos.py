@@ -55,7 +55,7 @@ the training dataset used in the `original PET-MAD-DOS publication
 # %%
 
 # Load the structures
-sample_MAD_structures = ase.io.read("./data/MAD_sample_structures.xyz", ":")
+sample_MAD_structures = ase.io.read("data/MAD_sample_structures.xyz", ":")
 
 # Extract the DOS and mask
 true_DOS = []
@@ -281,7 +281,7 @@ the training of PET-MAD-DOS.
 n_extra_targets = 200  # PET-MAD-DOS predicts 200 more DOS
 # values per structure (4806 - 4606 = 200)
 
-GaAs_sample_structures = ase.io.read("GaAs_sample_structures.xyz", ":")
+GaAs_sample_structures = ase.io.read("data/GaAs_sample_structures.xyz", ":")
 
 eigenvalues = []
 kweights = []
@@ -342,10 +342,14 @@ the end of the data processing pipeline as follows
 """
 # %%
 GaAs_sample_train_structures = ase.io.read(
-    ".data/GaAs_sample_train_structures.xyz", ":"
+    "data/GaAs_sample_train_structures.xyz", ":"
 )
-GaAs_sample_val_structures = ase.io.read(".data/GaAs_sample_val_structures.xyz", ":")
-GaAs_sample_test_structures = ase.io.read(".data/GaAs_sample_test_structures.xyz", ":")
+GaAs_sample_val_structures = ase.io.read(
+    "data/GaAs_sample_val_structures.xyz", ":"
+)
+GaAs_sample_test_structures = ase.io.read(
+    "data/GaAs_sample_test_structures.xyz", ":"
+)
 
 # To prepare the structures for training
 extra_targets = 200
