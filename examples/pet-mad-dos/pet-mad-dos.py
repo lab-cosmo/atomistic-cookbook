@@ -109,7 +109,6 @@ plt.legend(fontsize=16)
 # visible on the plot. The DOS is aligned such that the Fermi level is at 0eV.
 
 
-
 # Step 2: Loading PET-MAD-DOS
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Here we will load the PET-MAD-DOS model using the upet package and use it to
@@ -260,7 +259,6 @@ plt.legend(fontsize=16)
 # we will show how to use the `metatrain` package to finetune the model.
 
 
-
 # Step 1: Data Processing
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # The data processing pipeline uses the computed eigenvalues at each k-point,
@@ -403,7 +401,6 @@ if not os.path.exists(checkpoint_path):
 #   :language: yaml
 
 
-
 # %%
 # Begin finetuning
 subprocess.run(
@@ -420,7 +417,7 @@ subprocess.run(
 
 # .. literalinclude:: eval.yaml
 #   :language: yaml
-# 
+#
 
 
 # %%
