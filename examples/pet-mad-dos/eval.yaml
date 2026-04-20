@@ -1,0 +1,2 @@
+systems: 
+  read_from: ./data/GaAs_sample_test_structures.xyz
