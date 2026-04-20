@@ -28,13 +28,13 @@ training_set:
   systems: GaAs_processed_train.xyz
   targets:
     mtt::dos:
-      key: DOS
+      key: trainingDOS
       per_atom: false
       type: scalar
       num_subtargets: 4806
   extra_data:
     mtt::dos_mask:
-      key: mask
+      key: trainingmask
       per_atom: false
       type: scalar
       num_subtargets: 4806
@@ -43,13 +43,13 @@ validation_set:
   systems: GaAs_processed_val.xyz
   targets:
     mtt::dos:
-      key: DOS
+      key: trainingDOS
       per_atom: false
       type: scalar
       num_subtargets: 4806
   extra_data:
     mtt::dos_mask:
-      key: mask
+      key: trainingmask
       per_atom: false
       type: scalar
       num_subtargets: 4806

@@ -27,8 +27,6 @@ import ase.io
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from huggingface_hub import hf_hub_download
-import shutil
 import urllib.request
 import os
 import subprocess
@@ -281,13 +279,10 @@ the training of PET-MAD-DOS.
 # %%
 n_extra_targets = 200  # PET-MAD-DOS predicts 200 more DOS
 # values per structure (4806 - 4606 = 200)
-# Load the GaAs sample structures with eigenvalues and k-point weights. These 
+# Load the GaAs sample structures with eigenvalues and k-point weights. These
 # files are hosted on zenodo due to their large size
 
-url = (
-    "https://zenodo.org/records/19655792/files/"
-    "GaAs_sample_structures.xyz?download=1"
-)
+url = "https://zenodo.org/records/19655792/files/GaAs_sample_structures.xyz?download=1"
 filename = "GaAs_sample_structures.xyz"
 urllib.request.urlretrieve(url, filename)
 GaAs_sample_structures = ase.io.read("GaAs_sample_structures.xyz", ":")
@@ -370,8 +365,16 @@ for i in GaAs_sample_val_structures:
     i.info["trainingDOS"] = dos_i_padded
     i.info["trainingmask"] = mask_i_padded
 
+for i in GaAs_sample_test_structures:
+    dos_i_padded = np.concatenate([np.zeros(n_extra_targets), i.info["DOS"]])
+    mask_i_padded = np.concatenate([np.zeros(n_extra_targets), i.info["mask"]])
+
+    i.info["trainingDOS"] = dos_i_padded
+    i.info["trainingmask"] = mask_i_padded
+
 ase.io.write("GaAs_processed_train.xyz", GaAs_sample_train_structures)
 ase.io.write("GaAs_processed_val.xyz", GaAs_sample_val_structures)
+ase.io.write("GaAs_processed_test.xyz", GaAs_sample_test_structures)
 
 # %%
 
@@ -383,17 +386,13 @@ local directory so that it can be referenced in the metatrain YAML
 configuration files for fine-tuning.
 """
 # %%
-checkpoint_cache = hf_hub_download(
-    repo_id="lab-cosmo/pet-mad-dos",
-    filename="pet-mad-dos-v1.0.ckpt",
-    subfolder="models",
-)
 
-# Copy the checkpoint to the local directory so that it can be referenced
-# in the metatrain YAML configuration files.
+# Download the checkpoint from Zenodo and copy it to the local directory
+url = "https://zenodo.org/records/19655792/files/pet-mad-dos-v1.0.ckpt?download=1"
+
 checkpoint_path = "pet-mad-dos-v1.0.ckpt"
 if not os.path.exists(checkpoint_path):
-    shutil.copy(checkpoint_cache, checkpoint_path)
+    urllib.request.urlretrieve(url, filename)
 
 # %%
 
