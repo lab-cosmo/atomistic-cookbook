@@ -31,23 +31,21 @@ import urllib.request
 import os
 import subprocess
 
-"""
-Using PET-MAD-DOS out of the box
------------------------------------
-In this section, we are going to treat PET-MAD-DOS as a universal
-model and use it out-of-the-box to obtain predictions of the DOS for a sample
-of structures.
-"""
+# %%
 
-"""
+# Using PET-MAD-DOS out of the box
+# -----------------------------------
+# In this section, we are going to treat PET-MAD-DOS as a universal
+# model and use it out-of-the-box to obtain predictions of the DOS for a sample
+# of structures.
 
-Step 1: Loading Sample Structures
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Here, we will demonstrate PET-MAD-DOS on a small sample of 5 structures in
-the training dataset used in the `original PET-MAD-DOS publication
-<https://arxiv.org/abs/2508.17418>`_.
 
-"""
+# Step 1: Loading Sample Structures
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Here, we will demonstrate PET-MAD-DOS on a small sample of 5 structures in
+# the training dataset used in the `original PET-MAD-DOS publication
+# <https://arxiv.org/abs/2508.17418>`_.
+
 # %%
 
 # Load the structures
@@ -72,23 +70,24 @@ n_points = np.ceil(np.array(upper_bound - lower_bound) / interval)
 true_energy_grid = np.arange(n_points) * interval + lower_bound
 print(f"The shape of true_energy_grid is: {true_energy_grid.shape}")
 
+# %%
 
-"""
-The true DOS is computed based on eigenvalaues obtained from DFT calculations
-and projected on an energy grid (`true_energy_grid`) of size 4606. # However,
-due to eigenvalue truncation in the dataset, the DOS is not necessarily
-well-defined at every point on the energy grid. For instance, if the highest
-computed eigenvalue of a structure A is at 3eV, the computed DOS would
-indicate that there are no states past 3eV. However, that is false and is
-merely an artefact of eigenvalue truncation. Hence, an additional mask is
-included for each structure to show the regions where the DOS is
-well-defined, 1 indicates that the DOS is well defined and 0 indicates that
-it is not. The DOS is considered well-defined up to 0.9eV below the minimum
-energy of the highest band in the DFT calculation. In the following, we plot
-these quantities, where the mask is multiplied by 10 to enhance visibility
-in the plot. DOS values where the mask is 0 should not be considered reliable
-and should be ignored when comparing both spectra.
-"""
+
+# The true DOS is computed based on eigenvalaues obtained from DFT calculations
+# and projected on an energy grid (`true_energy_grid`) of size 4606. # However,
+# due to eigenvalue truncation in the dataset, the DOS is not necessarily
+# well-defined at every point on the energy grid. For instance, if the highest
+# computed eigenvalue of a structure A is at 3eV, the computed DOS would
+# indicate that there are no states past 3eV. However, that is false and is
+# merely an artefact of eigenvalue truncation. Hence, an additional mask is
+# included for each structure to show the regions where the DOS is
+# well-defined, 1 indicates that the DOS is well defined and 0 indicates that
+# it is not. The DOS is considered well-defined up to 0.9eV below the minimum
+# energy of the highest band in the DFT calculation. In the following, we plot
+# these quantities, where the mask is multiplied by 10 to enhance visibility
+# in the plot. DOS values where the mask is 0 should not be considered reliable
+# and should be ignored when comparing both spectra.
+
 # %%
 plt.plot(true_energy_grid, true_DOS[0], label="DFT DOS", color="red")
 plt.plot(
@@ -103,21 +102,21 @@ plt.tick_params(axis="both", which="major", labelsize=14, width=2, length=6)
 plt.xlabel(r"Energy - $\mathrm{E_F}$ [eV]", size=16)
 plt.ylabel(r"DOS [$\mathrm{states}/eV$]", size=16)
 plt.legend(fontsize=16)
+# %%
 
-"""
-Here, we see a visualization of the DOS and the mask for the first sample
-structure. In this case, the mask is multiplied by 10 so that it is more
-visible on the plot. The DOS is aligned such that the Fermi level is at 0eV.
-"""
+# Here, we see a visualization of the DOS and the mask for the first sample
+# structure. In this case, the mask is multiplied by 10 so that it is more
+# visible on the plot. The DOS is aligned such that the Fermi level is at 0eV.
 
-"""
-Step 2: Loading PET-MAD-DOS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Here we will load the PET-MAD-DOS model using the upet package and use it to
-predict the DOS. Although the target has size 4606 as seen in the cells above,
-in order to accomodate the energy reference agnostic loss function,
-PET-MAD-DOS predicts on a larger energy grid (`energies`) of size 4806.
-"""
+
+
+# Step 2: Loading PET-MAD-DOS
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Here we will load the PET-MAD-DOS model using the upet package and use it to
+# predict the DOS. Although the target has size 4606 as seen in the cells above,
+# in order to accomodate the energy reference agnostic loss function,
+# PET-MAD-DOS predicts on a larger energy grid (`energies`) of size 4806.
+
 # %%
 
 # Load the calculator
@@ -129,14 +128,15 @@ energies, pred_DOS = pet_mad_dos_calculator.calculate_dos(sample_MAD_structures)
 print(f"The shape of pred_DOS is: {pred_DOS.shape}")
 print(f"The shape of energies is: {energies.shape}")
 
-"""
-Step 3: Visualize the predictions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Since the absolute energy reference is not well-defined for bulk systems, we
-need to compare the predicted DOS and the true DOS in a way that is agnostic
-to the energy reference used. To do this, we will compare these spectra using
-the energy reference that minimizes the error between them.
-"""
+# %%
+
+# Step 3: Visualize the predictions
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Since the absolute energy reference is not well-defined for bulk systems, we
+# need to compare the predicted DOS and the true DOS in a way that is agnostic
+# to the energy reference used. To do this, we will compare these spectra using
+# the energy reference that minimizes the error between them.
+
 # %%
 # Define a function that minimizes the RMSE between the predicted and true DOS
 # by shifting the energy axis
@@ -217,14 +217,15 @@ plt.xlabel(r"Energy - $\mathrm{E_F}$ [eV]", size=16)
 plt.ylabel(r"DOS [$\mathrm{states}/eV$]", size=16)
 plt.legend(fontsize=16)
 
-"""
-Step 4: Predicting the Bandgap
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Additionally, PET-MAD-DOS comes with a CNN bandgap model that predicts the gap
-of a system based on the predicted DOS. Due to the inherent model noise and
-the high sensitivity of the bandgap to small errors in the DOS, obtaining the
-bandgap via a CNN model is more robust than deriving it from the predicted DOS.
-"""
+# %%
+
+# Step 4: Predicting the Bandgap
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Additionally, PET-MAD-DOS comes with a CNN bandgap model that predicts the gap
+# of a system based on the predicted DOS. Due to the inherent model noise and
+# the high sensitivity of the bandgap to small errors in the DOS, obtaining the
+# bandgap via a CNN model is more robust than deriving it from the predicted DOS.
+
 
 # %%
 
@@ -240,34 +241,35 @@ true_bandgap = torch.tensor(true_bandgap, dtype=torch.float32)
 print(f"The predicted bandgaps are : {pred_bandgap}")
 print(f"The DFT bandgaps are : {(true_bandgap)}")
 # %%
-# %%
+
 # Visualze the predicted and true bandgaps on a parity plot
+# %%
 plt.scatter(pred_bandgap, true_bandgap, color="blue")
 plt.plot([0, 1.4], [0, 1.4], label="y=x", color="red")
 plt.tick_params(axis="both", which="major", labelsize=14, width=2, length=6)
 plt.xlabel(r"Predicted Gap [eV]", size=16)
 plt.ylabel(r"DFT Gap [eV]", size=16)
 plt.legend(fontsize=16)
+# %%
 
-"""
-Finetuning PET-MAD-DOS on specific applications
---------------------------------------------------
-In this section, we are going to treat PET-MAD-DOS as a foundation
-model and finetune it on a Gallium Arsenide (GaAs) system. We will first
-demonstrate the data processing pipeline starting from DFT outputs, and then
-we will show how to use the `metatrain` package to finetune the model.
-"""
+# Finetuning PET-MAD-DOS on specific applications
+# --------------------------------------------------
+# In this section, we are going to treat PET-MAD-DOS as a foundation
+# model and finetune it on a Gallium Arsenide (GaAs) system. We will first
+# demonstrate the data processing pipeline starting from DFT outputs, and then
+# we will show how to use the `metatrain` package to finetune the model.
 
-"""
-Step 1: Data Processing
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The data processing pipeline uses the computed eigenvalues at each k-point,
-along with its associated k-point weight (where relevant) to generate the DOS
-and mask for each structure. The DOS is generated by applying gaussian
-broadening on each eigenenergy, and projected on an energy grid. For the
-purposes of fine-tuning, the energy grid will be identical to the one used for
-the training of PET-MAD-DOS.
-"""
+
+
+# Step 1: Data Processing
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# The data processing pipeline uses the computed eigenvalues at each k-point,
+# along with its associated k-point weight (where relevant) to generate the DOS
+# and mask for each structure. The DOS is generated by applying gaussian
+# broadening on each eigenenergy, and projected on an energy grid. For the
+# purposes of fine-tuning, the energy grid will be identical to the one used for
+# the training of PET-MAD-DOS.
+
 
 # %%
 n_extra_targets = 200  # PET-MAD-DOS predicts 200 more DOS
@@ -329,13 +331,14 @@ for index in range(len(GaAs_sample_structures)):
     GaAs_sample_structures[index].info["DOS"] = dos_i_padded.astype(np.float32)
     GaAs_sample_structures[index].info["mask"] = mask_i_padded.astype(np.float32)
 
+# %%
 
-"""
-Alternatively, if one uses precomputed DOS data, like the ones on the
-`MaterialsCloud archive
-<https://archive.materialscloud.org/records/8ee9k-b7865>`_, one can skip to
-the end of the data processing pipeline as follows
-"""
+
+# Alternatively, if one uses precomputed DOS data, like the ones on the
+# `MaterialsCloud archive
+# <https://archive.materialscloud.org/records/8ee9k-b7865>`_, one can skip to
+# the end of the data processing pipeline as follows
+
 # %%
 GaAs_sample_train_structures = ase.io.read("data/GaAs_sample_train_structures.xyz", ":")
 GaAs_sample_val_structures = ase.io.read("data/GaAs_sample_val_structures.xyz", ":")
@@ -368,14 +371,15 @@ ase.io.write("GaAs_processed_train.xyz", GaAs_sample_train_structures)
 ase.io.write("GaAs_processed_val.xyz", GaAs_sample_val_structures)
 ase.io.write("GaAs_processed_test.xyz", GaAs_sample_test_structures)
 
+# %%
 
-"""
-Step 2: Model Loading
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Now we need to download the PET-MAD-DOS checkpoint and place it in the
-local directory so that it can be referenced in the metatrain YAML
-configuration files for fine-tuning.
-"""
+
+# Step 2: Model Loading
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Now we need to download the PET-MAD-DOS checkpoint and place it in the
+# local directory so that it can be referenced in the metatrain YAML
+# configuration files for fine-tuning.
+
 # %%
 
 # Download the checkpoint from Zenodo and copy it to the local directory
@@ -386,17 +390,18 @@ if not os.path.exists(checkpoint_path):
     print("Downloading PET-MAD-DOS checkpoint...")
     urllib.request.urlretrieve(url, checkpoint_path)
 
+# %%
 
-"""
-Step 3: Fine-tuning the model
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Now we are ready to fine-tune the model using the `metatrain` package. We
-will use the `mtt train` command to train the model, alongside with a
-supporting YAML configuration file that specifies the training hyperparameters.
 
-.. literalinclude:: finetune.yaml
-  :language: yaml
-"""
+# Step 3: Fine-tuning the model
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Now we are ready to fine-tune the model using the `metatrain` package. We
+# will use the `mtt train` command to train the model, alongside with a
+# supporting YAML configuration file that specifies the training hyperparameters.
+
+# .. literalinclude:: finetune.yaml
+#   :language: yaml
+
 
 
 # %%
@@ -405,16 +410,17 @@ subprocess.run(
     ["mtt", "train", "finetune.yaml", "-o", "fine_tune-model.pt"], check=True
 )
 
-"""
-Step 4: Evaluating the model
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-After training, we can evaluate the model on the test set using the `mtt eval`
-command, alongside with a supporting YAML configuration file that specifies the
-evaluation hyperparameters.
+# %%
 
-.. literalinclude:: eval.yaml
-  :language: yaml
-"""
+# Step 4: Evaluating the model
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# After training, we can evaluate the model on the test set using the `mtt eval`
+# command, alongside with a supporting YAML configuration file that specifies the
+# evaluation hyperparameters.
+
+# .. literalinclude:: eval.yaml
+#   :language: yaml
+# 
 
 
 # %%
@@ -423,6 +429,8 @@ subprocess.run(
 )
 
 output = ase.io.read("pred.xyz", ":")
+
+# %%
 
 # As we have only fine-tuned for 10 epochs on a tiny dataset, the model
 # performance is not expected to be good. However, this simply serves as a
