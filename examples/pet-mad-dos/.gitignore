@@ -1,10 +1,6 @@
-models
-data
-
 RESTART
 \#*
 *.out
-*.xyz
 *.extxyz
 *.committee_pot*
 *.atomic_error*

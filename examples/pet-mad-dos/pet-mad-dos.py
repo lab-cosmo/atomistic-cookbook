@@ -341,15 +341,9 @@ Alternatively, if one uses precomputed DOS data, like the ones on the
 the end of the data processing pipeline as follows
 """
 # %%
-GaAs_sample_train_structures = ase.io.read(
-    "data/GaAs_sample_train_structures.xyz", ":"
-)
-GaAs_sample_val_structures = ase.io.read(
-    "data/GaAs_sample_val_structures.xyz", ":"
-)
-GaAs_sample_test_structures = ase.io.read(
-    "data/GaAs_sample_test_structures.xyz", ":"
-)
+GaAs_sample_train_structures = ase.io.read("data/GaAs_sample_train_structures.xyz", ":")
+GaAs_sample_val_structures = ase.io.read("data/GaAs_sample_val_structures.xyz", ":")
+GaAs_sample_test_structures = ase.io.read("data/GaAs_sample_test_structures.xyz", ":")
 
 # To prepare the structures for training
 extra_targets = 200
