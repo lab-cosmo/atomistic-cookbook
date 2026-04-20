@@ -31,9 +31,6 @@ import urllib.request
 import os
 import subprocess
 
-
-# %%
-
 """
 Using PET-MAD-DOS out of the box
 -----------------------------------
@@ -75,7 +72,7 @@ n_points = np.ceil(np.array(upper_bound - lower_bound) / interval)
 true_energy_grid = np.arange(n_points) * interval + lower_bound
 print(f"The shape of true_energy_grid is: {true_energy_grid.shape}")
 
-# %%
+
 """
 The true DOS is computed based on eigenvalaues obtained from DFT calculations
 and projected on an energy grid (`true_energy_grid`) of size 4606. # However,
@@ -106,8 +103,6 @@ plt.tick_params(axis="both", which="major", labelsize=14, width=2, length=6)
 plt.xlabel(r"Energy - $\mathrm{E_F}$ [eV]", size=16)
 plt.ylabel(r"DOS [$\mathrm{states}/eV$]", size=16)
 plt.legend(fontsize=16)
-
-# %%
 
 """
 Here, we see a visualization of the DOS and the mask for the first sample
@@ -222,7 +217,6 @@ plt.xlabel(r"Energy - $\mathrm{E_F}$ [eV]", size=16)
 plt.ylabel(r"DOS [$\mathrm{states}/eV$]", size=16)
 plt.legend(fontsize=16)
 
-# %%
 """
 Step 4: Predicting the Bandgap
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -255,7 +249,6 @@ plt.xlabel(r"Predicted Gap [eV]", size=16)
 plt.ylabel(r"DFT Gap [eV]", size=16)
 plt.legend(fontsize=16)
 
-# %%
 """
 Finetuning PET-MAD-DOS on specific applications
 --------------------------------------------------
@@ -336,7 +329,6 @@ for index in range(len(GaAs_sample_structures)):
     GaAs_sample_structures[index].info["DOS"] = dos_i_padded.astype(np.float32)
     GaAs_sample_structures[index].info["mask"] = mask_i_padded.astype(np.float32)
 
-# %%
 
 """
 Alternatively, if one uses precomputed DOS data, like the ones on the
@@ -376,7 +368,6 @@ ase.io.write("GaAs_processed_train.xyz", GaAs_sample_train_structures)
 ase.io.write("GaAs_processed_val.xyz", GaAs_sample_val_structures)
 ase.io.write("GaAs_processed_test.xyz", GaAs_sample_test_structures)
 
-# %%
 
 """
 Step 2: Model Loading
@@ -395,7 +386,6 @@ if not os.path.exists(checkpoint_path):
     print("Downloading PET-MAD-DOS checkpoint...")
     urllib.request.urlretrieve(url, checkpoint_path)
 
-# %%
 
 """
 Step 3: Fine-tuning the model
@@ -403,17 +393,17 @@ Step 3: Fine-tuning the model
 Now we are ready to fine-tune the model using the `metatrain` package. We
 will use the `mtt train` command to train the model, alongside with a
 supporting YAML configuration file that specifies the training hyperparameters.
+
+.. literalinclude:: finetune.yaml
+  :language: yaml
 """
 
-# .. literalinclude:: finetune.yaml
-#   :language: yaml
 
 # %%
 # Begin finetuning
 subprocess.run(
     ["mtt", "train", "finetune.yaml", "-o", "fine_tune-model.pt"], check=True
 )
-# %%
 
 """
 Step 4: Evaluating the model
@@ -421,9 +411,11 @@ Step 4: Evaluating the model
 After training, we can evaluate the model on the test set using the `mtt eval`
 command, alongside with a supporting YAML configuration file that specifies the
 evaluation hyperparameters.
+
+.. literalinclude:: eval.yaml
+  :language: yaml
 """
-# .. literalinclude:: eval.yaml
-#   :language: yaml
+
 
 # %%
 subprocess.run(
