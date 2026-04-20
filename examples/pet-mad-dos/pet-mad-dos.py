@@ -32,22 +32,25 @@ import os
 import subprocess
 
 # %%
-
 # Using PET-MAD-DOS out of the box
 # -----------------------------------
+#
 # In this section, we are going to treat PET-MAD-DOS as a universal
 # model and use it out-of-the-box to obtain predictions of the DOS for a sample
 # of structures.
+#
 
 
+# %%
 # Step 1: Loading Sample Structures
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Here, we will demonstrate PET-MAD-DOS on a small sample of 5 structures in
 # the training dataset used in the `original PET-MAD-DOS publication
 # <https://arxiv.org/abs/2508.17418>`_.
+#
+
 
 # %%
-
 # Load the structures
 sample_MAD_structures = ase.io.read("data/MAD_sample_structures.xyz", ":")
 
@@ -71,8 +74,6 @@ true_energy_grid = np.arange(n_points) * interval + lower_bound
 print(f"The shape of true_energy_grid is: {true_energy_grid.shape}")
 
 # %%
-
-
 # The true DOS is computed based on eigenvalaues obtained from DFT calculations
 # and projected on an energy grid (`true_energy_grid`) of size 4606. # However,
 # due to eigenvalue truncation in the dataset, the DOS is not necessarily
@@ -103,12 +104,11 @@ plt.xlabel(r"Energy - $\mathrm{E_F}$ [eV]", size=16)
 plt.ylabel(r"DOS [$\mathrm{states}/eV$]", size=16)
 plt.legend(fontsize=16)
 # %%
-
 # Here, we see a visualization of the DOS and the mask for the first sample
 # structure. In this case, the mask is multiplied by 10 so that it is more
 # visible on the plot. The DOS is aligned such that the Fermi level is at 0eV.
 
-
+# %%
 # Step 2: Loading PET-MAD-DOS
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Here we will load the PET-MAD-DOS model using the upet package and use it to
@@ -117,7 +117,6 @@ plt.legend(fontsize=16)
 # PET-MAD-DOS predicts on a larger energy grid (`energies`) of size 4806.
 
 # %%
-
 # Load the calculator
 pet_mad_dos_calculator = PETMADDOSCalculator(version="latest", device="cpu")
 
@@ -128,7 +127,6 @@ print(f"The shape of pred_DOS is: {pred_DOS.shape}")
 print(f"The shape of energies is: {energies.shape}")
 
 # %%
-
 # Step 3: Visualize the predictions
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Since the absolute energy reference is not well-defined for bulk systems, we
@@ -136,11 +134,10 @@ print(f"The shape of energies is: {energies.shape}")
 # to the energy reference used. To do this, we will compare these spectra using
 # the energy reference that minimizes the error between them.
 
+
 # %%
 # Define a function that minimizes the RMSE between the predicted and true DOS
 # by shifting the energy axis
-
-
 def get_dynamic_shift_agnostic_mse(predictions, targets, cutoff_mask):
     if predictions.shape[1] < targets.shape[1]:
         smaller = predictions
@@ -217,7 +214,6 @@ plt.ylabel(r"DOS [$\mathrm{states}/eV$]", size=16)
 plt.legend(fontsize=16)
 
 # %%
-
 # Step 4: Predicting the Bandgap
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Additionally, PET-MAD-DOS comes with a CNN bandgap model that predicts the gap
@@ -227,7 +223,6 @@ plt.legend(fontsize=16)
 
 
 # %%
-
 pred_bandgap = pet_mad_dos_calculator.calculate_bandgap(
     sample_MAD_structures, dos=pred_DOS
 )
@@ -239,9 +234,10 @@ true_bandgap = torch.tensor(true_bandgap, dtype=torch.float32)
 
 print(f"The predicted bandgaps are : {pred_bandgap}")
 print(f"The DFT bandgaps are : {(true_bandgap)}")
-# %%
 
+# %%
 # Visualze the predicted and true bandgaps on a parity plot
+
 # %%
 plt.scatter(pred_bandgap, true_bandgap, color="blue")
 plt.plot([0, 1.4], [0, 1.4], label="y=x", color="red")
@@ -249,8 +245,8 @@ plt.tick_params(axis="both", which="major", labelsize=14, width=2, length=6)
 plt.xlabel(r"Predicted Gap [eV]", size=16)
 plt.ylabel(r"DFT Gap [eV]", size=16)
 plt.legend(fontsize=16)
-# %%
 
+# %%
 # Finetuning PET-MAD-DOS on specific applications
 # --------------------------------------------------
 # In this section, we are going to treat PET-MAD-DOS as a foundation
@@ -258,7 +254,7 @@ plt.legend(fontsize=16)
 # demonstrate the data processing pipeline starting from DFT outputs, and then
 # we will show how to use the `metatrain` package to finetune the model.
 
-
+# %%
 # Step 1: Data Processing
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # The data processing pipeline uses the computed eigenvalues at each k-point,
@@ -330,8 +326,6 @@ for index in range(len(GaAs_sample_structures)):
     GaAs_sample_structures[index].info["mask"] = mask_i_padded.astype(np.float32)
 
 # %%
-
-
 # Alternatively, if one uses precomputed DOS data, like the ones on the
 # `MaterialsCloud archive
 # <https://archive.materialscloud.org/records/8ee9k-b7865>`_, one can skip to
@@ -370,8 +364,6 @@ ase.io.write("GaAs_processed_val.xyz", GaAs_sample_val_structures)
 ase.io.write("GaAs_processed_test.xyz", GaAs_sample_test_structures)
 
 # %%
-
-
 # Step 2: Model Loading
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Now we need to download the PET-MAD-DOS checkpoint and place it in the
@@ -379,7 +371,6 @@ ase.io.write("GaAs_processed_test.xyz", GaAs_sample_test_structures)
 # configuration files for fine-tuning.
 
 # %%
-
 # Download the checkpoint from Zenodo and copy it to the local directory
 url = "https://zenodo.org/records/19655792/files/pet-mad-dos-v1.0.ckpt?download=1"
 
@@ -389,14 +380,13 @@ if not os.path.exists(checkpoint_path):
     urllib.request.urlretrieve(url, checkpoint_path)
 
 # %%
-
-
 # Step 3: Fine-tuning the model
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Now we are ready to fine-tune the model using the `metatrain` package. We
 # will use the `mtt train` command to train the model, alongside with a
 # supporting YAML configuration file that specifies the training hyperparameters.
 
+# %%
 # .. literalinclude:: finetune.yaml
 #   :language: yaml
 
@@ -408,13 +398,12 @@ subprocess.run(
 )
 
 # %%
-
 # Step 4: Evaluating the model
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # After training, we can evaluate the model on the test set using the `mtt eval`
 # command, alongside with a supporting YAML configuration file that specifies the
 # evaluation hyperparameters.
-
+# %%
 # .. literalinclude:: eval.yaml
 #   :language: yaml
 #
@@ -428,7 +417,6 @@ subprocess.run(
 output = ase.io.read("pred.xyz", ":")
 
 # %%
-
 # As we have only fine-tuned for 10 epochs on a tiny dataset, the model
 # performance is not expected to be good. However, this simply serves as a
 # demonstration of how to use the fine-tuned model.
