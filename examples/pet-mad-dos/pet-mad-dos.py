@@ -392,7 +392,7 @@ url = "https://zenodo.org/records/19655792/files/pet-mad-dos-v1.0.ckpt?download=
 
 checkpoint_path = "pet-mad-dos-v1.0.ckpt"
 if not os.path.exists(checkpoint_path):
-    print ("Downloading PET-MAD-DOS checkpoint...")
+    print("Downloading PET-MAD-DOS checkpoint...")
     urllib.request.urlretrieve(url, checkpoint_path)
 
 # %%

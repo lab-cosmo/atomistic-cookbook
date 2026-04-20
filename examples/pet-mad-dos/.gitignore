@@ -9,3 +9,5 @@ RESTART
 GaAs_processed*
 GaAs_sample_structures.xyz
 pred.xyz
+fine_tune-model*
+outputs/
