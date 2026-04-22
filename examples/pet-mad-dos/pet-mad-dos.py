@@ -3,20 +3,20 @@ A Guide to PET-MAD-DOS: Model Inference and Fine-Tuning
 =========================================================
 :Authors: How Wei Bin `@HowWeiBin <https://github.com/HowWeiBin/>`_
 
-This tutorial would describe two ways that one can use PET-MAD-DOS to
-predict the electronic density of states (DOS) of a structure, 1) Treating
-PET-MAD-DOS as a universal model and deploying it out of the box, or 2)
-Treating PET-MAD-DOS as a foundation model and fine-tuning it for specific
-applications.
+This tutorial describes two ways in which one can use PET-MAD-DOS to
+predict the electronic density of states (DOS) of a structure:
 
-In this tutorial, we would demonstrate the first approach using the upet
-package to showcase how one can easily obtain high quality DOS predictions
-for a structure of interest. Then, we would illustrate how one can use the
-`metatrain` package to fine-tune the PET-MAD-DOS model for a specific
-application. In the process, we would also go through the necessary
+1. **Treating PET-MAD-DOS as a universal model**: using the upet package,
+we will obtain high quality DOS predictions out of the box for a structure
+of interest.
+2. **Treating PET-MAD-DOS as a foundation model**: we will illustrate
+how one can use the ``metatrain`` package to fine-tune the PET-MAD-DOS
+model for a specific application.
+
+In the process, we will also go through the necessary
 data processing pipeline, starting from basic DFT outputs.
 
-First, lets begin by importing the necessary packages and helper functions
+First, let's begin by importing the necessary packages and helper functions
 """
 # sphinx_gallery_thumbnail_number = 2
 # %%
@@ -44,57 +44,51 @@ import subprocess
 # %%
 # Step 1: Loading Sample Structures
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Here, we will demonstrate PET-MAD-DOS on a small sample of 5 structures in
-# the training dataset used in the `original PET-MAD-DOS publication
-# <https://arxiv.org/abs/2508.17418>`_.
+# We will start by loading a sample of structures, along with their associated
+# DOS and mask. These are 5 structures from the training dataset used in the
+# original PET-MAD-DOS publication <https://arxiv.org/abs/2508.17418>`_.
 #
 
 
 # %%
 
 # Load the structures
-sample_MAD_structures = ase.io.read("data/MAD_sample_structures.xyz", ":")
+structs = ase.io.read("data/MAD_sample_structures.xyz", ":")
 
 # Extract the DOS and mask
-true_DOS = []
-true_mask = []
-for i in sample_MAD_structures:
-    true_DOS.append(i.info["DOS"])
-    true_mask.append(i.info["mask"])
-true_DOS = np.stack(true_DOS)
-true_mask = np.stack(true_mask)
+true_DOS = np.stack([s.info["DOS"] for s in structs])
+true_mask = np.stack([s.info["mask"] for s in structs])
 print(f"The shape of true_DOS is: {true_DOS.shape}")
 print(f"The shape of true_mask is: {true_mask.shape}")
 
 # Define the energy grid for the DOS
-lower_bound = -148.1456 - 1.5
-upper_bound = 79.1528 + 1.5
+lower_bound, upper_bound = -148.1456 - 1.5, 79.1528 + 1.5
 interval = 0.05
-n_points = np.ceil(np.array(upper_bound - lower_bound) / interval)
-true_energy_grid = np.arange(n_points) * interval + lower_bound
+true_energy_grid = np.arange(lower_bound, upper_bound, interval)
 print(f"The shape of true_energy_grid is: {true_energy_grid.shape}")
 
 # %%
-# The true DOS is computed based on eigenvalaues obtained from DFT calculations
+# The true DOS is computed based on eigenvalues obtained from DFT calculations
 # and projected on an energy grid (``true_energy_grid``) of size 4606. However,
 # due to eigenvalue truncation in the dataset, the DOS is not necessarily
 # well-defined at every point on the energy grid. For instance, if the highest
 # computed eigenvalue of a structure A is at 3eV, the computed DOS would
 # indicate that there are no states past 3eV. However, that is false and is
-# merely an artefact of eigenvalue truncation. Hence, an additional mask is
+# merely an artifact of eigenvalue truncation. Hence, an additional mask is
 # included for each structure to show the regions where the DOS is
-# well-defined, 1 indicates that the DOS is well defined and 0 indicates that
-# it is not. The DOS is considered well-defined up to 0.9eV below the minimum
-# energy of the highest band in the DFT calculation. In the following, we plot
-# these quantities, where the mask is multiplied by 10 to enhance visibility
-# in the plot. DOS values where the mask is 0 should not be considered reliable
-# and should be ignored when comparing both spectra.
-
+# well-defined. The DOS is considered well-defined up to 0.9eV below the minimum
+# energy of the highest band in the DFT calculation. Following, we plot
+# these quantities.
 # %%
-plt.plot(true_energy_grid, true_DOS[0], label="DFT DOS", color="red")
+
+i_struct = 0  # index of the structure to visualize
+
+# Plot DOS of the structure
+plt.plot(true_energy_grid, true_DOS[i_struct], label="DFT DOS", color="red")
+# Plot mask for the structure (multiplied by 10 for better visualization)
 plt.plot(
     true_energy_grid,
-    true_mask[0] * 10,
+    true_mask[i_struct] * 10,
     label="Mask x 10",
     linestyle="--",
     color="black",
@@ -107,9 +101,10 @@ plt.legend(fontsize=16)
 plt.tight_layout()
 plt.show()
 # %%
-# Here, we see a visualization of the DOS and the mask for the first sample
-# structure. In this case, the mask is multiplied by 10 so that it is more
-# visible on the plot. The DOS is aligned such that the Fermi level is at 0eV.
+# In this plot, The DOS is aligned such that the Fermi level is at 0eV.
+# DOS values where the mask is 0 should not be considered reliable
+# and should be ignored when comparing both spectra.
+
 
 # %%
 # Step 2: Loading PET-MAD-DOS
@@ -124,18 +119,38 @@ plt.show()
 pet_mad_dos_calculator = PETMADDOSCalculator(version="latest", device="cpu")
 
 # Generate predictions for structures
-energies, pred_DOS = pet_mad_dos_calculator.calculate_dos(sample_MAD_structures)
+energies, pred_DOS = pet_mad_dos_calculator.calculate_dos(structs)
 
 print(f"The shape of pred_DOS is: {pred_DOS.shape}")
 print(f"The shape of energies is: {energies.shape}")
 
+
 # %%
 # Step 3: Visualize the predictions
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Since the absolute energy reference is not well-defined for bulk systems, we
-# need to compare the predicted DOS and the true DOS in a way that is agnostic
-# to the energy reference used. To do this, we will compare these spectra using
-# the energy reference that minimizes the error between them.
+# We can plot the predicted DOS and the true DOS on the same plot
+# to see how they compare.
+
+# Visualize the predictions and the true DOS on the same plot
+plt.plot(energies, pred_DOS[i_struct], label="Predicted DOS", color="blue")
+plt.plot(
+    true_energy_grid, true_DOS[i_struct], label="DFT DOS", linestyle="--", color="red"
+)
+
+plt.xlim(-60, 20)
+plt.tick_params(axis="both", which="major", labelsize=14, width=2, length=6)
+plt.xlabel(r"Energy - $\mathrm{E_F}$ [eV]", size=16)
+plt.ylabel(r"DOS [$\mathrm{states}/eV$]", size=16)
+plt.legend(fontsize=16)
+plt.tight_layout()
+plt.show()
+
+# %%
+# The profiles are very similar, but they are not aligned. This is because
+# the energy reference is not well-defined. For this reason, during training
+# of the model, the predictions are shifted to minimize the error with
+# respect to the true DOS. Therefore, to compare the predicted DOS with the
+# target, we need to do the same procedure.
 
 
 # Define a function that minimizes the RMSE between the predicted and true DOS
@@ -197,13 +212,15 @@ adjusted_true_DOS, adjusted_true_mask = adjust_DOS_and_mask(
 )
 
 # Visualize the predictions and the true DOS on the same plot
-plt.plot(energies, pred_DOS[0], label="Predicted DOS", color="blue")
+plt.plot(energies, pred_DOS[i_struct], label="Predicted DOS", color="blue")
 
-plt.plot(energies, adjusted_true_DOS[0], label="DFT DOS", linestyle="--", color="red")
+plt.plot(
+    energies, adjusted_true_DOS[i_struct], label="DFT DOS", linestyle="--", color="red"
+)
 
 plt.plot(
     energies,
-    adjusted_true_mask[0] * 10,
+    adjusted_true_mask[i_struct] * 10,
     label="Mask x 10",
     linestyle="-.",
     color="black",
@@ -216,6 +233,12 @@ plt.ylabel(r"DOS [$\mathrm{states}/eV$]", size=16)
 plt.legend(fontsize=16)
 plt.tight_layout()
 plt.show()
+
+# %%
+# The alignment shows that the predicted DOS is actually very close to the
+# true DOS for the region where the DOS values are physical, and essentially
+# randomly oscillates after that point.
+
 # %%
 # Step 4: Predicting the Bandgap
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -225,12 +248,10 @@ plt.show()
 # bandgap via a CNN model is more robust than deriving it from the predicted DOS.
 
 
-pred_bandgap = pet_mad_dos_calculator.calculate_bandgap(
-    sample_MAD_structures, dos=pred_DOS
-)
+pred_bandgap = pet_mad_dos_calculator.calculate_bandgap(structs, dos=pred_DOS)
 
 true_bandgap = []
-for i in sample_MAD_structures:
+for i in structs:
     true_bandgap.append(i.info["gap"])
 true_bandgap = torch.tensor(true_bandgap, dtype=torch.float32)
 
@@ -238,7 +259,7 @@ print(f"The predicted bandgaps are : {pred_bandgap}")
 print(f"The DFT bandgaps are : {(true_bandgap)}")
 
 # %%
-# Visualze the predicted and true bandgaps on a parity plot
+# The band gaps show good agreement, following we generate a parity plot:
 
 plt.scatter(pred_bandgap, true_bandgap, color="blue")
 plt.plot([0, 1.4], [0, 1.4], label="y=x", color="red")
@@ -259,6 +280,12 @@ plt.show()
 # %%
 # Step 1: Data Processing
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# The following cells will show how to process a dataset containing eigenvalues
+# to obtain the corresponding DOS and mask that can be used for fine-tuning
+# PET-MAD-DOS.
+# We will start by loading some GaAs sample structures containing eigenvalues and
+# k-point weights from zenodo.
+
 # The data processing pipeline uses the computed eigenvalues at each k-point,
 # along with its associated k-point weight (where relevant) to generate the DOS
 # and mask for each structure. The DOS is generated by applying gaussian
@@ -266,99 +293,129 @@ plt.show()
 # purposes of fine-tuning, the energy grid will be identical to the one used for
 # the training of PET-MAD-DOS.
 
-
-n_extra_targets = 200  # PET-MAD-DOS predicts 200 more DOS
-# values per structure (4806 - 4606 = 200)
-# Load the GaAs sample structures with eigenvalues and k-point weights. These
-# files are hosted on zenodo due to their large size
-
 url = "https://zenodo.org/records/19655792/files/GaAs_sample_structures.xyz?download=1"
 filename = "GaAs_sample_structures.xyz"
 urllib.request.urlretrieve(url, filename)
 GaAs_sample_structures = ase.io.read("GaAs_sample_structures.xyz", ":")
 
-eigenvalues = []
-kweights = []
+# %%
+# Then define the function that will add the computed DOS and mask to the info
+# of each structure.
 
-for structure_i in GaAs_sample_structures:
-    eigenvalues.append(structure_i.info["eigvals"])  # shape (n_kpoints, n_bands)
-    kweights.append(
-        structure_i.info["kweight"]
-    )  # shape (n_kpoints,), sums to 2 in this example
 
-smearing = 0.3  # Same smearing value as the one used in the MAD training data
-energy_grid = true_energy_grid
+def compute_structure_DOS_and_mask(
+    structure: ase.Atoms, smearing: float, energy_grid: np.ndarray, n_extra_targets: int
+):
+    """Compute the DOS and mask for a structure based on its eigenvalues and k-points.
 
-normalization = 1 / np.sqrt(2 * np.pi * smearing**2)  # Gaussian normalization factor
+    The DOS is generated by applying gaussian broadening on each eigenenergy, and
+    projected on an energy grid.
 
-# After defining the energy grid, we can now compute the DOS and the
-# mask for each structure.
-for index in range(len(GaAs_sample_structures)):
+    The dos and mask are added to the info of the structure as "DOS" and "mask"
+    respectively.
+
+    :param structure: The input structure for which the DOS and mask will be computed.
+       This should contain the info fields "eigvals" and "kweight" corresponding to
+       the eigenvalues (n_kpoints, n_bands) and k-point weights (n_kpoints,) obtained
+       from DFT calculations.
+    :param smearing: The smearing value (in eV) to be used for gaussian broadening
+       of the eigenenergies.
+    :param energy_grid: The energy grid (in eV) on which the DOS will be projected.
+    """
+    eigenvalues = structure.info["eigvals"]  # shape (n_kpoints, n_bands)
+    kweights = structure.info["kweight"]  # shape (n_kpoints,), sums to 2
+
     confident_energy_upper_bound = (
-        np.min(eigenvalues[index][:, -1]) - 0.9
+        np.min(eigenvalues[:, -1]) - 0.9
     )  # 0.9eV below the minimum of the highest band
 
-    # Flatten eigenvalues to shape (n_kpoints * n_bands,)
-    eigenvalues_i = eigenvalues[index].flatten()
+    n_bands = eigenvalues.shape[1]
 
+    # Flatten eigenvalues to shape (n_kpoints * n_bands,)
+    eigenvalues = eigenvalues.flatten()
     # Ensure that the eigenvalues are mapped to the correct weight,
     # shape (n_kpoints * n_bands,)
-    kweights_i = kweights[index].repeat(eigenvalues[index].shape[1])
+    kweights = kweights.repeat(n_bands)
 
     # Compute the DOS on the energy grid by applying Gaussian broadening
     # on each eigenvalue
-    delta_E = (energy_grid - eigenvalues_i[:, None]) / smearing
+    delta_E = (energy_grid - eigenvalues[:, None]) / smearing
     gaussian_weights = np.exp(-0.5 * delta_E**2)
-    dos_i = (
-        np.sum(kweights_i[:, None] * gaussian_weights, axis=0) * normalization
+    normalization = 1 / np.sqrt(2 * np.pi * smearing**2)
+    dos = (
+        np.sum(kweights[:, None] * gaussian_weights, axis=0) * normalization
     )  # Apply Gaussian smearing and sum contributions
 
     # Define the mask
-    mask_i = (energy_grid <= confident_energy_upper_bound).astype(int)
+    mask = (energy_grid <= confident_energy_upper_bound).astype(int)
 
     # To prepare the data for fine-tuning, we will pad the DOS and mask with
     # zeros in front based on the number of extra targets that PET-MAD-DOS
     # predicts. These values will be ignored during loss computation.
-    dos_i_padded = np.concatenate([np.zeros(n_extra_targets), dos_i])
-    mask_i_padded = np.concatenate([np.zeros(n_extra_targets), mask_i])
+    dos_padded = np.concatenate([np.zeros(n_extra_targets), dos])
+    mask_padded = np.concatenate([np.zeros(n_extra_targets), mask])
 
     # Store the dos and mask in the structure info for training
-    GaAs_sample_structures[index].info["DOS"] = dos_i_padded.astype(np.float32)
-    GaAs_sample_structures[index].info["mask"] = mask_i_padded.astype(np.float32)
+    structure.info["DOS"] = dos_padded.astype(np.float32)
+    structure.info["mask"] = mask_padded.astype(np.float32)
+
 
 # %%
-# Alternatively, if one uses precomputed DOS data, like the ones on the
-# `MaterialsCloud archive
-# <https://archive.materialscloud.org/records/8ee9k-b7865>`_, one can skip to
-# the end of the data processing pipeline as follows
+# And apply it to each structure in the dataset.
 
+# After defining the energy grid, we can now compute the DOS and the
+# mask for each structure.
+for struct in GaAs_sample_structures:
+    compute_structure_DOS_and_mask(
+        struct,
+        # Same smearing value as the one used in the MAD training data
+        smearing=0.3,
+        # For fine-tuning, we will use the same energy grid as the one used for
+        # training PET-MAD-DOS
+        energy_grid=true_energy_grid,
+        # PET-MAD-DOS predicts 200 more DOS
+        # values per structure (4806 - 4606 = 200)
+        n_extra_targets=200,
+    )
+
+# Store the processed structures as a new XYZ file for fine-tuning
+# ase.io.write("GaAs_processed_structures.xyz", GaAs_sample_structures)
+
+# %%
+# One would save the processed structures as a new XYZ file to to the
+# fine-tuning, as demonstrated in the commented line. However, for the
+# purposes of this tutorial, we will use datasets that have already been
+# processed, as can be obtained from the `MaterialsCloud archive
+# <https://archive.materialscloud.org/records/8ee9k-b7865>`_.
+# We just need to pad the DOS and mask with zeros in front
+# to make the dimensionality compatible with the PET-MAD-DOS predictions.
+
+# PET-MAD-DOS predicts 200 more DOS
+# values per structure (4806 - 4606 = 200)
+n_extra_targets = 200
 
 GaAs_sample_train_structures = ase.io.read("data/GaAs_sample_train_structures.xyz", ":")
 GaAs_sample_val_structures = ase.io.read("data/GaAs_sample_val_structures.xyz", ":")
 GaAs_sample_test_structures = ase.io.read("data/GaAs_sample_test_structures.xyz", ":")
 
+
+def pad_DOS(struct, n_extra_targets):
+    dos_padded = np.concatenate([np.zeros(n_extra_targets), struct.info["DOS"]])
+    mask_padded = np.concatenate([np.zeros(n_extra_targets), struct.info["mask"]])
+
+    struct.info["trainingDOS"] = dos_padded
+    struct.info["trainingmask"] = mask_padded
+
+
 # To prepare the structures for training
-extra_targets = 200
-for i in GaAs_sample_train_structures:
-    dos_i_padded = np.concatenate([np.zeros(n_extra_targets), i.info["DOS"]])
-    mask_i_padded = np.concatenate([np.zeros(n_extra_targets), i.info["mask"]])
+for struct in GaAs_sample_train_structures:
+    pad_DOS(struct, n_extra_targets)
 
-    i.info["trainingDOS"] = dos_i_padded
-    i.info["trainingmask"] = mask_i_padded
+for struct in GaAs_sample_val_structures:
+    pad_DOS(struct, n_extra_targets)
 
-for i in GaAs_sample_val_structures:
-    dos_i_padded = np.concatenate([np.zeros(n_extra_targets), i.info["DOS"]])
-    mask_i_padded = np.concatenate([np.zeros(n_extra_targets), i.info["mask"]])
-
-    i.info["trainingDOS"] = dos_i_padded
-    i.info["trainingmask"] = mask_i_padded
-
-for i in GaAs_sample_test_structures:
-    dos_i_padded = np.concatenate([np.zeros(n_extra_targets), i.info["DOS"]])
-    mask_i_padded = np.concatenate([np.zeros(n_extra_targets), i.info["mask"]])
-
-    i.info["trainingDOS"] = dos_i_padded
-    i.info["trainingmask"] = mask_i_padded
+for struct in GaAs_sample_test_structures:
+    pad_DOS(struct, n_extra_targets)
 
 ase.io.write("GaAs_processed_train.xyz", GaAs_sample_train_structures)
 ase.io.write("GaAs_processed_val.xyz", GaAs_sample_val_structures)
@@ -421,15 +478,15 @@ output = ase.io.read("pred.xyz", ":")
 # demonstration of how to use the fine-tuned model.
 
 predicted_DOS = []
-for i in output:
-    predicted_DOS.append(i.info["mtt::dos"])
+for struct in output:
+    predicted_DOS.append(struct.info["mtt::dos"])
 predicted_DOS = torch.tensor(predicted_DOS)
 
 true_DOS = []
 true_mask = []
-for i in GaAs_sample_test_structures:
-    true_DOS.append(i.info["DOS"])
-    true_mask.append(i.info["mask"])
+for struct in GaAs_sample_test_structures:
+    true_DOS.append(struct.info["DOS"])
+    true_mask.append(struct.info["mask"])
 true_DOS = np.stack(true_DOS)
 true_mask = np.stack(true_mask)
 
@@ -444,14 +501,17 @@ adjusted_true_DOS, adjusted_true_mask = adjust_DOS_and_mask(
 )
 
 # Visualize the predictions and the true DOS on the same plot
+i_struct = 0  # index of the structure to visualize
 
-plt.plot(energies, predicted_DOS[0], label="Predicted DOS", color="blue")
+plt.plot(energies, predicted_DOS[i_struct], label="Predicted DOS", color="blue")
 
-plt.plot(energies, adjusted_true_DOS[0], label="DFT DOS", linestyle="--", color="red")
+plt.plot(
+    energies, adjusted_true_DOS[i_struct], label="DFT DOS", linestyle="--", color="red"
+)
 
 plt.plot(
     energies,
-    adjusted_true_mask[0] * 100,
+    adjusted_true_mask[i_struct] * 100,
     label="Mask x 100",
     linestyle="-.",
     color="black",
