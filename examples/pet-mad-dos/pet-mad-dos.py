@@ -9,6 +9,7 @@ predict the electronic density of states (DOS) of a structure:
 1. **Treating PET-MAD-DOS as a universal model**: using the upet package,
 we will obtain high quality DOS predictions out of the box for a structure
 of interest.
+
 2. **Treating PET-MAD-DOS as a foundation model**: we will illustrate
 how one can use the ``metatrain`` package to fine-tune the PET-MAD-DOS
 model for a specific application.
@@ -46,7 +47,7 @@ import subprocess
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # We will start by loading a sample of structures, along with their associated
 # DOS and mask. These are 5 structures from the training dataset used in the
-# original PET-MAD-DOS publication <https://arxiv.org/abs/2508.17418>`_.
+# original `PET-MAD-DOS publication <https://arxiv.org/abs/2508.17418>`_.
 #
 
 
