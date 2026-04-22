@@ -74,13 +74,12 @@ print(f"The shape of true_energy_grid is: {true_energy_grid.shape}")
 # due to eigenvalue truncation in the dataset, the DOS is not necessarily
 # well-defined at every point on the energy grid. For instance, if the highest
 # computed eigenvalue of a structure A is at 3eV, the computed DOS would
-# indicate that there are no states past 3eV. However, that is false and is
+# indicate that there are no states past 3 eV. However, that is false and is
 # merely an artifact of eigenvalue truncation. Hence, an additional mask is
 # included for each structure to show the regions where the DOS is
 # well-defined. The DOS is considered well-defined up to 0.9eV below the minimum
 # energy of the highest band in the DFT calculation. Following, we plot
-# these quantities.
-# %%
+# an example DOS together with its mask.
 
 i_struct = 0  # index of the structure to visualize
 
