@@ -1,0 +1,10 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - tqdm
+  - matplotlib
+  - pip:
+    - ase>=3.28
+    - upet>=0.2.2

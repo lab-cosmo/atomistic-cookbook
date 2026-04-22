@@ -1,0 +1,57 @@
+device: cpu
+base_precision: 64
+seed: 42
+
+architecture:
+  name: "pet"
+  training:
+    batch_size: 1
+    num_epochs: 10
+    learning_rate: 0.01
+    atomic_baseline:
+      mtt::dos: 0.0
+    scale_targets: false
+    loss:
+      mtt::dos:
+        type: masked_dos
+        weight: 1.0
+        grad_weight: 1e-4
+        int_weight: 2
+        extra_targets: 200  # Number of extra zero-padded targets to ignore during loss computation
+        reduction: mean
+    finetune:
+      method: "full"
+      read_from: pet-mad-dos-v1.0.ckpt
+
+# Section defining the parameters for system and target data
+training_set:
+  systems: GaAs_processed_train.xyz
+  targets:
+    mtt::dos:
+      key: trainingDOS
+      per_atom: false
+      type: scalar
+      num_subtargets: 4806
+  extra_data:
+    mtt::dos_mask:
+      key: trainingmask
+      per_atom: false
+      type: scalar
+      num_subtargets: 4806
+
+validation_set:
+  systems: GaAs_processed_val.xyz
+  targets:
+    mtt::dos:
+      key: trainingDOS
+      per_atom: false
+      type: scalar
+      num_subtargets: 4806
+  extra_data:
+    mtt::dos_mask:
+      key: trainingmask
+      per_atom: false
+      type: scalar
+      num_subtargets: 4806
+
+test_set: 0.0
