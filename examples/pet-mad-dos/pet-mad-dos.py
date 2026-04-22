@@ -101,7 +101,7 @@ plt.legend(fontsize=16)
 plt.tight_layout()
 plt.show()
 # %%
-# In this plot, The DOS is aligned such that the Fermi level is at 0eV.
+# In this plot, the DOS is aligned such that the Fermi level is at 0eV.
 # DOS values where the mask is 0 should not be considered reliable
 # and should be ignored when comparing both spectra.
 
