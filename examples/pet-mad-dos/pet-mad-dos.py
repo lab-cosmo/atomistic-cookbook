@@ -31,6 +31,7 @@ import torch
 import urllib.request
 import os
 import subprocess
+import chemiscope
 
 # %%
 # Using PET-MAD-DOS out of the box
@@ -269,6 +270,64 @@ plt.ylabel(r"DFT Gap [eV]", size=16)
 plt.legend(fontsize=16)
 plt.tight_layout()
 plt.show()
+
+# %%
+# Step 5: Interactive visualization
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# It is possible to visualize the structures, together with their DOS,
+# in a `chemiscope <https://chemiscope.org>`__ widget.
+# The map shows a parity plot of the bandgap predictions,
+# while the DOS can be visualized by clicking on the
+# ``structure`` info panel.
+
+chemiscope.show(
+    structures=structs,
+    properties={
+        "index": np.arange(len(structs)),
+        "gap": {
+            "target": "structure",
+            "units": "eV",
+            "values": true_bandgap.numpy(),
+            "description": "Reference band gap",
+        },
+        "predicted gap": {
+            "target": "structure",
+            "units": "eV",
+            "values": true_bandgap.numpy(),
+            "description": "Band gap predicted by PET-MAD-DOS",
+        },
+        "DOS": {
+            "target": "structure",
+            "units": "1/eV",
+            "values": true_DOS,
+            "description": "Reference density of states",
+            "parameters": ["energy"],
+        },
+        "predicted DOS": {
+            "target": "structure",
+            "units": "1/eV",
+            "values": pred_DOS,
+            "description": "Density of states predicted by PET-MAD-DOS",
+            "parameters": ["pred_energy"],
+        },
+    },
+    parameters={
+        "energy": {
+            "name": "Energy grid",
+            "units": "eV",
+            "values": true_energy_grid,
+        },
+        "pred_energy": {
+            "name": "Energy grid",
+            "units": "eV",
+            "values": energies,
+        },
+    },
+    settings=chemiscope.quick_settings(x="predicted gap", y="gap", periodic=True),
+)
+
+
 # %%
 # Finetuning PET-MAD-DOS on specific applications
 # --------------------------------------------------
