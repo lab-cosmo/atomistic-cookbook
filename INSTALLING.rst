@@ -38,7 +38,7 @@ and run the recipe file.
 .. code-block:: bash
 
    # When you want to use the environment
-   conda env activate --name <recipe-env-path>
+   conda activate <recipe-env-path>
    
    # You should be able to run the recipe within the environment 
    python recipe.py
@@ -58,11 +58,11 @@ you should run
 .. code-block:: bash
 
    # Activate the environment 
-   conda env activate --name <recipe-env-path>
+   conda activate <recipe-env-path>
    pip install ipykernel # in case is not part of the environment
    
    # Create the kernel definition
-   python -m ipykernel install --user --name recipe-env-path --display-name "Python (recipe)"
+   python -m ipykernel install --user --name <recipe> --display-name "Python (<recipe>)"
    
    # You can launch Jupyter from outside the conda environment,
    # unless you also need conda-installed executables. When you open

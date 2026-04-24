@@ -20,12 +20,13 @@ supporting data files.
 
 The fist step to run your recipe is to create a `conda` custom environment
 If you have never used conda before, you may want to read this
-`beginners guide <https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html>`_.
+`beginners guide 
+<https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html>`_.
 
 .. code-block:: bash
 
    # Deflate the downloaded archive of the recipe
-   unzip recipe.zip # you may have done this already
+   unzip recipe.zip  # you may have done this already
    
    # Pick a path where to create the environment and replace 
    # <recipe-env-path> with it - this creates a local folder 
@@ -39,7 +40,7 @@ and run the recipe file.
 .. code-block:: bash
 
    # When you want to use the environment
-   conda env activate --name <recipe-env-path>
+   conda activate <recipe-env-path>
    
    # You should be able to run the recipe within the environment 
    python recipe.py
@@ -59,11 +60,11 @@ you should run
 .. code-block:: bash
 
    # Activate the environment 
-   conda env activate --name <recipe-env-path>
+   conda activate <recipe-env-path>
    pip install ipykernel # in case is not part of the environment
    
    # Create the kernel definition
-   python -m ipykernel install --user --name recipei-env-path --display-name "Python (recipe)"
+   python -m ipykernel install --user --name <recipe> --display-name "Python (<recipe>)"
    
    # You can launch Jupyter from outside the conda environment,
    # unless you also need conda-installed executables. When you open
