@@ -1,0 +1,23 @@
+#include "oplsaa.ff/forcefield.itp"
+
+[ moleculetype ]
+; Name            nrexcl
+Ethanol           3
+
+[ atoms ]
+; nr  type  resnr  resname  atom  cgnr  charge  mass
+   1  opls_135  1  ETOH     C1     1     0.000  12.011
+   2  opls_135  1  ETOH     C2     2     0.000  12.011
+   3  opls_154  1  ETOH     O1     3     0.000  15.999
+   4  opls_140  1  ETOH     H11    4     0.000   1.008
+   5  opls_140  1  ETOH     H12    5     0.000   1.008
+   6  opls_140  1  ETOH     H13    6     0.000   1.008
+   7  opls_140  1  ETOH     H21    7     0.000   1.008
+   8  opls_140  1  ETOH     H22    8     0.000   1.008
+   9  opls_155  1  ETOH     HO     9     0.000   1.008
+
+[ system ]
+Ethanol in Vacuum
+
+[ molecules ]
+Ethanol           1
