@@ -9,9 +9,10 @@ dependencies:
     - ase
     - chemiscope>=1.0
     - ipi>=3.1.5
-    - metatensor-torch<0.8
+    - metatensor-torch>=0.8,<0.9
     - metatensor-operations
     - matplotlib
     - metatomic-torch
-    - vesin-torch <=0.3.7
+    - vesin>=0.5.4
+    - vesin-torch>=0.5.4
     - torch-pme>=0.3.1,<0.4

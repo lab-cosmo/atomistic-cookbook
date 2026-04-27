@@ -1,0 +1,8 @@
+systems: 
+  read_from: ./GaAs_processed_test.xyz
+targets:
+  mtt::dos:
+    key: trainingDOS
+    per_atom: false
+    type: scalar
+    num_subtargets: 4806
