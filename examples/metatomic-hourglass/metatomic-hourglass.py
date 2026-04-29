@@ -13,8 +13,6 @@ import matplotlib.pyplot as plt
 
 from metatomic.torch import AtomisticModel, load_atomistic_model
 
-type Ensemble = Literal["nve", "nvt"]
-
 
 # %%
 def get_pet() -> AtomisticModel:
@@ -111,7 +109,7 @@ def get_dpa3() -> AtomisticModel:
 
 # %%
 def run_ase(
-    model: AtomisticModel, ensemble: Ensemble
+    model: AtomisticModel, ensemble: Literal["nve", "nvt"]
 ) -> Tuple[List[float], List[float]]:
     if ensemble != "nve":
         raise NotImplementedError("only nve is implemented for ase")
@@ -153,7 +151,7 @@ def run_ase(
 
 # %%
 def run_lammps(
-    model: AtomisticModel, ensemble: Ensemble
+    model: AtomisticModel, ensemble: Literal["nve", "nvt"]
 ) -> Tuple[List[float], List[float]]:
     if ensemble != "nve":
         raise NotImplementedError("only nve is implemented for lammps")
@@ -174,8 +172,7 @@ def run_lammps(
     nstep = 100
 
     with open("lammps.in", "w") as f:
-        f.write(
-            f"""units metal
+        f.write(f"""units metal
 atom_style atomic
 
 read_data ethanol.data
@@ -198,8 +195,7 @@ run_style verlet
 fix 2 all print 1 "$(time) $(pe)" file lammps.out screen no
 
 run {nstep}
-"""
-        )
+""")
 
     # run lammps
     subprocess.run(
@@ -216,7 +212,7 @@ run {nstep}
 
 # %%
 def run_ipi(
-    model: AtomisticModel, ensemble: Ensemble
+    model: AtomisticModel, ensemble: Literal["nve", "nvt"]
 ) -> Tuple[List[float], List[float]]:
     if ensemble != "nvt":
         raise NotImplementedError("only nvt is implemented for i-pi")
@@ -255,7 +251,7 @@ def run_ipi(
 
 # %%
 def run_torchsim(
-    model: AtomisticModel, ensemble: Ensemble
+    model: AtomisticModel, ensemble: Literal["nve", "nvt"]
 ) -> Tuple[List[float], List[float]]:
     from functools import partial
     import ase.io
@@ -296,7 +292,9 @@ def run_torchsim(
     return times, energies  # return time in fs and energy in eV
 
 
-def run_gromacs(model, ensemble: Ensemble) -> Tuple[List[float], List[float]]:
+def run_gromacs(
+    model, ensemble: Literal["nve", "nvt"]
+) -> Tuple[List[float], List[float]]:
     if ensemble != "nvt":
         raise NotImplementedError("only nvt is implemented for gromacs")
 
