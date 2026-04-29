@@ -111,8 +111,9 @@ def get_dpa3() -> AtomisticModel:
 def run_ase(
     model: AtomisticModel, ensemble: Literal["nve", "nvt"]
 ) -> Tuple[List[float], List[float]]:
-    if ensemble != "nve":
-        raise NotImplementedError("only nve is implemented for ase")
+
+    if ensemble not in ["nve", "nvt"]:
+        raise NotImplementedError("only nve and nvt are implemented for ase")
 
     import ase.io
     import ase.md
@@ -127,16 +128,19 @@ def run_ase(
     # set up the integrator
     dt = 1.0 * ase.units.fs
     n_steps = 100
-    integrator = ase.md.VelocityVerlet(
-        atoms,
-        timestep=dt,
-    )
-    # integrator = ase.md.Langevin(
-    #     atoms,
-    #     timestep=dt,
-    #     temperature_K=300,
-    #     friction=0.1 / ase.units.fs,
-    # )
+    if ensemble == "nve":
+        integrator = ase.md.VelocityVerlet(
+            atoms,
+            timestep=dt,
+        )
+    else:
+        assert ensemble == "nvt"
+        integrator = ase.md.Langevin(
+            atoms,
+            timestep=dt,
+            temperature_K=300,
+            friction=0.1 / ase.units.fs,
+        )
 
     # run a short MD simulation and store the potential energy
     time = []
