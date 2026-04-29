@@ -8,10 +8,12 @@ Metatomic hourglass demonstration
 
 # %%
 
-from typing import List, Tuple
+from typing import List, Tuple, Literal
 import matplotlib.pyplot as plt
 
 from metatomic.torch import AtomisticModel, load_atomistic_model
+
+type Ensemble = Literal["nve", "nvt"]
 
 
 # %%
@@ -107,7 +109,9 @@ def get_dpa3() -> AtomisticModel:
 
 
 # %%
-def run_ase(model: AtomisticModel) -> Tuple[List[float], List[float]]:
+def run_ase(model: AtomisticModel, ensemble: Ensemble) -> Tuple[List[float], List[float]]:
+    if ensemble != "nve":
+        raise NotImplementedError("only nve is implemented for ase")
 
     import ase.io
     import ase.md
@@ -145,7 +149,10 @@ def run_ase(model: AtomisticModel) -> Tuple[List[float], List[float]]:
 
 
 # %%
-def run_lammps(model: AtomisticModel) -> Tuple[List[float], List[float]]:
+def run_lammps(model: AtomisticModel, ensemble: Ensemble) -> Tuple[List[float], List[float]]:
+    if ensemble != "nve":
+        raise NotImplementedError("only nve is implemented for lammps")
+
     import ase.io
     import subprocess
     import numpy as np
@@ -203,12 +210,10 @@ run {nstep}
 
 
 # %%
-def run_gromacs(model: AtomisticModel):
-    print("works!")
+def run_ipi(model: AtomisticModel, ensemble: Ensemble) -> Tuple[List[float], List[float]]:
+    if ensemble != "nvt":
+        raise NotImplementedError("only nvt is implemented for i-pi")
 
-
-# %%
-def run_ipi(model: AtomisticModel):
     import ase.io
     from ipi.utils.scripting import (
         simulation_xml,
@@ -242,12 +247,20 @@ def run_ipi(model: AtomisticModel):
 
 
 # %%
-def run_torchsim(model: AtomisticModel):
+def run_torchsim(model: AtomisticModel, ensemble: Ensemble) -> Tuple[List[float], List[float]]:
+    from functools import partial
     import ase.io
     import torch_sim as ts
     from torch_sim.units import MetalUnits
 
     from metatomic_torchsim import MetatomicModel
+
+    # decide which functions to use based on the ensemble
+    fns = {
+        "nve": (ts.nve_init, ts.nve_step), 
+        "nvt": (ts.nvt_langevin_init, partial(ts.nvt_langevin_step, gammma=10 / MetalUnits.time)),
+    }
+    init_fn, step_fn = fns[ensemble]
 
     # save the model to be reloaded by TorchSim
     model.save("model.pt")
@@ -256,24 +269,25 @@ def run_torchsim(model: AtomisticModel):
     atoms = ase.io.read("data/ethanol.xyz")
     sim_state = ts.initialize_state(atoms, device=model.device, dtype=model.dtype)
 
-    # initialize the NVT state
+    # initialize the simulation state
     dt = 1e-3 * MetalUnits.time  # 1 fs time step
-    gamma = 10 / MetalUnits.time
     kt = 300.0 * MetalUnits.temperature
-    # md_state = ts.nvt_langevin_init(sim_state, model, kT=kt)
-    md_state = ts.nve_init(sim_state, model, kT=kt)
+    md_state = init_fn(sim_state, model, kT=kt)
 
+    # run 100 fs of MD
     times, energies = [], []
     for step in range(100):
-        # md_state = ts.nvt_langevin_step(md_state, model, dt=dt, kT=kt, gamma=gamma)
-        md_state = ts.nve_step(md_state, model, dt=dt)
+        md_state = step_fn(md_state, model, dt=dt)
         times.append(float(step))
         energies.append(md_state.energy.sum().item())
 
     return times, energies  # return time in fs and energy in eV
 
 
-def run_gromacs(model):
+def run_gromacs(model, ensemble: Ensemble) -> Tuple[List[float], List[float]]:
+    if ensemble != "nvt":
+        raise NotImplementedError("only nvt is implemented for gromacs")
+
     import subprocess
     import numpy as np
 
@@ -341,11 +355,12 @@ all_models = [
 all_engines = [
     run_torchsim,
     run_ase,
-    run_lammps,
-    run_gromacs,
+    #run_lammps,
+    #run_gromacs,
     # run_ipi,
 ]
 
+# %%
 fig, ax = plt.subplots(len(all_engines), len(all_models), figsize=(15, 8))
 
 for model_i, model_getter in enumerate(all_models):
@@ -354,7 +369,7 @@ for model_i, model_getter in enumerate(all_models):
         print(
             f"Running {run_engine.__engine_name__} with {model_getter.__model_name__}"
         )
-        times, energies = run_engine(model)
+        times, energies = run_engine(model, ensemble="nvt")
         ax[engine_i, model_i].plot(times, energies)
         ax[engine_i, model_i].set_title(
             f"{run_engine.__engine_name__} — {model_getter.__model_name__}"
@@ -365,3 +380,23 @@ for model_i, model_getter in enumerate(all_models):
 
 plt.tight_layout()
 plt.show()
+
+# %%
+# Plot NVE trajectories -- they should be similar across engines, but may differ across
+# models. We put them all in the same figure to make it easier to compare.
+
+plt.ylabel("Energy (eV)")
+plt.xlabel("Time (fs)")
+for model_i, model_getter in enumerate(all_models):
+    model = model_getter()
+    for engine_i, run_engine in enumerate(all_engines):
+        print(
+            f"Running {run_engine.__engine_name__} with {model_getter.__model_name__}"
+        )
+        times, energies = run_engine(model, ensemble="nve")
+        plt.plot(times, energies, label=f"{run_engine.__engine_name__} — {model_getter.__model_name__}")
+plt.legend()
+plt.tight_layout()
+plt.show()
+
+# %%
