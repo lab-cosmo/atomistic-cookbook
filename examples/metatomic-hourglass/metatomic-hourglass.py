@@ -269,7 +269,7 @@ def run_torchsim(
         "nve": (ts.nve_init, ts.nve_step),
         "nvt": (
             ts.nvt_langevin_init,
-            partial(ts.nvt_langevin_step, gammma=10 / MetalUnits.time),
+            partial(ts.nvt_langevin_step, gamma=10 / MetalUnits.time),
         ),
     }
     init_fn, step_fn = fns[ensemble]
@@ -289,7 +289,7 @@ def run_torchsim(
     # run 100 fs of MD
     times, energies = [], []
     for step in range(100):
-        md_state = step_fn(md_state, model, dt=dt)
+        md_state = step_fn(md_state, model, dt=dt, kT=kt)
         times.append(float(step))
         energies.append(md_state.energy.sum().item())
 
@@ -369,7 +369,7 @@ all_engines = [
     run_ase,
     run_lammps,
     run_gromacs,
-    # run_ipi,
+    run_ipi,
 ]
 
 # %%
