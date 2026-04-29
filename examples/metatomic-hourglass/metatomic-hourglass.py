@@ -48,6 +48,7 @@ def get_pet() -> AtomisticModel:
 # Export a MACE model following the instructions in the
 # `metatrain documentation <https://docs.metatensor.org/metatrain/latest/architectures/generated/mace.html#exporting-a-foundation-mace-model>`_.
 
+
 def get_mace() -> AtomisticModel:
     import urllib.request
     import subprocess
@@ -109,7 +110,9 @@ def get_dpa3() -> AtomisticModel:
 
 
 # %%
-def run_ase(model: AtomisticModel, ensemble: Ensemble) -> Tuple[List[float], List[float]]:
+def run_ase(
+    model: AtomisticModel, ensemble: Ensemble
+) -> Tuple[List[float], List[float]]:
     if ensemble != "nve":
         raise NotImplementedError("only nve is implemented for ase")
 
@@ -149,7 +152,9 @@ def run_ase(model: AtomisticModel, ensemble: Ensemble) -> Tuple[List[float], Lis
 
 
 # %%
-def run_lammps(model: AtomisticModel, ensemble: Ensemble) -> Tuple[List[float], List[float]]:
+def run_lammps(
+    model: AtomisticModel, ensemble: Ensemble
+) -> Tuple[List[float], List[float]]:
     if ensemble != "nve":
         raise NotImplementedError("only nve is implemented for lammps")
 
@@ -210,7 +215,9 @@ run {nstep}
 
 
 # %%
-def run_ipi(model: AtomisticModel, ensemble: Ensemble) -> Tuple[List[float], List[float]]:
+def run_ipi(
+    model: AtomisticModel, ensemble: Ensemble
+) -> Tuple[List[float], List[float]]:
     if ensemble != "nvt":
         raise NotImplementedError("only nvt is implemented for i-pi")
 
@@ -247,7 +254,9 @@ def run_ipi(model: AtomisticModel, ensemble: Ensemble) -> Tuple[List[float], Lis
 
 
 # %%
-def run_torchsim(model: AtomisticModel, ensemble: Ensemble) -> Tuple[List[float], List[float]]:
+def run_torchsim(
+    model: AtomisticModel, ensemble: Ensemble
+) -> Tuple[List[float], List[float]]:
     from functools import partial
     import ase.io
     import torch_sim as ts
@@ -257,8 +266,11 @@ def run_torchsim(model: AtomisticModel, ensemble: Ensemble) -> Tuple[List[float]
 
     # decide which functions to use based on the ensemble
     fns = {
-        "nve": (ts.nve_init, ts.nve_step), 
-        "nvt": (ts.nvt_langevin_init, partial(ts.nvt_langevin_step, gammma=10 / MetalUnits.time)),
+        "nve": (ts.nve_init, ts.nve_step),
+        "nvt": (
+            ts.nvt_langevin_init,
+            partial(ts.nvt_langevin_step, gammma=10 / MetalUnits.time),
+        ),
     }
     init_fn, step_fn = fns[ensemble]
 
@@ -355,8 +367,8 @@ all_models = [
 all_engines = [
     run_torchsim,
     run_ase,
-    #run_lammps,
-    #run_gromacs,
+    run_lammps,
+    run_gromacs,
     # run_ipi,
 ]
 
@@ -394,7 +406,11 @@ for model_i, model_getter in enumerate(all_models):
             f"Running {run_engine.__engine_name__} with {model_getter.__model_name__}"
         )
         times, energies = run_engine(model, ensemble="nve")
-        plt.plot(times, energies, label=f"{run_engine.__engine_name__} — {model_getter.__model_name__}")
+        plt.plot(
+            times,
+            energies,
+            label=f"{run_engine.__engine_name__} — {model_getter.__model_name__}",
+        )
 plt.legend()
 plt.tight_layout()
 plt.show()
