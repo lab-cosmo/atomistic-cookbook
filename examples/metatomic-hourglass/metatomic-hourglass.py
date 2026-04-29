@@ -43,15 +43,62 @@ def get_pet() -> AtomisticModel:
 
 
 # %%
+# Export a MACE model following the instructions in the
+# `metatrain documentation <https://docs.metatensor.org/metatrain/latest/architectures/generated/mace.html#exporting-a-foundation-mace-model>`_.
+
 def get_mace() -> AtomisticModel:
     import urllib.request
-    from metatrain.experimental.mace.utils._load_model_file import load_mace_model_file
+    import subprocess
+    import textwrap
 
+    # Download model.
     path = "https://github.com/ACEsuit/mace-foundations/releases/download/mace_omat_0/mace-omat-0-small.model"
     urllib.request.urlretrieve(path, "mace-omat-0-small.model")
 
-    mace = load_mace_model_file("mace-omat-0-small.model", "energy", "cpu")
-    return mace.export()
+    # Training yaml with 0 epochs
+    train_yaml = """\
+    architecture:
+        name: experimental.mace
+        model:
+            mace_model: mace-omat-0-small.model
+            mace_head_target: energy
+        training:
+            num_epochs: 0
+            batch_size: 1
+
+    training_set: mace_dummy_dataset.xyz
+    validation_set: 0.0
+    """
+
+    # A dummy dataset with a single H2 molecule, it will
+    # not really get used. The only thing that has to be
+    # correct is the name of the targets ("energy", "forces").
+    dummy_dataset = """\
+    2
+    Properties=species:S:1:pos:R:3:forces:R:3 energy=-2.1
+    H 0.0 0.0 0.0 0.0 0.0 0.0
+    H 1.0 0.0 0.0 0.0 0.0 0.0
+    """
+
+    # Write the training yaml and dummy dataset to disk
+    with open("mace_train.yaml", "w") as f:
+        f.write(textwrap.dedent(train_yaml))
+    with open("mace_dummy_dataset.xyz", "w") as f:
+        f.write(textwrap.dedent(dummy_dataset))
+
+    # Run training.
+    subprocess.run(
+        [
+            "mtt",
+            "train",
+            "mace_train.yaml",
+            "--output",
+            "model.pt",
+        ],
+        check=True,
+    )
+
+    return load_atomistic_model("model.pt")
 
 
 # %%
