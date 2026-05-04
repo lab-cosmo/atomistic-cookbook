@@ -6,6 +6,10 @@ dependencies:
   - pip:
     - ase>=3.23
     - upet>=0.2.1
+    # upet 0.2.2 hard-pins nvalchemi-toolkit-ops==0.2.0, which uses the removed
+    # wp.vec API and crashes at import on warp-lang>=1.10. Force >=0.3.0 so pip
+    # falls back to upet 0.2.1 (no nvalchemi pin) with the fixed nvalchemi build.
+    - nvalchemi-toolkit-ops>=0.3.0
     - chemiscope>1.0
     - kaldo
     - spglib
