@@ -5,10 +5,10 @@ dependencies:
   - pip
   - pip:
     - ase
-    - upet>=0.2.1
+    - upet>=0.2.3
     - ipi
     - chemiscope>=1.0.1
     - matplotlib
-    - metatomic-torch<=0.1.8
+    - metatomic-torch
     - vesin>=0.5
     - requests
