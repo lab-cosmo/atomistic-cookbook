@@ -1,0 +1,986 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="search" title="Search" href="../../search.html"><link rel="next" title="A ML model for the electron density of states" href="../dos-align/dos-align.html"><link rel="prev" title="List of all recipes" href="../../all-examples.html">
+        <link rel="canonical" href="https://atomistic-cookbook.org/examples/pet-mad-dos/pet-mad-dos.html">
+        <link rel="prefetch" href="../../_static/cookbook-icon.svg" as="image">
+
+    <link rel="shortcut icon" href="../../_static/cookbook-icon.png"><!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>A Guide to PET-MAD-DOS: Model Inference and Fine-Tuning - The Atomistic Cookbook</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/cookbook.css?v=d86cfb60" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">The Atomistic Cookbook</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/cookbook-icon.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">The Atomistic Cookbook</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../topics/index.html">Recipes grouped by topic</a><input aria-label="Toggle navigation of Recipes grouped by topic" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/sampling.html">Statistical sampling and dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/analysis.html">Analysis and post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/ml-models.html">Machine learning models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/universal.html">Universal ML models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/nqes.html">Nuclear quantum effects</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../software/index.html">Recipes grouped by software used</a><input aria-label="Toggle navigation of Recipes grouped by software used" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../software/chemiscope.html">chemiscope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/cp2k.html">cp2k</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/eon.html">eon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/featomic.html">featomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/gromacs.html">GROMACS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/i-pi.html">i-PI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/kaldo.html">kALDo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/lammps.html">LAMMPS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/metatensor.html">metatensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/plumed.html">PLUMED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/scikit-matter.html">scikit-matter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/torch-pme.html">torch-pme</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../all-examples.html">List of all recipes</a><input aria-label="Toggle navigation of List of all recipes" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">A Guide to PET-MAD-DOS: Model Inference and Fine-Tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dos-align/dos-align.html">A ML model for the electron density of states</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-model/water-model.html">Atomistic Water Model for Molecular Dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../batch-cp2k/reference-trajectory.html">Batch run of CP2K calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../shiftml/shiftml-example.html">Computing NMR shielding tensors using ShiftML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft-nc.html">Conservative fine-tuning for a PET model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermostats/thermostats.html">Constant-temperature MD and thermostats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../polarizability/polarizability.html">Equivariant linear model for polarizability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../learn-tensors-with-mcov/learn-tensors-with-mcov.html">Equivariant model for tensorial properties based on scalar features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../eon-pet-neb/eon-pet-neb.html">Finding Reaction Paths with eOn and a Metatomic Potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft.html">Fine-tuning the PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../roy-gch/roy-gch.html">Generalized Convex Hull construction for the polymorphs of ROY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-relaxation/pet-relaxation.html">Geometry relaxation with unconstrained MLIPs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hamiltonian-qm7/hamiltonian-qm7.html">Hamiltonian Learning for Molecules with Indirect Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../torchpme/torchpme_learning.html">Learning Capabilities with torchpme</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lpr/lpr.html">Local Prediction Rigidity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lode-linear/lode-linear.html">Long-distance Equivariants: a tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flashmd/flashmd-demo.html">Long-stride trajectories with a universal FlashMD model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-nc/pet-mad-nc.html">MD using direct-force predictions with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metatomic-plumed/metatomic-plumed.html">ML collective variables in PLUMED with metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ml-mm/ml-mm.html">ML/MM Simulations with GROMACS and Metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../mendeleev/mendeleev.html">Mendeleev clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-mts-rpc/mts-rpc.html">Multiple time stepping and ring-polymer contraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../gaas-map/gaas-map.html">PCA/PCovR Visualization of a training dataset for a potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-metad/pi-metad.html">Path integral metadynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../path-integrals/path-integrals.html">Path integral molecular dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../periodic-hamiltonian/periodic-hamiltonian.html">Periodic Hamiltonian learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-phonons/pet-phonons.html">Phonon dispersions with unconstrained models and uncertainty quantification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../heat-capacity/heat-capacity.html">Quantum heat capacity of water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ring-polymer-instanton/rpi-rates.html">Ring Polymer Instanton Rate Theory: Tunneling Rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rotate-equivariants/rotate-equivariants.html">Rotating equivariants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sample-selection/sample-selection.html">Sample and Feature Selection with FPS and CUR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad/pet-mad.html">The PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermal-conductivity-bte/thermal-conductivity-bte.html">Thermal conductivity from the Boltzmann transport equation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-uq/pet-mad-uq.html">Uncertainty Quantification with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-pulsed/water-pulsed.html">Water orientation in a pulsed electric field</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../downloading.html">Downloading and running the recipes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing a recipe</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-examples-pet-mad-dos-pet-mad-dos-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="a-guide-to-pet-mad-dos-model-inference-and-fine-tuning">
+<span id="sphx-glr-examples-pet-mad-dos-pet-mad-dos-py"></span><h1>A Guide to PET-MAD-DOS: Model Inference and Fine-Tuning<a class="headerlink" href="#a-guide-to-pet-mad-dos-model-inference-and-fine-tuning" title="Link to this heading">¶</a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Authors<span class="colon">:</span></dt>
+<dd class="field-odd"><p>How Wei Bin <a class="reference external" href="https://github.com/HowWeiBin/">&#64;HowWeiBin</a></p>
+</dd>
+</dl>
+<p>This tutorial describes two ways in which one can use PET-MAD-DOS to
+predict the electronic density of states (DOS) of a structure:</p>
+<p>1. <strong>Treating PET-MAD-DOS as a universal model</strong>: using the upet package,
+we will obtain high quality DOS predictions out of the box for a structure
+of interest.</p>
+<p>2. <strong>Treating PET-MAD-DOS as a foundation model</strong>: we will illustrate
+how one can use the <code class="docutils literal notranslate"><span class="pre">metatrain</span></code> package to fine-tune the PET-MAD-DOS
+model for a specific application.</p>
+<p>In the process, we will also go through the necessary
+data processing pipeline, starting from basic DFT outputs.</p>
+<p>First, let’s begin by importing the necessary packages and helper functions</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># sphinx_gallery_thumbnail_number = 2</span>
+</pre></div>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">upet.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">PETMADDOSCalculator</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ase</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ase.io</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">urllib.request</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+</pre></div>
+</div>
+<section id="using-pet-mad-dos-out-of-the-box">
+<h2>Using PET-MAD-DOS out of the box<a class="headerlink" href="#using-pet-mad-dos-out-of-the-box" title="Link to this heading">¶</a></h2>
+<p>In this section, we are going to treat PET-MAD-DOS as a universal
+model and use it out-of-the-box to obtain predictions of the DOS for a sample
+of structures.</p>
+<section id="step-1-loading-sample-structures">
+<h3>Step 1: Loading Sample Structures<a class="headerlink" href="#step-1-loading-sample-structures" title="Link to this heading">¶</a></h3>
+<p>We will start by loading a sample of structures, along with their associated
+DOS and mask. These are 5 structures from the training dataset used in the
+original <a class="reference external" href="https://arxiv.org/abs/2508.17418">PET-MAD-DOS publication</a>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the structures</span>
+<span class="n">structs</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;data/MAD_sample_structures.xyz&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">)</span>
+
+<span class="c1"># Extract the DOS and mask</span>
+<span class="n">true_DOS</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;DOS&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">structs</span><span class="p">])</span>
+<span class="n">true_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;mask&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">structs</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The shape of true_DOS is: </span><span class="si">{</span><span class="n">true_DOS</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The shape of true_mask is: </span><span class="si">{</span><span class="n">true_mask</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Define the energy grid for the DOS</span>
+<span class="n">lower_bound</span><span class="p">,</span> <span class="n">upper_bound</span> <span class="o">=</span> <span class="o">-</span><span class="mf">148.1456</span> <span class="o">-</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">79.1528</span> <span class="o">+</span> <span class="mf">1.5</span>
+<span class="n">interval</span> <span class="o">=</span> <span class="mf">0.05</span>
+<span class="n">true_energy_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">lower_bound</span><span class="p">,</span> <span class="n">upper_bound</span><span class="p">,</span> <span class="n">interval</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The shape of true_energy_grid is: </span><span class="si">{</span><span class="n">true_energy_grid</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The shape of true_DOS is: (5, 4606)
+The shape of true_mask is: (5, 4606)
+The shape of true_energy_grid is: (4606,)
+</pre></div>
+</div>
+<p>The true DOS is computed based on eigenvalues obtained from DFT calculations
+and projected on an energy grid (<code class="docutils literal notranslate"><span class="pre">true_energy_grid</span></code>) of size 4606. However,
+due to eigenvalue truncation in the dataset, the DOS is not necessarily
+well-defined at every point on the energy grid. For instance, if the highest
+computed eigenvalue of a structure A is at 3eV, the computed DOS would
+indicate that there are no states past 3 eV. However, that is false and is
+merely an artifact of eigenvalue truncation. Hence, an additional mask is
+included for each structure to show the regions where the DOS is
+well-defined. The DOS is considered well-defined up to 0.9eV below the minimum
+energy of the highest band in the DFT calculation. Following, we plot
+an example DOS together with its mask.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">i_struct</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># index of the structure to visualize</span>
+
+<span class="c1"># Plot DOS of the structure</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">true_energy_grid</span><span class="p">,</span> <span class="n">true_DOS</span><span class="p">[</span><span class="n">i_struct</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;DFT DOS&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+<span class="c1"># Plot mask for the structure (multiplied by 10 for better visualization)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">true_energy_grid</span><span class="p">,</span>
+    <span class="n">true_mask</span><span class="p">[</span><span class="n">i_struct</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Mask x 10&quot;</span><span class="p">,</span>
+    <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="o">-</span><span class="mi">60</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s2">&quot;major&quot;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Energy - $\mathrm</span><span class="si">{E_F}</span><span class="s2">$ [eV]&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;DOS [$\mathrm</span><span class="si">{states}</span><span class="s2">/eV$]&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_pet-mad-dos_001.png" srcset="../../_images/sphx_glr_pet-mad-dos_001.png" alt="pet mad dos" class = "sphx-glr-single-img"/><p>In this plot, the DOS is aligned such that the Fermi level is at 0eV.
+DOS values where the mask is 0 should not be considered reliable
+and should be ignored when comparing both spectra.</p>
+</section>
+<section id="step-2-loading-pet-mad-dos">
+<h3>Step 2: Loading PET-MAD-DOS<a class="headerlink" href="#step-2-loading-pet-mad-dos" title="Link to this heading">¶</a></h3>
+<p>Here we will load the PET-MAD-DOS model using the upet package and use it to
+predict the DOS. Although the target has size 4606 as seen in the cells above,
+in order to accomodate the energy reference agnostic loss function,
+PET-MAD-DOS predicts on a larger energy grid (<cite>energies</cite>) of size 4806.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the calculator</span>
+<span class="n">pet_mad_dos_calculator</span> <span class="o">=</span> <span class="n">PETMADDOSCalculator</span><span class="p">(</span><span class="n">version</span><span class="o">=</span><span class="s2">&quot;latest&quot;</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+
+<span class="c1"># Generate predictions for structures</span>
+<span class="n">energies</span><span class="p">,</span> <span class="n">pred_DOS</span> <span class="o">=</span> <span class="n">pet_mad_dos_calculator</span><span class="o">.</span><span class="n">calculate_dos</span><span class="p">(</span><span class="n">structs</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The shape of pred_DOS is: </span><span class="si">{</span><span class="n">pred_DOS</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The shape of energies is: </span><span class="si">{</span><span class="n">energies</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/pet-mad-dos/lib/python3.12/site-packages/metatomic_ase/_neighbors.py:78: UserWarning: `compute_requested_neighbors_from_options` is deprecated and will be removed in a future version. Please use `neighbor_lists_for_model` to get the calculators and call them directly.
+  vesin.metatomic.compute_requested_neighbors_from_options(
+The shape of pred_DOS is: torch.Size([5, 4806])
+The shape of energies is: torch.Size([4806])
+</pre></div>
+</div>
+</section>
+<section id="step-3-visualize-the-predictions">
+<h3>Step 3: Visualize the predictions<a class="headerlink" href="#step-3-visualize-the-predictions" title="Link to this heading">¶</a></h3>
+<p>We can plot the predicted DOS and the true DOS on the same plot
+to see how they compare.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Visualize the predictions and the true DOS on the same plot</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">energies</span><span class="p">,</span> <span class="n">pred_DOS</span><span class="p">[</span><span class="n">i_struct</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Predicted DOS&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">true_energy_grid</span><span class="p">,</span> <span class="n">true_DOS</span><span class="p">[</span><span class="n">i_struct</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;DFT DOS&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="o">-</span><span class="mi">60</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s2">&quot;major&quot;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Energy - $\mathrm</span><span class="si">{E_F}</span><span class="s2">$ [eV]&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;DOS [$\mathrm</span><span class="si">{states}</span><span class="s2">/eV$]&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_pet-mad-dos_002.png" srcset="../../_images/sphx_glr_pet-mad-dos_002.png" alt="pet mad dos" class = "sphx-glr-single-img"/><p>The profiles are very similar, but they are not aligned. This is because
+the energy reference is not well-defined. For this reason, during training
+of the model, the predictions are shifted to minimize the error with
+respect to the true DOS. Therefore, to compare the predicted DOS with the
+target, we need to do the same procedure.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define a function that minimizes the RMSE between the predicted and true DOS</span>
+<span class="c1"># by shifting the energy axis</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_dynamic_shift_agnostic_mse</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">cutoff_mask</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">predictions</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">targets</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="n">smaller</span> <span class="o">=</span> <span class="n">predictions</span>
+        <span class="n">bigger</span> <span class="o">=</span> <span class="n">targets</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">smaller</span> <span class="o">=</span> <span class="n">targets</span>
+        <span class="n">bigger</span> <span class="o">=</span> <span class="n">predictions</span>
+
+    <span class="n">bigger_unfolded</span> <span class="o">=</span> <span class="n">bigger</span><span class="o">.</span><span class="n">unfold</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">smaller</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">smaller_expanded</span> <span class="o">=</span> <span class="n">smaller</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">delta</span> <span class="o">=</span> <span class="n">smaller_expanded</span> <span class="o">-</span> <span class="n">bigger_unfolded</span>
+    <span class="n">dynamic_delta</span> <span class="o">=</span> <span class="n">delta</span> <span class="o">*</span> <span class="n">cutoff_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">device</span> <span class="o">=</span> <span class="n">predictions</span><span class="o">.</span><span class="n">device</span>
+    <span class="n">losses</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dynamic_delta</span> <span class="o">*</span> <span class="n">dynamic_delta</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">front_tail</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">predictions</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">shape_difference</span> <span class="o">=</span> <span class="n">predictions</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">targets</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">additional_error</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">predictions</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">front_tail</span><span class="p">[:,</span> <span class="p">:</span><span class="n">shape_difference</span><span class="p">],</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">total_losses</span> <span class="o">=</span> <span class="n">losses</span> <span class="o">+</span> <span class="n">additional_error</span>
+    <span class="n">final_loss</span><span class="p">,</span> <span class="n">shift</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">total_losses</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">final_loss</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span><span class="p">,</span> <span class="n">shift</span>
+
+
+<span class="c1"># Compute the optimal shift and the associated MSE</span>
+<span class="n">MSEs</span><span class="p">,</span> <span class="n">shifts</span> <span class="o">=</span> <span class="n">get_dynamic_shift_agnostic_mse</span><span class="p">(</span>
+    <span class="n">pred_DOS</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">true_DOS</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">true_mask</span><span class="p">)</span>
+<span class="p">)</span>
+
+
+<span class="c1"># Function that adjusts the true DOS and mask so that it is aligned to the</span>
+<span class="c1"># predictions based on the optimal shift obtained above. This is useful for</span>
+<span class="c1"># visualizing the predictions and the true DOS on the same plot.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">adjust_DOS_and_mask</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">shift</span><span class="p">):</span>
+    <span class="n">adjusted_DOSes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">adjusted_mask</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">shift</span><span class="p">):</span>
+        <span class="n">front_pad</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="n">end_pad</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">200</span> <span class="o">-</span> <span class="n">s</span><span class="p">)</span>  <span class="c1"># 200 is because the dimensionality of</span>
+        <span class="c1"># the prediction is 200 larger than</span>
+        <span class="c1"># that of the target</span>
+        <span class="n">adjusted_DOSes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">front_pad</span><span class="p">,</span> <span class="n">target</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">end_pad</span><span class="p">]))</span>
+        <span class="n">adjusted_mask</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">front_pad</span><span class="p">,</span> <span class="n">mask</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">end_pad</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">adjusted_DOSes</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">adjusted_mask</span><span class="p">)</span>
+
+
+<span class="c1"># Adjust the DOS and mask based on the optimal shifts obtained above</span>
+<span class="n">adjusted_true_DOS</span><span class="p">,</span> <span class="n">adjusted_true_mask</span> <span class="o">=</span> <span class="n">adjust_DOS_and_mask</span><span class="p">(</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">true_DOS</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">true_mask</span><span class="p">),</span> <span class="n">shifts</span>
+<span class="p">)</span>
+
+<span class="c1"># Visualize the predictions and the true DOS on the same plot</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">energies</span><span class="p">,</span> <span class="n">pred_DOS</span><span class="p">[</span><span class="n">i_struct</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Predicted DOS&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">energies</span><span class="p">,</span> <span class="n">adjusted_true_DOS</span><span class="p">[</span><span class="n">i_struct</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;DFT DOS&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">energies</span><span class="p">,</span>
+    <span class="n">adjusted_true_mask</span><span class="p">[</span><span class="n">i_struct</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Mask x 10&quot;</span><span class="p">,</span>
+    <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;-.&quot;</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="o">-</span><span class="mi">60</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s2">&quot;major&quot;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Energy - $\mathrm</span><span class="si">{E_F}</span><span class="s2">$ [eV]&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;DOS [$\mathrm</span><span class="si">{states}</span><span class="s2">/eV$]&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_pet-mad-dos_003.png" srcset="../../_images/sphx_glr_pet-mad-dos_003.png" alt="pet mad dos" class = "sphx-glr-single-img"/><p>The alignment shows that the predicted DOS is actually very close to the
+true DOS for the region where the DOS values are physical, and essentially
+randomly oscillates after that point.</p>
+</section>
+<section id="step-4-predicting-the-bandgap">
+<h3>Step 4: Predicting the Bandgap<a class="headerlink" href="#step-4-predicting-the-bandgap" title="Link to this heading">¶</a></h3>
+<p>Additionally, PET-MAD-DOS comes with a CNN bandgap model that predicts the gap
+of a system based on the predicted DOS. Due to the inherent model noise and
+the high sensitivity of the bandgap to small errors in the DOS, obtaining the
+bandgap via a CNN model is more robust than deriving it from the predicted DOS.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">pred_bandgap</span> <span class="o">=</span> <span class="n">pet_mad_dos_calculator</span><span class="o">.</span><span class="n">calculate_bandgap</span><span class="p">(</span><span class="n">structs</span><span class="p">,</span> <span class="n">dos</span><span class="o">=</span><span class="n">pred_DOS</span><span class="p">)</span>
+
+<span class="n">true_bandgap</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">structs</span><span class="p">:</span>
+    <span class="n">true_bandgap</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;gap&quot;</span><span class="p">])</span>
+<span class="n">true_bandgap</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">true_bandgap</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The predicted bandgaps are : </span><span class="si">{</span><span class="n">pred_bandgap</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The DFT bandgaps are : </span><span class="si">{</span><span class="p">(</span><span class="n">true_bandgap</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The predicted bandgaps are : tensor([0.0185, 1.0744, 0.3747, 1.3778, 0.0000])
+The DFT bandgaps are : tensor([0.0000, 1.1067, 0.3567, 1.2842, 0.0000])
+</pre></div>
+</div>
+<p>The band gaps show good agreement, following we generate a parity plot:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">pred_bandgap</span><span class="p">,</span> <span class="n">true_bandgap</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.4</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.4</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;y=x&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s2">&quot;major&quot;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Predicted Gap [eV]&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;DFT Gap [eV]&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_pet-mad-dos_004.png" srcset="../../_images/sphx_glr_pet-mad-dos_004.png" alt="pet mad dos" class = "sphx-glr-single-img"/></section>
+</section>
+<section id="finetuning-pet-mad-dos-on-specific-applications">
+<h2>Finetuning PET-MAD-DOS on specific applications<a class="headerlink" href="#finetuning-pet-mad-dos-on-specific-applications" title="Link to this heading">¶</a></h2>
+<p>In this section, we are going to treat PET-MAD-DOS as a foundation
+model and finetune it on a Gallium Arsenide (GaAs) system. We will first
+demonstrate the data processing pipeline starting from DFT outputs, and then
+we will show how to use the <cite>metatrain</cite> package to finetune the model.</p>
+<section id="step-1-data-processing">
+<h3>Step 1: Data Processing<a class="headerlink" href="#step-1-data-processing" title="Link to this heading">¶</a></h3>
+<p>The following cells will show how to process a dataset containing eigenvalues
+to obtain the corresponding DOS and mask that can be used for fine-tuning
+PET-MAD-DOS.
+We will start by loading some GaAs sample structures containing eigenvalues and
+k-point weights from zenodo.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://zenodo.org/records/19655792/files/GaAs_sample_structures.xyz?download=1&quot;</span>
+<span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;GaAs_sample_structures.xyz&quot;</span>
+<span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlretrieve</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+<span class="n">GaAs_sample_structures</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;GaAs_sample_structures.xyz&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Then define the function that will add the computed DOS and mask to the info
+of each structure.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">compute_structure_DOS_and_mask</span><span class="p">(</span>
+    <span class="n">structure</span><span class="p">:</span> <span class="n">ase</span><span class="o">.</span><span class="n">Atoms</span><span class="p">,</span> <span class="n">smearing</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">energy_grid</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">n_extra_targets</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the DOS and mask for a structure based on its eigenvalues and k-points.</span>
+
+<span class="sd">    The DOS is generated by applying gaussian broadening on each eigenenergy, and</span>
+<span class="sd">    projected on an energy grid.</span>
+
+<span class="sd">    The dos and mask are added to the info of the structure as &quot;DOS&quot; and &quot;mask&quot;</span>
+<span class="sd">    respectively.</span>
+
+<span class="sd">    :param structure: The input structure for which the DOS and mask will be computed.</span>
+<span class="sd">       This should contain the info fields &quot;eigvals&quot; and &quot;kweight&quot; corresponding to</span>
+<span class="sd">       the eigenvalues (n_kpoints, n_bands) and k-point weights (n_kpoints,) obtained</span>
+<span class="sd">       from DFT calculations.</span>
+<span class="sd">    :param smearing: The smearing value (in eV) to be used for gaussian broadening</span>
+<span class="sd">       of the eigenenergies.</span>
+<span class="sd">    :param energy_grid: The energy grid (in eV) on which the DOS will be projected.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">structure</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;eigvals&quot;</span><span class="p">]</span>  <span class="c1"># shape (n_kpoints, n_bands)</span>
+    <span class="n">kweights</span> <span class="o">=</span> <span class="n">structure</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;kweight&quot;</span><span class="p">]</span>  <span class="c1"># shape (n_kpoints,), sums to 2</span>
+
+    <span class="n">confident_energy_upper_bound</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="mf">0.9</span>
+    <span class="p">)</span>  <span class="c1"># 0.9eV below the minimum of the highest band</span>
+
+    <span class="n">n_bands</span> <span class="o">=</span> <span class="n">eigenvalues</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># Flatten eigenvalues to shape (n_kpoints * n_bands,)</span>
+    <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">eigenvalues</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="c1"># Ensure that the eigenvalues are mapped to the correct weight,</span>
+    <span class="c1"># shape (n_kpoints * n_bands,)</span>
+    <span class="n">kweights</span> <span class="o">=</span> <span class="n">kweights</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">n_bands</span><span class="p">)</span>
+
+    <span class="c1"># Compute the DOS on the energy grid by applying Gaussian broadening</span>
+    <span class="c1"># on each eigenvalue</span>
+    <span class="n">delta_E</span> <span class="o">=</span> <span class="p">(</span><span class="n">energy_grid</span> <span class="o">-</span> <span class="n">eigenvalues</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">/</span> <span class="n">smearing</span>
+    <span class="n">gaussian_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">delta_E</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">normalization</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">smearing</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">dos</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">kweights</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">gaussian_weights</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">normalization</span>
+    <span class="p">)</span>  <span class="c1"># Apply Gaussian smearing and sum contributions</span>
+
+    <span class="c1"># Define the mask</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">energy_grid</span> <span class="o">&lt;=</span> <span class="n">confident_energy_upper_bound</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="c1"># To prepare the data for fine-tuning, we will pad the DOS and mask with</span>
+    <span class="c1"># zeros in front based on the number of extra targets that PET-MAD-DOS</span>
+    <span class="c1"># predicts. These values will be ignored during loss computation.</span>
+    <span class="n">dos_padded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_extra_targets</span><span class="p">),</span> <span class="n">dos</span><span class="p">])</span>
+    <span class="n">mask_padded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_extra_targets</span><span class="p">),</span> <span class="n">mask</span><span class="p">])</span>
+
+    <span class="c1"># Store the dos and mask in the structure info for training</span>
+    <span class="n">structure</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;DOS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dos_padded</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">structure</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mask_padded</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>And apply it to each structure in the dataset.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># After defining the energy grid, we can now compute the DOS and the</span>
+<span class="c1"># mask for each structure.</span>
+<span class="k">for</span> <span class="n">struct</span> <span class="ow">in</span> <span class="n">GaAs_sample_structures</span><span class="p">:</span>
+    <span class="n">compute_structure_DOS_and_mask</span><span class="p">(</span>
+        <span class="n">struct</span><span class="p">,</span>
+        <span class="c1"># Same smearing value as the one used in the MAD training data</span>
+        <span class="n">smearing</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+        <span class="c1"># For fine-tuning, we will use the same energy grid as the one used for</span>
+        <span class="c1"># training PET-MAD-DOS</span>
+        <span class="n">energy_grid</span><span class="o">=</span><span class="n">true_energy_grid</span><span class="p">,</span>
+        <span class="c1"># PET-MAD-DOS predicts 200 more DOS</span>
+        <span class="c1"># values per structure (4806 - 4606 = 200)</span>
+        <span class="n">n_extra_targets</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<span class="c1"># Store the processed structures as a new XYZ file for fine-tuning</span>
+<span class="c1"># ase.io.write(&quot;GaAs_processed_structures.xyz&quot;, GaAs_sample_structures)</span>
+</pre></div>
+</div>
+<p>One would save the processed structures as a new XYZ file to to the
+fine-tuning, as demonstrated in the commented line. However, for the
+purposes of this tutorial, we will use datasets that have already been
+processed, as can be obtained from the <a class="reference external" href="https://archive.materialscloud.org/records/8ee9k-b7865">MaterialsCloud archive</a>.
+We just need to pad the DOS and mask with zeros in front
+to make the dimensionality compatible with the PET-MAD-DOS predictions.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># PET-MAD-DOS predicts 200 more DOS</span>
+<span class="c1"># values per structure (4806 - 4606 = 200)</span>
+<span class="n">n_extra_targets</span> <span class="o">=</span> <span class="mi">200</span>
+
+<span class="n">GaAs_sample_train_structures</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;data/GaAs_sample_train_structures.xyz&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">)</span>
+<span class="n">GaAs_sample_val_structures</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;data/GaAs_sample_val_structures.xyz&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">)</span>
+<span class="n">GaAs_sample_test_structures</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;data/GaAs_sample_test_structures.xyz&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">pad_DOS</span><span class="p">(</span><span class="n">struct</span><span class="p">,</span> <span class="n">n_extra_targets</span><span class="p">):</span>
+    <span class="n">dos_padded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_extra_targets</span><span class="p">),</span> <span class="n">struct</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;DOS&quot;</span><span class="p">]])</span>
+    <span class="n">mask_padded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_extra_targets</span><span class="p">),</span> <span class="n">struct</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;mask&quot;</span><span class="p">]])</span>
+
+    <span class="n">struct</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;trainingDOS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dos_padded</span>
+    <span class="n">struct</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;trainingmask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mask_padded</span>
+
+
+<span class="c1"># To prepare the structures for training</span>
+<span class="k">for</span> <span class="n">struct</span> <span class="ow">in</span> <span class="n">GaAs_sample_train_structures</span><span class="p">:</span>
+    <span class="n">pad_DOS</span><span class="p">(</span><span class="n">struct</span><span class="p">,</span> <span class="n">n_extra_targets</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">struct</span> <span class="ow">in</span> <span class="n">GaAs_sample_val_structures</span><span class="p">:</span>
+    <span class="n">pad_DOS</span><span class="p">(</span><span class="n">struct</span><span class="p">,</span> <span class="n">n_extra_targets</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">struct</span> <span class="ow">in</span> <span class="n">GaAs_sample_test_structures</span><span class="p">:</span>
+    <span class="n">pad_DOS</span><span class="p">(</span><span class="n">struct</span><span class="p">,</span> <span class="n">n_extra_targets</span><span class="p">)</span>
+
+<span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;GaAs_processed_train.xyz&quot;</span><span class="p">,</span> <span class="n">GaAs_sample_train_structures</span><span class="p">)</span>
+<span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;GaAs_processed_val.xyz&quot;</span><span class="p">,</span> <span class="n">GaAs_sample_val_structures</span><span class="p">)</span>
+<span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;GaAs_processed_test.xyz&quot;</span><span class="p">,</span> <span class="n">GaAs_sample_test_structures</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="step-2-model-loading">
+<h3>Step 2: Model Loading<a class="headerlink" href="#step-2-model-loading" title="Link to this heading">¶</a></h3>
+<p>Now we need to download the PET-MAD-DOS checkpoint and place it in the
+local directory so that it can be referenced in the metatrain YAML
+configuration files for fine-tuning.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Download the checkpoint from Zenodo and copy it to the local directory</span>
+<span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://zenodo.org/records/19655792/files/pet-mad-dos-v1.0.ckpt?download=1&quot;</span>
+
+<span class="n">checkpoint_path</span> <span class="o">=</span> <span class="s2">&quot;pet-mad-dos-v1.0.ckpt&quot;</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Downloading PET-MAD-DOS checkpoint...&quot;</span><span class="p">)</span>
+    <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlretrieve</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">checkpoint_path</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading PET-MAD-DOS checkpoint...
+</pre></div>
+</div>
+</section>
+<section id="step-3-fine-tuning-the-model">
+<h3>Step 3: Fine-tuning the model<a class="headerlink" href="#step-3-fine-tuning-the-model" title="Link to this heading">¶</a></h3>
+<p>Now we are ready to fine-tune the model using the <cite>metatrain</cite> package. We
+will use the <cite>mtt train</cite> command to train the model, alongside with a
+supporting YAML configuration file that specifies the training hyperparameters.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cpu</span>
+<span class="nt">base_precision</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">64</span>
+<span class="nt">seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+
+<span class="nt">architecture</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;pet&quot;</span>
+<span class="w">  </span><span class="nt">training</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">num_epochs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+<span class="w">    </span><span class="nt">learning_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.01</span>
+<span class="w">    </span><span class="nt">atomic_baseline</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">mtt::dos</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+<span class="w">    </span><span class="nt">scale_targets</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">    </span><span class="nt">loss</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">mtt::dos</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">masked_dos</span>
+<span class="w">        </span><span class="nt">weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+<span class="w">        </span><span class="nt">grad_weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1e-4</span>
+<span class="w">        </span><span class="nt">int_weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">        </span><span class="nt">extra_targets</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">200</span><span class="w">  </span><span class="c1"># Number of extra zero-padded targets to ignore during loss computation</span>
+<span class="w">        </span><span class="nt">reduction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mean</span>
+<span class="w">    </span><span class="nt">finetune</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;full&quot;</span>
+<span class="w">      </span><span class="nt">read_from</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pet-mad-dos-v1.0.ckpt</span>
+
+<span class="c1"># Section defining the parameters for system and target data</span>
+<span class="nt">training_set</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">systems</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">GaAs_processed_train.xyz</span>
+<span class="w">  </span><span class="nt">targets</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">mtt::dos</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">trainingDOS</span>
+<span class="w">      </span><span class="nt">per_atom</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scalar</span>
+<span class="w">      </span><span class="nt">num_subtargets</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4806</span>
+<span class="w">  </span><span class="nt">extra_data</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">mtt::dos_mask</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">trainingmask</span>
+<span class="w">      </span><span class="nt">per_atom</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scalar</span>
+<span class="w">      </span><span class="nt">num_subtargets</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4806</span>
+
+<span class="nt">validation_set</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">systems</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">GaAs_processed_val.xyz</span>
+<span class="w">  </span><span class="nt">targets</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">mtt::dos</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">trainingDOS</span>
+<span class="w">      </span><span class="nt">per_atom</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scalar</span>
+<span class="w">      </span><span class="nt">num_subtargets</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4806</span>
+<span class="w">  </span><span class="nt">extra_data</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">mtt::dos_mask</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">trainingmask</span>
+<span class="w">      </span><span class="nt">per_atom</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scalar</span>
+<span class="w">      </span><span class="nt">num_subtargets</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4806</span>
+
+<span class="nt">test_set</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+</pre></div>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Begin finetuning</span>
+<span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="p">[</span><span class="s2">&quot;mtt&quot;</span><span class="p">,</span> <span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;finetune.yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="s2">&quot;fine_tune-model.pt&quot;</span><span class="p">],</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>CompletedProcess(args=[&#39;mtt&#39;, &#39;train&#39;, &#39;finetune.yaml&#39;, &#39;-o&#39;, &#39;fine_tune-model.pt&#39;], returncode=0)
+</pre></div>
+</div>
+</section>
+<section id="step-4-evaluating-the-model">
+<h3>Step 4: Evaluating the model<a class="headerlink" href="#step-4-evaluating-the-model" title="Link to this heading">¶</a></h3>
+<p>After training, we can evaluate the model on the test set using the <cite>mtt eval</cite>
+command, alongside with a supporting YAML configuration file that specifies the
+evaluation hyperparameters.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">systems</span><span class="p">:</span><span class="w"> </span>
+<span class="w">  </span><span class="nt">read_from</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./GaAs_processed_test.xyz</span>
+<span class="nt">targets</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">mtt::dos</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">trainingDOS</span>
+<span class="w">    </span><span class="nt">per_atom</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scalar</span>
+<span class="w">    </span><span class="nt">num_subtargets</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4806</span>
+</pre></div>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="p">[</span><span class="s2">&quot;mtt&quot;</span><span class="p">,</span> <span class="s2">&quot;eval&quot;</span><span class="p">,</span> <span class="s2">&quot;fine_tune-model.pt&quot;</span><span class="p">,</span> <span class="s2">&quot;eval.yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="s2">&quot;pred.xyz&quot;</span><span class="p">],</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="n">output</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;pred.xyz&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>As we have only fine-tuned for 10 epochs on a tiny dataset, the model
+performance is not expected to be good. However, this simply serves as a
+demonstration of how to use the fine-tuned model.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">predicted_DOS</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">struct</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
+    <span class="n">predicted_DOS</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;mtt::dos&quot;</span><span class="p">])</span>
+<span class="n">predicted_DOS</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">predicted_DOS</span><span class="p">)</span>
+
+<span class="n">true_DOS</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">true_mask</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">struct</span> <span class="ow">in</span> <span class="n">GaAs_sample_test_structures</span><span class="p">:</span>
+    <span class="n">true_DOS</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;DOS&quot;</span><span class="p">])</span>
+    <span class="n">true_mask</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;mask&quot;</span><span class="p">])</span>
+<span class="n">true_DOS</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">true_DOS</span><span class="p">)</span>
+<span class="n">true_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">true_mask</span><span class="p">)</span>
+
+<span class="c1"># Compute the optimal shift and the associated MSE</span>
+<span class="n">MSEs</span><span class="p">,</span> <span class="n">shifts</span> <span class="o">=</span> <span class="n">get_dynamic_shift_agnostic_mse</span><span class="p">(</span>
+    <span class="n">predicted_DOS</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">true_DOS</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">true_mask</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># Adjust the DOS and mask based on the optimal shifts obtained above</span>
+<span class="n">adjusted_true_DOS</span><span class="p">,</span> <span class="n">adjusted_true_mask</span> <span class="o">=</span> <span class="n">adjust_DOS_and_mask</span><span class="p">(</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">true_DOS</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">true_mask</span><span class="p">),</span> <span class="n">shifts</span>
+<span class="p">)</span>
+
+<span class="c1"># Visualize the predictions and the true DOS on the same plot</span>
+<span class="n">i_struct</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># index of the structure to visualize</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">energies</span><span class="p">,</span> <span class="n">predicted_DOS</span><span class="p">[</span><span class="n">i_struct</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Predicted DOS&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">energies</span><span class="p">,</span> <span class="n">adjusted_true_DOS</span><span class="p">[</span><span class="n">i_struct</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;DFT DOS&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">energies</span><span class="p">,</span>
+    <span class="n">adjusted_true_mask</span><span class="p">[</span><span class="n">i_struct</span><span class="p">]</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Mask x 100&quot;</span><span class="p">,</span>
+    <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;-.&quot;</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s2">&quot;major&quot;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Energy - $\mathrm</span><span class="si">{E_F}</span><span class="s2">$ [eV]&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;DOS [$\mathrm</span><span class="si">{states}</span><span class="s2">/eV$]&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_pet-mad-dos_005.png" srcset="../../_images/sphx_glr_pet-mad-dos_005.png" alt="pet mad dos" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/home/runner/work/atomistic-cookbook/atomistic-cookbook/examples/pet-mad-dos/pet-mad-dos.py:476: UserWarning: Creating a tensor from a list of numpy.ndarrays is extremely slow. Please consider converting the list to a single numpy.ndarray with numpy.array() before converting to a tensor. (Triggered internally at /pytorch/torch/csrc/utils/tensor_new.cpp:253.)
+  predicted_DOS = torch.tensor(predicted_DOS)
+</pre></div>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (4 minutes 20.930 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-pet-mad-dos-pet-mad-dos-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/521346eca075e7656df60b572bb5e855/pet-mad-dos.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">pet-mad-dos.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/3cae65941152a193f60cde2809292bed/pet-mad-dos.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">pet-mad-dos.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/3b5ac3cb3716c2c54d3b9dcd2c8ff24f/pet-mad-dos.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">recipe:</span> <span class="pre">pet-mad-dos.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../dos-align/dos-align.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">A ML model for the electron density of states</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../../all-examples.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">List of all recipes</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; BSD 3-Clause License, Copyright (c) 2026, The atomistic cookbook team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">A Guide to PET-MAD-DOS: Model Inference and Fine-Tuning</a><ul>
+<li><a class="reference internal" href="#using-pet-mad-dos-out-of-the-box">Using PET-MAD-DOS out of the box</a><ul>
+<li><a class="reference internal" href="#step-1-loading-sample-structures">Step 1: Loading Sample Structures</a></li>
+<li><a class="reference internal" href="#step-2-loading-pet-mad-dos">Step 2: Loading PET-MAD-DOS</a></li>
+<li><a class="reference internal" href="#step-3-visualize-the-predictions">Step 3: Visualize the predictions</a></li>
+<li><a class="reference internal" href="#step-4-predicting-the-bandgap">Step 4: Predicting the Bandgap</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#finetuning-pet-mad-dos-on-specific-applications">Finetuning PET-MAD-DOS on specific applications</a><ul>
+<li><a class="reference internal" href="#step-1-data-processing">Step 1: Data Processing</a></li>
+<li><a class="reference internal" href="#step-2-model-loading">Step 2: Model Loading</a></li>
+<li><a class="reference internal" href="#step-3-fine-tuning-the-model">Step 3: Fine-tuning the model</a></li>
+<li><a class="reference internal" href="#step-4-evaluating-the-model">Step 4: Evaluating the model</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script data-domain="atomistic-cookbook.org" defer="defer" src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"></script>
+    <script src="../../_static/all-examples-data.js?v=4ff62313"></script>
+    <script src="../../_static/daily-recipe.js?v=b5e71911"></script>
+    </body>
+</html>

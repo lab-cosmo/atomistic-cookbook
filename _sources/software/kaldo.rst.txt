@@ -1,0 +1,29 @@
+kALDo
+=====
+
+kALDo is an open-source package for computing phonon transport properties by
+solving the linearized Boltzmann transport equation (BTE).  It supports
+several solution methods (direct inversion, relaxation-time approximation,
+self-consistent iteration) and can use force constants from any calculator.
+Learn more about it on its `homepage
+<https://nanotheorygroup.github.io/kaldo/>`_ or `the github repository
+<https://github.com/nanotheorygroup/kaldo>`_.
+
+
+
+.. grid:: 1 2 2 3
+    :gutter: 1 1 2 3
+
+    .. grid-item::
+
+        .. card:: Thermal conductivity from the Boltzmann transport equation
+            :link: ../examples/thermal-conductivity-bte/thermal-conductivity-bte
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/thermal-conductivity-bte/images/thumb/sphx_glr_thermal-conductivity-bte_thumb.png
+                :alt: This recipe shows how to compute lattice thermal conductivity \kappa by solving the phonon Boltzmann transport equation (BTE) with kALDo and the PET-MAD universal machine-learning potential via the UPET calculator.
+                :class: gallery-img
+
+                

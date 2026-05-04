@@ -1,0 +1,1508 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="search" title="Search" href="../../search.html"><link rel="next" title="Hamiltonian Learning for Molecules with Indirect Targets" href="../hamiltonian-qm7/hamiltonian-qm7.html"><link rel="prev" title="Generalized Convex Hull construction for the polymorphs of ROY" href="../roy-gch/roy-gch.html">
+        <link rel="canonical" href="https://atomistic-cookbook.org/examples/pet-relaxation/pet-relaxation.html">
+        <link rel="prefetch" href="../../_static/cookbook-icon.svg" as="image">
+
+    <link rel="shortcut icon" href="../../_static/cookbook-icon.png"><!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>Geometry relaxation with unconstrained MLIPs - The Atomistic Cookbook</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/cookbook.css?v=d86cfb60" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">The Atomistic Cookbook</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/cookbook-icon.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">The Atomistic Cookbook</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../topics/index.html">Recipes grouped by topic</a><input aria-label="Toggle navigation of Recipes grouped by topic" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/sampling.html">Statistical sampling and dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/analysis.html">Analysis and post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/ml-models.html">Machine learning models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/universal.html">Universal ML models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/nqes.html">Nuclear quantum effects</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../software/index.html">Recipes grouped by software used</a><input aria-label="Toggle navigation of Recipes grouped by software used" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../software/chemiscope.html">chemiscope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/cp2k.html">cp2k</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/eon.html">eon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/featomic.html">featomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/gromacs.html">GROMACS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/i-pi.html">i-PI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/kaldo.html">kALDo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/lammps.html">LAMMPS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/metatensor.html">metatensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/plumed.html">PLUMED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/scikit-matter.html">scikit-matter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/torch-pme.html">torch-pme</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../all-examples.html">List of all recipes</a><input aria-label="Toggle navigation of List of all recipes" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-dos/pet-mad-dos.html">A Guide to PET-MAD-DOS: Model Inference and Fine-Tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dos-align/dos-align.html">A ML model for the electron density of states</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-model/water-model.html">Atomistic Water Model for Molecular Dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../batch-cp2k/reference-trajectory.html">Batch run of CP2K calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../shiftml/shiftml-example.html">Computing NMR shielding tensors using ShiftML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft-nc.html">Conservative fine-tuning for a PET model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermostats/thermostats.html">Constant-temperature MD and thermostats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../polarizability/polarizability.html">Equivariant linear model for polarizability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../learn-tensors-with-mcov/learn-tensors-with-mcov.html">Equivariant model for tensorial properties based on scalar features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../eon-pet-neb/eon-pet-neb.html">Finding Reaction Paths with eOn and a Metatomic Potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft.html">Fine-tuning the PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../roy-gch/roy-gch.html">Generalized Convex Hull construction for the polymorphs of ROY</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Geometry relaxation with unconstrained MLIPs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hamiltonian-qm7/hamiltonian-qm7.html">Hamiltonian Learning for Molecules with Indirect Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../torchpme/torchpme_learning.html">Learning Capabilities with torchpme</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lpr/lpr.html">Local Prediction Rigidity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lode-linear/lode-linear.html">Long-distance Equivariants: a tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flashmd/flashmd-demo.html">Long-stride trajectories with a universal FlashMD model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-nc/pet-mad-nc.html">MD using direct-force predictions with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metatomic-plumed/metatomic-plumed.html">ML collective variables in PLUMED with metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ml-mm/ml-mm.html">ML/MM Simulations with GROMACS and Metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../mendeleev/mendeleev.html">Mendeleev clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-mts-rpc/mts-rpc.html">Multiple time stepping and ring-polymer contraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../gaas-map/gaas-map.html">PCA/PCovR Visualization of a training dataset for a potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-metad/pi-metad.html">Path integral metadynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../path-integrals/path-integrals.html">Path integral molecular dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../periodic-hamiltonian/periodic-hamiltonian.html">Periodic Hamiltonian learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-phonons/pet-phonons.html">Phonon dispersions with unconstrained models and uncertainty quantification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../heat-capacity/heat-capacity.html">Quantum heat capacity of water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ring-polymer-instanton/rpi-rates.html">Ring Polymer Instanton Rate Theory: Tunneling Rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rotate-equivariants/rotate-equivariants.html">Rotating equivariants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sample-selection/sample-selection.html">Sample and Feature Selection with FPS and CUR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad/pet-mad.html">The PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermal-conductivity-bte/thermal-conductivity-bte.html">Thermal conductivity from the Boltzmann transport equation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-uq/pet-mad-uq.html">Uncertainty Quantification with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-pulsed/water-pulsed.html">Water orientation in a pulsed electric field</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../downloading.html">Downloading and running the recipes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing a recipe</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-examples-pet-relaxation-pet-relaxation-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="geometry-relaxation-with-unconstrained-mlips">
+<span id="sphx-glr-examples-pet-relaxation-pet-relaxation-py"></span><h1>Geometry relaxation with unconstrained MLIPs<a class="headerlink" href="#geometry-relaxation-with-unconstrained-mlips" title="Link to this heading">¶</a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Authors<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Paolo Pegolo <a class="reference external" href="https://github.com/ppegolo/">&#64;ppegolo</a>
+Michele Ceriotti <a class="reference external" href="https://github.com/ceriottm/">&#64;ceriottm</a></p>
+</dd>
+</dl>
+<p>This recipe shows how to perform geometry optimization with <em>unconstrained</em>
+machine-learning interatomic potentials (MLIPs), and what tools are available
+to control symmetry during relaxation.</p>
+<p>Unconstrained models, such as the <a class="reference external" href="https://proceedings.neurips.cc/paper_files/paper/2023/file/fb4a7e3522363907b26a86cc5be627ac-Paper-Conference.pdf">Point-Edge Transformer (PET)</a>
+learns symmetry through data augmentation rather than having it encoded by
+construction (see also the
+<a class="reference external" href="https://atomistic-cookbook.org/examples/pet-mad/pet-mad.html">PET-MAD recipe</a>).
+This means that PET’s predicted forces and stresses can have a small nonzero
+residual even on perfect high-symmetry structures. During optimization, this
+residual breaks degeneracies: if a structure sits on a saddle point, the
+optimizer will move off it toward a nearby minimum. The practical consequence
+is that a plain relaxation does not necessarily preserve the initial symmetry.
+When the starting configuration is close to a local minimum, this introduces
+small distortions that could be problematic for some applications (e.g. when
+automatically building brillouin zone paths for
+<a class="reference external" href="https://atomistic-cookbook.org/examples/pet-phonons/pet-phonons.html">phonon calculations</a>).
+When the starting configuration is unstable, the unconstrained model will
+naturally find the nearest minimum, which is often desirable but not always
+(e.g., when you want to study a specific metastable or high-symmetry phase).</p>
+<p>This recipe covers the workflow for handling this behavior:</p>
+<ol class="arabic simple">
+<li><p><strong>Unconstrained relaxation</strong>: let the optimizer find the nearest minimum.
+Use <code class="docutils literal notranslate"><span class="pre">spglib</span></code> to identify the symmetry of the result and <code class="docutils literal notranslate"><span class="pre">standardize_cell</span></code>
+to obtain a clean primitive cell.</p></li>
+<li><p><strong>Constrained relaxation with</strong> <code class="docutils literal notranslate"><span class="pre">FixSymmetry</span></code>: when you want to study a
+<em>specific</em> phase (e.g., a metastable or high-symmetry structure), lock in
+its symmetry before optimizing.</p></li>
+<li><p><strong>Rotational averaging</strong>: a calculator-level option that reduces the
+symmetry-breaking residual by averaging predictions over a grid of
+rotations, and can be useful when one wants to reduce the residual
+distortion in unconstrained optimizations.</p></li>
+</ol>
+<p>We demonstrate these tools on two systems:</p>
+<ol class="arabic simple">
+<li><p><strong>Al (Bain path)</strong>: BCC aluminum is a saddle point. Unconstrained
+relaxation drives the cell to FCC along the
+<a class="reference external" href="https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.78.3892">Bain path</a>.</p></li>
+<li><p><strong>BaTiO₃ (perovskite)</strong>: unconstrained relaxation of the cubic
+<span class="math notranslate nohighlight">\(Pm\bar{3}m\)</span> structure converges to the ferroelectric
+<span class="math notranslate nohighlight">\(R3m\)</span> ground state.</p></li>
+</ol>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ase.io</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">chemiscope</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ase</span><span class="w"> </span><span class="kn">import</span> <span class="n">Atoms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ase.build</span><span class="w"> </span><span class="kn">import</span> <span class="n">bulk</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ase.constraints</span><span class="w"> </span><span class="kn">import</span> <span class="n">FixSymmetry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ase.filters</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrechetCellFilter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ase.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">FIRE</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">spglib</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">upet.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">UPETCalculator</span>
+
+<span class="c1"># Suppress warnings about matrix logarithm accuracy issued by scipy during geometry</span>
+<span class="c1"># optimization to avoid cluttering the output</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span>
+    <span class="s2">&quot;ignore&quot;</span><span class="p">,</span>
+    <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">,</span>
+    <span class="n">message</span><span class="o">=</span><span class="s2">&quot;logm result may be inaccurate, approximate err&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># sphinx_gallery_thumbnail_number = 1</span>
+</pre></div>
+</div>
+<section id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Link to this heading">¶</a></h2>
+<p>We use the small (S) variant of
+<a class="reference external" href="https://arxiv.org/abs/2603.02089">PET-MAD v1.5.0</a>, which is trained on
+a dataset of approximately 200k structures computed at the r2SCAN level of theory.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">FMAX</span> <span class="o">=</span> <span class="mf">1e-4</span>  <span class="c1"># eV/Å, force convergence threshold</span>
+<span class="n">STEPS</span> <span class="o">=</span> <span class="mi">500</span>  <span class="c1"># max optimization steps</span>
+
+<span class="n">DEVICE</span> <span class="o">=</span> <span class="s2">&quot;cpu&quot;</span>
+
+<span class="c1"># We suggest using double precison (``dtype=&quot;float64&quot;``) for geometry optimization, as</span>
+<span class="c1"># it allows smaller values of the ``fmax`` convergence threshold and more reliable</span>
+<span class="c1"># symmetry detection.</span>
+
+<span class="n">calc</span> <span class="o">=</span> <span class="n">UPETCalculator</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;pet-mad-s&quot;</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="n">DEVICE</span><span class="p">,</span>
+    <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float64&quot;</span><span class="p">,</span>
+    <span class="n">version</span><span class="o">=</span><span class="s2">&quot;1.5.0&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+WARNING:huggingface_hub.utils._http:Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+</pre></div>
+</div>
+<section id="helper-functions">
+<h3>Helper functions<a class="headerlink" href="#helper-functions" title="Link to this heading">¶</a></h3>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">report_symmetry</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">loose_tol</span><span class="o">=</span><span class="mf">0.02</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Detect and report space group using spglib.&quot;&quot;&quot;</span>
+    <span class="n">spglib_cell</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">get_cell</span><span class="p">(),</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">get_scaled_positions</span><span class="p">(),</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">get_atomic_numbers</span><span class="p">(),</span>
+    <span class="p">)</span>
+    <span class="n">sg_loose</span> <span class="o">=</span> <span class="n">spglib</span><span class="o">.</span><span class="n">get_spacegroup</span><span class="p">(</span><span class="n">spglib_cell</span><span class="p">,</span> <span class="n">symprec</span><span class="o">=</span><span class="n">loose_tol</span><span class="p">)</span>
+    <span class="n">sg_tight</span> <span class="o">=</span> <span class="n">spglib</span><span class="o">.</span><span class="n">get_spacegroup</span><span class="p">(</span><span class="n">spglib_cell</span><span class="p">,</span> <span class="n">symprec</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">:</span><span class="s2">20s</span><span class="si">}</span><span class="s2">  loose (</span><span class="si">{</span><span class="n">loose_tol</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">sg_loose</span><span class="p">)</span><span class="si">:</span><span class="s2">15s</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;  tight (1e-6): </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">sg_tight</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="al-along-the-bain-path">
+<h2>Al along the Bain path<a class="headerlink" href="#al-along-the-bain-path" title="Link to this heading">¶</a></h2>
+<p>The <a class="reference external" href="https://next-gen.materialsproject.org/materials/mp-134">ground state structure for Aluminum</a> has FCC symmetry
+(<span class="math notranslate nohighlight">\(Fm\bar{3}m\)</span>). The BCC structure is a saddle point along the
+<a class="reference external" href="https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.78.3892">Bain path</a>,
+a continuous tetragonal deformation connecting BCC and FCC.</p>
+<section id="unconstrained-relaxation">
+<h3>Unconstrained relaxation<a class="headerlink" href="#unconstrained-relaxation" title="Link to this heading">¶</a></h3>
+<p>Because PET does not enforce point-group symmetry, the predicted stress on the
+perfect BCC cell has a small anisotropic residual. This is enough to push the
+optimizer off the saddle, and the cell slides down to FCC.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">atoms_al</span> <span class="o">=</span> <span class="n">bulk</span><span class="p">(</span><span class="s2">&quot;Al&quot;</span><span class="p">,</span> <span class="s2">&quot;bcc&quot;</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mf">3.3</span><span class="p">,</span> <span class="n">cubic</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">report_symmetry</span><span class="p">(</span><span class="n">atoms_al</span><span class="p">,</span> <span class="s2">&quot;Initial (BCC)&quot;</span><span class="p">)</span>
+
+<span class="n">atoms_al</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="n">calc</span>
+
+<span class="n">opt_al</span> <span class="o">=</span> <span class="n">FIRE</span><span class="p">(</span><span class="n">FrechetCellFilter</span><span class="p">(</span><span class="n">atoms_al</span><span class="p">),</span> <span class="n">trajectory</span><span class="o">=</span><span class="s2">&quot;al_bain.traj&quot;</span><span class="p">)</span>
+<span class="n">opt_al</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">fmax</span><span class="o">=</span><span class="n">FMAX</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">STEPS</span><span class="p">)</span>
+
+<span class="n">report_symmetry</span><span class="p">(</span><span class="n">atoms_al</span><span class="p">,</span> <span class="s2">&quot;After relaxation&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Initial (BCC)         loose (0.02): Im-3m (229)      tight (1e-6): Im-3m (229)
+/home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/pet-relaxation/lib/python3.12/site-packages/metatomic_ase/_neighbors.py:78: UserWarning: `compute_requested_neighbors_from_options` is deprecated and will be removed in a future version. Please use `neighbor_lists_for_model` to get the calculators and call them directly.
+  vesin.metatomic.compute_requested_neighbors_from_options(
+      Step     Time          Energy          fmax
+FIRE:    0 15:17:17       -3.967994        0.771156
+FIRE:    1 15:17:19       -3.983930        0.611374
+FIRE:    2 15:17:19       -4.002858        0.302599
+FIRE:    3 15:17:19       -4.007780        0.115900
+FIRE:    4 15:17:19       -4.007872        0.108697
+FIRE:    5 15:17:19       -4.008032        0.094793
+FIRE:    6 15:17:19       -4.008219        0.075152
+FIRE:    7 15:17:19       -4.008388        0.051117
+FIRE:    8 15:17:19       -4.008495        0.024310
+FIRE:    9 15:17:19       -4.008516        0.010660
+FIRE:   10 15:17:19       -4.008516        0.010541
+FIRE:   11 15:17:19       -4.008516        0.010304
+FIRE:   12 15:17:19       -4.008517        0.009955
+FIRE:   13 15:17:19       -4.008517        0.009499
+FIRE:   14 15:17:20       -4.008518        0.008944
+FIRE:   15 15:17:20       -4.008518        0.008303
+FIRE:   16 15:17:20       -4.008519        0.007587
+FIRE:   17 15:17:20       -4.008520        0.006729
+FIRE:   18 15:17:20       -4.008520        0.005729
+FIRE:   19 15:17:20       -4.008521        0.004608
+FIRE:   20 15:17:20       -4.008522        0.005658
+FIRE:   21 15:17:20       -4.008523        0.007392
+FIRE:   22 15:17:20       -4.008523        0.009113
+FIRE:   23 15:17:20       -4.008524        0.010703
+FIRE:   24 15:17:20       -4.008526        0.012051
+FIRE:   25 15:17:20       -4.008529        0.013068
+FIRE:   26 15:17:20       -4.008533        0.013716
+FIRE:   27 15:17:20       -4.008539        0.014072
+FIRE:   28 15:17:20       -4.008548        0.014422
+FIRE:   29 15:17:20       -4.008562        0.015342
+FIRE:   30 15:17:20       -4.008584        0.017698
+FIRE:   31 15:17:20       -4.008623        0.022571
+FIRE:   32 15:17:20       -4.008692        0.031109
+FIRE:   33 15:17:21       -4.008825        0.044400
+FIRE:   34 15:17:21       -4.009090        0.063713
+FIRE:   35 15:17:21       -4.009668        0.091837
+FIRE:   36 15:17:21       -4.011036        0.136485
+FIRE:   37 15:17:21       -4.014638        0.216365
+FIRE:   38 15:17:21       -4.025261        0.362872
+FIRE:   39 15:17:21       -4.057183        0.508943
+FIRE:   40 15:17:21       -4.106908        0.177130
+FIRE:   41 15:17:21       -4.094556        0.433682
+FIRE:   42 15:17:21       -4.100537        0.270707
+FIRE:   43 15:17:21       -4.106547        0.285012
+FIRE:   44 15:17:21       -4.109848        0.275357
+FIRE:   45 15:17:21       -4.112282        0.156179
+FIRE:   46 15:17:21       -4.112807        0.055468
+FIRE:   47 15:17:21       -4.112839        0.052727
+FIRE:   48 15:17:21       -4.112899        0.049582
+FIRE:   49 15:17:21       -4.112980        0.050155
+FIRE:   50 15:17:21       -4.113074        0.050002
+FIRE:   51 15:17:22       -4.113173        0.048416
+FIRE:   52 15:17:22       -4.113269        0.044675
+FIRE:   53 15:17:22       -4.113356        0.038213
+FIRE:   54 15:17:22       -4.113433        0.027657
+FIRE:   55 15:17:22       -4.113487        0.012382
+FIRE:   56 15:17:22       -4.113496        0.007272
+FIRE:   57 15:17:22       -4.113496        0.007063
+FIRE:   58 15:17:22       -4.113496        0.006655
+FIRE:   59 15:17:22       -4.113497        0.006067
+FIRE:   60 15:17:22       -4.113497        0.005327
+FIRE:   61 15:17:22       -4.113498        0.004474
+FIRE:   62 15:17:22       -4.113498        0.003557
+FIRE:   63 15:17:22       -4.113498        0.003274
+FIRE:   64 15:17:22       -4.113499        0.003344
+FIRE:   65 15:17:22       -4.113499        0.003178
+FIRE:   66 15:17:22       -4.113499        0.002675
+FIRE:   67 15:17:22       -4.113500        0.002234
+FIRE:   68 15:17:22       -4.113500        0.001817
+FIRE:   69 15:17:23       -4.113500        0.001178
+FIRE:   70 15:17:23       -4.113500        0.001161
+FIRE:   71 15:17:23       -4.113500        0.001127
+FIRE:   72 15:17:23       -4.113500        0.001076
+FIRE:   73 15:17:23       -4.113500        0.001009
+FIRE:   74 15:17:23       -4.113500        0.000929
+FIRE:   75 15:17:23       -4.113500        0.000835
+FIRE:   76 15:17:23       -4.113500        0.000730
+FIRE:   77 15:17:23       -4.113500        0.000603
+FIRE:   78 15:17:23       -4.113500        0.000454
+FIRE:   79 15:17:23       -4.113500        0.000281
+FIRE:   80 15:17:23       -4.113500        0.000090
+After relaxation      loose (0.02): Fm-3m (225)      tight (1e-6): P-1 (2)
+</pre></div>
+</div>
+<p>The optimizer converged from BCC (<span class="math notranslate nohighlight">\(Im\bar{3}m\)</span>) to FCC (<span class="math notranslate nohighlight">\(Fm\bar{3}m\)</span>). We
+can track the cell parameters along the trajectory: the BCC primitive cell
+(<span class="math notranslate nohighlight">\(a = b = c\)</span>, <span class="math notranslate nohighlight">\(\alpha = \beta = \gamma \approx 109.5°\)</span>) deforms
+continuously into the FCC primitive cell.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">traj</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">Trajectory</span><span class="p">(</span><span class="s2">&quot;al_bain.traj&quot;</span><span class="p">)</span>
+<span class="n">cell_parameters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">frame</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">cellpar</span><span class="p">()</span> <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">traj</span><span class="p">])</span>
+<span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">gamma</span> <span class="o">=</span> <span class="n">cell_parameters</span><span class="o">.</span><span class="n">T</span>
+<span class="n">steps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">traj</span><span class="p">))</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">steps</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;a&quot;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">steps</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">steps</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Optimization step&quot;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Lattice parameter (Å)&quot;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+<span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">steps</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;$\alpha$&quot;</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">steps</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;$\beta$&quot;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">steps</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;$\gamma$&quot;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Optimization step&quot;</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Angle (°)&quot;</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+<span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Al: BCC → FCC along the Bain path&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_pet-relaxation_001.png" srcset="../../_images/sphx_glr_pet-relaxation_001.png" alt="Al: BCC → FCC along the Bain path" class = "sphx-glr-single-img"/><p>The <a class="reference external" href="http://chemiscope.org">chemiscope</a> widget lets you inspect the
+trajectory frame by frame. The BCC (red) and FCC (blue) conventional cells
+are overlaid: watch the BCC cube deform as the FCC cube becomes regular.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">traj_frames</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;al_bain.traj&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+<span class="n">al_energies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">frame</span><span class="o">.</span><span class="n">get_potential_energy</span><span class="p">()</span> <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">traj_frames</span><span class="p">])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">conventional_cell_edges</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">kind</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the 12 edges of a conventional cubic cell as (position, vector) pairs.&quot;&quot;&quot;</span>
+    <span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">a3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+    <span class="c1"># BCC conventional cell vectors from BCC primitive vectors</span>
+    <span class="n">A_bcc</span><span class="p">,</span> <span class="n">B_bcc</span><span class="p">,</span> <span class="n">C_bcc</span> <span class="o">=</span> <span class="n">a2</span> <span class="o">+</span> <span class="n">a3</span><span class="p">,</span> <span class="n">a1</span> <span class="o">+</span> <span class="n">a3</span><span class="p">,</span> <span class="n">a1</span> <span class="o">+</span> <span class="n">a2</span>
+    <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;bcc&quot;</span><span class="p">:</span>
+        <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="n">A_bcc</span><span class="p">,</span> <span class="n">B_bcc</span><span class="p">,</span> <span class="n">C_bcc</span>
+        <span class="n">origin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># fcc</span>
+        <span class="c1"># Bain correspondence: FCC shares one BCC edge, the other two are</span>
+        <span class="c1"># face diagonals of the BCC cube</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">B_bcc</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">A_bcc</span> <span class="o">+</span> <span class="n">C_bcc</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">A_bcc</span> <span class="o">-</span> <span class="n">C_bcc</span>
+        <span class="n">origin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">corners</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">origin</span><span class="p">,</span>
+        <span class="n">origin</span> <span class="o">+</span> <span class="n">A</span><span class="p">,</span>
+        <span class="n">origin</span> <span class="o">+</span> <span class="n">B</span><span class="p">,</span>
+        <span class="n">origin</span> <span class="o">+</span> <span class="n">C</span><span class="p">,</span>
+        <span class="n">origin</span> <span class="o">+</span> <span class="n">A</span> <span class="o">+</span> <span class="n">B</span><span class="p">,</span>
+        <span class="n">origin</span> <span class="o">+</span> <span class="n">A</span> <span class="o">+</span> <span class="n">C</span><span class="p">,</span>
+        <span class="n">origin</span> <span class="o">+</span> <span class="n">B</span> <span class="o">+</span> <span class="n">C</span><span class="p">,</span>
+        <span class="n">origin</span> <span class="o">+</span> <span class="n">A</span> <span class="o">+</span> <span class="n">B</span> <span class="o">+</span> <span class="n">C</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="n">edge_pairs</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">corners</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="p">(</span><span class="n">corners</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">corners</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">edge_pairs</span>
+    <span class="p">]</span>
+
+
+<span class="n">conv_shapes</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">edge_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">12</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">kind</span><span class="p">,</span> <span class="n">color</span> <span class="ow">in</span> <span class="p">[(</span><span class="s2">&quot;bcc&quot;</span><span class="p">,</span> <span class="s2">&quot;0xFF0000&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;fcc&quot;</span><span class="p">,</span> <span class="s2">&quot;0x0000FF&quot;</span><span class="p">)]:</span>
+        <span class="n">structure_params</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">traj_frames</span><span class="p">:</span>
+            <span class="n">edges</span> <span class="o">=</span> <span class="n">conventional_cell_edges</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">cell</span><span class="p">[:],</span> <span class="n">kind</span><span class="p">)</span>
+            <span class="n">pos</span><span class="p">,</span> <span class="n">vec</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[</span><span class="n">edge_idx</span><span class="p">]</span>
+            <span class="n">structure_params</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;position&quot;</span><span class="p">:</span> <span class="n">pos</span><span class="p">,</span> <span class="s2">&quot;vector&quot;</span><span class="p">:</span> <span class="n">vec</span><span class="p">})</span>
+        <span class="n">conv_shapes</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">_edge_</span><span class="si">{</span><span class="n">edge_idx</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;cylinder&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;global&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">,</span> <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="n">color</span><span class="p">},</span>
+                <span class="s2">&quot;structure&quot;</span><span class="p">:</span> <span class="n">structure_params</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+
+<span class="n">chemiscope</span><span class="o">.</span><span class="n">show</span><span class="p">(</span>
+    <span class="n">traj_frames</span><span class="p">,</span>
+    <span class="n">properties</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;step&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">traj_frames</span><span class="p">)),</span>
+        <span class="s2">&quot;energy&quot;</span><span class="p">:</span> <span class="n">al_energies</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="n">shapes</span><span class="o">=</span><span class="n">conv_shapes</span><span class="p">,</span>
+    <span class="n">settings</span><span class="o">=</span><span class="n">chemiscope</span><span class="o">.</span><span class="n">quick_settings</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="s2">&quot;step&quot;</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+        <span class="n">map_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;joinPoints&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+        <span class="n">structure_settings</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;unitCell&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;supercell&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
+            <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;bcc_edge_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">12</span><span class="p">)]</span>
+            <span class="o">+</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;fcc_edge_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">12</span><span class="p">)],</span>
+            <span class="s2">&quot;keepOrientation&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<!-- begin headers -->
+<!-- Load all dependencies -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
+
+<!-- JS scripts -->
+<script src="../../_static/chemiscope.min.js"></script>
+<script src="../../_static/chemiscope-sphinx.js"></script>
+
+<!-- CSS styles -->
+<link rel="stylesheet" href="../../_static/chemiscope-sphinx.css" type="text/css" />
+<!-- end headers -->
+
+<!-- Error display -->
+<div id="chsp-a34ef99e-be6b-45f2-a2a5-615ac4ee5d0d-error-display" class="chemiscope-sphinx-error">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-a34ef99e-be6b-45f2-a2a5-615ac4ee5d0d-error-display')">
+        &times;
+    </button>
+</div>
+
+<!-- Warning Display -->
+<div id="chsp-a34ef99e-be6b-45f2-a2a5-615ac4ee5d0d-warning-display" class="chemiscope-sphinx-warning">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-a34ef99e-be6b-45f2-a2a5-615ac4ee5d0d-warning-display')">
+        &times;
+    </button>
+</div>
+<div style="padding: 0.5rem 1.25rem" />
+
+<!-- Loading Spinner -->
+<div id="chsp-a34ef99e-be6b-45f2-a2a5-615ac4ee5d0d-loading" class="chemiscope-sphinx-spinner">
+    <img src="../../_static/chemiscope-loading.svg" alt="Loading icon" />
+</div>
+
+<!-- Chemiscope Visualization -->
+<div id="chsp-a34ef99e-be6b-45f2-a2a5-615ac4ee5d0d">
+    <!-- This will be replaced by the chemiscope HTML -->
+</div>
+
+<!-- Load Visualization Script -->
+<script>
+    loadChemiscopeSphinx('chsp-a34ef99e-be6b-45f2-a2a5-615ac4ee5d0d', '../../_datasets/7754104c819a266b0f6827e01fc153727d87cb8ac66c8bb9d053a363f6aae97d-fig_pet-relaxation_001.json.gz', 'default', '2000.0');
+</script>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/pet-relaxation/lib/python3.12/site-packages/chemiscope/input.py:387: UserWarning: The target of the property &#39;step&#39; is ambiguous because there is the same number of atoms and structures. We will assume target=structure
+  properties = _expand_properties(properties, n_structures, n_atoms)
+/home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/pet-relaxation/lib/python3.12/site-packages/chemiscope/input.py:387: UserWarning: The target of the property &#39;energy&#39; is ambiguous because there is the same number of atoms and structures. We will assume target=structure
+  properties = _expand_properties(properties, n_structures, n_atoms)
+</pre></div>
+</div>
+<div class="output_subarea output_html rendered_html output_result">
+
+</div>
+<br />
+<br /><section id="detecting-the-relaxed-symmetry">
+<h4>Detecting the relaxed symmetry<a class="headerlink" href="#detecting-the-relaxed-symmetry" title="Link to this heading">¶</a></h4>
+<p>Even if the relaxed structure is very close to FCC and is converged to a very tight
+force threshold, the small symmetry breaking due to the unconstrained nature of PET
+can make symmetry detection tricky. When using a tight <code class="docutils literal notranslate"><span class="pre">symprec</span></code> value of <code class="docutils literal notranslate"><span class="pre">1e-6</span></code>,
+<code class="docutils literal notranslate"><span class="pre">spglib</span></code> detects the lowest-symmetry space group (<span class="math notranslate nohighlight">\(P\bar{1}\)</span>).
+A looser tolerance of <code class="docutils literal notranslate"><span class="pre">0.02</span></code> correctly identifies the high-symmetry
+<span class="math notranslate nohighlight">\(Fm\bar{3}m\)</span>. We recommend scanning the <code class="docutils literal notranslate"><span class="pre">symprec</span></code> parameter to find a
+“plateau” that identifies the true symmetry of the relaxed structure.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">spglib_cell</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">atoms_al</span><span class="o">.</span><span class="n">get_cell</span><span class="p">(),</span>
+    <span class="n">atoms_al</span><span class="o">.</span><span class="n">get_scaled_positions</span><span class="p">(),</span>
+    <span class="n">atoms_al</span><span class="o">.</span><span class="n">get_atomic_numbers</span><span class="p">(),</span>
+<span class="p">)</span>
+<span class="k">for</span> <span class="n">symprec</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mf">0.1</span><span class="p">),</span> <span class="mi">10</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;  symprec=</span><span class="si">{</span><span class="n">symprec</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">  &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">spglib</span><span class="o">.</span><span class="n">get_spacegroup</span><span class="p">(</span><span class="n">spglib_cell</span><span class="p">,</span><span class="w"> </span><span class="n">symprec</span><span class="o">=</span><span class="n">symprec</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>symprec=0.0001  P-1 (2)
+symprec=0.0002  P-1 (2)
+symprec=0.0005  P-1 (2)
+symprec=0.0010  P-1 (2)
+symprec=0.0022  I4/mmm (139)
+symprec=0.0046  I4/mmm (139)
+symprec=0.0100  Fm-3m (225)
+symprec=0.0215  Fm-3m (225)
+symprec=0.0464  Fm-3m (225)
+symprec=0.1000  Fm-3m (225)
+</pre></div>
+</div>
+<p>At tight tolerances, <code class="docutils literal notranslate"><span class="pre">spglib</span></code> detects the residual shear as a highly asymmetric
+<span class="math notranslate nohighlight">\(P\bar{1}\)</span> state. As the tolerance is relaxed, it identifies an
+<span class="math notranslate nohighlight">\(I4/mmm\)</span> (body-centered tetragonal) intermediate state before recognizing the
+“true” <span class="math notranslate nohighlight">\(Fm\bar{3}m\)</span> (FCC) ground state.</p>
+<p>Once the plateau is identified, <code class="docutils literal notranslate"><span class="pre">standardize_cell</span></code> snaps the coordinates
+onto ideal Wyckoff positions and the lattice vectors onto the exact
+<span class="math notranslate nohighlight">\(Fm\bar{3}m\)</span> cell, removing the residual numerical noise.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">std_data</span> <span class="o">=</span> <span class="n">spglib</span><span class="o">.</span><span class="n">standardize_cell</span><span class="p">(</span><span class="n">spglib_cell</span><span class="p">,</span> <span class="n">to_primitive</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">symprec</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+
+<span class="n">al_fcc</span> <span class="o">=</span> <span class="n">Atoms</span><span class="p">(</span>
+    <span class="n">numbers</span><span class="o">=</span><span class="n">std_data</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+    <span class="n">scaled_positions</span><span class="o">=</span><span class="n">std_data</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+    <span class="n">cell</span><span class="o">=</span><span class="n">std_data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">pbc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">report_symmetry</span><span class="p">(</span><span class="n">al_fcc</span><span class="p">,</span> <span class="s2">&quot;FCC (spglib)&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>FCC (spglib)          loose (0.02): Fm-3m (225)      tight (1e-6): Fm-3m (225)
+</pre></div>
+</div>
+</section>
+</section>
+<section id="constrained-relaxation">
+<h3>Constrained relaxation<a class="headerlink" href="#constrained-relaxation" title="Link to this heading">¶</a></h3>
+<p>The standardized cell from <code class="docutils literal notranslate"><span class="pre">spglib</span></code> has exact <span class="math notranslate nohighlight">\(Fm\bar{3}m\)</span> symmetry,
+but its lattice parameters may differ slightly from the model’s true minimum.
+We can refine them with <code class="docutils literal notranslate"><span class="pre">FixSymmetry</span></code>, which projects forces and stresses
+onto the symmetry-invariant subspace at every step, ensuring the cell stays
+exactly FCC throughout the optimization.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">al_fcc</span><span class="o">.</span><span class="n">set_constraint</span><span class="p">(</span><span class="n">FixSymmetry</span><span class="p">(</span><span class="n">al_fcc</span><span class="p">))</span>
+<span class="n">al_fcc</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="n">calc</span>
+
+<span class="n">opt_al_const</span> <span class="o">=</span> <span class="n">FIRE</span><span class="p">(</span><span class="n">FrechetCellFilter</span><span class="p">(</span><span class="n">al_fcc</span><span class="p">),</span> <span class="n">trajectory</span><span class="o">=</span><span class="s2">&quot;al_fcc_const.traj&quot;</span><span class="p">)</span>
+<span class="n">opt_al_const</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">fmax</span><span class="o">=</span><span class="n">FMAX</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">STEPS</span><span class="p">)</span>
+
+<span class="n">report_symmetry</span><span class="p">(</span><span class="n">al_fcc</span><span class="p">,</span> <span class="s2">&quot;Constrained FCC&quot;</span><span class="p">)</span>
+
+<span class="n">al_fcc</span><span class="o">.</span><span class="n">set_constraint</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>      Step     Time          Energy          fmax
+FIRE:    0 15:17:24       -4.112804        0.001644
+FIRE:    1 15:17:24       -4.112804        0.001223
+FIRE:    2 15:17:24       -4.112804        0.000489
+FIRE:    3 15:17:24       -4.112804        0.000371
+FIRE:    4 15:17:25       -4.112804        0.000347
+FIRE:    5 15:17:25       -4.112804        0.000301
+FIRE:    6 15:17:25       -4.112804        0.000236
+FIRE:    7 15:17:25       -4.112804        0.000155
+FIRE:    8 15:17:25       -4.112804        0.000065
+Constrained FCC       loose (0.02): Fm-3m (225)      tight (1e-6): Fm-3m (225)
+</pre></div>
+</div>
+</section>
+<section id="rotational-averaging">
+<h3>Rotational averaging<a class="headerlink" href="#rotational-averaging" title="Link to this heading">¶</a></h3>
+<p>A complementary approach to <code class="docutils literal notranslate"><span class="pre">FixSymmetry</span></code> is <em>rotational averaging</em>: the calculator
+averages its predictions over a <a class="reference external" href="https://en.wikipedia.org/wiki/Lebedev_quadrature">grid</a> of rotations (plus inversion),
+reducing the symmetry-breaking residual at the source. Since the group of rotations is
+continuous, the averaging is approximate, but the residual can be controlled via the
+<code class="docutils literal notranslate"><span class="pre">rotational_average_order</span></code> parameter, which sets the order of the integration grid
+(formally, spherical harmonics up to this order are integrated exactly).
+The cheapest choice is <code class="docutils literal notranslate"><span class="pre">rotational_average_order=3</span></code>, which averages predictions on
+a grid of 24 rotations <span class="math notranslate nohighlight">\(\times\)</span> 2 inversions.</p>
+<p>Rotational averaging and <code class="docutils literal notranslate"><span class="pre">FixSymmetry</span></code> address different aspects: <code class="docutils literal notranslate"><span class="pre">FixSymmetry</span></code>
+projects forces and stresses onto the symmetry-invariant subspace of a
+<em>specific</em> space group, while rotational averaging reduces the model’s O(3)-breaking
+noise for <em>any</em> structure. They can be combined. However, if the target space group is
+known, <code class="docutils literal notranslate"><span class="pre">FixSymmetry</span></code> is generally preferred: it is exact, cheap, and sufficient.
+Rotational averaging is most useful in exploratory settings where the
+final symmetry is not known in advance, but it comes at a significant computational
+and memory cost.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">calc_symm</span> <span class="o">=</span> <span class="n">UPETCalculator</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;pet-mad-s&quot;</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="n">DEVICE</span><span class="p">,</span>
+    <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float64&quot;</span><span class="p">,</span>
+    <span class="n">version</span><span class="o">=</span><span class="s2">&quot;1.5.0&quot;</span><span class="p">,</span>
+    <span class="n">rotational_average_order</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">atoms_al</span> <span class="o">=</span> <span class="n">bulk</span><span class="p">(</span><span class="s2">&quot;Al&quot;</span><span class="p">,</span> <span class="s2">&quot;bcc&quot;</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mf">3.3</span><span class="p">,</span> <span class="n">cubic</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">atoms_al</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="n">calc_symm</span>
+
+<span class="n">opt_al</span> <span class="o">=</span> <span class="n">FIRE</span><span class="p">(</span><span class="n">FrechetCellFilter</span><span class="p">(</span><span class="n">atoms_al</span><span class="p">))</span>
+<span class="n">opt_al</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">fmax</span><span class="o">=</span><span class="n">FMAX</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">STEPS</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;After relaxation with symmetrized calculator&quot;</span><span class="p">)</span>
+<span class="n">spglib_cell</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">atoms_al</span><span class="o">.</span><span class="n">get_cell</span><span class="p">(),</span>
+    <span class="n">atoms_al</span><span class="o">.</span><span class="n">get_scaled_positions</span><span class="p">(),</span>
+    <span class="n">atoms_al</span><span class="o">.</span><span class="n">get_atomic_numbers</span><span class="p">(),</span>
+<span class="p">)</span>
+<span class="k">for</span> <span class="n">symprec</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mf">0.1</span><span class="p">),</span> <span class="mi">10</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;  symprec=</span><span class="si">{</span><span class="n">symprec</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">  &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">spglib</span><span class="o">.</span><span class="n">get_spacegroup</span><span class="p">(</span><span class="n">spglib_cell</span><span class="p">,</span><span class="w"> </span><span class="n">symprec</span><span class="o">=</span><span class="n">symprec</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/pet-relaxation/lib/python3.12/site-packages/metatomic_ase/_neighbors.py:78: UserWarning: `compute_requested_neighbors_from_options` is deprecated and will be removed in a future version. Please use `neighbor_lists_for_model` to get the calculators and call them directly.
+  vesin.metatomic.compute_requested_neighbors_from_options(
+      Step     Time          Energy          fmax
+FIRE:    0 15:17:26       -3.968206        0.770140
+FIRE:    1 15:17:27       -3.984132        0.610368
+FIRE:    2 15:17:27       -4.003049        0.301676
+FIRE:    3 15:17:28       -4.007969        0.112781
+FIRE:    4 15:17:29       -4.008060        0.105553
+FIRE:    5 15:17:29       -4.008220        0.091600
+FIRE:    6 15:17:30       -4.008407        0.071880
+FIRE:    7 15:17:30       -4.008575        0.047730
+FIRE:    8 15:17:31       -4.008682        0.020756
+FIRE:    9 15:17:32       -4.008702        0.009528
+FIRE:   10 15:17:32       -4.008702        0.009405
+FIRE:   11 15:17:33       -4.008702        0.009161
+FIRE:   12 15:17:33       -4.008703        0.008800
+FIRE:   13 15:17:34       -4.008703        0.008328
+FIRE:   14 15:17:35       -4.008704        0.007753
+FIRE:   15 15:17:35       -4.008704        0.007084
+FIRE:   16 15:17:36       -4.008705        0.006333
+FIRE:   17 15:17:36       -4.008705        0.005425
+FIRE:   18 15:17:37       -4.008706        0.004349
+FIRE:   19 15:17:38       -4.008706        0.003112
+FIRE:   20 15:17:38       -4.008706        0.001763
+FIRE:   21 15:17:39       -4.008706        0.002627
+FIRE:   22 15:17:39       -4.008706        0.002614
+FIRE:   23 15:17:40       -4.008706        0.002588
+FIRE:   24 15:17:41       -4.008706        0.002549
+FIRE:   25 15:17:41       -4.008706        0.002497
+FIRE:   26 15:17:42       -4.008706        0.002435
+FIRE:   27 15:17:42       -4.008706        0.002362
+FIRE:   28 15:17:43       -4.008706        0.002279
+FIRE:   29 15:17:44       -4.008706        0.002180
+FIRE:   30 15:17:44       -4.008706        0.002061
+FIRE:   31 15:17:45       -4.008706        0.001924
+FIRE:   32 15:17:45       -4.008706        0.001814
+FIRE:   33 15:17:46       -4.008707        0.002116
+FIRE:   34 15:17:46       -4.008707        0.002457
+FIRE:   35 15:17:47       -4.008707        0.002828
+FIRE:   36 15:17:48       -4.008707        0.003219
+FIRE:   37 15:17:48       -4.008707        0.003617
+FIRE:   38 15:17:49       -4.008707        0.004010
+FIRE:   39 15:17:49       -4.008708        0.004388
+FIRE:   40 15:17:50       -4.008708        0.004756
+FIRE:   41 15:17:51       -4.008709        0.005143
+FIRE:   42 15:17:51       -4.008711        0.005617
+FIRE:   43 15:17:52       -4.008713        0.006304
+FIRE:   44 15:17:52       -4.008716        0.007392
+FIRE:   45 15:17:53       -4.008722        0.009128
+FIRE:   46 15:17:54       -4.008731        0.011798
+FIRE:   47 15:17:54       -4.008749        0.015706
+FIRE:   48 15:17:55       -4.008782        0.021188
+FIRE:   49 15:17:55       -4.008849        0.028747
+FIRE:   50 15:17:56       -4.008988        0.039360
+FIRE:   51 15:17:57       -4.009293        0.054859
+FIRE:   52 15:17:57       -4.009992        0.077841
+FIRE:   53 15:17:58       -4.011633        0.109755
+FIRE:   54 15:17:58       -4.015422        0.144458
+FIRE:   55 15:17:59       -4.023342        0.174253
+FIRE:   56 15:18:00       -4.035801        0.250612
+FIRE:   57 15:18:00       -4.043102        0.458496
+FIRE:   58 15:18:01       -4.052969        0.495201
+FIRE:   59 15:18:02       -4.069253        0.509862
+FIRE:   60 15:18:02       -4.088824        0.402912
+FIRE:   61 15:18:03       -4.104643        0.247719
+FIRE:   62 15:18:04       -4.106352        0.282678
+FIRE:   63 15:18:04       -4.107173        0.246573
+FIRE:   64 15:18:05       -4.108498        0.186885
+FIRE:   65 15:18:06       -4.109924        0.147799
+FIRE:   66 15:18:07       -4.111108        0.161508
+FIRE:   67 15:18:07       -4.111888        0.156716
+FIRE:   68 15:18:08       -4.112369        0.126357
+FIRE:   69 15:18:09       -4.112660        0.109037
+FIRE:   70 15:18:09       -4.112693        0.098588
+FIRE:   71 15:18:10       -4.112713        0.095995
+FIRE:   72 15:18:11       -4.112751        0.090896
+FIRE:   73 15:18:12       -4.112803        0.083469
+FIRE:   74 15:18:12       -4.112864        0.073984
+FIRE:   75 15:18:13       -4.112928        0.062805
+FIRE:   76 15:18:14       -4.112990        0.050395
+FIRE:   77 15:18:14       -4.113045        0.037337
+FIRE:   78 15:18:15       -4.113095        0.029193
+FIRE:   79 15:18:16       -4.113135        0.026610
+FIRE:   80 15:18:17       -4.113163        0.022772
+FIRE:   81 15:18:17       -4.113174        0.019698
+FIRE:   82 15:18:18       -4.113175        0.019281
+FIRE:   83 15:18:19       -4.113176        0.018458
+FIRE:   84 15:18:19       -4.113178        0.017249
+FIRE:   85 15:18:20       -4.113181        0.015686
+FIRE:   86 15:18:21       -4.113183        0.013809
+FIRE:   87 15:18:21       -4.113185        0.011665
+FIRE:   88 15:18:22       -4.113187        0.009313
+FIRE:   89 15:18:23       -4.113189        0.006553
+FIRE:   90 15:18:24       -4.113189        0.003666
+FIRE:   91 15:18:24       -4.113189        0.005808
+FIRE:   92 15:18:25       -4.113189        0.005765
+FIRE:   93 15:18:26       -4.113190        0.005679
+FIRE:   94 15:18:26       -4.113190        0.005552
+FIRE:   95 15:18:27       -4.113190        0.005385
+FIRE:   96 15:18:28       -4.113190        0.005180
+FIRE:   97 15:18:28       -4.113190        0.004938
+FIRE:   98 15:18:29       -4.113190        0.004663
+FIRE:   99 15:18:30       -4.113190        0.004324
+FIRE:  100 15:18:31       -4.113190        0.003913
+FIRE:  101 15:18:31       -4.113190        0.003424
+FIRE:  102 15:18:32       -4.113191        0.002856
+FIRE:  103 15:18:33       -4.113191        0.002338
+FIRE:  104 15:18:33       -4.113191        0.002621
+FIRE:  105 15:18:34       -4.113191        0.002832
+FIRE:  106 15:18:35       -4.113191        0.002910
+FIRE:  107 15:18:36       -4.113191        0.002794
+FIRE:  108 15:18:36       -4.113192        0.002426
+FIRE:  109 15:18:37       -4.113192        0.001768
+FIRE:  110 15:18:38       -4.113192        0.000809
+FIRE:  111 15:18:38       -4.113192        0.000575
+FIRE:  112 15:18:39       -4.113192        0.000563
+FIRE:  113 15:18:40       -4.113192        0.000540
+FIRE:  114 15:18:41       -4.113192        0.000506
+FIRE:  115 15:18:41       -4.113192        0.000462
+FIRE:  116 15:18:42       -4.113192        0.000409
+FIRE:  117 15:18:43       -4.113192        0.000389
+FIRE:  118 15:18:43       -4.113192        0.000380
+FIRE:  119 15:18:44       -4.113192        0.000364
+FIRE:  120 15:18:45       -4.113192        0.000337
+FIRE:  121 15:18:46       -4.113192        0.000292
+FIRE:  122 15:18:46       -4.113192        0.000225
+FIRE:  123 15:18:47       -4.113192        0.000127
+FIRE:  124 15:18:48       -4.113192        0.000145
+FIRE:  125 15:18:48       -4.113192        0.000143
+FIRE:  126 15:18:49       -4.113192        0.000138
+FIRE:  127 15:18:50       -4.113192        0.000132
+FIRE:  128 15:18:51       -4.113192        0.000124
+FIRE:  129 15:18:51       -4.113192        0.000114
+FIRE:  130 15:18:52       -4.113192        0.000103
+FIRE:  131 15:18:53       -4.113192        0.000091
+After relaxation with symmetrized calculator
+  symprec=0.0001  Immm (71)
+  symprec=0.0002  Immm (71)
+  symprec=0.0005  Immm (71)
+  symprec=0.0010  I4/mmm (139)
+  symprec=0.0022  Fm-3m (225)
+  symprec=0.0046  Fm-3m (225)
+  symprec=0.0100  Fm-3m (225)
+  symprec=0.0215  Fm-3m (225)
+  symprec=0.0464  Fm-3m (225)
+  symprec=0.1000  Fm-3m (225)
+</pre></div>
+</div>
+<p>The symmetrized model successfully protects the angular symmetry of the cell, keeping
+the internal angles closer to 90 degrees. The resulting structure has higher symmetry
+with space group <span class="math notranslate nohighlight">\(Immm\)</span> (body-centered orthorhombic) at tight tolerances.
+As the tolerance is increased, it still perfectly retraces the <span class="math notranslate nohighlight">\(I4/mmm\)</span>
+Bain path before reaching the <span class="math notranslate nohighlight">\(Fm\bar{3}m\)</span> minimum, which is recovered at
+tighter tolerances than before thanks to the reduced noise.</p>
+</section>
+</section>
+<section id="batio3-spontaneous-ferroelectric-distortion">
+<h2>BaTiO₃: spontaneous ferroelectric distortion<a class="headerlink" href="#batio3-spontaneous-ferroelectric-distortion" title="Link to this heading">¶</a></h2>
+<p>Barium titanate is a prototypical ferroelectric perovskite. At 0 K
+the cubic <span class="math notranslate nohighlight">\(Pm\bar{3}m\)</span> <a class="reference external" href="https://next-gen.materialsproject.org/materials/mp-2998/">phase</a> is a saddle point:
+Ti displaces off-center, breaking cubic symmetry and stabilizing the rhombohedral
+<span class="math notranslate nohighlight">\(R3m\)</span> <a class="reference external" href="https://next-gen.materialsproject.org/materials/mp-5020/">phase</a>.
+Contrary to the case of Al, which we simulated with a primitive cell so that
+the deformation was entirely driven by the cell degrees of freedom, the
+ferroelectric distortion in BaTiO₃ is primarily an internal displacement of Ti
+relative to the oxygen cage, which involves primarily a distortion within the
+cell, and only a small accompanying shear distortion of the cell itself.</p>
+<p>An unconstrained relaxation starting from the cubic cell will naturally
+fall off the saddle and converge to the <span class="math notranslate nohighlight">\(R3m\)</span> basin. We then use
+<code class="docutils literal notranslate"><span class="pre">spglib</span></code> to identify the resulting symmetry and extract a clean primitive
+cell.</p>
+<p>We also show how <code class="docutils literal notranslate"><span class="pre">FixSymmetry</span></code> can lock in the cubic <span class="math notranslate nohighlight">\(Pm\bar{3}m\)</span>
+phase when that is the structure of interest (e.g., for computing phonons
+at the saddle point).</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">a_bto</span> <span class="o">=</span> <span class="mf">4.00</span>
+<span class="n">bto_cubic</span> <span class="o">=</span> <span class="n">Atoms</span><span class="p">(</span>
+    <span class="n">symbols</span><span class="o">=</span><span class="s2">&quot;BaTiO3&quot;</span><span class="p">,</span>
+    <span class="n">scaled_positions</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>  <span class="c1"># Ba</span>
+        <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>  <span class="c1"># Ti</span>
+        <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>  <span class="c1"># O1</span>
+        <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>  <span class="c1"># O2</span>
+        <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>  <span class="c1"># O3</span>
+    <span class="p">],</span>
+    <span class="n">cell</span><span class="o">=</span><span class="p">[</span><span class="n">a_bto</span><span class="p">,</span> <span class="n">a_bto</span><span class="p">,</span> <span class="n">a_bto</span><span class="p">],</span>
+    <span class="n">pbc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">report_symmetry</span><span class="p">(</span><span class="n">bto_cubic</span><span class="p">,</span> <span class="s2">&quot;Initial (cubic)&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Initial (cubic)       loose (0.02): Pm-3m (221)      tight (1e-6): Pm-3m (221)
+</pre></div>
+</div>
+<section id="id3">
+<h3>Constrained relaxation<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<p>As for the case of Al, we can use <a class="reference external" href="https://ase-lib.org/ase/constraints.html#the-fixsymmetry-class">FixSymmetry</a>
+to lock in the cubic <span class="math notranslate nohighlight">\(Pm\bar{3}m\)</span> phase, by projecting
+forces and stresses onto the symmetry-invariant subspace at
+every optimization step. It must therefore be instantiated from a cell
+that already has the target symmetry—applying it to an already-distorted
+cell would lock in the wrong (lower) symmetry.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">bto_const</span> <span class="o">=</span> <span class="n">bto_cubic</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">bto_const</span><span class="o">.</span><span class="n">set_constraint</span><span class="p">(</span><span class="n">FixSymmetry</span><span class="p">(</span><span class="n">bto_const</span><span class="p">))</span>
+<span class="n">bto_const</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="n">calc</span>
+
+<span class="c1"># The mask [True]*3 + [False]*3 allows the three lattice lengths to relax</span>
+<span class="c1"># while freezing the cell angles, preventing the filter from introducing</span>
+<span class="c1"># angular distortions that FixSymmetry does not constrain.</span>
+<span class="n">opt_const</span> <span class="o">=</span> <span class="n">FIRE</span><span class="p">(</span><span class="n">FrechetCellFilter</span><span class="p">(</span><span class="n">bto_const</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span><span class="p">))</span>
+<span class="n">opt_const</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">fmax</span><span class="o">=</span><span class="n">FMAX</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">STEPS</span><span class="p">)</span>
+
+<span class="n">report_symmetry</span><span class="p">(</span><span class="n">bto_const</span><span class="p">,</span> <span class="s2">&quot;Constrained&quot;</span><span class="p">)</span>
+
+<span class="c1"># Remove the constraint so that subsequent energy queries return the raw</span>
+<span class="c1"># model prediction rather than the symmetry-projected one.</span>
+<span class="n">bto_const</span><span class="o">.</span><span class="n">set_constraint</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>      Step     Time          Energy          fmax
+FIRE:    0 15:18:53      -43.224032        0.053880
+FIRE:    1 15:18:53      -43.224115        0.049369
+FIRE:    2 15:18:53      -43.224255        0.040721
+FIRE:    3 15:18:53      -43.224404        0.028653
+FIRE:    4 15:18:53      -43.224515        0.014172
+FIRE:    5 15:18:53      -43.224551        0.001509
+FIRE:    6 15:18:54      -43.224551        0.001478
+FIRE:    7 15:18:54      -43.224551        0.001415
+FIRE:    8 15:18:54      -43.224551        0.001323
+FIRE:    9 15:18:54      -43.224551        0.001202
+FIRE:   10 15:18:54      -43.224551        0.001057
+FIRE:   11 15:18:54      -43.224551        0.000889
+FIRE:   12 15:18:54      -43.224551        0.000703
+FIRE:   13 15:18:54      -43.224551        0.000480
+FIRE:   14 15:18:54      -43.224551        0.000220
+FIRE:   15 15:18:54      -43.224551        0.000074
+Constrained           loose (0.02): Pm-3m (221)      tight (1e-6): Pm-3m (221)
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Unconstrained relaxation<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<p>By removing the constraint, we can run a relaxation using the raw PET model.
+This allows breaking the cubic symmetry and finding the nearest minimum, triggering
+the ferroelectric distortion.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">bto_unconst</span> <span class="o">=</span> <span class="n">bto_cubic</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">bto_unconst</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="n">calc</span>
+
+<span class="n">opt_unconst</span> <span class="o">=</span> <span class="n">FIRE</span><span class="p">(</span><span class="n">FrechetCellFilter</span><span class="p">(</span><span class="n">bto_unconst</span><span class="p">),</span> <span class="n">trajectory</span><span class="o">=</span><span class="s2">&quot;bto_unconst.traj&quot;</span><span class="p">)</span>
+<span class="n">opt_unconst</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">fmax</span><span class="o">=</span><span class="n">FMAX</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">STEPS</span><span class="p">)</span>
+
+<span class="n">report_symmetry</span><span class="p">(</span><span class="n">bto_unconst</span><span class="p">,</span> <span class="s2">&quot;Unconstrained&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>      Step     Time          Energy          fmax
+FIRE:    0 15:18:55      -43.224032        0.055951
+FIRE:    1 15:18:55      -43.224120        0.051388
+FIRE:    2 15:18:55      -43.224270        0.042638
+FIRE:    3 15:18:55      -43.224436        0.030442
+FIRE:    4 15:18:55      -43.224571        0.020556
+FIRE:    5 15:18:55      -43.224647        0.025803
+FIRE:    6 15:18:55      -43.224680        0.033193
+FIRE:    7 15:18:55      -43.224725        0.042625
+FIRE:    8 15:18:55      -43.224867        0.055578
+FIRE:    9 15:18:56      -43.225234        0.073590
+FIRE:   10 15:18:56      -43.226039        0.099300
+FIRE:   11 15:18:56      -43.227700        0.136475
+FIRE:   12 15:18:56      -43.231169        0.187436
+FIRE:   13 15:18:56      -43.238454        0.238419
+FIRE:   14 15:18:56      -43.251334        0.203554
+FIRE:   15 15:18:56      -43.259915        0.223516
+FIRE:   16 15:18:56      -43.261483        0.194561
+FIRE:   17 15:18:56      -43.263578        0.144037
+FIRE:   18 15:18:56      -43.265084        0.084394
+FIRE:   19 15:18:57      -43.265816        0.116076
+FIRE:   20 15:18:57      -43.266482        0.155132
+FIRE:   21 15:18:57      -43.267695        0.161073
+FIRE:   22 15:18:57      -43.269350        0.129498
+FIRE:   23 15:18:57      -43.270784        0.054005
+FIRE:   24 15:18:57      -43.270941        0.086872
+FIRE:   25 15:18:57      -43.271051        0.078533
+FIRE:   26 15:18:57      -43.271232        0.063140
+FIRE:   27 15:18:57      -43.271423        0.043123
+FIRE:   28 15:18:58      -43.271563        0.028387
+FIRE:   29 15:18:58      -43.271622        0.028429
+FIRE:   30 15:18:58      -43.271617        0.038548
+FIRE:   31 15:18:58      -43.271621        0.038109
+FIRE:   32 15:18:58      -43.271630        0.037255
+FIRE:   33 15:18:58      -43.271643        0.036028
+FIRE:   34 15:18:58      -43.271659        0.034499
+FIRE:   35 15:18:58      -43.271677        0.032765
+FIRE:   36 15:18:58      -43.271696        0.030951
+FIRE:   37 15:18:58      -43.271716        0.029208
+FIRE:   38 15:18:59      -43.271737        0.027556
+FIRE:   39 15:18:59      -43.271760        0.026285
+FIRE:   40 15:18:59      -43.271784        0.025693
+FIRE:   41 15:18:59      -43.271809        0.025882
+FIRE:   42 15:18:59      -43.271837        0.026570
+FIRE:   43 15:18:59      -43.271872        0.027156
+FIRE:   44 15:18:59      -43.271917        0.026979
+FIRE:   45 15:18:59      -43.271975        0.025622
+FIRE:   46 15:18:59      -43.272043        0.023237
+FIRE:   47 15:19:00      -43.272119        0.020829
+FIRE:   48 15:19:00      -43.272198        0.019520
+FIRE:   49 15:19:00      -43.272284        0.018333
+FIRE:   50 15:19:00      -43.272385        0.020465
+FIRE:   51 15:19:00      -43.272502        0.024543
+FIRE:   52 15:19:00      -43.272625        0.028042
+FIRE:   53 15:19:00      -43.272765        0.028597
+FIRE:   54 15:19:00      -43.272945        0.024416
+FIRE:   55 15:19:00      -43.273158        0.020256
+FIRE:   56 15:19:00      -43.273402        0.021244
+FIRE:   57 15:19:01      -43.273670        0.011945
+FIRE:   58 15:19:01      -43.273900        0.013905
+FIRE:   59 15:19:01      -43.274058        0.008700
+FIRE:   60 15:19:01      -43.274111        0.010050
+FIRE:   61 15:19:01      -43.274116        0.008484
+FIRE:   62 15:19:01      -43.274124        0.005754
+FIRE:   63 15:19:01      -43.274131        0.003972
+FIRE:   64 15:19:01      -43.274135        0.004501
+FIRE:   65 15:19:01      -43.274137        0.004045
+FIRE:   66 15:19:02      -43.274137        0.003802
+FIRE:   67 15:19:02      -43.274137        0.003332
+FIRE:   68 15:19:02      -43.274137        0.002670
+FIRE:   69 15:19:02      -43.274138        0.001867
+FIRE:   70 15:19:02      -43.274138        0.001046
+FIRE:   71 15:19:02      -43.274138        0.001079
+FIRE:   72 15:19:02      -43.274138        0.001107
+FIRE:   73 15:19:02      -43.274138        0.001105
+FIRE:   74 15:19:02      -43.274138        0.001100
+FIRE:   75 15:19:02      -43.274138        0.001094
+FIRE:   76 15:19:03      -43.274138        0.001085
+FIRE:   77 15:19:03      -43.274138        0.001074
+FIRE:   78 15:19:03      -43.274138        0.001060
+FIRE:   79 15:19:03      -43.274138        0.001044
+FIRE:   80 15:19:03      -43.274138        0.001024
+FIRE:   81 15:19:03      -43.274138        0.000998
+FIRE:   82 15:19:03      -43.274139        0.000965
+FIRE:   83 15:19:03      -43.274139        0.000925
+FIRE:   84 15:19:03      -43.274139        0.000877
+FIRE:   85 15:19:04      -43.274139        0.000822
+FIRE:   86 15:19:04      -43.274139        0.000761
+FIRE:   87 15:19:04      -43.274139        0.000742
+FIRE:   88 15:19:04      -43.274139        0.000719
+FIRE:   89 15:19:04      -43.274139        0.000623
+FIRE:   90 15:19:04      -43.274139        0.000594
+FIRE:   91 15:19:04      -43.274139        0.000598
+FIRE:   92 15:19:04      -43.274140        0.000614
+FIRE:   93 15:19:04      -43.274140        0.000607
+FIRE:   94 15:19:04      -43.274140        0.000538
+FIRE:   95 15:19:05      -43.274140        0.000392
+FIRE:   96 15:19:05      -43.274140        0.000367
+FIRE:   97 15:19:05      -43.274140        0.000284
+FIRE:   98 15:19:05      -43.274140        0.000184
+FIRE:   99 15:19:05      -43.274140        0.000251
+FIRE:  100 15:19:05      -43.274140        0.000207
+FIRE:  101 15:19:05      -43.274140        0.000130
+FIRE:  102 15:19:05      -43.274140        0.000074
+Unconstrained         loose (0.02): R3m (160)        tight (1e-6): P1 (1)
+</pre></div>
+</div>
+<section id="identifying-the-ferroelectric-phase">
+<h4>Identifying the ferroelectric phase<a class="headerlink" href="#identifying-the-ferroelectric-phase" title="Link to this heading">¶</a></h4>
+<p>The unconstrained structure has broken cubic symmetry, but the
+detected space group depends on the <code class="docutils literal notranslate"><span class="pre">spglib</span></code> tolerance. We scan
+<code class="docutils literal notranslate"><span class="pre">symprec</span></code> to find the plateau that identifies the true symmetry.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">spglib_cell</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">bto_unconst</span><span class="o">.</span><span class="n">get_cell</span><span class="p">(),</span>
+    <span class="n">bto_unconst</span><span class="o">.</span><span class="n">get_scaled_positions</span><span class="p">(),</span>
+    <span class="n">bto_unconst</span><span class="o">.</span><span class="n">get_atomic_numbers</span><span class="p">(),</span>
+<span class="p">)</span>
+<span class="k">for</span> <span class="n">symprec</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mf">0.2</span><span class="p">),</span> <span class="mi">10</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;  symprec=</span><span class="si">{</span><span class="n">symprec</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">  &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">spglib</span><span class="o">.</span><span class="n">get_spacegroup</span><span class="p">(</span><span class="n">spglib_cell</span><span class="p">,</span><span class="w"> </span><span class="n">symprec</span><span class="o">=</span><span class="n">symprec</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>symprec=0.0010  P1 (1)
+symprec=0.0018  P1 (1)
+symprec=0.0032  P1 (1)
+symprec=0.0058  P1 (1)
+symprec=0.0105  Cm (8)
+symprec=0.0190  R3m (160)
+symprec=0.0342  R3m (160)
+symprec=0.0616  R3m (160)
+symprec=0.1110  R3m (160)
+symprec=0.2000  R3m (160)
+</pre></div>
+</div>
+<p>A clear <span class="math notranslate nohighlight">\(R3m\)</span> plateau appears. The relaxed cell still carries
+small numerical noise that breaks exact <span class="math notranslate nohighlight">\(R3m\)</span> symmetry.
+<a class="reference external" href="https://spglib.readthedocs.io/en/stable/api.html#spg-standardize-cell">standardize_cell</a>
+snaps coordinates onto ideal Wyckoff positions and lattice vectors
+onto the exact <span class="math notranslate nohighlight">\(R3m\)</span> cell, giving a clean starting point for
+further calculations (e.g., phonons).</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">std_data</span> <span class="o">=</span> <span class="n">spglib</span><span class="o">.</span><span class="n">standardize_cell</span><span class="p">(</span><span class="n">spglib_cell</span><span class="p">,</span> <span class="n">to_primitive</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">symprec</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+
+<span class="n">bto_r3m</span> <span class="o">=</span> <span class="n">Atoms</span><span class="p">(</span>
+    <span class="n">numbers</span><span class="o">=</span><span class="n">std_data</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+    <span class="n">scaled_positions</span><span class="o">=</span><span class="n">std_data</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+    <span class="n">cell</span><span class="o">=</span><span class="n">std_data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">pbc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">report_symmetry</span><span class="p">(</span><span class="n">bto_r3m</span><span class="p">,</span> <span class="s2">&quot;R3m (spglib)&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>R3m (spglib)          loose (0.02): R3m (160)        tight (1e-6): R3m (160)
+</pre></div>
+</div>
+</section>
+<section id="energy-comparison">
+<h4>Energy comparison<a class="headerlink" href="#energy-comparison" title="Link to this heading">¶</a></h4>
+<p>The unconstrained relaxation converges to a lower-energy structure.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">dE</span> <span class="o">=</span> <span class="n">bto_const</span><span class="o">.</span><span class="n">get_potential_energy</span><span class="p">()</span> <span class="o">-</span> <span class="n">bto_unconst</span><span class="o">.</span><span class="n">get_potential_energy</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;E(cubic) - E(R3m): </span><span class="si">{</span><span class="n">dE</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1000</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> meV&quot;</span><span class="p">)</span>
+
+<span class="n">cellpar_c</span> <span class="o">=</span> <span class="n">bto_const</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">cellpar</span><span class="p">()</span>
+<span class="n">cellpar_u</span> <span class="o">=</span> <span class="n">bto_unconst</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">cellpar</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Cubic:         a = </span><span class="si">{</span><span class="n">cellpar_c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> Å&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Ferroelectric: a = </span><span class="si">{</span><span class="n">cellpar_u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> Å, α = </span><span class="si">{</span><span class="n">cellpar_u</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">°&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>E(cubic) - E(R3m): 49.6 meV
+  Cubic:         a = 3.9949 Å
+  Ferroelectric: a = 4.0262 Å, α = 89.82°
+</pre></div>
+</div>
+<p>The energy and cell parameter evolution during the unconstrained
+relaxation shows how the optimizer moves away from the cubic saddle
+point toward the <span class="math notranslate nohighlight">\(R3m\)</span> minimum.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">traj_bto</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;bto_unconst.traj&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+<span class="n">energies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">frame</span><span class="o">.</span><span class="n">get_potential_energy</span><span class="p">()</span> <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">traj_bto</span><span class="p">])</span>
+<span class="n">angles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">frame</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">cellpar</span><span class="p">()[</span><span class="mi">3</span><span class="p">]</span> <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">traj_bto</span><span class="p">])</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+
+<span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">energies</span><span class="p">)),</span> <span class="p">(</span><span class="n">energies</span> <span class="o">-</span> <span class="n">energies</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span>
+    <span class="p">(</span><span class="n">bto_const</span><span class="o">.</span><span class="n">get_potential_energy</span><span class="p">()</span> <span class="o">-</span> <span class="n">energies</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">,</span>
+    <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;$Pm\bar</span><span class="si">{3}</span><span class="s2">m$ (constrained)&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Optimization step&quot;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Energy (meV)&quot;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+<span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">angles</span><span class="p">)),</span> <span class="n">angles</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;cubic&quot;</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Optimization step&quot;</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\alpha$ (°)&quot;</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+<span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;BaTiO$_3$: cubic $Pm\bar</span><span class="si">{3}</span><span class="s2">m$ → ferroelectric $R3m$&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_pet-relaxation_002.png" srcset="../../_images/sphx_glr_pet-relaxation_002.png" alt="BaTiO$_3$: cubic $Pm\bar{3}m$ → ferroelectric $R3m$" class = "sphx-glr-single-img"/><p>The <a class="reference external" href="http://chemiscope.org">chemiscope</a> widget below lets you
+inspect the trajectory frame by frame. Notice how Ti gradually
+displaces relative to the oxygen cage as the ferroelectric
+distortion develops.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">vec_forces_bto</span> <span class="o">=</span> <span class="n">chemiscope</span><span class="o">.</span><span class="n">ase_vectors_to_arrows</span><span class="p">(</span><span class="n">traj_bto</span><span class="p">,</span> <span class="s2">&quot;forces&quot;</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">chemiscope</span><span class="o">.</span><span class="n">show</span><span class="p">(</span>
+    <span class="n">structures</span><span class="o">=</span><span class="n">traj_bto</span><span class="p">,</span>
+    <span class="n">properties</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;step&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">traj_bto</span><span class="p">)),</span>
+        <span class="s2">&quot;energy&quot;</span><span class="p">:</span> <span class="n">energies</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="n">shapes</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;forces&quot;</span><span class="p">:</span> <span class="n">vec_forces_bto</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="n">settings</span><span class="o">=</span><span class="n">chemiscope</span><span class="o">.</span><span class="n">quick_settings</span><span class="p">(</span>
+        <span class="n">map_settings</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;property&quot;</span><span class="p">:</span> <span class="s2">&quot;step&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;property&quot;</span><span class="p">:</span> <span class="s2">&quot;energy&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;joinPoints&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="n">structure_settings</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;unitCell&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;supercell&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+            <span class="s2">&quot;bonds&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;keepOrientation&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;forces&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+
+
+<!-- Error display -->
+<div id="chsp-6e6096f0-b086-4e25-bcf1-e6f6b394e679-error-display" class="chemiscope-sphinx-error">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-6e6096f0-b086-4e25-bcf1-e6f6b394e679-error-display')">
+        &times;
+    </button>
+</div>
+
+<!-- Warning Display -->
+<div id="chsp-6e6096f0-b086-4e25-bcf1-e6f6b394e679-warning-display" class="chemiscope-sphinx-warning">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-6e6096f0-b086-4e25-bcf1-e6f6b394e679-warning-display')">
+        &times;
+    </button>
+</div>
+<div style="padding: 0.5rem 1.25rem" />
+
+<!-- Loading Spinner -->
+<div id="chsp-6e6096f0-b086-4e25-bcf1-e6f6b394e679-loading" class="chemiscope-sphinx-spinner">
+    <img src="../../_static/chemiscope-loading.svg" alt="Loading icon" />
+</div>
+
+<!-- Chemiscope Visualization -->
+<div id="chsp-6e6096f0-b086-4e25-bcf1-e6f6b394e679">
+    <!-- This will be replaced by the chemiscope HTML -->
+</div>
+
+<!-- Load Visualization Script -->
+<script>
+    loadChemiscopeSphinx('chsp-6e6096f0-b086-4e25-bcf1-e6f6b394e679', '../../_datasets/bffa48ff02762f13e843aab0d66635fc703850d412431e484251fc9db652025a-fig_pet-relaxation_002.json.gz', 'default', '2000.0');
+</script>
+<div class="output_subarea output_html rendered_html output_result">
+
+</div>
+<br />
+<br /></section>
+</section>
+</section>
+<section id="conclusions">
+<h2>Conclusions<a class="headerlink" href="#conclusions" title="Link to this heading">¶</a></h2>
+<p>In summary, geometry relaxation with unconstrained MLIPs requires
+attention to symmetry, but the tools are straightforward:</p>
+<ol class="arabic simple">
+<li><p><strong>Unconstrained relaxation</strong> finds the nearest minimum. Use
+<code class="docutils literal notranslate"><span class="pre">spglib</span></code> to identify the resulting symmetry and
+<code class="docutils literal notranslate"><span class="pre">standardize_cell</span></code> to obtain a clean primitive cell.</p></li>
+<li><p><strong>``FixSymmetry``</strong> locks in a specific space group when you
+want to study a particular phase (stable or metastable). It is
+exact, cheap, and the recommended default when the target
+symmetry is known.</p></li>
+<li><p><strong>Rotational averaging</strong> reduces the model’s symmetry-breaking
+noise at the calculator level. It is useful in exploratory
+settings but expensive; prefer <code class="docutils literal notranslate"><span class="pre">FixSymmetry</span></code> when possible.</p></li>
+</ol>
+<p>To verify that the relaxed structures are true minima, one should
+compute their phonon dispersions. This is the subject of the
+<a class="reference external" href="https://atomistic-cookbook.org/examples/pet-phonons/pet-phonons.html">phonon uncertainty quantification recipe</a>.</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (1 minutes 56.505 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-pet-relaxation-pet-relaxation-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/fc377a2ac2f09e1320450d8eb521d940/pet-relaxation.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">pet-relaxation.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/cab9d65c6616502c0ded162060703e8a/pet-relaxation.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">pet-relaxation.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/383c7ce3f867c95ef7a7925b7dd9c320/pet-relaxation.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">recipe:</span> <span class="pre">pet-relaxation.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../hamiltonian-qm7/hamiltonian-qm7.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Hamiltonian Learning for Molecules with Indirect Targets</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../roy-gch/roy-gch.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Generalized Convex Hull construction for the polymorphs of ROY</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; BSD 3-Clause License, Copyright (c) 2026, The atomistic cookbook team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Geometry relaxation with unconstrained MLIPs</a><ul>
+<li><a class="reference internal" href="#setup">Setup</a><ul>
+<li><a class="reference internal" href="#helper-functions">Helper functions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#al-along-the-bain-path">Al along the Bain path</a><ul>
+<li><a class="reference internal" href="#unconstrained-relaxation">Unconstrained relaxation</a><ul>
+<li><a class="reference internal" href="#detecting-the-relaxed-symmetry">Detecting the relaxed symmetry</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#constrained-relaxation">Constrained relaxation</a></li>
+<li><a class="reference internal" href="#rotational-averaging">Rotational averaging</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#batio3-spontaneous-ferroelectric-distortion">BaTiO₃: spontaneous ferroelectric distortion</a><ul>
+<li><a class="reference internal" href="#id3">Constrained relaxation</a></li>
+<li><a class="reference internal" href="#id4">Unconstrained relaxation</a><ul>
+<li><a class="reference internal" href="#identifying-the-ferroelectric-phase">Identifying the ferroelectric phase</a></li>
+<li><a class="reference internal" href="#energy-comparison">Energy comparison</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#conclusions">Conclusions</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script data-domain="atomistic-cookbook.org" defer="defer" src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"></script>
+    <script src="../../_static/all-examples-data.js?v=4ff62313"></script>
+    <script src="../../_static/daily-recipe.js?v=b5e71911"></script>
+    </body>
+</html>
