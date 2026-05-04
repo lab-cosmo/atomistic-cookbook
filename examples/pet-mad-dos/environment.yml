@@ -7,4 +7,4 @@ dependencies:
   - matplotlib
   - pip:
     - ase>=3.28
-    - upet>=0.2.2
+    - upet>=0.2.3

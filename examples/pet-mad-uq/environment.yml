@@ -8,7 +8,7 @@ dependencies:
   - pandas
   - pip:
     - ase>=3.27
-    - upet>=0.2.1
+    - upet>=0.2.3
     - ipi>=3.1.8,<4
     - metatomic-torch<=0.1.8
     - metatrain

@@ -7,7 +7,7 @@ dependencies:
   - lammps-metatomic
   - pip:
     - ase>=3.27
-    - upet>=0.2.1
+    - upet>=0.2.3
     - ipi>=3.1.8,<4.0
     - chemiscope>=1.0
     - metatomic-torch<=0.1.8
