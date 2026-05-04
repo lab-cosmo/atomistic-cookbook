@@ -4,8 +4,18 @@ channels:
 dependencies:
   - chemiscope
   - metatensor::gromacs-metatomic=*=mpi_*
-  - libtorch =*=cpu*
-  - pytorch-cpu
+  # gromacs-metatomic links libgromacs against libopenblas.so.0 but the recipe
+  # does not list it as a runtime dependency; pin it here so gmx_mpi can load.
+  - libopenblas
+  # Use the cpu_generic libtorch build (linked against openblas) instead of the
+  # default cpu_mkl one. With cpu_mkl, libtorch's mkl_gemm_batched calls
+  # cblas_sgemm_batch, which the dynamic loader resolves to libopenblas (pulled
+  # in by libgromacs) rather than libmkl. The OpenBLAS implementation crashes
+  # because it is being called with MKL's argument layout (SIGSEGV inside
+  # inner_small_matrix_thread). Forcing cpu_generic makes both libtorch and
+  # libgromacs share the same openblas BLAS, eliminating the symbol clash.
+  - libtorch =*=cpu_generic*
+  - pytorch-cpu =*=cpu_generic*
   - matplotlib
   - mdanalysis
   - python=3.12
