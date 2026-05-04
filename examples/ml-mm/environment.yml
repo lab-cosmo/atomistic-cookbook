@@ -4,6 +4,9 @@ channels:
 dependencies:
   - chemiscope
   - metatensor::gromacs-metatomic=*=mpi_*
+  # gromacs-metatomic links libgromacs against libopenblas.so.0 but the recipe
+  # does not list it as a runtime dependency; pin it here so gmx_mpi can load.
+  - libopenblas
   - libtorch =*=cpu*
   - pytorch-cpu
   - matplotlib
