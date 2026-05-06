@@ -376,6 +376,7 @@ METATOMIC_RC_METATOMIC_REF = (
 METATOMIC_RC_METATRAIN_REF = (
     "git+https://github.com/HaoZeke/metatrain.git@test/metatensor-v0.2.0"
 )
+METATOMIC_RC_TORCH_VERSION = "2.10.*"
 
 
 def _conda_dependency_name(dependency):
@@ -406,15 +407,19 @@ def _metatomic_rc_metadata():
         "conda": METATOMIC_RC_CONDA_DEPENDENCIES,
         "metatomic": METATOMIC_RC_METATOMIC_REF,
         "metatomic_no_local_deps": "1",
+        "metatomic_torch_build_with_torch_version": METATOMIC_RC_TORCH_VERSION,
         "metatrain": METATOMIC_RC_METATRAIN_REF,
-        "torch": "2.11.*",
+        "torch": METATOMIC_RC_TORCH_VERSION,
     }
     return json.dumps(metadata, sort_keys=True)
 
 
 def _run_with_metatomic_rc_env(session, *args, **kwargs):
     if _metatomic_rc_enabled():
-        kwargs["env"] = {"METATOMIC_NO_LOCAL_DEPS": "1"}
+        kwargs["env"] = {
+            "METATOMIC_NO_LOCAL_DEPS": "1",
+            "METATOMIC_TORCH_BUILD_WITH_TORCH_VERSION": METATOMIC_RC_TORCH_VERSION,
+        }
 
     return session.run(*args, **kwargs)
 
@@ -441,7 +446,7 @@ def _rc_pip_dependency(dependency):
             extras = match.group(1)
         return f"metatrain{extras} @ {METATOMIC_RC_METATRAIN_REF}"
     if _is_pip_dependency(dependency, "torch"):
-        return "torch==2.11.*"
+        return f"torch=={METATOMIC_RC_TORCH_VERSION}"
 
     return dependency
 
