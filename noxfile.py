@@ -434,9 +434,7 @@ def apply_metatomic_rc_overrides(environment_yml, session):
             )
         else:
             name = _conda_dependency_name(dependency)
-            dependencies.append(
-                METATOMIC_RC_CONDA_DEPENDENCIES.get(name, dependency)
-            )
+            dependencies.append(METATOMIC_RC_CONDA_DEPENDENCIES.get(name, dependency))
 
     environment["dependencies"] = dependencies
     return _write_environment_yml(environment, session)
