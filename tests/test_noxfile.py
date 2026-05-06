@@ -133,6 +133,43 @@ class DependencyMetadataTests(unittest.TestCase):
 
 
 class MetatomicRCOverridesTests(unittest.TestCase):
+    def test_rc_conda_dependencies_force_python_313(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            environment_yml = Path(tmp) / "environment.yml"
+            environment_yml.write_text("dependencies:\n  - python=3.12\n")
+            session_dir = Path(tmp) / "session"
+            session_dir.mkdir()
+            session = FakeSession(str(session_dir))
+            environment = {
+                "dependencies": [
+                    "python=3.12",
+                    "numpy",
+                ]
+            }
+            dumped = {}
+
+            def capture_dump(data, fd):
+                dumped["environment"] = data
+
+            with (
+                mock.patch.dict(
+                    os.environ, {"METATOMIC_RC_CHANNEL": "file:///tmp/rc-channel"}
+                ),
+                mock.patch.object(noxfile.yaml, "safe_load", return_value=environment),
+                mock.patch.object(
+                    noxfile.yaml, "safe_dump", side_effect=capture_dump
+                ),
+            ):
+                noxfile.apply_metatomic_rc_overrides(environment_yml, session)
+
+        self.assertEqual(
+            dumped["environment"]["dependencies"],
+            [
+                "python =3.13",
+                "numpy",
+            ],
+        )
+
     def test_rc_pip_dependencies_move_metatomic_stack_to_conda(self):
         pip_dependencies = [
             "--extra-index-url https://download.pytorch.org/whl/cpu",
