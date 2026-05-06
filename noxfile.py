@@ -370,8 +370,8 @@ METATOMIC_RC_CONDA_DEPENDENCIES = {
 }
 
 METATOMIC_RC_METATOMIC_REF = (
-    "git+https://github.com/Luthaf/metatomic.git"
-    "@2f6ab246e927f02687ece76b0bce6eaecdb3ccf8"
+    "git+https://github.com/metatensor/metatomic.git"
+    "@a46c3a7e79dd24d35217b7bb9176420823723242"
 )
 METATOMIC_RC_METATRAIN_REF = (
     "git+https://github.com/HaoZeke/metatrain.git@test/metatensor-v0.2.0"
