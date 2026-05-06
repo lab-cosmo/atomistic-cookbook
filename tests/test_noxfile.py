@@ -197,7 +197,7 @@ class MetatomicRCOverridesTests(unittest.TestCase):
             [
                 "ase",
                 "torch-pme @ git+https://github.com/HaoZeke/torch-pme.git"
-                "@rc/metatomic-0.1.12",
+                "@rc/metatomic-0.1.12-v0.3.2",
             ],
         )
 
