@@ -71,6 +71,7 @@ from the `UPET <https://huggingface.co/lab-cosmo/upet>`_ family.
 #
 # We begin by loading the required Python packages.
 
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -80,10 +81,14 @@ import cmcrameri.cm as cmc
 import matplotlib.pyplot as plt
 import MDAnalysis as mda
 import numpy as np
-from MDAnalysis.analysis.dihedrals import Ramachandran
+from MDAnalysis.analysis.dihedrals import Rama_ref, Ramachandran
 from MDAnalysis.analysis.rms import RMSD
 from metatomic_ase import MetatomicCalculator
-from MDAnalysis.analysis.dihedrals import Rama_ref
+
+
+GMX = shutil.which("gmx_mpi") or shutil.which("gmx")
+if GMX is None:
+    raise RuntimeError("could not find a GROMACS executable")
 
 # %%
 # Initial structure
@@ -151,7 +156,7 @@ print(f"Successfully exported {fname}.")
 
 _ = subprocess.check_call(
     [
-        "gmx_mpi",
+        GMX,
         "grompp",
         "-f",
         "grompp.mdp",
@@ -162,7 +167,7 @@ _ = subprocess.check_call(
     ]
 )
 
-_ = subprocess.check_call(["gmx_mpi", "mdrun"])
+_ = subprocess.check_call([GMX, "mdrun"])
 
 # %%
 # RMSD analysis
@@ -374,7 +379,7 @@ fig.tight_layout()
 
 # Extract protein trajectory
 subprocess.run(
-    ["gmx_mpi", "trjconv", "-f", "traj.trr", "-s", "topol.tpr", "-o", "traj.pdb"],
+    [GMX, "trjconv", "-f", "traj.trr", "-s", "topol.tpr", "-o", "traj.pdb"],
     input=b"1\n",  # select Protein group
     check=True,
 )
