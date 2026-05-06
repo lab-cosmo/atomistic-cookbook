@@ -1,6 +1,57 @@
 import tempfile
+import sys
+import types
 import unittest
 from pathlib import Path
+
+
+def _install_nox_stub():
+    nox = types.ModuleType("nox")
+    nox.options = types.SimpleNamespace()
+    nox.needs_version = None
+
+    def session(*decorator_args, **decorator_kwargs):
+        if decorator_args and callable(decorator_args[0]):
+            return decorator_args[0]
+
+        def decorate(function):
+            return function
+
+        return decorate
+
+    nox.session = session
+    sys.modules["nox"] = nox
+
+
+def _install_docutils_stub():
+    core = types.ModuleType("docutils.core")
+    core.publish_doctree = lambda *args, **kwargs: None
+    core.publish_parts = lambda *args, **kwargs: {}
+
+    nodes = types.ModuleType("docutils.nodes")
+    nodes.comment = dict
+    nodes.paragraph = dict
+    nodes.title = dict
+
+    rst = types.ModuleType("docutils.parsers.rst")
+
+    class Directive:
+        has_content = False
+
+    rst.Directive = Directive
+    rst.directives = types.SimpleNamespace(
+        register_directive=lambda *args, **kwargs: None
+    )
+
+    sys.modules["docutils"] = types.ModuleType("docutils")
+    sys.modules["docutils.core"] = core
+    sys.modules["docutils.nodes"] = nodes
+    sys.modules["docutils.parsers"] = types.ModuleType("docutils.parsers")
+    sys.modules["docutils.parsers.rst"] = rst
+
+
+_install_nox_stub()
+_install_docutils_stub()
 
 import noxfile
 
