@@ -388,7 +388,7 @@ METATOMIC_RC_PIP_CONDA_DEPENDENCIES = {
 METATOMIC_RC_PIP_DEPENDENCIES = {
     "torch-pme": (
         "torch-pme @ git+https://github.com/HaoZeke/torch-pme.git"
-        "@rc/metatomic-0.1.12"
+        "@rc/metatomic-0.1.12-v0.3.2"
     ),
 }
 
