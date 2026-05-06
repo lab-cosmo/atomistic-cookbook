@@ -360,20 +360,20 @@ metadata = mta.ModelMetadata(
     description="Computes smooth histogram of coordination numbers",
 )
 
-# metadata about what the model can do
-capabilities = mta.ModelCapabilities(
-    length_unit="Angstrom",
-    outputs={"feature": mta.ModelOutput(sample_kind="system")},
-    atomic_types=[18],
-    interaction_range=cutoff,
-    supported_devices=["cpu"],
-    dtype="float64",
-)
+def model_capabilities():
+    return mta.ModelCapabilities(
+        length_unit="Angstrom",
+        outputs={"feature": mta.ModelOutput(sample_kind="system")},
+        atomic_types=[18],
+        interaction_range=cutoff,
+        supported_devices=["cpu"],
+        dtype="float64",
+    )
 
 model_ch = mta.AtomisticModel(
     module=module.eval(),
     metadata=metadata,
-    capabilities=capabilities,
+    capabilities=model_capabilities(),
 )
 
 model_ch.save("histo-cv.pt", collect_extensions="./extensions/")
@@ -389,7 +389,7 @@ metadata = mta.ModelMetadata(
 model_soap = mta.AtomisticModel(
     module=module.eval(),
     metadata=metadata,
-    capabilities=capabilities,
+    capabilities=model_capabilities(),
 )
 
 # finally, save the model to a standalone file
