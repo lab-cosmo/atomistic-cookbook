@@ -367,6 +367,7 @@ METATOMIC_RC_CONDA_DEPENDENCIES = {
     "metatrain": "metatrain =2026.2.1.dev31",
     "plumed-metatomic": "plumed-metatomic =2.10.0=*nompi*",
     "py-plumed-metatomic": "py-plumed-metatomic =2.10.0",
+    "python": "python =3.13",
     "pytorch-cpu": "pytorch-cpu =2.10.*=cpu_generic*",
     "python-metatomic-torch": "python-metatomic-torch =0.1.12.rc1",
     "python-metatensor-operations": "python-metatensor-operations =0.5.0.rc2",
