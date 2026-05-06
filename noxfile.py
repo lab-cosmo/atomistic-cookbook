@@ -385,6 +385,13 @@ METATOMIC_RC_PIP_CONDA_DEPENDENCIES = {
     "torch": METATOMIC_RC_CONDA_DEPENDENCIES["pytorch-cpu"],
 }
 
+METATOMIC_RC_PIP_DEPENDENCIES = {
+    "torch-pme": (
+        "torch-pme @ git+https://github.com/HaoZeke/torch-pme.git"
+        "@rc/metatomic-0.1.12"
+    ),
+}
+
 METATOMIC_RC_METATOMIC_REF = (
     "git+https://github.com/metatensor/metatomic.git"
     "@a46c3a7e79dd24d35217b7bb9176420823723242"
@@ -425,6 +432,7 @@ def _metatomic_rc_metadata():
         "metatomic_no_local_deps": "1",
         "metatomic_torch_build_with_torch_version": METATOMIC_RC_TORCH_VERSION,
         "metatrain": METATOMIC_RC_METATRAIN_REF,
+        "pip": METATOMIC_RC_PIP_DEPENDENCIES,
         "torch": METATOMIC_RC_TORCH_VERSION,
     }
     return json.dumps(metadata, sort_keys=True)
@@ -443,6 +451,9 @@ def _run_with_metatomic_rc_env(session, *args, **kwargs):
 def _rc_pip_dependency(dependency):
     if str(dependency).startswith("--extra-index-url"):
         return None
+    for name, rc_dependency in METATOMIC_RC_PIP_DEPENDENCIES.items():
+        if _is_pip_dependency(dependency, name):
+            return rc_dependency
     for name in METATOMIC_RC_PIP_CONDA_DEPENDENCIES:
         if _is_pip_dependency(dependency, name):
             return None
