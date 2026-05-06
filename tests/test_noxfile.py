@@ -188,8 +188,8 @@ class MetatomicRCOverridesTests(unittest.TestCase):
                 "pytorch-cpu =2.10.*=cpu_generic*",
                 "python-metatensor-torch =0.9.0.rc5",
                 "python-metatensor-operations =0.5.0.rc2",
-                "python-metatomic-torch =0.1.12.rc1",
-                "metatrain =2026.2.1.dev31",
+                "python-metatomic-torch =0.1.12.rc2",
+                "metatrain =2026.2.1.dev47",
             ],
         )
         self.assertEqual(
