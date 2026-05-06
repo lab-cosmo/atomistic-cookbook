@@ -383,6 +383,19 @@ def _metatomic_rc_enabled():
     return os.environ.get("METATOMIC_RC_CHANNEL", "").strip() != ""
 
 
+def _metatomic_rc_metadata():
+    if not _metatomic_rc_enabled():
+        return ""
+
+    metadata = {
+        "conda": METATOMIC_RC_CONDA_DEPENDENCIES,
+        "metatomic": METATOMIC_RC_METATOMIC_REF,
+        "metatrain": METATOMIC_RC_METATRAIN_REF,
+        "torch": "2.11.*",
+    }
+    return json.dumps(metadata, sort_keys=True)
+
+
 def _rc_pip_dependency(dependency):
     if _is_pip_dependency(dependency, "metatomic-torch"):
         return (
@@ -502,6 +515,7 @@ for name in EXAMPLES:
             session,
             environment_yml=environment_yml,
             metatomic_rc_channel=os.environ.get("METATOMIC_RC_CHANNEL", ""),
+            metatomic_rc_metadata=_metatomic_rc_metadata(),
         ):
             environment_yml = update_dependencies(environment_yml, session)
 
