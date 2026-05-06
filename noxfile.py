@@ -397,6 +397,13 @@ def _metatomic_rc_metadata():
     return json.dumps(metadata, sort_keys=True)
 
 
+def _run_with_metatomic_rc_env(session, *args, **kwargs):
+    if _metatomic_rc_enabled():
+        kwargs["env"] = {"METATOMIC_NO_LOCAL_DEPS": "1"}
+
+    return session.run(*args, **kwargs)
+
+
 def _rc_pip_dependency(dependency):
     if _is_pip_dependency(dependency, "metatomic-torch"):
         return (
@@ -478,7 +485,8 @@ def update_dependencies(environment_yml, session):
     environment_yml = apply_metatomic_rc_overrides(environment_yml, session)
     metatomic_rc_enabled = _metatomic_rc_enabled()
 
-    output = session.run(
+    output = _run_with_metatomic_rc_env(
+        session,
         "conda",
         "env",
         "create",
@@ -536,7 +544,8 @@ for name in EXAMPLES:
         ):
             environment_yml = update_dependencies(environment_yml, session)
 
-            session.run(
+            _run_with_metatomic_rc_env(
+                session,
                 "conda",
                 "env",
                 "update",
