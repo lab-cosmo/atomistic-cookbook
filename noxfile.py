@@ -364,9 +364,24 @@ METATOMIC_RC_CONDA_DEPENDENCIES = {
     "lammps-metatomic": "lammps-metatomic =2025.09.10.mta4=*nompi*",
     "libmetatomic-torch": "libmetatomic-torch =0.1.12.rc1",
     "libtorch": "libtorch =2.10.*=cpu_generic*",
+    "metatrain": "metatrain =2026.2.1.dev31",
     "plumed-metatomic": "plumed-metatomic =2.10.0=*nompi*",
     "py-plumed-metatomic": "py-plumed-metatomic =2.10.0",
     "pytorch-cpu": "pytorch-cpu =2.10.*=cpu_generic*",
+    "python-metatomic-torch": "python-metatomic-torch =0.1.12.rc1",
+    "python-metatensor-operations": "python-metatensor-operations =0.5.0.rc2",
+    "python-metatensor-torch": "python-metatensor-torch =0.9.0.rc5",
+}
+
+METATOMIC_RC_PIP_CONDA_DEPENDENCIES = {
+    "metatomic-ase": METATOMIC_RC_CONDA_DEPENDENCIES["python-metatomic-torch"],
+    "metatomic-torch": METATOMIC_RC_CONDA_DEPENDENCIES["python-metatomic-torch"],
+    "metatensor-operations": METATOMIC_RC_CONDA_DEPENDENCIES[
+        "python-metatensor-operations"
+    ],
+    "metatensor-torch": METATOMIC_RC_CONDA_DEPENDENCIES["python-metatensor-torch"],
+    "metatrain": METATOMIC_RC_CONDA_DEPENDENCIES["metatrain"],
+    "torch": METATOMIC_RC_CONDA_DEPENDENCIES["pytorch-cpu"],
 }
 
 METATOMIC_RC_METATOMIC_REF = (
@@ -425,45 +440,33 @@ def _run_with_metatomic_rc_env(session, *args, **kwargs):
 
 
 def _rc_pip_dependency(dependency):
-    if _is_pip_dependency(dependency, "metatomic-torch"):
-        return (
-            f"metatomic-torch @ {METATOMIC_RC_METATOMIC_REF}"
-            "#subdirectory=python/metatomic_torch"
-        )
-    if _is_pip_dependency(dependency, "metatomic-ase"):
-        return (
-            f"metatomic-ase @ {METATOMIC_RC_METATOMIC_REF}"
-            "#subdirectory=python/metatomic_ase"
-        )
-    if _is_pip_dependency(dependency, "metatensor-torch"):
-        return "metatensor-torch==0.9.0rc5"
-    if _is_pip_dependency(dependency, "metatensor-operations"):
-        return "metatensor-operations==0.5.0rc2"
-    if _is_pip_dependency(dependency, "metatrain"):
-        extras = ""
-        match = re.match(r"metatrain(\[[^\]]+\])", dependency)
-        if match:
-            extras = match.group(1)
-        return f"metatrain{extras} @ {METATOMIC_RC_METATRAIN_REF}"
-    if _is_pip_dependency(dependency, "torch"):
-        return f"torch=={METATOMIC_RC_TORCH_VERSION}"
+    if str(dependency).startswith("--extra-index-url"):
+        return None
+    for name in METATOMIC_RC_PIP_CONDA_DEPENDENCIES:
+        if _is_pip_dependency(dependency, name):
+            return None
 
     return dependency
 
 
+def _rc_conda_dependencies_from_pip(dependencies):
+    conda_dependencies = []
+    for dependency in dependencies:
+        for name, conda_dependency in METATOMIC_RC_PIP_CONDA_DEPENDENCIES.items():
+            if _is_pip_dependency(dependency, name):
+                if conda_dependency not in conda_dependencies:
+                    conda_dependencies.append(conda_dependency)
+                break
+
+    return conda_dependencies
+
+
 def _rc_pip_dependencies(dependencies):
-    has_metatomic_torch = any(
-        _is_pip_dependency(dep, "metatomic-torch") for dep in dependencies
-    )
-    has_metatomic_ase = any(
-        _is_pip_dependency(dep, "metatomic-ase") for dep in dependencies
-    )
-
-    rc_dependencies = [_rc_pip_dependency(dep) for dep in dependencies]
-    if has_metatomic_torch and not has_metatomic_ase:
-        rc_dependencies.append(_rc_pip_dependency("metatomic-ase"))
-
-    return rc_dependencies
+    return [
+        rc_dependency
+        for dependency in dependencies
+        if (rc_dependency := _rc_pip_dependency(dependency)) is not None
+    ]
 
 
 def _write_environment_yml(environment, session):
@@ -492,7 +495,10 @@ def apply_metatomic_rc_overrides(environment_yml, session):
     dependencies = []
     for dependency in environment["dependencies"]:
         if isinstance(dependency, dict) and "pip" in dependency:
-            dependencies.append({"pip": _rc_pip_dependencies(dependency["pip"])})
+            dependencies.extend(_rc_conda_dependencies_from_pip(dependency["pip"]))
+            pip_dependencies = _rc_pip_dependencies(dependency["pip"])
+            if pip_dependencies:
+                dependencies.append({"pip": pip_dependencies})
         else:
             name = _conda_dependency_name(dependency)
             dependencies.append(METATOMIC_RC_CONDA_DEPENDENCIES.get(name, dependency))
