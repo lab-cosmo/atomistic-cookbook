@@ -151,10 +151,10 @@ class CoordinationHistogram(torch.nn.Module):
         outputs: Dict[str, mta.ModelOutput],
         selected_atoms: Optional[mts.Labels],
     ) -> Dict[str, mts.TensorMap]:
-        if "features" not in outputs:
+        if "feature" not in outputs:
             return {}
 
-        if outputs["features"].per_atom:
+        if outputs["feature"].sample_kind == "atom":
             raise ValueError("per-atoms features are not supported in this model")
 
         if selected_atoms is not None:
@@ -170,7 +170,7 @@ class CoordinationHistogram(torch.nn.Module):
                 components=[],
                 properties=mts.Labels("cn", self.cn_list.reshape(-1, 1)),
             )
-            return {"features": mts.TensorMap(keys, [block])}
+            return {"feature": mts.TensorMap(keys, [block])}
 
         values = []
         # loop over all systems
@@ -206,9 +206,9 @@ class CoordinationHistogram(torch.nn.Module):
             properties=mts.Labels("cn", self.cn_list.reshape(-1, 1)),
         )
         mts_coords = mts.TensorMap(keys, [block])
-        # This model has a single output, named "features". This can be used by multiple
+        # This model has a single output, named "feature". This can be used by multiple
         # tools, including PLUMED where it defines a custom collective variable.
-        return {"features": mts_coords}
+        return {"feature": mts_coords}
 
 
 # %%
@@ -277,7 +277,7 @@ class SoapCV(torch.nn.Module):
         outputs: Dict[str, mta.ModelOutput],
         selected_atoms: Optional[mts.Labels],
     ) -> Dict[str, mts.TensorMap]:
-        if "features" not in outputs:
+        if "feature" not in outputs:
             return {}
 
         # computes the spherical expansion
@@ -295,7 +295,7 @@ class SoapCV(torch.nn.Module):
                 components=[],
                 properties=self.selected_keys,
             )
-            return {"features": mts.TensorMap(keys, [block])}
+            return {"feature": mts.TensorMap(keys, [block])}
 
         # then manipulate the tensormap to remove some of the sparsity
         spex = mts.remove_dimension(spex, axis="keys", name="o3_sigma")
@@ -317,13 +317,13 @@ class SoapCV(torch.nn.Module):
         summed_q = mts.TensorMap(spex.keys, blocks)
         summed_q = summed_q.keys_to_properties("o3_lambda")
 
-        if not outputs["features"].per_atom:
+        if outputs["feature"].sample_kind != "atom":
             summed_q = mts.mean_over_samples(
                 summed_q, sample_names=["atom", "center_type"]
             )
 
-        # This model, like CoordinationHistogram has a single output, named "features".
-        return {"features": summed_q}
+        # This model, like CoordinationHistogram has a single output, named "feature".
+        return {"feature": summed_q}
 
 
 # %%
@@ -355,7 +355,7 @@ metadata = mta.ModelMetadata(
 # metadata about what the model can do
 capabilities = mta.ModelCapabilities(
     length_unit="Angstrom",
-    outputs={"features": mta.ModelOutput(per_atom=False)},
+    outputs={"feature": mta.ModelOutput(sample_kind="system")},
     atomic_types=[18],
     interaction_range=cutoff,
     supported_devices=["cpu"],
