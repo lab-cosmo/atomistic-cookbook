@@ -386,12 +386,24 @@ METATOMIC_RC_PIP_CONDA_DEPENDENCIES = {
 }
 
 METATOMIC_RC_PIP_DEPENDENCIES = {
+    "featomic": (
+        "featomic @ git+https://github.com/HaoZeke/featomic.git"
+        "@rc/metatomic-0.1.12#subdirectory=python/featomic"
+    ),
+    "featomic-torch": (
+        "featomic-torch @ git+https://github.com/HaoZeke/featomic.git"
+        "@rc/metatomic-0.1.12#subdirectory=python/featomic_torch"
+    ),
     "torch-pme": (
         "torch-pme @ git+https://github.com/HaoZeke/torch-pme.git"
         "@rc/metatomic-0.1.12-v0.3.2"
     ),
 }
 
+METATOMIC_RC_FEATOMIC_REF = (
+    "git+https://github.com/HaoZeke/featomic.git"
+    "@rc/metatomic-0.1.12"
+)
 METATOMIC_RC_METATOMIC_REF = (
     "git+https://github.com/metatensor/metatomic.git"
     "@5691ca595fea6f07f239dc5217488b6fd58911a6"
@@ -429,6 +441,7 @@ def _metatomic_rc_metadata():
 
     metadata = {
         "conda": METATOMIC_RC_CONDA_DEPENDENCIES,
+        "featomic": METATOMIC_RC_FEATOMIC_REF,
         "metatomic": METATOMIC_RC_METATOMIC_REF,
         "metatomic_no_local_deps": "1",
         "metatomic_torch_build_with_torch_version": METATOMIC_RC_TORCH_VERSION,
@@ -442,6 +455,7 @@ def _metatomic_rc_metadata():
 def _run_with_metatomic_rc_env(session, *args, **kwargs):
     if _metatomic_rc_enabled():
         kwargs["env"] = {
+            "FEATOMIC_TORCH_BUILD_WITH_TORCH_VERSION": METATOMIC_RC_TORCH_VERSION,
             "METATOMIC_NO_LOCAL_DEPS": "1",
             "METATOMIC_TORCH_BUILD_WITH_TORCH_VERSION": METATOMIC_RC_TORCH_VERSION,
         }

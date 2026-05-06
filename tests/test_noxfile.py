@@ -179,6 +179,7 @@ class MetatomicRCOverridesTests(unittest.TestCase):
             "metatomic-torch==0.1.7",
             "metatrain",
             "ase",
+            "featomic-torch",
             "torch-pme>=0.3.1,<0.4",
         ]
 
@@ -196,6 +197,8 @@ class MetatomicRCOverridesTests(unittest.TestCase):
             noxfile._rc_pip_dependencies(pip_dependencies),
             [
                 "ase",
+                "featomic-torch @ git+https://github.com/HaoZeke/featomic.git"
+                "@rc/metatomic-0.1.12#subdirectory=python/featomic_torch",
                 "torch-pme @ git+https://github.com/HaoZeke/torch-pme.git"
                 "@rc/metatomic-0.1.12-v0.3.2",
             ],
@@ -212,6 +215,7 @@ class MetatomicRCOverridesTests(unittest.TestCase):
         self.assertEqual(
             session.run_kwargs["env"],
             {
+                "FEATOMIC_TORCH_BUILD_WITH_TORCH_VERSION": "2.10.*",
                 "METATOMIC_NO_LOCAL_DEPS": "1",
                 "METATOMIC_TORCH_BUILD_WITH_TORCH_VERSION": "2.10.*",
             },
