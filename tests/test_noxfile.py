@@ -1,8 +1,10 @@
 import tempfile
+import os
 import sys
 import types
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 def _install_nox_stub():
@@ -78,6 +80,11 @@ class FakeSession:
     def debug(self, message):
         self.debug_messages.append(message)
 
+    def run(self, *args, **kwargs):
+        self.run_args = args
+        self.run_kwargs = kwargs
+        return None
+
 
 class DependencyMetadataTests(unittest.TestCase):
     def test_should_reinstall_dependencies_does_not_write_metadata_marker(self):
@@ -123,6 +130,27 @@ class DependencyMetadataTests(unittest.TestCase):
                     session, environment_yml=environment_yml
                 )
             )
+
+
+class MetatomicRCOverridesTests(unittest.TestCase):
+    def test_rc_pip_dependency_uses_torch_2_10(self):
+        self.assertEqual(noxfile._rc_pip_dependency("torch==2.9.1"), "torch==2.10.*")
+
+    def test_rc_run_env_sets_metatomic_torch_build_version(self):
+        session = FakeSession("/tmp")
+
+        with mock.patch.dict(
+            os.environ, {"METATOMIC_RC_CHANNEL": "file:///tmp/rc-channel"}
+        ):
+            noxfile._run_with_metatomic_rc_env(session, "conda", "env", "update")
+
+        self.assertEqual(
+            session.run_kwargs["env"],
+            {
+                "METATOMIC_NO_LOCAL_DEPS": "1",
+                "METATOMIC_TORCH_BUILD_WITH_TORCH_VERSION": "2.10.*",
+            },
+        )
 
 
 if __name__ == "__main__":
