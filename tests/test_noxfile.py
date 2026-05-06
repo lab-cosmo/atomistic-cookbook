@@ -133,8 +133,28 @@ class DependencyMetadataTests(unittest.TestCase):
 
 
 class MetatomicRCOverridesTests(unittest.TestCase):
-    def test_rc_pip_dependency_uses_torch_2_10(self):
-        self.assertEqual(noxfile._rc_pip_dependency("torch==2.9.1"), "torch==2.10.*")
+    def test_rc_pip_dependencies_move_metatomic_stack_to_conda(self):
+        pip_dependencies = [
+            "--extra-index-url https://download.pytorch.org/whl/cpu",
+            "torch==2.9.1",
+            "metatensor-torch>=0.8,<0.9",
+            "metatensor-operations",
+            "metatomic-torch==0.1.7",
+            "metatrain",
+            "ase",
+        ]
+
+        self.assertEqual(
+            noxfile._rc_conda_dependencies_from_pip(pip_dependencies),
+            [
+                "pytorch-cpu =2.10.*=cpu_generic*",
+                "python-metatensor-torch =0.9.0.rc5",
+                "python-metatensor-operations =0.5.0.rc2",
+                "python-metatomic-torch =0.1.12.rc1",
+                "metatrain =2026.2.1.dev31",
+            ],
+        )
+        self.assertEqual(noxfile._rc_pip_dependencies(pip_dependencies), ["ase"])
 
     def test_rc_run_env_sets_metatomic_torch_build_version(self):
         session = FakeSession("/tmp")
