@@ -370,6 +370,7 @@ METATOMIC_RC_CONDA_DEPENDENCIES = {
     "python": "python =3.13",
     "pytorch-cpu": "pytorch-cpu =2.10.*=cpu_generic*",
     "python-metatomic-torch": "python-metatomic-torch =0.1.12.rc2",
+    "python-metatensor-core": "python-metatensor-core =0.2.0.rc3",
     "python-metatensor-operations": "python-metatensor-operations =0.5.0.rc2",
     "python-metatensor-torch": "python-metatensor-torch =0.9.0.rc5",
 }
@@ -377,12 +378,27 @@ METATOMIC_RC_CONDA_DEPENDENCIES = {
 METATOMIC_RC_PIP_CONDA_DEPENDENCIES = {
     "metatomic-ase": METATOMIC_RC_CONDA_DEPENDENCIES["python-metatomic-torch"],
     "metatomic-torch": METATOMIC_RC_CONDA_DEPENDENCIES["python-metatomic-torch"],
+    "metatensor-core": METATOMIC_RC_CONDA_DEPENDENCIES["python-metatensor-core"],
     "metatensor-operations": METATOMIC_RC_CONDA_DEPENDENCIES[
         "python-metatensor-operations"
     ],
     "metatensor-torch": METATOMIC_RC_CONDA_DEPENDENCIES["python-metatensor-torch"],
     "metatrain": METATOMIC_RC_CONDA_DEPENDENCIES["metatrain"],
     "torch": METATOMIC_RC_CONDA_DEPENDENCIES["pytorch-cpu"],
+}
+
+METATOMIC_RC_TRANSITIVE_PIP_CONDA_DEPENDENCIES = {
+    "featomic": [
+        METATOMIC_RC_CONDA_DEPENDENCIES["python-metatensor-core"],
+        METATOMIC_RC_CONDA_DEPENDENCIES["python-metatensor-operations"],
+    ],
+    "featomic-torch": [
+        METATOMIC_RC_CONDA_DEPENDENCIES["pytorch-cpu"],
+        METATOMIC_RC_CONDA_DEPENDENCIES["python-metatomic-torch"],
+        METATOMIC_RC_CONDA_DEPENDENCIES["python-metatensor-core"],
+        METATOMIC_RC_CONDA_DEPENDENCIES["python-metatensor-operations"],
+        METATOMIC_RC_CONDA_DEPENDENCIES["python-metatensor-torch"],
+    ],
 }
 
 METATOMIC_RC_PIP_DEPENDENCIES = {
@@ -484,6 +500,14 @@ def _rc_conda_dependencies_from_pip(dependencies):
                 if conda_dependency not in conda_dependencies:
                     conda_dependencies.append(conda_dependency)
                 break
+        for name, extra_conda_dependencies in (
+            METATOMIC_RC_TRANSITIVE_PIP_CONDA_DEPENDENCIES.items()
+        ):
+            if _is_pip_dependency(dependency, name):
+                for conda_dependency in extra_conda_dependencies:
+                    if conda_dependency not in conda_dependencies:
+                        conda_dependencies.append(conda_dependency)
+                break
 
     return conda_dependencies
 
@@ -502,6 +526,35 @@ def _write_environment_yml(environment, session):
         yaml.safe_dump(environment, fd)
 
     return environment_yml
+
+
+def _pip_installed_packages(session, packages):
+    script = """
+import importlib.metadata as metadata
+import sys
+
+for name in sys.argv[1:]:
+    try:
+        distribution = metadata.distribution(name)
+    except metadata.PackageNotFoundError:
+        continue
+
+    installer = (distribution.read_text("INSTALLER") or "").strip().lower()
+    if installer == "pip":
+        print(name)
+"""
+    output = session.run("python", "-c", script, *packages, silent=True)
+    return output.splitlines()
+
+
+def uninstall_metatomic_rc_pip_packages(session):
+    if not _metatomic_rc_enabled():
+        return
+
+    packages = sorted(METATOMIC_RC_PIP_CONDA_DEPENDENCIES)
+    pip_packages = _pip_installed_packages(session, packages)
+    if pip_packages:
+        session.run("python", "-m", "pip", "uninstall", "--yes", *pip_packages)
 
 
 def apply_metatomic_rc_overrides(environment_yml, session):
@@ -596,6 +649,8 @@ for name in EXAMPLES:
         }
         if should_reinstall_dependencies(session, **dependency_metadata):
             environment_yml = update_dependencies(environment_yml, session)
+
+            uninstall_metatomic_rc_pip_packages(session)
 
             _run_with_metatomic_rc_env(
                 session,

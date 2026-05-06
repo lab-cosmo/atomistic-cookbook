@@ -73,17 +73,20 @@ class FakeVirtualenv:
 
 
 class FakeSession:
-    def __init__(self, location, reused=True):
+    def __init__(self, location, reused=True, run_output=None):
         self.virtualenv = FakeVirtualenv(location, reused)
         self.debug_messages = []
+        self.run_output = run_output
+        self.runs = []
 
     def debug(self, message):
         self.debug_messages.append(message)
 
     def run(self, *args, **kwargs):
+        self.runs.append((args, kwargs))
         self.run_args = args
         self.run_kwargs = kwargs
-        return None
+        return self.run_output
 
 
 class DependencyMetadataTests(unittest.TestCase):
@@ -191,6 +194,7 @@ class MetatomicRCOverridesTests(unittest.TestCase):
                 "python-metatensor-operations =0.5.0.rc2",
                 "python-metatomic-torch =0.1.12.rc2",
                 "metatrain =2026.2.1.dev47",
+                "python-metatensor-core =0.2.0.rc3",
             ],
         )
         self.assertEqual(
@@ -219,6 +223,31 @@ class MetatomicRCOverridesTests(unittest.TestCase):
                 "METATOMIC_NO_LOCAL_DEPS": "1",
                 "METATOMIC_TORCH_BUILD_WITH_TORCH_VERSION": "2.10.*",
             },
+        )
+
+    def test_rc_uninstalls_pip_packages_replaced_by_conda(self):
+        session = FakeSession(
+            "/tmp",
+            run_output="metatensor-core\nmetatomic-torch\n",
+        )
+
+        with mock.patch.dict(
+            os.environ, {"METATOMIC_RC_CHANNEL": "file:///tmp/rc-channel"}
+        ):
+            noxfile.uninstall_metatomic_rc_pip_packages(session)
+
+        self.assertEqual(session.runs[0][0][:2], ("python", "-c"))
+        self.assertEqual(
+            session.runs[1][0],
+            (
+                "python",
+                "-m",
+                "pip",
+                "uninstall",
+                "--yes",
+                "metatensor-core",
+                "metatomic-torch",
+            ),
         )
 
 
