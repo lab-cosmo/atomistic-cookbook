@@ -151,10 +151,14 @@ class CoordinationHistogram(torch.nn.Module):
         outputs: Dict[str, mta.ModelOutput],
         selected_atoms: Optional[mts.Labels],
     ) -> Dict[str, mts.TensorMap]:
-        if "feature" not in outputs:
+        if "feature" in outputs:
+            feature_options = outputs["feature"]
+        elif "features" in outputs:
+            feature_options = outputs["features"]
+        else:
             return {}
 
-        if outputs["feature"].sample_kind == "atom":
+        if feature_options.sample_kind == "atom":
             raise ValueError("per-atoms features are not supported in this model")
 
         if selected_atoms is not None:
@@ -277,7 +281,11 @@ class SoapCV(torch.nn.Module):
         outputs: Dict[str, mta.ModelOutput],
         selected_atoms: Optional[mts.Labels],
     ) -> Dict[str, mts.TensorMap]:
-        if "feature" not in outputs:
+        if "feature" in outputs:
+            feature_options = outputs["feature"]
+        elif "features" in outputs:
+            feature_options = outputs["features"]
+        else:
             return {}
 
         # computes the spherical expansion
@@ -317,7 +325,7 @@ class SoapCV(torch.nn.Module):
         summed_q = mts.TensorMap(spex.keys, blocks)
         summed_q = summed_q.keys_to_properties("o3_lambda")
 
-        if outputs["feature"].sample_kind != "atom":
+        if feature_options.sample_kind != "atom":
             summed_q = mts.mean_over_samples(
                 summed_q, sample_names=["atom", "center_type"]
             )
