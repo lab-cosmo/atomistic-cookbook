@@ -37,8 +37,10 @@ template, you should set more appropriate parameters.
 """
 
 import linecache
+import os
 import pathlib
 import subprocess
+import sys
 from time import sleep
 from typing import Dict, List, Optional
 
@@ -448,8 +450,24 @@ lammps_initial.cell = [20, 20, 20]
 ase.io.write("data/minimal.data", lammps_initial, format="lammps-data")
 
 print(linecache.getline("data/lammps.plumed.in", 25).strip())
+torch_major, torch_minor, *_ = torch.__version__.split(".")
+library_paths = [
+    pathlib.Path(sys.prefix) / "lib",
+    pathlib.Path("extensions/featomic/lib").resolve(),
+    pathlib.Path(
+        f"extensions/featomic/torch/torch-{torch_major}.{torch_minor}/lib"
+    ).resolve(),
+]
+env = os.environ.copy()
+env["LD_LIBRARY_PATH"] = os.pathsep.join(
+    [str(path) for path in library_paths]
+    + ([env["LD_LIBRARY_PATH"]] if "LD_LIBRARY_PATH" in env else [])
+)
 subprocess.run(
-    ["lmp", "-in", "data/lammps.plumed.in"], check=True, capture_output=False
+    ["lmp", "-in", "data/lammps.plumed.in"],
+    check=True,
+    capture_output=False,
+    env=env,
 )
 lmp_trajectory = ase.io.read("lj38.lammpstrj", index=":")
 
