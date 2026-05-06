@@ -362,14 +362,14 @@ DEPENCENCIES_UPDATES = {
 METATOMIC_RC_CONDA_DEPENDENCIES = {
     "gromacs-metatomic": "gromacs-metatomic =2026.0.mta4=*nompi*",
     "lammps-metatomic": "lammps-metatomic =2025.09.10.mta4=*nompi*",
-    "libmetatomic-torch": "libmetatomic-torch =0.1.12.rc1",
+    "libmetatomic-torch": "libmetatomic-torch =0.1.12.rc2",
     "libtorch": "libtorch =2.10.*=cpu_generic*",
-    "metatrain": "metatrain =2026.2.1.dev31",
+    "metatrain": "metatrain =2026.2.1.dev47",
     "plumed-metatomic": "plumed-metatomic =2.10.0=*nompi*",
     "py-plumed-metatomic": "py-plumed-metatomic =2.10.0",
     "python": "python =3.13",
     "pytorch-cpu": "pytorch-cpu =2.10.*=cpu_generic*",
-    "python-metatomic-torch": "python-metatomic-torch =0.1.12.rc1",
+    "python-metatomic-torch": "python-metatomic-torch =0.1.12.rc2",
     "python-metatensor-operations": "python-metatensor-operations =0.5.0.rc2",
     "python-metatensor-torch": "python-metatensor-torch =0.9.0.rc5",
 }
@@ -394,10 +394,11 @@ METATOMIC_RC_PIP_DEPENDENCIES = {
 
 METATOMIC_RC_METATOMIC_REF = (
     "git+https://github.com/metatensor/metatomic.git"
-    "@a46c3a7e79dd24d35217b7bb9176420823723242"
+    "@5691ca595fea6f07f239dc5217488b6fd58911a6"
 )
 METATOMIC_RC_METATRAIN_REF = (
-    "git+https://github.com/HaoZeke/metatrain.git@test/metatensor-v0.2.0"
+    "git+https://github.com/metatensor/metatrain.git"
+    "@8a3ee83d672ce825bc7f556a312a7e2970f4aaf6"
 )
 METATOMIC_RC_TORCH_VERSION = "2.10.*"
 
