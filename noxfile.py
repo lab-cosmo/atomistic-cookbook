@@ -390,6 +390,7 @@ def _metatomic_rc_metadata():
     metadata = {
         "conda": METATOMIC_RC_CONDA_DEPENDENCIES,
         "metatomic": METATOMIC_RC_METATOMIC_REF,
+        "metatomic_no_local_deps": "1",
         "metatrain": METATOMIC_RC_METATRAIN_REF,
         "torch": "2.11.*",
     }
@@ -423,6 +424,21 @@ def _rc_pip_dependency(dependency):
     return dependency
 
 
+def _rc_pip_dependencies(dependencies):
+    has_metatomic_torch = any(
+        _is_pip_dependency(dep, "metatomic-torch") for dep in dependencies
+    )
+    has_metatomic_ase = any(
+        _is_pip_dependency(dep, "metatomic-ase") for dep in dependencies
+    )
+
+    rc_dependencies = [_rc_pip_dependency(dep) for dep in dependencies]
+    if has_metatomic_torch and not has_metatomic_ase:
+        rc_dependencies.append(_rc_pip_dependency("metatomic-ase"))
+
+    return rc_dependencies
+
+
 def _write_environment_yml(environment, session):
     environment_yml = session.virtualenv.location + "/environment.yml"
     with open(environment_yml, "w") as fd:
@@ -443,12 +459,13 @@ def apply_metatomic_rc_overrides(environment_yml, session):
     if rc_channel not in channels:
         channels.insert(0, rc_channel)
 
+    variables = environment.setdefault("variables", {})
+    variables["METATOMIC_NO_LOCAL_DEPS"] = "1"
+
     dependencies = []
     for dependency in environment["dependencies"]:
         if isinstance(dependency, dict) and "pip" in dependency:
-            dependencies.append(
-                {"pip": [_rc_pip_dependency(dep) for dep in dependency["pip"]]}
-            )
+            dependencies.append({"pip": _rc_pip_dependencies(dependency["pip"])})
         else:
             name = _conda_dependency_name(dependency)
             dependencies.append(METATOMIC_RC_CONDA_DEPENDENCIES.get(name, dependency))
