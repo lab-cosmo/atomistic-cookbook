@@ -344,8 +344,107 @@ DEPENCENCIES_UPDATES = {
     "plumed-metatomic": "plumed-metatomic * *nompi*",
 }
 
+METATOMIC_RC_CONDA_DEPENDENCIES = {
+    "gromacs-metatomic": "gromacs-metatomic =2026.0.mta4=*nompi*",
+    "lammps-metatomic": "lammps-metatomic =2025.09.10.mta4=*nompi*",
+    "libmetatomic-torch": "libmetatomic-torch =0.1.12.rc1",
+    "libtorch": "libtorch =2.10.*=cpu_generic*",
+    "plumed-metatomic": "plumed-metatomic =2.10.0=*nompi*",
+    "py-plumed-metatomic": "py-plumed-metatomic =2.10.0",
+    "pytorch-cpu": "pytorch-cpu =2.10.*=cpu_generic*",
+}
+
+METATOMIC_RC_METATOMIC_REF = (
+    "git+https://github.com/Luthaf/metatomic.git"
+    "@2f6ab246e927f02687ece76b0bce6eaecdb3ccf8"
+)
+METATOMIC_RC_METATRAIN_REF = (
+    "git+https://github.com/HaoZeke/metatrain.git@test/metatensor-v0.2.0"
+)
+
+
+def _conda_dependency_name(dependency):
+    dependency = str(dependency).split("::")[-1].strip()
+    return re.split(r"\s|=", dependency, maxsplit=1)[0]
+
+
+def _is_pip_dependency(dependency, name):
+    return (
+        dependency == name
+        or dependency.startswith(f"{name} ")
+        or dependency.startswith(f"{name}=")
+        or dependency.startswith(f"{name}<")
+        or dependency.startswith(f"{name}>")
+        or dependency.startswith(f"{name}[")
+    )
+
+
+def _rc_pip_dependency(dependency):
+    if _is_pip_dependency(dependency, "metatomic-torch"):
+        return (
+            f"metatomic-torch @ {METATOMIC_RC_METATOMIC_REF}"
+            "#subdirectory=python/metatomic_torch"
+        )
+    if _is_pip_dependency(dependency, "metatomic-ase"):
+        return (
+            f"metatomic-ase @ {METATOMIC_RC_METATOMIC_REF}"
+            "#subdirectory=python/metatomic_ase"
+        )
+    if _is_pip_dependency(dependency, "metatensor-torch"):
+        return "metatensor-torch==0.9.0rc5"
+    if _is_pip_dependency(dependency, "metatensor-operations"):
+        return "metatensor-operations==0.5.0rc2"
+    if _is_pip_dependency(dependency, "metatrain"):
+        extras = ""
+        match = re.match(r"metatrain(\[[^\]]+\])", dependency)
+        if match:
+            extras = match.group(1)
+        return f"metatrain{extras} @ {METATOMIC_RC_METATRAIN_REF}"
+    if _is_pip_dependency(dependency, "torch"):
+        return "torch==2.10.*"
+
+    return dependency
+
+
+def _write_environment_yml(environment, session):
+    environment_yml = session.virtualenv.location + "/environment.yml"
+    with open(environment_yml, "w") as fd:
+        yaml.safe_dump(environment, fd)
+
+    return environment_yml
+
+
+def apply_metatomic_rc_overrides(environment_yml, session):
+    rc_channel = os.environ.get("METATOMIC_RC_CHANNEL", "").strip()
+    if rc_channel == "":
+        return environment_yml
+
+    with open(environment_yml) as fd:
+        environment = yaml.safe_load(fd)
+
+    channels = environment.setdefault("channels", [])
+    if rc_channel not in channels:
+        channels.insert(0, rc_channel)
+
+    dependencies = []
+    for dependency in environment["dependencies"]:
+        if isinstance(dependency, dict) and "pip" in dependency:
+            dependencies.append(
+                {"pip": [_rc_pip_dependency(dep) for dep in dependency["pip"]]}
+            )
+        else:
+            name = _conda_dependency_name(dependency)
+            dependencies.append(
+                METATOMIC_RC_CONDA_DEPENDENCIES.get(name, dependency)
+            )
+
+    environment["dependencies"] = dependencies
+    return _write_environment_yml(environment, session)
+
 
 def update_dependencies(environment_yml, session):
+    environment_yml = apply_metatomic_rc_overrides(environment_yml, session)
+
     output = session.run(
         "conda",
         "env",
@@ -378,9 +477,7 @@ def update_dependencies(environment_yml, session):
         for dep in new_deps:
             environment["dependencies"].append(dep)
 
-        environment_yml = session.virtualenv.location + "/environment.yml"
-        with open(environment_yml, "w") as fd:
-            yaml.safe_dump(environment, fd)
+        environment_yml = _write_environment_yml(environment, session)
 
     return environment_yml
 
@@ -396,7 +493,11 @@ for name in EXAMPLES:
     def example(session, name=name):
         example_dir = Path("examples") / name
         environment_yml = example_dir / "environment.yml"
-        if should_reinstall_dependencies(session, environment_yml=environment_yml):
+        if should_reinstall_dependencies(
+            session,
+            environment_yml=environment_yml,
+            metatomic_rc_channel=os.environ.get("METATOMIC_RC_CHANNEL", ""),
+        ):
             environment_yml = update_dependencies(environment_yml, session)
 
             session.run(
