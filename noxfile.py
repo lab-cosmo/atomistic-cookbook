@@ -474,6 +474,7 @@ def _run_with_metatomic_rc_env(session, *args, **kwargs):
             "FEATOMIC_TORCH_BUILD_WITH_TORCH_VERSION": METATOMIC_RC_TORCH_VERSION,
             "METATOMIC_NO_LOCAL_DEPS": "1",
             "METATOMIC_TORCH_BUILD_WITH_TORCH_VERSION": METATOMIC_RC_TORCH_VERSION,
+            "PIP_EXTRA_INDEX_URL": "https://download.pytorch.org/whl/cpu",
         }
 
     return session.run(*args, **kwargs)

@@ -222,6 +222,7 @@ class MetatomicRCOverridesTests(unittest.TestCase):
                 "FEATOMIC_TORCH_BUILD_WITH_TORCH_VERSION": "2.10.*",
                 "METATOMIC_NO_LOCAL_DEPS": "1",
                 "METATOMIC_TORCH_BUILD_WITH_TORCH_VERSION": "2.10.*",
+                "PIP_EXTRA_INDEX_URL": "https://download.pytorch.org/whl/cpu",
             },
         )
 
