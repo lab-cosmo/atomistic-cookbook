@@ -47,6 +47,7 @@ nox.options.sessions = ["lint", "docs"]
 
 
 EXAMPLES = get_examples()
+DEPENDENCY_METADATA_VERSION = "v2"
 
 # ==================================================================================== #
 #                                 helper functions                                     #
@@ -129,9 +130,13 @@ def dependency_metadata_path(session):
     return os.path.join(session.virtualenv.location, "metadata.sha1")
 
 
+def dependency_metadata_marker(**metadata):
+    return f"{DEPENDENCY_METADATA_VERSION}:{dependency_metadata_sha1(**metadata)}"
+
+
 def mark_dependencies_installed(session, **metadata):
     with open(dependency_metadata_path(session), "w") as fd:
-        fd.write(dependency_metadata_sha1(**metadata))
+        fd.write(dependency_metadata_marker(**metadata))
 
 
 def should_reinstall_dependencies(session, **metadata):
@@ -143,20 +148,17 @@ def should_reinstall_dependencies(session, **metadata):
     session virtualenv marker. If the hash changes, we'll have to re-install!
     """
 
-    sha1 = dependency_metadata_sha1(**metadata)
+    marker = dependency_metadata_marker(**metadata)
     sha1_path = dependency_metadata_path(session)
 
     if session.virtualenv._reused:
         if os.path.exists(sha1_path):
             with open(sha1_path) as fd:
-                should_reinstall = fd.read().strip() != sha1
+                should_reinstall = fd.read().strip() != marker
         else:
             should_reinstall = True
     else:
         should_reinstall = True
-
-    with open(sha1_path, "w") as fd:
-        fd.write(sha1)
 
     if should_reinstall:
         session.debug("updating environment since the dependencies changed")
