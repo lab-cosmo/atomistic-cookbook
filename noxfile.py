@@ -379,6 +379,10 @@ def _is_pip_dependency(dependency, name):
     )
 
 
+def _metatomic_rc_enabled():
+    return os.environ.get("METATOMIC_RC_CHANNEL", "").strip() != ""
+
+
 def _rc_pip_dependency(dependency):
     if _is_pip_dependency(dependency, "metatomic-torch"):
         return (
@@ -401,7 +405,7 @@ def _rc_pip_dependency(dependency):
             extras = match.group(1)
         return f"metatrain{extras} @ {METATOMIC_RC_METATRAIN_REF}"
     if _is_pip_dependency(dependency, "torch"):
-        return "torch==2.10.*"
+        return "torch==2.11.*"
 
     return dependency
 
@@ -415,10 +419,10 @@ def _write_environment_yml(environment, session):
 
 
 def apply_metatomic_rc_overrides(environment_yml, session):
-    rc_channel = os.environ.get("METATOMIC_RC_CHANNEL", "").strip()
-    if rc_channel == "":
+    if not _metatomic_rc_enabled():
         return environment_yml
 
+    rc_channel = os.environ["METATOMIC_RC_CHANNEL"].strip()
     with open(environment_yml) as fd:
         environment = yaml.safe_load(fd)
 
@@ -442,6 +446,7 @@ def apply_metatomic_rc_overrides(environment_yml, session):
 
 def update_dependencies(environment_yml, session):
     environment_yml = apply_metatomic_rc_overrides(environment_yml, session)
+    metatomic_rc_enabled = _metatomic_rc_enabled()
 
     output = session.run(
         "conda",
@@ -466,6 +471,8 @@ def update_dependencies(environment_yml, session):
     for dep in dependencies:
         for to_update, new_dep in DEPENCENCIES_UPDATES.items():
             if f"::{to_update}==" in dep:
+                if metatomic_rc_enabled and to_update == "libtorch":
+                    continue
                 new_deps.add(new_dep)
 
     if len(new_deps) != 0:
