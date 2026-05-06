@@ -179,6 +179,7 @@ class MetatomicRCOverridesTests(unittest.TestCase):
             "metatomic-torch==0.1.7",
             "metatrain",
             "ase",
+            "torch-pme>=0.3.1,<0.4",
         ]
 
         self.assertEqual(
@@ -191,7 +192,14 @@ class MetatomicRCOverridesTests(unittest.TestCase):
                 "metatrain =2026.2.1.dev31",
             ],
         )
-        self.assertEqual(noxfile._rc_pip_dependencies(pip_dependencies), ["ase"])
+        self.assertEqual(
+            noxfile._rc_pip_dependencies(pip_dependencies),
+            [
+                "ase",
+                "torch-pme @ git+https://github.com/HaoZeke/torch-pme.git"
+                "@rc/metatomic-0.1.12",
+            ],
+        )
 
     def test_rc_run_env_sets_metatomic_torch_build_version(self):
         session = FakeSession("/tmp")
