@@ -112,15 +112,7 @@ def get_example_other_files(fd):
     return [os.path.join(folder, file) for file in tracked_files_output.splitlines()]
 
 
-def should_reinstall_dependencies(session, **metadata):
-    """
-    Returns a bool indicating whether the dependencies should be re-installed in the
-    venv.
-
-    This works by hashing everything in metadata, and storing the hash in the session
-    virtualenv. If the hash changes, we'll have to re-install!
-    """
-
+def dependency_metadata_sha1(**metadata):
     to_hash = {}
     for key, value in metadata.items():
         if os.path.exists(value):
@@ -130,8 +122,29 @@ def should_reinstall_dependencies(session, **metadata):
             to_hash[key] = str(value)
 
     to_hash = json.dumps(to_hash).encode("utf8")
-    sha1 = hashlib.sha1(to_hash).hexdigest()
-    sha1_path = os.path.join(session.virtualenv.location, "metadata.sha1")
+    return hashlib.sha1(to_hash).hexdigest()
+
+
+def dependency_metadata_path(session):
+    return os.path.join(session.virtualenv.location, "metadata.sha1")
+
+
+def mark_dependencies_installed(session, **metadata):
+    with open(dependency_metadata_path(session), "w") as fd:
+        fd.write(dependency_metadata_sha1(**metadata))
+
+
+def should_reinstall_dependencies(session, **metadata):
+    """
+    Returns a bool indicating whether the dependencies should be re-installed in the
+    venv.
+
+    This works by hashing everything in metadata, and comparing the hash to the
+    session virtualenv marker. If the hash changes, we'll have to re-install!
+    """
+
+    sha1 = dependency_metadata_sha1(**metadata)
+    sha1_path = dependency_metadata_path(session)
 
     if session.virtualenv._reused:
         if os.path.exists(sha1_path):
@@ -536,12 +549,12 @@ for name in EXAMPLES:
     def example(session, name=name):
         example_dir = Path("examples") / name
         environment_yml = example_dir / "environment.yml"
-        if should_reinstall_dependencies(
-            session,
-            environment_yml=environment_yml,
-            metatomic_rc_channel=os.environ.get("METATOMIC_RC_CHANNEL", ""),
-            metatomic_rc_metadata=_metatomic_rc_metadata(),
-        ):
+        dependency_metadata = {
+            "environment_yml": environment_yml,
+            "metatomic_rc_channel": os.environ.get("METATOMIC_RC_CHANNEL", ""),
+            "metatomic_rc_metadata": _metatomic_rc_metadata(),
+        }
+        if should_reinstall_dependencies(session, **dependency_metadata):
             environment_yml = update_dependencies(environment_yml, session)
 
             _run_with_metatomic_rc_env(
@@ -563,6 +576,7 @@ for name in EXAMPLES:
                 "matplotlib",
                 "chemiscope",
             )
+            mark_dependencies_installed(session, **dependency_metadata)
 
         session.run(
             "conda",
@@ -621,8 +635,10 @@ def build_website(session):
 
     # install build dependencies
     requirements = "docs/requirements.txt"
-    if should_reinstall_dependencies(session, requirements=requirements):
+    dependency_metadata = {"requirements": requirements}
+    if should_reinstall_dependencies(session, **dependency_metadata):
         session.install("-r", requirements)
+        mark_dependencies_installed(session, **dependency_metadata)
 
     # list all examples
     all_examples_rst = {}
