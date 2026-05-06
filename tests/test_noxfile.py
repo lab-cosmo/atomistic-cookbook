@@ -50,8 +50,16 @@ def _install_docutils_stub():
     sys.modules["docutils.parsers.rst"] = rst
 
 
+def _install_yaml_stub():
+    yaml = types.ModuleType("yaml")
+    yaml.safe_dump = lambda *args, **kwargs: None
+    yaml.safe_load = lambda *args, **kwargs: {}
+    sys.modules["yaml"] = yaml
+
+
 _install_nox_stub()
 _install_docutils_stub()
+_install_yaml_stub()
 
 import noxfile
 
