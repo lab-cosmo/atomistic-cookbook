@@ -109,6 +109,21 @@ class DependencyMetadataTests(unittest.TestCase):
                 )
             )
 
+    def test_bare_dependency_hash_marker_forces_reinstall(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            environment_yml = Path(tmp) / "environment.yml"
+            environment_yml.write_text("dependencies:\n  - python\n")
+            session = FakeSession(tmp)
+            (Path(tmp) / "metadata.sha1").write_text(
+                noxfile.dependency_metadata_sha1(environment_yml=environment_yml)
+            )
+
+            self.assertTrue(
+                noxfile.should_reinstall_dependencies(
+                    session, environment_yml=environment_yml
+                )
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
