@@ -47,6 +47,7 @@ nox.options.sessions = ["lint", "docs"]
 
 
 EXAMPLES = get_examples()
+DEPENDENCY_METADATA_VERSION = "v2"
 
 # ==================================================================================== #
 #                                 helper functions                                     #
@@ -112,15 +113,7 @@ def get_example_other_files(fd):
     return [os.path.join(folder, file) for file in tracked_files_output.splitlines()]
 
 
-def should_reinstall_dependencies(session, **metadata):
-    """
-    Returns a bool indicating whether the dependencies should be re-installed in the
-    venv.
-
-    This works by hashing everything in metadata, and storing the hash in the session
-    virtualenv. If the hash changes, we'll have to re-install!
-    """
-
+def dependency_metadata_sha1(**metadata):
     to_hash = {}
     for key, value in metadata.items():
         if os.path.exists(value):
@@ -130,20 +123,42 @@ def should_reinstall_dependencies(session, **metadata):
             to_hash[key] = str(value)
 
     to_hash = json.dumps(to_hash).encode("utf8")
-    sha1 = hashlib.sha1(to_hash).hexdigest()
-    sha1_path = os.path.join(session.virtualenv.location, "metadata.sha1")
+    return hashlib.sha1(to_hash).hexdigest()
+
+
+def dependency_metadata_path(session):
+    return os.path.join(session.virtualenv.location, "metadata.sha1")
+
+
+def dependency_metadata_marker(**metadata):
+    return f"{DEPENDENCY_METADATA_VERSION}:{dependency_metadata_sha1(**metadata)}"
+
+
+def mark_dependencies_installed(session, **metadata):
+    with open(dependency_metadata_path(session), "w") as fd:
+        fd.write(dependency_metadata_marker(**metadata))
+
+
+def should_reinstall_dependencies(session, **metadata):
+    """
+    Returns a bool indicating whether the dependencies should be re-installed in the
+    venv.
+
+    This works by hashing everything in metadata, and comparing the hash to the
+    session virtualenv marker. If the hash changes, we'll have to re-install!
+    """
+
+    marker = dependency_metadata_marker(**metadata)
+    sha1_path = dependency_metadata_path(session)
 
     if session.virtualenv._reused:
         if os.path.exists(sha1_path):
             with open(sha1_path) as fd:
-                should_reinstall = fd.read().strip() != sha1
+                should_reinstall = fd.read().strip() != marker
         else:
             should_reinstall = True
     else:
         should_reinstall = True
-
-    with open(sha1_path, "w") as fd:
-        fd.write(sha1)
 
     if should_reinstall:
         session.debug("updating environment since the dependencies changed")
@@ -344,9 +359,241 @@ DEPENCENCIES_UPDATES = {
     "plumed-metatomic": "plumed-metatomic * *nompi*",
 }
 
+METATOMIC_RC_CONDA_DEPENDENCIES = {
+    "gromacs-metatomic": "gromacs-metatomic =2026.0.mta4=*nompi*",
+    "lammps-metatomic": "lammps-metatomic =2025.09.10.mta4=*nompi*",
+    "libmetatomic-torch": "libmetatomic-torch =0.1.12.rc2",
+    "libtorch": "libtorch =2.10.*=cpu_generic*",
+    "metatrain": "metatrain =2026.2.1.dev47",
+    "plumed-metatomic": "plumed-metatomic =2.10.0=*nompi*",
+    "py-plumed-metatomic": "py-plumed-metatomic =2.10.0",
+    "python": "python =3.13",
+    "pytorch-cpu": "pytorch-cpu =2.10.*=cpu_generic*",
+    "python-metatomic-torch": "python-metatomic-torch =0.1.12.rc2",
+    "python-metatensor-core": "python-metatensor-core =0.2.0.rc3",
+    "python-metatensor-operations": "python-metatensor-operations =0.5.0.rc2",
+    "python-metatensor-torch": "python-metatensor-torch =0.9.0.rc5",
+}
+
+METATOMIC_RC_PIP_CONDA_DEPENDENCIES = {
+    "metatomic-ase": METATOMIC_RC_CONDA_DEPENDENCIES["python-metatomic-torch"],
+    "metatomic-torch": METATOMIC_RC_CONDA_DEPENDENCIES["python-metatomic-torch"],
+    "metatensor-core": METATOMIC_RC_CONDA_DEPENDENCIES["python-metatensor-core"],
+    "metatensor-operations": METATOMIC_RC_CONDA_DEPENDENCIES[
+        "python-metatensor-operations"
+    ],
+    "metatensor-torch": METATOMIC_RC_CONDA_DEPENDENCIES["python-metatensor-torch"],
+    "metatrain": METATOMIC_RC_CONDA_DEPENDENCIES["metatrain"],
+    "torch": METATOMIC_RC_CONDA_DEPENDENCIES["pytorch-cpu"],
+}
+
+METATOMIC_RC_TRANSITIVE_PIP_CONDA_DEPENDENCIES = {
+    "featomic": [
+        METATOMIC_RC_CONDA_DEPENDENCIES["python-metatensor-core"],
+        METATOMIC_RC_CONDA_DEPENDENCIES["python-metatensor-operations"],
+    ],
+    "featomic-torch": [
+        METATOMIC_RC_CONDA_DEPENDENCIES["pytorch-cpu"],
+        METATOMIC_RC_CONDA_DEPENDENCIES["python-metatomic-torch"],
+        METATOMIC_RC_CONDA_DEPENDENCIES["python-metatensor-core"],
+        METATOMIC_RC_CONDA_DEPENDENCIES["python-metatensor-operations"],
+        METATOMIC_RC_CONDA_DEPENDENCIES["python-metatensor-torch"],
+    ],
+}
+
+METATOMIC_RC_PIP_DEPENDENCIES = {
+    "featomic": (
+        "featomic @ git+https://github.com/HaoZeke/featomic.git"
+        "@rc/metatomic-0.1.12#subdirectory=python/featomic"
+    ),
+    "featomic-torch": (
+        "featomic-torch @ git+https://github.com/HaoZeke/featomic.git"
+        "@rc/metatomic-0.1.12#subdirectory=python/featomic_torch"
+    ),
+    "torch-pme": (
+        "torch-pme @ git+https://github.com/HaoZeke/torch-pme.git"
+        "@rc/metatomic-0.1.12-v0.3.2"
+    ),
+}
+
+METATOMIC_RC_FEATOMIC_REF = (
+    "git+https://github.com/HaoZeke/featomic.git"
+    "@rc/metatomic-0.1.12"
+)
+METATOMIC_RC_METATOMIC_REF = (
+    "git+https://github.com/metatensor/metatomic.git"
+    "@5691ca595fea6f07f239dc5217488b6fd58911a6"
+)
+METATOMIC_RC_METATRAIN_REF = (
+    "git+https://github.com/metatensor/metatrain.git"
+    "@8a3ee83d672ce825bc7f556a312a7e2970f4aaf6"
+)
+METATOMIC_RC_TORCH_VERSION = "2.10.*"
+
+
+def _conda_dependency_name(dependency):
+    dependency = str(dependency).split("::")[-1].strip()
+    return re.split(r"\s|=", dependency, maxsplit=1)[0]
+
+
+def _is_pip_dependency(dependency, name):
+    return (
+        dependency == name
+        or dependency.startswith(f"{name} ")
+        or dependency.startswith(f"{name}=")
+        or dependency.startswith(f"{name}<")
+        or dependency.startswith(f"{name}>")
+        or dependency.startswith(f"{name}[")
+    )
+
+
+def _metatomic_rc_enabled():
+    return os.environ.get("METATOMIC_RC_CHANNEL", "").strip() != ""
+
+
+def _metatomic_rc_metadata():
+    if not _metatomic_rc_enabled():
+        return ""
+
+    metadata = {
+        "conda": METATOMIC_RC_CONDA_DEPENDENCIES,
+        "featomic": METATOMIC_RC_FEATOMIC_REF,
+        "metatomic": METATOMIC_RC_METATOMIC_REF,
+        "metatomic_no_local_deps": "1",
+        "metatomic_torch_build_with_torch_version": METATOMIC_RC_TORCH_VERSION,
+        "metatrain": METATOMIC_RC_METATRAIN_REF,
+        "pip": METATOMIC_RC_PIP_DEPENDENCIES,
+        "torch": METATOMIC_RC_TORCH_VERSION,
+    }
+    return json.dumps(metadata, sort_keys=True)
+
+
+def _run_with_metatomic_rc_env(session, *args, **kwargs):
+    if _metatomic_rc_enabled():
+        kwargs["env"] = {
+            "FEATOMIC_TORCH_BUILD_WITH_TORCH_VERSION": METATOMIC_RC_TORCH_VERSION,
+            "METATOMIC_NO_LOCAL_DEPS": "1",
+            "METATOMIC_TORCH_BUILD_WITH_TORCH_VERSION": METATOMIC_RC_TORCH_VERSION,
+            "PIP_EXTRA_INDEX_URL": "https://download.pytorch.org/whl/cpu",
+        }
+
+    return session.run(*args, **kwargs)
+
+
+def _rc_pip_dependency(dependency):
+    if str(dependency).startswith("--extra-index-url"):
+        return None
+    for name, rc_dependency in METATOMIC_RC_PIP_DEPENDENCIES.items():
+        if _is_pip_dependency(dependency, name):
+            return rc_dependency
+    for name in METATOMIC_RC_PIP_CONDA_DEPENDENCIES:
+        if _is_pip_dependency(dependency, name):
+            return None
+
+    return dependency
+
+
+def _rc_conda_dependencies_from_pip(dependencies):
+    conda_dependencies = []
+    for dependency in dependencies:
+        for name, conda_dependency in METATOMIC_RC_PIP_CONDA_DEPENDENCIES.items():
+            if _is_pip_dependency(dependency, name):
+                if conda_dependency not in conda_dependencies:
+                    conda_dependencies.append(conda_dependency)
+                break
+        for name, extra_conda_dependencies in (
+            METATOMIC_RC_TRANSITIVE_PIP_CONDA_DEPENDENCIES.items()
+        ):
+            if _is_pip_dependency(dependency, name):
+                for conda_dependency in extra_conda_dependencies:
+                    if conda_dependency not in conda_dependencies:
+                        conda_dependencies.append(conda_dependency)
+                break
+
+    return conda_dependencies
+
+
+def _rc_pip_dependencies(dependencies):
+    return [
+        rc_dependency
+        for dependency in dependencies
+        if (rc_dependency := _rc_pip_dependency(dependency)) is not None
+    ]
+
+
+def _write_environment_yml(environment, session):
+    environment_yml = session.virtualenv.location + "/environment.yml"
+    with open(environment_yml, "w") as fd:
+        yaml.safe_dump(environment, fd)
+
+    return environment_yml
+
+
+def _pip_installed_packages(session, packages):
+    script = """
+import importlib.metadata as metadata
+import sys
+
+for name in sys.argv[1:]:
+    try:
+        distribution = metadata.distribution(name)
+    except metadata.PackageNotFoundError:
+        continue
+
+    installer = (distribution.read_text("INSTALLER") or "").strip().lower()
+    if installer == "pip":
+        print(name)
+"""
+    output = session.run("python", "-c", script, *packages, silent=True)
+    return output.splitlines()
+
+
+def uninstall_metatomic_rc_pip_packages(session):
+    if not _metatomic_rc_enabled():
+        return
+
+    packages = sorted(METATOMIC_RC_PIP_CONDA_DEPENDENCIES)
+    pip_packages = _pip_installed_packages(session, packages)
+    if pip_packages:
+        session.run("python", "-m", "pip", "uninstall", "--yes", *pip_packages)
+
+
+def apply_metatomic_rc_overrides(environment_yml, session):
+    if not _metatomic_rc_enabled():
+        return environment_yml
+
+    rc_channel = os.environ["METATOMIC_RC_CHANNEL"].strip()
+    with open(environment_yml) as fd:
+        environment = yaml.safe_load(fd)
+
+    channels = environment.setdefault("channels", [])
+    if rc_channel not in channels:
+        channels.insert(0, rc_channel)
+
+    variables = environment.setdefault("variables", {})
+    variables["METATOMIC_NO_LOCAL_DEPS"] = "1"
+
+    dependencies = []
+    for dependency in environment["dependencies"]:
+        if isinstance(dependency, dict) and "pip" in dependency:
+            dependencies.extend(_rc_conda_dependencies_from_pip(dependency["pip"]))
+            pip_dependencies = _rc_pip_dependencies(dependency["pip"])
+            if pip_dependencies:
+                dependencies.append({"pip": pip_dependencies})
+        else:
+            name = _conda_dependency_name(dependency)
+            dependencies.append(METATOMIC_RC_CONDA_DEPENDENCIES.get(name, dependency))
+
+    environment["dependencies"] = dependencies
+    return _write_environment_yml(environment, session)
+
 
 def update_dependencies(environment_yml, session):
-    output = session.run(
+    environment_yml = apply_metatomic_rc_overrides(environment_yml, session)
+    metatomic_rc_enabled = _metatomic_rc_enabled()
+
+    output = _run_with_metatomic_rc_env(
+        session,
         "conda",
         "env",
         "create",
@@ -369,6 +616,8 @@ def update_dependencies(environment_yml, session):
     for dep in dependencies:
         for to_update, new_dep in DEPENCENCIES_UPDATES.items():
             if f"::{to_update}==" in dep:
+                if metatomic_rc_enabled and to_update == "libtorch":
+                    continue
                 new_deps.add(new_dep)
 
     if len(new_deps) != 0:
@@ -378,9 +627,7 @@ def update_dependencies(environment_yml, session):
         for dep in new_deps:
             environment["dependencies"].append(dep)
 
-        environment_yml = session.virtualenv.location + "/environment.yml"
-        with open(environment_yml, "w") as fd:
-            yaml.safe_dump(environment, fd)
+        environment_yml = _write_environment_yml(environment, session)
 
     return environment_yml
 
@@ -396,10 +643,18 @@ for name in EXAMPLES:
     def example(session, name=name):
         example_dir = Path("examples") / name
         environment_yml = example_dir / "environment.yml"
-        if should_reinstall_dependencies(session, environment_yml=environment_yml):
+        dependency_metadata = {
+            "environment_yml": environment_yml,
+            "metatomic_rc_channel": os.environ.get("METATOMIC_RC_CHANNEL", ""),
+            "metatomic_rc_metadata": _metatomic_rc_metadata(),
+        }
+        if should_reinstall_dependencies(session, **dependency_metadata):
             environment_yml = update_dependencies(environment_yml, session)
 
-            session.run(
+            uninstall_metatomic_rc_pip_packages(session)
+
+            _run_with_metatomic_rc_env(
+                session,
                 "conda",
                 "env",
                 "update",
@@ -417,6 +672,7 @@ for name in EXAMPLES:
                 "matplotlib",
                 "chemiscope",
             )
+            mark_dependencies_installed(session, **dependency_metadata)
 
         session.run(
             "conda",
@@ -475,8 +731,10 @@ def build_website(session):
 
     # install build dependencies
     requirements = "docs/requirements.txt"
-    if should_reinstall_dependencies(session, requirements=requirements):
+    dependency_metadata = {"requirements": requirements}
+    if should_reinstall_dependencies(session, **dependency_metadata):
         session.install("-r", requirements)
+        mark_dependencies_installed(session, **dependency_metadata)
 
     # list all examples
     all_examples_rst = {}

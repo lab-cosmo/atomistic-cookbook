@@ -37,8 +37,10 @@ template, you should set more appropriate parameters.
 """
 
 import linecache
+import os
 import pathlib
 import subprocess
+import sys
 from time import sleep
 from typing import Dict, List, Optional
 
@@ -149,10 +151,14 @@ class CoordinationHistogram(torch.nn.Module):
         outputs: Dict[str, mta.ModelOutput],
         selected_atoms: Optional[mts.Labels],
     ) -> Dict[str, mts.TensorMap]:
-        if "features" not in outputs:
+        if "feature" in outputs:
+            feature_options = outputs["feature"]
+        elif "features" in outputs:
+            feature_options = outputs["features"]
+        else:
             return {}
 
-        if outputs["features"].per_atom:
+        if feature_options.sample_kind == "atom":
             raise ValueError("per-atoms features are not supported in this model")
 
         if selected_atoms is not None:
@@ -168,7 +174,7 @@ class CoordinationHistogram(torch.nn.Module):
                 components=[],
                 properties=mts.Labels("cn", self.cn_list.reshape(-1, 1)),
             )
-            return {"features": mts.TensorMap(keys, [block])}
+            return {"feature": mts.TensorMap(keys, [block])}
 
         values = []
         # loop over all systems
@@ -204,9 +210,9 @@ class CoordinationHistogram(torch.nn.Module):
             properties=mts.Labels("cn", self.cn_list.reshape(-1, 1)),
         )
         mts_coords = mts.TensorMap(keys, [block])
-        # This model has a single output, named "features". This can be used by multiple
+        # This model has a single output, named "feature". This can be used by multiple
         # tools, including PLUMED where it defines a custom collective variable.
-        return {"features": mts_coords}
+        return {"feature": mts_coords}
 
 
 # %%
@@ -275,7 +281,11 @@ class SoapCV(torch.nn.Module):
         outputs: Dict[str, mta.ModelOutput],
         selected_atoms: Optional[mts.Labels],
     ) -> Dict[str, mts.TensorMap]:
-        if "features" not in outputs:
+        if "feature" in outputs:
+            feature_options = outputs["feature"]
+        elif "features" in outputs:
+            feature_options = outputs["features"]
+        else:
             return {}
 
         # computes the spherical expansion
@@ -293,7 +303,7 @@ class SoapCV(torch.nn.Module):
                 components=[],
                 properties=self.selected_keys,
             )
-            return {"features": mts.TensorMap(keys, [block])}
+            return {"feature": mts.TensorMap(keys, [block])}
 
         # then manipulate the tensormap to remove some of the sparsity
         spex = mts.remove_dimension(spex, axis="keys", name="o3_sigma")
@@ -315,13 +325,13 @@ class SoapCV(torch.nn.Module):
         summed_q = mts.TensorMap(spex.keys, blocks)
         summed_q = summed_q.keys_to_properties("o3_lambda")
 
-        if not outputs["features"].per_atom:
+        if feature_options.sample_kind != "atom":
             summed_q = mts.mean_over_samples(
                 summed_q, sample_names=["atom", "center_type"]
             )
 
-        # This model, like CoordinationHistogram has a single output, named "features".
-        return {"features": summed_q}
+        # This model, like CoordinationHistogram has a single output, named "feature".
+        return {"feature": summed_q}
 
 
 # %%
@@ -350,20 +360,20 @@ metadata = mta.ModelMetadata(
     description="Computes smooth histogram of coordination numbers",
 )
 
-# metadata about what the model can do
-capabilities = mta.ModelCapabilities(
-    length_unit="Angstrom",
-    outputs={"features": mta.ModelOutput(per_atom=False)},
-    atomic_types=[18],
-    interaction_range=cutoff,
-    supported_devices=["cpu"],
-    dtype="float64",
-)
+def model_capabilities():
+    return mta.ModelCapabilities(
+        length_unit="Angstrom",
+        outputs={"feature": mta.ModelOutput(sample_kind="system")},
+        atomic_types=[18],
+        interaction_range=cutoff,
+        supported_devices=["cpu"],
+        dtype="float64",
+    )
 
 model_ch = mta.AtomisticModel(
     module=module.eval(),
     metadata=metadata,
-    capabilities=capabilities,
+    capabilities=model_capabilities(),
 )
 
 model_ch.save("histo-cv.pt", collect_extensions="./extensions/")
@@ -379,7 +389,7 @@ metadata = mta.ModelMetadata(
 model_soap = mta.AtomisticModel(
     module=module.eval(),
     metadata=metadata,
-    capabilities=capabilities,
+    capabilities=model_capabilities(),
 )
 
 # finally, save the model to a standalone file
@@ -448,8 +458,24 @@ lammps_initial.cell = [20, 20, 20]
 ase.io.write("data/minimal.data", lammps_initial, format="lammps-data")
 
 print(linecache.getline("data/lammps.plumed.in", 25).strip())
+torch_major, torch_minor, *_ = torch.__version__.split(".")
+library_paths = [
+    pathlib.Path(sys.prefix) / "lib",
+    pathlib.Path("extensions/featomic/lib").resolve(),
+    pathlib.Path(
+        f"extensions/featomic/torch/torch-{torch_major}.{torch_minor}/lib"
+    ).resolve(),
+]
+env = os.environ.copy()
+env["LD_LIBRARY_PATH"] = os.pathsep.join(
+    [str(path) for path in library_paths]
+    + ([env["LD_LIBRARY_PATH"]] if "LD_LIBRARY_PATH" in env else [])
+)
 subprocess.run(
-    ["lmp", "-in", "data/lammps.plumed.in"], check=True, capture_output=False
+    ["lmp", "-in", "data/lammps.plumed.in"],
+    check=True,
+    capture_output=False,
+    env=env,
 )
 lmp_trajectory = ase.io.read("lj38.lammpstrj", index=":")
 
