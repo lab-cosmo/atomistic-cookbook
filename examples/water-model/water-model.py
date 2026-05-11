@@ -34,12 +34,13 @@ import torch
 # Core atomistic libraries
 import torchpme
 from ase.optimize import LBFGS
-from ipi.utils.parsing import read_output, read_trajectory
-from ipi.utils.scripting import (
+from ipi.scripting import (
     InteractiveSimulation,
     forcefield_xml,
     motion_nvt_xml,
     simulation_xml,
+    read_output,
+    read_trajectory,
 )
 from metatensor.torch import Labels, TensorBlock, TensorMap
 from metatomic.torch import (
