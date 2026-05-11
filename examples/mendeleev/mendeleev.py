@@ -28,8 +28,7 @@ import matplotlib.colors as mcolors
 
 
 # i-PI utilities
-from ipi.utils.parsing import read_output, read_trajectory
-from ipi.utils.scripting import InteractiveSimulation
+from ipi.scripting import InteractiveSimulation, read_output, read_trajectory
 
 # %%
 # First, we download the universal potential model. We will use the extra-small (xs)

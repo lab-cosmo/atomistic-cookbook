@@ -48,8 +48,7 @@ import matplotlib.pyplot as plt
 import upet
 
 # i-PI scripting utilities
-from ipi.utils.parsing import read_output, read_trajectory
-from ipi.utils.scripting import InteractiveSimulation
+from ipi.scripting import InteractiveSimulation, read_output, read_trajectory
 
 # metatomic ASE calculator
 from metatomic.torch.ase_calculator import MetatomicCalculator

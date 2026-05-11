@@ -8,7 +8,7 @@ dependencies:
   - pip:
     - ase
     - chemiscope>=1.0
-    - ipi>=3.1.5
+    - ipi>=3.2.0
     - metatensor-torch>=0.8,<0.9
     - metatensor-operations
     - matplotlib

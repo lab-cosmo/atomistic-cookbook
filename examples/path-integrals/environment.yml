@@ -7,5 +7,5 @@ dependencies:
   - pip:
     - ase
     - chemiscope>=1.0
-    - ipi  
+    - ipi>=3.2.0  
     - matplotlib

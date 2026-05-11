@@ -6,7 +6,7 @@ dependencies:
   - pip
   - pip:
     - ase>=3.23
-    - ipi==3.1.5
+    - ipi>=3.2.0
     - vesin[torch]>=0.3.2,<0.4
     - flashmd>=0.2.2
     - metatrain  

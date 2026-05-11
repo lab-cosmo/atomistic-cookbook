@@ -60,12 +60,13 @@ import upet
 from ase.optimize import LBFGS
 from upet.calculator import UPETCalculator
 from ipi.utils.mathtools import get_rotation_quadrature_lebedev
-from ipi.utils.parsing import read_output, read_trajectory
-from ipi.utils.scripting import (
+from ipi.scripting import (
     InteractiveSimulation,
     forcefield_xml,
     motion_nvt_xml,
     simulation_xml,
+    read_output,
+    read_trajectory,
 )
 
 

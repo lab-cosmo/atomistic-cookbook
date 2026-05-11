@@ -663,10 +663,8 @@ lmp_process.wait()
 # so we only run 2000 steps as a demonstration.
 
 ipi_trajectory = ase.io.read("meta-md.pos_0.extxyz", ":")
-ipi_properties, _ = ipi.utils.parsing.read_output("meta-md.out")
-ipi_cv = ipi.utils.parsing.read_trajectory("meta-md.colvar_0", format="extras")[
-    "cv1, cv2"
-]
+ipi_properties, _ = ipi.scripting.read_output("meta-md.out")
+ipi_cv = ipi.scripting.read_trajectory("meta-md.colvar_0", format="extras")["cv1, cv2"]
 
 # %%
 #
