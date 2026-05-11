@@ -31,7 +31,7 @@ You can read more about the model and its limitations in
 import chemiscope
 from flashmd import get_pretrained
 from flashmd.ipi import get_npt_stepper, get_nvt_stepper
-from ipi.scripting import read_output, read_trajectory, InteractiveSimulation
+from ipi.scripting import InteractiveSimulation, read_output, read_trajectory
 
 
 # %%

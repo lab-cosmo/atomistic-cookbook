@@ -7,8 +7,8 @@ dependencies:
   - pip:
     - ase>=3.23
     - ipi>=3.2.0
-    - vesin[torch]>=0.3.2,<0.4
-    - flashmd>=0.2.2
+    - vesin[torch]>=0.5.5
+    - flashmd>=0.2.8
     - metatrain  
     - chemiscope>=1.0
     - matplotlib

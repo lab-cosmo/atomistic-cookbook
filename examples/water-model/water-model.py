@@ -34,7 +34,7 @@ import torch
 # Core atomistic libraries
 import torchpme
 from ase.optimize import LBFGS
-from ipi.utils.scripting import (
+from ipi.scripting import (
     InteractiveSimulation,
     forcefield_xml,
     motion_nvt_xml,
