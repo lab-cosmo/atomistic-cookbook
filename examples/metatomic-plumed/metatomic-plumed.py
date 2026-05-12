@@ -47,12 +47,12 @@ from typing import Dict, List, Optional
 import ase.io
 import chemiscope
 import featomic.torch
-import ipi
 import matplotlib.pyplot as plt
 import metatensor.torch as mts
 import metatomic.torch as mta
 import numpy as np
 import torch
+from ipi.scripting import read_output, read_trajectory
 
 
 # %%
@@ -151,14 +151,16 @@ class CoordinationHistogram(torch.nn.Module):
         outputs: Dict[str, mta.ModelOutput],
         selected_atoms: Optional[mts.Labels],
     ) -> Dict[str, mts.TensorMap]:
-        if "feature" in outputs:
-            feature_options = outputs["feature"]
-        elif "features" in outputs:
+        if "features" in outputs:
+            output_name = "features"
             feature_options = outputs["features"]
+        elif "feature" in outputs:
+            output_name = "feature"
+            feature_options = outputs["feature"]
         else:
             return {}
 
-        if feature_options.sample_kind == "atom":
+        if feature_options.per_atom:
             raise ValueError("per-atoms features are not supported in this model")
 
         if selected_atoms is not None:
@@ -170,11 +172,11 @@ class CoordinationHistogram(torch.nn.Module):
             keys = mts.Labels("_", torch.tensor([[0]]))
             block = mts.TensorBlock(
                 torch.zeros((0, len(self.cn_list)), dtype=torch.float64),
-                samples=mts.Labels("structure", torch.zeros((0, 1), dtype=torch.int32)),
+                samples=mts.Labels("system", torch.zeros((0, 1), dtype=torch.int32)),
                 components=[],
                 properties=mts.Labels("cn", self.cn_list.reshape(-1, 1)),
             )
-            return {"feature": mts.TensorMap(keys, [block])}
+            return {output_name: mts.TensorMap(keys, [block])}
 
         values = []
         # loop over all systems
@@ -205,14 +207,14 @@ class CoordinationHistogram(torch.nn.Module):
         keys = mts.Labels("_", torch.tensor([[0]]))
         block = mts.TensorBlock(
             values=torch.stack(values, dim=0),
-            samples=mts.Labels("structure", system_index),
+            samples=mts.Labels("system", system_index),
             components=[],
             properties=mts.Labels("cn", self.cn_list.reshape(-1, 1)),
         )
         mts_coords = mts.TensorMap(keys, [block])
-        # This model has a single output, named "feature". This can be used by multiple
+        # This model has a single output, named "features". This can be used by multiple
         # tools, including PLUMED where it defines a custom collective variable.
-        return {"feature": mts_coords}
+        return {output_name: mts_coords}
 
 
 # %%
@@ -281,10 +283,12 @@ class SoapCV(torch.nn.Module):
         outputs: Dict[str, mta.ModelOutput],
         selected_atoms: Optional[mts.Labels],
     ) -> Dict[str, mts.TensorMap]:
-        if "feature" in outputs:
-            feature_options = outputs["feature"]
-        elif "features" in outputs:
+        if "features" in outputs:
+            output_name = "features"
             feature_options = outputs["features"]
+        elif "feature" in outputs:
+            output_name = "feature"
+            feature_options = outputs["feature"]
         else:
             return {}
 
@@ -299,11 +303,11 @@ class SoapCV(torch.nn.Module):
             keys = mts.Labels("_", torch.tensor([[0]]))
             block = mts.TensorBlock(
                 torch.zeros((0, len(self.selected_keys)), dtype=torch.float64),
-                samples=mts.Labels("structure", torch.zeros((0, 1), dtype=torch.int32)),
+                samples=mts.Labels("system", torch.zeros((0, 1), dtype=torch.int32)),
                 components=[],
                 properties=self.selected_keys,
             )
-            return {"feature": mts.TensorMap(keys, [block])}
+            return {output_name: mts.TensorMap(keys, [block])}
 
         # then manipulate the tensormap to remove some of the sparsity
         spex = mts.remove_dimension(spex, axis="keys", name="o3_sigma")
@@ -325,13 +329,13 @@ class SoapCV(torch.nn.Module):
         summed_q = mts.TensorMap(spex.keys, blocks)
         summed_q = summed_q.keys_to_properties("o3_lambda")
 
-        if feature_options.sample_kind != "atom":
+        if not feature_options.per_atom:
             summed_q = mts.mean_over_samples(
                 summed_q, sample_names=["atom", "center_type"]
             )
 
-        # This model, like CoordinationHistogram has a single output, named "feature".
-        return {"feature": summed_q}
+        # This model, like CoordinationHistogram has a single output, named "features".
+        return {output_name: summed_q}
 
 
 # %%
@@ -360,15 +364,17 @@ metadata = mta.ModelMetadata(
     description="Computes smooth histogram of coordination numbers",
 )
 
+
 def model_capabilities():
     return mta.ModelCapabilities(
         length_unit="Angstrom",
-        outputs={"feature": mta.ModelOutput(sample_kind="system")},
+        outputs={"features": mta.ModelOutput(per_atom=False)},
         atomic_types=[18],
         interaction_range=cutoff,
         supported_devices=["cpu"],
         dtype="float64",
     )
+
 
 model_ch = mta.AtomisticModel(
     module=module.eval(),
@@ -689,8 +695,8 @@ lmp_process.wait()
 # so we only run 2000 steps as a demonstration.
 
 ipi_trajectory = ase.io.read("meta-md.pos_0.extxyz", ":")
-ipi_properties, _ = ipi.scripting.read_output("meta-md.out")
-ipi_cv = ipi.scripting.read_trajectory("meta-md.colvar_0", format="extras")["cv1, cv2"]
+ipi_properties, _ = read_output("meta-md.out")
+ipi_cv = read_trajectory("meta-md.colvar_0", format="extras")["cv1, cv2"]
 
 # %%
 #
