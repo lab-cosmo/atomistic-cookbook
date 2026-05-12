@@ -378,7 +378,7 @@ class PolarizabilityModel(torch.nn.Module):
 
     def _apply_weights(self, ridges: List[RidgeCV]) -> None:
         with torch.no_grad():
-            for model, ridge in zip(self.linear_model.module_map, ridges):
+            for model, ridge in zip(self.linear_model.module_map.module_list, ridges):
                 model.weight.copy_(torch.tensor(ridge.coef_, dtype=self.dtype))
                 if model.bias is not None:
                     model.bias.copy_(torch.tensor(ridge.intercept_, dtype=self.dtype))
