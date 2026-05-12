@@ -62,6 +62,37 @@ This way if the example breaks further down the line it is easy to
 bring it back to a working state converting these to strict pinnings,
 yet most harmless updates will be applied automatically.
 
+Shared utilities
+~~~~~~~~~~~~~~~~
+
+A small companion package, `atomistic-cookbook-utils
+<https://pypi.org/project/atomistic-cookbook-utils/>`_, collects helpers
+that would otherwise be re-implemented in many recipes. Prefer using it
+over rolling your own. Currently it provides:
+
+- ``download_with_retry(url, destination)`` — fetch a file with HTTP
+  retries on transient errors, skipping the download if the file is
+  already present;
+- ``run_command("cmd with args")`` — a friendlier ``subprocess.run``
+  that accepts a shell-like string (split with ``shlex``) instead of a
+  list of arguments.
+
+To use it in your recipe, add it to the ``pip:`` section of your
+``environment.yml`` with a semantic version range:
+
+.. code-block:: yaml
+
+   - atomistic-cookbook-utils >=0.1,<0.2
+
+and import the helpers you need:
+
+.. code-block:: python
+
+   from atomistic_cookbook_utils import download_with_retry, run_command
+
+The package source lives under ``src/atomistic-cookbook-utils/`` in
+this repository; see its ``README.md`` for development notes.
+
 Data files
 ~~~~~~~~~~
 

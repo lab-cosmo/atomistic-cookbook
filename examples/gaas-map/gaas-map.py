@@ -21,13 +21,11 @@ and the principal covariate regression scheme as implemented in
 
 # sphinx_gallery_thumbnail_number = 2
 
-import os
-
 import ase
 import ase.io
 import chemiscope
 import numpy as np
-import requests
+from atomistic_cookbook_utils import download_with_retry
 from featomic import AtomicComposition, SoapPowerSpectrum
 from matplotlib import pyplot as plt
 from metatensor import mean_over_samples
@@ -35,7 +33,6 @@ from sklearn.decomposition import PCA
 from sklearn.linear_model import RidgeCV
 from skmatter.decomposition import PCovR
 from skmatter.preprocessing import StandardFlexibleScaler
-from urllib3.util.retry import Retry
 
 
 # %%
@@ -47,30 +44,8 @@ from urllib3.util.retry import Retry
 #
 
 
-def fetch_dataset(filename, base_url, local_path=""):
-    """Helper function to load data with retries on errors."""
-
-    local_file = local_path + filename
-    if os.path.isfile(local_file):
-        return
-
-    # Retry strategy: wait 1s, 2s, 4s, 8s, 16s on 429/5xx errors
-    retry_strategy = Retry(
-        total=5, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504]
-    )
-    session = requests.Session()
-    session.mount("https://", requests.adapters.HTTPAdapter(max_retries=retry_strategy))
-
-    # Fetch with automatic retry and error raising
-    response = session.get(base_url + filename)
-    response.raise_for_status()
-
-    with open(local_file, "wb") as file:
-        file.write(response.content)
-
-
 filename = "gaas_training.xyz"
-fetch_dataset(filename, "https://zenodo.org/records/10566825/files/")
+download_with_retry(f"https://zenodo.org/records/10566825/files/{filename}", filename)
 
 structures = ase.io.read(filename, ":")
 energy = np.array([f.info["energy"] for f in structures])

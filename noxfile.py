@@ -62,6 +62,11 @@ def get_lint_files():
         "noxfile.py",
         "docs/src/conf.py",
         "src/get_examples.py",
+        "src/atomistic-cookbook-utils/src/atomistic_cookbook_utils/__init__.py",
+        "src/atomistic-cookbook-utils/src/atomistic_cookbook_utils/_command.py",
+        "src/atomistic-cookbook-utils/src/atomistic_cookbook_utils/_download.py",
+        "src/atomistic-cookbook-utils/tests/test_command.py",
+        "src/atomistic-cookbook-utils/tests/test_download.py",
     ]
     return LINT_FILES + get_example_files()
 

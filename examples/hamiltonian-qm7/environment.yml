@@ -9,8 +9,8 @@ dependencies:
   - pip:
       - pyscfad @ git+https://github.com/fishjojo/pyscfad.git@ml#egg=pyscfad
       - ase==3.22.1
+      - atomistic-cookbook-utils>=0.1,<0.2
       - seekpath
-      - requests
       - ipython
       - metatensor-core>=0.1.17,<0.2
       - metatensor-learn>=0.3.0,<0.4
