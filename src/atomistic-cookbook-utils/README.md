@@ -42,11 +42,17 @@ Run a shell-like command string without invoking a shell. The string is
 split with `shlex.split`, so quoting works as expected; pipes, redirection
 and globs do *not* — for those, use `subprocess` directly.
 
+By default the child inherits the parent's stdout and stderr. Pass
+`print_output=True` to capture the command's combined output and
+re-emit it via `print()` — this makes the output visible in
+sphinx-gallery rendered cells (which capture `sys.stdout` but not raw
+file-descriptor writes from child processes).
+
 ```python
 from atomistic_cookbook_utils import run_command
 
 run_command("mtt train options.yaml")
-run_command("ls -la", cwd="data", capture_output=True)
+run_command("ls -la", cwd="data", print_output=True)
 ```
 
 ## Source
