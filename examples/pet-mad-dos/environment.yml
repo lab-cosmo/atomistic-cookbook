@@ -3,8 +3,9 @@ channels:
 dependencies:
   - python=3.12
   - pip
+  - git
   - tqdm
   - matplotlib
   - pip:
     - ase>=3.28
-    - upet>=0.2.3
+    - git+https://github.com/lab-cosmo/upet.git@dos
