@@ -263,9 +263,10 @@ GaAs_sample_structures = ase.io.read("GaAs_sample_structures.xyz", ":")
 # %%
 # Then we compute the DOS and mask for each structure using the
 # ``compute_DOS_and_mask_from_eigenvalues`` function in the
-# ``PETMADDOSCalculator`` calculator, which applies Gaussian broadening on the eigenvalues
-# and projects them onto the energy grid of PET-MAD-DOS to obtain the DOS, and defines the
-# mask based on the energy range where the DOS is well-defined.
+# ``PETMADDOSCalculator`` calculator, which applies Gaussian broadening
+# on the eigenvalues and projects them onto the energy grid of PET-MAD-DOS
+# to obtain the DOS, and defines the mask based on the energy range
+# where the DOS is well-defined.
 #
 
 for struct in GaAs_sample_structures:
