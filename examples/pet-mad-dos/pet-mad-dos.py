@@ -48,7 +48,7 @@ from upet.calculator import PETMADDOSCalculator
 # We will start by loading a sample of structures, along with their associated
 # DOS and mask. These are 5 structures from the training dataset used in the
 # original `PET-MAD-DOS publication <https://arxiv.org/abs/2508.17418>`_. We also load
-# the PETMADDOSCalculator from the upet package, which will be used to predict the
+# the ``PETMADDOSCalculator`` from the upet package, which will be used to predict the
 # DOS for these structures.
 #
 
@@ -100,7 +100,7 @@ plt.plot(
     linestyle="--",
     color="black",
 )
-plt.xlim(-80, 20)
+plt.xlim(-80, 10)
 plt.tick_params(axis="both", which="major", labelsize=14, width=2, length=6)
 plt.xlabel(r"Energy - $\mathrm{E_F}$ [eV]", size=16)
 plt.ylabel(r"DOS [$\mathrm{states}/eV$]", size=16)
@@ -118,7 +118,7 @@ plt.show()
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Although the target has size 4606 as seen in the cells above,
 # in order to accomodate the energy reference agnostic loss function,
-# PET-MAD-DOS predicts on a larger energy grid (`energies`) of size 4806.
+# PET-MAD-DOS predicts on a larger energy grid (``energies``)of size 4806.
 #
 
 energies, pred_DOS = pet_mad_dos_calculator.calculate_dos(structs)
@@ -127,11 +127,11 @@ print(f"The shape of pred_DOS is: {pred_DOS.shape}")
 print(f"The shape of energies is: {energies.shape}")
 
 # %%
-# Additionally, the calculate_dos function also includes a `denoise` parameter that
+# Additionally, the calculate_dos function also includes a ``denoise`` parameter that
 # implements a post-processing denoising step to remove the high-frequency noise in the
 # predicted DOS. The denoising procedure is detailed in the `PET-MAD-DOS publication
 # <https://arxiv.org/abs/2508.17418>`_. By default, the denoising is turned off,
-# but one can set `denoise=True` to obtain the denoised predictions.
+# but one can set ``denoise=True`` to obtain the denoised predictions.
 #
 
 energies, denoised_pred_DOS = pet_mad_dos_calculator.calculate_dos(
@@ -171,9 +171,9 @@ plt.show()
 # As we can see, the denoising step removes the high-frequency noise in the raw
 # predictions, while preserving the overall DOS profile. In the next part, we will
 # compare the denoised predictions with the true DOS. However, since the prediction and
-# the true DOS are on different energy grids and not necessarily aligned in energy since
-# the energy reference is not well-defined, we will need to do some processing to align
-# them before we can compare them directly.
+# the true DOS are on different energy grids and are not necessarily aligned in energy
+# as the energy reference is not well-defined, we will need to do some processing to
+# align them before we can compare them directly.
 #
 
 denoised_DOS, aligned_true_DOS, aligned_true_masks = pet_mad_dos_calculator.align_dos(
@@ -196,7 +196,7 @@ plt.plot(
 )
 plt.xlim(-80, 10)
 plt.tick_params(axis="both", which="major", labelsize=14, width=2, length=6)
-plt.xlabel(r"Energy", size=16)
+plt.xlabel(r"Energy [eV]", size=16)
 plt.ylabel(r"DOS [$\mathrm{states}/eV$]", size=16)
 plt.legend(fontsize=14)
 plt.tight_layout()
@@ -213,7 +213,7 @@ plt.show()
 # Step 4: Predicting the Bandgap
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Additionally, PET-MAD-DOS comes with a CNN bandgap model that predicts the gap
-# of a system based on the predicted DOS. Due to the inherent model noise and
+# of a system based on the predicted DOS. Due to inherent model noise and
 # the high sensitivity of the bandgap to small errors in the DOS, obtaining the
 # bandgap via a CNN model is more robust than deriving it from the predicted DOS.
 #
@@ -242,7 +242,7 @@ plt.show()
 # In this section, we are going to treat PET-MAD-DOS as a foundation
 # model and finetune it on a Gallium Arsenide (GaAs) system. We will first
 # demonstrate the data processing pipeline starting from DFT outputs, and then
-# we will show how to use the `metatrain` package to finetune the model.
+# we will show how to use the ``metatrain`` package to finetune the model.
 #
 
 # %%
@@ -262,9 +262,9 @@ GaAs_sample_structures = ase.io.read("GaAs_sample_structures.xyz", ":")
 
 # %%
 # Then we compute the DOS and mask for each structure using the
-# `compute_DOS_and_mask_from_eigenvalues` function in the
-# PETMADDOSCalculator calculator, which applies Gaussian broadening on the eigenvalues
-# and projects them on the energy grid of PET-MAD-DOS to obtain the DOS, and defines the
+# ``compute_DOS_and_mask_from_eigenvalues`` function in the
+# ``PETMADDOSCalculator`` calculator, which applies Gaussian broadening on the eigenvalues
+# and projects them onto the energy grid of PET-MAD-DOS to obtain the DOS, and defines the
 # mask based on the energy range where the DOS is well-defined.
 #
 
@@ -326,8 +326,8 @@ if not os.path.exists(checkpoint_path):
 # %%
 # Step 3: Fine-tuning the model
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Now we are ready to fine-tune the model using the `metatrain` package. We
-# will use the `mtt train` command to train the model, alongside with a
+# Now we are ready to fine-tune the model using the ``metatrain`` package. We
+# will use the ``mtt train`` command to train the model, alongside with a
 # supporting YAML configuration file that specifies the training hyperparameters.
 
 # %%
@@ -343,7 +343,7 @@ subprocess.run(
 # %%
 # Step 4: Evaluating the model
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# After training, we can evaluate the model on the test set using the `mtt eval`
+# After training, we can evaluate the model on the test set using the ``mtt eval``
 # command, alongside with a supporting YAML configuration file that specifies the
 # evaluation hyperparameters.
 
