@@ -57,9 +57,9 @@ from upet.calculator import PETMADDOSCalculator
 
 # Load the structures
 url = "https://zenodo.org/records/19655792/files/MAD_sample_structures.xyz?download=1"
-filename = "./data/MAD_sample_structures.xyz"
+filename = "MAD_sample_structures.xyz"
 urllib.request.urlretrieve(url, filename)
-structs = ase.io.read("./data/MAD_sample_structures.xyz", ":")
+structs = ase.io.read("MAD_sample_structures.xyz", ":")
 
 # Extract the DOS and mask
 true_DOS = torch.tensor(np.stack([s.info["DOS"] for s in structs])).float()
@@ -130,13 +130,13 @@ print(f"The shape of energies is: {energies.shape}")
 # Additionally, the calculate_dos function also includes a `denoise` parameter that
 # implements a post-processing denoising step to remove the high-frequency noise in the
 # predicted DOS. The denoising procedure is detailed in the `PET-MAD-DOS publication
-# <https://arxiv.org/abs/2508.17418>`_. By default, the denoising is turned off, 
-# but one can set `denoise=True` to obtain the denoised predictions. 
+# <https://arxiv.org/abs/2508.17418>`_. By default, the denoising is turned off,
+# but one can set `denoise=True` to obtain the denoised predictions.
 #
 
 energies, denoised_pred_DOS = pet_mad_dos_calculator.calculate_dos(
     structs,
-    denoise = True,
+    denoise=True,
 )
 print(f"The shape of denoised_pred_DOS is: {denoised_pred_DOS.shape}")
 
@@ -155,9 +155,9 @@ plt.plot(
     denoised_pred_DOS[i_struct],
     label="Denoised DOS",
     color="blue",
-    linestyle = "-"
+    linestyle="-",
 )
-plt.plot(energies, pred_DOS[i_struct], label="Raw DOS", color="green", linestyle = "--")
+plt.plot(energies, pred_DOS[i_struct], label="Raw DOS", color="green", linestyle="--")
 
 plt.xlim(-80, 10)
 plt.tick_params(axis="both", which="major", labelsize=14, width=2, length=6)
@@ -177,18 +177,12 @@ plt.show()
 #
 
 denoised_DOS, aligned_true_DOS, aligned_true_masks = pet_mad_dos_calculator.align_dos(
-    denoised_pred_DOS,
-    true_DOS.float(),
-    true_mask.float()
+    denoised_pred_DOS, true_DOS.float(), true_mask.float()
 )
 
 # Visualize the predictions and the true DOS on the same plot
 plt.plot(
-    energies,
-    denoised_DOS[i_struct],
-    label="Denoised DOS",
-    color="blue",
-    linestyle = "-"
+    energies, denoised_DOS[i_struct], label="Denoised DOS", color="blue", linestyle="-"
 )
 plt.plot(
     energies, aligned_true_DOS[i_struct], label="DFT DOS", linestyle="--", color="red"
@@ -212,8 +206,8 @@ plt.show()
 # %%
 # The plot shows that the predicted DOS is actually very close to the
 # true DOS for the region where the DOS values are physical. The DOS profiles are
-# nearly identical, with the errors lying primarily in the height of the peaks. 
-# 
+# nearly identical, with the errors lying primarily in the height of the peaks.
+#
 
 # %%
 # Step 4: Predicting the Bandgap
@@ -262,9 +256,9 @@ plt.show()
 #
 
 url = "https://zenodo.org/records/19655792/files/GaAs_sample_structures.xyz?download=1"
-filename = "./data/GaAs_sample_structures.xyz"
+filename = "GaAs_sample_structures.xyz"
 urllib.request.urlretrieve(url, filename)
-GaAs_sample_structures = ase.io.read("./data/GaAs_sample_structures.xyz", ":")
+GaAs_sample_structures = ase.io.read("GaAs_sample_structures.xyz", ":")
 
 # %%
 # Then we compute the DOS and mask for each structure using the
@@ -275,20 +269,19 @@ GaAs_sample_structures = ase.io.read("./data/GaAs_sample_structures.xyz", ":")
 #
 
 for struct in GaAs_sample_structures:
-        dos_i, mask_i = pet_mad_dos_calculator.compute_DOS_and_mask_from_eigenvalues(
-            torch.tensor(struct.info['eigvals']),
-            torch.tensor(struct.info['kweight'])
-        )
-        struct.info['DOS'] = dos_i.numpy().astype(np.float32)
-        struct.info['mask'] = mask_i.numpy().astype(np.float32)
+    dos_i, mask_i = pet_mad_dos_calculator.compute_DOS_and_mask_from_eigenvalues(
+        torch.tensor(struct.info["eigvals"]), torch.tensor(struct.info["kweight"])
+    )
+    struct.info["DOS"] = dos_i.numpy().astype(np.float32)
+    struct.info["mask"] = mask_i.numpy().astype(np.float32)
 
 # Store the processed structures as a new XYZ file for fine-tuning
 # ase.io.write("GaAs_processed_structures.xyz", GaAs_sample_structures)
 
 # %%
 # One would save the processed structures as a new XYZ file to to the
-# fine-tuning, as demonstrated in the commented line in the cell above. However, 
-# for the purposes of this tutorial, we will demonstrate on datasets that have already 
+# fine-tuning, as demonstrated in the commented line in the cell above. However,
+# for the purposes of this tutorial, we will demonstrate on datasets that have already
 # been processed, as can be obtained from the `MaterialsCloud archive
 # <https://archive.materialscloud.org/records/8ee9k-b7865>`_.
 #
@@ -298,18 +291,16 @@ for i in ["train", "val", "test"]:
         f"https://zenodo.org/records/19655792/files/"
         f"GaAs_sample_{i}_structures.xyz?download=1"
     )
-    filename = f"./data/GaAs_sample_{i}_structures.xyz"
+    filename = f"GaAs_sample_{i}_structures.xyz"
     urllib.request.urlretrieve(url, filename)
 
     GaAs_sample_structures = ase.io.read(filename, ":")
 
-
     for struct in GaAs_sample_structures:
-        DOS = torch.tensor(struct.info['DOS'])
-        mask = torch.tensor(struct.info['mask'])
+        DOS = torch.tensor(struct.info["DOS"])
+        mask = torch.tensor(struct.info["mask"])
         padded_dos, padded_mask = pet_mad_dos_calculator.pad_dos_and_mask_for_training(
-            DOS,
-            mask
+            DOS, mask
         )
         struct.info["trainingDOS"] = padded_dos.numpy().astype(np.float32)
         struct.info["trainingmask"] = padded_mask.numpy().astype(np.int32)
@@ -366,26 +357,16 @@ output = ase.io.read("pred.xyz", ":")
 # performance is not expected to be good. However, this simply serves as a
 # demonstration of how to use the fine-tuned model.
 
-predicted_DOS = torch.tensor(
-    np.stack(
-        [s.info["mtt::dos"] for s in output]
-    )
-).float()
+predicted_DOS = torch.tensor(np.stack([s.info["mtt::dos"] for s in output])).float()
 true_DOS = torch.tensor(
-     np.stack(
-        [s.info["DOS"] for s in GaAs_sample_structures]
-    )
+    np.stack([s.info["DOS"] for s in GaAs_sample_structures])
 ).float()
 true_mask = torch.tensor(
-    np.stack(
-        [s.info["mask"] for s in GaAs_sample_structures]
-    )
+    np.stack([s.info["mask"] for s in GaAs_sample_structures])
 ).float()
 
 predicted_DOS, aligned_true_DOS, aligned_true_masks = pet_mad_dos_calculator.align_dos(
-    predicted_DOS,
-    true_DOS,
-    true_mask
+    predicted_DOS, true_DOS, true_mask
 )
 
 # Visualize the predictions and the true DOS on the same plot
