@@ -69,7 +69,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/utils-v')
     runs-on: ubuntu-latest
     environment:
-      name: pypi
+      name: pypi-publish-utils
       url: https://pypi.org/p/atomistic-cookbook-utils
     permissions:
       id-token: write
