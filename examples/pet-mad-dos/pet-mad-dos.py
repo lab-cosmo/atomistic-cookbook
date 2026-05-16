@@ -35,6 +35,7 @@ import torch
 import urllib.request
 import os
 import subprocess
+import chemiscope
 from upet.calculator import PETMADDOSCalculator
 
 # %%
@@ -242,6 +243,57 @@ plt.ylabel(r"DFT Gap [eV]", size=16)
 plt.legend(fontsize=16)
 plt.tight_layout()
 plt.show()
+
+# %%
+# Interactive exploration with chemiscope
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# To make it easier to inspect the predictions structure-by-structure, we use
+# `chemiscope <https://chemiscope.org>`_ to build an interactive viewer that
+# combines the structures, the scalar bandgaps (reference and predicted) and the
+# full DOS curves. The DOS is declared as a per-structure property living on a
+# shared energy axis, which is defined through chemiscope's ``parameters``
+# mechanism: each entry in ``parameters`` provides the values of an independent
+# axis that 1D properties (here, the DOS) can be plotted against.
+
+chemiscope.show(
+    structures=structs,
+    properties={
+        "DFT bandgap": {
+            "target": "structure",
+            "values": true_bandgap.numpy(),
+            "units": "eV",
+        },
+        "predicted bandgap": {
+            "target": "structure",
+            "values": pred_bandgap.numpy(),
+            "units": "eV",
+        },
+        "DFT DOS": {
+            "target": "structure",
+            "values": aligned_true_DOS.numpy(),
+            "parameters": ["energy"],
+            "units": "states/eV",
+        },
+        "predicted DOS": {
+            "target": "structure",
+            "values": denoised_DOS.numpy(),
+            "parameters": ["energy"],
+            "units": "states/eV",
+        },
+    },
+    parameters={
+        "energy": {
+            "values": np.asarray(energies),
+            "name": "Energy",
+            "units": "eV",
+        },
+    },
+    settings=chemiscope.quick_settings(
+        x="DFT bandgap",
+        y="predicted bandgap",
+        trajectory=False,
+    ),
+)
 
 # %%
 # Finetuning PET-MAD-DOS on specific applications
