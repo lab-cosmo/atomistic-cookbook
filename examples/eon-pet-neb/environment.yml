@@ -16,3 +16,4 @@ dependencies:
     - requests
     - rgpycrumbs>=1.7.0,<2
     - chemparseplot>=1.7.0,<2
+    - atomistic-cookbook-utils >=0.1,<0.2

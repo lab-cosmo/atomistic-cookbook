@@ -51,6 +51,7 @@ import metatensor.torch as mts
 import metatomic.torch as mta
 import numpy as np
 import torch
+from atomistic_cookbook_utils import run_command
 
 
 # %%
@@ -448,9 +449,7 @@ lammps_initial.cell = [20, 20, 20]
 ase.io.write("data/minimal.data", lammps_initial, format="lammps-data")
 
 print(linecache.getline("data/lammps.plumed.in", 25).strip())
-subprocess.run(
-    ["lmp", "-in", "data/lammps.plumed.in"], check=True, capture_output=False
-)
+run_command("lmp -in data/lammps.plumed.in")
 lmp_trajectory = ase.io.read("lj38.lammpstrj", index=":")
 
 # %%

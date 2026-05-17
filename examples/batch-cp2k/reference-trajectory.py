@@ -29,7 +29,7 @@ import ase.io
 import ase.visualize.plot
 import matplotlib.pyplot as plt
 import numpy as np
-from atomistic_cookbook_utils import download_with_retry
+from atomistic_cookbook_utils import download_with_retry, run_command
 
 
 # %%
@@ -43,20 +43,12 @@ from atomistic_cookbook_utils import download_with_retry
 
 if platform.system() == "Linux":
     # use conda on Linux
-    subprocess.run(
-        [
-            "conda",
-            "install",
-            "cp2k=2024.2=openblas_nompi_hbd0aaf2_1000",
-            "-c",
-            "conda-forge",
-            "-y",
-        ],
-        check=True,
+    run_command(
+        "conda install cp2k=2024.2=openblas_nompi_hbd0aaf2_1000 -c conda-forge -y"
     )
 elif platform.system() == "Darwin":
     # use homebrew on macOS
-    subprocess.run(["brew", "install", "cp2k"], check=True)
+    run_command("brew install cp2k")
 else:
     print("no known way to install cp2k, skipping installation")
 

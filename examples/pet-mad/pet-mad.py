@@ -44,7 +44,6 @@ in `this preprint <https://arxiv.org/abs/2503.14118>`_.
 #     pip install upet
 #
 
-import subprocess
 from copy import copy, deepcopy
 
 # ASE and i-PI scripting utilities
@@ -55,7 +54,7 @@ import matplotlib.pyplot as plt
 # pet-mad ASE calculator
 import numpy as np
 import upet
-from atomistic_cookbook_utils import download_with_retry
+from atomistic_cookbook_utils import download_with_retry, run_command
 from ase.optimize import LBFGS
 from upet.calculator import UPETCalculator
 from ipi.utils.mathtools import get_rotation_quadrature_lebedev
@@ -533,7 +532,7 @@ with open("data/al6xxx-o2.in", "r") as f:
 
 ase.io.write("al6xxx-o2.data", al_surface, format="lammps-data", masses=True)
 
-subprocess.check_call(["lmp", "-in", "data/al6xxx-o2.in"])
+run_command("lmp -in data/al6xxx-o2.in")
 
 # %%
 #

@@ -28,8 +28,7 @@ import ase.io
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import subprocess
-from atomistic_cookbook_utils import download_with_retry
+from atomistic_cookbook_utils import download_with_retry, run_command
 
 # %%
 # Using PET-MAD-DOS out of the box
@@ -440,9 +439,7 @@ download_with_retry(url, checkpoint_path)
 
 
 # Begin finetuning
-subprocess.run(
-    ["mtt", "train", "finetune.yaml", "-o", "fine_tune-model.pt"], check=True
-)
+run_command("mtt train finetune.yaml -o fine_tune-model.pt")
 
 # %%
 # Step 4: Evaluating the model
@@ -456,9 +453,7 @@ subprocess.run(
 #   :language: yaml
 #
 
-subprocess.run(
-    ["mtt", "eval", "fine_tune-model.pt", "eval.yaml", "-o", "pred.xyz"], check=True
-)
+run_command("mtt eval fine_tune-model.pt eval.yaml -o pred.xyz")
 
 output = ase.io.read("pred.xyz", ":")
 
