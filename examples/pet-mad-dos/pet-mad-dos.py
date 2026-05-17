@@ -29,13 +29,11 @@ First, let's begin by importing the necessary packages and helper functions
 
 import ase
 import ase.io
+import chemiscope
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import urllib.request
-import os
-import subprocess
-import chemiscope
+from atomistic_cookbook_utils import download_with_retry, run_command
 from upet.calculator import PETMADDOSCalculator
 
 # %%
@@ -65,7 +63,7 @@ from upet.calculator import PETMADDOSCalculator
 # Load the structures
 url = "https://zenodo.org/records/19655792/files/MAD_sample_structures.xyz?download=1"
 filename = "MAD_sample_structures.xyz"
-urllib.request.urlretrieve(url, filename)
+download_with_retry(url, filename)
 structs = ase.io.read("MAD_sample_structures.xyz", ":")
 
 # Extract the DOS and mask
@@ -316,7 +314,7 @@ chemiscope.show(
 
 url = "https://zenodo.org/records/19655792/files/GaAs_sample_structures.xyz?download=1"
 filename = "GaAs_sample_structures.xyz"
-urllib.request.urlretrieve(url, filename)
+download_with_retry(url, filename)
 GaAs_sample_structures = ase.io.read("GaAs_sample_structures.xyz", ":")
 
 # %%
@@ -352,7 +350,7 @@ for i in ["train", "val", "test"]:
         f"GaAs_sample_{i}_structures.xyz?download=1"
     )
     filename = f"GaAs_sample_{i}_structures.xyz"
-    urllib.request.urlretrieve(url, filename)
+    download_with_retry(url, filename)
 
     GaAs_sample_structures = ase.io.read(filename, ":")
 
