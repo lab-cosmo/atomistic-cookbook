@@ -9,7 +9,7 @@ dependencies:
       - pyscfad @ git+https://github.com/fishjojo/pyscfad.git@ml#egg=pyscfad
       - ase==3.22.1
       - seekpath
-      - requests
+      - atomistic-cookbook-utils >=0.1,<0.2
       - lightning
       - xitorch
       - keras_core

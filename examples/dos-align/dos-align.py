@@ -16,15 +16,14 @@ First, lets begin by importing the necessary packages and helper functions
 
 # %%
 
-import os
 import zipfile
 
 import ase
 import ase.io
 import matplotlib.pyplot as plt
 import numpy as np
-import requests
 import torch
+from atomistic_cookbook_utils import download_with_retry
 from featomic import SoapPowerSpectrum
 from scipy.interpolate import CubicHermiteSpline, interp1d
 from scipy.optimize import brentq
@@ -50,12 +49,10 @@ from torch.utils.data import BatchSampler, DataLoader, Dataset, RandomSampler
 # 1) Downloading and Extracting Data
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 filename = "dataset.zip"
-if not os.path.exists(filename):
-    url = "https://github.com/HowWeiBin/datasets/archive/refs/tags/Silicon-Diamonds.zip"
-    response = requests.get(url)
-    response.raise_for_status()
-    with open(filename, "wb") as f:
-        f.write(response.content)
+download_with_retry(
+    "https://github.com/HowWeiBin/datasets/archive/refs/tags/Silicon-Diamonds.zip",
+    filename,
+)
 
 with zipfile.ZipFile("./dataset.zip", "r") as zip_ref:
     zip_ref.extractall("./")

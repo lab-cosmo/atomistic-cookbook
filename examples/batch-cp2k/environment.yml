@@ -6,4 +6,4 @@ dependencies:
   - pip:
     - ase
     - matplotlib
-    - requests
+    - atomistic-cookbook-utils >=0.1,<0.2
