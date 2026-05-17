@@ -28,9 +28,7 @@ import ase.io
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import urllib.request
-import os
-import subprocess
+from atomistic_cookbook_utils import download_with_retry, run_command
 
 # %%
 # Using PET-MAD-DOS out of the box
@@ -288,7 +286,7 @@ plt.show()
 
 url = "https://zenodo.org/records/19655792/files/GaAs_sample_structures.xyz?download=1"
 filename = "GaAs_sample_structures.xyz"
-urllib.request.urlretrieve(url, filename)
+download_with_retry(url, filename)
 GaAs_sample_structures = ase.io.read("GaAs_sample_structures.xyz", ":")
 
 # %%
@@ -426,9 +424,7 @@ ase.io.write("GaAs_processed_test.xyz", GaAs_sample_test_structures)
 url = "https://zenodo.org/records/19655792/files/pet-mad-dos-v1.0.ckpt?download=1"
 
 checkpoint_path = "pet-mad-dos-v1.0.ckpt"
-if not os.path.exists(checkpoint_path):
-    print("Downloading PET-MAD-DOS checkpoint...")
-    urllib.request.urlretrieve(url, checkpoint_path)
+download_with_retry(url, checkpoint_path)
 
 # %%
 # Step 3: Fine-tuning the model
@@ -443,9 +439,7 @@ if not os.path.exists(checkpoint_path):
 
 
 # Begin finetuning
-subprocess.run(
-    ["mtt", "train", "finetune.yaml", "-o", "fine_tune-model.pt"], check=True
-)
+run_command("mtt train finetune.yaml -o fine_tune-model.pt")
 
 # %%
 # Step 4: Evaluating the model
@@ -459,9 +453,7 @@ subprocess.run(
 #   :language: yaml
 #
 
-subprocess.run(
-    ["mtt", "eval", "fine_tune-model.pt", "eval.yaml", "-o", "pred.xyz"], check=True
-)
+run_command("mtt eval fine_tune-model.pt eval.yaml -o pred.xyz")
 
 output = ase.io.read("pred.xyz", ":")
 

@@ -12,4 +12,4 @@ dependencies:
     - chemiscope>=1.0
     - matplotlib
     - vesin>=0.4.2
-    - requests
+    - atomistic-cookbook-utils >=0.1,<0.2

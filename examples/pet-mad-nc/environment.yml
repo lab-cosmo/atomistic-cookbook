@@ -13,3 +13,4 @@ dependencies:
     - metatomic-torch
     - matplotlib>=3.10,<4.0
     - vesin>=0.4.2
+    - atomistic-cookbook-utils >=0.1,<0.2
