@@ -341,9 +341,9 @@ for struct in GaAs_sample_structures:
 # The processed structures can be saved as a new XYZ file, which will be the target for
 # fine-tuning, as demonstrated in the commented line in the cell above. However,
 # for this tutorial, we would expand on the processing pipeline if one obtains the
-# processed DOS, either from a custom DFT calculation or from 
+# processed DOS, either from a custom DFT calculation or from
 # the `MaterialsCloud archive
-# <https://archive.materialscloud.org/records/8ee9k-b7865>`_. The following cell 
+# <https://archive.materialscloud.org/records/8ee9k-b7865>`_. The following cell
 # demonstrates the pipeline on a sample of 5 structures from the GaAs dataset in the
 # MaterialsCloud archive.
 
