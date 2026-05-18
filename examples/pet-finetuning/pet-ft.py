@@ -32,7 +32,6 @@ application.
 # %%
 
 import os
-import subprocess
 from collections import Counter
 from glob import glob
 
@@ -42,6 +41,7 @@ import chemiscope
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from atomistic_cookbook_utils import run_command
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution
 from ase.md.verlet import VelocityVerlet
 from huggingface_hub import hf_hub_download
@@ -260,10 +260,7 @@ def display_training_curves(train_log, ax=None, style="-", label=""):
 #
 # Or from Python:
 
-subprocess.run(
-    ["mtt", "train", "from_scratch_options.yaml", "-o", "from_scratch-model.pt"],
-    check=True,
-)
+run_command("mtt train from_scratch_options.yaml -o from_scratch-model.pt")
 
 # %%
 # The training logs are stored in the ``outputs/`` directory, with a subdirectory
@@ -298,9 +295,7 @@ display_training_curves(from_scratch_log)
 #   :language: yaml
 #
 
-subprocess.run(
-    ["mtt", "train", "full_ft_options.yaml", "-o", "fine_tune-model.pt"], check=True
-)
+run_command("mtt train full_ft_options.yaml -o fine_tune-model.pt")
 
 
 # %%
@@ -340,13 +335,7 @@ ax[0].set_ylim(1, 1000)
 #
 # Or from Python:
 
-result = subprocess.run(
-    ["mtt", "eval", "fine_tune-model.pt", "model_eval.yaml"],
-    check=True,
-    capture_output=True,
-    text=True,
-)
-print(result.stdout)
+run_command("mtt eval fine_tune-model.pt model_eval.yaml", print_output=True)
 
 # %%
 # Running NVE molecular dynamics with the fine-tuned model

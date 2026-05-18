@@ -7,3 +7,7 @@ sphinx-toggleprompt
 docutils
 furo
 chemiscope>=0.8.5
+
+# In-repo utilities package, installed editable so its API docs are
+# generated from the current source tree (no PyPI release required).
+-e ./src/atomistic-cookbook-utils

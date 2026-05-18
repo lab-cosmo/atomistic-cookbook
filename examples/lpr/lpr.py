@@ -14,12 +14,11 @@ First, we import all the necessary packages:
 """
 
 # %%
-import os
 import tarfile
 
 import numpy as np
-import requests
 from ase.io import read
+from atomistic_cookbook_utils import download_with_retry
 from featomic import SoapPowerSpectrum
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
@@ -38,12 +37,10 @@ from skmatter.metrics import local_prediction_rigidity as lpr
 
 
 filename = "LPR_supp_notebook_dataset.tar.gz"
-if not os.path.exists(filename):
-    url = "https://archive.materialscloud.org/records/1wsvs-sb736/files/LPR_supp_notebook_dataset.tar.gz"  # noqa: E501
-    response = requests.get(url)
-    response.raise_for_status()
-    with open(filename, "wb") as f:
-        f.write(response.content)
+download_with_retry(
+    "https://archive.materialscloud.org/records/1wsvs-sb736/files/LPR_supp_notebook_dataset.tar.gz",  # noqa: E501
+    filename,
+)
 
 with tarfile.open(filename) as tar:
     tar.extractall(path=".")

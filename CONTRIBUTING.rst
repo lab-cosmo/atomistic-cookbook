@@ -62,6 +62,19 @@ This way if the example breaks further down the line it is easy to
 bring it back to a working state converting these to strict pinnings,
 yet most harmless updates will be applied automatically.
 
+Shared utilities
+~~~~~~~~~~~~~~~~
+
+A small companion package, `atomistic-cookbook-utils
+<https://pypi.org/project/atomistic-cookbook-utils/>`_, collects helpers
+(retry-aware downloads, friendly subprocess wrappers, ...) that would
+otherwise be re-implemented in many recipes. Prefer using it over
+rolling your own — see the :doc:`utils` page for the full API.
+
+To use it in your recipe, add it to the ``pip:`` section of your
+``environment.yml`` (e.g. ``atomistic-cookbook-utils >=0.1,<0.2``) and
+import the helpers you need.
+
 Data files
 ~~~~~~~~~~
 

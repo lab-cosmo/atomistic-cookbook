@@ -37,7 +37,6 @@ for an example of how to use direct forces to accelerate training.
 #
 
 import linecache
-import subprocess
 import time
 
 import ase.io
@@ -46,6 +45,7 @@ import ase.io
 import chemiscope
 import matplotlib.pyplot as plt
 import upet
+from atomistic_cookbook_utils import run_command
 
 # i-PI scripting utilities
 from ipi.scripting import InteractiveSimulation, read_output, read_trajectory
@@ -378,7 +378,7 @@ chemiscope.show(
 print(linecache.getline("data/lammps-c.in", 12), end="")
 
 time_lammps_c = -time.time()
-subprocess.run(["lmp", "-in", "data/lammps-c.in"])
+run_command("lmp -in data/lammps-c.in")
 time_lammps_c += time.time()
 
 # %%
@@ -388,7 +388,7 @@ time_lammps_c += time.time()
 print(linecache.getline("data/lammps-nc.in", 12), end="")
 
 time_lammps_nc = -time.time()
-subprocess.run(["lmp", "-in", "data/lammps-nc.in"])
+run_command("lmp -in data/lammps-nc.in")
 time_lammps_nc += time.time()
 
 # %%
@@ -405,7 +405,7 @@ for lineno in [12, 13, 14, 15, 17, 18, 19, 24, 27]:
     print(linecache.getline("data/lammps-respa.in", lineno), end="")
 
 time_lammps_mts = -time.time()
-subprocess.run(["lmp", "-in", "data/lammps-respa.in"])
+run_command("lmp -in data/lammps-respa.in")
 time_lammps_mts += time.time()
 
 # %%

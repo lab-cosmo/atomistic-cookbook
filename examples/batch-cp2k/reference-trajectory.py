@@ -29,7 +29,7 @@ import ase.io
 import ase.visualize.plot
 import matplotlib.pyplot as plt
 import numpy as np
-import requests
+from atomistic_cookbook_utils import download_with_retry, run_command
 
 
 # %%
@@ -43,20 +43,12 @@ import requests
 
 if platform.system() == "Linux":
     # use conda on Linux
-    subprocess.run(
-        [
-            "conda",
-            "install",
-            "cp2k=2024.2=openblas_nompi_hbd0aaf2_1000",
-            "-c",
-            "conda-forge",
-            "-y",
-        ],
-        check=True,
+    run_command(
+        "conda install cp2k=2024.2=openblas_nompi_hbd0aaf2_1000 -c conda-forge -y"
     )
 elif platform.system() == "Darwin":
     # use homebrew on macOS
-    subprocess.run(["brew", "install", "cp2k"], check=True)
+    run_command("brew install cp2k")
 else:
     print("no known way to install cp2k, skipping installation")
 
@@ -163,20 +155,11 @@ def write_cp2k_in(
 # installation, this might not be necessary!
 
 
-def download_parameter(file):
-    path = os.path.join("parameters", file)
-
-    if not os.path.exists(path):
-        url = f"https://raw.githubusercontent.com/cp2k/cp2k/support/v2024.1/data/{file}"
-        response = requests.get(url)
-        response.raise_for_status()
-        with open(path, "wb") as f:
-            f.write(response.content)
-
-
-os.makedirs("parameters", exist_ok=True)
 for file in ["GTH_BASIS_SETS", "BASIS_ADMM", "POTENTIAL", "dftd3.dat", "t_c_g.dat"]:
-    download_parameter(file)
+    download_with_retry(
+        f"https://raw.githubusercontent.com/cp2k/cp2k/support/v2024.1/data/{file}",
+        os.path.join("parameters", file),
+    )
 
 
 # %%

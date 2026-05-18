@@ -24,6 +24,7 @@ pair_coeff * * metatomic_3 6 17 1 7
 run_style respa 2 8 hybrid 1 2 2
 
 neighbor 2.0 bin
+neigh_modify one 5000
 timestep 0.004
 
 thermo 1
