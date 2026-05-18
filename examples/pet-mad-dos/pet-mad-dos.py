@@ -35,6 +35,7 @@ import numpy as np
 import torch
 from atomistic_cookbook_utils import download_with_retry, run_command
 from upet.calculator import PETMADDOSCalculator
+from upet.utils import align_dos
 
 # %%
 # Using PET-MAD-DOS out of the box
@@ -67,8 +68,8 @@ download_with_retry(url, filename)
 structs = ase.io.read("MAD_sample_structures.xyz", ":")
 
 # Extract the DOS and mask
-true_DOS = torch.tensor(np.stack([s.info["DOS"] for s in structs])).float()
-true_mask = torch.tensor(np.stack([s.info["mask"] for s in structs])).float()
+true_DOS = torch.tensor(np.stack([s.info["DOS"] for s in structs]))
+true_mask = torch.tensor(np.stack([s.info["mask"] for s in structs]))
 print(f"The shape of true_DOS is: {true_DOS.shape}")
 print(f"The shape of true_mask is: {true_mask.shape}")
 
@@ -92,14 +93,14 @@ i_struct = 1  # index of the structure to visualize
 
 # Plot DOS of the structure
 plt.plot(
-    pet_mad_dos_calculator._target_energy_grid,
+    pet_mad_dos_calculator.target_energy_grid,
     true_DOS[i_struct],
     label="DFT DOS",
     color="red",
 )
 # Plot mask for the structure (multiplied by 10 for better visualization)
 plt.plot(
-    pet_mad_dos_calculator._target_energy_grid,
+    pet_mad_dos_calculator.target_energy_grid,
     true_mask[i_struct] * 10,
     label="Mask x 10",
     linestyle="--",
@@ -182,7 +183,7 @@ plt.show()
 # align them before we can compare them directly.
 #
 
-denoised_DOS, aligned_true_DOS, aligned_true_masks = pet_mad_dos_calculator.align_dos(
+denoised_DOS, aligned_true_DOS, aligned_true_masks = align_dos(
     denoised_pred_DOS, true_DOS, true_mask
 )
 
@@ -225,7 +226,7 @@ plt.show()
 
 pred_bandgap = pet_mad_dos_calculator.calculate_bandgap(structs, dos=pred_DOS)
 
-true_bandgap = torch.tensor(np.stack([s.info["gap"] for s in structs])).float()
+true_bandgap = torch.tensor(np.stack([s.info["gap"] for s in structs]))
 
 print(f"The predicted bandgaps are : {pred_bandgap}")
 print(f"The DFT bandgaps are : {(true_bandgap)}")
@@ -327,11 +328,11 @@ GaAs_sample_structures = ase.io.read("GaAs_sample_structures.xyz", ":")
 #
 
 for struct in GaAs_sample_structures:
-    dos_i, mask_i = pet_mad_dos_calculator.compute_DOS_and_mask_from_eigenvalues(
+    dos_i, mask_i = pet_mad_dos_calculator.dos_from_eigenvalues(
         torch.tensor(struct.info["eigvals"]), torch.tensor(struct.info["kweight"])
     )
-    struct.info["DOS"] = dos_i.numpy().astype(np.float32)
-    struct.info["mask"] = mask_i.numpy().astype(np.float32)
+    struct.info["DOS"] = dos_i.numpy()
+    struct.info["mask"] = mask_i.numpy()
 
 # Store the processed structures as a new XYZ file for fine-tuning
 # ase.io.write("GaAs_processed_structures.xyz", GaAs_sample_structures)
@@ -357,11 +358,9 @@ for i in ["train", "val", "test"]:
     for struct in GaAs_sample_structures:
         DOS = torch.tensor(struct.info["DOS"])
         mask = torch.tensor(struct.info["mask"])
-        padded_dos, padded_mask = pet_mad_dos_calculator.pad_dos_and_mask_for_training(
-            DOS, mask
-        )
-        struct.info["trainingDOS"] = padded_dos.numpy().astype(np.float32)
-        struct.info["trainingmask"] = padded_mask.numpy().astype(np.int32)
+        padded_dos, padded_mask = pet_mad_dos_calculator.pad_dos(DOS, mask)
+        struct.info["trainingDOS"] = padded_dos.numpy()
+        struct.info["trainingmask"] = padded_mask.numpy()
     ase.io.write(f"GaAs_processed_{i}.xyz", GaAs_sample_structures)
 
 
@@ -415,15 +414,11 @@ output = ase.io.read("pred.xyz", ":")
 # performance is not expected to be good. This simply serves as a
 # demonstration of how to use the fine-tuned model.
 
-predicted_DOS = torch.tensor(np.stack([s.info["mtt::dos"] for s in output])).float()
-true_DOS = torch.tensor(
-    np.stack([s.info["DOS"] for s in GaAs_sample_structures])
-).float()
-true_mask = torch.tensor(
-    np.stack([s.info["mask"] for s in GaAs_sample_structures])
-).float()
+predicted_DOS = torch.tensor(np.stack([s.info["mtt::dos"] for s in output]))
+true_DOS = torch.tensor(np.stack([s.info["DOS"] for s in GaAs_sample_structures]))
+true_mask = torch.tensor(np.stack([s.info["mask"] for s in GaAs_sample_structures]))
 
-predicted_DOS, aligned_true_DOS, aligned_true_masks = pet_mad_dos_calculator.align_dos(
+predicted_DOS, aligned_true_DOS, aligned_true_masks = align_dos(
     predicted_DOS, true_DOS, true_mask
 )
 
