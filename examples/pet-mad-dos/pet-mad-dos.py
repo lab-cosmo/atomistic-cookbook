@@ -183,7 +183,7 @@ plt.show()
 #
 
 denoised_DOS, aligned_true_DOS, aligned_true_masks = pet_mad_dos_calculator.align_dos(
-    denoised_pred_DOS, true_DOS.float(), true_mask.float()
+    denoised_pred_DOS, true_DOS, true_mask
 )
 
 # Visualize the predictions and the true DOS on the same plot
