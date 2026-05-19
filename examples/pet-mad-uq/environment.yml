@@ -14,3 +14,4 @@ dependencies:
     - metatomic-ase
     - metatrain
     - vesin>=0.4.2
+    - atomistic-cookbook-utils >=0.1,<0.2

@@ -78,6 +78,7 @@ from pathlib import Path
 import ase.io
 import chemiscope
 import cmcrameri.cm as cmc
+from atomistic_cookbook_utils import run_command
 import matplotlib.pyplot as plt
 import MDAnalysis as mda
 import numpy as np
@@ -124,16 +125,7 @@ fname = Path(f"models/pet-mad-xs-{tag}.pt")
 url = f"https://huggingface.co/{repo_id}/resolve/main/{url_path}"
 fname.parent.mkdir(parents=True, exist_ok=True)
 
-subprocess.run(
-    [
-        "mtt",
-        "export",
-        url,
-        "-o",
-        str(fname),
-    ],
-    check=True,
-)
+run_command(f"mtt export {url} -o {fname}")
 print(f"Successfully exported {fname}.")
 
 # %%
@@ -154,20 +146,9 @@ print(f"Successfully exported {fname}.")
 # MDP settings into a single binary input (``.tpr``), then execute the simulation with
 # ``mdrun``.
 
-_ = subprocess.check_call(
-    [
-        GMX,
-        "grompp",
-        "-f",
-        "grompp.mdp",
-        "-c",
-        "data/conf.gro",
-        "-p",
-        "data/topol.top",
-    ]
-)
+run_command(f"{GMX} grompp -f grompp.mdp -c data/conf.gro -p data/topol.top")
 
-_ = subprocess.check_call([GMX, "mdrun"])
+run_command(f"{GMX} mdrun")
 
 # %%
 # RMSD analysis

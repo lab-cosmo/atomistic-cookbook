@@ -53,6 +53,7 @@ import metatomic.torch as mta
 import numpy as np
 import torch
 from ipi.scripting import read_output, read_trajectory
+from atomistic_cookbook_utils import run_command
 
 
 # %%
@@ -477,12 +478,7 @@ env["LD_LIBRARY_PATH"] = os.pathsep.join(
     [str(path) for path in library_paths]
     + ([env["LD_LIBRARY_PATH"]] if "LD_LIBRARY_PATH" in env else [])
 )
-subprocess.run(
-    ["lmp", "-in", "data/lammps.plumed.in"],
-    check=True,
-    capture_output=False,
-    env=env,
-)
+run_command("lmp -in data/lammps.plumed.in", env=env)
 lmp_trajectory = ase.io.read("lj38.lammpstrj", index=":")
 
 # %%

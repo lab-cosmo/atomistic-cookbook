@@ -8,3 +8,4 @@ dependencies:
   - pip:
     - ase>=3.28
     - upet>=0.2.3
+    - atomistic-cookbook-utils >=0.1,<0.2

@@ -8,6 +8,8 @@ extensions = [
     "sphinx_sitemap",
     "sphinx_design",
     "sphinx_copybutton",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "sphinx_gallery.load_style",

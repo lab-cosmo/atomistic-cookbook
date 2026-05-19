@@ -85,9 +85,9 @@ to execute the script.
 # %%
 import os
 import subprocess
-from urllib.request import urlretrieve
 
 import upet
+from atomistic_cookbook_utils import download_with_retry
 
 import ase.geometry.rdf
 import matplotlib.pyplot as plt
@@ -139,9 +139,8 @@ calculator = MetatomicCalculator(model_path, device="cpu")
 # ground truth method.
 
 if not os.path.exists("data/mad-val-100.xyz"):
-    os.makedirs("data", exist_ok=True)
     mad_val_full = "data/mad-1.5-r2scan-val.xyz"
-    urlretrieve(
+    download_with_retry(
         "https://archive.materialscloud.org/records/18tke-tt476/"
         "files/mad-1.5-r2scan-val.xyz",
         mad_val_full,

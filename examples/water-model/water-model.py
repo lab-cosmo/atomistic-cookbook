@@ -18,10 +18,10 @@ to perform demonstrative molecular dynamics simulations.
 # sphinx_gallery_thumbnail_number = 3
 
 # %%
-import subprocess
 from typing import Dict, List, Optional, Tuple
 
 import ase.io
+from atomistic_cookbook_utils import run_command
 
 # Simulation and visualization tools
 import chemiscope
@@ -1103,4 +1103,4 @@ for line in lines[:7] + lines[16:]:
 
 ase.io.write("water_32.data", atoms, format="lammps-data", masses=True)
 
-subprocess.check_call(["lmp", "-in", "data/spcfw.in"])
+run_command("lmp -in data/spcfw.in")

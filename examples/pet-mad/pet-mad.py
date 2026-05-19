@@ -44,8 +44,6 @@ in `this preprint <https://arxiv.org/abs/2503.14118>`_.
 #     pip install upet
 #
 
-import os
-import subprocess
 from copy import copy, deepcopy
 
 # ASE and i-PI scripting utilities
@@ -55,8 +53,8 @@ import matplotlib.pyplot as plt
 
 # pet-mad ASE calculator
 import numpy as np
-import requests
 import upet
+from atomistic_cookbook_utils import download_with_retry, run_command
 from ase.optimize import LBFGS
 from upet.calculator import UPETCalculator
 from ipi.utils.mathtools import get_rotation_quadrature_lebedev
@@ -91,15 +89,11 @@ from ipi.scripting import (
 # runtime on CPU. The model can also run (much faster) on GPUs if you have some at hand.
 
 filename = "data/mad-test-mad-settings.xyz"
-if not os.path.exists(filename):
-    url = (
-        "https://huggingface.co/lab-cosmo/pet-mad/resolve/"
-        "main/benchmarks/mad-test-mad-settings.xyz"
-    )
-    response = requests.get(url)
-    response.raise_for_status()
-    with open(filename, "wb") as f:
-        f.write(response.content)
+download_with_retry(
+    "https://huggingface.co/lab-cosmo/pet-mad/resolve/"
+    "main/benchmarks/mad-test-mad-settings.xyz",
+    filename,
+)
 
 test_structures = ase.io.read(filename, "::15")
 
@@ -538,7 +532,7 @@ with open("data/al6xxx-o2.in", "r") as f:
 
 ase.io.write("al6xxx-o2.data", al_surface, format="lammps-data", masses=True)
 
-subprocess.check_call(["lmp", "-in", "data/al6xxx-o2.in"])
+run_command("lmp -in data/al6xxx-o2.in")
 
 # %%
 #

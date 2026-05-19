@@ -42,7 +42,6 @@ statements are at the top of the file.
 """
 
 import os
-import subprocess
 import sys
 from contextlib import chdir
 from pathlib import Path
@@ -57,6 +56,7 @@ from ase.optimize import LBFGS
 from ase.visualize import view
 from ase.visualize.plot import plot_atoms
 from metatomic_ase import MetatomicCalculator
+from atomistic_cookbook_utils import run_command
 from rgpycrumbs.eon.helpers import write_eon_config
 from rgpycrumbs.run.jupyter import run_command_or_exit
 
@@ -87,16 +87,7 @@ url_path = f"models/pet-mad-xs-{tag}.ckpt"
 fname = Path(f"models/pet-mad-xs-{tag}.pt")
 url = f"https://huggingface.co/{repo_id}/resolve/main/{url_path}"
 fname.parent.mkdir(parents=True, exist_ok=True)
-subprocess.run(
-    [
-        "mtt",
-        "export",
-        url,
-        "-o",
-        str(fname),  # Convert Path to string
-    ],
-    check=True,
-)
+run_command(f"mtt export {url} -o {fname}")
 print(f"Successfully exported {fname}.")
 
 
