@@ -1,0 +1,26 @@
+; RUN CONTROL
+integrator              = md
+dt                      = 0.001
+nsteps                  = 100
+
+; NEIGHBOR SEARCHING
+cutoff-scheme           = Verlet
+rlist                   = 1.6
+rcoulomb                = 1.6
+rvdw                    = 1.6
+
+; THERMOSTAT (NVT)
+tcoupl                  = v-rescale
+tc-grps                 = Ethanol
+tau-t                   = 0.1
+ref-t                   = 300
+
+; --- METATOMIC SECTION ---
+metatomic-active        = yes
+metatomic-model         = model.pt
+metatomic-input-group   = Ethanol
+
+; OUTPUT CONTROL
+nstxout-compressed       = 1       ; Save coordinates to .xtc every 100 steps
+nstenergy                = 1       ; Save energies to .edr every 100 steps
+nstlog                   = 1       ; Write to .log every 100 steps

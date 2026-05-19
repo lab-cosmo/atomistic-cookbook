@@ -1,0 +1,17 @@
+channels:
+  - metatensor
+  - conda-forge
+dependencies:
+  - python==3.13
+  - lammps-metatomic=2025.09.10.mta3
+  - gromacs-metatomic
+  - pip
+  - pip:
+    - ase
+    - upet>=0.2.1
+    - ipi>=3.1.8
+    - matplotlib
+    - requests
+    - metatomic_torchsim
+    - metatrain
+    - mace-torch==0.3.14
