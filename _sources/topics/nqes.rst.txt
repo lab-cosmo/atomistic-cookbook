@@ -1,0 +1,78 @@
+Nuclear quantum effects
+=======================
+
+Most atomistic simulations treat nuclei as classical particles, that sample a
+Boltzmann distribution. This approximation breaks down for light nuclei
+(hydrogen above all) and high-frequency vibrations, requiring more sophisticated
+statistical sampling to compute accurate statistical and dynamical properties.
+
+
+
+.. grid:: 1 2 2 3
+    :gutter: 1 1 2 3
+
+    .. grid-item::
+
+        .. card:: Path integral molecular dynamics
+            :link: ../examples/path-integrals/path-integrals
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/path-integrals/images/thumb/sphx_glr_path-integrals_thumb.png
+                :alt: This example shows how to run a path integral molecular dynamics simulation using i-PI, analyze the output and visualize the trajectory in chemiscope. It uses LAMMPS as the driver to simulate the q-TIP4P/f water model.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Path integral metadynamics
+            :link: ../examples/pi-metad/pi-metad
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/pi-metad/images/thumb/sphx_glr_pi-metad_thumb.png
+                :alt: This example shows how to run a free-energy sampling calculation that combines path integral molecular dynamics to model nuclear quantum effects and metadynamics to accelerate sampling of the high-free-energy regions.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Quantum heat capacity of water
+            :link: ../examples/heat-capacity/heat-capacity
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/heat-capacity/images/thumb/sphx_glr_heat-capacity_thumb.png
+                :alt: This example shows how to estimate the heat capacity of liquid water from a path integral molecular dynamics simulation. The dynamics are run with i-PI, and LAMMPS is used as the driver to simulate the q-TIP4P/f water model.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Multiple time stepping and ring-polymer contraction
+            :link: ../examples/pi-mts-rpc/mts-rpc
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/pi-mts-rpc/images/thumb/sphx_glr_mts-rpc_thumb.png
+                :alt: This notebook provides an introduction to multiple time stepping and ring polymer contraction, two closely-related techniques, that are geared towards reducing the cost of calculations by separating slowly-varying (and computationally-expensive) components of the potential energy from the fast-varying (and hopefully cheaper) ones.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Ring Polymer Instanton Rate Theory: Tunneling Rates
+            :link: ../examples/ring-polymer-instanton/rpi-rates
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/ring-polymer-instanton/images/thumb/sphx_glr_rpi-rates_thumb.png
+                :alt: This notebook introduces the calculation of tunneling rates using ring-polymer instanton rate theory. A comprehensive presentation of the instanton formalism can be found in the review article by J. Richardson, Int. Rev. Phys. Chem., 37, 171, 2018, while the implementation within i-PI is described in V. Kapil et al., Comp. Phys. Commun., 236, 214, 2020. Additional practical details are available in Yair Litman's doctoral thesis.
+                :class: gallery-img
+
+                
