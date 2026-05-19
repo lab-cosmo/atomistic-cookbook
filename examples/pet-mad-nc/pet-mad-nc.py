@@ -51,7 +51,7 @@ from atomistic_cookbook_utils import run_command
 from ipi.scripting import InteractiveSimulation, read_output, read_trajectory
 
 # metatomic ASE calculator
-from metatomic.torch.ase_calculator import MetatomicCalculator
+from metatomic_ase import MetatomicCalculator
 from upet.calculator import UPETCalculator
 
 
