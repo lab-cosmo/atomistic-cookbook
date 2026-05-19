@@ -47,12 +47,12 @@ from typing import Dict, List, Optional
 import ase.io
 import chemiscope
 import featomic.torch
+import ipi
 import matplotlib.pyplot as plt
 import metatensor.torch as mts
 import metatomic.torch as mta
 import numpy as np
 import torch
-from ipi.scripting import read_output, read_trajectory
 from atomistic_cookbook_utils import run_command
 
 
@@ -691,8 +691,8 @@ lmp_process.wait()
 # so we only run 2000 steps as a demonstration.
 
 ipi_trajectory = ase.io.read("meta-md.pos_0.extxyz", ":")
-ipi_properties, _ = read_output("meta-md.out")
-ipi_cv = read_trajectory("meta-md.colvar_0", format="extras")["cv1, cv2"]
+ipi_properties, _ = ipi.scripting.read_output("meta-md.out")
+ipi_cv = ipi.scripting.read_trajectory("meta-md.colvar_0", format="extras")["cv1, cv2"]
 
 # %%
 #
