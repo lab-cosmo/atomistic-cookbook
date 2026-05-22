@@ -224,7 +224,7 @@ plt.show()
 # the high sensitivity of the bandgap to small errors in the DOS, obtaining the
 # bandgap via a CNN model is more robust than deriving it from the predicted DOS.
 
-pred_bandgap = pet_mad_dos_calculator.calculate_bandgap(structs, dos=pred_DOS)
+pred_bandgap = pet_mad_dos_calculator.calculate_bandgap(structs)
 
 true_bandgap = torch.tensor(np.stack([s.info["gap"] for s in structs]))
 
