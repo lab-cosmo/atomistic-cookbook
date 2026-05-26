@@ -29,7 +29,7 @@ information on dataset calibration and error propagation, see
 The PET-MAD model used here already includes LLPR and ensemble UQ. To train a
 custom model with these capabilities from scratch using
 `metatrain <https://metatensor.github.io/metatrain/>`_, see the
-:doc:`Training a Model with UQ from Scratch </examples/end-to-end-uq/end-to-end-uq>`
+:doc:`Training with LLPR from Scratch </examples/llpr-from-scratch/llpr-from-scratch>`
 example.
 
 Getting Started
