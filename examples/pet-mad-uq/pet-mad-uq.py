@@ -237,7 +237,7 @@ N = len(supercell)  # store the number of atoms
 outputs = ["energy", "energy_ensemble"]
 outputs = {o: ModelOutput() for o in outputs}
 results = calculator.run_model(supercell, outputs)
-bulk_ens = results["energy_ensemble"][0].values
+bulk = results["energy_ensemble"][0].values
 
 # Remove an atom (last atom in this case) to create a vacancy
 i = -1
@@ -245,7 +245,7 @@ supercell.pop(i)
 
 # Get ensemble energy right after creating the vacancy
 results = calculator.run_model(supercell, outputs)
-right_after_vacancy_ens = results["energy_ensemble"][0].values
+right_after_vacancy = results["energy_ensemble"][0].values
 
 # Run structural optimization optimizing both positions and cell layout.
 ecf = FrechetCellFilter(supercell)
@@ -254,13 +254,13 @@ bfgs.run()
 
 # get ensembele energy after optimization
 results = calculator.run_model(supercell, outputs)
-vacancy_ens = results["energy_ensemble"][0].values
+vacancy = results["energy_ensemble"][0].values
 
 # %%
 # Compute vacancy formation energy for each ensemble member.
 
-vacancy_formation_ens = vacancy_ens - (N - 1) / N * bulk_ens
-unrelaxed_formation_ens = right_after_vacancy_ens - (N - 1) / N * bulk_ens
+vacancy_formation = vacancy - (N - 1) / N * bulk
+unrelaxed_formation = right_after_vacancy - (N - 1) / N * bulk
 
 # %%
 # A compact plot helps compare the uncertainty scales of the directly predicted
@@ -268,11 +268,11 @@ unrelaxed_formation_ens = right_after_vacancy_ens - (N - 1) / N * bulk_ens
 # the raw total energies and the formation energies live on very different scales.
 
 defect_energy_samples = [
-    ("Bulk energy", bulk_ens.detach().numpy().squeeze()),
-    ("Unrelaxed vacancy energy", right_after_vacancy_ens.detach().numpy().squeeze()),
-    ("Relaxed vacancy energy", vacancy_ens.detach().numpy().squeeze()),
-    ("Unrelaxed VFE", unrelaxed_formation_ens.detach().numpy().squeeze()),
-    ("Relaxed VFE", vacancy_formation_ens.detach().numpy().squeeze()),
+    ("Bulk energy", bulk.detach().numpy().squeeze()),
+    ("Unrelaxed vacancy energy", right_after_vacancy.detach().numpy().squeeze()),
+    ("Relaxed vacancy energy", vacancy.detach().numpy().squeeze()),
+    ("Unrelaxed VFE", unrelaxed_formation.detach().numpy().squeeze()),
+    ("Relaxed VFE", vacancy_formation.detach().numpy().squeeze()),
 ]
 
 for name, values in defect_energy_samples:

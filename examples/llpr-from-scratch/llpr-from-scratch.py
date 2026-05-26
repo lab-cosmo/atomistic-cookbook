@@ -2,8 +2,7 @@
 Training a Model with Uncertainties from Scratch
 =================================================
 
-:Authors: Filippo Bigi `@frostedoyster <https://github.com/frostedoyster>`_,
-          Johannes Spies `@johannes-spies <https://github.com/johannes-spies>`_
+:Authors: Filippo Bigi `@frostedoyster <https://github.com/frostedoyster>`_
 
 This recipe shows how to train a small baseline potential and equip it with
 uncertainty quantification (UQ) capabilities using LLPR, including a shallow
