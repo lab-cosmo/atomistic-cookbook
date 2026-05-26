@@ -3,6 +3,7 @@ evaluation.xyz
 output.xyz
 
 model.ckpt
+model-llpr.ckpt
 model.pt
 model-llpr.pt
 extensions
