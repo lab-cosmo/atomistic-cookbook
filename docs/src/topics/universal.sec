@@ -9,6 +9,7 @@ structural space.
 - examples/pet-mad-nc/pet-mad-nc
 - examples/pet-finetuning/pet-ft
 - examples/pet-mad-uq/pet-mad-uq
+- examples/end-to-end-uq/end-to-end-uq
 - examples/flashmd/flashmd-demo
 - examples/eon-pet-neb/eon-pet-neb
 - examples/mendeleev/mendeleev
