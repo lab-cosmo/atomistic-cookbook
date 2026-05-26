@@ -2,7 +2,8 @@
 Uncertainty Quantification with PET-MAD
 =======================================
 
-:Authors: Johannes Spies `@johannes-spies <https://github.com/johannes-spies>`_
+:Authors: Johannes Spies `@johannes-spies <https://github.com/johannes-spies>`_,
+          Filippo Bigi `@frostedoyster <https://github.com/frostedoyster>`_
 
 This recipe demonstrates three ways of computing errors on the outputs of
 ML potential-driven simulations, using as an example the PET-MAD model and its
@@ -25,54 +26,11 @@ The LLPR uncertainties are introduced in `Bigi et al., 2024.
 information on dataset calibration and error propagation, see
 `Imabalzano et al., 2021. <https://arxiv.org/abs/2011.08828>`_
 
-Optional: Adding UQ to a Model
-------------------------------
-
-Models compatible with `metatomic <https://metatensor.github.io/metatomic/>`_ can be
-equipped with UQ capabilities through the
-`LLPRUncertaintyModel` wrapper included with
-`metatrain <https://metatensor.github.io/metatrain/>`_. For running this recipe, you can
-use a prebuilt model (the example itself downloads a model from Hugging Face).
-For adding UQ support to an existing model, have a look at
-the following scaffold. For more information on loading a dataset with the
-infrastructure, have a look at
-`this section <https://metatensor.github.io/metatrain/latest/dev-docs/utils/data>`_
-of the documentation. The pseudocode below also shows how to create an ensemble model
-from the last-layer parameters of a model.
-
-.. code-block:: python
-
-    from metatrain.utils.llpr import LLPRUncertaintyModel
-    from metatomic.torch import AtomisticModel, ModelMetadata
-
-    # You need to provide a model and datasets (wrapped in PyTorch dataloaders).
-    model = ...
-    dataloaders = {"train": ..., "val": ...}
-
-    # Wrap the model in a module capable of estimating uncertainties, estimate the
-    # inverse covariance on the training set, and calibrate the model on the validation
-    # set.
-    llpr_model = LLPRUncertaintyModel(model)
-    llpr_model.compute_covariance(dataloaders["train"])
-    llpr_model.compute_inverse_covariance(regularizer=1e-4)
-    llpr_model.calibrate(dataloaders["val"])
-
-    # In the next step, we show how to enable ensembles in PET-MAD. For that, it is
-    # necessary to extract the last-layer parameters of the model. The ensemble
-    # generation expects the parameters in a flat-vector format.
-    last_layer_parameters = ...
-
-    # Generate an ensemble with 128 members to compare ensemble uncertainties to LLPR
-    # scores.
-    llpr_model.generate_ensemble({"energy": last_layer_parameters}, 128)
-
-    # Save the model to disk using metatomic.
-    exported_model = AtomisticModel(
-        llpr_model.eval(),
-        ModelMetadata(),
-        llpr_model.capabilities,
-    )
-    exported_model.save("models/model-with-llpr.pt")
+The PET-MAD model used here already includes LLPR and ensemble UQ. To train a
+custom model with these capabilities from scratch using
+`metatrain <https://metatensor.github.io/metatrain/>`_, see the
+:doc:`Training a Model with UQ from Scratch </examples/end-to-end-uq/end-to-end-uq>`
+example.
 
 Getting Started
 ---------------
@@ -90,13 +48,19 @@ import upet
 from atomistic_cookbook_utils import download_with_retry
 
 import ase.geometry.rdf
+import ase.units
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import torch
 from ase import Atoms
 from ase.filters import FrechetCellFilter
 from ase.io.cif import read_cif
+from ase.md.bussi import Bussi
+from ase.md.velocitydistribution import (
+    MaxwellBoltzmannDistribution,
+    Stationary,
+    ZeroRotation,
+)
 from ase.optimize.bfgs import BFGS
 from ipi.utils.scripting import InteractiveSimulation
 from metatomic.torch import ModelOutput
@@ -186,12 +150,18 @@ outputs = {
     # Request the uncertainty in the atomic energy predictions
     "energy": ModelOutput(),  # (Needed to request the uncertainties)
     "energy_uncertainty": ModelOutput(),
+    "energy_ensemble": ModelOutput(),
 }
 results = calculator.run_model(systems, outputs)
 
 # Extract the requested results
 predicted_energies = results["energy"][0].values.squeeze()
 predicted_uncertainties = results["energy_uncertainty"][0].values.squeeze()
+ensemble_raw = results["energy_ensemble"][0].values
+print(
+    "energy_ensemble shape:", ensemble_raw.shape
+)  # (n_structures, n_ensemble_members)
+predicted_ensemble_std = ensemble_raw.std(dim=-1).squeeze()
 
 # %%
 # Compute the true prediction error by comparing the predicted energy to the reference
@@ -208,35 +178,30 @@ empirical_errors = torch.abs(predicted_energies - ground_truth_energies)
 # %%
 # After gathering predicted uncertainties and computing ground truth error metrics, we
 # can compare them to each other. Similar to figure S4 of the PET-MAD paper, we present
-# the data in using a parity plot. For more information about interpreting this type of
-# plot, see Appendix F.7 of `Bigi et al., 2024 <https://arxiv.org/abs/2403.02251>`_.
-# Note that both the x- and the y-axis use a logarithmic scale, which is more suitable
-# for inspecting uncertainty values. Because we are using a heavily reduced dataset
-# (only 100 structures) from the MAD validation set, the parity plot looks very sparse.
+# the data using a parity plot. The side-by-side panels compare the calibrated LLPR
+# uncertainty (analytical) to the ensemble standard deviation. For more information
+# about interpreting this type of plot, see Appendix F.7 of
+# `Bigi et al., 2024 <https://arxiv.org/abs/2403.02251>`_.
+# Because we are using a heavily reduced dataset (only 100 structures) from the MAD
+# validation set, the parity plots look very sparse.
 
-# Hard-code the zoomed in region of the plot and iso-lines.
 quantile_lines = [0.00916, 0.10256, 0.4309805, 1.71796, 2.5348, 3.44388]
 min_val, max_val = 2.5e-2, 2.5
 
-# Create the parity plot.
-plt.figure(figsize=(4, 4))
-plt.grid()
-plt.gca().set(
-    title="Parity of Uncertainties",
-    ylabel="Errors",
-    xlabel="Uncertainties",
-)
-plt.loglog()
+fig, axes = plt.subplots(1, 2, figsize=(8, 4), sharey=True)
+for ax, uncertainty, title, xlabel in [
+    (axes[0], predicted_uncertainties, "LLPR", "Predicted energy uncertainty / eV"),
+    (axes[1], predicted_ensemble_std, "Ensemble", "Ensemble standard deviation / eV"),
+]:
+    ax.set(xscale="log", yscale="log", title=title, xlabel=xlabel)
+    ax.grid()
+    ax.plot([min_val, max_val], [min_val, max_val], "k--")
+    for factor in quantile_lines:
+        ax.plot([min_val, max_val], [factor * min_val, factor * max_val], "k:", lw=0.75)
+    ax.scatter(uncertainty, empirical_errors, s=10)
 
-# Plot iso lines.
-plt.plot([min_val, max_val], [min_val, max_val], ls="--", c="k")
-for factor in quantile_lines:
-    plt.plot([min_val, max_val], [factor * min_val, factor * max_val], "k:", lw=0.75)
-
-# Add actual samples.
-plt.scatter(predicted_uncertainties, empirical_errors)
-
-plt.tight_layout()
+axes[0].set_ylabel("Absolute energy error / eV")
+fig.tight_layout()
 
 # %%
 # Uncertainties in Vacancy Formation Energies
@@ -269,10 +234,10 @@ N = len(supercell)  # store the number of atoms
 # triggers computing the ensemble values.
 
 # Get ensemble energy before creating the vacancy
-outputs = ["energy", "energy_uncertainty", "energy_ensemble"]
+outputs = ["energy", "energy_ensemble"]
 outputs = {o: ModelOutput() for o in outputs}
 results = calculator.run_model(supercell, outputs)
-bulk = results["energy_ensemble"][0].values
+bulk_ens = results["energy_ensemble"][0].values
 
 # Remove an atom (last atom in this case) to create a vacancy
 i = -1
@@ -280,7 +245,7 @@ supercell.pop(i)
 
 # Get ensemble energy right after creating the vacancy
 results = calculator.run_model(supercell, outputs)
-right_after_vacancy = results["energy_ensemble"][0].values
+right_after_vacancy_ens = results["energy_ensemble"][0].values
 
 # Run structural optimization optimizing both positions and cell layout.
 ecf = FrechetCellFilter(supercell)
@@ -289,43 +254,190 @@ bfgs.run()
 
 # get ensembele energy after optimization
 results = calculator.run_model(supercell, outputs)
-vacancy = results["energy_ensemble"][0].values
+vacancy_ens = results["energy_ensemble"][0].values
 
 # %%
 # Compute vacancy formation energy for each ensemble member.
 
-vacancy_formation = vacancy - (N - 1) / N * bulk
+vacancy_formation_ens = vacancy_ens - (N - 1) / N * bulk_ens
+unrelaxed_formation_ens = right_after_vacancy_ens - (N - 1) / N * bulk_ens
 
 # %%
-# Put all ensemble energies in a dataframe and compute the desired statistics.
+# A compact plot helps compare the uncertainty scales of the directly predicted
+# energies and the derived formation energies. We plot them in separate panels because
+# the raw total energies and the formation energies live on very different scales.
 
-# This dataframe contains each stage's energies in a single column.
-named_stages = [
-    ("Before creating vacancy", bulk),
-    ("Right after creating vacancy", right_after_vacancy),
-    ("Energy of optimized vacancy", vacancy),
-    ("Vacancy formation energy", vacancy_formation),
+defect_energy_samples = [
+    ("Bulk energy", bulk_ens.detach().numpy().squeeze()),
+    ("Unrelaxed vacancy energy", right_after_vacancy_ens.detach().numpy().squeeze()),
+    ("Relaxed vacancy energy", vacancy_ens.detach().numpy().squeeze()),
+    ("Unrelaxed VFE", unrelaxed_formation_ens.detach().numpy().squeeze()),
+    ("Relaxed VFE", vacancy_formation_ens.detach().numpy().squeeze()),
 ]
-df = pd.DataFrame.from_dict(
-    {
-        # Convert the PyTorch tensors to flat NumPy vectors
-        k: v.detach().numpy().squeeze()
-        for k, v in named_stages
-    }
+
+for name, values in defect_energy_samples:
+    print(f"{name}: mean = {values.mean():.6f} eV, std = {values.std(ddof=1):.6f} eV")
+
+# %%
+
+fig, axes = plt.subplots(1, 2, figsize=(8, 3.5))
+defect_means = np.array([values.mean() for _, values in defect_energy_samples])
+defect_stds = np.array([values.std(ddof=1) for _, values in defect_energy_samples])
+
+for ax, selection, title in [
+    (axes[0], slice(0, 3), "Total energies"),
+    (axes[1], slice(3, 5), "Formation energies"),
+]:
+    x = np.arange(len(defect_energy_samples[selection]))
+    ax.errorbar(
+        x,
+        defect_means[selection],
+        yerr=defect_stds[selection],
+        fmt="o",
+        capsize=4,
+    )
+    ax.set(
+        xticks=x,
+        xticklabels=[
+            label.replace(" ", "\n") for label, _ in defect_energy_samples[selection]
+        ],
+        title=title,
+    )
+    ax.grid(axis="y")
+
+fig.supylabel("Energy / eV")
+fig.tight_layout()
+
+# %%
+#
+# Uncertainty Propagation with Python-based MD
+# ---------------------------------------------
+#
+# We now propagate ensemble uncertainty to a thermodynamic observable. We run a short
+# NVT simulation on a box of 32 water molecules, evaluate the ensemble energy for each
+# sampled configuration, and reweight each frame for every ensemble member.
+# As an observable we use the O-H `Radial Distribution Function
+# (RDF) <https://en.wikipedia.org/wiki/Radial_distribution_function>`_.
+
+temperature_K = 300.0
+water_md = ase.io.read("data/h2o-32.xyz")
+water_md.set_cell([9.865916, 9.865916, 9.865916])
+water_md.set_pbc(True)
+water_md.calc = calculator
+
+MaxwellBoltzmannDistribution(water_md, temperature_K=temperature_K, rng=np.random)
+Stationary(water_md)
+ZeroRotation(water_md)
+
+integrator = Bussi(
+    water_md,
+    timestep=0.5 * ase.units.fs,
+    temperature_K=temperature_K,
+    taut=10.0 * ase.units.fs,
 )
 
-# Compute statistics (mean, variance, and standard deviation) on the ensemble energies.
-df = pd.DataFrame(dict(mean=df.mean(), var=df.var(), std=df.std()))
-df
+rdf_edges = np.linspace(0.5, 4.5, 250)
+rdf_centers = 0.5 * (rdf_edges[:-1] + rdf_edges[1:])
+shell_volumes = 4.0 * np.pi / 3.0 * (rdf_edges[1:] ** 3 - rdf_edges[:-1] ** 3)
+oxygen_indices = [i for i, atom in enumerate(water_md) if atom.symbol == "O"]
+hydrogen_indices = [i for i, atom in enumerate(water_md) if atom.symbol == "H"]
+hydrogen_density = len(hydrogen_indices) / water_md.get_volume()
+
+
+def oh_distance_distribution(atoms) -> np.ndarray:
+    distances = atoms.get_all_distances(mic=True)
+    distances = distances[np.ix_(oxygen_indices, hydrogen_indices)].ravel()
+    histogram, _ = np.histogram(distances, bins=rdf_edges)
+    return histogram / (len(oxygen_indices) * hydrogen_density * shell_volumes)
+
+
+energies = []
+sampled_structures = []
+
+
+def collect_sample() -> None:
+    sampled_structures.append(water_md.copy())
+    energies.append(water_md.get_potential_energy())
+
+
+integrator.attach(collect_sample, interval=2)
+integrator.run(1000)
+
+# %%
+# After the simulation, we evaluate the ensemble energy for each frame and compute
+# the O-H RDF.
+
+energies = np.asarray(energies)
+ensemble_outputs = {"energy_ensemble": ModelOutput()}
+ensemble_energies = np.array(
+    [
+        calculator.run_model(atoms, ensemble_outputs)["energy_ensemble"][0]
+        .values.detach()
+        .numpy()
+        .squeeze()
+        for atoms in sampled_structures
+    ]
+)
+oh_rdfs = np.array([oh_distance_distribution(atoms) for atoms in sampled_structures])
+
+# %%
+# The ensemble member :math:`m` assigns a Boltzmann reweighting factor to frame
+# :math:`t` based on the energy difference between the member energy
+# :math:`E_m(x_t)` and the sampled reference energy :math:`E_0(x_t)`.
+
+beta = 1.0 / (ase.units.kB * temperature_K)
+log_weights = -beta * (ensemble_energies - energies[:, None])
+log_weights -= log_weights.max(axis=0, keepdims=True)
+weights = np.exp(log_weights)
+weights /= weights.sum(axis=0, keepdims=True)
+
+reweighted_rdf_by_member = weights.T @ oh_rdfs
+
+reweighted_rdf_mean = reweighted_rdf_by_member.mean(axis=0)
+reweighted_rdf_std = reweighted_rdf_by_member.std(axis=0, ddof=1)
+
+# %%
+
+fig, axes = plt.subplots(1, 2, figsize=(9, 3.5), sharey=True)
+member_ax, mean_ax = axes
+
+for i, member_rdf in enumerate(reweighted_rdf_by_member):
+    label = "Ensemble members" if i == 0 else None
+    member_ax.plot(
+        rdf_centers, member_rdf, color="tab:orange", alpha=0.08, lw=0.5, label=label
+    )
+member_ax.set(
+    xlabel="O-H distance / Å",
+    ylabel="Probability density",
+    title="Reweighted ensemble members",
+    ylim=(0.0, 3.0),
+)
+member_ax.grid()
+member_ax.legend()
+
+mean_ax.plot(rdf_centers, reweighted_rdf_mean, label="Reweighted ensemble", lw=1.5)
+mean_ax.fill_between(
+    rdf_centers,
+    reweighted_rdf_mean - 3.0 * reweighted_rdf_std,
+    reweighted_rdf_mean + 3.0 * reweighted_rdf_std,
+    alpha=0.25,
+    label="3 ensemble standard deviations",
+)
+mean_ax.set(xlabel="O-H distance / Å", title="Ensemble mean and spread")
+mean_ax.grid()
+mean_ax.legend()
+fig.tight_layout()
 
 # %%
 #
-# Uncertainty Propagation with MD
-# -------------------------------
+# Uncertainty Propagation with i-PI
+# ----------------------------------
 #
-# This example shows how to use i-PI to propagate error estimates from an ensemble to
-# output observables. In this example, we use a box with period boundary conditions
-# housing 32 water molecules. As an observable, we inspect the `Radial Distribution
+# The same propagation can be performed with `i-PI
+# <https://ipi-code.org>`_, which supports more advanced MD
+# algorithms and handles the reweighting as a post-processing step. In this
+# example, we use a box with period boundary conditions housing 32 water molecules.
+# As an observable, we inspect the `Radial Distribution
 # Function (RDF) <https://en.wikipedia.org/wiki/Radial_distribution_function>`_ between
 # hydrogen-hydrogen and oxygen-oxygen bonds.
 #
