@@ -11,5 +11,6 @@ examples/**/*.json.gz
 __pycache__/
 *.pyc
 *.ipynb
+!examples/lammps-flashmd/lammps-flashmd.ipynb
 # Ruff stuff:
 .ruff_cache/
