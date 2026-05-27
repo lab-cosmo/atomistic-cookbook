@@ -13,7 +13,7 @@ pair_coeff * * metatomic_2 8 1
 pair_coeff * * metatomic_3 8 1
 
 neighbor 2.0 bin
-neigh_modify one 5000
+neigh_modify one 100000 page 1000000 binsize 5.5
 
 # 2 RESPA levels, with step sizes a factor of 8 apart. The hybrid/overlay
 # components are assigned to levels 1 (inner), 2, and 2 respectively.

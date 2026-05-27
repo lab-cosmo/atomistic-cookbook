@@ -7,7 +7,7 @@ pair_style metatomic pet-mad-s-v1.5.0.pt device cpu
 pair_coeff * * 8 1
 
 neighbor 2.0 bin
-neigh_modify one 5000
+neigh_modify one 100000 page 1000000 binsize 5.5
 
 run_style verlet
 timestep 0.0005
