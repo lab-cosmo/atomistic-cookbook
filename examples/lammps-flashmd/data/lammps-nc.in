@@ -22,4 +22,4 @@ fix integration all nve
 dump trajectory all custom 10 non-conservative.lammpstrj id type element x y z
 dump_modify trajectory sort id element O H
 
-run 200
+run 100

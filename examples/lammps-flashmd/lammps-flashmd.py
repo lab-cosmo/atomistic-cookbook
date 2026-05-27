@@ -36,10 +36,12 @@ from flashmd import get_pretrained
 SECONDS_PER_DAY = 24 * 60 * 60
 ELEMENTS = ["O", "H"]
 MODEL_PATH = "pet-mad-s-v1.5.0.pt"
-NORMAL_STEPS = 200
+NORMAL_STEPS = 100
 TIMESTEP_FS = 0.5
+MTS_STEPS = 12
+MTS_TIMESTEP_FS = 4.0
 FLASHMD_TIMESTEP_FS = 16
-FLASHMD_STEPS = 16
+FLASHMD_STEPS = 8
 
 
 # %%
@@ -123,7 +125,11 @@ throughputs = {
         "data/lammps-nc.in",
         simulated_time_fs,
     ),
-    "MTS": run_lammps("MTS LAMMPS", "data/lammps-mts.in", simulated_time_fs),
+    "MTS": run_lammps(
+        "MTS LAMMPS",
+        "data/lammps-mts.in",
+        MTS_STEPS * MTS_TIMESTEP_FS,
+    ),
     "FlashMD": run_lammps(
         "FlashMD LAMMPS",
         "data/lammps-flashmd.in",
