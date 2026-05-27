@@ -3,7 +3,7 @@ units metal
 atom_style atomic
 read_data data/water.data
 
-pair_style metatomic pet-mad-xs-v1.5.0.pt device cpu
+pair_style metatomic pet-mad-s-v1.5.0.pt device cpu
 pair_coeff * * 8 1
 
 neighbor 2.0 bin

@@ -35,7 +35,7 @@ from flashmd import get_pretrained
 
 SECONDS_PER_DAY = 24 * 60 * 60
 ELEMENTS = ["O", "H"]
-MODEL_PATH = "pet-mad-xs-v1.5.0.pt"
+MODEL_PATH = "pet-mad-s-v1.5.0.pt"
 NORMAL_STEPS = 400
 TIMESTEP_FS = 0.5
 FLASHMD_TIMESTEP_FS = 16
@@ -64,7 +64,7 @@ ase.io.write(
     masses=True,
 )
 
-upet.save_upet(model="pet-mad", size="xs", version="1.5.0", output=MODEL_PATH)
+upet.save_upet(model="pet-mad", size="s", version="1.5.0", output=MODEL_PATH)
 
 _, flashmd_model = get_pretrained("pet-omatpes-v2", FLASHMD_TIMESTEP_FS)
 flashmd_model.save(f"flashmd-{FLASHMD_TIMESTEP_FS}.pt")
