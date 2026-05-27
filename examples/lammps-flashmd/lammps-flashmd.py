@@ -36,10 +36,10 @@ from flashmd import get_pretrained
 SECONDS_PER_DAY = 24 * 60 * 60
 ELEMENTS = ["O", "H"]
 MODEL_PATH = "pet-mad-xs-v1.5.0.pt"
-NORMAL_STEPS = 200
+NORMAL_STEPS = 400
 TIMESTEP_FS = 0.5
 FLASHMD_TIMESTEP_FS = 16
-FLASHMD_STEPS = 16
+FLASHMD_STEPS = 32
 
 
 # %%
@@ -185,5 +185,6 @@ for label, filename in trajectory_files.items():
 
 ax.set_xlabel(r"O-H distance / $\AA$")
 ax.set_ylabel(r"$g_{\mathrm{OH}}(r)$")
+ax.set_ylim(0, 3)
 ax.legend(ncols=2)
 plt.show()
