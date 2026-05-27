@@ -17,6 +17,7 @@ training and evaluating ML models.
 - examples/pet-finetuning/pet-ft
 - examples/pet-finetuning/pet-ft-nc
 - examples/flashmd/flashmd-demo
+- examples/lammps-flashmd/lammps-flashmd
 - examples/shiftml/shiftml-example
 - examples/hamiltonian-qm7/hamiltonian-qm7
 - examples/metatomic-plumed/metatomic-plumed

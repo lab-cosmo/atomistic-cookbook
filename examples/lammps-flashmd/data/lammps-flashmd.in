@@ -1,0 +1,21 @@
+units metal
+
+atom_style atomic
+read_data data/water.data
+
+neighbor 2.0 bin
+neigh_modify one 5000
+
+timestep 0.016
+
+thermo 1
+thermo_style custom step temp ke
+
+velocity all create 300.0 87287 mom yes rot yes dist gaussian
+fix flashmd all metatomic flashmd-16.pt types 8 1 device cpu
+fix thermostat all langevin 300.0 300.0 0.1 928733 zero yes
+
+dump trajectory all custom 1 flashmd.lammpstrj id type element x y z
+dump_modify trajectory sort id element O H
+
+run 16

@@ -1,0 +1,17 @@
+channels:
+  - metatensor
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - lammps-metatomic
+  - pip:
+    - ase>=3.28
+    - upet>=0.2.3
+    - metatomic-torch
+    - metatomic-ase
+    - metatrain
+    - vesin[torch]>=0.5.5
+    - flashmd>=0.2.9
+    - matplotlib
+    - atomistic-cookbook-utils >=0.1,<0.2
