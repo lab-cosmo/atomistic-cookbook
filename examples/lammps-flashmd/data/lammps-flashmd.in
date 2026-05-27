@@ -18,4 +18,4 @@ fix thermostat all langevin 300.0 300.0 0.1 928733 zero yes
 dump trajectory all custom 1 flashmd.lammpstrj id type element x y z
 dump_modify trajectory sort id element O H
 
-run 16
+run 32
