@@ -13,9 +13,8 @@ time stepping (MTS) correction that combines both. We also run
 `FlashMD <https://github.com/lab-cosmo/flashmd>`_, a long-stride trajectory
 model, through the same LAMMPS executable and from the same initial structure.
 
-For each method we print an indicative throughput in ns/day. For the three
-LAMMPS trajectories, which all use the same PET-MAD potential, we also compute
-the O-H radial distribution function.
+For each method we print an indicative throughput in ns/day. We also compute
+the O-H radial distribution function from each trajectory.
 """
 
 # %%
@@ -137,9 +136,10 @@ throughputs = {
 # O-H radial distribution functions
 # ---------------------------------
 #
-# We compute O-H radial distribution functions for the three PET-MAD trajectories.
-# FlashMD is omitted from this comparison because it uses a different model and a
-# much longer learned propagation step.
+# We compute O-H radial distribution functions for all four trajectories. The
+# FlashMD curve should be interpreted separately from the three PET-MAD curves,
+# because FlashMD uses a different model and a much longer learned propagation
+# step.
 
 
 def read_lammps_trajectory(filename: str) -> list:
@@ -173,9 +173,10 @@ trajectory_files = {
     "conservative": "conservative.lammpstrj",
     "non-conservative": "non-conservative.lammpstrj",
     "MTS": "mts.lammpstrj",
+    "FlashMD": "flashmd.lammpstrj",
 }
 
-fig, ax = plt.subplots(1, 1, figsize=(5, 3), constrained_layout=True)
+fig, ax = plt.subplots(1, 1, figsize=(5.5, 3), constrained_layout=True)
 
 for label, filename in trajectory_files.items():
     frames = read_lammps_trajectory(filename)
@@ -184,5 +185,5 @@ for label, filename in trajectory_files.items():
 
 ax.set_xlabel(r"O-H distance / $\AA$")
 ax.set_ylabel(r"$g_{\mathrm{OH}}(r)$")
-ax.legend()
+ax.legend(ncols=2)
 plt.show()
