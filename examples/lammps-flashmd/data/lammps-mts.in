@@ -4,9 +4,9 @@ atom_style atomic
 read_data data/water.data
 
 pair_style hybrid/overlay &
-     metatomic_1 pet-mad-xs-v1.5.0.pt device cpu non_conservative on scale 1.0 &
-     metatomic_2 pet-mad-xs-v1.5.0.pt device cpu non_conservative on scale -1.0 &
-     metatomic_3 pet-mad-xs-v1.5.0.pt device cpu non_conservative off scale 1.0
+     metatomic_1 pet-mad-s-v1.5.0.pt device cpu non_conservative on scale 1.0 &
+     metatomic_2 pet-mad-s-v1.5.0.pt device cpu non_conservative on scale -1.0 &
+     metatomic_3 pet-mad-s-v1.5.0.pt device cpu non_conservative off scale 1.0
 
 pair_coeff * * metatomic_1 8 1
 pair_coeff * * metatomic_2 8 1
