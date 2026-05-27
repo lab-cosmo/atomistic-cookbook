@@ -36,10 +36,10 @@ from flashmd import get_pretrained
 SECONDS_PER_DAY = 24 * 60 * 60
 ELEMENTS = ["O", "H"]
 MODEL_PATH = "pet-mad-s-v1.5.0.pt"
-NORMAL_STEPS = 400
+NORMAL_STEPS = 200
 TIMESTEP_FS = 0.5
 FLASHMD_TIMESTEP_FS = 16
-FLASHMD_STEPS = 32
+FLASHMD_STEPS = 16
 
 
 # %%
