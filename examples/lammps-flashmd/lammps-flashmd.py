@@ -84,10 +84,14 @@ flashmd_model.save(f"flashmd-{FLASHMD_TIMESTEP_FS}.pt")
 
 temperature = 300.0
 
+print("\nConservative forces MLIP input file:")
 print(linecache.getline("data/lammps-c.in", 6), end="")
+print("\nNon-conservative forces MLIP input file:")
 print(linecache.getline("data/lammps-nc.in", 6), end="")
+print("\nMTS combining both input file:")
 for lineno in [5, 6, 7, 8, 10, 11, 12, 19]:
     print(linecache.getline("data/lammps-mts.in", lineno), end="")
+print("\nDirect propagation input file:")
 print(linecache.getline("data/lammps-flashmd.in", 15), end="")
 
 
