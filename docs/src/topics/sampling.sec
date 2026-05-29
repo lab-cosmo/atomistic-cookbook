@@ -14,3 +14,4 @@ set of configurations of an atomistic system.
 - examples/water-model/water-model
 - examples/metatomic-plumed/metatomic-plumed
 - examples/mendeleev/mendeleev
+- examples/ir_spectrum/ir_spectrum

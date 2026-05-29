@@ -1,0 +1,62 @@
+units real
+atom_style full
+special_bonds lj/coul 0.0 0.0 0.0
+
+variable seed       index 24680
+variable t_target   equal 300.0
+variable tdamp      equal 100*dt
+variable nequil     equal 2000     # equilibration:  2000 * 0.5 fs = 1 ps
+variable nprod      equal 10000    # production:    10000 * 0.5 fs = 5 ps
+variable dump_every equal 4        # dump every 4 steps = 2 fs
+
+pair_style lj/cut/coul/long 9.0
+bond_style harmonic
+angle_style harmonic
+# Run from the recipe directory (examples/ir_spectrum/), not from data/
+read_data data/initial.data
+
+set type 1 charge -0.834
+set type 2 charge 0.417
+
+pair_style lj/cut/coul/long 9.0
+kspace_style ewald 1.0e-6
+pair_modify tail yes
+
+pair_coeff 1 1 0.1020 3.188
+pair_coeff 1 2 0.0 1.0
+pair_coeff 2 2 0.0 1.0
+
+bond_style harmonic
+bond_coeff 1 450.0 0.9572
+
+angle_style harmonic
+angle_coeff 1 55.0 104.52
+
+timestep 0.5
+neighbor 2.0 bin
+neigh_modify every 1 delay 0 check yes
+kspace_style ewald 1.0e-6
+
+thermo_style custom step temp press density etotal pe ke ebond eangle evdwl ecoul elong
+thermo 1000
+
+# Energy minimization to remove bad contacts
+min_style cg
+minimize 1.0e-4 1.0e-6 1000 10000
+
+velocity all create ${t_target} ${seed} mom yes rot yes dist gaussian
+velocity all zero linear
+reset_timestep 0
+
+# Equilibration (no dump)
+fix nve_int   all nve
+fix thermostat all temp/csvr ${t_target} ${t_target} ${tdamp} ${seed}
+#fix constraints all shake 1.0e-6 200 0 b 1 a 1
+run ${nequil}
+
+# Production (dump every 2 fs)
+dump traj all custom ${dump_every} tip3p.lammpstrj id mol type xu yu zu
+dump_modify traj sort id
+run ${nprod}
+
+write_data final.data
