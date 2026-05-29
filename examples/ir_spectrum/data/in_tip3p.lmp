@@ -58,5 +58,3 @@ run ${nequil}
 dump traj all custom ${dump_every} tip3p.lammpstrj id mol type xu yu zu
 dump_modify traj sort id
 run ${nprod}
-
-write_data final.data

@@ -1,0 +1,9 @@
+data.zip
+log.lammps
+ml_traj_dipoles.xyz
+pet*
+test_set*
+tip3p.lammpstrj
+traj_eval.yaml
+water.data
+water_mlip_dipole_data.xyz
