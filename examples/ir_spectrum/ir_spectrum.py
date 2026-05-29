@@ -725,28 +725,12 @@ ax.legend()
 ax.set_title("IR spectrum: point charges vs ML vs experiment")
 
 # %%
-# The ML dipole model fixes the most visible deficiencies of the point-charge
-# spectrum: the O--H stretch broadens and gains integrated intensity (charge flux is now
-# captured), the bending mode shifts to its correct position, and the low-frequency
-# intermolecular bands carry more realistic weight. A residual intensity mismatch
-# remains, set by the limited training-set size and the short trajectory; both would
-# shrink with more data and longer dynamics.
-#
-# Two approximations are worth stating explicitly. First, the nuclei are treated
-# *classically* (classical MD with the classical/Kubo lineshape prefactor): genuine
-# nuclear quantum effects would red-shift and broaden the O--H stretch and redistribute
-# intensity. That the classical spectrum nonetheless reproduces experiment reasonably
-# well is partly the merit of the absolute prefactor and an accurate potential-energy
-# surface, and partly fortuitous---the broad, inhomogeneously broadened liquid lineshape
-# masks the finer shifts (notably the O--H stretch, which classical dynamics leaves
-# somewhat too blue and which nuclear quantum effects would red-shift toward
-# experiment). A path-integral treatment would be required to capture those effects
-# quantitatively. Second, the training set (654 frames) and trajectory (5 ps production)
-# are both modest; larger datasets and longer dynamics would shrink the residual errors.
+# The MLIP dynamics alone shifts and broadens the peaks relative to the TIP3P
+# baseline, improving agreement with experimental data. The main contribution of the ML
+# dipole model is to correct the intensities, especially for the O--H stretch and the
+# bending modes.
 #
 # The main lesson is that the failure modes of fixed partial charges are *systematic*:
 # they follow from the absence of charge flux, not from a poor choice of charge value,
 # and cannot be remedied by tuning one scalar parameter. An ML dipole model trained on a
-# few hundred DFT snapshots already recovers the missing physics. The workflow here---
-# fine-tune a foundational MLIP, add a dipole head, run MD, evaluate dipoles, compute
-# the spectrum---generalizes directly to other systems and levels of theory.
+# few hundred DFT snapshots already recovers the missing physics.
