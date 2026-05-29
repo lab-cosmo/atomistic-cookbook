@@ -219,17 +219,16 @@ ax.set_title("Point-charge model vs experiment")
 # H--O--H bend (~1600 cm⁻¹), and the librational band (~400--900 cm⁻¹)---but gets their
 # shapes wrong in two visible ways: the O--H stretch is narrower than the experimental
 # band, and the bending mode is blue-shifted relative to experiment. The reason is that
-# IR intensities and peak shapes are governed by dipole *derivatives* (dynamical, or Born
-# effective, charges), not by static charges: a band's intensity scales as
+# IR intensities and peak shapes are governed by dipole *derivatives* (dynamical, or
+# Born effective, charges), not by static charges: a band's intensity scales as
 # :math:`|\partial\boldsymbol{\mu}/\partial Q|^2` along its vibrational mode :math:`Q`.
-# With fixed charges the only contribution to
-# :math:`\partial\boldsymbol{\mu}/\partial Q` is the rigid displacement of the charges,
-# :math:`q\,\partial\mathbf{r}/\partial Q`. In reality the partial charges themselves
-# change as a bond stretches---an intramolecular *charge flux* :math:`\partial
-# q/\partial Q` that a fixed-charge model omits entirely. The same charge-flux and
-# induced-dipole effects shape the low-frequency intermolecular (librational and
-# hindered-translational) bands, which the point-charge model therefore also
-# misrepresents.
+# With fixed charges the only contribution to :math:`\partial\boldsymbol{\mu}/\partial
+# Q` is the rigid displacement of the charges, :math:`q\,\partial\mathbf{r}/\partial Q`.
+# In reality the partial charges themselves change as a bond stretches---an
+# intramolecular *charge flux* :math:`\partial q/\partial Q` that a fixed-charge model
+# omits entirely. The same charge-flux and induced-dipole effects shape the
+# low-frequency intermolecular (librational and hindered-translational) bands, which the
+# point-charge model therefore also misrepresents.
 
 # %%
 # Equivariance and the dipole moment
@@ -254,16 +253,16 @@ ax.set_title("Point-charge model vs experiment")
 # operation.
 #
 # Some ML architectures guarantee equivariance under rotations and inversion by
-# construction. Others, including
-# `PET <https://proceedings.neurips.cc/paper_files/paper/2023/file/fb4a7e3522363907b26a86cc5be627ac-Paper-Conference.pdf>`_
+# construction. Others, including `PET
+# <https://proceedings.neurips.cc/paper_files/paper/2023/file/fb4a7e3522363907b26a86cc5be627ac-Paper-Conference.pdf>`_
 # (Point-Edge Transformer---a message-passing graph neural network with transformer
 # attention), which we will fine-tune below, are *unconstrained*: equivariance is not
 # built into the architecture but **learned** during training via data augmentation
 # (each frame is shown to the model in random orientations). The resulting equivariance
 # is therefore approximate. We will quantify the residual error explicitly later in the
-# recipe. In return, unconstrained models are more flexible and can be `very
-# expressive <https://iopscience.iop.org/article/10.1088/2632-2153/ae6417>`_, improving
-# accuracy at equivalent computational cost.
+# recipe. In return, unconstrained models are more flexible and can be `very expressive
+# <https://iopscience.iop.org/article/10.1088/2632-2153/ae6417>`_, improving accuracy at
+# equivalent computational cost.
 #
 # To build intuition, we verify what *exact* equivariance looks like for a simple
 # point-charge dipole: rotating the molecule must rotate the arrow by the same amount.
@@ -729,9 +728,9 @@ ax.set_title("IR spectrum: point charges vs ML vs experiment")
 # The ML dipole model fixes the most visible deficiencies of the point-charge
 # spectrum: the O--H stretch broadens and gains integrated intensity (charge flux is now
 # captured), the bending mode shifts to its correct position, and the low-frequency
-# intermolecular bands carry more realistic weight. A residual intensity
-# mismatch remains, set by the limited training-set size and the short trajectory; both
-# would shrink with more data and longer dynamics.
+# intermolecular bands carry more realistic weight. A residual intensity mismatch
+# remains, set by the limited training-set size and the short trajectory; both would
+# shrink with more data and longer dynamics.
 #
 # Two approximations are worth stating explicitly. First, the nuclei are treated
 # *classically* (classical MD with the classical/Kubo lineshape prefactor): genuine
@@ -742,8 +741,8 @@ ax.set_title("IR spectrum: point charges vs ML vs experiment")
 # masks the finer shifts (notably the O--H stretch, which classical dynamics leaves
 # somewhat too blue and which nuclear quantum effects would red-shift toward
 # experiment). A path-integral treatment would be required to capture those effects
-# quantitatively. Second, the training set (654 frames) and trajectory (5 ps production) are both
-# modest; larger datasets and longer dynamics would shrink the residual errors.
+# quantitatively. Second, the training set (654 frames) and trajectory (5 ps production)
+# are both modest; larger datasets and longer dynamics would shrink the residual errors.
 #
 # The main lesson is that the failure modes of fixed partial charges are *systematic*:
 # they follow from the absence of charge flux, not from a poor choice of charge value,
