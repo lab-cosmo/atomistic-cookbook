@@ -1,0 +1,21 @@
+channels:
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=3.11
+  - cpuonly
+  - pip
+  - pip:
+    - --extra-index-url https://download.pytorch.org/whl/cpu
+    - ase >=3.23
+    - chemiscope >=1.0
+    - matplotlib
+    - metatensor-torch >=0.8,<0.9
+    - metatomic[torch] >=0.1,<0.2
+    - metatomic-ase >=0.1,<0.2
+    - numpy
+    - py3dmol
+    - pyscf >=2.6,<3.0
+    - scipy
+    - torch >=2.4,<3.0
+    - atomistic-cookbook-utils >=0.1,<0.2
