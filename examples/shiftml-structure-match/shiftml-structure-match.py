@@ -106,8 +106,9 @@ from sklearn.metrics import root_mean_squared_error
 # We use a curated set of 29 cocaine candidate crystal structures with pre-computed
 # GIPAW shieldings, provided together with the original ShiftML release (`Paruzzo et
 # al., Nat. Commun. (2018) <https://www.nature.com/articles/s41467-018-06972-x>`_) and
-# hosted on Materials Cloud. The same archive is used by the introductory ShiftML
-# recipe <LINK IT>.
+# hosted on Materials Cloud. The same archive is used by the
+# `introductory ShiftML recipe
+# <https://atomistic-cookbook.org/examples/shiftml/shiftml-example.html>`_.
 
 filename = "ShiftML_poly.zip"
 download_with_retry(
@@ -157,7 +158,11 @@ print(f"Comparing {len(list_atom)} assigned 1H environments")
 
 
 # %%
-# 
+# The cocaine crystal contains two molecules per unit cell, so we take the
+# first molecule's hydrogens and average shieldings over symmetry-equivalent
+# groups (e.g. the three methyl protons ``"11,12,13"`` share a single
+# observed NMR peak).
+
 
 def assign_shieldings(per_h_shieldings, list_atom, n_h_per_mol=N_H_PER_MOL):
     """Pick one cocaine molecule's H shieldings out of the unit cell and
@@ -248,7 +253,7 @@ rmse_sml = calibrated_rmse(X_sml, list_cs_exp)
 rmse_gipaw = calibrated_rmse(X_gipaw, list_cs_exp)
 
 best = int(np.argmin(rmse_sml))
-print(f"Best ShiftML3 match: candidate #{best} " f"(RMSE = {rmse_sml[best]:.3f} ppm)")
+print(f"Best ShiftML3 match: candidate #{best} (RMSE = {rmse_sml[best]:.3f} ppm)")
 print(
     f"Best GIPAW   match: candidate #{int(np.argmin(rmse_gipaw))} "
     f"(RMSE = {rmse_gipaw.min():.3f} ppm)"
@@ -313,7 +318,7 @@ ax.set_xlim(-0.7, len(frames) - 0.3)
 ax.set_ylim(0, max(rmse_sml.max(), rmse_gipaw.max()) * 1.15)
 ax.grid(axis="y", color="0.92", lw=0.6, zorder=0)
 ax.spines[["top", "right"]].set_visible(False)
-ax.legend(loc="upper right", frameon=False, fontsize=9)
+ax.legend(loc="upper left", frameon=False, fontsize=9)
 
 
 # %%
@@ -462,8 +467,8 @@ chemiscope.show(
 # Note that in many cases, the regression slope can be attributed to systematic errors
 # in the potential energy surface used to generate the candidate pool, or the
 # neglectance of finite temperature effects and quantum delocalization of acidic
-# protons. [Kellner et al](https://arxiv.org/abs/2603.06236). Here we use geometries,
-# relaxed at the PBE-D2 level of theory and at 0K.
+# protons (`Kellner et al. <https://arxiv.org/abs/2603.06236>`_). Here we use
+# geometries relaxed at the PBE-D2 level of theory and at 0K.
 
 # %%
 # Outlook
@@ -483,9 +488,7 @@ chemiscope.show(
 #
 # Modern NMR-CSP workflows move to more sophisticated similarity measures between
 # computed and experimental values, such as full bayesian treatment, considering also
-# prediction uncertainties of the ML model (Engel et
-# al)[https://doi.org/10.1039/C9CP04489B]  and metrics that allow for combining NMR
-# measurements of different Nuclei in the structure selection process
-# (Mueller)[https://doi.org/10.1039/D4FD00114A].
-#
-#
+# prediction uncertainties of the ML model (`Engel et al.
+# <https://doi.org/10.1039/C9CP04489B>`_) and metrics that allow for combining NMR
+# measurements of different nuclei in the structure selection process
+# (`Müller et al. <https://doi.org/10.1039/D4FD00114A>`_).
