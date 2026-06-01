@@ -1,0 +1,38 @@
+# NaCl aqueous solution NVT at 300 K with PET-MAD-xs
+# Atom types: 1=H, 2=O, 3=Na, 4=Cl
+
+units metal
+atom_style atomic
+
+variable seed       index 23456
+variable t_target   equal 400.0
+variable tdamp      equal 100*dt
+variable nsteps     equal 20000        # 20000 * 0.5 fs = 10 ps
+variable dump_every equal 10
+
+read_data data/nacl.data
+
+pair_style metatomic pet-mad-xs-v1.5.1.pt device cpu
+pair_coeff * * 1 8 11 17
+
+timestep 0.0005
+
+neighbor 2.0 bin
+neigh_modify one 50000 page 500000
+
+thermo_style custom step temp pe etotal press vol
+thermo 10
+
+velocity all create ${t_target} ${seed} mom yes rot yes dist gaussian
+reset_timestep 0
+
+fix nve_int   all nve
+fix thermostat all temp/csvr ${t_target} ${t_target} ${tdamp} ${seed}
+
+print "step temp pe etotal press vol" file nacl_thermo.out
+fix thermofile all print ${dump_every} "$(step) $(temp) $(pe) $(etotal) $(press) $(vol)" append nacl_thermo.out
+
+dump traj all custom ${dump_every} nacl_traj.lammpstrj id type element xu yu zu
+dump_modify traj element H O Na Cl sort id
+
+run ${nsteps}

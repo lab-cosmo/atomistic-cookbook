@@ -1,0 +1,39 @@
+# Superionic water NVT at 3000 K with PET-MAD-xs
+# Pre-equilibrated at ~175 GPa; NVT keeps the volume fixed.
+# Atom types: 1=H, 2=O
+
+units metal
+atom_style atomic
+
+variable seed       index 45678
+variable t_target   equal 3000.0
+variable tdamp      equal 100*dt
+variable nsteps     equal 50000        # 50000 * 0.2 fs = 10 ps
+variable dump_every equal 25
+
+read_data data/superionic_ice.data
+
+pair_style metatomic pet-mad-xs-v1.5.1.pt device cpu
+pair_coeff * * 1 8
+
+timestep 0.0002                        # 0.2 fs — shorter for high-T/P stability
+
+neighbor 2.0 bin
+neigh_modify one 50000 page 500000
+
+thermo_style custom step temp pe etotal press vol
+thermo 10
+
+velocity all create ${t_target} ${seed} mom yes rot yes dist gaussian
+reset_timestep 0
+
+fix nve_int   all nve
+fix thermostat all temp/csvr ${t_target} ${t_target} ${tdamp} ${seed}
+
+print "step temp pe etotal press vol" file superionic_thermo.out
+fix thermofile all print ${dump_every} "$(step) $(temp) $(pe) $(etotal) $(press) $(vol)" append superionic_thermo.out
+
+dump traj all custom ${dump_every} superionic_traj.lammpstrj id type element xu yu zu
+dump_modify traj element H O sort id
+
+run ${nsteps}

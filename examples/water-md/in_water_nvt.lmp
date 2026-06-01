@@ -1,0 +1,38 @@
+# Liquid water NVT at 300 K with PET-MAD-xs
+# Atom types: 1=H, 2=O
+
+units metal
+atom_style atomic
+
+variable seed       index 12345
+variable t_target   equal 400.0
+variable tdamp      equal 100*dt       # thermostat time constant
+variable nsteps     equal 20000        # 20000 * 0.5 fs = 10 ps
+variable dump_every equal 10
+
+read_data data/water.data
+
+pair_style metatomic pet-mad-xs-v1.5.1.pt device cpu
+pair_coeff * * 1 8
+
+timestep 0.0005
+
+neighbor 2.0 bin
+neigh_modify one 50000 page 500000
+
+thermo_style custom step temp pe etotal press vol
+thermo 10
+
+velocity all create ${t_target} ${seed} mom yes rot yes dist gaussian
+reset_timestep 0
+
+fix nve_int   all nve
+fix thermostat all temp/csvr ${t_target} ${t_target} ${tdamp} ${seed}
+
+print "step temp pe etotal press vol" file water_thermo.out
+fix thermofile all print ${dump_every} "$(step) $(temp) $(pe) $(etotal) $(press) $(vol)" append water_thermo.out
+
+dump traj all custom ${dump_every} water_traj.lammpstrj id type element xu yu zu
+dump_modify traj element H O sort id
+
+run ${nsteps}
