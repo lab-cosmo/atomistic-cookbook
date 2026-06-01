@@ -48,7 +48,7 @@ from metatomic.torch.ase_calculator import MetatomicCalculator
 # extract:
 
 download_with_retry(
-    "https://github.com/ppegolo/ir_spectrum_ictp_school/raw/refs/heads/tmp/data.zip",
+    "https://github.com/ppegolo/labcosmo_ictp_school/raw/refs/heads/tmp/data.zip",
     "data.zip",
 )
 
