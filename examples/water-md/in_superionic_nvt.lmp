@@ -1,5 +1,5 @@
 # Superionic water NVT at 3000 K with PET-MAD-xs
-# Pre-equilibrated at ~175 GPa; NVT keeps the volume fixed.
+# Pre-equilibrated at ~140 GPa; NVT keeps the volume fixed.
 # Atom types: 1=H, 2=O
 
 units metal

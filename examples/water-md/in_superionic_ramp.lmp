@@ -1,5 +1,5 @@
 # Superionic water: temperature ramp 300 K → 3000 K with PET-MAD-xs
-# Starts from ordered ice X at ~175 GPa; shows ice → superionic transition.
+# Starts from ordered ice X at ~140 GPa; shows ice → superionic transition.
 # Atom types: 1=H, 2=O
 
 units metal

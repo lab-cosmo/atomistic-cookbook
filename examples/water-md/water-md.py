@@ -19,7 +19,8 @@ different aqueous systems:
 For each system we provide the LAMMPS input that drives a short constant-temperature
 simulation through the ``metatomic`` pair style. Running them live would take several
 minutes on a GPU each, so here we analyze pre-computed trajectories; the inputs are
-shown in full so the simulations can be reproduced or extended.
+shown in full, together with the command that runs each one, so the simulations can be
+reproduced or extended.
 """
 
 # sphinx_gallery_thumbnail_number = 3
@@ -105,8 +106,16 @@ with ZipFile("data.zip", "r") as z:
 #
 # These runs are intentionally short, so they reproduce quickly, but long enough to
 # show clear structure and stable dynamics.
+#
+# Each input reads its starting structure from ``data/`` and is launched with a single
+# command. We do not run it here (the trajectory was precomputed); to reproduce it:
+#
+# .. code-block:: bash
+#
+#    lmp -in in_water_nvt.lmp
 
-# %% As a first sanity check we plot the temperature and potential energy along the
+# %%
+# As a first sanity check we plot the temperature and potential energy along the
 # trajectory: the thermostat should hold the temperature near its 400 K target
 # (fluctuations are expected, given the small system and the stochastic thermostat).
 # After a brief equilibration the potential energy should settle around a stable mean,
@@ -154,6 +163,10 @@ chemiscope.show(
 #
 # .. literalinclude:: in_nacl_nvt.lmp
 #    :language: text
+#
+# .. code-block:: bash
+#
+#    lmp -in in_nacl_nvt.lmp
 
 # %%
 # Does that hold up quantitatively? The standard structural probe of solvation is the
@@ -161,31 +174,6 @@ chemiscope.show(
 # distance r from each ion, normalized to the bulk density. A tall first peak followed
 # by a deep minimum is the fingerprint of a well-defined hydration shell, and that first
 # minimum sets the shell radius.
-
-
-def first_shell_count(
-    traj: list[ase.Atoms], ion: str, cutoff: float, other: str = "O"
-) -> np.ndarray:
-    """
-    Mean number of other atoms within cutoff of each ion (minimum image).
-
-    :param traj: trajectory to analyze
-    :param ion: element symbol of the ion (e.g. "Na" or "Cl")
-    :param cutoff: shell radius in Å
-    :param other: element symbol of the other species (default: "O")
-    :return: array of shape (n_frames,) with the average count per ion at each frame
-    """
-    sym = np.array(traj[0].get_chemical_symbols())
-    L = traj[0].get_cell()[0, 0]
-    i_ion = np.where(sym == ion)[0]
-    i_other = np.where(sym == other)[0]
-    counts = []
-    for frame in traj:
-        pos = frame.get_positions()
-        d = pos[i_ion][:, None, :] - pos[i_other][None, :, :]
-        d -= np.round(d / L) * L  # minimum-image convention
-        counts.append((np.linalg.norm(d, axis=-1) < cutoff).sum(axis=1).mean())
-    return np.array(counts)
 
 
 nacl_traj = ase.io.read("nacl_traj.lammpstrj", ":", format="lammps-dump-text")
@@ -222,6 +210,33 @@ plt.show()
 # Cl⁻ and never collapses: both shells survive the whole run. Drag the slider to follow
 # structure and curve together, or use the map menu to switch between the two ions.
 
+
+def first_shell_count(
+    traj: list[ase.Atoms], ion: str, cutoff: float, other: str = "O"
+) -> np.ndarray:
+    """
+    Mean number of other atoms within cutoff of each ion.
+
+    :param traj: trajectory to analyze
+    :param ion: element symbol of the ion (e.g. "Na" or "Cl")
+    :param cutoff: shell radius in Å
+    :param other: element symbol of the other species (default: "O")
+    :return: array of shape (n_frames,) with the average count per ion at each frame
+    """
+    sym = np.array(traj[0].get_chemical_symbols())
+    # L = traj[0].get_cell()[0, 0]
+    i_ion = np.where(sym == ion)[0]
+    i_other = np.where(sym == other)[0]
+    counts = []
+    for frame in traj:
+        # pos = frame.get_positions()
+        # d = pos[i_ion][:, None, :] - pos[i_other][None, :, :]
+        # d -= np.round(d / L) * L  # minimum-image convention
+        d = frame.get_all_distances(mic=True)[i_ion, :][:, i_other]
+        counts.append((d < cutoff).sum(axis=1).mean())
+    return np.array(counts)
+
+
 n_na = first_shell_count(nacl_traj, "Na", 3.1)
 n_cl = first_shell_count(nacl_traj, "Cl", 3.8)
 time_ps = np.arange(len(nacl_traj)) * 0.0005 * 10  # 0.5 fs step, dumped every 10
@@ -256,8 +271,13 @@ chemiscope.show(
 #
 # .. literalinclude:: in_ethanol_nvt.lmp
 #    :language: text
+#
+# .. code-block:: bash
+#
+#    lmp -in in_ethanol_nvt.lmp
 
-# %% We claimed that the two species mix and hydrogen-bond to each other; we can count
+# %%
+# We claimed that the two species mix and hydrogen-bond to each other; we can count
 # those bonds explicitly. Using the standard geometric definition (an O-H...O motif with
 # the two oxygens within 3.5 Å and an O-H...O angle above 150°) we classify each
 # hydrogen bond as water-water or water-ethanol. (A hydroxyl H is identified as the H
@@ -346,7 +366,8 @@ chemiscope.show(
     ),
 )
 
-# %% Extreme conditions: superionic water
+# %%
+# Extreme conditions: superionic water
 # ------------------------------------
 # The last system pushes far outside everyday chemistry. Deep inside the ice-giant
 # planets (Uranus and Neptune) water is thought to exist in a *superionic* phase: the
@@ -363,6 +384,10 @@ chemiscope.show(
 #
 # .. literalinclude:: in_superionic_nvt.lmp
 #    :language: text
+#
+# .. code-block:: bash
+#
+#    lmp -in in_superionic_nvt.lmp
 
 # %%
 # The clearest signature of the superionic phase is the **mean-squared
@@ -402,11 +427,19 @@ ax.set(
 ax.legend()
 plt.show()
 
-# %% The two curves behave just as predicted: hydrogen diffuses freely while oxygen
+# %%
+# The two curves behave just as predicted: hydrogen diffuses freely while oxygen
 # stays put. To watch the transition itself, we ramp the temperature from 300 K to 3000
-# K over a single trajectory. While visualizing the trajectory, notice how the oxygen
-# lattice stays ordered while the hydrogen atoms progressively diffuse and begin to
-# flow between sites.
+# K over a single trajectory. The input is the one above with a single change: the
+# thermostat target sweeps from 300 K to 3000 K instead of being held fixed
+# (``fix temp/csvr 300 3000 ...``). Run it with:
+#
+# .. code-block:: bash
+#
+#    lmp -in in_superionic_ramp.lmp
+#
+# While visualizing the trajectory, notice how the oxygen lattice stays ordered while
+# the hydrogen atoms progressively diffuse and begin to flow between sites.
 
 sup_ramp_traj = ase.io.read(
     "superionic_ramp_traj.lammpstrj", ":", format="lammps-dump-text"
