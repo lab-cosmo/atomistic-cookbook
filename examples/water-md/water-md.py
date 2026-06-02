@@ -89,8 +89,8 @@ with ZipFile("data.zip", "r") as z:
 #   velocity-rescaling thermostat (the `Bussi-Donadio-Parrinello, or CSVR, thermostat
 #   <https://doi.org/10.1063/1.2408420>`_) on top. Together they sample the canonical
 #   ensemble. CSVR reproduces the exact canonical velocity distribution while disturbing
-#   the dynamics minimally, which makes it a safe default when one wants both structural
-#   and transport (diffusion) properties from the same run.
+#   the dynamics minimally, which makes it a very common choice, especially when
+#   one wants to compute dynamical observables.
 # * **Thermostat coupling time.** ``tdamp = 100*dt`` (here 50 fs) sets how strongly the
 #   thermostat couples to the system: 100 times the integration time step is usually
 #   loose enough not to damp the physical motion we want to measure, tight enough to
