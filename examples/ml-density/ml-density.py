@@ -134,17 +134,15 @@ atoms = ase.Atoms(
 )
 atoms.center(about=atoms.get_center_of_mass())
 
-BASIS = "def2-svp"                # DFT atomic orbital basis
-XC = "pbe"                        # XC functional
+BASIS = "def2-svp"  # DFT atomic orbital basis
+XC = "pbe"  # XC functional
 AUXBASIS = "def2-universal-jfit"  # auxiliary basis for the RI fit
 
 # Visualize the molecule with chemiscope
 chemiscope.show(
     atoms,
     mode="structure",
-    settings=chemiscope.quick_settings(
-        structure_settings={"rotation": True}
-    ),
+    settings=chemiscope.quick_settings(structure_settings={"rotation": True}),
 )
 
 # %%
@@ -158,9 +156,9 @@ chemiscope.show(
 # in ``dm_sad`` to compare with the RI reference and ML predictions below.
 
 # Get and store the SAD initial guess DM
-mol = atoms_to_pyscf(atoms, BASIS)     # PySCF mol object
-mf_baseline = dft.RKS(mol)             # intialize KS-DFT solver
-mf_baseline.xc = XC                    # set functional
+mol = atoms_to_pyscf(atoms, BASIS)  # PySCF mol object
+mf_baseline = dft.RKS(mol)  # intialize KS-DFT solver
+mf_baseline.xc = XC  # set functional
 dm_sad = mf_baseline.get_init_guess()  # SAD DM
 
 # Run SCF with SAD initial guess and store the converged DM
@@ -193,7 +191,8 @@ ref_coefficients = mts.load(
     os.path.join(_data_dir, "scfbench_test_molecule_3464_rho_c_jfit.mts")
 )
 
-# Compute the densty matrix from the RI coefficients, then run SCF with it as the initial guess
+# Compute the densty matrix from the RI coefficients, then run SCF with it as the
+# initial guess
 dm_ri = dm_from_ri_coefficients(atoms, ref_coefficients, XC, BASIS, AUXBASIS)
 _, n_ri = run_scf(atoms, XC, BASIS, dm0=dm_ri)
 
@@ -225,9 +224,9 @@ model = load_atomistic_model(model_path)
 calculator = MetatomicCalculator(model)
 
 # Run inference on the model to predict RI coefficients for our example molecule
-ml_coefficients = calculator.run_model(atoms, {target_name: ModelOutput(per_atom=True)})[
-    target_name
-]
+ml_coefficients = calculator.run_model(
+    atoms, {target_name: ModelOutput(per_atom=True)}
+)[target_name]
 
 # Construct the ML initial guess density matrix from the predicted RI coefficients
 dm_ml = dm_from_ri_coefficients(atoms, ml_coefficients, XC, BASIS, AUXBASIS)
@@ -269,8 +268,8 @@ ax.grid(axis="y", color="0.92", lw=0.6, zorder=0)
 #
 # Here we plot the self consistent density, as well as the delta densities between this
 # and the densities constructed from the i) SAD initial guess and ii) reference RI
-# coefficients and iii) ML-predicted coefficients. 
-# 
+# coefficients and iii) ML-predicted coefficients.
+#
 # Note the isovalues used here for visual clarity, which also indicate the relative
 # scales of the errors in the initial guesses. The SAD delta-density is large and
 # structured, missing the redistribution of charge due to bonding. The ML prediction
@@ -279,9 +278,9 @@ ax.grid(axis="y", color="0.92", lw=0.6, zorder=0)
 # still residual errors relative to the RI reference.
 
 visualise_density(mol, dm_conv, isoval=1e-2)  # SCF converged density
-visualise_density(mol, dm_conv - dm_sad, isoval=1e-3)   # ∆ density - SAD
-visualise_density(mol, dm_conv - dm_ri, isoval=1e-4)   # ∆ density - RI
-visualise_density(mol, dm_conv - dm_ml, isoval=1e-4)   # ∆ density - ML
+visualise_density(mol, dm_conv - dm_sad, isoval=1e-3)  # ∆ density - SAD
+visualise_density(mol, dm_conv - dm_ri, isoval=1e-4)  # ∆ density - RI
+visualise_density(mol, dm_conv - dm_ml, isoval=1e-4)  # ∆ density - ML
 
 # %%
 # Visualizing the electron density (in 2D)
@@ -290,6 +289,7 @@ visualise_density(mol, dm_conv - dm_ml, isoval=1e-4)   # ∆ density - ML
 # Alternatively (if there are problems with Py3Dmol), we can plot the electron density
 # in 2D using matplotlib, as all heavy atoms in this molecule lie in the plane :math:`y
 # = z`, so a 2D slice through that plane gives a clear view of the electron density.
+
 
 def _rho_slice(mol, dm, n_x=100, n_s=80, x_lim=(-3.5, 3.5), s_lim=(-2.5, 2.5)):
     """Electron density on the y=z molecular plane, shaped (n_s, n_x)."""
@@ -393,6 +393,7 @@ def _dm_to_rho(dm):
     """ρ(r) = Σ_μν D_μν φ_μ(r) φ_ν(r) evaluated on the pre-built grid."""
     return np.einsum("pi,ij,pj->p", ao_at_grid, dm, ao_at_grid)
 
+
 # Compute the reference real-space density
 rho = _dm_to_rho(dm_conv)
 
@@ -408,7 +409,6 @@ for ax, dm, color, label in [
     (axes[1], dm_ri, "C0", "RI reference"),
     (axes[2], dm_ml, "C1", "ML prediction"),
 ]:
-
     rho_guess = _dm_to_rho(dm)
     electrons = grid_weights @ rho_guess
     nmae = nmae_percent(rho_guess, rho, grid_weights)

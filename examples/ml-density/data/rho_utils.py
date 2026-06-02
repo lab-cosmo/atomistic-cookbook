@@ -209,9 +209,7 @@ def visualise_density(mol, dm, isoval, nx=20, ny=20, nz=20):
     fd, cube_path = tempfile.mkstemp(suffix=".cube")
     os.close(fd)
 
-    cubegen.density(
-        mol, cube_path, dm, nx=nx, ny=ny, nz=nz
-    )
+    cubegen.density(mol, cube_path, dm, nx=nx, ny=ny, nz=nz)
 
     with open(cube_path) as f:
         cube = f.read()
@@ -219,10 +217,10 @@ def visualise_density(mol, dm, isoval, nx=20, ny=20, nz=20):
 
     # Render
     view = py3Dmol.view(width=500, height=500)
-    view.addVolumetricData(cube, "cube", {"isoval": isoval, "color": "blue", "opacity": 0.85})
-    view.addModel(cube, "cube")           # molecular geometry from the cube header
+    view.addVolumetricData(
+        cube, "cube", {"isoval": isoval, "color": "blue", "opacity": 0.85}
+    )
+    view.addModel(cube, "cube")  # molecular geometry from the cube header
     view.setStyle({"stick": {}, "sphere": {"scale": 0.25}})
     view.zoomTo()
     view.show()
-
-
