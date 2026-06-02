@@ -101,7 +101,7 @@ with ZipFile("data.zip", "r") as z:
 # * **Temperature.** We run at 400 K rather than 300 K because the electronic-structure
 #   reference of the MAD dataset (the r2SCAN functional) overstructures liquid water and
 #   raises its melting point by a few tens of kelvin. Working slightly above ambient
-#   keeps the liquid unambiguously liquid and accelerates sampling, so that 10 ps
+#   keeps the system liquid and accelerates sampling, so that a 10 ps run
 #   already shows clear diffusion.
 #
 # These runs are intentionally short, so they reproduce quickly, but long enough to
