@@ -467,7 +467,7 @@ chemiscope.show(
 # %%
 # Where to go next
 # ----------------
-# Throughout this recipe we used a foundational model exactly as shipped, changing only
+# Throughout this recipe we used a foundational model out of the box, changing only
 # the system and never the potential. That is often enough for a qualitative picture, a
 # starting structure, or a screening study. For quantitative accuracy at a specific
 # thermodynamic state, though, one often needs **fine-tuning**: a small, targeted set of
