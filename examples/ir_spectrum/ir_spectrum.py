@@ -308,7 +308,7 @@ chemiscope.show(
 # Joint MLIP + dipole training with metatrain
 # -------------------------------------------
 #
-# A *joint* MLIP+dipole model is a single neural network with two output heads that
+# We will now train a single neural network with two output heads that
 # share the same atomic representation: an energy/forces head, which drives the
 # molecular dynamics, and a dipole head, which provides the :math:`\boldsymbol{\mu}(t)`
 # time series needed for the IR spectrum. Because both heads are attached to the same
