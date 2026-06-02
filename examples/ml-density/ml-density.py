@@ -287,9 +287,9 @@ visualise_density(mol, dm_conv - dm_ml, isoval=1e-4)   # ∆ density - ML
 # Visualizing the electron density (in 2D)
 # ----------------------------------------
 #
-# Alternatively (if there are problems with Py3Dmol, we can plot the electron density in
-# 2D using matplotlib, as all heavy atoms in this molecule lie in the plane :math:`y = z`, so a 2D slice
-# through that plane gives a clear view of the electron density.
+# Alternatively (if there are problems with Py3Dmol), we can plot the electron density
+# in 2D using matplotlib, as all heavy atoms in this molecule lie in the plane :math:`y
+# = z`, so a 2D slice through that plane gives a clear view of the electron density.
 
 def _rho_slice(mol, dm, n_x=100, n_s=80, x_lim=(-3.5, 3.5), s_lim=(-2.5, 2.5)):
     """Electron density on the y=z molecular plane, shaped (n_s, n_x)."""
