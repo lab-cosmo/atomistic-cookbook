@@ -32,7 +32,7 @@ import matplotlib.pyplot as plt
 import metatensor.torch as mts
 import numpy as np
 from metatomic.torch import ModelOutput, load_atomistic_model
-from metatomic_ase import MetatomicCalculator
+from metatomic.torch.ase_calculator import MetatomicCalculator
 from pyscf import dft
 from atomistic_cookbook_utils import download_with_retry
 
@@ -200,13 +200,13 @@ print(f"RI reference initial guess → converged in {n_ri} cycles")
 # atomic species.
 
 download_with_retry(
-    "https://github.com/ppegolo/labcosmo_ictp_school/blob/tmp/pet-density.pt",
+    "https://github.com/ppegolo/labcosmo_ictp_school/raw/refs/heads/tmp/pet-density.pt",
     "model.pt",
 )
 model_path = "model.pt"
 
 TARGET = "mtt::rho_c_jfit_overlap"
-model = load_atomistic_model(model_path).eval()
+model = load_atomistic_model(model_path)
 calculator = MetatomicCalculator(model)
 ml_coefficients = calculator.run_model(atoms, {TARGET: ModelOutput(per_atom=True)})[
     TARGET
