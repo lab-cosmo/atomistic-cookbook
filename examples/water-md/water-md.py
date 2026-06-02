@@ -117,7 +117,7 @@ with ZipFile("data.zip", "r") as z:
 # %%
 # As a first sanity check we plot the temperature and potential energy along the
 # trajectory: the thermostat should hold the temperature near its 400 K target
-# (fluctuations are expected, given the small system and the stochastic thermostat).
+# (fluctuations are expected, given the small system).
 # After a brief equilibration the potential energy should settle around a stable mean,
 # with no long-term drift.
 
