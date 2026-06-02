@@ -6,7 +6,7 @@ Introduction to foundational models for molecular dynamics
 
 Foundational (or *universal*) machine-learning interatomic potentials are trained once
 on broad, chemically diverse datasets, with the goal of describing essentially any
-system without specific re-parameterization. This recipe tests that promise directly: we
+system without specific re-parameterization. This recipe illustrates the concept: we
 take a single foundational model, PET-MAD-XS (which alone spans 102 elements of the
 periodic table), and use it, unchanged, to run molecular dynamics on four qualitatively
 different aqueous systems:
