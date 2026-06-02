@@ -313,7 +313,7 @@ chemiscope.show(
 # molecular dynamics, and a dipole head, which provides the :math:`\boldsymbol{\mu}(t)`
 # time series needed for the IR spectrum. Because both heads are attached to the same
 # backbone features, each training frame simultaneously constrains the potential-energy
-# surface and the electronic-structure response, making joint training more
+# surface and the electronic-structure response, potentially making joint training more
 # data-efficient than fitting two separate models.
 #
 # `PET-MAD-XS <https://huggingface.co/lab-cosmo/pet-mad>`_ is a foundational MLIP
