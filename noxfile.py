@@ -372,8 +372,7 @@ def update_dependencies(environment_yml, session):
 
     if stderr_output:
         session.warn(
-            "Conda emitted warnings while resolving dependencies:\n"
-            f"{stderr_output}"
+            f"Conda emitted warnings while resolving dependencies:\n{stderr_output}"
         )
 
     try:
