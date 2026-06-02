@@ -155,7 +155,7 @@ def dm_from_ri_coefficients(
     grid.build()
 
     vxc_mat = np.zeros((nao, nao))
-    for ao, mask, weight, coords in ni.block_loop(mol, grid, nao, ao_deriv):
+    for ao, _, weight, coords in ni.block_loop(mol, grid, nao, ao_deriv):
         aux_ao = auxmol.eval_gto("GTOval_sph", coords)
         if xctype == "LDA":
             rho = aux_ao @ coeffs

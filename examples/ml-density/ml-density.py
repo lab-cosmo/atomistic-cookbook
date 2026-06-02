@@ -4,20 +4,19 @@ Machine-learned electron density and zero-shot properties
 
 :Authors: Joseph W. Abbott `@jwa7 <https://github.com/jwa7>`_
 
-This recipe demonstrates how to predict the electron density of a molecule
-with a pretrained machine learning model and use the prediction for two
-purposes: (1) as an improved initial guess for a self-consistent field (SCF)
-calculation that reduces the number of iterations to convergence, and (2) as a
-direct source of electronic properties without running any SCF at all.
+This recipe demonstrates how to predict the electron density of a molecule with a
+pretrained machine learning model and use the prediction for two purposes: (1) as an
+improved initial guess for a self-consistent field (SCF) calculation that reduces the
+number of iterations to convergence, and (2) as a direct source of electronic properties
+without running any SCF at all.
 
-The model is a PET (Point Edge Transformer) architecture trained with
-`metatrain <https://github.com/lab-cosmo/metatrain>`_ on the `SCFBench
-<https://doi.org/10.48550/arXiv.2509.25724>`_ dataset of PBE/def2-SVP
-density functional theory calculations on small organic molecules. It predicts
-the expansion coefficients of the electron density using an overlap-metric
-resolution-of-identity (RI) fit onto the ``def2-universal-jfit`` auxiliary basis, and the
-downstream DFT calculations are carried out with
-`PySCF <https://pyscf.org>`_.
+The model is a PET (Point Edge Transformer) architecture trained with `metatrain
+<https://github.com/lab-cosmo/metatrain>`_ on the `SCFBench
+<https://doi.org/10.48550/arXiv.2509.25724>`_ dataset of PBE/def2-SVP density functional
+theory calculations on small organic molecules. It predicts the expansion coefficients
+of the electron density using an overlap-metric resolution-of-identity (RI) fit onto the
+``def2-universal-jfit`` auxiliary basis, and the downstream DFT calculations are carried
+out with `PySCF <https://pyscf.org>`_.
 """
 
 # sphinx_gallery_thumbnail_number = 2
@@ -42,7 +41,7 @@ from atomistic_cookbook_utils import download_with_retry
 # the CWD is set to the example folder, so a relative path works.
 _data_dir = os.path.abspath("data")
 sys.path.insert(0, _data_dir)
-from rho_utils import (
+from rho_utils import (  # noqa: E402
     BOHR_TO_ANG,
     atoms_to_pyscf,
     dm_from_ri_coefficients,
@@ -209,9 +208,9 @@ model_path = "model.pt"
 TARGET = "mtt::rho_c_jfit_overlap"
 model = load_atomistic_model(model_path).eval()
 calculator = MetatomicCalculator(model)
-ml_coefficients = calculator.run_model(
-    atoms, {TARGET: ModelOutput(per_atom=True)}
-)[TARGET]
+ml_coefficients = calculator.run_model(atoms, {TARGET: ModelOutput(per_atom=True)})[
+    TARGET
+]
 
 dm_ml = dm_from_ri_coefficients(atoms, ml_coefficients, XC, BASIS, AUXBASIS)
 _, n_ml = run_scf(atoms, XC, BASIS, dm0=dm_ml)
@@ -286,9 +285,7 @@ numbers = atoms.get_atomic_numbers()
 _marker = {8: ("o", "red"), 6: ("o", "dimgrey"), 1: ("o", "white")}
 _ms = {8: 9, 6: 8, 1: 5}
 
-fig, axes = plt.subplots(
-    1, 3, figsize=(11, 3.8), constrained_layout=True, dpi=120
-)
+fig, axes = plt.subplots(1, 3, figsize=(11, 3.8), constrained_layout=True, dpi=120)
 
 # Panel 1: converged density
 im0 = axes[0].imshow(
@@ -357,7 +354,7 @@ for ax in axes:
 # substantially worse.
 
 # The quadrature grid is already built inside mf_conv; reuse it.
-grid_coords = mf_conv.grids.coords   # (npts, 3), Bohr
+grid_coords = mf_conv.grids.coords  # (npts, 3), Bohr
 grid_weights = mf_conv.grids.weights  # (npts,)
 
 # AO values at every grid point — evaluated once, shared across all DMs.
@@ -445,7 +442,7 @@ for name, dm in [
 # choice; the dipole arrow shows its direction and magnitude.
 
 frames = []
-for name, dm in [
+for name, _ in [
     ("SAD", dm_sad),
     ("RI reference", dm_ri),
     ("ML prediction", dm_ml),
