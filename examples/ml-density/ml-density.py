@@ -11,7 +11,7 @@ number of iterations to convergence, and (2) as a direct source of electronic pr
 without running any SCF at all.
 
 The model is a PET (Point Edge Transformer) architecture trained with `metatrain
-<https://github.com/lab-cosmo/metatrain>`_ on the `SCFBench
+<https://github.com/metatensor/metatrain>`_ on the `SCFBench
 <https://doi.org/10.48550/arXiv.2509.25724>`_ dataset of PBE/def2-SVP density functional
 theory calculations on small organic molecules. It predicts the expansion coefficients
 of the electron density using an overlap-metric resolution-of-identity (RI) fit onto the
@@ -42,11 +42,11 @@ from atomistic_cookbook_utils import download_with_retry
 _data_dir = os.path.abspath("data")
 sys.path.insert(0, _data_dir)
 from rho_utils import (  # noqa: E402
-    BOHR_TO_ANG,
     atoms_to_pyscf,
     dm_from_ri_coefficients,
     nmae_percent,
     run_scf,
+    visualise_density,
 )
 
 # %%
@@ -89,10 +89,14 @@ from rho_utils import (  # noqa: E402
 #   :math:`N_\text{ao}\times N_\text{ao}` matrix.
 # * **Local.** The basis functions are atom-centred, so the coefficients
 #   naturally decompose by chemical environment and transfer across systems.
-# * **Systematically improvable.** Enlarging the auxiliary basis reduces the
-#   fitting error towards zero.
+# * **Systematically improvable.** Enlarging the auxiliary basis (essentially by tuning
+#   the :math:`L_\text{max}` and number of onsite radial functions parameters) generally
+#   reduces the fitting error towards zero. This comes at increased cost, both in the
+#   fitting of the RI coefficients in data generation and in the training and inference
+#   of the resulting ML model. An additional caveat is that a larger auxiliary basis may
+#   also be more difficult to learn.
 #
-# Given a predicted :math:`\tilde\rho`, two downstream workflows become cheap:
+# Given a predicted :math:`\tilde\rho`, two downstream workflows become cheaper:
 #
 # * **Accelerated SCF.** Diagonalising the Fock matrix built from
 #   :math:`\tilde\rho`, :math:`F[\tilde\rho] = h + V_J[\tilde\rho]
@@ -110,13 +114,11 @@ from rho_utils import (  # noqa: E402
 # System setup
 # ------------
 #
-# We use a small organic molecule from the SCFBench dataset (index 3464), a
-# seven-atom :math:`\text{C}_2\text{H}_2\text{O}_3` system computed at the
-# PBE/def2-SVP level of theory. The DFT functional and orbital basis are set
-# to match the training data; the auxiliary basis is
-# ``def2-universal-jfit`` -- the auxiliary basis used for the overlap-metric
-# RI fit in SCFBench (the ``jfit`` in the name refers to the basis design,
-# not the fitting metric).
+# We use a small organic molecule from the test set SCFBench dataset, a seven-atom
+# :math:`\text{C}_2\text{H}_2\text{O}_3` system computed at the PBE/def2-SVP level of
+# theory, with RI decomposition onto the ``def2-universal-jfit`` auxiliary basis set.
+# The DFT functional, orbital basis, and RI auxiliary basis are set to match the
+# training data.
 
 atoms = ase.Atoms(
     numbers=[8, 6, 6, 1, 8, 8, 1],
@@ -132,31 +134,37 @@ atoms = ase.Atoms(
 )
 atoms.center(about=atoms.get_center_of_mass())
 
-BASIS = "def2-svp"
-XC = "pbe"
-AUXBASIS = "def2-universal-jfit"
+BASIS = "def2-svp"                # DFT atomic orbital basis
+XC = "pbe"                        # XC functional
+AUXBASIS = "def2-universal-jfit"  # auxiliary basis for the RI fit
 
-chemiscope.show(atoms, mode="structure")
+# Visualize the molecule with chemiscope
+chemiscope.show(
+    atoms,
+    mode="structure",
+    settings=chemiscope.quick_settings(
+        structure_settings={"rotation": True}
+    ),
+)
 
 # %%
 # Baseline: DFT from the SAD initial guess
 # -----------------------------------------
 #
-# PySCF's default initial density matrix is the *superposition of atomic
-# densities* (SAD): pre-computed atomic density matrices are stacked
-# block-diagonally, ignoring all bonding. This is a reasonable but crude
-# starting point that typically requires 10--15 SCF iterations to converge.
-#
-# We capture the SAD density matrix *before* the SCF runs so that we can
-# later compute properties from it directly and compare with the predicted
-# densities.
+# PySCF's default initial density matrix is the *superposition of atomic densities*
+# (SAD): pre-computed atomic density matrices are stacked block-diagonally, ignoring all
+# bonding. This is a reasonable but simple starting point. Other (and possibly better)
+# initial guess schemes are available, but we only focus on the SAD here. We store this
+# in ``dm_sad`` to compare with the RI reference and ML predictions below.
 
-mol = atoms_to_pyscf(atoms, BASIS)
-mf_baseline = dft.RKS(mol)
-mf_baseline.xc = XC
-dm_sad = mf_baseline.get_init_guess()
+# Get and store the SAD initial guess DM
+mol = atoms_to_pyscf(atoms, BASIS)     # PySCF mol object
+mf_baseline = dft.RKS(mol)             # intialize KS-DFT solver
+mf_baseline.xc = XC                    # set functional
+dm_sad = mf_baseline.get_init_guess()  # SAD DM
 
-mf_conv, n_sad = run_scf(atoms, XC, BASIS)
+# Run SCF with SAD initial guess and store the converged DM
+mf_conv, n_sad = run_scf(atoms, XC, BASIS, dm0=dm_sad)
 dm_conv = mf_conv.make_rdm1()
 
 print(f"SAD initial guess → converged in {n_sad} cycles")
@@ -166,23 +174,26 @@ print(f"Converged total energy: {mf_conv.e_tot:.6f} Ha")
 # RI reference coefficients
 # -------------------------
 #
-# The ``.mts`` file below contains the overlap-metric RI coefficients for this
-# molecule computed directly from the converged DFT density matrix. These represent the
-# theoretical best that any ML model trained with this scheme can achieve for
-# this auxiliary basis -- the error relative to the true density is purely
-# from the RI truncation, not from model inaccuracy.
+# The reference coefficients from the SCFBench dataset for the example molecule are
+# loaded below. They are stored in a :class:`~metatensor.TensorMap` file (extension
+# ``.mts``). To reiterate, these are computed using the RI decomposition of the
+# converged electron density, and represent the theoretical best that any ML model
+# trained with this scheme can achieve for this auxiliary basis. Any errors in
+# observables computed from the RI density relative to the true SCF density are a
+# consequence of the incompleteness of the RI basis set.
 #
-# The helper ``dm_from_ri_coefficients`` builds the Fock matrix
-# :math:`F = h + V_J[\tilde\rho] + V_{xc}[\tilde\rho]` from the RI
-# coefficients, then diagonalises it to obtain an orbital-consistent density
-# matrix. This single-step Fock diagonalisation is not self-consistent, but
-# it places the starting density matrix on the correct orbital manifold for
-# the chosen Hamiltonian.
+# The helper ``dm_from_ri_coefficients`` builds the Fock matrix :math:`F = h +
+# V_J[\tilde\rho] + V_{xc}[\tilde\rho]` from the RI coefficients, then diagonalises it
+# to obtain a density matrix. This is (almost definitely) not a self-consistent density,
+# but it is (hopefully) a good start. Indeed, running SCF with the RI reference initial
+# guess reduces the number of iterations.
 
+# Load the reference SCFBench RI coefficients for this molecule
 ref_coefficients = mts.load(
-    os.path.join(_data_dir, "scfbench_test_molecule_3464_jft_density.mts")
+    os.path.join(_data_dir, "scfbench_test_molecule_3464_rho_c_jfit.mts")
 )
 
+# Compute the densty matrix from the RI coefficients, then run SCF with it as the initial guess
 dm_ri = dm_from_ri_coefficients(atoms, ref_coefficients, XC, BASIS, AUXBASIS)
 _, n_ri = run_scf(atoms, XC, BASIS, dm0=dm_ri)
 
@@ -192,27 +203,36 @@ print(f"RI reference initial guess → converged in {n_ri} cycles")
 # ML-predicted RI coefficients
 # ----------------------------
 #
-# We now replace the reference coefficients with the output of the pretrained
-# PET model. The model takes a ``metatomic``-format atomistic system and
-# returns a :class:`~metatensor.TensorMap` of predicted RI coefficients with
-# the same structure as the reference above -- one block per
-# :math:`(\ell, \sigma, Z)` triple of angular momentum, inversion parity, and
-# atomic species.
+# We now replace the reference coefficients with the output of the pretrained PET model.
+# The model takes as input the atomic types and positions and returns a
+# :class:`~metatensor.TensorMap` of predicted RI coefficients with the same structure as
+# the reference above -- one block per :math:`(\lambda, \sigma, Z)` tuple of angular
+# momentum, inversion parity, and atomic species.
+#
+# This model has been trained on the whole SCFBench dataset of ~45k molecules, using an
+# extension of the PET architecture for atomic basis targets.
 
+# Download the pretrained model
 download_with_retry(
     "https://github.com/ppegolo/labcosmo_ictp_school/raw/refs/heads/tmp/pet-density.pt",
     "model.pt",
 )
 model_path = "model.pt"
 
-TARGET = "mtt::rho_c_jfit_overlap"
+# Load the model as an ASE calculator
+target_name = "mtt::rho_c_jfit_overlap"
 model = load_atomistic_model(model_path)
 calculator = MetatomicCalculator(model)
-ml_coefficients = calculator.run_model(atoms, {TARGET: ModelOutput(per_atom=True)})[
-    TARGET
+
+# Run inference on the model to predict RI coefficients for our example molecule
+ml_coefficients = calculator.run_model(atoms, {target_name: ModelOutput(per_atom=True)})[
+    target_name
 ]
 
+# Construct the ML initial guess density matrix from the predicted RI coefficients
 dm_ml = dm_from_ri_coefficients(atoms, ml_coefficients, XC, BASIS, AUXBASIS)
+
+# Run SCF with the ML initial guess
 _, n_ml = run_scf(atoms, XC, BASIS, dm0=dm_ml)
 
 print(f"ML initial guess → converged in {n_ml} cycles")
@@ -240,22 +260,36 @@ ax.spines[["top", "right"]].set_visible(False)
 ax.grid(axis="y", color="0.92", lw=0.6, zorder=0)
 
 # %%
-# Electron density in the molecular plane
+# Visualize the electron density (in 3D)
+# --------------------------------------
+#
+# The denisty matrix can be used to compute the electron density on a uniform real-space
+# grid (a cube file) and visualized. The resolution of the grid is kept low for faster
+# rendering.
+#
+# Here we plot the self consistent density, as well as the delta densities between this
+# and the densities constructed from the i) SAD initial guess and ii) reference RI
+# coefficients and iii) ML-predicted coefficients. 
+# 
+# Note the isovalues used here for visual clarity, which also indicate the relative
+# scales of the errors in the initial guesses. The SAD delta-density is large and
+# structured, missing the redistribution of charge due to bonding. The ML prediction
+# recovers the converged density far more accurately than the SAD guess. Residuals are
+# small and featureless, and concentrated near the nuclear cores. However, there are
+# still residual errors relative to the RI reference.
+
+visualise_density(mol, dm_conv, isoval=1e-2)  # SCF converged density
+visualise_density(mol, dm_conv - dm_sad, isoval=1e-3)   # ∆ density - SAD
+visualise_density(mol, dm_conv - dm_ri, isoval=1e-4)   # ∆ density - RI
+visualise_density(mol, dm_conv - dm_ml, isoval=1e-4)   # ∆ density - ML
+
+# %%
+# Visualizing the electron density (in 2D)
 # ----------------------------------------
 #
-# All heavy atoms in this molecule lie in the plane :math:`y = z`, so a 2D
-# slice through that plane gives a clear view of the electron density. We
-# parametrise the slice by :math:`(x,\; s)` where
-# :math:`s = \sqrt{2}\,y = \sqrt{2}\,z` is the in-plane coordinate
-# perpendicular to the molecular axis.
-#
-# The first panel shows the converged PBE/def2-SVP density. The remaining
-# panels show the *error* of each initial density relative to the converged
-# one, :math:`\Delta\rho = \tilde\rho - \rho_\text{conv}`, on a diverging
-# colour scale: positive values (more charge in :math:`\tilde\rho`) are red,
-# negative blue. The ML prediction recovers the converged density far more
-# accurately than the SAD guess.
-
+# Alternatively (if there are problems with Py3Dmol, we can plot the electron density in
+# 2D using matplotlib, as all heavy atoms in this molecule lie in the plane :math:`y = z`, so a 2D slice
+# through that plane gives a clear view of the electron density.
 
 def _rho_slice(mol, dm, n_x=100, n_s=80, x_lim=(-3.5, 3.5), s_lim=(-2.5, 2.5)):
     """Electron density on the y=z molecular plane, shaped (n_s, n_x)."""
@@ -263,9 +297,10 @@ def _rho_slice(mol, dm, n_x=100, n_s=80, x_lim=(-3.5, 3.5), s_lim=(-2.5, 2.5)):
     s = np.linspace(*s_lim, n_s)
     xx, ss = np.meshgrid(x, s)
     # y = z = s / sqrt(2) puts points exactly in the molecular plane
+    bohr_to_ang = 0.529177210903
     pts_bohr = (
         np.column_stack([xx.ravel(), ss.ravel() / np.sqrt(2), ss.ravel() / np.sqrt(2)])
-        / BOHR_TO_ANG
+        / bohr_to_ang
     )
     ao = mol.eval_gto("GTOval_sph", pts_bohr)  # (npts, nao)
     rho = np.einsum("pi,ij,pj->p", ao, dm, ao).reshape(n_s, n_x)
@@ -326,13 +361,6 @@ for ax in axes:
     ax.spines[["top", "right"]].set_visible(False)
 
 # %%
-# The SAD delta-density is large and structured -- the superposition of atomic
-# densities misses the redistribution of charge due to bonding. The ML
-# prediction is visibly much closer to the converged density: residuals are
-# small and featureless, concentrated near the nuclear cores where the
-# auxiliary basis truncation is most severe.
-
-# %%
 # Density parity plots
 # --------------------
 #
@@ -365,35 +393,31 @@ def _dm_to_rho(dm):
     """ρ(r) = Σ_μν D_μν φ_μ(r) φ_ν(r) evaluated on the pre-built grid."""
     return np.einsum("pi,ij,pj->p", ao_at_grid, dm, ao_at_grid)
 
+# Compute the reference real-space density
+rho = _dm_to_rho(dm_conv)
 
-rho_conv_grid = _dm_to_rho(dm_conv)
-rho_sad_grid = _dm_to_rho(dm_sad)
-rho_ri_grid = _dm_to_rho(dm_ri)
-rho_ml_grid = _dm_to_rho(dm_ml)
-
-print(
-    f"Electrons (converged): {grid_weights @ rho_conv_grid:.4f}  "
-    f"(expected {mol.nelectron})"
-)
-
-# %%
-# Only plot grid points where the converged density exceeds a small threshold
-# to avoid crowding in the exponentially decaying tail far from the molecule.
-
-_mask = rho_conv_grid > 1e-4
+# Only plot grid points where the converged density exceeds a small threshold to avoid
+# crowding in the exponentially decaying tail far from the molecule.
+_mask = rho > 1e-4
 
 fig, axes = plt.subplots(1, 3, figsize=(10, 3.6), constrained_layout=True, dpi=120)
-_ref = rho_conv_grid[_mask]
+_ref = rho[_mask]
 
-for ax, rho_x, color, label in [
-    (axes[0], rho_sad_grid, "C7", "SAD"),
-    (axes[1], rho_ri_grid, "C0", "RI reference"),
-    (axes[2], rho_ml_grid, "C1", "ML prediction"),
+for ax, dm, color, label in [
+    (axes[0], dm_sad, "C7", "SAD"),
+    (axes[1], dm_ri, "C0", "RI reference"),
+    (axes[2], dm_ml, "C1", "ML prediction"),
 ]:
-    nmae = nmae_percent(rho_x, rho_conv_grid, grid_weights)
+
+    rho_guess = _dm_to_rho(dm)
+    electrons = grid_weights @ rho_guess
+    nmae = nmae_percent(rho_guess, rho, grid_weights)
+    print(f"Electrons ({label}): {electrons:.6f}  (expected {mol.nelectron})")
+    print(f"NMAE% ({label}): {nmae:.6f}")
+
     ax.scatter(
         _ref,
-        rho_x[_mask],
+        rho_guess[_mask],
         s=0.8,
         alpha=0.25,
         color=color,
@@ -459,10 +483,11 @@ dipole_arrows["parameters"]["global"]["color"] = "#e07b00"
 chemiscope.show(
     frames,
     shapes={"dipole": dipole_arrows},
-    properties={
-        "density": [f.info["density"] for f in frames],
-        "|dipole| / D": [np.linalg.norm(f.info["dipole"]) for f in frames],
-    },
+    mode="structure",
+    # properties={
+    #     "density": [f.info["density"] for f in frames],
+    #     "|dipole| / D": [np.linalg.norm(f.info["dipole"]) for f in frames],
+    # },
     settings=chemiscope.quick_settings(
         trajectory=True,
         structure_settings={"shape": ["dipole"]},

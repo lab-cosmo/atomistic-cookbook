@@ -1,27 +1,30 @@
+import os
+import tempfile
+
 import numpy as np
 import scipy.linalg
 import torch
 
 import metatensor.torch as mts
 from metatensor.torch import TensorMap
+
+import py3Dmol
 from pyscf import df, dft, gto
 from pyscf.dft import numint
 from pyscf.lib import unpack_tril
+from pyscf.tools import cubegen
 
 from ase import Atoms
-
-BOHR_TO_ANG = 0.529177210903
 
 
 def atoms_to_pyscf(atoms: Atoms, basis: str) -> gto.Mole:
     """Build a PySCF Mole from an ASE Atoms object."""
-    import pyscf
 
     atom_spec = list(zip(atoms.get_chemical_symbols(), atoms.get_positions()))
     parts = basis.split(":")
     if len(parts) == 3 and parts[0].lower() == "etb":
         mol_ao = gto.M(atom=atom_spec, basis=parts[1], unit="Angstrom").build()
-        resolved = pyscf.df.aug_etb(mol_ao, beta=float(parts[2]))
+        resolved = df.aug_etb(mol_ao, beta=float(parts[2]))
     else:
         resolved = basis
     return gto.M(atom=atom_spec, basis=resolved, unit="Angstrom").build()
@@ -198,3 +201,28 @@ def run_scf(
     mf.callback = _count
     mf.kernel(dm0=dm0)
     return mf, n_cycles
+
+
+def visualise_density(mol, dm, isoval, nx=20, ny=20, nz=20):
+    """Visualise the density using py3Dmol, with isosurface at isoval."""
+    # Write the density to a temporary cube file
+    fd, cube_path = tempfile.mkstemp(suffix=".cube")
+    os.close(fd)
+
+    cubegen.density(
+        mol, cube_path, dm, nx=nx, ny=ny, nz=nz
+    )
+
+    with open(cube_path) as f:
+        cube = f.read()
+    os.unlink(cube_path)
+
+    # Render
+    view = py3Dmol.view(width=500, height=500)
+    view.addVolumetricData(cube, "cube", {"isoval": isoval, "color": "blue", "opacity": 0.85})
+    view.addModel(cube, "cube")           # molecular geometry from the cube header
+    view.setStyle({"stick": {}, "sphere": {"scale": 0.25}})
+    view.zoomTo()
+    view.show()
+
+
