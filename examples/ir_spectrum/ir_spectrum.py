@@ -735,4 +735,4 @@ ax.set_title("IR spectrum: point charges vs ML vs experiment")
 # The main lesson is that the failure modes of fixed partial charges are *systematic*:
 # they follow from the absence of charge flux, not from a poor choice of charge value,
 # and cannot be remedied by tuning one scalar parameter. An ML dipole model trained on a
-# few hundred DFT snapshots already recovers the missing physics.
+# few hundred DFT snapshots already recovers much of the missing physics.
