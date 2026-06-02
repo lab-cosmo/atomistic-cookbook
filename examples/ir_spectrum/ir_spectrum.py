@@ -320,7 +320,7 @@ chemiscope.show(
 # pre-trained on a diverse dataset of materials at r2SCAN meta-GGA level. `Fine-tuning
 # <https://docs.metatensor.org/metatrain/latest/concepts/fine-tuning.html>`_ starts from
 # PET-MAD's pre-trained weights---which already encode good atomic representations from
-# a broad training distribution---and continues gradient descent on our 654-frame water
+# a broad training distribution---and continues training on our 654-frame water
 # dataset, rather than training from scratch. We add a ``mtt::dipole`` output head
 # alongside the standard energy/forces.
 #
