@@ -154,7 +154,7 @@ chemiscope.show(
 # %%
 # Adding ions: NaCl in water
 # --------------------------
-# PET-MAD can handle in principle any stable chemical element. We start easy, dissolving
+# PET-MAD can handle in principle any stable chemical element. We start by dissolving
 # two NaCl units (two Na⁺ and two Cl⁻ ions) in 60 water molecules, a roughly 1.8 M
 # solution. The only change to the LAMMPS input is the element map: the ``pair_coeff``
 # line now also assigns Na (Z=11) and Cl (Z=17). No new parameters and no retraining
