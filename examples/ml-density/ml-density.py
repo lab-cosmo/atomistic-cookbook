@@ -200,13 +200,11 @@ print(f"RI reference initial guess → converged in {n_ri} cycles")
 # :math:`(\ell, \sigma, Z)` triple of angular momentum, inversion parity, and
 # atomic species.
 
-# TODO: replace with the final Materials Cloud / Zenodo URL once uploaded
-# download_with_retry(
-#     "https://TODO_UPLOAD_MODEL_URL/model.pt",
-#     "model.pt",
-# )
-# TODO: remove
-model_path = "/Users/joe.abbott/JoeDev/dev/marvel-ictp/density_example/starting_materials/model.pt"
+download_with_retry(
+    "https://github.com/ppegolo/labcosmo_ictp_school/blob/tmp/pet-density.pt",
+    "model.pt",
+)
+model_path = "model.pt"
 
 TARGET = "mtt::rho_c_jfit_overlap"
 model = load_atomistic_model(model_path).eval()
