@@ -36,9 +36,9 @@ from flashmd import get_pretrained
 SECONDS_PER_DAY = 24 * 60 * 60
 ELEMENTS = ["O", "H"]
 MODEL_PATH = "pet-mad-s-v1.5.0.pt"
-NORMAL_STEPS = 100
+NORMAL_STEPS = 128
 TIMESTEP_FS = 0.5
-MTS_STEPS = 12
+MTS_STEPS = 16
 MTS_TIMESTEP_FS = 4.0
 FLASHMD_TIMESTEP_FS = 16
 FLASHMD_STEPS = 8
@@ -48,10 +48,10 @@ FLASHMD_STEPS = 8
 # Preparing the water box and models
 # ----------------------------------
 #
-# We use the same liquid-water structure as in the end-to-end UQ example. The
-# coordinates are wrapped before writing the LAMMPS data file so all atoms start
-# inside the periodic cell. ``specorder`` fixes LAMMPS type 1 to O and type 2 to H,
-# matching the ``pair_coeff`` and ``fix metatomic`` lines below.
+# We use a liquid-water box containing 64 molecules. The coordinates are wrapped
+# before writing the LAMMPS data file so all atoms start inside the periodic cell.
+# ``specorder`` fixes LAMMPS type 1 to O and type 2 to H, matching the
+# ``pair_coeff`` and ``fix metatomic`` lines below.
 
 water = ase.io.read("data/water.xyz")
 water.wrap()
@@ -99,9 +99,9 @@ print(linecache.getline("data/lammps-flashmd.in", 15), end="")
 # Running and timing the LAMMPS trajectories
 # ------------------------------------------
 #
-# The runs are deliberately short to keep the example lightweight. The throughput
-# includes LAMMPS startup overhead, so increase ``normal_steps`` for more stable
-# benchmark numbers.
+# The runs are relatively short for the purposes of this recipe: longer runs would
+# be needed to obtain converged statistics. However, the relative speeds of the
+# different simulations are (almost) representative of their cost ratios.
 
 
 def ns_per_day(simulated_time_fs: float, elapsed_seconds: float) -> float:
