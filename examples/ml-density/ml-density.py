@@ -1,6 +1,6 @@
 r"""
-Machine-learned electron density and zero-shot properties
-==========================================================
+ML surrogate for the electron density and derived properties
+============================================================
 
 :Authors: Joseph W. Abbott `@jwa7 <https://github.com/jwa7>`_
 
@@ -8,7 +8,7 @@ This recipe demonstrates how to predict the electron density of a molecule with 
 pretrained machine learning model and use the prediction for two purposes: (1) as an
 improved initial guess for a self-consistent field (SCF) calculation that reduces the
 number of iterations to convergence, and (2) as a direct source of electronic properties
-without running any SCF at all.
+without running any further full SCF cycles.
 
 The model is a PET (Point Edge Transformer) architecture trained with `metatrain
 <https://github.com/metatensor/metatrain>`_ on the `SCFBench
@@ -102,13 +102,12 @@ from rho_utils import (  # noqa: E402
 #   :math:`\tilde\rho`, :math:`F[\tilde\rho] = h + V_J[\tilde\rho]
 #   + V_{xc}[\tilde\rho]`, yields a density matrix :math:`D_0` already
 #   close to self-consistency, reducing the number of SCF iterations needed.
-# * **Zero-shot properties.** Observables that are linear in :math:`\rho`
-#   -- such as the electric dipole moment
-#   :math:`\boldsymbol{\mu} = -\int \mathbf{r}\,\rho(\mathbf{r})\,
-#   \mathrm{d}\mathbf{r}` --
-#   can be evaluated directly from :math:`\tilde\rho` without any SCF at
-#   all. The quality depends on how closely :math:`\tilde\rho` approximates
-#   the true ground-state density.
+# * **Downstream properties.** Observables that can be derived from :math:`\rho` -- such
+#   as the electric dipole moment :math:`\boldsymbol{\mu} = -\int
+#   \mathbf{r}\,\rho(\mathbf{r})\, \mathrm{d}\mathbf{r}` -- can also be derived directly
+#   from :math:`\tilde\rho` without running a full SCF cycle (though a diagonalization
+#   step may be required). The quality depends on how closely :math:`\tilde\rho`
+#   approximates the true ground-state density.
 
 # %%
 # System setup
@@ -380,14 +379,14 @@ for ax, dm, color, label in [
 axes[0].set_ylabel(r"$\tilde{\rho}$ / $e\,\mathrm{bohr}^{-3}$")
 
 # %%
-# Zero-shot electronic properties
-# --------------------------------
+# Derived electronic properties
+# -----------------------------
 #
-# Some observables can be evaluated from the density matrix without running SCF
-# ("zero-shot"). Here we compare the electric dipole moment computed from each of the
-# three initial density matrices against the converged reference. The dipole is
-# particularly sensitive to the quality of the density because it measures the first
-# moment of the charge distribution globally across the molecule.
+# Some observables can be evaluated from the density matrix without running a full SCF
+# cycle. Here we compare the electric dipole moment computed from each of the three
+# initial density matrices against the converged reference. The dipole is particularly
+# sensitive to the quality of the density because it measures the first moment of the
+# charge distribution globally across the molecule.
 
 mf_props = dft.RKS(molecule)
 mf_props.xc = XC
