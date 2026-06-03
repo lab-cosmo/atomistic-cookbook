@@ -156,7 +156,7 @@ chemiscope.show(
 
 # Get and store the SAD initial guess DM
 molecule = atoms_to_pyscf(atoms, BASIS)  # PySCF molecule object
-mf_baseline = dft.RKS(molecule)  # intialize KS-DFT solver
+mf_baseline = dft.RKS(molecule)  # initialize KS-DFT solver
 mf_baseline.xc = XC  # set functional
 dm_sad = mf_baseline.get_init_guess()  # SAD DM
 
@@ -190,7 +190,7 @@ ref_coefficients = mts.load(
     os.path.join(_data_dir, "scfbench_test_molecule_3464_rho_c_jfit.mts")
 )
 
-# Compute the densty matrix from the RI coefficients, then run SCF with it as the
+# Compute the density matrix from the RI coefficients, then run SCF with it as the
 # initial guess
 dm_ri = dm_from_ri_coefficients(atoms, ref_coefficients, XC, BASIS, AUXBASIS)
 _, n_ri = run_scf(atoms, XC, BASIS, dm0=dm_ri)
@@ -260,7 +260,7 @@ ax.spines[["top", "right"]].set_visible(False)
 # Visualize the electron density (in 3D)
 # --------------------------------------
 #
-# The denisty matrix can be used to compute the electron density on a uniform real-space
+# The density matrix can be used to compute the electron density on a uniform real-space
 # grid (a cube file) and visualized. The resolution of the grid is kept low for faster
 # rendering.
 #
@@ -294,7 +294,7 @@ HTML(
 )
 
 # %%
-# Delta densities between the converged density and each SAD initial guess
+# Delta densities between the converged density and the ML predicted initial guess
 HTML(
     visualise_density(molecule, dm_conv - dm_ml, isoval=1e-4)  # ∆ density - ML
 )
