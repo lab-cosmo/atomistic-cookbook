@@ -16,7 +16,7 @@ read_data data/superionic_ice.data
 pair_style metatomic pet-mad-xs-v1.5.1.pt device cpu
 pair_coeff * * 1 8
 
-timestep 0.0002                        # 0.2 fs — shorter for high-T/P stability
+timestep 0.0002                        # 0.2 fs (shorter for high-T/P stability)
 
 neighbor 2.0 bin
 neigh_modify one 50000 page 500000

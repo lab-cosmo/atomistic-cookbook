@@ -7,12 +7,12 @@ atom_style atomic
 variable seed       index 23456
 variable t_target   equal 400.0
 variable tdamp      equal 100*dt
-variable nsteps     equal 20000        # 20000 * 0.5 fs = 10 ps
+variable nsteps     equal 500         # 2000 * 0.5 fs = 1 ps
 variable dump_every equal 10
 
 read_data data/nacl.data
 
-pair_style metatomic pet-mad-xs-v1.5.1.pt device cpu
+pair_style metatomic pet-mad-xs-v1.5.0.pt device cpu
 pair_coeff * * 1 8 11 17
 
 timestep 0.0005
