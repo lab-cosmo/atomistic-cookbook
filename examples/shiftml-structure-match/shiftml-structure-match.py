@@ -127,24 +127,31 @@ print(f"Atoms per unit cell: {len(frames[0])}")
 print(f"Per-atom arrays available: {list(frames[0].arrays.keys())}")
 
 # %%
-# 
+#
 # Browse the candidate pool interactively with chemiscope
 
 chemiscope.show(
     frames,
     mode="structure",
-    settings=chemiscope.quick_settings(trajectory=True, structure_settings={"unitCell": True})
+    settings=chemiscope.quick_settings(
+        trajectory=True, structure_settings={"unitCell": True}
+    ),
 )
 
 
 # %%
-# 
+#
 # Each structure carries a ``CS`` array of GIPAW-computed shieldings, one entry per
 # atom. We will use those values both as the reference DFT predictions and to illustrate
 # that ShiftML3 reproduces DFT-level accuracy on this task at a fraction of the cost.
 
-print("atom types (every tenth atom; 1 = H, 6 = C, 8 = O):", frames[0].arrays["numbers"][::10])
-print("chemical shieldings (every tenth atom):", frames[0].arrays["CS"][::10])  # GIPAW shieldings for the first 10 atoms of the first candidate
+print(
+    "atom types (every tenth atom; 1 = H, 6 = C, 8 = O):",
+    frames[0].arrays["numbers"][::10],
+)
+print(
+    "chemical shieldings (every tenth atom):", frames[0].arrays["CS"][::10]
+)  # GIPAW shieldings for the first 10 atoms of the first candidate
 
 # %%
 # Experimental :sup:`1`\ H shifts and atom labelling
@@ -152,8 +159,8 @@ print("chemical shieldings (every tenth atom):", frames[0].arrays["CS"][::10])  
 #
 # Cocaine has 21 protons, but only 17 chemically distinct proton sites. The experimental
 # :sup:`1`\ H spectrum of cocaine, assigned to its 17 chemically distinct proton sites,
-# is reproduced in the supplementary information of Cordova et al. 
-# 
+# is reproduced in the supplementary information of Cordova et al.
+#
 # The list below pairs an experimental shift (in ppm) with the corresponding 1-based
 # atom index in the asymmetric unit. Entries like ``"11,12,13"`` denote chemically
 # equivalent protons (e.g. a rotating methyl) whose predicted shieldings should be
@@ -213,7 +220,7 @@ X_gipaw = []  # GIPAW reference shieldings
 for frame in frames:
     is_h = frame.get_atomic_numbers() == 1  # mask for H atoms
 
-    sml = calculator.get_cs_iso(frame).ravel()[is_h]  # model predictions
+    sml = calculator.get_cs_iso(frame).ravel()[is_h]  # model predictions
     X_sml.append(assign_shieldings(sml, list_atom))
 
     gipaw = frame.arrays["CS"][is_h]  # GIPAW reference
@@ -260,6 +267,7 @@ def calibrated_rmse(X_per_candidate, Y_exp, slope=-1.0):
         Y_pred = slope * X + intercept
         rmses.append(root_mean_squared_error(Y_pred, Y_exp))
     return np.array(rmses)
+
 
 # Calibrate the shieldings -> shifts
 rmse_sml = calibrated_rmse(X_sml, list_cs_exp)
@@ -348,108 +356,69 @@ ax.legend(loc="upper left", frameon=False, fontsize=9)
 #    candidates carry markedly larger RMSEs and can be confidently rejected.
 
 # %%
-# Parity plots: best vs worst candidate
-# -------------------------------------
+# Browsing parity plots linked to crystal structure
+# -------------------------------------------------
 #
-# A useful sanity check is to look at the predicted-vs-experimental
-# :sup:`1`\ H shifts site-by-site. For the *best* candidate we expect
-# points scattered tightly around :math:`y=x`; for the *worst* candidate
-# the scatter is much larger and -- importantly -- the residuals are
-# structured rather than random. That structure is what the RMSE detects:
-# specific protons sit in chemically wrong environments, so their shifts
-# are systematically off.
-
-
-def calibrate_one(X, Y, slope=-1.0):
-    intercept = np.mean(Y) - slope * np.mean(X)
-    return slope * X + intercept
-
-
-def parity(ax, X_sml_i, X_gipaw_i, rmse_sml_i, rmse_gipaw_i, title):
-    lo, hi = 0.5, 9.0
-    ax.plot([lo, hi], [lo, hi], color="0.55", ls="--", lw=0.9, zorder=1)
-    ax.scatter(
-        list_cs_exp,
-        calibrate_one(X_gipaw_i, list_cs_exp),
-        s=60,
-        marker="o",
-        facecolor="C0",
-        edgecolor="white",
-        lw=0.8,
-        zorder=3,
-        label=f"GIPAW   (RMSE {rmse_gipaw_i:.2f} ppm)",
-    )
-    ax.scatter(
-        list_cs_exp,
-        calibrate_one(X_sml_i, list_cs_exp),
-        s=60,
-        marker="s",
-        facecolor="C1",
-        edgecolor="white",
-        lw=0.8,
-        zorder=3,
-        label=f"ShiftML3 (RMSE {rmse_sml_i:.2f} ppm)",
-    )
-    ax.set_xlim(lo, hi)
-    ax.set_ylim(lo, hi)
-    ax.set_aspect("equal")
-    ax.set_xlabel(r"experimental $\delta(^1\mathrm{H})$ / ppm")
-    ax.set_title(title)
-    ax.grid(color="0.92", lw=0.6, zorder=0)
-    ax.spines[["top", "right"]].set_visible(False)
-    ax.legend(loc="upper left", frameon=False, fontsize=9)
-
-
-worst = int(np.argmax(rmse_sml))
-
-fig, axes = plt.subplots(
-    1, 2, figsize=(9.4, 4.8), sharey=True, constrained_layout=True, dpi=120
-)
-parity(
-    axes[0],
-    X_sml[best],
-    X_gipaw[best],
-    rmse_sml[best],
-    rmse_gipaw[best],
-    f"Best match (candidate #{best})",
-)
-parity(
-    axes[1],
-    X_sml[worst],
-    X_gipaw[worst],
-    rmse_sml[worst],
-    rmse_gipaw[worst],
-    f"Worst match (candidate #{worst})",
-)
-axes[0].set_ylabel(r"predicted $\delta(^1\mathrm{H})$ / ppm")
-
-
-# %%
-# Browsing the candidate pool interactively
-# -----------------------------------------
+# The parity plot (x = GIPAW reference shift, y = ShiftML3 predicted shift) has one
+# point per H atom in the dataset. Each point is linked to its atom in the structure
+# viewer.
 #
-# It is instructive to inspect the candidates themselves alongside the RMSE numbers. We
-# attach the per-candidate RMSE to each frame and let chemiscope show the pool as a
-# structure trajectory linked to a scatter plot of the score.
+# Here we sort candidates by ShiftML3 RMSE (in ascending order). Step through the
+# trajectory to watch the parity plot evolve: the best candidate scatters tightly around
+# :math:`y = x`, while poor candidates show structured residuals -- specific protons
+# whose shifts are systematically off because they sit in chemically wrong environments.
+#
+# The H-atom environments in the chemiscope viewer have been set to have a local
+# neighborhood of 10 Å, with atoms outisde this greyed-out. This value represents the
+# effective cutoff (i.e., receptive field) of the ShiftML3 model (a base cutoff of 5 Å,
+# with 2 message passing layers).
+#
+# This helps to visualize the locality of the model: in principle only geometric
+# information from atoms within this sphere influence the prediction on a given atom.
 
-for f, r_sml, r_gipaw in zip(frames, rmse_sml, rmse_gipaw):
-    f.info["rmse_shiftml"] = float(r_sml)
-    f.info["rmse_gipaw"] = float(r_gipaw)
+# Sort frames and the shieldings by the RMSE vs experiment
+sort_order = np.argsort(rmse_sml)
+frames_sorted = [frames[i] for i in sort_order]
+X_sml_sorted = X_sml[sort_order]
+X_gipaw_sorted = X_gipaw[sort_order]
+
+# Convert shieldings to shifts with the same per-structure calibration as above
+slope = -1.0
+pred_sml = (
+    slope * X_sml_sorted
+    + (np.mean(list_cs_exp) - slope * X_sml_sorted.mean(axis=1))[:, None]
+)
+pred_gipaw = (
+    slope * X_gipaw_sorted
+    + (np.mean(list_cs_exp) - slope * X_gipaw_sorted.mean(axis=1))[:, None]
+)
+
+# Build the atomic environments for viewing
+site_for_h = np.empty(N_H_PER_MOL, dtype=int)
+for site_idx, atom_string in enumerate(list_atom):
+    for j in [int(s) - 1 for s in atom_string.split(",")]:
+        site_for_h[j] = site_idx
+
+environments = []
+gipaw_env = []
+sml_env = []
+for A, frame in enumerate(frames_sorted):
+    h_counter = 0
+    for i, atom_type in enumerate(frame.numbers):
+        if atom_type == 1:
+            environments.append((A, i, 10.0))
+            site = site_for_h[h_counter % N_H_PER_MOL]
+            gipaw_env.append(pred_gipaw[A, site])
+            sml_env.append(pred_sml[A, site])
+            h_counter += 1
 
 chemiscope.show(
-    frames,
+    frames_sorted,
     properties={
-        "ShiftML3 RMSE / ppm": rmse_sml,
-        "GIPAW RMSE / ppm": rmse_gipaw,
-        "candidate index": candidate_idx,
+        "GIPAW shift / ppm": np.array(gipaw_env),
+        "ShiftML3 shift / ppm": np.array(sml_env),
     },
-    settings=chemiscope.quick_settings(
-        x="candidate index",
-        y="ShiftML3 RMSE / ppm",
-        map_color="GIPAW RMSE / ppm",
-        trajectory=True,
-        structure_settings={"unitCell": True},
-    ),
+    environments=environments,
 )
 
 
