@@ -19,8 +19,6 @@ of the electron density using an overlap-metric resolution-of-identity (RI) fit 
 out with `PySCF <https://pyscf.org>`_.
 """
 
-# sphinx_gallery_thumbnail_number = 2
-
 # %%
 
 import os
@@ -31,6 +29,7 @@ import chemiscope
 import matplotlib.pyplot as plt
 import metatensor.torch as mts
 import numpy as np
+from IPython.display import HTML
 from metatomic.torch import ModelOutput, load_atomistic_model
 from metatomic.torch.ase_calculator import MetatomicCalculator
 from pyscf import dft
@@ -45,6 +44,7 @@ from rho_utils import (  # noqa: E402
     atoms_to_pyscf,
     dm_from_ri_coefficients,
     nmae_percent,
+    plot_density_slice,
     run_scf,
     visualise_density,
 )
@@ -156,8 +156,8 @@ chemiscope.show(
 # in ``dm_sad`` to compare with the RI reference and ML predictions below.
 
 # Get and store the SAD initial guess DM
-mol = atoms_to_pyscf(atoms, BASIS)  # PySCF mol object
-mf_baseline = dft.RKS(mol)  # intialize KS-DFT solver
+molecule = atoms_to_pyscf(atoms, BASIS)  # PySCF molecule object
+mf_baseline = dft.RKS(molecule)  # intialize KS-DFT solver
 mf_baseline.xc = XC  # set functional
 dm_sad = mf_baseline.get_init_guess()  # SAD DM
 
@@ -166,7 +166,7 @@ mf_conv, n_sad = run_scf(atoms, XC, BASIS, dm0=dm_sad)
 dm_conv = mf_conv.make_rdm1()
 
 print(f"SAD initial guess → converged in {n_sad} cycles")
-print(f"Converged total energy: {mf_conv.e_tot:.6f} Ha")
+print(f"Converged SCF energy: {mf_conv.e_tot:.6f} Ha")
 
 # %%
 # RI reference coefficients
@@ -256,7 +256,6 @@ ax.set_ylabel("SCF iterations to convergence")
 ax.set_title("Effect of initial density on SCF convergence")
 ax.set_ylim(0, max(counts) * 1.3)
 ax.spines[["top", "right"]].set_visible(False)
-ax.grid(axis="y", color="0.92", lw=0.6, zorder=0)
 
 # %%
 # Visualize the electron density (in 3D)
@@ -277,97 +276,48 @@ ax.grid(axis="y", color="0.92", lw=0.6, zorder=0)
 # small and featureless, and concentrated near the nuclear cores. However, there are
 # still residual errors relative to the RI reference.
 
-visualise_density(mol, dm_conv, isoval=1e-2)  # SCF converged density
-visualise_density(mol, dm_conv - dm_sad, isoval=1e-3)  # ∆ density - SAD
-visualise_density(mol, dm_conv - dm_ri, isoval=1e-4)  # ∆ density - RI
-visualise_density(mol, dm_conv - dm_ml, isoval=1e-4)  # ∆ density - ML
+# %%
+# First the converged density
+HTML(
+    visualise_density(molecule, dm_conv, isoval=2e-3)  # SCF converged density
+)
+
+# %%
+# Delta densities between the converged density and the SAD initial guess
+HTML(
+    visualise_density(molecule, dm_conv - dm_sad, isoval=1e-3)  # ∆ density - SAD
+)
+
+# %%
+# Delta densities between the converged density and the RI reference initial guess
+HTML(
+    visualise_density(molecule, dm_conv - dm_ri, isoval=1e-4)  # ∆ density - RI
+)
+
+# %%
+# Delta densities between the converged density and each SAD initial guess
+HTML(
+    visualise_density(molecule, dm_conv - dm_ml, isoval=1e-4)  # ∆ density - ML
+)
 
 # %%
 # Visualizing the electron density (in 2D)
 # ----------------------------------------
 #
-# Alternatively (if there are problems with Py3Dmol), we can plot the electron density
-# in 2D using matplotlib, as all heavy atoms in this molecule lie in the plane :math:`y
-# = z`, so a 2D slice through that plane gives a clear view of the electron density.
+# The 3D viewers above show isosurfaces. A complementary view is a 2D density slice
+# through the molecular plane. Since all heavy atoms lie in the :math:`y = z` plane,
+# a 2D cut reveals the electron density profile in quantitative colour-mapped detail.
 
-
-def _rho_slice(mol, dm, n_x=100, n_s=80, x_lim=(-3.5, 3.5), s_lim=(-2.5, 2.5)):
-    """Electron density on the y=z molecular plane, shaped (n_s, n_x)."""
-    x = np.linspace(*x_lim, n_x)
-    s = np.linspace(*s_lim, n_s)
-    xx, ss = np.meshgrid(x, s)
-    # y = z = s / sqrt(2) puts points exactly in the molecular plane
-    bohr_to_ang = 0.529177210903
-    pts_bohr = (
-        np.column_stack([xx.ravel(), ss.ravel() / np.sqrt(2), ss.ravel() / np.sqrt(2)])
-        / bohr_to_ang
-    )
-    ao = mol.eval_gto("GTOval_sph", pts_bohr)  # (npts, nao)
-    rho = np.einsum("pi,ij,pj->p", ao, dm, ao).reshape(n_s, n_x)
-    return x, s, rho
-
-
-x_grid, s_grid, rho_conv = _rho_slice(mol, dm_conv)
-_, _, rho_ml = _rho_slice(mol, dm_ml)
-_, _, rho_sad = _rho_slice(mol, dm_sad)
-
-# Atom positions projected onto (x, s=y*sqrt(2)) plane
-pos = atoms.get_positions()
-x_atoms = pos[:, 0]
-s_atoms = pos[:, 1] * np.sqrt(2)
-numbers = atoms.get_atomic_numbers()
-
-_marker = {8: ("o", "red"), 6: ("o", "dimgrey"), 1: ("o", "white")}
-_ms = {8: 9, 6: 8, 1: 5}
-
-fig, axes = plt.subplots(1, 3, figsize=(11, 3.8), constrained_layout=True, dpi=120)
-
-# Panel 1: converged density
-im0 = axes[0].imshow(
-    rho_conv,
-    extent=[x_grid[0], x_grid[-1], s_grid[0], s_grid[-1]],
-    origin="lower",
-    cmap="Blues",
-    aspect="auto",
-    vmin=0,
-)
-axes[0].set_title(r"Converged density $\rho_\mathrm{conv}$")
-plt.colorbar(im0, ax=axes[0], label=r"$\rho$ / $e\,\mathrm{bohr}^{-3}$")
-
-# Panels 2-3: delta densities
-delta_vmax = 0.025
-for ax, delta_rho, title in [
-    (axes[1], rho_ml - rho_conv, r"$\Delta\rho$: ML $-$ converged"),
-    (axes[2], rho_sad - rho_conv, r"$\Delta\rho$: SAD $-$ converged"),
-]:
-    im = ax.imshow(
-        delta_rho,
-        extent=[x_grid[0], x_grid[-1], s_grid[0], s_grid[-1]],
-        origin="lower",
-        cmap="RdBu_r",
-        aspect="auto",
-        vmin=-delta_vmax,
-        vmax=delta_vmax,
-    )
-    ax.set_title(title)
-    plt.colorbar(im, ax=ax, label=r"$\Delta\rho$ / $e\,\mathrm{bohr}^{-3}$")
-
-for ax in axes:
-    for xi, si, Z in zip(x_atoms, s_atoms, numbers):
-        m, c = _marker[Z]
-        ax.plot(xi, si, m, ms=_ms[Z], color=c, mec="black", mew=0.7, zorder=5)
-    ax.set_xlabel(r"$x$ / Å")
-    ax.set_ylabel(r"$s = \sqrt{2}\,y$ / Å")
-    ax.spines[["top", "right"]].set_visible(False)
+plot_density_slice(molecule, atoms, dm_conv, dm_ml, dm_sad)
 
 # %%
 # Density parity plots
 # --------------------
 #
-# For a quantitative comparison we evaluate each density on the DFT
-# quadrature grid and plot the predicted value against the converged
-# reference point-by-point. The normalised mean absolute error (NMAE)
-# summarises the agreement over the whole grid with a single number:
+# For a quantitative comparison we evaluate each density on the DFT quadrature grid and
+# plot the predicted value against the converged reference point-by-point. The
+# normalised mean absolute error (NMAE) summarises the agreement over the whole grid
+# with a single number, as is a common metric in density-learning literature.
 #
 # .. math::
 #
@@ -377,16 +327,13 @@ for ax in axes:
 #    {\int \rho_\mathrm{conv}(\mathbf{r})\,\mathrm{d}\mathbf{r}}
 #    \times 100\%\;.
 #
-# The RI reference sets the achievable floor for this auxiliary basis;
-# the ML prediction should approach it, while the SAD guess will be
-# substantially worse.
+# The RI reference sets the achievable floor for this auxiliary basis; the ML prediction
+# should approach it, while the SAD guess will be substantially worse.
 
-# The quadrature grid is already built inside mf_conv; reuse it.
+# Evaluate AOs on the grid
 grid_coords = mf_conv.grids.coords  # (npts, 3), Bohr
 grid_weights = mf_conv.grids.weights  # (npts,)
-
-# AO values at every grid point — evaluated once, shared across all DMs.
-ao_at_grid = mol.eval_gto("GTOval_sph", grid_coords)  # (npts, nao)
+ao_at_grid = molecule.eval_gto("GTOval_sph", grid_coords)  # (npts, nao)
 
 
 def _dm_to_rho(dm):
@@ -394,15 +341,12 @@ def _dm_to_rho(dm):
     return np.einsum("pi,ij,pj->p", ao_at_grid, dm, ao_at_grid)
 
 
-# Compute the reference real-space density
+# Compute the reference (converged) real-space density
 rho = _dm_to_rho(dm_conv)
 
-# Only plot grid points where the converged density exceeds a small threshold to avoid
-# crowding in the exponentially decaying tail far from the molecule.
-_mask = rho > 1e-4
-
-fig, axes = plt.subplots(1, 3, figsize=(10, 3.6), constrained_layout=True, dpi=120)
-_ref = rho[_mask]
+fig, axes = plt.subplots(
+    1, 3, figsize=(10, 3.6), constrained_layout=True, dpi=120, sharey=True
+)
 
 for ax, dm, color, label in [
     (axes[0], dm_sad, "C7", "SAD"),
@@ -410,46 +354,42 @@ for ax, dm, color, label in [
     (axes[2], dm_ml, "C1", "ML prediction"),
 ]:
     rho_guess = _dm_to_rho(dm)
-    electrons = grid_weights @ rho_guess
+    n_electrons = grid_weights @ rho_guess
     nmae = nmae_percent(rho_guess, rho, grid_weights)
-    print(f"Electrons ({label}): {electrons:.6f}  (expected {mol.nelectron})")
+    print(f"Electrons ({label}): {n_electrons:.6f}  (expected {molecule.nelectron})")
     print(f"NMAE% ({label}): {nmae:.6f}")
 
     ax.scatter(
-        _ref,
-        rho_guess[_mask],
+        rho[
+            rho > 1e-4
+        ],  # only plot where the converged density is above a small threshold
+        rho_guess[rho > 1e-4],
         s=0.8,
         alpha=0.25,
         color=color,
         rasterized=True,
         linewidths=0,
     )
-    lo, hi = _ref.min(), _ref.max()
+    lo, hi = rho[rho > 1e-4].min(), rho[rho > 1e-4].max()
     ax.plot([lo, hi], [lo, hi], color="0.35", lw=0.9, ls="--", zorder=3)
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlabel(r"$\rho_\mathrm{conv}$ / $e\,\mathrm{bohr}^{-3}$")
-    ax.set_ylabel(r"$\tilde{\rho}$ / $e\,\mathrm{bohr}^{-3}$")
     ax.set_title(f"{label}\nNMAE = {nmae:.2f}%")
     ax.spines[["top", "right"]].set_visible(False)
+axes[0].set_ylabel(r"$\tilde{\rho}$ / $e\,\mathrm{bohr}^{-3}$")
 
 # %%
 # Zero-shot electronic properties
 # --------------------------------
 #
-# Observables that are linear functionals of the density can be evaluated
-# from any density matrix without an SCF. Here we compare the electric dipole
-# moment computed from each of the three initial density matrices against the
-# converged reference. The dipole is particularly sensitive to the quality of
-# the density because it measures the first moment of the charge distribution
-# globally across the molecule.
-#
-# The DFT total energy is *quadratic* in the density error (the energy is
-# stationary at the ground-state density), so it is far less discriminating --
-# all three initial guesses give virtually the same value when the SCF is run
-# to convergence.
+# Some observables can be evaluated from the density matrix without running SCF
+# ("zero-shot"). Here we compare the electric dipole moment computed from each of the
+# three initial density matrices against the converged reference. The dipole is
+# particularly sensitive to the quality of the density because it measures the first
+# moment of the charge distribution globally across the molecule.
 
-mf_props = dft.RKS(mol)
+mf_props = dft.RKS(molecule)
 mf_props.xc = XC
 
 dipole_data = {}
@@ -462,8 +402,14 @@ for name, dm in [
     dipole_data[name] = mf_props.dip_moment(dm=dm, verbose=0)  # Debye
 
 # %%
-# Visualise with chemiscope: each frame corresponds to one density-matrix
-# choice; the dipole arrow shows its direction and magnitude.
+#
+# The SAD density matrix has a near-zero dipole moment: the superposition of
+# spherical atomic densities is centrosymmetric and entirely misses the
+# bond-polarisation physics. The RI reference recovers the correct dipole
+# to within the auxiliary basis truncation error. The ML prediction lies
+# between the two -- a significant improvement over SAD -- and the residual
+# error reflects the finite accuracy of the model on out-of-training-set
+# geometries.
 
 frames = []
 for name, _ in [
@@ -483,31 +429,12 @@ dipole_arrows["parameters"]["global"]["color"] = "#e07b00"
 chemiscope.show(
     frames,
     shapes={"dipole": dipole_arrows},
-    mode="structure",
-    # properties={
-    #     "density": [f.info["density"] for f in frames],
-    #     "|dipole| / D": [np.linalg.norm(f.info["dipole"]) for f in frames],
-    # },
+    properties={
+        "density": [f.info["density"] for f in frames],
+        "|dipole| / D": [np.linalg.norm(f.info["dipole"]) for f in frames],
+    },
     settings=chemiscope.quick_settings(
         trajectory=True,
         structure_settings={"shape": ["dipole"]},
     ),
 )
-
-# %%
-# The SAD density matrix has a near-zero dipole moment: the superposition of
-# spherical atomic densities is centrosymmetric and entirely misses the
-# bond-polarisation physics. The RI reference recovers the correct dipole
-# to within the auxiliary basis truncation error. The ML prediction lies
-# between the two -- a significant improvement over SAD -- and the residual
-# error reflects the finite accuracy of the model on out-of-training-set
-# geometries.
-
-print("Dipole magnitudes / Debye:")
-conv_mag = np.linalg.norm(dipole_data["Converged"])
-for name, d in dipole_data.items():
-    mag = np.linalg.norm(d)
-    err = abs(mag - conv_mag)
-    print(f"  {name:15s}: {mag:.3f} D   (error vs. converged: {err:.3f} D)")
-
-# %%

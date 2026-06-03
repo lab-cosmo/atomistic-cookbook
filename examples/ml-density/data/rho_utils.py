@@ -1,6 +1,7 @@
 import os
 import tempfile
 
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy.linalg
 import torch
@@ -204,8 +205,12 @@ def run_scf(
 
 
 def visualise_density(mol, dm, isoval, nx=20, ny=20, nz=20):
-    """Visualise the density using py3Dmol, with isosurface at isoval."""
-    # Write the density to a temporary cube file
+    """Return py3Dmol HTML string for the density isosurface at isoval.
+
+    Returns an HTML string (not a displayed widget) so that callers can
+    concatenate multiple viewers and display them together via
+    ``IPython.display.HTML``, which sphinx-gallery captures via ``_repr_html_``.
+    """
     fd, cube_path = tempfile.mkstemp(suffix=".cube")
     os.close(fd)
 
@@ -215,7 +220,6 @@ def visualise_density(mol, dm, isoval, nx=20, ny=20, nz=20):
         cube = f.read()
     os.unlink(cube_path)
 
-    # Render
     view = py3Dmol.view(width=500, height=500)
     view.addVolumetricData(
         cube, "cube", {"isoval": isoval, "color": "blue", "opacity": 0.85}
@@ -223,4 +227,105 @@ def visualise_density(mol, dm, isoval, nx=20, ny=20, nz=20):
     view.addModel(cube, "cube")  # molecular geometry from the cube header
     view.setStyle({"stick": {}, "sphere": {"scale": 0.25}})
     view.zoomTo()
-    view.show()
+    return view._make_html()
+
+
+def _rho_slice_yz(mol, dm, n_x=100, n_s=80, x_lim=(-3.5, 3.5), s_lim=(-2.5, 2.5)):
+    """Electron density on the y=z molecular plane, shaped (n_s, n_x).
+
+    Evaluates ρ(r) = Σ_μν D_μν φ_μ φ_ν on a 2D grid of points with y = z = s/√2.
+    Only valid for molecules where the atoms of interest lie in this plane.
+    """
+    _bohr_to_ang = 0.529177210903
+    x = np.linspace(*x_lim, n_x)
+    s = np.linspace(*s_lim, n_s)
+    xx, ss = np.meshgrid(x, s)
+    pts_bohr = (
+        np.column_stack([xx.ravel(), ss.ravel() / np.sqrt(2), ss.ravel() / np.sqrt(2)])
+        / _bohr_to_ang
+    )
+    ao = mol.eval_gto("GTOval_sph", pts_bohr)
+    return x, s, np.einsum("pi,ij,pj->p", ao, dm, ao).reshape(n_s, n_x)
+
+
+def plot_density_slice(
+    mol, atoms, dm_conv, dm_ml, dm_sad, delta_vmax=0.025, rho_vmax=0.3
+):
+    """Three-panel 2D electron density slice through the y=z molecular plane.
+
+    Panel 1: converged density (absolute).
+    Panel 2: ML − converged delta density.
+    Panel 3: SAD − converged delta density.
+
+    Assumes all heavy atoms lie in the y=z plane; specific to the SCFBench
+    test molecule used in this recipe.
+
+    Parameters
+    ----------
+    mol : pyscf.gto.Mole
+    atoms : ase.Atoms
+    dm_conv, dm_ml, dm_sad : np.ndarray
+        Density matrices for the converged SCF, ML guess, and SAD guess.
+    delta_vmax : float
+        Symmetric colour-scale limit for the delta-density panels.
+    rho_vmax : float
+        Upper colour-scale limit for the converged density panel.  Without
+        this cap the nuclear-core peaks dominate the range and compress the
+        bonding/outer-shell region into near-white.  The default 0.3 e/bohr³
+        saturates the cores (clipped to dark blue) while showing the full
+        molecular shape and inter-atomic bonding clearly.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+    """
+    x_grid, s_grid, rho_conv = _rho_slice_yz(mol, dm_conv)
+    _, _, rho_ml = _rho_slice_yz(mol, dm_ml)
+    _, _, rho_sad = _rho_slice_yz(mol, dm_sad)
+
+    pos = atoms.get_positions()
+    x_atoms, s_atoms = pos[:, 0], pos[:, 1] * np.sqrt(2)
+    numbers = atoms.get_atomic_numbers()
+    _marker = {8: ("o", "red"), 6: ("o", "dimgrey"), 1: ("o", "white")}
+    _ms = {8: 9, 6: 8, 1: 5}
+
+    extent = [x_grid[0], x_grid[-1], s_grid[0], s_grid[-1]]
+    fig, axes = plt.subplots(1, 3, figsize=(11, 3.8), constrained_layout=True, dpi=120)
+
+    im0 = axes[0].imshow(
+        rho_conv,
+        extent=extent,
+        origin="lower",
+        cmap="Blues",
+        aspect="auto",
+        vmin=0,
+        vmax=rho_vmax,
+    )
+    axes[0].set_title(r"Converged density $\rho_\mathrm{conv}$")
+    plt.colorbar(im0, ax=axes[0], label=r"$\rho$ / $e\,\mathrm{bohr}^{-3}$")
+
+    for ax, delta_rho, title in [
+        (axes[1], rho_ml - rho_conv, r"$\Delta\rho$: ML $-$ converged"),
+        (axes[2], rho_sad - rho_conv, r"$\Delta\rho$: SAD $-$ converged"),
+    ]:
+        im = ax.imshow(
+            delta_rho,
+            extent=extent,
+            origin="lower",
+            cmap="RdBu_r",
+            aspect="auto",
+            vmin=-delta_vmax,
+            vmax=delta_vmax,
+        )
+        ax.set_title(title)
+        plt.colorbar(im, ax=ax, label=r"$\Delta\rho$ / $e\,\mathrm{bohr}^{-3}$")
+
+    for ax in axes:
+        for xi, si, Z in zip(x_atoms, s_atoms, numbers):
+            m, c = _marker[Z]
+            ax.plot(xi, si, m, ms=_ms[Z], color=c, mec="black", mew=0.7, zorder=5)
+        ax.set_xlabel(r"$x$ / Å")
+        ax.set_ylabel(r"$y$ / Å")
+        ax.spines[["top", "right"]].set_visible(False)
+
+    return fig
