@@ -40,21 +40,6 @@ and the `rotating-equivariants recipe
 <https://atomistic-cookbook.org/examples/rotate-equivariants/rotate-equivariants.html>`_.
 """
 
-# sphinx_gallery_thumbnail_number = 1
-
-# %%
-
-import os
-import zipfile
-
-import chemiscope
-import matplotlib.pyplot as plt
-import numpy as np
-from ase.io import read
-from atomistic_cookbook_utils import download_with_retry
-from shiftml.ase import ShiftML
-from sklearn.metrics import root_mean_squared_error
-
 # %%
 # Chemical shifts, chemical shieldings, and structure matching
 # ------------------------------------------------------------
@@ -110,6 +95,19 @@ from sklearn.metrics import root_mean_squared_error
 # `introductory ShiftML recipe
 # <https://atomistic-cookbook.org/examples/shiftml/shiftml-example.html>`_.
 
+# %%
+import os
+import zipfile
+
+import chemiscope
+import matplotlib.pyplot as plt
+import numpy as np
+from ase.io import read
+from atomistic_cookbook_utils import download_with_retry
+from shiftml.ase import ShiftML
+from sklearn.metrics import root_mean_squared_error
+
+# Download the reference chemical shieldings
 filename = "ShiftML_poly.zip"
 download_with_retry(
     "https://archive.materialscloud.org/records/j2fka-sda13/files/ShiftML_poly.zip",
@@ -122,28 +120,44 @@ with zipfile.ZipFile(filename, "r") as zip_ref:
         with zip_ref.open(file) as source, open(target, "wb") as dest:
             dest.write(source.read())
 
+# Load the frames
 frames = read("cocaine_QuantumEspresso.xyz", ":")
 print(f"Loaded {len(frames)} candidate cocaine structures")
 print(f"Atoms per unit cell: {len(frames[0])}")
 print(f"Per-atom arrays available: {list(frames[0].arrays.keys())}")
 
+# %%
+# 
+# Browse the candidate pool interactively with chemiscope
+
+chemiscope.show(
+    frames,
+    mode="structure",
+    settings=chemiscope.quick_settings(trajectory=True, structure_settings={"unitCell": True})
+)
+
 
 # %%
+# 
 # Each structure carries a ``CS`` array of GIPAW-computed shieldings, one entry per
 # atom. We will use those values both as the reference DFT predictions and to illustrate
 # that ShiftML3 reproduces DFT-level accuracy on this task at a fraction of the cost.
+
+print("atom types (every tenth atom; 1 = H, 6 = C, 8 = O):", frames[0].arrays["numbers"][::10])
+print("chemical shieldings (every tenth atom):", frames[0].arrays["CS"][::10])  # GIPAW shieldings for the first 10 atoms of the first candidate
 
 # %%
 # Experimental :sup:`1`\ H shifts and atom labelling
 # ---------------------------------------------------
 #
-# The experimental :sup:`1`\ H spectrum of cocaine, assigned to its 17 chemically
-# distinct proton sites, is reproduced in the supplementary information of Cordova et
-# al. The list below pairs an experimental shift (in ppm) with the corresponding 1-based
-# atom index in the asymmetric unit (one cocaine molecule has 21 hydrogens); entries
-# like ``"11,12,13"`` denote chemically equivalent protons (e.g. a rotating methyl)
-# whose predicted shieldings should be averaged before being compared with the single
-# observed peak.
+# Cocaine has 21 protons, but only 17 chemically distinct proton sites. The experimental
+# :sup:`1`\ H spectrum of cocaine, assigned to its 17 chemically distinct proton sites,
+# is reproduced in the supplementary information of Cordova et al. 
+# 
+# The list below pairs an experimental shift (in ppm) with the corresponding 1-based
+# atom index in the asymmetric unit. Entries like ``"11,12,13"`` denote chemically
+# equivalent protons (e.g. a rotating methyl) whose predicted shieldings should be
+# averaged before being compared with the single observed peak.
 
 list_atom = [
     "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
@@ -179,27 +193,30 @@ def assign_shieldings(per_h_shieldings, list_atom, n_h_per_mol=N_H_PER_MOL):
 # Predicting shieldings with ShiftML3
 # -----------------------------------
 #
-# We instantiate the calculator once (the model weights are downloaded on
-# first use and cached locally) and call ``get_cs_iso`` on each candidate
-# structure. This returns the isotropic chemical shielding for every atom in
-# the cell, as a NumPy array of shape ``(n_atoms,)``. We restrict to the
-# hydrogen atoms before passing through ``assign_shieldings``.
+# We instantiate the ShiftML3 surrogate model as the calculator for the shieldings
+# tensors. The ``get_cs_iso`` method computes this tensor and returns the isotropic part
+# (the mean trace) of the passed candidate ``frame`` for every atom in the unit cell.
 #
-# Inference on the full set of 29 cocaine candidates takes a couple of
-# minutes on a laptop CPU; on a GPU it is well under ten seconds.
+# As we are only interested in the hydrogen spectrum in this exercise, we filter the
+# redictions only the the H atoms (atomic number 1) before passing them to the
+# assignment function above.
+#
+# Inference on the full set of 29 cocaine candidates takes a matter of seconds on a
+# single CPU/GPU. Remember that the GIPAW reference for the same task takes hundreds of
+# CPU-hours.
 
 calculator = ShiftML("ShiftML3")
 
-X_sml = []  # ShiftML3-predicted shieldings, one (17,) array per candidate
-X_gipaw = []  # GIPAW reference shieldings, idem
+X_sml = []  # ShiftML3-predicted shieldings
+X_gipaw = []  # GIPAW reference shieldings
 
 for frame in frames:
-    is_h = frame.get_atomic_numbers() == 1
+    is_h = frame.get_atomic_numbers() == 1  # mask for H atoms
 
-    sml = calculator.get_cs_iso(frame).ravel()[is_h]
+    sml = calculator.get_cs_iso(frame).ravel()[is_h]  # model predictions
     X_sml.append(assign_shieldings(sml, list_atom))
 
-    gipaw = frame.arrays["CS"][is_h]
+    gipaw = frame.arrays["CS"][is_h]  # GIPAW reference
     X_gipaw.append(assign_shieldings(gipaw, list_atom))
 
 X_sml = np.array(X_sml)  # (n_candidates, n_sites)
@@ -210,32 +227,28 @@ X_gipaw = np.array(X_gipaw)
 # Calibrating shielding to shift
 # ------------------------------
 #
-# To compare predictions to experiment we need to map shieldings to shifts
-# via :math:`\delta = a\,\sigma + b`. Two parameters, two choices to make.
+# To compare predictions to experiment we need to map shieldings to shifts via
+# :math:`\delta = a\,\sigma + b`. Two parameters, two choices to make.
 #
-# *Slope.* Chemical shift and chemical shielding are defined so that
-# :math:`\delta \approx -\sigma + \sigma_{\mathrm{ref}}`, i.e. the slope is
-# *exactly* :math:`-1` if both quantities are perfectly consistent. Letting
-# the slope float effectively rescales the predicted spectrum, which lets
-# every candidate cheat its way to a better RMSE and erodes the
-# discrimination between polymorphs. We therefore fix :math:`a = -1`.
+# *Slope.* Chemical shift and chemical shielding are defined so that :math:`\delta
+# \approx -\sigma + \sigma_{\mathrm{ref}}`, i.e. the slope is *exactly* :math:`-1` if
+# both quantities are perfectly consistent. Letting the slope float effectively rescales
+# the predicted spectrum, which lets every candidate cheat its way to a better RMSE and
+# erodes the discrimination between polymorphs. We therefore fix :math:`a = -1`.
 #
-# *Intercept.* :math:`b` is the shielding of the reference compound used
-# experimentally (TMS for :sup:`1`\ H). It is not known *a priori* for an
-# arbitrary candidate pool, so we fit it per-structure --- equivalent to
-# saying we compare *spectral patterns*, not absolute shifts. Concretely,
-# for each candidate the intercept is set to the value that makes the
-# predicted and experimental shifts coincide on average,
-# :math:`b = \overline{\delta^{\,\mathrm{exp}}} -
-# a\,\overline{\sigma^{\,\mathrm{pred}}}`.
+# *Intercept.* :math:`b` is the shielding of the reference compound used experimentally
+# (TMS for :sup:`1`\ H). It is not known *a priori* for an arbitrary candidate pool, so
+# we fit it per-structure --- equivalent to saying we compare *spectral patterns*, not
+# absolute shifts. Concretely, for each candidate the intercept is set to the value that
+# makes the predicted and experimental shifts coincide on average, :math:`b =
+# \overline{\delta^{\,\mathrm{exp}}} - a\,\overline{\sigma^{\,\mathrm{pred}}}`.
 #
-# (An alternative is to apply a single *global* calibration -- e.g. the
-# values determined by Kellner et al. by regressing predicted ShiftML3
-# shieldings against experimental shifts on a held-out benchmark of organic
-# crystals. That is preferred when you also care about absolute shift
-# accuracy; for ranking candidates by spectral pattern, the per-structure
-# scheme above gives the same answer with one fewer parameter to argue
-# about.)
+# (An alternative is to apply a single *global* calibration -- e.g. the values
+# determined by Kellner et al. by regressing predicted ShiftML3 shieldings against
+# experimental shifts on a held-out benchmark of organic crystals. That is preferred
+# when you also care about absolute shift accuracy; for ranking candidates by spectral
+# pattern, the per-structure scheme above gives the same answer with one fewer parameter
+# to argue about.)
 
 
 def calibrated_rmse(X_per_candidate, Y_exp, slope=-1.0):
@@ -248,10 +261,11 @@ def calibrated_rmse(X_per_candidate, Y_exp, slope=-1.0):
         rmses.append(root_mean_squared_error(Y_pred, Y_exp))
     return np.array(rmses)
 
-
+# Calibrate the shieldings -> shifts
 rmse_sml = calibrated_rmse(X_sml, list_cs_exp)
 rmse_gipaw = calibrated_rmse(X_gipaw, list_cs_exp)
 
+# Find the best candidate (lowest RMSE vs experiment)
 best = int(np.argmin(rmse_sml))
 print(f"Best ShiftML3 match: candidate #{best} (RMSE = {rmse_sml[best]:.3f} ppm)")
 print(
@@ -292,21 +306,21 @@ ax.vlines(candidate_idx + dx, 0, rmse_sml, color="C1", lw=1.4, alpha=0.85, zorde
 ax.scatter(
     candidate_idx - dx,
     rmse_gipaw,
-    s=28,
     color="C0",
+    label="GIPAW (DFT reference)",
+    s=28,
     edgecolor="white",
     lw=0.7,
-    label="GIPAW (DFT reference)",
     zorder=3,
 )
 ax.scatter(
     candidate_idx + dx,
     rmse_sml,
-    s=28,
     color="C1",
+    label="ShiftML3",
+    s=28,
     edgecolor="white",
     lw=0.7,
-    label="ShiftML3",
     zorder=3,
 )
 
@@ -414,10 +428,9 @@ axes[0].set_ylabel(r"predicted $\delta(^1\mathrm{H})$ / ppm")
 # Browsing the candidate pool interactively
 # -----------------------------------------
 #
-# It is instructive to inspect the candidates themselves alongside the
-# RMSE numbers. We attach the per-candidate RMSE to each frame and let
-# chemiscope show the pool as a structure trajectory linked to a scatter
-# plot of the score.
+# It is instructive to inspect the candidates themselves alongside the RMSE numbers. We
+# attach the per-candidate RMSE to each frame and let chemiscope show the pool as a
+# structure trajectory linked to a scatter plot of the score.
 
 for f, r_sml, r_gipaw in zip(frames, rmse_sml, rmse_gipaw):
     f.info["rmse_shiftml"] = float(r_sml)
@@ -444,25 +457,20 @@ chemiscope.show(
 # Calibration choices and their effect
 # ------------------------------------
 #
-# We used a per-structure intercept fit with the slope pinned at
-# :math:`-1`. Two alternatives are worth being aware of:
+# We used a per-structure intercept fit with the slope pinned at :math:`-1`. Two
+# alternatives are worth being aware of:
 #
-# * **Per-structure free fit.** Also let the slope float, fitting it
-#   independently for each candidate. Because every candidate gets two free
-#   parameters instead of one, the RMSEs shrink overall and the gap between
-#   the correct structure and the rest tends to narrow. This makes the
-#   ranking less diagnostic and is generally *not* recommended for
-#   structure matching.
-# * **Global calibration.** Use the slope/intercept obtained by Kellner et
-#   al. on a held-out experimental benchmark
-#   (:math:`a = -0.9024,\, b = 28.05\,\mathrm{ppm}` for the ShiftML3
-#   :sup:`1`\ H output). Preferred when you also care about absolute
-#   :sup:`1`\ H shift accuracy; for the ranking task here it gives the same
-#   winner with slightly inflated RMSEs across the pool.
+# * **Per-structure free fit.** Also let the slope float, fitting it independently for
+#   each candidate. Because every candidate gets two free parameters instead of one, the
+#   RMSEs shrink overall and the gap between the correct structure and the rest tends to
+#   narrow. This makes the ranking less diagnostic and is generally *not* recommended
+#   for structure matching.
+# * **Global calibration.** Use the slope/intercept obtained by Kellner et al. on a
+#   held-out experimental benchmark (:math:`a = -0.9024,\, b = 28.05\,\mathrm{ppm}` for
+#   the ShiftML3 :sup:`1`\ H output). Preferred when you also care about absolute
+#   :sup:`1`\ H shift accuracy; for the ranking task here it gives the same winner with
+#   slightly inflated RMSEs across the pool.
 #
-# Re-running the analysis with the free-slope fit is left as an exercise;
-# the gap between the correct candidate and the rest of the pool shrinks
-# substantially, illustrating the over-fitting concern above.
 #
 # Note that in many cases, the regression slope can be attributed to systematic errors
 # in the potential energy surface used to generate the candidate pool, or the
