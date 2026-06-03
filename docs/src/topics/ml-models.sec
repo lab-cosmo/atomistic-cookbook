@@ -23,4 +23,4 @@ data.
 - examples/pet-phonons/pet-phonons
 - examples/ml-mm/ml-mm
 - examples/thermal-conductivity-bte/thermal-conductivity-bte
-- examples/ir_spectrum/ir_spectrum
+- examples/water-ir-spectrum/water-ir-spectrum

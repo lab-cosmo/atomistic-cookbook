@@ -21,4 +21,4 @@ training and evaluating ML models.
 - examples/hamiltonian-qm7/hamiltonian-qm7
 - examples/metatomic-plumed/metatomic-plumed
 - examples/pet-relaxation/pet-relaxation
-- examples/ir_spectrum/ir_spectrum
+- examples/water-ir-spectrum/water-ir-spectrum

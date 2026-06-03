@@ -18,8 +18,8 @@ The workflow has four steps:
 4. **Spectrum**: evaluate ML dipoles along the trajectory and compare against the
    point-charge baseline and experiment.
 
-Along the way we discuss *equivariance*---the symmetry constraint that any dipole model
-must satisfy---and quantify how well an unconstrained architecture satisfies it.
+Along the way we discuss *equivariance*, the symmetry constraint that any dipole model
+must satisfy, and quantify how well an unconstrained architecture satisfies it.
 """
 
 # sphinx_gallery_thumbnail_number = 4
@@ -44,7 +44,7 @@ from metatomic.torch.ase_calculator import MetatomicCalculator
 # Data and model downloads
 # ------------------------
 #
-# All data and model files are bundled in a single zip archive, that we download and
+# All data and model files are included in a single zip archive, that we download and
 # extract:
 
 download_with_retry(
@@ -70,25 +70,24 @@ with ZipFile("data.zip", "r") as z:
 #
 # Note that, as long as charge neutrality is maintained (:math:`q_\mathrm{O} =
 # -2\,q_\mathrm{H}`), rescaling all charges by a factor :math:`k` maps
-# :math:`\boldsymbol{\mu} \to k\boldsymbol{\mu}` and therefore the IR spectrum by
-# :math:`k^2`. This is a global rescaling: it cannot change the relative intensities
+# :math:`\boldsymbol{\mu}` to :math:`k\boldsymbol{\mu}` and therefore the IR spectrum by
+# :math:`k^2`. This is a global rescaling that cannot change the relative intensities
 # between peaks, so tuning the charge value is not a meaningful way to improve the
-# *shape* of the spectrum. The same argument applies to the vibrational bands. For
-# systems that carry a net ionic current (electrolytes, ionic liquids), the
-# zero-frequency limit of the spectrum is proportional to the ionic conductivity, which
-# *does* depend on the actual transported charge: in that case `only formal
-# (oxidation-number) charges yield the correct DC limit,
-# <https://doi.org/10.1038/s41567-019-0562-0>`_ even though they
-# produce incorrect intensities. Here, pure water has zero ionic conductivity, so the
-# choice of charge value is truly nothing else than an overall scale factor.
+# *shape* of the spectrum. For systems that carry a net ionic current (electrolytes,
+# ionic liquids), the zero-frequency limit of the spectrum is proportional to the ionic
+# conductivity, which *does* depend on the actual transported charge: in that case `only
+# formal (oxidation-number) charges yield the correct DC limit,
+# <https://doi.org/10.1038/s41567-019-0562-0>`_ even though they produce incorrect
+# intensities. Here, pure water has zero ionic conductivity, so the choice of charge
+# value is truly nothing else than an overall scale factor.
 #
 # Under periodic boundary conditions the raw sum :math:`\sum_i q_i \mathbf{r}_i` is
 # `gauge-dependent
 # <https://www.physics.rutgers.edu/~dhv/pubs/local_preprint/dv_fchap.pdf>`_: shifting a
-# molecule across the simulation box by a lattice vector changes the total. To get a
+# molecule across the simulation box by a lattice vector changes its value. To get a
 # physically meaningful cell dipole, we unwrap each hydrogen into the minimum-image
-# frame of its bonded oxygen before summing. The vectorized implementation below assumes
-# an orthorhombic cell, which is the case for our water box.
+# frame of its bonded oxygen before summing, using ASE's minimum-image convention
+# (``mic=True``), which handles any cell shape.
 
 
 def compute_pc_dipole(
@@ -96,22 +95,30 @@ def compute_pc_dipole(
 ) -> np.ndarray:
     """Total point-charge dipole of a periodic water box (e·Å).
 
-    Each H is unwrapped relative to its nearest O via minimum image.
-    Assumes an orthorhombic cell.
+    Each H is unwrapped relative to its nearest O using ASE's minimum-image
+    convention (``mic=True``), which works for any cell shape.
+
+    :param atoms: ASE Atoms object containing a box of water molecules
+    :param q_H: partial charge on H in units of e
+    :param q_O: partial charge on O in units of e
+    :returns: total cell dipole in e·Å, shape (3,)
     """
-    pos = atoms.positions
-    cell = np.diag(atoms.cell)
     syms = np.array(atoms.get_chemical_symbols())
+    i_O = np.where(syms == "O")[0]
+    i_H = np.where(syms == "H")[0]
+    o_pos = atoms.positions[i_O]  # (n_mol, 3)
 
-    o_pos = pos[syms == "O"]  # (n_mol, 3)
-    h_pos = pos[syms == "H"]  # (2*n_mol, 3)
+    # Minimum-image displacement vectors between every atom pair, from ASE: entry
+    # [i, j] is the vector from atom i to atom j in the nearest periodic image
+    mic_vectors = atoms.get_all_distances(mic=True, vector=True)
 
-    # For each H find nearest O (minimum-image distance matrix)
-    diff = h_pos[:, None, :] - o_pos[None, :, :]  # (n_H, n_O, 3)
-    diff -= cell * np.round(diff / cell)
-    nearest_o = np.argmin(np.linalg.norm(diff, axis=-1), axis=1)  # (n_H,)
+    # O->H vectors; for each H pick the nearest O (the oxygen it is bonded to)
+    o_to_h = mic_vectors[np.ix_(i_O, i_H)]  # (n_O, n_H, 3)
+    nearest_o = np.argmin(np.linalg.norm(o_to_h, axis=-1), axis=0)  # (n_H,)
 
-    h_unwrapped = o_pos[nearest_o] + diff[np.arange(len(h_pos)), nearest_o]
+    # Rebuild each H next to its bonded O by following that minimum-image bond vector
+    bond_vec = o_to_h[nearest_o, np.arange(len(i_H))]  # (n_H, 3)
+    h_unwrapped = o_pos[nearest_o] + bond_vec
 
     return q_O * o_pos.sum(axis=0) + q_H * h_unwrapped.sum(axis=0)
 
@@ -130,22 +137,10 @@ def compute_pc_dipole(
 # where :math:`\tilde{S}_{\boldsymbol{\mu}}` is the isotropic two-sided power spectral
 # density of :math:`\boldsymbol{\mu}(t)`, :math:`n(\omega)` is the refractive index, and
 # :math:`1/6 = (1/3) \times (1/2)` combines the orientational average (liquid water is
-# isotropic) with the cosine-transform convention. We compute the spectrum from a 5 ps
-# production trajectory (after 1 ps of equilibration) at 300 K (`canonical
-# <https://doi.org/10.1063/1.2408420>`_ NVT, CSVR thermostat, flexible TIP3P force
-# field), giving a frequency resolution of ~7 cm⁻¹ (the minimum resolvable frequency is
-# the inverse of the total simulation time, i.e. 1/(5 ps) = 0.2 THz, or around 6.7 cm⁻¹
-# ). The trajectory is generated by running LAMMPS with ``data/in_tip3p.lmp``:
-
-run_command("lmp -in data/in_tip3p.lmp")
-
-type_map_pc = {1: "O", 2: "H"}
-traj_pc = ase.io.read("tip3p.lammpstrj", index=":", format="lammps-dump-text")
-for atoms in traj_pc:
-    atoms.set_chemical_symbols([type_map_pc[int(t)] for t in atoms.arrays["type"]])
-    atoms.set_pbc(True)
-
-pc_timeseries = np.array([compute_pc_dipole(f) for f in traj_pc])
+# isotropic) with the cosine-transform convention.
+# Given a dipole time series sampled at regular intervals, we can compute the power
+# spectral density with `scipy.signal.periodogram`, which uses a fast Fourier transform
+# (FFT) and is therefore very efficient even for long trajectories:
 
 
 def ir_spectrum(
@@ -160,13 +155,13 @@ def ir_spectrum(
     :param dt_fs: time between saved frames in fs
     :param volume_A3: simulation box volume in Å³
     :param temperature_K: temperature in K
-    :returns: ``(freqs_cm, alpha)`` — frequencies in cm⁻¹ and
-              :math:`n(\\omega)\\alpha(\\omega)` in 10³ cm⁻¹
+    :returns: tuple with frequencies in cm⁻¹ and :math:`n(\\omega)\\alpha(\\omega)` in
+        10³ cm⁻¹
     """
     c_cms = 2.99792458e10  # cm/s
     kb_J = 1.380649e-23  # J/K
     e_C = 1.602176634e-19  # C
-    A_m = 1e-10  # Å → m
+    A_m = 1e-10  # Å to m
 
     # Convert dipole to SI (C·m)
     mu_Cm = dipoles_eA * e_C * A_m
@@ -186,24 +181,57 @@ def ir_spectrum(
     # the 1/6 = (1/3 orientational average) × (1/2 one-sided cosine transform)
     eps0 = 8.854187817e-12
     prefactor = omega**2 / (6.0 * vol_m3 * kb_J * temperature_K * eps0 * c_cms)
-    alpha = prefactor * S * 1e-3  # cm⁻¹ → 10³ cm⁻¹
+    alpha = prefactor * S * 1e-3  # cm⁻¹ to 10³ cm⁻¹
 
     return freqs_cm, alpha
 
 
+# %%
+# We compute the spectrum from a 5 ps production trajectory (after 1 ps of
+# equilibration) at 300 K (`canonical <https://doi.org/10.1063/1.2408420>`_ NVT, CSVR
+# thermostat, flexible TIP3P force field), giving a frequency resolution of ~7 cm⁻¹ (the
+# minimum resolvable frequency is the inverse of the total simulation time, i.e. 1/(5
+# ps) = 0.2 THz, or around 6.7 cm⁻¹). The trajectory is generated by running LAMMPS with
+# ``data/in_tip3p.lmp``:
+#
+# .. literalinclude:: in_tip3p.lmp
+#    :language: text
+#
+# and it's run with:
+#
+
+run_command("lmp -in in_tip3p.lmp", print_output=True)
+
+# %%
+# We can now load the trajectory and compute the point-charge dipole time series. The
+# LAMMPS dump file contains atomic types (1 for O, 2 for H) but not chemical symbols,
+# so we assign those based on the type array before computing the dipole.
+
+type_map_pc = {1: "O", 2: "H"}
+traj_pc = ase.io.read("tip3p.lammpstrj", index=":", format="lammps-dump-text")
+for atoms in traj_pc:
+    atoms.set_chemical_symbols([type_map_pc[int(t)] for t in atoms.arrays["type"]])
+    atoms.set_pbc(True)
+
+pc_timeseries = np.array([compute_pc_dipole(f) for f in traj_pc])
 volume_A3 = float(np.abs(np.linalg.det(traj_pc[0].cell)))
 DT_FS = 2.0  # time between saved frames (MD timestep × dump frequency), in fs
+
+# %%
+# We use the ``ir_spectrum`` function defined above to compute the IR spectrum from the
+# dipole time series. The resulting frequencies and :math:`n(\omega)\,\alpha(\omega)`
+# values are stored in ``freqs_pc`` and ``alpha_pc`` for plotting.
 
 freqs_pc, alpha_pc = ir_spectrum(pc_timeseries, DT_FS, volume_A3)
 
 # %%
-# As a benchmark we use the experimental IR spectrum of liquid H₂O at 25 °C taken
+# As a benchmark we use the experimental IR spectrum of liquid H₂O at 25°C taken
 # from `Bertie & Lan, Appl. Spectrosc. 50, 1047--1057
 # (1996) <https://doi.org/10.1366/0003702963905385>`_. The file
-# ``data/IR_light_expt.txt`` stores two columns: frequency in :math:`\mathrm{cm}^{-1}`
+# ``data/IR_light_expt.txt`` has two columns: frequency in :math:`\mathrm{cm}^{-1}`
 # and :math:`n(\omega)\,\alpha(\omega)` in units of
-# :math:`10^{3}\,\mathrm{cm}^{-1}`---the same combination we just computed from the
-# simulated dipole time series, which makes the two directly comparable.
+# :math:`10^{3}\,\mathrm{cm}^{-1}`, which is the same combination we just computed from
+# the simulated dipole time series, which makes the two directly comparable.
 
 expt = np.loadtxt("data/IR_light_expt.txt")
 
@@ -217,8 +245,8 @@ ax.legend()
 ax.set_title("Point-charge model vs experiment")
 
 # %%
-# The point-charge model captures the main bands---the O--H stretch (~3400 cm⁻¹), the
-# H--O--H bend (~1600 cm⁻¹), and the librational band (~400--900 cm⁻¹)---but gets their
+# The point-charge model captures the main bands (the O--H stretch at ~3400 cm⁻¹, the
+# H--O--H bend at ~1600 cm⁻¹, and the librational band at ~650 cm⁻¹) but gets their
 # shapes wrong in two visible ways: the O--H stretch is narrower than the experimental
 # band, and the bending mode is blue-shifted relative to experiment. The reason is that
 # IR intensities and peak shapes are governed by dipole *derivatives* (dynamical, or
@@ -226,7 +254,7 @@ ax.set_title("Point-charge model vs experiment")
 # :math:`|\partial\boldsymbol{\mu}/\partial Q|^2` along its vibrational mode :math:`Q`.
 # With fixed charges the only contribution to :math:`\partial\boldsymbol{\mu}/\partial
 # Q` is the rigid displacement of the charges, :math:`q\,\partial\mathbf{r}/\partial Q`.
-# In reality the partial charges themselves change as a bond stretches---an
+# In reality the partial charges themselves change as a bond stretches, resulting in an
 # intramolecular *charge flux* :math:`\partial q/\partial Q` that a fixed-charge model
 # omits entirely. The same charge-flux and induced-dipole effects shape the
 # low-frequency intermolecular (librational and hindered-translational) bands, which the
@@ -310,24 +338,26 @@ chemiscope.show(
 # -------------------------------------------
 #
 # We will now train a single neural network with two output heads that
-# share the same atomic representation: an energy/forces head, which drives the
+# share the same atomic representation: an energy/forces (MLIP) head, which drives the
 # molecular dynamics, and a dipole head, which provides the :math:`\boldsymbol{\mu}(t)`
 # time series needed for the IR spectrum. Because both heads are attached to the same
-# backbone features, each training frame simultaneously constrains the potential-energy
-# surface and the electronic-structure response, potentially making joint training more
-# data-efficient than fitting two separate models.
+# backbone features, each structure in the dataset simultaneously constrains the
+# potential-energy surface and the electric dipole, potentially making joint training
+# more data-efficient than fitting two separate models.
 #
 # `PET-MAD-XS <https://huggingface.co/lab-cosmo/pet-mad>`_ is a foundational MLIP
 # pre-trained on a diverse dataset of materials at r2SCAN meta-GGA level. `Fine-tuning
 # <https://docs.metatensor.org/metatrain/latest/concepts/fine-tuning.html>`_ starts from
-# PET-MAD's pre-trained weights---which already encode good atomic representations from
-# a broad training distribution---and continues training on our 654-frame water
-# dataset, rather than training from scratch. We add a ``mtt::dipole`` output head
-# alongside the standard energy/forces.
+# PET-MAD's pre-trained weights, which already encode good atomic representations from
+# a broad training distribution, and continues training on our 654-frame water
+# dataset, rather than training from scratch. We also add a ``mtt::dipole`` output head
+# alongside the standard energy/forces; the new head is randomly initialized and trained
+# from scratch, but it benefits from the shared backbone features that are already
+# well-trained on the base dataset.
 #
 # The ``finetune`` section in ``training`` tells metatrain to start from the pre-trained
-# model checkpoint (``finetune.read_from``) and fine-tune the ``energy`` head on our
-# water dataset. The ``energy/scan`` key sets the name of the fine-tuned head (called a
+# model checkpoint (``finetune.read_from``) and fine-tune the ``energy`` head on the
+# new dataset. The ``energy/scan`` key sets the name of the fine-tuned head (called a
 # ``variant`` in metatomic). The LAMMPS input must reference this same name via
 # ``variant scan`` to select this head at inference time. The ``mtt::dipole`` head is
 # trained from scratch, with ``type: cartesian rank 1``, meaning it is a Cartesian
@@ -375,7 +405,7 @@ ax.legend()
 # Model evaluation on the test set
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# metatrain holds out 5 % of the dataset as a test set (``test_set: 0.05`` in
+# metatrain holds out 5% of the dataset as a test set (``test_set: 0.05`` in
 # ``options.yaml``). Ten representative frames from this test set are listed in
 # ``data/test.txt``. We select the corresponding frames from the full dataset and write
 # them to disk so that ``data/eval.yaml`` can point to them:
@@ -386,7 +416,8 @@ ax.legend()
 # ``finetune.read_from``.
 
 run_command(
-    "mtt export pet-mad-xs-v1.5.1_SCAN_dipole.ckpt -o pet-mad-xs-v1.5.1_SCAN_dipole.pt"
+    "mtt export pet-mad-xs-v1.5.1_SCAN_dipole.ckpt -o pet-mad-xs-v1.5.1_SCAN_dipole.pt",
+    print_output=True,
 )
 
 ref_frames = ase.io.read("water_mlip_dipole_data.xyz", index=":")
@@ -400,8 +431,8 @@ ase.io.write("test_set.xyz", test_set, format="extxyz")
 #
 
 run_command(
-    "mtt eval pet-mad-xs-v1.5.1_SCAN_dipole.pt data/eval.yaml"
-    " -o test_set_dipoles.xyz -b 10"
+    "mtt eval pet-mad-xs-v1.5.1_SCAN_dipole.pt data/eval.yaml -o test_set_dipoles.xyz",
+    print_output=True,
 )
 
 # We load the predictions and visualize a parity plot. Reference dipoles are under
@@ -591,7 +622,7 @@ chemiscope.show(
     shapes=shapes_eq,
     mode="structure",
     settings=chemiscope.quick_settings(
-        structure_settings={"shape": list(shapes_eq.keys())},
+        structure_settings={"rotation": True, "shape": list(shapes_eq.keys())},
     ),
 )
 
@@ -603,14 +634,18 @@ chemiscope.show(
 # TIP3P force field. To obtain dynamics governed by the DFT-quality potential-energy
 # surface, we run a new trajectory driven by the fine-tuned joint model.
 #
-# We use LAMMPS for this. First we generate a LAMMPS data file from the last frame of
-# the TIP3P trajectory (a 15.6 Å cubic box at ~1 g/cm³). The type map follows the TIP3P
-# dump: type 1 = O, type 2 = H; ``pair_coeff * * 8 1`` passes atomic numbers Z=8 (O)
-# and Z=1 (H) to the model accordingly.
+# We use LAMMPS for this. First we generate a LAMMPS data file to be used as initial
+# frame for the MLIP run from the last frame of the TIP3P trajectory (a 15.6 Å cubic box
+# at ~1 g/cm³). The type map follows the TIP3P dump: type 1 = O, type 2 = H;
+# ``pair_coeff * * 8 1`` passes atomic numbers Z=8 (O) and Z=1 (H) to the model
+# accordingly.
 
-first_frame = traj_pc[-1].copy()
-first_frame.wrap()
-ase.io.write("water.data", first_frame, format="lammps-data", atom_style="atomic")
+last_frame_tip3p = traj_pc[-1]
+initial_frame_mlip = traj_pc[-1].copy()
+initial_frame_mlip.wrap()
+ase.io.write(
+    "water.data", initial_frame_mlip, format="lammps-data", atom_style="atomic"
+)
 
 # %%
 # The LAMMPS input mirrors the TIP3P setup: 1 ps NVT equilibration followed by 5 ps
@@ -632,8 +667,8 @@ ase.io.write("water.data", first_frame, format="lammps-data", atom_style="atomic
 #    lmp -in in_metatomic.lmp
 
 # %%
-# We load the pre-run trajectory and restore chemical symbols from the
-# type map (type 1 = O, type 2 = H).
+# We load the pre-run trajectory and restore chemical symbols from the type map
+# (type 1 = O, type 2 = H).
 
 type_map = {1: "O", 2: "H"}
 traj_ml = ase.io.read("pet-xs-scan.lammpstrj", index=":", format="lammps-dump-text")
@@ -675,6 +710,11 @@ with open("traj_eval.yaml", "w") as fh:
     yaml.dump(traj_eval_yaml, fh)
 
 # %%
+# Finally we run the evaluation to get the dipole time series for the whole trajectory.
+# The ``-b 64`` flag batches the evaluation on 64 frames at a time, which speeds it up
+# compared to the default of one frame at a time. Depending on the  available memory,
+# this batch size might be too large, or even larger batch sizes may be possible.
+#
 # .. warning::
 #
 #   Dipole evaluation on the whole trajectory takes a few minutes on a GPU. The

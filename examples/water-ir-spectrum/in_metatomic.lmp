@@ -12,7 +12,7 @@ read_data water.data
 mass 1 15.999
 mass 2 1.008
 
-pair_style metatomic pet-mad-xs-v1.5.1_SCAN_dipole.pt device cuda variant scan
+pair_style metatomic pet-mad-xs-v1.5.1_SCAN_dipole.pt device cpu variant scan
 pair_coeff * * 8 1
 
 timestep 0.0005   # 0.5 fs in metal (ps)
