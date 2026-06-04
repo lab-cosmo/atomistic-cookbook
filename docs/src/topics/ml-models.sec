@@ -24,3 +24,4 @@ data.
 - examples/ml-mm/ml-mm
 - examples/thermal-conductivity-bte/thermal-conductivity-bte
 - examples/ml-density/ml-density
+- examples/water-md/water-md
