@@ -7,8 +7,7 @@ dependencies:
   - lammps-metatomic=2025.09.10.mta3
   - pip
   - pip:
-    - upet
-    - warp-lang==1.13.0
+    - upet>=0.2.4
     - chemiscope==1.0.3
     - matplotlib
     - atomistic-cookbook-utils >=0.1,<0.2
