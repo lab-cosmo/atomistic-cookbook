@@ -55,7 +55,7 @@ from metatomic.torch import (
 )
 
 # Integration with ASE calculator for metatomic models
-from metatomic.torch.ase_calculator import MetatomicCalculator
+from metatomic_ase import MetatomicCalculator
 from vesin.metatomic import NeighborList
 
 
@@ -480,7 +480,13 @@ def get_molecular_geometry(
     species = system.types
 
     # get neighbor idx and vectors as torch tensors
-    neigh_ij = neighbors.samples.view(["first_atom", "second_atom"]).values
+    neigh_ij = torch.stack(
+        (
+            neighbors.samples.column("first_atom"),
+            neighbors.samples.column("second_atom"),
+        ),
+        dim=1,
+    )
     neigh_dij = neighbors.values.squeeze()
 
     # get all OH distances and their sorting order
@@ -554,8 +560,8 @@ def get_molecular_geometry(
     # true, so one should use a slightly larger-than-usual cutoff nb - this is reshaped
     # to match the values in a NL tensorblock
     nl = system.get_neighbor_list(nlo)
-    i_idx = nl.samples.view(["first_atom"]).values.flatten()
-    j_idx = nl.samples.view(["second_atom"]).values.flatten()
+    i_idx = nl.samples.column("first_atom")
+    j_idx = nl.samples.column("second_atom")
     m_nl = TensorBlock(
         nl.values
         + (om_displacements[j_idx] - om_displacements[i_idx]).reshape(-1, 3, 1),
@@ -722,7 +728,13 @@ class WaterModel(torch.nn.Module):
         system, neighbors = self._setup_systems(systems, selected_atoms)
 
         # compute non-bonded LJ energy
-        neighbor_indices = neighbors.samples.view(["first_atom", "second_atom"]).values
+        neighbor_indices = torch.stack(
+            (
+                neighbors.samples.column("first_atom"),
+                neighbors.samples.column("second_atom"),
+            ),
+            dim=1,
+        )
         species = system.types
         oo_mask = (species[neighbor_indices[:, 0]] == 8) & (
             species[neighbor_indices[:, 1]] == 8
