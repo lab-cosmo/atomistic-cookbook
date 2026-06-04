@@ -11,7 +11,7 @@ NMR chemical-shielding calculations --
 `ShiftML3 <https://github.com/lab-cosmo/shiftml>`_ -- to pick out an
 experimentally observed crystal structure from a pool of candidate polymorphs.
 We work through the cocaine benchmark from
-`Cordova et al., Nat. Commun. (2018)
+`Paruzzo et al., Nat. Commun. (2018)
 <https://www.nature.com/articles/s41467-018-06972-x>`_, where the pool consists
 of geometry-optimized candidate structures and a measured solid-state
 :sup:`1`\ H spectrum is available for comparison.
@@ -29,15 +29,24 @@ The basic workflow of NMR crystallography is:
 
 The chemical *shielding* is a rank-2 Cartesian tensor; its isotropic part
 (the trace divided by three) is rotation-invariant and is the quantity we
-use here for structure matching. For background on running ShiftML3 itself
+use here for structure matching, as they are the observable most reliably measured
+using solid-state NMR spectroscopy. For background on running ShiftML3 itself
 -- calculator setup, ensemble uncertainties, anisotropic tensor predictions
 -- see the companion recipe `Computing NMR shielding tensors using ShiftML
 <https://atomistic-cookbook.org/examples/shiftml/shiftml-example.html>`_.
-For background on rotationally equivariant tensor properties more
-generally, see the `polarizability recipe
+For background on learning and predicting rotationally equivariant tensor properties,
+see the `polarizability recipe
 <https://atomistic-cookbook.org/examples/polarizability/polarizability.html>`_
 and the `rotating-equivariants recipe
 <https://atomistic-cookbook.org/examples/rotate-equivariants/rotate-equivariants.html>`_.
+
+This recipe is meant to be a starting point for users interested in applying ShiftML3 to
+their own NMR crystallography problems.
+Note however that modern shielding-driven NMR-CSP workflows make use of more
+sophisticated
+similarity measures than the simple RMSE used here and often combine information
+from multiple nuclei, as well as carefully calibrated shielding-to-shift regressors.
+This recipy should only serve as a demonstration of the basic workflow.
 """
 
 # %%
@@ -159,7 +168,7 @@ print(
 #
 # Cocaine has 21 protons, but only 17 chemically distinct proton sites. The experimental
 # :sup:`1`\ H spectrum of cocaine, assigned to its 17 chemically distinct proton sites,
-# is reproduced in the supplementary information of Cordova et al.
+# is reproduced in the supplementary information of Paruzzo et al.
 #
 # The list below pairs an experimental shift (in ppm) with the corresponding 1-based
 # atom index in the asymmetric unit. Entries like ``"11,12,13"`` denote chemically
@@ -255,7 +264,10 @@ X_gipaw = np.array(X_gipaw)
 # experimental shifts on a held-out benchmark of organic crystals. That is preferred
 # when you also care about absolute shift accuracy; for ranking candidates by spectral
 # pattern, the per-structure scheme above gives the same answer with one fewer parameter
-# to argue about.)
+# to argue about.) Note that the regression parameters can be attributed to systematic
+# errors in the DFT functional used to compute shieldings and relax geometries,
+# hence for each pair of NMR-functional and geometry-functional, the optimal calibration
+# parameters need to be determined individually.
 
 
 def calibrated_rmse(X_per_candidate, Y_exp, slope=-1.0):
@@ -309,16 +321,16 @@ ax.axhspan(
     label=r"DFT vs experiment noise floor ($0.33 \pm 0.16$ ppm)",
 )
 
-ax.vlines(candidate_idx - dx, 0, rmse_gipaw, color="C0", lw=1.4, alpha=0.85, zorder=2)
-ax.vlines(candidate_idx + dx, 0, rmse_sml, color="C1", lw=1.4, alpha=0.85, zorder=2)
+ax.vlines(candidate_idx - dx, 0, rmse_gipaw, color="C0", lw=2.5, alpha=0.85, zorder=2)
+ax.vlines(candidate_idx + dx, 0, rmse_sml, color="C1", lw=2.5, alpha=0.85, zorder=2)
 ax.scatter(
     candidate_idx - dx,
     rmse_gipaw,
     color="C0",
     label="GIPAW (DFT reference)",
-    s=28,
+    s=60,
     edgecolor="white",
-    lw=0.7,
+    lw=0.9,
     zorder=3,
 )
 ax.scatter(
@@ -326,30 +338,33 @@ ax.scatter(
     rmse_sml,
     color="C1",
     label="ShiftML3",
-    s=28,
+    s=60,
     edgecolor="white",
-    lw=0.7,
+    lw=0.9,
     zorder=3,
 )
 
-ax.set_xlabel("Candidate structure index")
-ax.set_ylabel(r"$^1$H shift RMSE / ppm")
-ax.set_title("Ranking cocaine polymorph candidates by $^1$H NMR fingerprint")
+ax.set_xlabel("Candidate structure index", fontsize=13)
+ax.set_ylabel(r"$^1$H shift RMSE / ppm", fontsize=13)
+ax.set_title(
+    "Ranking cocaine polymorph candidates by $^1$H NMR fingerprint", fontsize=14
+)
+ax.tick_params(axis="both", labelsize=12)
 ax.set_xticks(candidate_idx[::2])
 ax.set_xlim(-0.7, len(frames) - 0.3)
 ax.set_ylim(0, max(rmse_sml.max(), rmse_gipaw.max()) * 1.15)
 ax.grid(axis="y", color="0.92", lw=0.6, zorder=0)
 ax.spines[["top", "right"]].set_visible(False)
-ax.legend(loc="upper left", frameon=False, fontsize=9)
+ax.legend(loc="upper left", frameon=False, fontsize=12)
 
 
 # %%
 # Two things stand out:
 #
 # 1. **ShiftML3 tracks the DFT reference candidate-by-candidate.** The
-#    orange stems closely follow the blue ones, confirming that the model
-#    has not just learned the average behaviour of the training set, but
-#    also the polymorph-specific deviations from it.
+#    orange stems closely follow the blue ones, confirming that the ShiftML
+#    model is transferable and acts almost as a drop-in replacement for GIPAW-DFT.
+#
 # 2. **The minimum is unambiguous.** The best-matching candidate sits well
 #    below the rest of the pool, inside the experimental noise band -- this
 #    is the structure that best reproduces the measured spectrum. The other
