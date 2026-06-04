@@ -233,6 +233,7 @@ chemiscope.show(
         "map": {
             "x": {"property": "ln(LLPR uncertainty / eV)"},
             "y": {"property": "ln(Empirical error / eV)"},
+            "color": {"property": "ln(Ensemble std / eV)", "scheme": "inferno", "log": True},
         },
         "structure": [
             {"playbackDelay": 50, "unitCell": True, "bonds": True, "spaceFilling": True}
@@ -574,7 +575,7 @@ sim.run(2000)
 
 # %%
 # Load the trajectories and compute the per-frame RDFs.
-# Note that ASE applies a unusal normalization to the partial RDFs,
+# Note that ASE applies an unusual normalization to the partial RDFs,
 # which require a correction to recover the usual asymptotic
 # behavior at large distances.
 # Because the short tutorial run produces very few frames, we apply a light
