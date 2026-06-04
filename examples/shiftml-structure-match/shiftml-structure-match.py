@@ -1,5 +1,5 @@
 r"""
-NMR-driven structure determination with ShiftML3
+NMR-shielding-driven structure determination with ShiftML3
 ================================================
 
 :Authors:
@@ -10,10 +10,19 @@ This recipe shows how to use a fast machine-learning surrogate for *ab initio*
 NMR chemical-shielding calculations --
 `ShiftML3 <https://github.com/lab-cosmo/shiftml>`_ -- to pick out an
 experimentally observed crystal structure from a pool of candidate polymorphs.
+In a nutshell, the NMR-shielding-driven structure determination protocol,
+also sometimes referred to as NMR crystallography or NMR crystal-structure prediction
+(NMR-CSP), aims to enhance the confidence in a classical crystal structure prediction
+(CSP) workflow by
+anchoring the final structure selection step to experimental solid-state NMR data.
+This method is particularly useful to determine the structure of organic solids,
+for which it is difficult to obtain single crystals suitable for X-ray diffraction,
+or to unambiguously determine protonation states who cannot be resolved by XRD.
+
 We work through the cocaine benchmark from
 `Paruzzo et al., Nat. Commun. (2018)
 <https://www.nature.com/articles/s41467-018-06972-x>`_, where the pool consists
-of geometry-optimized candidate structures and a measured solid-state
+of geometry-optimized candidate structures of solid cocaine and a measured solid-state
 :sup:`1`\ H spectrum is available for comparison.
 
 The basic workflow of NMR crystallography is:
