@@ -7,5 +7,5 @@ dependencies:
   - matplotlib
   - pip:
     - ase>=3.28
-    - upet>=0.2.3
+    - upet>=0.2.4
     - atomistic-cookbook-utils >=0.1,<0.2
