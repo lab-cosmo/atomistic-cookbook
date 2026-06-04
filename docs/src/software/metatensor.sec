@@ -22,5 +22,5 @@ training and evaluating ML models.
 - examples/metatomic-plumed/metatomic-plumed
 - examples/pet-relaxation/pet-relaxation
 - examples/ml-density/ml-density
-- examples/water-ir-spectrum/water-ir-spectrum
 - examples/water-md/water-md
+- examples/water-ir-spectrum/water-ir-spectrum
