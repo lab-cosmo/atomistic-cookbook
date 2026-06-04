@@ -9,8 +9,7 @@ dependencies:
   - chemiscope
   - pip:
     - ase>=3.27
-    - upet>=0.2.3
-    - "warp-lang==1.13.0"
+    - upet>=0.2.4
     - ipi>=3.2.0
     - metatomic-torch
     - metatomic-ase
