@@ -189,7 +189,9 @@ empirical_errors = torch.abs(predicted_energies - ground_truth_energies)
 # validation set, the parity plots look very sparse.
 
 quantile_lines = [0.00916, 0.10256, 0.4309805, 1.71796, 2.5348, 3.44388]
-_all_data = torch.cat([predicted_uncertainties, predicted_ensemble_std, empirical_errors])
+_all_data = torch.cat(
+    [predicted_uncertainties, predicted_ensemble_std, empirical_errors]
+)
 min_val = float(_all_data[_all_data > 0].min()) * 0.5
 max_val = float(_all_data.max()) * 2.0
 
@@ -234,8 +236,8 @@ chemiscope.show(
         },
         "structure": [
             {"playbackDelay": 50, "unitCell": True, "bonds": True, "spaceFilling": True}
-        ]
-    }
+        ],
+    },
 )
 
 # %%
@@ -432,8 +434,8 @@ oh_rdfs = np.array([oh_distance_distribution(atoms) for atoms in sampled_structu
 # The key idea is to run a **single** MD trajectory under the mean committee
 # potential :math:`\bar{V}` and then, in post-processing, reweight each sampled
 # frame to obtain averages as if the simulation had been driven by each individual
-# committee member :math:`V^{(i)}`. Taken together with last layer ensembling, 
-# this strategy comes with virtually no additional computational cost, as the 
+# committee member :math:`V^{(i)}`. Taken together with last layer ensembling,
+# this strategy comes with virtually no additional computational cost, as the
 # additional ensemble energy predictions are computed from last layer readouts,
 # whilst the expensive forces for propagating the dynamics only have to be computed
 # once per timestep.
@@ -450,13 +452,15 @@ oh_rdfs = np.array([oh_distance_distribution(atoms) for atoms in sampled_structu
 #            {\langle w^{(i)} \rangle_{\bar{V}}},
 #    \qquad
 #    w^{(i)}(\mathbf{x}_t) =
-#       \exp\!\left(-\beta\bigl[V^{(i)}(\mathbf{x}_t) - \bar{V}(\mathbf{x}_t)\bigr]\right).
+#       \exp\!\left(
+#          -\beta\bigl[V^{(i)}(\mathbf{x}_t) - \bar{V}(\mathbf{x}_t)\bigr]
+#       \right).
 #
 # This is exact in principle, but its statistical efficiency deteriorates
 # exponentially with the variance of the log-weight
 # :math:`h^{(i)} \equiv \beta(V^{(i)} - \bar{V})`. Because :math:`h^{(i)}`
 # depends on the extensive quantity, the potential energy :math:`V`,
-# :math:`\sigma^2(h^{(i)})` grows **linearly with system size** 
+# :math:`\sigma^2(h^{(i)})` grows **linearly with system size**
 # — so the statistical error of the reweighted
 # estimator grows exponentially with the number of atoms
 # (`Ceriotti et al., 2012 <https://doi.org/10.1098/rspa.2011.0413>`_).
@@ -664,7 +668,7 @@ for title, ax, mus, std, xlim in [
     ax.grid()
     ax.plot(xs, mus, label="Mean", lw=0.5)
     rdfs_std = (mus - std, mus + std)
-    ax.fill_between(xs, *rdfs_std, alpha=0.5, label="$\pm 1 \sigma$")
+    ax.fill_between(xs, *rdfs_std, alpha=0.5, label=r"$\pm 1 \sigma$")
     ax.legend()
 
 
@@ -684,7 +688,7 @@ ax.set(
     xlabel="Distance / $\\mathrm{\\AA}$",
     ylabel="RDF",
     xlim=(2.0, 4.5),
-    ylim=(-0.1, 3.7)
+    ylim=(-0.1, 3.7),
 )
 ax.grid()
 
@@ -695,7 +699,7 @@ ax.fill_between(
     rdfs_oo_reweighted_mu - rdfs_oo_reweighted_err,
     rdfs_oo_reweighted_mu + rdfs_oo_reweighted_err,
     alpha=0.5,
-    label="PET-MAD ($\pm 1 \sigma$)"
+    label=r"PET-MAD ($\pm 1 \sigma$)",
 )
 
 # Plot the experimental data
@@ -749,16 +753,16 @@ fig.tight_layout()
 
 # %%
 # We have included the precomputed RDFs for both the XS and S models,
-# which can be loaded and plotted directly. 
+# which can be loaded and plotted directly.
 # Here, we load precomputed O-O RDFs for PET-MAD XS and S (500 ps trajectories).
 
-bins_xs   = np.load("data/MAD_XS_precompute/rdf_bins.npy")
-mean_xs   = np.load("data/MAD_XS_precompute/rdf_mean_rdf_o-o.npy")
+bins_xs = np.load("data/MAD_XS_precompute/rdf_bins.npy")
+mean_xs = np.load("data/MAD_XS_precompute/rdf_mean_rdf_o-o.npy")
 rew_std_xs = np.load("data/MAD_XS_precompute/rdf_reweighted_std_o-o.npy")
 
-bins_s    = np.load("data/MAD_S_precompute/rdf_bins.npy")
-mean_s    = np.load("data/MAD_S_precompute/rdf_mean_rdf_o-o.npy")
-rew_std_s  = np.load("data/MAD_S_precompute/rdf_reweighted_std_o-o.npy")
+bins_s = np.load("data/MAD_S_precompute/rdf_bins.npy")
+mean_s = np.load("data/MAD_S_precompute/rdf_mean_rdf_o-o.npy")
+rew_std_s = np.load("data/MAD_S_precompute/rdf_reweighted_std_o-o.npy")
 
 # %%
 fig, ax = plt.subplots(figsize=(6, 4))
@@ -787,8 +791,11 @@ ax.fill_between(
 )
 
 ax.plot(
-    experimental_oo[:, 0], experimental_oo[:, 1],
-    "k--", lw=1.5, label="Experiment",
+    experimental_oo[:, 0],
+    experimental_oo[:, 1],
+    "k--",
+    lw=1.5,
+    label="Experiment",
 )
 
 ax.set_xlabel("Distance / $\\mathrm{\\AA}$", fontsize=13)
@@ -797,11 +804,11 @@ ax.set_title("O-O RDF: model comparison (500 ps)", fontsize=13)
 ax.legend(fontsize=11)
 fig.tight_layout()
 
-#%%
+# %%
 # We can observe that the computed OO RDF using the S model is in better agreement
 # with the experimental data than the XS model, which is consistent with the improved
-# accuracy of the S model on a reference dataset. 
-# The computed uncertainty band of the S model is also slightly narrower than that of the XS model,
-# yet they remain elevated.
-# That suggests that liquid water structures are probably still not perfectly 
-# modelled by the S model, and further improvement in confidence may be achieved by finetuning.
+# accuracy of the S model on a reference dataset.
+# The computed uncertainty band of the S model is also slightly narrower than
+# that of the XS model, yet they remain elevated. That suggests that liquid water
+# structures are probably still not perfectly modelled by the S model, and further
+# improvement in confidence may be achieved by finetuning.
