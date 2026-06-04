@@ -233,7 +233,11 @@ chemiscope.show(
         "map": {
             "x": {"property": "ln(LLPR uncertainty / eV)"},
             "y": {"property": "ln(Empirical error / eV)"},
-            "color": {"property": "ln(Ensemble std / eV)", "scheme": "inferno", "log": True},
+            "color": {
+                "property": "ln(Ensemble std / eV)",
+                "scheme": "inferno",
+                "log": True,
+            },
         },
         "structure": [
             {"playbackDelay": 50, "unitCell": True, "bonds": True, "spaceFilling": True}
