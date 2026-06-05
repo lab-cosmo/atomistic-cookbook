@@ -1,0 +1,11 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - matplotlib
+  - pip:
+    - ase>=3.28
+    - metatrain
+    - upet>=0.2.3
+    - atomistic-cookbook-utils >=0.1,<0.2

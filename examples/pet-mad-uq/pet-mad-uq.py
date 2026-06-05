@@ -2,7 +2,9 @@
 Uncertainty Quantification with PET-MAD
 =======================================
 
-:Authors: Johannes Spies `@johannes-spies <https://github.com/johannes-spies>`_
+:Authors: Johannes Spies `@johannes-spies <https://github.com/johannes-spies>`_,
+          Filippo Bigi `@frostedoyster <https://github.com/frostedoyster>`_,
+          Matthias Kellner `@bananenpampe <https://github.com/bananenpampe>`_
 
 This recipe demonstrates three ways of computing errors on the outputs of
 ML potential-driven simulations, using as an example the PET-MAD model and its
@@ -12,67 +14,25 @@ In particular, it demonstrates:
 
 1. Estimating uncertainties for single-point calculations on a
    full validation dataset.
-2. Computing energies in simple functions of energy predictions,
-   namely the value of vacancy formation energies
+2. Propagating ensemble uncertainty to simple derived quantities,
+   namely vacancy formation energies
 3. Propagating errors from energy predictions to thermodynamic averages
    computed over a constant-temperature MD simulation.
 
-
 For more information on PET-MAD, have a look at
 `Mazitov et al., 2025. <https://arxiv.org/abs/2503.14118>`_
+and `Malosso et al., 2026. <https://arxiv.org/abs/2603.02089>`_.
 The LLPR uncertainties are introduced in `Bigi et al., 2024.
-<https://arxiv.org/abs/2403.02251>`_ For more
-information on dataset calibration and error propagation, see
-`Imabalzano et al., 2021. <https://arxiv.org/abs/2011.08828>`_
+<https://arxiv.org/abs/2403.02251>`_ and last layer ensemble UQ
+in `Kellner et al., 2024. <https://arxiv.org/abs/2402.16621>`_.
+For more information on dataset calibration and error propagation, see
+`Imbalzano et al., 2021. <https://arxiv.org/abs/2011.08828>`_
 
-Optional: Adding UQ to a Model
-------------------------------
-
-Models compatible with `metatomic <https://metatensor.github.io/metatomic/>`_ can be
-equipped with UQ capabilities through the
-`LLPRUncertaintyModel` wrapper included with
-`metatrain <https://metatensor.github.io/metatrain/>`_. For running this recipe, you can
-use a prebuilt model (the example itself downloads a model from Hugging Face).
-For adding UQ support to an existing model, have a look at
-the following scaffold. For more information on loading a dataset with the
-infrastructure, have a look at
-`this section <https://metatensor.github.io/metatrain/latest/dev-docs/utils/data>`_
-of the documentation. The pseudocode below also shows how to create an ensemble model
-from the last-layer parameters of a model.
-
-.. code-block:: python
-
-    from metatrain.utils.llpr import LLPRUncertaintyModel
-    from metatomic.torch import AtomisticModel, ModelMetadata
-
-    # You need to provide a model and datasets (wrapped in PyTorch dataloaders).
-    model = ...
-    dataloaders = {"train": ..., "val": ...}
-
-    # Wrap the model in a module capable of estimating uncertainties, estimate the
-    # inverse covariance on the training set, and calibrate the model on the validation
-    # set.
-    llpr_model = LLPRUncertaintyModel(model)
-    llpr_model.compute_covariance(dataloaders["train"])
-    llpr_model.compute_inverse_covariance(regularizer=1e-4)
-    llpr_model.calibrate(dataloaders["val"])
-
-    # In the next step, we show how to enable ensembles in PET-MAD. For that, it is
-    # necessary to extract the last-layer parameters of the model. The ensemble
-    # generation expects the parameters in a flat-vector format.
-    last_layer_parameters = ...
-
-    # Generate an ensemble with 128 members to compare ensemble uncertainties to LLPR
-    # scores.
-    llpr_model.generate_ensemble({"energy": last_layer_parameters}, 128)
-
-    # Save the model to disk using metatomic.
-    exported_model = AtomisticModel(
-        llpr_model.eval(),
-        ModelMetadata(),
-        llpr_model.capabilities,
-    )
-    exported_model.save("models/model-with-llpr.pt")
+The PET-MAD model used here already includes LLPR and last-layer ensemble UQ. To train a
+custom model with these capabilities from scratch using
+`metatrain <https://metatensor.github.io/metatrain/>`_, see the
+:doc:`Training with LLPR from Scratch </examples/llpr-from-scratch/llpr-from-scratch>`
+example.
 
 Getting Started
 ---------------
@@ -90,13 +50,20 @@ import upet
 from atomistic_cookbook_utils import download_with_retry
 
 import ase.geometry.rdf
+import ase.units
+import chemiscope
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import torch
 from ase import Atoms
 from ase.filters import FrechetCellFilter
 from ase.io.cif import read_cif
+from ase.md.bussi import Bussi
+from ase.md.velocitydistribution import (
+    MaxwellBoltzmannDistribution,
+    Stationary,
+    ZeroRotation,
+)
 from ase.optimize.bfgs import BFGS
 from ipi.utils.scripting import InteractiveSimulation
 from metatomic.torch import ModelOutput
@@ -186,12 +153,18 @@ outputs = {
     # Request the uncertainty in the atomic energy predictions
     "energy": ModelOutput(),  # (Needed to request the uncertainties)
     "energy_uncertainty": ModelOutput(),
+    "energy_ensemble": ModelOutput(),
 }
 results = calculator.run_model(systems, outputs)
 
 # Extract the requested results
 predicted_energies = results["energy"][0].values.squeeze()
 predicted_uncertainties = results["energy_uncertainty"][0].values.squeeze()
+ensemble_raw = results["energy_ensemble"][0].values
+print(
+    "energy_ensemble shape:", ensemble_raw.shape
+)  # (n_structures, n_ensemble_members)
+predicted_ensemble_std = ensemble_raw.std(dim=-1).squeeze()
 
 # %%
 # Compute the true prediction error by comparing the predicted energy to the reference
@@ -208,35 +181,69 @@ empirical_errors = torch.abs(predicted_energies - ground_truth_energies)
 # %%
 # After gathering predicted uncertainties and computing ground truth error metrics, we
 # can compare them to each other. Similar to figure S4 of the PET-MAD paper, we present
-# the data in using a parity plot. For more information about interpreting this type of
-# plot, see Appendix F.7 of `Bigi et al., 2024 <https://arxiv.org/abs/2403.02251>`_.
-# Note that both the x- and the y-axis use a logarithmic scale, which is more suitable
-# for inspecting uncertainty values. Because we are using a heavily reduced dataset
-# (only 100 structures) from the MAD validation set, the parity plot looks very sparse.
+# the data using a parity plot. The side-by-side panels compare the calibrated LLPR
+# uncertainty (analytical) to the ensemble standard deviation. For more information
+# about interpreting this type of plot, see Appendix F.7 of
+# `Bigi et al., 2024 <https://arxiv.org/abs/2403.02251>`_.
+# Because we are using a heavily reduced dataset (only 100 structures) from the MAD
+# validation set, the parity plots look very sparse.
 
-# Hard-code the zoomed in region of the plot and iso-lines.
 quantile_lines = [0.00916, 0.10256, 0.4309805, 1.71796, 2.5348, 3.44388]
-min_val, max_val = 2.5e-2, 2.5
-
-# Create the parity plot.
-plt.figure(figsize=(4, 4))
-plt.grid()
-plt.gca().set(
-    title="Parity of Uncertainties",
-    ylabel="Errors",
-    xlabel="Uncertainties",
+_all_data = torch.cat(
+    [predicted_uncertainties, predicted_ensemble_std, empirical_errors]
 )
-plt.loglog()
+min_val = float(_all_data[_all_data > 0].min()) * 0.5
+max_val = float(_all_data.max()) * 2.0
 
-# Plot iso lines.
-plt.plot([min_val, max_val], [min_val, max_val], ls="--", c="k")
-for factor in quantile_lines:
-    plt.plot([min_val, max_val], [factor * min_val, factor * max_val], "k:", lw=0.75)
+fig, axes = plt.subplots(1, 2, figsize=(8, 4), sharey=True)
+for ax, uncertainty, title, xlabel in [
+    (axes[0], predicted_uncertainties, "LLPR", "Predicted energy uncertainty / eV"),
+    (axes[1], predicted_ensemble_std, "Ensemble", "Ensemble standard deviation / eV"),
+]:
+    ax.set(xscale="log", yscale="log", title=title, xlabel=xlabel)
+    ax.grid()
+    ax.plot([min_val, max_val], [min_val, max_val], "k--")
+    for factor in quantile_lines:
+        ax.plot([min_val, max_val], [factor * min_val, factor * max_val], "k:", lw=0.75)
+    ax.scatter(uncertainty, empirical_errors, s=10)
 
-# Add actual samples.
-plt.scatter(predicted_uncertainties, empirical_errors)
+axes[0].set_ylabel("Absolute energy error / eV")
+fig.tight_layout()
 
-plt.tight_layout()
+# %%
+# Visualizing uncertainties with chemiscope
+# -----------------------------------------
+# We can use `chemiscope <https://chemiscope.org/docs/>`_ to interactively visualize
+# the structures and their corresponding uncertainties. This allows for an intuitive
+# exploration of which atomic configurations feature larger prediction errors or higher
+# uncertainty.
+#
+# Below, we pass the same uncertainty and error values that are plotted in the double
+# logarithmic plot to the chemiscope viewer. We use explicit logarithm of the values
+# to reflect the double logarithmic scale directly in the viewer.
+
+chemiscope.show(
+    systems,
+    properties={
+        "ln(LLPR uncertainty / eV)": np.log(predicted_uncertainties.detach().numpy()),
+        "ln(Ensemble std / eV)": np.log(predicted_ensemble_std.detach().numpy()),
+        "ln(Empirical error / eV)": np.log(empirical_errors.detach().numpy()),
+    },
+    settings={
+        "map": {
+            "x": {"property": "ln(LLPR uncertainty / eV)"},
+            "y": {"property": "ln(Empirical error / eV)"},
+            "color": {
+                "property": "ln(Ensemble std / eV)",
+                "scheme": "inferno",
+                "log": True,
+            },
+        },
+        "structure": [
+            {"playbackDelay": 50, "unitCell": True, "bonds": True, "spaceFilling": True}
+        ],
+    },
+)
 
 # %%
 # Uncertainties in Vacancy Formation Energies
@@ -269,7 +276,7 @@ N = len(supercell)  # store the number of atoms
 # triggers computing the ensemble values.
 
 # Get ensemble energy before creating the vacancy
-outputs = ["energy", "energy_uncertainty", "energy_ensemble"]
+outputs = ["energy", "energy_ensemble"]
 outputs = {o: ModelOutput() for o in outputs}
 results = calculator.run_model(supercell, outputs)
 bulk = results["energy_ensemble"][0].values
@@ -287,7 +294,7 @@ ecf = FrechetCellFilter(supercell)
 bfgs = BFGS(ecf)  # type: ignore
 bfgs.run()
 
-# get ensembele energy after optimization
+# get ensemble energy after optimization
 results = calculator.run_model(supercell, outputs)
 vacancy = results["energy_ensemble"][0].values
 
@@ -295,39 +302,253 @@ vacancy = results["energy_ensemble"][0].values
 # Compute vacancy formation energy for each ensemble member.
 
 vacancy_formation = vacancy - (N - 1) / N * bulk
+unrelaxed_formation = right_after_vacancy - (N - 1) / N * bulk
 
 # %%
-# Put all ensemble energies in a dataframe and compute the desired statistics.
+# A compact plot helps compare the uncertainty scales of the directly predicted
+# energies and the derived formation energies. We plot them in separate panels because
+# the raw total energies and the formation energies live on very different scales.
 
-# This dataframe contains each stage's energies in a single column.
-named_stages = [
-    ("Before creating vacancy", bulk),
-    ("Right after creating vacancy", right_after_vacancy),
-    ("Energy of optimized vacancy", vacancy),
-    ("Vacancy formation energy", vacancy_formation),
+defect_energy_samples = [
+    ("Bulk energy", bulk.detach().numpy().squeeze()),
+    ("Unrelaxed vacancy energy", right_after_vacancy.detach().numpy().squeeze()),
+    ("Relaxed vacancy energy", vacancy.detach().numpy().squeeze()),
+    ("Unrelaxed VFE", unrelaxed_formation.detach().numpy().squeeze()),
+    ("Relaxed VFE", vacancy_formation.detach().numpy().squeeze()),
 ]
-df = pd.DataFrame.from_dict(
-    {
-        # Convert the PyTorch tensors to flat NumPy vectors
-        k: v.detach().numpy().squeeze()
-        for k, v in named_stages
-    }
+
+for name, values in defect_energy_samples:
+    print(f"{name}: mean = {values.mean():.6f} eV, std = {values.std(ddof=1):.6f} eV")
+
+# %%
+
+fig, axes = plt.subplots(1, 2, figsize=(8, 3.5))
+defect_means = np.array([values.mean() for _, values in defect_energy_samples])
+defect_stds = np.array([values.std(ddof=1) for _, values in defect_energy_samples])
+
+for ax, selection, title in [
+    (axes[0], slice(0, 3), "Total energies"),
+    (axes[1], slice(3, 5), "Formation energies"),
+]:
+    x = np.arange(len(defect_energy_samples[selection]))
+    ax.errorbar(
+        x,
+        defect_means[selection],
+        yerr=defect_stds[selection],
+        fmt="o",
+        capsize=4,
+    )
+    ax.set(
+        xticks=x,
+        xticklabels=[
+            label.replace(" ", "\n") for label, _ in defect_energy_samples[selection]
+        ],
+        title=title,
+    )
+    ax.grid(axis="y")
+
+fig.supylabel("Energy / eV")
+fig.tight_layout()
+
+# %%
+#
+# Uncertainty Propagation with Python-based MD
+# ---------------------------------------------
+#
+# We now propagate ensemble uncertainty to a thermodynamic observable. We run a short
+# NVT simulation on a box of 32 water molecules, evaluate the ensemble energy for each
+# sampled configuration, and reweight each frame for every ensemble member.
+# As an observable we use the O-H `Radial Distribution Function
+# (RDF) <https://en.wikipedia.org/wiki/Radial_distribution_function>`_.
+# Note that computing the RDF uncertainty by linearization or Gaussian error calculus
+# is completely infeasible: the RDF is a highly non-linear functional of the atomic
+# positions, and its sensitivity to the potential parameters cannot be expressed
+# analytically along an MD trajectory.
+#
+# The motivation for reweighting is efficiency: running a separate trajectory
+# for every committee member would be prohibitively expensive. Instead, we run
+# **one** trajectory under the mean potential :math:`\bar{V}` and then correct
+# each frame in post-processing to estimate what the observable would have been
+# under each individual member :math:`V^{(i)}`. The spread across members is then
+# a direct measure of the model's uncertainty on the thermodynamic quantity of interest.
+
+temperature_K = 350.0
+water_md = ase.io.read("data/h2o-32.xyz")
+water_md.set_cell([9.865916, 9.865916, 9.865916])
+water_md.set_pbc(True)
+water_md.calc = calculator
+
+MaxwellBoltzmannDistribution(water_md, temperature_K=temperature_K, rng=np.random)
+Stationary(water_md)
+ZeroRotation(water_md)
+
+integrator = Bussi(
+    water_md,
+    timestep=0.5 * ase.units.fs,
+    temperature_K=temperature_K,
+    taut=10.0 * ase.units.fs,
 )
 
-# Compute statistics (mean, variance, and standard deviation) on the ensemble energies.
-df = pd.DataFrame(dict(mean=df.mean(), var=df.var(), std=df.std()))
-df
+rdf_edges = np.linspace(0.5, 4.5, 250)
+rdf_centers = 0.5 * (rdf_edges[:-1] + rdf_edges[1:])
+shell_volumes = 4.0 * np.pi / 3.0 * (rdf_edges[1:] ** 3 - rdf_edges[:-1] ** 3)
+oxygen_indices = [i for i, atom in enumerate(water_md) if atom.symbol == "O"]
+hydrogen_indices = [i for i, atom in enumerate(water_md) if atom.symbol == "H"]
+hydrogen_density = len(hydrogen_indices) / water_md.get_volume()
+
+
+def oh_distance_distribution(atoms) -> np.ndarray:
+    distances = atoms.get_all_distances(mic=True)
+    distances = distances[np.ix_(oxygen_indices, hydrogen_indices)].ravel()
+    histogram, _ = np.histogram(distances, bins=rdf_edges)
+    return histogram / (len(oxygen_indices) * hydrogen_density * shell_volumes)
+
+
+energies = []
+sampled_structures = []
+
+
+def collect_sample() -> None:
+    sampled_structures.append(water_md.copy())
+    energies.append(water_md.get_potential_energy())
+
+
+integrator.attach(collect_sample, interval=2)
+integrator.run(1000)
+
+# %%
+# After the simulation, we evaluate the ensemble energy for each frame and compute
+# the O-H RDF.
+
+energies = np.asarray(energies)
+ensemble_outputs = {"energy_ensemble": ModelOutput()}
+ensemble_energies = np.array(
+    [
+        calculator.run_model(atoms, ensemble_outputs)["energy_ensemble"][0]
+        .values.detach()
+        .numpy()
+        .squeeze()
+        for atoms in sampled_structures
+    ]
+)
+oh_rdfs = np.array([oh_distance_distribution(atoms) for atoms in sampled_structures])
+
+# %%
+# Direct Thermodynamic Reweighting
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# The key idea is to run a **single** MD trajectory under the mean committee
+# potential :math:`\bar{V}` and then, in post-processing, reweight each sampled
+# frame to obtain averages as if the simulation had been driven by each individual
+# committee member :math:`V^{(i)}`. Taken together with last layer ensembling,
+# this strategy comes with virtually no additional computational cost, as the
+# additional ensemble energy predictions are computed from last layer readouts,
+# whilst the expensive forces for propagating the dynamics only have to be computed
+# once per timestep.
+#
+# For a canonical ensemble at temperature :math:`T = 1/(\beta k_\mathrm{B})`,
+# the reweighted average of an observable :math:`a` under potential
+# :math:`V^{(i)}` is (`Imbalzano et al., 2021 <https://doi.org/10.1063/5.0036522>`_,
+# Eq. 22):
+#
+# .. math::
+#
+#    \langle a \rangle_{V^{(i)}} =
+#       \frac{\langle w^{(i)}\, a \rangle_{\bar{V}}}
+#            {\langle w^{(i)} \rangle_{\bar{V}}},
+#    \qquad
+#    w^{(i)}(\mathbf{x}_t) =
+#       \exp\!\left(
+#          -\beta\bigl[V^{(i)}(\mathbf{x}_t) - \bar{V}(\mathbf{x}_t)\bigr]
+#       \right).
+#
+# This is exact in principle, but its statistical efficiency deteriorates
+# exponentially with the variance of the log-weight
+# :math:`h^{(i)} \equiv \beta(V^{(i)} - \bar{V})`. Because :math:`h^{(i)}`
+# depends on the extensive quantity, the potential energy :math:`V`,
+# :math:`\sigma^2(h^{(i)})` grows **linearly with system size**
+# — so the statistical error of the reweighted
+# estimator grows exponentially with the number of atoms
+# (`Ceriotti et al., 2012 <https://doi.org/10.1098/rspa.2011.0413>`_).
+#
+# The O-H RDF uncertainty here is the standard deviation of
+# :math:`\langle g(r) \rangle_{V^{(i)}}` across committee members.
+
+beta = 1.0 / (ase.units.kB * temperature_K)
+log_weights = -beta * (ensemble_energies - energies[:, None])
+log_weights -= log_weights.max(axis=0, keepdims=True)
+weights = np.exp(log_weights)
+weights /= weights.sum(axis=0, keepdims=True)
+
+reweighted_rdf_by_member = weights.T @ oh_rdfs
+
+reweighted_rdf_mean = reweighted_rdf_by_member.mean(axis=0)
+reweighted_rdf_std = reweighted_rdf_by_member.std(axis=0, ddof=1)
+
+# %%
+
+fig, ax = plt.subplots(figsize=(5, 3.5))
+
+ax.plot(rdf_centers, reweighted_rdf_mean, label="Reweighted ensemble mean", lw=1.5)
+ax.fill_between(
+    rdf_centers,
+    reweighted_rdf_mean - reweighted_rdf_std,
+    reweighted_rdf_mean + reweighted_rdf_std,
+    alpha=0.25,
+    label=r"$\pm 1\sigma$",
+)
+ax.set(
+    xlabel="O-H distance / Å",
+    ylabel="Probability density",
+    title="Ensemble mean and spread",
+    ylim=(0.0, 3.0),
+)
+ax.grid()
+ax.legend(fontsize=11)
+fig.tight_layout()
 
 # %%
 #
-# Uncertainty Propagation with MD
-# -------------------------------
+# Uncertainty Propagation with i-PI
+# ----------------------------------
 #
-# This example shows how to use i-PI to propagate error estimates from an ensemble to
-# output observables. In this example, we use a box with period boundary conditions
-# housing 32 water molecules. As an observable, we inspect the `Radial Distribution
+# The same propagation can be performed with `i-PI
+# <https://ipi-code.org>`_, which supports more advanced MD
+# algorithms and handles the reweighting as a post-processing step. In this
+# example, we use a box with periodic boundary conditions housing 32 water molecules.
+# As an observable, we inspect the `Radial Distribution
 # Function (RDF) <https://en.wikipedia.org/wiki/Radial_distribution_function>`_ between
 # hydrogen-hydrogen and oxygen-oxygen bonds.
+#
+# Cumulant Expansion Approximation (CEA)
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# To sidestep the exponential growth of the statistical error with system size,
+# i-PI uses the **Cumulant Expansion Approximation** (CEA) by default
+# (`Imbalzano et al., 2021 <https://doi.org/10.1063/5.0036522>`_, Eq. 24).
+# It replaces the exponential weight by a first-order (linear) expansion in
+# :math:`h^{(i)} = \beta(V^{(i)} - \bar{V})`:
+#
+# .. math::
+#
+#    \langle a \rangle_{V^{(i)}} \approx
+#       \langle a \rangle_{\bar{V}}
+#       - \beta\Bigl[
+#           \langle a\,(V^{(i)} - \bar{V}) \rangle_{\bar{V}}
+#           -\langle a \rangle_{\bar{V}}\,
+#            \langle V^{(i)} - \bar{V} \rangle_{\bar{V}}
+#         \Bigr].
+#
+# Two key properties make this approximation attractive:
+#
+# 1. **Statistical stability** — the error no longer grows exponentially with
+#    system size, because the variance of the linear correction scales only
+#    linearly with :math:`\sigma^2(h^{(i)})`, not exponentially.
+# 2. **Consistency** — the CEA mean equals the unweighted committee-trajectory
+#    average to first order (Eq. 25 of Imbalzano et al.).
+#
+# The CEA is reliable when the committee members agree closely
+# (:math:`\sigma^2(h^{(i)}) \ll 1`). For **non-linear** observables such as
+# energy fluctuations or heat capacity, the linearisation breaks down and must
+# be used with care (see Kellner & Ceriotti, 2024, §4.5).
 #
 # First, we run a simulation with i-PI generating a trajectory and logging other
 # metrics. The trajectory and committee energies can be used in a subsequent
@@ -336,7 +557,9 @@ df
 #
 # Note also that we set a `uncertainty_threshold` option in the driver. When running
 # from the command line, this will output a warning every time one of the atomic energy
-# is estimated to have an uncertainty above that threshold (in eV/atom).
+# is estimated to have an uncertainty above that threshold (in eV/atom). We have
+# intentionally set it to 100 eV/atom here — a value never reached in practice —
+# to avoid crowding the simulation printout during this tutorial.
 
 # Load configuration and run simulation.
 with open("data/h2o-32.xml") as f:
@@ -352,13 +575,15 @@ sim = InteractiveSimulation(xml_input)
 
 # NB: To get better estimates, set this to a higher number (perhaps 10000) to
 # run the simulation for a longer time.
-sim.run(400)
+sim.run(2000)
 
 # %%
-# Load the trajectories and compute the per-frame RDFs
-# Note that ASE applies a weird normalization to the partial RDFs,
+# Load the trajectories and compute the per-frame RDFs.
+# Note that ASE applies an unusual normalization to the partial RDFs,
 # which require a correction to recover the usual asymptotic
 # behavior at large distances.
+# Because the short tutorial run produces very few frames, we apply a light
+# smoothing kernel to reduce noise before reweighting.
 
 frames: list[Atoms] = ase.io.read("h2o-32.pos_0.extxyz", ":")  # type: ignore
 
@@ -366,7 +591,7 @@ frames: list[Atoms] = ase.io.read("h2o-32.pos_0.extxyz", ":")  # type: ignore
 assert set(frames[0].numbers.tolist()) == set([1, 8])
 
 # Compute the RDF of each frame (for H-H and for O-O)
-num_bins = 250
+num_bins = 90
 rdfs_hh = []
 rdfs_oo = []
 xs = None
@@ -376,7 +601,7 @@ for atoms in frames:
         atoms, 4.5, num_bins, elements=[1, 1]
     )
 
-    # smoothen the RDF a bit (not enough data...)
+    # smooth the RDF a bit (not enough sampling for smooth RDFs)
     bins[2:-2] = (
         bins[:-4] * 0.1
         + bins[1:-3] * 0.2
@@ -423,7 +648,7 @@ for ty in ["h-h", "o-o"]:
         process = subprocess.run(cmd, stdout=out)
 
 # %%
-# Load and display the RDFs after re-weighting. Note that the results might not noisy
+# Load and display the RDFs after re-weighting. Note that the results might be noisy
 # due to the small number of MD steps.
 
 # Load the reweighted RDFs.
@@ -433,11 +658,9 @@ rdfs_oo_reweighted = np.loadtxt("h2o-32_rdfs_o-o_reweighted.txt")
 # Extract columns.
 rdfs_hh_reweighted_mu = rdfs_hh_reweighted[:, 0]
 rdfs_hh_reweighted_err = rdfs_hh_reweighted[:, 1]
-rdfs_hh_reweighted_committees = rdfs_hh_reweighted[:, 2:]
 
 rdfs_oo_reweighted_mu = rdfs_oo_reweighted[:, 0]
 rdfs_oo_reweighted_err = rdfs_oo_reweighted[:, 1]
-rdfs_oo_reweighted_committees = rdfs_oo_reweighted[:, 2:]
 
 # Display results.
 fig, axs = plt.subplots(figsize=(6, 3), sharey=True, ncols=2, constrained_layout=True)
@@ -449,9 +672,148 @@ for title, ax, mus, std, xlim in [
     ax.set(title=title, xlabel="Distance", ylabel=ylabel, xlim=xlim, ylim=(-0.1, 3.7))
     ax.grid()
     ax.plot(xs, mus, label="Mean", lw=0.5)
-    z95 = 1.96
-    rdfs_ci95 = (mus - z95 * std, mus + z95 * std)
-    ax.fill_between(xs, *rdfs_ci95, alpha=0.5, label="CI95")
+    rdfs_std = (mus - std, mus + std)
+    ax.fill_between(xs, *rdfs_std, alpha=0.5, label=r"$\pm 1 \sigma$")
     ax.legend()
 
+
 # %%
+# Comparison to Experiment
+# ------------------------
+# Finally, we plot the simulated, i-PI reweighted O-O RDF against experimental data.
+# This gives the reader a chance to think about what might be missing to converge both
+# distributions entirely on top of each other. The experimental data is taken from
+# Soper (2000) Chemical Physics 258, <https://doi.org/10.1016/S0301-0104(00)00179-8>.
+
+experimental_oo = np.loadtxt("data/OO.csv", delimiter=",")
+
+fig, ax = plt.subplots(figsize=(5, 4))
+ax.set(
+    title="O-O Radial Distribution Function",
+    xlabel="Distance / $\\mathrm{\\AA}$",
+    ylabel="RDF",
+    xlim=(2.0, 4.5),
+    ylim=(-0.1, 3.7),
+)
+ax.grid()
+
+# Plot the ML prediction (mean and std)
+ax.plot(xs, rdfs_oo_reweighted_mu, label="PET-MAD (Mean)", lw=1.5)
+ax.fill_between(
+    xs,
+    rdfs_oo_reweighted_mu - rdfs_oo_reweighted_err,
+    rdfs_oo_reweighted_mu + rdfs_oo_reweighted_err,
+    alpha=0.5,
+    label=r"PET-MAD ($\pm 1 \sigma$)",
+)
+
+# Plot the experimental data
+ax.plot(experimental_oo[:, 0], experimental_oo[:, 1], "k--", label="Experiment", lw=1.5)
+
+ax.legend()
+fig.tight_layout()
+
+# %%
+# Eliminating error sources using properly converged simulations
+# --------------------------------------------------------------
+# This is a good place to discuss potential error sources in the simulation,
+# many of which were introduced by design to keep the example computationally light.
+# In this tutorial, we have a short simulation time, a finite simulation box, the
+# neglect of nuclear quantum effects, and the intrinsic accuracy of the base model.
+#
+# The two most straightforward to address are simulation length and model size.
+# The precomputed results below used **500 ps (1 000 000 steps)** of NVT dynamics
+# for both the PET-MAD XS and S models.
+# The uncertainty bands are the i-PI CEA reweighted ±1σ across the committee.
+#
+# To switch from XS to S yourself, update the model download call:
+#
+# .. code-block:: python
+#
+#    upet.save_upet(model="pet-mad", size="s", version="1.5.0", output=model_path)
+#
+# and the ``model`` key in the ``ffdirect`` parameters block of ``data/h2o-32.xml``:
+#
+# .. code-block:: xml
+#
+#    { template:data/h2o-32.xyz, model:models/pet-mad-s-v1.5.0.pt, ... }
+#
+# On an HPC cluster you might want to run the simulation standalone rather than
+# through the Python scripting API. Because this input uses ``ffdirect``, all
+# force evaluation happens in the same process — no separate driver is needed.
+# Add ``<total_steps>`` inside the ``<motion>`` block of ``data/h2o-32.xml``:
+#
+# .. code-block:: xml
+#
+#    <motion mode='dynamics'>
+#      <total_steps> 1000000 </total_steps>
+#      ...
+#    </motion>
+#
+# then submit with:
+#
+# .. code-block:: bash
+#
+#    i-pi data/h2o-32.xml
+
+# %%
+# We have included the precomputed RDFs for both the XS and S models,
+# which can be loaded and plotted directly.
+# Here, we load precomputed O-O RDFs for PET-MAD XS and S (500 ps trajectories).
+
+bins_xs = np.load("data/MAD_XS_precompute/rdf_bins.npy")
+mean_xs = np.load("data/MAD_XS_precompute/rdf_mean_rdf_o-o.npy")
+rew_std_xs = np.load("data/MAD_XS_precompute/rdf_reweighted_std_o-o.npy")
+
+bins_s = np.load("data/MAD_S_precompute/rdf_bins.npy")
+mean_s = np.load("data/MAD_S_precompute/rdf_mean_rdf_o-o.npy")
+rew_std_s = np.load("data/MAD_S_precompute/rdf_reweighted_std_o-o.npy")
+
+# %%
+fig, ax = plt.subplots(figsize=(6, 4))
+ax.set(xlim=(2.0, 4.5), ylim=(-0.1, 3.7))
+ax.tick_params(labelsize=12)
+ax.grid()
+
+ax.plot(bins_xs, mean_xs, label="PET-MAD XS", lw=1.5, color="C0")
+ax.fill_between(
+    bins_xs,
+    mean_xs - rew_std_xs,
+    mean_xs + rew_std_xs,
+    alpha=0.3,
+    color="C0",
+    label="PET-MAD XS ($\\pm 1\\sigma$)",
+)
+
+ax.plot(bins_s, mean_s, label="PET-MAD S", lw=1.5, color="C1")
+ax.fill_between(
+    bins_s,
+    mean_s - rew_std_s,
+    mean_s + rew_std_s,
+    alpha=0.3,
+    color="C1",
+    label="PET-MAD S ($\\pm 1\\sigma$)",
+)
+
+ax.plot(
+    experimental_oo[:, 0],
+    experimental_oo[:, 1],
+    "k--",
+    lw=1.5,
+    label="Experiment",
+)
+
+ax.set_xlabel("Distance / $\\mathrm{\\AA}$", fontsize=13)
+ax.set_ylabel("RDF", fontsize=13)
+ax.set_title("O-O RDF: model comparison (500 ps)", fontsize=13)
+ax.legend(fontsize=11)
+fig.tight_layout()
+
+# %%
+# We can observe that the computed OO RDF using the S model is in better agreement
+# with the experimental data than the XS model, which is consistent with the improved
+# accuracy of the S model on a reference dataset.
+# The computed uncertainty band of the S model is also slightly narrower than
+# that of the XS model, yet they remain elevated. That suggests that liquid water
+# structures are probably still not perfectly modelled by the S model, and further
+# improvement in confidence may be achieved by finetuning.

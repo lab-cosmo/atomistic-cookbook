@@ -14,20 +14,20 @@
         { template:data/h2o-32.xyz,model:models/pet-mad-xs-v1.5.0.pt,device:cpu,
           non_conservative:False,energy_ensemble:True,
           check_consistency:False,
-          uncertainty_threshold:7.0e-2
+          uncertainty_threshold:100
         }
     </parameters>
   </ffdirect>
   <system>
     <initialize nbeads='1'>
       <file mode='xyz' units="angstrom"> data/h2o-32.xyz </file>
-      <velocities mode='thermal' units='kelvin'> 300 </velocities>
+      <velocities mode='thermal' units='kelvin'> 350 </velocities>
     </initialize>
     <forces>
       <force forcefield='nocons'/>
     </forces>
     <ensemble>
-      <temperature units='kelvin'>300</temperature>
+      <temperature units='kelvin'>350</temperature>
     </ensemble>
     <motion mode='dynamics'>
       <fixcom>True</fixcom>
