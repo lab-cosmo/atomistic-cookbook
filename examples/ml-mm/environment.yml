@@ -27,4 +27,5 @@ dependencies:
     - cmcrameri
     - metatrain
     - metatomic-torch
+    - metatomic-ase
     - atomistic-cookbook-utils >=0.1,<0.2

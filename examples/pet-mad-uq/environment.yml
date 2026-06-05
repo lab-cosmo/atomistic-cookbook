@@ -8,9 +8,10 @@ dependencies:
   - pandas
   - pip:
     - ase>=3.27
-    - upet>=0.2.3
+    - upet>=0.2.4
     - ipi>=3.2.0
     - metatomic-torch
+    - metatomic-ase
     - metatrain
     - vesin>=0.4.2
     - atomistic-cookbook-utils >=0.1,<0.2

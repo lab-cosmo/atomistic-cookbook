@@ -15,4 +15,5 @@ dependencies:
       - keras_core
       - tensorboard
       - torchviz
+      - metatensor-core >=0.1,<0.2
       - mlelec @ git+https://github.com/ceriottm/mlelec.git@tutorial_periodic#egg=mlelec
