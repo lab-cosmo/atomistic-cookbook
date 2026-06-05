@@ -30,6 +30,7 @@ from zipfile import ZipFile
 
 import ase.build
 import ase.io
+from ase.geometry import get_distances
 import chemiscope
 import matplotlib.pyplot as plt
 import numpy as np
@@ -48,11 +49,11 @@ from metatomic.torch.ase_calculator import MetatomicCalculator
 # extract:
 
 download_with_retry(
-    "https://github.com/ppegolo/labcosmo_ictp_school/raw/refs/heads/tmp/data.zip",
-    "data.zip",
+    "https://github.com/ppegolo/labcosmo_ictp_school/raw/refs/heads/tmp/water-ir-spectrum.zip",  # noqa: E501
+    "water-ir-spectrum.zip",
 )
 
-with ZipFile("data.zip", "r") as z:
+with ZipFile("water-ir-spectrum.zip", "r") as z:
     z.extractall(".")
 
 # %%
@@ -93,34 +94,41 @@ with ZipFile("data.zip", "r") as z:
 def compute_pc_dipole(
     atoms: ase.Atoms, q_H: float = 0.417, q_O: float = -0.834
 ) -> np.ndarray:
-    """Total point-charge dipole of a periodic water box (e·Å).
-
-    Each H is unwrapped relative to its nearest O using ASE's minimum-image
-    convention (``mic=True``), which works for any cell shape.
-
-    :param atoms: ASE Atoms object containing a box of water molecules
-    :param q_H: partial charge on H in units of e
-    :param q_O: partial charge on O in units of e
-    :returns: total cell dipole in e·Å, shape (3,)
     """
+    Total point-charge dipole of a periodic water box (e·Å).
+    It assumes that each O is bonded to exactly two H's, and that each water molecule is
+    overall charge-neutral.
+
+    :param atoms: ASE Atoms object containing the water box
+    :param q_H: partial charge on each H atom in units of e
+    :param q_O: partial charge on each O atom in units of e
+    :returns: total cell dipole as a 3D vector in e·Å
+    """
+
+    q_sum = q_O + 2 * q_H
+    assert abs(q_sum) < 1e-6, "Net charge is not zero"
+
     syms = np.array(atoms.get_chemical_symbols())
     i_O = np.where(syms == "O")[0]
     i_H = np.where(syms == "H")[0]
-    o_pos = atoms.positions[i_O]  # (n_mol, 3)
 
-    # Minimum-image displacement vectors between every atom pair, from ASE: entry
-    # [i, j] is the vector from atom i to atom j in the nearest periodic image
-    mic_vectors = atoms.get_all_distances(mic=True, vector=True)
+    # D_vec: shape (n_O, n_H, 3), displacement vectors pointing from O to H
+    # D_len: shape (n_O, n_H), scalar distances
+    D_vec, D_len = get_distances(
+        p1=atoms.positions[i_O], p2=atoms.positions[i_H], cell=atoms.cell, pbc=atoms.pbc
+    )
 
-    # O->H vectors; for each H pick the nearest O (the oxygen it is bonded to)
-    o_to_h = mic_vectors[np.ix_(i_O, i_H)]  # (n_O, n_H, 3)
-    nearest_o = np.argmin(np.linalg.norm(o_to_h, axis=-1), axis=0)  # (n_H,)
+    # For each H (axis 1), find the index of its nearest O (axis 0)
+    nearest_o = np.argmin(D_len, axis=0)  # (n_H,)
 
-    # Rebuild each H next to its bonded O by following that minimum-image bond vector
-    bond_vec = o_to_h[nearest_o, np.arange(len(i_H))]  # (n_H, 3)
-    h_unwrapped = o_pos[nearest_o] + bond_vec
+    # Extract the minimum-image O->H bond vectors
+    bond_vec = D_vec[nearest_o, np.arange(len(i_H))]  # (n_H, 3)
 
-    return q_O * o_pos.sum(axis=0) + q_H * h_unwrapped.sum(axis=0)
+    # If the molecules were not neutral, the expression would be
+    # dipole = (q_O + 2 * q_H) * atoms.positions[i_O].sum(axis=0) +
+    # + q_H * bond_vec.sum(axis=0)
+    # The implified expression for neutral molecules is
+    return q_H * bond_vec.sum(axis=0)
 
 
 # %%
