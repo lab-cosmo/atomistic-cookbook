@@ -131,8 +131,8 @@ plt.show()
 # result of applying a post-processing denoising step to remove the high-frequency
 # noise in the predicted DOS. The denoising procedure is detailed in the
 # `PET-MAD-DOS publication <https://arxiv.org/abs/2508.17418>`_.
-
-results = pet_mad_dos_calculator.calculate(structs)
+with torch.no_grad():
+    results = pet_mad_dos_calculator.calculate(structs)
 
 print(f"The keys in results is: {results.keys()}")
 print(f"The shape of the dos is: {results['dos_raw'].shape}")
