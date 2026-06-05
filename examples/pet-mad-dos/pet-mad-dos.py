@@ -90,23 +90,23 @@ pet_mad_dos_calculator = PETMADDOSCalculator(version="latest", device="cpu")
 #
 
 i_struct = 1  # index of the structure to visualize
-
+energy_grid = np.arange(true_DOS.shape[1])* pet_mad_dos_calculator.energy_interval
 # Plot DOS of the structure
 plt.plot(
-    pet_mad_dos_calculator.target_energy_grid,
+    energy_grid,
     true_DOS[i_struct],
     label="DFT DOS",
     color="red",
 )
 # Plot mask for the structure (multiplied by 10 for better visualization)
 plt.plot(
-    pet_mad_dos_calculator.target_energy_grid,
+    energy_grid,
     true_mask[i_struct] * 10,
     label="Mask x 10",
     linestyle="--",
     color="black",
 )
-plt.xlim(-80, 10)
+plt.xlim(80, 170)
 plt.tick_params(axis="both", which="major", labelsize=14, width=2, length=6)
 plt.xlabel(r"Energy - $\mathrm{E_F}$ [eV]", size=16)
 plt.ylabel(r"DOS [$\mathrm{states}/eV$]", size=16)
@@ -120,32 +120,23 @@ plt.show()
 
 
 # %%
-# Predicting the DOS with PET-MAD-DOS
+# Predicting the DOS and related properties with PET-MAD-DOS
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Although the target has size 4606 as seen in the cells above,
 # in order to accomodate the energy reference agnostic loss function,
 # PET-MAD-DOS predicts on a larger energy grid (of size 4806 for this
-# version of the model). The calculator returns both the grid and the DOS,
-# to avoid ambiguitiy.
+# version of the model). On top of the DOS, the calculator also returns
+# the Fermi level and the bandgap predicted by the model. Additionally, the function 
+# also outputs the denoised_dos, which is the 
+# result of applying a post-processing denoising step to remove the high-frequency 
+# noise in the predicted DOS. The denoising procedure is detailed in the 
+# `PET-MAD-DOS publication <https://arxiv.org/abs/2508.17418>`_. 
 
-energies, pred_DOS = pet_mad_dos_calculator.calculate_dos(structs)
+results = pet_mad_dos_calculator.calculate(structs)
 
-print(f"The shape of pred_DOS is: {pred_DOS.shape}")
-print(f"The shape of energies is: {energies.shape}")
-
-# %%
-# Additionally, the calculate_dos function also includes a ``denoise`` parameter that
-# implements a post-processing denoising step to remove the high-frequency noise in the
-# predicted DOS. The denoising procedure is detailed in the `PET-MAD-DOS publication
-# <https://arxiv.org/abs/2508.17418>`_. By default, the denoising is turned off,
-# but one can set ``denoise=True`` to obtain the denoised predictions.
-#
-
-energies, denoised_pred_DOS = pet_mad_dos_calculator.calculate_dos(
-    structs,
-    denoise=True,
-)
-print(f"The shape of denoised_pred_DOS is: {denoised_pred_DOS.shape}")
+print (f"The keys in results is: {results.keys()}")
+print(f"The shape of the dos is: {results['dos_raw'].shape}")
+print(f"The shape of the denoised dos is: {results['dos_denoised'].shape}")
 
 
 # %%
@@ -155,18 +146,26 @@ print(f"The shape of denoised_pred_DOS is: {denoised_pred_DOS.shape}")
 # to see how they compare.
 #
 
-
+energy_grid = np.arange(
+    results['dos_raw'].shape[1]
+) * pet_mad_dos_calculator.energy_interval
 # Visualize the raw predictions and the denoised predictions on the same plot
 plt.plot(
-    energies,
-    denoised_pred_DOS[i_struct],
+    energy_grid,
+    results['dos_denoised'][i_struct],
     label="Denoised DOS",
     color="blue",
     linestyle="-",
 )
-plt.plot(energies, pred_DOS[i_struct], label="Raw DOS", color="green", linestyle="--")
+plt.plot(
+    energy_grid, 
+    results['dos_raw'][i_struct], 
+    label="Raw DOS", 
+    color="green", 
+    linestyle="--"
+)
 
-plt.xlim(-80, 10)
+plt.xlim(80, 170)
 plt.tick_params(axis="both", which="major", labelsize=14, width=2, length=6)
 plt.xlabel(r"Energy", size=16)
 plt.ylabel(r"DOS [$\mathrm{states}/eV$]", size=16)
@@ -184,24 +183,24 @@ plt.show()
 #
 
 denoised_DOS, aligned_true_DOS, aligned_true_masks = align_dos(
-    denoised_pred_DOS, true_DOS, true_mask
+    results['dos_denoised'], true_DOS, true_mask
 )
 
 # Visualize the predictions and the true DOS on the same plot
 plt.plot(
-    energies, denoised_DOS[i_struct], label="Denoised DOS", color="blue", linestyle="-"
+    energy_grid, denoised_DOS[i_struct], label="Denoised DOS", color="blue", linestyle="-"
 )
 plt.plot(
-    energies, aligned_true_DOS[i_struct], label="DFT DOS", linestyle="--", color="red"
+    energy_grid, aligned_true_DOS[i_struct], label="DFT DOS", linestyle="--", color="red"
 )
 plt.plot(
-    energies,
+    energy_grid,
     aligned_true_masks[i_struct] * 10,
     label="Mask x 10",
     linestyle="-.",
     color="black",
 )
-plt.xlim(-80, 10)
+plt.xlim(80, 170)
 plt.tick_params(axis="both", which="major", labelsize=14, width=2, length=6)
 plt.xlabel(r"Energy [eV]", size=16)
 plt.ylabel(r"DOS [$\mathrm{states}/eV$]", size=16)
@@ -224,7 +223,7 @@ plt.show()
 # the high sensitivity of the bandgap to small errors in the DOS, obtaining the
 # bandgap via a CNN model is more robust than deriving it from the predicted DOS.
 
-pred_bandgap = pet_mad_dos_calculator.calculate_bandgap(structs)
+pred_bandgap = results['bandgap']
 
 true_bandgap = torch.tensor(np.stack([s.info["gap"] for s in structs]))
 
@@ -282,7 +281,7 @@ chemiscope.show(
     },
     parameters={
         "energy": {
-            "values": np.asarray(energies),
+            "values": np.asarray(energy_grid),
             "name": "Energy",
             "units": "eV",
         },
@@ -427,22 +426,25 @@ predicted_DOS, aligned_true_DOS, aligned_true_masks = align_dos(
 
 # Visualize the predictions and the true DOS on the same plot
 i_struct = 0  # index of the structure to visualize
+energy_grid = np.arange(
+    predicted_DOS.shape[1]
+) * pet_mad_dos_calculator.energy_interval
 
-plt.plot(energies, predicted_DOS[i_struct], label="Raw Predicted DOS", color="green")
+plt.plot(energy_grid, predicted_DOS[i_struct], label="Raw Predicted DOS", color="green")
 
 plt.plot(
-    energies, aligned_true_DOS[i_struct], label="DFT DOS", linestyle="--", color="red"
+    energy_grid, aligned_true_DOS[i_struct], label="DFT DOS", linestyle="--", color="red"
 )
 
 plt.plot(
-    energies,
+    energy_grid,
     aligned_true_masks[i_struct] * 100,
     label="Mask x 100",
     linestyle="-.",
     color="black",
 )
 
-plt.xlim(-80, 10)
+plt.xlim(80, 170)
 plt.tick_params(axis="both", which="major", labelsize=14, width=2, length=6)
 plt.xlabel(r"Energy", size=16)
 plt.ylabel(r"DOS [$\mathrm{states}/eV$]", size=16)
