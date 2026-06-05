@@ -18,3 +18,5 @@ structural space.
 - examples/ml-mm/ml-mm
 - examples/thermal-conductivity-bte/thermal-conductivity-bte
 - examples/pet-mad-dos/pet-mad-dos
+- examples/water-md/water-md
+- examples/water-ir-spectrum/water-ir-spectrum
