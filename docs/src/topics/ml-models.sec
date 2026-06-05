@@ -17,6 +17,7 @@ data.
 - examples/pet-finetuning/pet-ft-nc
 - examples/flashmd/flashmd-demo
 - examples/shiftml/shiftml-example
+- examples/shiftml-structure-match/shiftml-structure-match
 - examples/hamiltonian-qm7/hamiltonian-qm7
 - examples/mendeleev/mendeleev
 - examples/pet-relaxation/pet-relaxation
