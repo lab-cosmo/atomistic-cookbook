@@ -114,6 +114,7 @@ This recipy should only serve as a demonstration of the basic workflow.
 # <https://atomistic-cookbook.org/examples/shiftml/shiftml-example.html>`_.
 
 # %%
+from typing import OrderedDict
 import os
 import zipfile
 
@@ -132,11 +133,12 @@ download_with_retry(
     filename,
 )
 
+# Extract the .xyz file containing the reference data
 with zipfile.ZipFile(filename, "r") as zip_ref:
-    for file in ["ShiftML_poly/Cocaine/cocaine_QuantumEspresso.xyz"]:
-        target = os.path.basename(file)
-        with zip_ref.open(file) as source, open(target, "wb") as dest:
-            dest.write(source.read())
+    file = "ShiftML_poly/Cocaine/cocaine_QuantumEspresso.xyz"
+    target = os.path.basename(file)
+    with zip_ref.open(file) as source, open(target, "wb") as dest:
+        dest.write(source.read())
 
 # Load the frames
 frames = read("cocaine_QuantumEspresso.xyz", ":")
@@ -179,21 +181,36 @@ print(
 # :sup:`1`\ H spectrum of cocaine, assigned to its 17 chemically distinct proton sites,
 # is reproduced in the supplementary information of Paruzzo et al.
 #
-# The list below pairs an experimental shift (in ppm) with the corresponding 1-based
-# atom index in the asymmetric unit. Entries like ``"11,12,13"`` denote chemically
-# equivalent protons (e.g. a rotating methyl) whose predicted shieldings should be
-# averaged before being compared with the single observed peak.
+# The dict below pairs an experimental shift (in ppm) with the corresponding 1-based
+# atom index in the asymmetric unit - while there may be multiple molecules per unit
+# cell, the shifts are indexed by unique index within a single molecule. Entries like
+# ``"11,12,13"`` denote chemically equivalent protons (e.g. a rotating methyl) whose
+# predicted shieldings should be averaged before being compared with the single observed
+# peak.
 
-list_atom = [
-    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
-    "11,12,13", "14", "15", "16", "17", "18", "19,20,21",
-]  # fmt: skip
-list_cs_exp = np.array(
-    [3.76, 3.78, 5.63, 3.32, 3.49, 3.06, 2.91, 3.38, 2.56, 2.12,
-     1.04, 8.01, 8.01, 8.01, 8.01, 8.01, 3.78]
-)  # fmt: skip
-N_H_PER_MOL = max(int(s) for entry in list_atom for s in entry.split(","))
-print(f"Comparing {len(list_atom)} assigned 1H environments")
+assigned_experimental_shifts = OrderedDict(
+    {
+        "1": 3.76,
+        "2": 3.78,
+        "3": 5.63,
+        "4": 3.32,
+        "5": 3.49,
+        "6": 3.06,
+        "7": 2.91,
+        "8": 3.38,
+        "9": 2.56,
+        "10": 2.12,
+        "11,12,13": 1.04,
+        "14": 8.01,
+        "15": 8.01,
+        "16": 8.01,
+        "17": 8.01,
+        "18": 8.01,
+        "19,20,21": 3.78,
+    }
+)
+NUM_H_PER_MOLECULE = 21
+print(f"Comparing {len(assigned_experimental_shifts)} assigned 1H environments")
 
 
 # %%
@@ -203,12 +220,14 @@ print(f"Comparing {len(list_atom)} assigned 1H environments")
 # observed NMR peak).
 
 
-def assign_shieldings(per_h_shieldings, list_atom, n_h_per_mol=N_H_PER_MOL):
-    """Pick one cocaine molecule's H shieldings out of the unit cell and
-    average over the symmetry-equivalent groups listed in ``list_atom``."""
-    per_mol = per_h_shieldings.reshape(n_h_per_mol, -1)[:, 0]
+def assign_shieldings(per_h_shieldings, assigned_experimental_shifts):
+    """
+    Pick one cocaine molecule's H shieldings out of the unit cell and average over the
+    symmetry-equivalent groups listed in ``assigned_experimental_shifts``.
+    """
+    per_mol = per_h_shieldings.reshape(NUM_H_PER_MOLECULE, -1)[:, 0]
     out = []
-    for atom_string in list_atom:
+    for atom_string in assigned_experimental_shifts.keys():
         idx = [int(s) - 1 for s in atom_string.split(",")]
         out.append(per_mol[idx].mean())
     return np.array(out)
@@ -232,20 +251,20 @@ def assign_shieldings(per_h_shieldings, list_atom, n_h_per_mol=N_H_PER_MOL):
 
 calculator = ShiftML("ShiftML3")
 
-X_sml = []  # ShiftML3-predicted shieldings
-X_gipaw = []  # GIPAW reference shieldings
+shieldings_sml = []  # ShiftML3-predicted shieldings
+shieldings_gipaw = []  # GIPAW reference shieldings
 
 for frame in frames:
     is_h = frame.get_atomic_numbers() == 1  # mask for H atoms
 
     sml = calculator.get_cs_iso(frame).ravel()[is_h]  # model predictions
-    X_sml.append(assign_shieldings(sml, list_atom))
+    shieldings_sml.append(assign_shieldings(sml, assigned_experimental_shifts))
 
     gipaw = frame.arrays["CS"][is_h]  # GIPAW reference
-    X_gipaw.append(assign_shieldings(gipaw, list_atom))
+    shieldings_gipaw.append(assign_shieldings(gipaw, assigned_experimental_shifts))
 
-X_sml = np.array(X_sml)  # (n_candidates, n_sites)
-X_gipaw = np.array(X_gipaw)
+shieldings_sml = np.array(shieldings_sml)
+shieldings_gipaw = np.array(shieldings_gipaw)
 
 
 # %%
@@ -267,32 +286,52 @@ X_gipaw = np.array(X_gipaw)
 # absolute shifts. Concretely, for each candidate the intercept is set to the value that
 # makes the predicted and experimental shifts coincide on average, :math:`b =
 # \overline{\delta^{\,\mathrm{exp}}} - a\,\overline{\sigma^{\,\mathrm{pred}}}`.
-#
-# (An alternative is to apply a single *global* calibration -- e.g. the values
-# determined by Kellner et al. by regressing predicted ShiftML3 shieldings against
-# experimental shifts on a held-out benchmark of organic crystals. That is preferred
-# when you also care about absolute shift accuracy; for ranking candidates by spectral
-# pattern, the per-structure scheme above gives the same answer with one fewer parameter
-# to argue about.) Note that the regression parameters can be attributed to systematic
-# errors in the DFT functional used to compute shieldings and relax geometries,
-# hence for each pair of NMR-functional and geometry-functional, the optimal calibration
-# parameters need to be determined individually.
 
 
-def calibrated_rmse(X_per_candidate, Y_exp, slope=-1.0):
+def calibrated_rmse(
+    shieldings_per_candidate,
+    experimental_shifts,
+    slope=-1.0,
+    intercept=None,
+):
     """RMSE for each candidate after fitting the intercept that aligns the
     predicted and experimental shift means."""
     rmses = []
-    for X in X_per_candidate:
-        intercept = np.mean(Y_exp) - slope * np.mean(X)
-        Y_pred = slope * X + intercept
-        rmses.append(root_mean_squared_error(Y_pred, Y_exp))
+    for sigmas in shieldings_per_candidate:
+        if intercept is None:
+            intercept = np.mean(experimental_shifts) - slope * np.mean(sigmas)
+        predicted_shifts = slope * sigmas + intercept
+        rmses.append(root_mean_squared_error(predicted_shifts, experimental_shifts))
     return np.array(rmses)
 
 
-# Calibrate the shieldings -> shifts
-rmse_sml = calibrated_rmse(X_sml, list_cs_exp)
-rmse_gipaw = calibrated_rmse(X_gipaw, list_cs_exp)
+# %%
+#
+# An alternative is to apply a single *global* calibration -- e.g. the values determined
+# by Kellner et al. by regressing predicted ShiftML3 shieldings against experimental
+# shifts on a held-out benchmark of organic crystals. That is preferred when you also
+# care about absolute shift accuracy; for ranking candidates by spectral pattern, the
+# per-structure scheme above gives the same answer with one fewer parameter to argue
+# about.
+#
+# Note that the regression parameters can be attributed to systematic errors in the DFT
+# functional used to compute shieldings and relax geometries, hence for each pair of
+# NMR-functional and geometry-functional, the optimal calibration parameters need to be
+# determined individually.
+#
+# In the function above, these global calibration parameters can be passed in the
+# ``slope`` and ``intercept`` arguments, which are then applied to all candidates. We
+# attach them there but leave them at the default values for the rest of this recipe,
+# which performs a per-structure intercept fit with the slope pinned at :math:`-1`.
+
+# Calibrate shieldings -> shifts
+experimental_shifts = np.array(list(assigned_experimental_shifts.values()))
+rmse_sml = calibrated_rmse(
+    shieldings_sml, experimental_shifts, slope=-1.0, intercept=None
+)
+rmse_gipaw = calibrated_rmse(
+    shieldings_gipaw, experimental_shifts, slope=-1.0, intercept=None
+)
 
 # Find the best candidate (lowest RMSE vs experiment)
 best = int(np.argmin(rmse_sml))
@@ -315,57 +354,63 @@ print(
 # solids: candidates with RMSEs in this range are, statistically, indistinguishable from
 # experiment.
 
-candidate_idx = np.arange(len(frames))
-dx = 0.18  # horizontal offset so the two methods sit side-by-side
 
-fig, ax = plt.subplots(figsize=(8.5, 5.2), constrained_layout=True, dpi=120)
+def make_lollipop_plot(frames, rmse_gipaw, rmse_sml):
+    """Plots the lollipop plot comparing the RMSE of the GIPAW and ShiftML3 predictions
+    against experiment for each candidate structure."""
 
-band_lo, band_hi = 0.33 - 0.16, 0.33 + 0.16
-ax.axhspan(
-    band_lo,
-    band_hi,
-    color="0.85",
-    alpha=0.7,
-    zorder=0,
-    label=r"DFT vs experiment noise floor ($0.33 \pm 0.16$ ppm)",
-)
+    candidate_idx = np.arange(len(frames))
+    dx = 0.18
 
-ax.vlines(candidate_idx - dx, 0, rmse_gipaw, color="C0", lw=2.5, alpha=0.85, zorder=2)
-ax.vlines(candidate_idx + dx, 0, rmse_sml, color="C1", lw=2.5, alpha=0.85, zorder=2)
-ax.scatter(
-    candidate_idx - dx,
-    rmse_gipaw,
-    color="C0",
-    label="GIPAW (DFT reference)",
-    s=60,
-    edgecolor="white",
-    lw=0.9,
-    zorder=3,
-)
-ax.scatter(
-    candidate_idx + dx,
-    rmse_sml,
-    color="C1",
-    label="ShiftML3",
-    s=60,
-    edgecolor="white",
-    lw=0.9,
-    zorder=3,
-)
+    fig, ax = plt.subplots(figsize=(8.5, 5.2), constrained_layout=True, dpi=120)
 
-ax.set_xlabel("Candidate structure index", fontsize=13)
-ax.set_ylabel(r"$^1$H shift RMSE / ppm", fontsize=13)
-ax.set_title(
-    "Ranking cocaine polymorph candidates by $^1$H NMR fingerprint", fontsize=14
-)
-ax.tick_params(axis="both", labelsize=12)
-ax.set_xticks(candidate_idx[::2])
-ax.set_xlim(-0.7, len(frames) - 0.3)
-ax.set_ylim(0, max(rmse_sml.max(), rmse_gipaw.max()) * 1.15)
-ax.grid(axis="y", color="0.92", lw=0.6, zorder=0)
-ax.spines[["top", "right"]].set_visible(False)
-ax.legend(loc="upper left", frameon=False, fontsize=12)
+    band_lo, band_hi = 0.33 - 0.16, 0.33 + 0.16
+    ax.axhspan(
+        band_lo,
+        band_hi,
+        color="0.85",
+        alpha=0.7,
+        zorder=0,
+        label=r"DFT vs experiment noise floor ($0.33 \pm 0.16$ ppm)",
+    )
 
+    ax.vlines(
+        candidate_idx - dx, 0, rmse_gipaw, color="C0", lw=2.5, alpha=0.85, zorder=2
+    )
+    ax.vlines(candidate_idx + dx, 0, rmse_sml, color="C1", lw=2.5, alpha=0.85, zorder=2)
+    ax.scatter(
+        candidate_idx - dx,
+        rmse_gipaw,
+        color="C0",
+        label="GIPAW (DFT reference)",
+        s=60,
+        edgecolor="white",
+        lw=0.9,
+        zorder=3,
+    )
+    ax.scatter(
+        candidate_idx + dx,
+        rmse_sml,
+        color="C1",
+        label="ShiftML3",
+        s=60,
+        edgecolor="white",
+        lw=0.9,
+        zorder=3,
+    )
+
+    ax.set_xlabel("Candidate structure index", fontsize=13)
+    ax.set_ylabel(r"$^1$H shift RMSE / ppm", fontsize=13)
+    ax.tick_params(axis="both", labelsize=12)
+    ax.set_xticks(candidate_idx[::2])
+    ax.set_xlim(-0.7, len(frames) - 0.3)
+    ax.set_ylim(0, max(rmse_sml.max(), rmse_gipaw.max()) * 1.15)
+    ax.grid(axis="y", color="0.92", lw=0.6, zorder=0)
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.legend(loc="upper left", frameon=False, fontsize=12)
+
+
+make_lollipop_plot(frames, rmse_gipaw, rmse_sml)
 
 # %%
 # Two things stand out:
@@ -403,23 +448,29 @@ ax.legend(loc="upper left", frameon=False, fontsize=12)
 # Sort frames and the shieldings by the RMSE vs experiment
 sort_order = np.argsort(rmse_sml)
 frames_sorted = [frames[i] for i in sort_order]
-X_sml_sorted = X_sml[sort_order]
-X_gipaw_sorted = X_gipaw[sort_order]
+X_sml_sorted = shieldings_sml[sort_order]
+X_gipaw_sorted = shieldings_gipaw[sort_order]
 
 # Convert shieldings to shifts with the same per-structure calibration as above
 slope = -1.0
 pred_sml = (
     slope * X_sml_sorted
-    + (np.mean(list_cs_exp) - slope * X_sml_sorted.mean(axis=1))[:, None]
+    + (
+        np.mean(list(assigned_experimental_shifts.values()))
+        - slope * X_sml_sorted.mean(axis=1)
+    )[:, None]
 )
 pred_gipaw = (
     slope * X_gipaw_sorted
-    + (np.mean(list_cs_exp) - slope * X_gipaw_sorted.mean(axis=1))[:, None]
+    + (
+        np.mean(list(assigned_experimental_shifts.values()))
+        - slope * X_gipaw_sorted.mean(axis=1)
+    )[:, None]
 )
 
 # Build the atomic environments for viewing
-site_for_h = np.empty(N_H_PER_MOL, dtype=int)
-for site_idx, atom_string in enumerate(list_atom):
+site_for_h = np.empty(NUM_H_PER_MOLECULE, dtype=int)
+for site_idx, atom_string in enumerate(assigned_experimental_shifts.keys()):
     for j in [int(s) - 1 for s in atom_string.split(",")]:
         site_for_h[j] = site_idx
 
@@ -431,7 +482,7 @@ for A, frame in enumerate(frames_sorted):
     for i, atom_type in enumerate(frame.numbers):
         if atom_type == 1:
             environments.append((A, i, 10.0))
-            site = site_for_h[h_counter % N_H_PER_MOL]
+            site = site_for_h[h_counter % NUM_H_PER_MOLECULE]
             gipaw_env.append(pred_gipaw[A, site])
             sml_env.append(pred_sml[A, site])
             h_counter += 1
@@ -492,4 +543,4 @@ chemiscope.show(
 # prediction uncertainties of the ML model (`Engel et al.
 # <https://doi.org/10.1039/C9CP04489B>`_) and metrics that allow for combining NMR
 # measurements of different nuclei in the structure selection process
-# (`Müller et al. <https://doi.org/10.1039/D4FD00114A>`_).
+# (`Mueller et al. <https://doi.org/10.1039/D4FD00114A>`_).
