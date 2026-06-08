@@ -1,0 +1,15 @@
+channels:
+  - metatensor
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+    - ase
+    - upet>=0.2.4
+    - torch-dftd>=0.5,<0.6
+    - chemiscope>=1.0
+    - matplotlib
+    - vesin>=0.4.2
+    - scipy
+    - atomistic-cookbook-utils >=0.1,<0.2
