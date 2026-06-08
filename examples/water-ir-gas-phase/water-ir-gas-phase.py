@@ -493,22 +493,3 @@ ax.set_xlabel(r"Frequency / cm$^{-1}$")
 ax.set_ylabel("IR intensity / arb. units")
 ax.set_title("Classical MD vs harmonic vs experiment")
 ax.legend(loc="upper left")
-
-# %%
-# Things to try
-# -------------
-#
-# This script is meant as a starting point. A few suggested extensions:
-#
-# - **Resolution and statistics**: increase ``N_FRAMES`` (a longer trajectory sharpens
-#   the peaks, since the frequency resolution is :math:`1/T`) and/or average the
-#   spectrum over several independent runs started from different random velocities.
-# - **Temperature**: change ``TEMPERATURE`` and watch the bands broaden and shift as
-#   anharmonicity grows — a direct probe of the shape of the potential.
-# - **Windowing**: replace ``periodogram`` with ``scipy.signal.welch`` (or apply a Hann
-#   window) to trade frequency resolution for smoother, less noisy peaks.
-# - **Quantum nuclear effects**: classical MD lacks zero-point motion; path-integral MD
-#   would shift and broaden the bands toward the experimental fundamentals.
-# - **Point charges vs ML dipole**: recompute the spectrum using fixed TIP3P charges (as
-#   in the liquid recipe) on the *same* trajectory, and see how much of the intensity
-#   pattern is due to the ML dipole's charge flux.
