@@ -113,7 +113,8 @@ upet.save_upet(model="pet-mad", size="xs", version="1.5.0", output=model_path)
 #   keeps the system liquid and accelerates sampling.
 #
 # These runs are intentionally short, so they reproduce quickly, but long enough to
-# show clear structure and stable dynamics.
+# show some structure and stable dynamics. The only precomputed trajectories are for
+# superionic water, which requires shorter time-steps and longer dynamics.
 #
 # Each input reads its starting structure from ``data/`` and is launched with a single
 # command, which we run here:
@@ -207,12 +208,13 @@ ax.legend()
 plt.show()
 
 # %%
-# Both ions show a structured first peak and a clear first minimum (dashed lines, near
-# 3.1 Å for Na⁺ and 3.8 Å for Cl⁻). Counting the water oxygens inside those radii every
-# frame gives a **coordination number**, which we attach to the trajectory and show on
-# the map beside the structure below. It fluctuates around 5-6 for Na⁺ and about 7 for
-# Cl⁻ and never collapses: both shells survive the whole run. Drag the slider to follow
-# structure and curve together, or use the map menu to switch between the two ions.
+# If sampled for longer, g(r) of both ions would show a structured first peak and a
+# clear first minimum (dashed lines, near 3.1 Å for Na⁺ and 3.8 Å for Cl⁻). Counting the
+# water oxygens inside those radii every frame gives a **coordination number**, which we
+# attach to the trajectory and show on the map beside the structure below. It fluctuates
+# around 5-6 for Na⁺ and about 7 for Cl⁻. The default chemiscope visualization shows the
+# Na⁺ coordination as the y-axis, but you can switch to the Cl⁻ one with the dropdown
+# menu.
 
 
 def first_shell_count(
@@ -357,12 +359,11 @@ hb_ww, hb_we = count_hbonds(ethanol_traj)
 time_ps = np.arange(len(ethanol_traj)) * 0.0005 * 10
 
 # %%
-# At every instant there are roughly a dozen water-ethanol hydrogen bonds (⟨n⟩ ≈ 12) and
-# about forty water-water ones (⟨n⟩ ≈ 42), both steady across the run; ethanol-ethanol
-# bonds are negligible at this dilution. That persistent water-ethanol count is the
-# molecular signature of a miscible mixture: ethanol is not sequestered in a pocket but
-# stitched into the water hydrogen-bond network. Both counts are attached to the
-# trajectory below: scrub through it, or switch the map axis between the two curves.
+# At every instant there are roughly a dozen water-ethanol hydrogen bonds and about
+# forty water-water ones. That persistent water-ethanol count is the molecular signature
+# of a miscible mixture: ethanol is not trapped in a pocket but stitched into the water
+# hydrogen-bond network. Both counts are attached to the trajectory below: you can
+# switch the map axis between the two curves.
 
 for frame in ethanol_traj:
     frame.wrap()
@@ -410,7 +411,7 @@ chemiscope.show(
 # The clearest signature of the superionic phase is the **mean-squared
 # displacement** (MSD) of each species. If the phase is truly superionic, the hydrogen
 # MSD should grow linearly in time (Fickian diffusion, exactly as in a liquid) while
-# the oxygen MSD stays small and flat, reflecting atoms that only rattle around fixed
+# the oxygen MSD stays small and flat, meaning that atoms can only rattle around fixed
 # lattice sites.
 #
 # Because the trajectory was dumped with unwrapped coordinates, the MSD is a plain
@@ -445,11 +446,11 @@ ax.legend()
 plt.show()
 
 # %%
-# The two curves behave just as predicted: hydrogen diffuses freely while oxygen
-# stays put. To watch the transition itself, we ramp the temperature from 300 K to 3000
-# K over a single trajectory. The input is the one above with a single change: the
-# thermostat target sweeps from 300 K to 3000 K instead of being held fixed
-# (``fix temp/csvr 300 3000 ...``). Run it with:
+# The two curves behave just as expected: hydrogen diffuses freely while oxygen
+# oscillated around lattice sites. To watch the transition itself, we ramp the
+# temperature from 300 K to 3000 K over a single trajectory. The input is the one above
+# with a single change: the thermostat target sweeps from 300 K to 3000 K instead of
+# being held fixed (``fix temp/csvr 300 3000 ...``). Run it with:
 #
 # .. code-block:: bash
 #
