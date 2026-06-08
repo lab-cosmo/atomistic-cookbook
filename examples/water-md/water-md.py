@@ -17,10 +17,9 @@ different aqueous systems:
 * superionic water, an exotic phase found deep inside the ice-giant planets
 
 For each system we provide the LAMMPS input that drives a short constant-temperature
-simulation through the ``metatomic`` pair style. Running them live would take several
-minutes on a GPU each, so here we analyze pre-computed trajectories; the inputs are
-shown in full, together with the command that runs each one, so the simulations can be
-reproduced or extended.
+simulation through the ``metatomic`` pair style. The first three (water, NaCl,
+ethanol-water) are light enough to run live; the fourth (superionic water) is more
+demanding, so for it we analyze a pre-computed trajectory.
 """
 
 # sphinx_gallery_thumbnail_number = 3
@@ -28,10 +27,11 @@ reproduced or extended.
 # %%
 # Setup
 # -----
-# We start by loading the pre-computed trajectories (``.lammpstrj``) and the per-step
-# thermodynamic outputs (``.out``) for the four systems. The LAMMPS dump format stores
-# the full cell information together with *unwrapped* Cartesian coordinates (``xu yu
-# zu``), which makes part of the analysis below straightforward.
+# We download a small archive with the data we need: the starting structures and the
+# pre-computed trajectory for the superionic system (the first three runs are launched
+# live below). The LAMMPS dump format stores the full cell information together with
+# *unwrapped* Cartesian coordinates (``xu yu zu``), which makes part of the analysis
+# below straightforward.
 
 from zipfile import ZipFile
 import numpy as np
@@ -39,7 +39,8 @@ import matplotlib.pyplot as plt
 import ase.io
 from ase.geometry.rdf import get_rdf
 import chemiscope
-from atomistic_cookbook_utils import download_with_retry
+import upet
+from atomistic_cookbook_utils import download_with_retry, run_command
 
 download_with_retry(
     "https://github.com/ppegolo/labcosmo_ictp_school/raw/refs/heads/tmp/water-md.zip",
@@ -65,15 +66,23 @@ with ZipFile("data.zip", "r") as z:
 # LAMMPS, gromacs, and ASE through a common API. In every LAMMPS input below the
 # potential is loaded with a single line::
 #
-#     pair_style metatomic pet-mad-xs-v1.5.1.pt device cpu
+#     pair_style metatomic pet-mad-xs-v1.5.0.pt device cpu
 #
 # (use ``device cuda`` to run on a GPU instead).
+
+# %%
+# We fetch the model once with ``upet`` and save it to the file the LAMMPS inputs load
+# (``pet-mad-xs-v1.5.0.pt``); every run below picks it up through the ``metatomic`` pair
+# style.
+
+model_path = "pet-mad-xs-v1.5.0.pt"
+upet.save_upet(model="pet-mad", size="xs", version="1.5.0", output=model_path)
 
 # %%
 # Liquid water at 400 K
 # ---------------------
 # We start with a simple case: 64 water molecules in a cubic, periodic box, propagated
-# for 10 ps in the canonical (NVT) ensemble. This is the complete LAMMPS input:
+# in the canonical (NVT) ensemble. This is the complete LAMMPS input:
 #
 # .. literalinclude:: in_water_nvt.lmp
 #    :language: text
@@ -101,18 +110,15 @@ with ZipFile("data.zip", "r") as z:
 # * **Temperature.** We run at 400 K rather than 300 K because the electronic-structure
 #   reference of the MAD dataset (the r2SCAN functional) overstructures liquid water and
 #   raises its melting point by a few tens of kelvin. Working slightly above ambient
-#   keeps the system liquid and accelerates sampling, so that a 10 ps run
-#   already shows clear diffusion.
+#   keeps the system liquid and accelerates sampling.
 #
 # These runs are intentionally short, so they reproduce quickly, but long enough to
 # show clear structure and stable dynamics.
 #
 # Each input reads its starting structure from ``data/`` and is launched with a single
-# command. We do not run it here (the trajectory was precomputed); to reproduce it:
-#
-# .. code-block:: bash
-#
-#    lmp -in in_water_nvt.lmp
+# command, which we run here:
+
+run_command("lmp -in in_water_nvt.lmp", print_output=True)
 
 # %%
 # As a first sanity check we plot the temperature and potential energy along the
@@ -163,10 +169,8 @@ chemiscope.show(
 #
 # .. literalinclude:: in_nacl_nvt.lmp
 #    :language: text
-#
-# .. code-block:: bash
-#
-#    lmp -in in_nacl_nvt.lmp
+
+run_command("lmp -in in_nacl_nvt.lmp", print_output=True)
 
 # %%
 # Does that hold up quantitatively? The standard structural probe of solvation is the
@@ -181,7 +185,7 @@ g_na = []
 r_na = []
 g_cl = []
 r_cl = []
-for frame in nacl_traj[::10]:
+for frame in nacl_traj:
     g_na_, r_na_ = get_rdf(frame, 6.0, 100, elements=["Na", "O"])
     g_cl_, r_cl_ = get_rdf(frame, 6.0, 100, elements=["Cl", "O"])
     g_na.append(g_na_)
@@ -224,14 +228,10 @@ def first_shell_count(
     :return: array of shape (n_frames,) with the average count per ion at each frame
     """
     sym = np.array(traj[0].get_chemical_symbols())
-    # L = traj[0].get_cell()[0, 0]
     i_ion = np.where(sym == ion)[0]
     i_other = np.where(sym == other)[0]
     counts = []
     for frame in traj:
-        # pos = frame.get_positions()
-        # d = pos[i_ion][:, None, :] - pos[i_other][None, :, :]
-        # d -= np.round(d / L) * L  # minimum-image convention
         d = frame.get_all_distances(mic=True)[i_ion, :][:, i_other]
         counts.append((d < cutoff).sum(axis=1).mean())
     return np.array(counts)
@@ -271,10 +271,8 @@ chemiscope.show(
 #
 # .. literalinclude:: in_ethanol_nvt.lmp
 #    :language: text
-#
-# .. code-block:: bash
-#
-#    lmp -in in_ethanol_nvt.lmp
+
+run_command("lmp -in in_ethanol_nvt.lmp", print_output=True)
 
 # %%
 # We claimed that the two species mix and hydrogen-bond to each other; we can count
@@ -290,6 +288,11 @@ def count_hbonds(
     """
     Per-frame counts of (water-water, water-ethanol) hydrogen bonds.
 
+    A hydrogen bond is counted with the usual geometric criterion: a covalent donor O-H
+    pointing at an acceptor oxygen, with the two oxygens closer than ``r_oo`` and the
+    O-H...O angle wider than ``angle``. Each bond is then labelled water-water or
+    water-ethanol from the identity of its two oxygens.
+
     :param traj: trajectory to analyze
     :param r_oo: O-O distance cutoff in Å
     :param angle: O-H...O angle cutoff in degrees
@@ -297,41 +300,55 @@ def count_hbonds(
         water-ethanol H-bonds at each frame
     """
     sym = np.array(traj[0].get_chemical_symbols())
-    L = traj[0].get_cell()[0, 0]
+    L = traj[0].get_cell()[0, 0]  # cubic box edge (minimum-image convention)
     iO = np.where(sym == "O")[0]
     iH = np.where(sym == "H")[0]
     iC = np.where(sym == "C")[0]
-    heavy = np.concatenate([iO, iC])
+    heavy = np.concatenate([iO, iC])  # all heavy atoms, oxygens first then carbons
 
     def mic(a, b):
+        # Minimum-image displacement vectors a[i] -> b[j] for a cubic box. We roll this
+        # by hand because it is far cheaper than ASE's general-cell minimum image for
+        # these small systems (we only need a few atom-pair blocks per frame).
         d = a[:, None, :] - b[None, :, :]
         return d - np.round(d / L) * L
 
-    # ethanol oxygens have a carbon neighbor; topology is fixed, use the first frame
+    # An ethanol oxygen is the one with a carbon neighbour; the bonding topology never
+    # changes, so we flag the ethanol oxygens once, from the first frame (one bool per
+    # atom in ``iO``).
     p0 = traj[0].get_positions()
     eth_O = (np.linalg.norm(mic(p0[iO], p0[iC]), axis=-1) < 1.7).any(axis=1)
-    cos_thr = np.cos(np.radians(angle))
+    cos_thr = np.cos(np.radians(angle))  # angle > thr  <=>  cos(angle) < cos(thr)
 
     ww, we = [], []
     for frame in traj:
         p = frame.get_positions()
-        # donor O-H pairs: each H whose nearest heavy neighbor is an oxygen
+        # Assign each H to its nearest heavy atom; keep it as a donor only if that
+        # neighbour is an oxygen within a covalent O-H bond length (1.3 Å).
         dist_H = np.linalg.norm(mic(p[iH], p[heavy]), axis=-1)
         nn = np.argmin(dist_H, axis=1)
         is_oh = (nn < len(iO)) & (dist_H[np.arange(len(iH)), nn] < 1.3)
-        Hd, Od = iH[is_oh], iO[nn[is_oh]]
+        Hd, Od = iH[is_oh], iO[nn[is_oh]]  # donor hydrogens and their donor oxygens
+
+        # For every (donor H, candidate acceptor O) pair, build the two bond vectors
+        # that meet at the hydrogen, plus the donor-acceptor oxygen distance.
         vHD = p[Od] - p[Hd]
         vHD -= np.round(vHD / L) * L  # H -> donor O
         vHA = -mic(p[Hd], p[iO])  # H -> every candidate acceptor O
         rDA = np.linalg.norm(mic(p[Od], p[iO]), axis=-1)  # donor O .. acceptor O
         nHD = np.linalg.norm(vHD, axis=-1)
         nHA = np.linalg.norm(vHA, axis=-1)
+        # cos of the O-H...O angle at the hydrogen, for every donor/acceptor pair.
         cos = (vHD[:, None, :] * vHA).sum(-1) / (nHD[:, None] * nHA + 1e-9)
+        # Keep pairs that are both close and near-linear. A donor's own oxygen pairs
+        # with itself at cos = 1, so it never passes the angle test.
         hbond = (rDA < r_oo) & (cos < cos_thr)
+
+        # Split the surviving bonds by whether their donor / acceptor oxygen is ethanol.
         donor_eth = eth_O[nn[is_oh]][:, None]
         accpt_eth = eth_O[None, :]
-        ww.append(int((hbond & ~donor_eth & ~accpt_eth).sum()))
-        we.append(int((hbond & (donor_eth ^ accpt_eth)).sum()))
+        ww.append(int((hbond & ~donor_eth & ~accpt_eth).sum()))  # water-water
+        we.append(int((hbond & (donor_eth ^ accpt_eth)).sum()))  # water-ethanol
     return np.array(ww), np.array(we)
 
 
