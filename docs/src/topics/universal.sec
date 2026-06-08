@@ -9,6 +9,7 @@ structural space.
 - examples/pet-mad-nc/pet-mad-nc
 - examples/pet-finetuning/pet-ft
 - examples/pet-mad-uq/pet-mad-uq
+- examples/llpr-from-scratch/llpr-from-scratch
 - examples/flashmd/flashmd-demo
 - examples/eon-pet-neb/eon-pet-neb
 - examples/mendeleev/mendeleev
@@ -18,3 +19,4 @@ structural space.
 - examples/thermal-conductivity-bte/thermal-conductivity-bte
 - examples/pet-mad-dos/pet-mad-dos
 - examples/water-md/water-md
+- examples/water-ir-spectrum/water-ir-spectrum
