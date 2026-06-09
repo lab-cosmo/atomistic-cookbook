@@ -11,6 +11,7 @@ structural space.
 - examples/pet-mad-uq/pet-mad-uq
 - examples/llpr-from-scratch/llpr-from-scratch
 - examples/flashmd/flashmd-demo
+- examples/lammps-flashmd/lammps-flashmd
 - examples/eon-pet-neb/eon-pet-neb
 - examples/mendeleev/mendeleev
 - examples/pet-relaxation/pet-relaxation
