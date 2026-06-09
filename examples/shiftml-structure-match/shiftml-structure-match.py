@@ -4,7 +4,7 @@ NMR-shielding-driven structure determination with ShiftML3
 
 :Authors:
     Joseph W. Abbott `@jwa7 <https://github.com/jwa7>`_;
-    Matthias Kellner `@bananempampe <https://github.com/bananempampe>`_
+    Matthias Kellner `@bananempampe <https://github.com/bananenpampe>`_
 
 This recipe shows how to use a fast machine-learning surrogate for *ab initio*
 NMR chemical-shielding calculations --
