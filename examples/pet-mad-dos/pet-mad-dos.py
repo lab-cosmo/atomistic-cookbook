@@ -335,11 +335,10 @@ GaAs_sample_structures = ase.io.read("GaAs_sample_structures.xyz", ":")
 #
 
 for struct in GaAs_sample_structures:
-    dos_i, mask_i = pet_mad_dos_calculator.dos_from_eigenvalues(
+    dos_i = pet_mad_dos_calculator.dos_from_eigenvalues(
         torch.tensor(struct.info["eigvals"]), torch.tensor(struct.info["kweight"])
     )
     struct.info["DOS"] = dos_i.numpy()
-    struct.info["mask"] = mask_i.numpy()
 
 # Store the processed structures as a new XYZ file for fine-tuning
 # ase.io.write("GaAs_processed_structures.xyz", GaAs_sample_structures)
@@ -368,9 +367,8 @@ for i in ["train", "val", "test"]:
     for struct in GaAs_sample_structures:
         DOS = torch.tensor(struct.info["DOS"])
         mask = torch.tensor(struct.info["mask"])
-        padded_dos, padded_mask = pet_mad_dos_calculator.pad_dos(DOS, mask)
+        padded_dos = pet_mad_dos_calculator.pad_dos(DOS, mask)
         struct.info["trainingDOS"] = padded_dos.numpy()
-        struct.info["trainingmask"] = padded_mask.numpy()
     ase.io.write(f"GaAs_processed_{i}.xyz", GaAs_sample_structures)
 
 
