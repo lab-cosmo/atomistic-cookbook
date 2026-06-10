@@ -7,17 +7,16 @@ architecture:
   training:
     batch_size: 1
     num_epochs: 10
-    learning_rate: 0.01
+    learning_rate: 1e-4
     atomic_baseline:
       mtt::dos: 0.0
     scale_targets: false
     loss:
       mtt::dos:
-        type: masked_dos
+        type: shift_agnostic_mse
         weight: 1.0
         grad_weight: 1e-4
         int_weight: 2
-        extra_targets: 200  # Number of extra zero-padded targets to ignore during loss computation
         reduction: mean
     finetune:
       method: "full"
@@ -32,24 +31,12 @@ training_set:
       per_atom: false
       type: scalar
       num_subtargets: 4806
-  extra_data:
-    mtt::dos_mask:
-      key: trainingmask
-      per_atom: false
-      type: scalar
-      num_subtargets: 4806
 
 validation_set:
   systems: GaAs_processed_val.xyz
   targets:
     mtt::dos:
       key: trainingDOS
-      per_atom: false
-      type: scalar
-      num_subtargets: 4806
-  extra_data:
-    mtt::dos_mask:
-      key: trainingmask
       per_atom: false
       type: scalar
       num_subtargets: 4806
