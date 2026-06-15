@@ -9,5 +9,5 @@ dependencies:
   - pip:
     - upet
     - ase>=3.28
-    - git+https://github.com/metatensor/metatrain.git@new_dos_loss
+    - git+https://github.com/metatensor/metatrain.git@main
     - atomistic-cookbook-utils >=0.1,<0.2
