@@ -6,6 +6,7 @@ dependencies:
   - tqdm
   - matplotlib
   - pandas
+  - chemiscope
   - pip:
     - ase>=3.27
     - upet>=0.2.4
