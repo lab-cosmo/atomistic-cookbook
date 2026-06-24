@@ -459,4 +459,3 @@ plt.ylabel(r"DOS [$\mathrm{states}/eV$]", size=16)
 plt.legend(fontsize=16)
 plt.tight_layout()
 plt.show()
-
