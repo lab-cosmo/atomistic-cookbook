@@ -16,5 +16,6 @@ dependencies:
     - metatomic-ase
     - vesin>=0.5.4
     - vesin-torch>=0.5.4
-    - torch-pme>=0.3.1,<0.5
+    # 0.4+ drops the prefactor kwarg used by this recipe; keep 0.3.x API.
+    - torch-pme>=0.3.1,<0.4
     - atomistic-cookbook-utils >=0.1,<0.2
