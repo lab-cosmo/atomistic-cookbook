@@ -631,6 +631,61 @@ def get_molecular_geometry(
 # functions defined further up in this file, and should be relatively easy to follow.
 
 
+class _P3MCalculatorCompat(torch.nn.Module):
+    """P3M wrapper avoiding Labels.view (removed in metatensor-torch>=0.8)."""
+
+    def __init__(self, base: torch.nn.Module):
+        super().__init__()
+        # Re-use the underlying torchpme calculator state/buffers.
+        self._calculator = base._calculator
+
+    def forward(self, system: System, neighbors: TensorBlock) -> TensorMap:
+        device = system.positions.device
+        charges = system.get_data("charges").block().values
+
+        n_atoms = len(system)
+        samples = torch.zeros((n_atoms, 2), device=device, dtype=torch.int32)
+        samples[:, 0] = 0
+        samples[:, 1] = torch.arange(n_atoms, device=device, dtype=torch.int32)
+
+        # Labels.column is the supported replacement for Labels.view([...]).values
+        neighbor_indices = torch.column_stack(
+            (
+                neighbors.samples.column("first_atom"),
+                neighbors.samples.column("second_atom"),
+            )
+        )
+
+        if device.type == "cpu":
+            neighbor_indices = neighbor_indices.to(
+                torch.int64, memory_format=torch.contiguous_format
+            )
+
+        neighbor_distances = torch.linalg.norm(neighbors.values, dim=1).squeeze(1)
+
+        potential = self._calculator.forward(
+            charges=charges,
+            cell=system.cell,
+            positions=system.positions,
+            neighbor_indices=neighbor_indices,
+            neighbor_distances=neighbor_distances,
+        )
+
+        properties_values = torch.arange(
+            charges.shape[1], device=device, dtype=torch.int32
+        )
+
+        block = TensorBlock(
+            values=potential,
+            samples=Labels(["system", "atom"], samples),
+            components=[],
+            properties=Labels("charges_channel", properties_values.unsqueeze(1)),
+        )
+
+        keys = Labels("_", torch.zeros(1, 1, dtype=torch.int32, device=device))
+        return TensorMap(keys=keys, blocks=[block])
+
+
 class WaterModel(torch.nn.Module):
     def __init__(
         self,
@@ -654,11 +709,14 @@ class WaterModel(torch.nn.Module):
 
         p3m_smearing, p3m_parameters, _ = p3m_options
 
-        self.p3m_calculator = torchpme.metatensor.P3MCalculator(
+        # torch-pme<=0.4 uses Labels.view in TorchScript; metatensor-torch>=0.8 removed
+        # it. Wrap P3M so neighbor indices use Labels.column before model export/LAMMPS.
+        base_p3m = torchpme.metatensor.P3MCalculator(
             potential=torchpme.CoulombPotential(p3m_smearing),
             **p3m_parameters,
             prefactor=torchpme.prefactors.kcalmol_A,  # consistent units
         )
+        self.p3m_calculator = _P3MCalculatorCompat(base_p3m)
 
         self.coulomb = torchpme.CoulombPotential()
 
