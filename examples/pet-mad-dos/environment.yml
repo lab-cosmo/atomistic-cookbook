@@ -3,11 +3,14 @@ channels:
 dependencies:
   - python=3.12
   - pip
+  - git
   - tqdm
   - matplotlib
   - pip:
+    # PyPI 0.2.5 denoise path fails on batched structures (conv1d groups);
+    # main has the groups=1 fix and the calculate()/align_dos surface used below.
+    - git+https://github.com/lab-cosmo/upet.git@main
     - ase>=3.28
-    - upet>=0.2.5
-    - metatrain
+    - git+https://github.com/metatensor/metatrain.git@main
     - chemiscope
     - atomistic-cookbook-utils >=0.1,<0.2
