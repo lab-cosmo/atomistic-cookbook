@@ -9,12 +9,14 @@ dependencies:
     - ase
     - chemiscope>=1.0
     - ipi>=3.2.0
-    - metatensor-torch>=0.8,<0.9
+    # torch-pme TorchScript path still calls Labels.view; keep metatensor-torch in the
+    # 0.7 line that retains that API (0.8+ removes it and breaks lmp model load).
+    - metatensor-torch>=0.7.1,<0.8
     - metatensor-operations
     - matplotlib
     - metatomic-torch
     - metatomic-ase
     - vesin>=0.5.4
     - vesin-torch>=0.5.4
-    - torch-pme>=0.3.1,<0.4
+    - torch-pme>=0.3.1,<0.5
     - atomistic-cookbook-utils >=0.1,<0.2
