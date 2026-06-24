@@ -2,15 +2,17 @@ channels:
   - metatensor
   - conda-forge
 dependencies:
-  - python=3.12
+  # 3.11 keeps metatensor-torch 0.7.x (Labels.view for torch-pme TorchScript) installable
+  # without falling back to legacy numpy sdist builds that fail on 3.12.
+  - python=3.11
   - lammps-metatomic
+  - numpy>=1.26
   - pip
   - pip:
     - ase
     - chemiscope>=1.0
     - ipi>=3.2.0
-    # torch-pme TorchScript path still calls Labels.view; keep metatensor-torch in the
-    # 0.7 line that retains that API (0.8+ removes it and breaks lmp model load).
+    # torch-pme P3M TorchScript still calls Labels.view; 0.8+ removed it.
     - metatensor-torch>=0.7.1,<0.8
     - metatensor-operations
     - matplotlib
