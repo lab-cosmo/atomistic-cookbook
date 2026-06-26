@@ -9,5 +9,5 @@ dependencies:
   - pip:
     - git+https://github.com/lab-cosmo/upet.git@main
     - ase>=3.28
-    - git+https://github.com/metatensor/metatrain.git@main
+    - metatrain>=2026.3
     - atomistic-cookbook-utils >=0.1,<0.2
