@@ -9,18 +9,15 @@ dependencies:
   - pip
   - uv
   - pip:
-    # Align torch with conda eon 2.15 (libtorch 2.9.x). metatrain 2026.3 embeds
-    # ModelOutput calls for metatomic-torch 0.1.15; conda eon still links
-    # libmetatomic-torch <0.1.15 until a rebuild (TheochemUI/eOn#361). Use the
-    # newest stack that keeps eonclient and mtt export on the same ABI.
     - torch>=2.9,<2.10
     - ase>=3.23
     - matplotlib
+    # Keep mtt export on the same metatomic ABI as conda eon 2.15 until
+    # TheochemUI/eOn#361 is released and the feedstock rebuilds against
+    # libmetatomic-torch 0.1.15 (needs libtorch 2.12 on conda-forge).
     - metatrain>=2026.2.1,<2026.3
     - requests
     - metatomic-ase>=0.1.1
-    - metatomic-torch>=0.1.11,<0.1.15
-    - metatensor-torch>=0.8.4,<0.10
     - rgpycrumbs>=1.8.0,<2
     - chemparseplot>=1.8.0,<2
     - atomistic-cookbook-utils >=0.1,<0.2
