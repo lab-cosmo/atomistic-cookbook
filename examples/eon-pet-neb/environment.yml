@@ -3,13 +3,18 @@ channels:
   - conda-forge
   - https://repo.prefix.dev/rg-forge
 dependencies:
+  # eonclient links libmetatomic-torch; 0.1.15 accepts models from metatrain 2026.3
+  # (sample_kind / optional per_atom). That package requires libtorch >=2.12.
   - eon>=2.15.0
+  - libmetatomic-torch>=0.1.15,<0.2
+  - libmetatensor-torch>=0.10.0,<0.11
+  - libmetatensor>=0.2.2,<0.3
+  - libtorch>=2.12,<2.13
   - ira
   - python=3.13
   - pip
   - uv
   - pip:
-    - torch>=2.9,<2.11
     - ase>=3.23
     - matplotlib
     - metatrain>=2026.3,<2027
