@@ -3,25 +3,24 @@ channels:
   - conda-forge
   - https://repo.prefix.dev/rg-forge
 dependencies:
-  # eonclient links libmetatomic-torch; 0.1.15 accepts models from metatrain 2026.3
-  # (sample_kind / optional per_atom). That package requires libtorch >=2.12.
   - eon>=2.15.0
-  - libmetatomic-torch>=0.1.15,<0.2
-  - libmetatensor-torch>=0.10.0,<0.11
-  - libmetatensor>=0.2.2,<0.3
-  - libtorch>=2.12,<2.13
   - ira
   - python=3.13
   - pip
   - uv
   - pip:
+    # Align torch with conda eon 2.15 (libtorch 2.9.x). metatrain 2026.3 embeds
+    # ModelOutput calls for metatomic-torch 0.1.15; conda eon still links
+    # libmetatomic-torch <0.1.15 until a rebuild (TheochemUI/eOn#361). Use the
+    # newest stack that keeps eonclient and mtt export on the same ABI.
+    - torch>=2.9,<2.10
     - ase>=3.23
     - matplotlib
-    - metatrain>=2026.3,<2027
+    - metatrain>=2026.2.1,<2026.3
     - requests
     - metatomic-ase>=0.1.1
-    - metatomic-torch>=0.1.15,<0.2
-    - metatensor-torch>=0.10.0,<0.11
+    - metatomic-torch>=0.1.11,<0.1.15
+    - metatensor-torch>=0.8.4,<0.10
     - rgpycrumbs>=1.8.0,<2
     - chemparseplot>=1.8.0,<2
     - atomistic-cookbook-utils >=0.1,<0.2
