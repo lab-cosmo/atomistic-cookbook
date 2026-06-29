@@ -9,7 +9,7 @@ dependencies:
     - ase
     - chemiscope>=1.0
     - ipi>=3.2.0
-    - metatensor-torch>=0.8,<0.9
+    - metatensor-torch>=0.10,<0.11
     - metatensor-operations
     - matplotlib
     - metatomic-torch
