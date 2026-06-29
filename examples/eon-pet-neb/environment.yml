@@ -3,18 +3,20 @@ channels:
   - conda-forge
   - https://repo.prefix.dev/rg-forge
 dependencies:
-  - eon>=2.12.0
+  - eon>=2.15.0
   - ira
   - python=3.13
   - pip
   - uv
   - pip:
-    - torch>=2.9,<2.10 
+    - torch>=2.9,<2.11
     - ase>=3.23
     - matplotlib
-    - metatrain>=2026.2.1,<2027
+    - metatrain>=2026.3,<2027
     - requests
-    - metatomic-ase
-    - rgpycrumbs>=1.7.0,<2
-    - chemparseplot>=1.7.0,<2
+    - metatomic-ase>=0.1.1
+    - metatomic-torch>=0.1.15,<0.2
+    - metatensor-torch>=0.10.0,<0.11
+    - rgpycrumbs>=1.8.0,<2
+    - chemparseplot>=1.8.0,<2
     - atomistic-cookbook-utils >=0.1,<0.2
