@@ -22,10 +22,11 @@ dependencies:
   - pip
   - uv
   - pip:
-    # Align Python metatomic stack with published metatensor::gromacs-metatomic
-    # (libmetatomic-torch <0.1.12 on the metatensor channel). Raise metatrain
-    # and metatomic-torch after a feedstock rebuild against metatomic-torch
-    # >=0.1.15 (see metatensor/gromacs#13).
+    # INTERIM: align Python with published metatensor::gromacs-metatomic
+    # (libmetatomic-torch <0.1.12). Fixed client: metatensor/gromacs#13
+    # (sample_kind == "atom"); build via HaoZeke/pixi_envs metatomic-cpu
+    # (gromk-mpi / gromk-tmpi) then raise metatrain and metatomic-torch.
+    # See README.rst "GROMACS Metatomic client and stack pins".
     - torch>=2.7,<2.8
     - ase>=3.23
     - cmcrameri
