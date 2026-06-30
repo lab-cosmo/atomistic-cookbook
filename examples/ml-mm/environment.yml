@@ -22,10 +22,14 @@ dependencies:
   - pip
   - uv
   - pip:
+    # Align Python metatomic stack with published metatensor::gromacs-metatomic
+    # (libmetatomic-torch <0.1.12 on the metatensor channel). Raise metatrain
+    # and metatomic-torch after a feedstock rebuild against metatomic-torch
+    # >=0.1.15 (see metatensor/gromacs#13).
     - torch>=2.7,<2.8
     - ase>=3.23
     - cmcrameri
-    - metatrain
-    - metatomic-torch
+    - metatrain>=2026.2.1,<2026.3
+    - metatomic-torch>=0.1.11,<0.1.12
     - metatomic-ase
     - atomistic-cookbook-utils >=0.1,<0.2
