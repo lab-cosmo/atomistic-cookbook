@@ -341,9 +341,8 @@ p3m_prefactor = torchpme.prefactors.kcalmol_A
 # energy between two point charges using the P3M algorithm.
 
 p3m_calculator = torchpme.P3MCalculator(
-    potential=torchpme.CoulombPotential(p3m_smearing),
+    potential=torchpme.CoulombPotential(p3m_smearing, prefactor=p3m_prefactor),
     **p3m_parameters,
-    prefactor=p3m_prefactor,
 )
 
 
@@ -594,7 +593,7 @@ def get_molecular_geometry(
         blocks=[data],
     )
 
-    m_system.add_data(name="charges", tensor=tensor)
+    m_system.add_data(name="charge", tensor=tensor)
 
     # intra-molecular distances with M sites (for self-energy removal)
     hh_dist = torch.sqrt(((doh_1 - doh_2) ** 2).sum(dim=1))
@@ -655,9 +654,10 @@ class WaterModel(torch.nn.Module):
         p3m_smearing, p3m_parameters, _ = p3m_options
 
         self.p3m_calculator = torchpme.metatensor.P3MCalculator(
-            potential=torchpme.CoulombPotential(p3m_smearing),
+            potential=torchpme.CoulombPotential(
+                p3m_smearing, prefactor=torchpme.prefactors.kcalmol_A
+            ),
             **p3m_parameters,
-            prefactor=torchpme.prefactors.kcalmol_A,  # consistent units
         )
 
         self.coulomb = torchpme.CoulombPotential()
@@ -759,7 +759,7 @@ class WaterModel(torch.nn.Module):
         m_neighbors = m_system.get_neighbor_list(self.nlo)
 
         potentials = self.p3m_calculator(m_system, m_neighbors).block(0).values
-        charges = m_system.get_data("charges").block().values
+        charges = m_system.get_data("charge").block().values
         energy_coulomb = (potentials * charges).sum()
 
         # this is the intra-molecular Coulomb interactions, that must be removed
