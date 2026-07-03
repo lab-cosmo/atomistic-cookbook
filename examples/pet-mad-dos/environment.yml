@@ -3,9 +3,11 @@ channels:
 dependencies:
   - python=3.12
   - pip
+  - git
   - tqdm
   - matplotlib
   - pip:
+    - upet>=0.2.6
     - ase>=3.28
-    - upet>=0.2.4
+    - metatrain>=2026.3
     - atomistic-cookbook-utils >=0.1,<0.2
