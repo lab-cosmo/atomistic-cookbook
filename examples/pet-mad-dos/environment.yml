@@ -7,7 +7,7 @@ dependencies:
   - tqdm
   - matplotlib
   - pip:
-    - git+https://github.com/lab-cosmo/upet.git@main
+    - upet>=0.2.6
     - ase>=3.28
     - metatrain>=2026.3
     - atomistic-cookbook-utils >=0.1,<0.2
