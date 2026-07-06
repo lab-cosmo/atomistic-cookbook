@@ -7,7 +7,7 @@ dependencies:
   - pip
   - pip:
     - ase
-    - upet>=0.2.4
+    - upet>=0.2.6
     - ipi>=3.2.0
     - chemiscope>=1.0
     - matplotlib
