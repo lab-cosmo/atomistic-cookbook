@@ -16,8 +16,8 @@ dependencies:
     - metatrain>=2026.2.1,<2026.3
     - requests
     - metatomic-ase
-    # readcon 0.13+ for eOn 2.16 frame metadata; [neb,plot] pulls polars/h5py/etc.
+    # readcon 0.13+ for eOn 2.16 frame metadata; rgpkgs 1.9+ for in-env plot dispatch.
     - "readcon>=0.13.1"
-    - "chemparseplot[neb,plot,xyzrender]==1.8.0"
-    - "rgpycrumbs[analysis]==1.8.0"
+    - "chemparseplot[neb,plot,xyzrender]>=1.9.0,<2"
+    - "rgpycrumbs[analysis]>=1.9.0,<2"
     - atomistic-cookbook-utils >=0.1,<0.2
