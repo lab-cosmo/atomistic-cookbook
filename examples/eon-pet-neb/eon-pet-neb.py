@@ -389,19 +389,48 @@ run_command_or_exit(["eonclient"], capture=True, timeout=300)
 # command-line, here we define a helper.
 
 
+def _strip_common_flags() -> list[str]:
+    """Shared xyzrender structure-strip flags for all gallery figures."""
+    return [
+        "--facecolor",
+        "white",
+        "--fontsize-base",
+        "14",
+        "--plot-structures",
+        "all",
+        "--strip-renderer",
+        "xyzrender",
+        "--strip-dividers",
+        "--xyzrender-config",
+        "paton",
+        "--rotation",
+        "90x,0y,0z",
+        "--show-legend",
+    ]
+
+
 def run_neb_plot(
     mode: str,
     con_file: str = "neb.con",
     output_file: str = "plot.png",
     title: str = "",
-    rotation: str = "90x,0y,0z",
 ) -> None:
     """
-    Constructs the CLI command for rgpycrumbs plotting to avoid clutter in notebooks.
+    Build and run an rgpycrumbs NEB plot.
+
+    Only the **final** band is drawn (no intermediate optimization frames and no
+    MMF overlay), so the gallery does not show jagged early paths. A full
+    structure strip (every image) sits under the axes.
+
     mode: 'profile' (1D) or 'landscape' (2D)
     """
-    # --dev: run plt-neb with this env's interpreter (readcon 0.13 + chemparseplot)
-    # instead of a fresh `uv run` env that can desync Python ABI from site-packages.
+    # Final NEB iteration only. plt-neb applies Python slicing dat_paths[start:end]
+    # (end exclusive), so the last history file uses start=n-1, end=n.
+    history_files = sorted(Path(".").glob("neb_*.dat"))
+    n_hist = len(history_files) if history_files else 1
+    start_idx = max(0, n_hist - 1)
+    end_idx = n_hist
+
     base_cmd = [
         sys.executable,
         "-m",
@@ -413,40 +442,27 @@ def run_neb_plot(
         con_file,
         "--output-file",
         output_file,
-        "--rotation",
-        rotation,
-        "--facecolor",
-        "white",
-        # Wider canvas so a full-path structure strip fits under the axes.
         "--figsize",
         "10",
         "8",
-        "--fontsize-base",
-        "14",
-        "--show-pts",
         "--zoom-ratio",
         "0.35",
-        # Full structure strip for every image on the path (not only R/TS/P).
-        "--plot-structures",
-        "all",
-        "--strip-renderer",
-        "xyzrender",
-        "--strip-dividers",
-        "--xyzrender-config",
-        "paton",
-        "--show-legend",
+        # Suppress jagged early paths / scatter of all optimizer samples.
+        "--no-show-pts",
+        "--no-mmf-peaks",
+        "--highlight-last",
+        "--start",
+        str(start_idx),
+        "--end",
+        str(end_idx),
+        *_strip_common_flags(),
     ]
 
     if title:
         base_cmd.extend(["--title", title])
 
     if mode == "profile":
-        base_cmd.extend(
-            [
-                "--plot-type",
-                "profile",
-            ]
-        )
+        base_cmd.extend(["--plot-type", "profile"])
     elif mode == "landscape":
         base_cmd.extend(
             [
@@ -456,8 +472,9 @@ def run_neb_plot(
                 "path",
                 "--landscape-mode",
                 "surface",
+                # Fit surface from the final path only (smooth valley, not all opts).
                 "--landscape-path",
-                "all",
+                "last",
                 "--surface-type",
                 "grad_imq",
                 "--project-path",
@@ -466,27 +483,66 @@ def run_neb_plot(
     else:
         raise ValueError(f"Unknown plot mode: {mode}")
 
-    # Full-path structure strips (plot-structures=all) need more than a minute.
     run_command_or_exit(base_cmd, capture=False, timeout=180)
+
+
+def run_min_plot(
+    job_dirs: list[Path],
+    labels: list[str],
+    plot_type: str,
+    output_file: str,
+) -> None:
+    """Plot endpoint minimizations (profile / landscape / convergence) with strips."""
+    base_cmd = [
+        sys.executable,
+        "-m",
+        "rgpycrumbs.cli",
+        "--dev",
+        "eon",
+        "plt-min",
+        "--plot-type",
+        plot_type,
+        "-o",
+        output_file,
+        "--surface-type",
+        "grad_imq",
+        "--project-path",
+        # Start/end structures for each minimization trajectory.
+        "--plot-structures",
+        "endpoints",
+        "--strip-renderer",
+        "xyzrender",
+        "--strip-dividers",
+        "--xyzrender-config",
+        "paton",
+        "--rotation",
+        "90x,0y,0z",
+    ]
+    for d, lab in zip(job_dirs, labels, strict=True):
+        base_cmd.extend(["--job-dir", str(d), "--label", lab])
+    run_command_or_exit(base_cmd, capture=False, timeout=180)
+
+
+def show_png(path: str, figsize=(10, 8)) -> None:
+    img = mpimg.imread(path)
+    plt.figure(figsize=figsize)
+    plt.imshow(img)
+    plt.axis("off")
+    plt.tight_layout()
+    plt.show()
 
 
 # %%
 #
-# We check both the standard 1D profile against the path reaction
-# coordinate, or the distance between intermediate images:
+# We plot the **final** NEB band only (not the jagged intermediate optimizer
+# iterations). A structure strip shows every image along that path.
 
 # Prefer Agg for headless/CI; notebooks can still override.
 os.environ.setdefault("MPLBACKEND", "Agg")
 
 # Run the 1D plotting command using the helper
-run_neb_plot("profile", title="NEB Path Optimization", output_file="1D_oxad.png")
-
-# Display the result
-img = mpimg.imread("1D_oxad.png")
-plt.figure(figsize=(8, 8))
-plt.imshow(img)
-plt.axis("off")
-plt.show()
+run_neb_plot("profile", title="NEB Path (final)", output_file="1D_oxad.png")
+show_png("1D_oxad.png")
 
 
 # %%
@@ -494,18 +550,10 @@ plt.show()
 # *progress* along the path and *orthogonal deviation*, computed from
 # permutation-corrected RMSD distances to the reactant and product. The energy
 # surface is interpolated using a gradient-enhanced inverse multiquadric (IMQ)
-# Gaussian process that incorporates both energies and projected tangential
-# forces from the NEB optimization history.
+# Gaussian process on the **final** path only.
 
-# Run the 2D plotting command using the helper
-run_neb_plot("landscape", title="NEB-RMSD Surface", output_file="2D_oxad.png")
-
-# Display the result
-img = mpimg.imread("2D_oxad.png")
-plt.figure(figsize=(8, 8))
-plt.imshow(img)
-plt.axis("off")
-plt.show()
+run_neb_plot("landscape", title="NEB-RMSD Surface (final)", output_file="2D_oxad.png")
+show_png("2D_oxad.png")
 
 # %%
 # Each black dot is a configuration evaluated during NEB optimization [7]. The
@@ -574,6 +622,8 @@ min_settings = {
         "max_move": 0.1,
         "converged_force": 0.01,
     },
+    # Movie frames for plt-min landscape / profile / convergence figures.
+    "Debug": {"write_movies": "true"},
 }
 
 write_eon_config(dir_reactant, min_settings)
@@ -592,6 +642,24 @@ with chdir(dir_reactant):
 
 with chdir(dir_product):
     run_command_or_exit(["eonclient"], capture=True, timeout=300)
+
+
+# %%
+# Minimization figures
+# ^^^^^^^^^^^^^^^^^^^^
+#
+# Overlay reactant and product minimizations: energy profile along the trajectory,
+# a 2D RMSD landscape of the path taken, and optimizer convergence. Structure
+# strips show the start and end geometries (xyzrender).
+
+min_jobs = [dir_reactant, dir_product]
+min_labels = ["reactant", "product"]
+run_min_plot(min_jobs, min_labels, "landscape", "min_2D_oxad.png")
+show_png("min_2D_oxad.png")
+run_min_plot(min_jobs, min_labels, "profile", "min_1D_oxad.png")
+show_png("min_1D_oxad.png")
+run_min_plot(min_jobs, min_labels, "convergence", "min_conv_oxad.png")
+show_png("min_conv_oxad.png")
 
 
 # %%
