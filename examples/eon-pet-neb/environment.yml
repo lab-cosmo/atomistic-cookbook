@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - https://repo.prefix.dev/rg-forge
 dependencies:
-  - eon>=2.15.0
+  - eon>=2.16.0
   - ira
   - python=3.13
   - pip
