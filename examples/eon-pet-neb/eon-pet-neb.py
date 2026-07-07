@@ -417,19 +417,23 @@ def run_neb_plot(
         rotation,
         "--facecolor",
         "white",
+        # Wider canvas so a full-path structure strip fits under the axes.
         "--figsize",
-        "7",
-        "7",
+        "10",
+        "8",
         "--fontsize-base",
-        "16",
+        "14",
         "--show-pts",
         "--zoom-ratio",
-        "0.4",
+        "0.35",
+        # Full structure strip for every image on the path (not only R/TS/P).
         "--plot-structures",
-        "crit_points",
+        "all",
         "--strip-renderer",
         "xyzrender",
         "--strip-dividers",
+        "--xyzrender-config",
+        "paton",
         "--show-legend",
     ]
 
@@ -462,8 +466,8 @@ def run_neb_plot(
     else:
         raise ValueError(f"Unknown plot mode: {mode}")
 
-    # Run the generated command
-    run_command_or_exit(base_cmd, capture=False, timeout=60)
+    # Full-path structure strips (plot-structures=all) need more than a minute.
+    run_command_or_exit(base_cmd, capture=False, timeout=180)
 
 
 # %%
