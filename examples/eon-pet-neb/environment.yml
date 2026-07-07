@@ -3,6 +3,7 @@ channels:
   - conda-forge
   - https://repo.prefix.dev/rg-forge
 dependencies:
+  # eOn 2.16 writes CON via readcon-core (con_spec_version=2 metadata).
   - eon>=2.16.0
   - ira
   - python=3.13
@@ -15,6 +16,8 @@ dependencies:
     - metatrain>=2026.2.1,<2026.3
     - requests
     - metatomic-ase
-    - rgpycrumbs==1.8.0
-    - chemparseplot==1.8.0
+    # readcon 0.13+ for eOn 2.16 frame metadata; [neb,plot] pulls polars/h5py/etc.
+    - "readcon>=0.13.1"
+    - "chemparseplot[neb,plot,xyzrender]==1.8.0"
+    - "rgpycrumbs[analysis]==1.8.0"
     - atomistic-cookbook-utils >=0.1,<0.2

@@ -51,6 +51,7 @@ import ira_mod
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import numpy as np
+import readcon
 from ase.mep import NEB
 from ase.optimize import LBFGS
 from ase.visualize import view
@@ -59,6 +60,20 @@ from metatomic_ase import MetatomicCalculator
 from atomistic_cookbook_utils import run_command
 from rgpycrumbs.eon.helpers import write_eon_config
 from rgpycrumbs.run.jupyter import run_command_or_exit
+
+
+def write_con(path, atoms_or_list):
+    """Write ASE atoms via readcon (con_spec_version=2 metadata path).
+
+    eOn 2.16+ uses readcon-core for all CON I/O. Prefer the same stack when
+    writing endpoints/path images so rgpycrumbs/chemparseplot see a single
+    metadata-native format.
+    """
+    path = Path(path)
+    items = atoms_or_list if isinstance(atoms_or_list, (list, tuple)) else [atoms_or_list]
+    frames = [readcon.ConFrame.from_ase(atoms) for atoms in items]
+    readcon.write_con(str(path), frames)
+    return path
 
 
 # sphinx_gallery_thumbnail_number = 4
@@ -191,9 +206,9 @@ output_dir.mkdir(exist_ok=True)
 output_files = [output_dir / f"{num:02d}.con" for num in range(TOTAL_IMGS)]
 
 for outfile, img in zip(output_files, images, strict=True):
-    aseio.write(outfile, img)
+    write_con(outfile, img)
 
-print(f"Wrote {len(output_files)} IDPP images to '{output_dir}/'.")
+print(f"Wrote {len(output_files)} IDPP images to '{output_dir}/' (readcon).")
 
 summary_file = Path("idppPath.dat")
 summary_file.write_text("\n".join(str(f.resolve()) for f in output_files) + "\n")
@@ -351,8 +366,8 @@ neb_settings = {
 # configuration of the eOn-NEB.
 
 write_eon_config(Path("."), neb_settings)
-aseio.write("reactant.con", reactant)
-aseio.write("product.con", product)
+write_con("reactant.con", reactant)
+write_con("product.con", product)
 
 # %%
 # Run the main C++ client
@@ -385,10 +400,13 @@ def run_neb_plot(
     Constructs the CLI command for rgpycrumbs plotting to avoid clutter in notebooks.
     mode: 'profile' (1D) or 'landscape' (2D)
     """
+    # --dev: run plt-neb with this env's interpreter (readcon 0.13 + chemparseplot)
+    # instead of a fresh `uv run` env that can desync Python ABI from site-packages.
     base_cmd = [
         sys.executable,
         "-m",
         "rgpycrumbs.cli",
+        "--dev",
         "eon",
         "plt-neb",
         "--con-file",
@@ -453,8 +471,8 @@ def run_neb_plot(
 # We check both the standard 1D profile against the path reaction
 # coordinate, or the distance between intermediate images:
 
-# Clean env to prevent backend conflicts in notebooks
-os.environ.pop("MPLBACKEND", None)
+# Prefer Agg for headless/CI; notebooks can still override.
+os.environ.setdefault("MPLBACKEND", "Agg")
 
 # Run the 1D plotting command using the helper
 run_neb_plot("profile", title="NEB Path Optimization", output_file="1D_oxad.png")
@@ -534,12 +552,12 @@ ax2.set_axis_off()
 # Reactant setup
 dir_reactant = Path("min_reactant")
 dir_reactant.mkdir(exist_ok=True)
-aseio.write(dir_reactant / "pos.con", reactant)
+write_con(dir_reactant / "pos.con", reactant)
 
 # Product setup
 dir_product = Path("min_product")
 dir_product.mkdir(exist_ok=True)
-aseio.write(dir_product / "pos.con", product)
+write_con(dir_product / "pos.con", product)
 
 # Shared minimization settings
 min_settings = {
@@ -576,8 +594,9 @@ with chdir(dir_product):
 # Additionally, the relative ordering must be preserved, for which we use
 # IRA [4].
 #
-reactant = aseio.read(dir_reactant / "min.con")
-product = aseio.read(dir_product / "min.con")
+# Prefer readcon so eOn 2.16 min.con metadata (energy, …) is available if needed.
+reactant = readcon.read_con_as_ase(str(dir_reactant / "min.con"))[0]
+product = readcon.read_con_as_ase(str(dir_product / "min.con"))[0]
 
 ira = ira_mod.IRA()
 # Default value
