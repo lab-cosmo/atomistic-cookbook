@@ -396,11 +396,14 @@ def _strip_common_flags() -> list[str]:
         "white",
         "--fontsize-base",
         "14",
+        # Always render every path image (not only R/SP/P).
         "--plot-structures",
         "all",
         "--strip-renderer",
         "xyzrender",
         "--strip-dividers",
+        "--strip-spacing",
+        "2.0",
         "--xyzrender-config",
         "paton",
         "--rotation",
@@ -435,11 +438,11 @@ def run_neb_plot(
         "--output-file",
         output_file,
         "--figsize",
-        "10",
+        "12",
         "8",
         "--zoom-ratio",
         "0.35",
-        # Full history: all optimizer paths / points (not a final-only slice).
+        # Full history: all optimizer paths / points.
         "--show-pts",
         "--highlight-last",
         *_strip_common_flags(),
