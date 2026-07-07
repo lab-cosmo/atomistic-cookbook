@@ -418,19 +418,11 @@ def run_neb_plot(
     """
     Build and run an rgpycrumbs NEB plot.
 
-    Only the **final** band is drawn (no intermediate optimization frames and no
-    MMF overlay), so the gallery does not show jagged early paths. A full
-    structure strip (every image) sits under the axes.
+    Always use the full optimization history and a full structure strip
+    (``--plot-structures all``): every image on the path, not only R/SP/P.
 
     mode: 'profile' (1D) or 'landscape' (2D)
     """
-    # Final NEB iteration only. plt-neb applies Python slicing dat_paths[start:end]
-    # (end exclusive), so the last history file uses start=n-1, end=n.
-    history_files = sorted(Path(".").glob("neb_*.dat"))
-    n_hist = len(history_files) if history_files else 1
-    start_idx = max(0, n_hist - 1)
-    end_idx = n_hist
-
     base_cmd = [
         sys.executable,
         "-m",
@@ -447,14 +439,9 @@ def run_neb_plot(
         "8",
         "--zoom-ratio",
         "0.35",
-        # Suppress jagged early paths / scatter of all optimizer samples.
-        "--no-show-pts",
-        "--no-mmf-peaks",
+        # Full history: all optimizer paths / points (not a final-only slice).
+        "--show-pts",
         "--highlight-last",
-        "--start",
-        str(start_idx),
-        "--end",
-        str(end_idx),
         *_strip_common_flags(),
     ]
 
@@ -472,9 +459,9 @@ def run_neb_plot(
                 "path",
                 "--landscape-mode",
                 "surface",
-                # Fit surface from the final path only (smooth valley, not all opts).
+                # Use all path points for the surface (not last-only).
                 "--landscape-path",
-                "last",
+                "all",
                 "--surface-type",
                 "grad_imq",
                 "--project-path",
@@ -534,14 +521,14 @@ def show_png(path: str, figsize=(10, 8)) -> None:
 
 # %%
 #
-# We plot the **final** NEB band only (not the jagged intermediate optimizer
-# iterations). A structure strip shows every image along that path.
+# NEB figures use the full optimization history and a structure strip for
+# **every** image on the path (``--plot-structures all``).
 
 # Prefer Agg for headless/CI; notebooks can still override.
 os.environ.setdefault("MPLBACKEND", "Agg")
 
 # Run the 1D plotting command using the helper
-run_neb_plot("profile", title="NEB Path (final)", output_file="1D_oxad.png")
+run_neb_plot("profile", title="NEB Path Optimization", output_file="1D_oxad.png")
 show_png("1D_oxad.png")
 
 
@@ -550,11 +537,11 @@ show_png("1D_oxad.png")
 # *progress* along the path and *orthogonal deviation*, computed from
 # permutation-corrected RMSD distances to the reactant and product. The energy
 # surface is interpolated using a gradient-enhanced inverse multiquadric (IMQ)
-# Gaussian process on the **final** path only.
+# Gaussian process that incorporates both energies and projected tangential
+# forces from the full NEB optimization history.
 
-run_neb_plot("landscape", title="NEB-RMSD Surface (final)", output_file="2D_oxad.png")
+run_neb_plot("landscape", title="NEB-RMSD Surface", output_file="2D_oxad.png")
 show_png("2D_oxad.png")
-
 # %%
 # Each black dot is a configuration evaluated during NEB optimization [7]. The
 # horizontal axis measures progress along the converged path; the vertical axis
