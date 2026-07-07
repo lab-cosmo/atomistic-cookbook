@@ -638,19 +638,21 @@ with chdir(dir_product):
 # Minimization figures
 # ^^^^^^^^^^^^^^^^^^^^
 #
-# Overlay reactant and product minimizations: energy profile along the trajectory,
-# a 2D RMSD landscape of the path taken, and optimizer convergence. Structure
-# strips show the start and end geometries (xyzrender).
+# Energy profile and optimizer convergence overlay both endpoints. The 2D
+# landscapes are **separate** for reactant and product (each trajectory has its
+# own RMSD frame). Structure strips show start/end geometries (xyzrender).
 
 min_jobs = [dir_reactant, dir_product]
 min_labels = ["reactant", "product"]
-run_min_plot(min_jobs, min_labels, "landscape", "min_2D_oxad.png")
-show_png("min_2D_oxad.png")
+# One landscape per endpoint — do not overlay on a shared (s, d) frame.
+run_min_plot([dir_reactant], ["reactant"], "landscape", "min_2D_reactant_oxad.png")
+show_png("min_2D_reactant_oxad.png")
+run_min_plot([dir_product], ["product"], "landscape", "min_2D_product_oxad.png")
+show_png("min_2D_product_oxad.png")
 run_min_plot(min_jobs, min_labels, "profile", "min_1D_oxad.png")
 show_png("min_1D_oxad.png")
 run_min_plot(min_jobs, min_labels, "convergence", "min_conv_oxad.png")
 show_png("min_conv_oxad.png")
-
 
 # %%
 # Additionally, the relative ordering must be preserved, for which we use
