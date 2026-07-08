@@ -70,7 +70,9 @@ def write_con(path, atoms_or_list):
     metadata-native format.
     """
     path = Path(path)
-    items = atoms_or_list if isinstance(atoms_or_list, (list, tuple)) else [atoms_or_list]
+    items = (
+        atoms_or_list if isinstance(atoms_or_list, (list, tuple)) else [atoms_or_list]
+    )
     frames = [readcon.ConFrame.from_ase(atoms) for atoms in items]
     readcon.write_con(str(path), frames)
     return path
@@ -473,7 +475,8 @@ def run_neb_plot(
     else:
         raise ValueError(f"Unknown plot mode: {mode}")
 
-    run_command_or_exit(base_cmd, capture=False, timeout=180)
+    # Landscape GP (grad_imq, full history) can exceed 3 min on CI runners.
+    run_command_or_exit(base_cmd, capture=False, timeout=600)
 
 
 def run_min_plot(
@@ -510,7 +513,7 @@ def run_min_plot(
     ]
     for d, lab in zip(job_dirs, labels, strict=True):
         base_cmd.extend(["--job-dir", str(d), "--label", lab])
-    run_command_or_exit(base_cmd, capture=False, timeout=180)
+    run_command_or_exit(base_cmd, capture=False, timeout=600)
 
 
 def show_png(path: str, figsize=(10, 8)) -> None:
@@ -613,7 +616,8 @@ min_settings = {
         "converged_force": 0.01,
     },
     # Movie frames for plt-min landscape / profile / convergence figures.
-    "Debug": {"write_movies": "true"},
+    # write_deprecated_outs keeps legacy .dat sidecars for older tooling.
+    "Debug": {"write_movies": True, "write_deprecated_outs": True},
 }
 
 write_eon_config(dir_reactant, min_settings)
