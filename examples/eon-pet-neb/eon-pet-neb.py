@@ -532,6 +532,9 @@ def show_png(path: str, figsize=(10, 8)) -> None:
 
 # Prefer Agg for headless/CI; notebooks can still override.
 os.environ.setdefault("MPLBACKEND", "Agg")
+# Belt-and-suspenders: analysis extra already hard-deps adjustText/jax, and
+# uv PEP 723 / ensure_import can still cache-install if the host env is lean.
+os.environ.setdefault("RGPYCRUMBS_AUTO_DEPS", "1")
 
 # Run the 1D plotting command using the helper
 run_neb_plot("profile", title="NEB Path Optimization", output_file="1D_oxad.png")
