@@ -19,7 +19,8 @@ dependencies:
     # readcon 0.13+ for eOn 2.16 frame metadata; rgpkgs 1.9+ for in-env plot dispatch.
     - "readcon>=0.13.1"
     - "chemparseplot[neb,plot,xyzrender]>=1.9.7,<2"
-    - "rgpycrumbs[analysis]>=1.9.9,<2"
+    # analysis = readcon/chemparseplot stack; surfaces = jax for grad_imq landscapes.
+    - "rgpycrumbs[analysis,surfaces]>=1.9.9,<2"
     # plt-neb imports adjustText at module load (not always pulled by extras).
     - "adjustText>=1.2"
     - atomistic-cookbook-utils >=0.1,<0.2
