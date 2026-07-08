@@ -16,10 +16,10 @@ dependencies:
     - metatrain>=2026.2.1,<2026.3
     - requests
     - metatomic-ase
-    # readcon 0.13+ for eOn 2.16 frame metadata; rgpkgs 1.9.10+ analysis hard-deps
-    # include adjustText + jax (surfaces). Optional leftovers resolve via uv PEP 723
-    # dispatch or RGPYCRUMBS_AUTO_DEPS=1 — do not re-declare them here.
+    # readcon 0.13+ for eOn 2.16 CON metadata; analysis = light plot stack.
+    # jax / adjustText are NOT host pins: rgpycrumbs CLI resolves them via
+    # uv PEP 723 or ensure_import + AUTO_DEPS (dispatch defaults AUTO_DEPS=1).
     - "readcon>=0.13.1"
     - "chemparseplot[neb,plot,xyzrender]>=1.9.7,<2"
-    - "rgpycrumbs[analysis]>=1.9.10,<2"
+    - "rgpycrumbs[analysis]>=1.9.11,<2"
     - atomistic-cookbook-utils >=0.1,<0.2
