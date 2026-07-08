@@ -20,4 +20,6 @@ dependencies:
     - "readcon>=0.13.1"
     - "chemparseplot[neb,plot,xyzrender]>=1.9.7,<2"
     - "rgpycrumbs[analysis]>=1.9.9,<2"
+    # plt-neb imports adjustText at module load (not always pulled by extras).
+    - "adjustText>=1.2"
     - atomistic-cookbook-utils >=0.1,<0.2
