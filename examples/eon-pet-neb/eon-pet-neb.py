@@ -428,11 +428,12 @@ def run_neb_plot(
 
     mode: 'profile' (1D) or 'landscape' (2D)
     """
+    # No --dev: let the CLI use uv PEP 723 for plot deps (jax, adjustText,
+    # chemparseplot, …). Host env only needs bare rgpycrumbs + readcon.
     base_cmd = [
         sys.executable,
         "-m",
         "rgpycrumbs.cli",
-        "--dev",
         "eon",
         "plt-neb",
         "--con-file",
@@ -490,7 +491,6 @@ def run_min_plot(
         sys.executable,
         "-m",
         "rgpycrumbs.cli",
-        "--dev",
         "eon",
         "plt-min",
         "--plot-type",
@@ -532,8 +532,9 @@ def show_png(path: str, figsize=(10, 8)) -> None:
 
 # Prefer Agg for headless/CI; notebooks can still override.
 os.environ.setdefault("MPLBACKEND", "Agg")
-# CLI dispatch defaults RGPYCRUMBS_AUTO_DEPS=1 for in-env ensure_import of
-# jax/adjustText; no host pin of those packages is required.
+# Prefer uv PEP 723 isolation for plot scripts so host need not carry
+# chemparseplot/jax/adjustText (avoids partial in-env stack).
+os.environ.setdefault("RGPYCRUMBS_FORCE_UV", "1")
 
 # Run the 1D plotting command using the helper
 run_neb_plot("profile", title="NEB Path Optimization", output_file="1D_oxad.png")
