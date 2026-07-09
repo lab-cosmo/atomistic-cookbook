@@ -1,0 +1,11 @@
+channels:
+  - metatensor
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+    - metatrain==2026.2
+    - chemiscope==1.0.3
+    - matplotlib
+    - atomistic-cookbook-utils >=0.1,<0.2
