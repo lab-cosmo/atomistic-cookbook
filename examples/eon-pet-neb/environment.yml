@@ -13,7 +13,9 @@ dependencies:
     - torch>=2.9,<2.10
     - ase>=3.23
     - matplotlib
-    - metatrain>=2026.2.1,<2026.3
+    # eOn 2.16 is built against libmetatomic-torch >=0.1.15; metatrain
+    # 2026.3.1 is the first release that requires the same floor.
+    - metatrain>=2026.3.1
     - requests
     - metatomic-ase
     # Notebook CON I/O only. Plot deps (chemparseplot, jax, adjustText, …)
