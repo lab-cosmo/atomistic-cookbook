@@ -51,6 +51,7 @@ import ira_mod
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import numpy as np
+import readcon
 from ase.mep import NEB
 from ase.optimize import LBFGS
 from ase.visualize import view
@@ -59,6 +60,22 @@ from metatomic_ase import MetatomicCalculator
 from atomistic_cookbook_utils import run_command
 from rgpycrumbs.eon.helpers import write_eon_config
 from rgpycrumbs.run.jupyter import run_command_or_exit
+
+
+def write_con(path, atoms_or_list):
+    """Write ASE atoms via readcon (con_spec_version=2 metadata path).
+
+    eOn 2.16+ uses readcon-core for all CON I/O. Prefer the same stack when
+    writing endpoints/path images so rgpycrumbs/chemparseplot see a single
+    metadata-native format.
+    """
+    path = Path(path)
+    items = (
+        atoms_or_list if isinstance(atoms_or_list, (list, tuple)) else [atoms_or_list]
+    )
+    frames = [readcon.ConFrame.from_ase(atoms) for atoms in items]
+    readcon.write_con(str(path), frames)
+    return path
 
 
 # sphinx_gallery_thumbnail_number = 4
@@ -191,9 +208,9 @@ output_dir.mkdir(exist_ok=True)
 output_files = [output_dir / f"{num:02d}.con" for num in range(TOTAL_IMGS)]
 
 for outfile, img in zip(output_files, images, strict=True):
-    aseio.write(outfile, img)
+    write_con(outfile, img)
 
-print(f"Wrote {len(output_files)} IDPP images to '{output_dir}/'.")
+print(f"Wrote {len(output_files)} IDPP images to '{output_dir}/' (readcon).")
 
 summary_file = Path("idppPath.dat")
 summary_file.write_text("\n".join(str(f.resolve()) for f in output_files) + "\n")
@@ -351,8 +368,8 @@ neb_settings = {
 # configuration of the eOn-NEB.
 
 write_eon_config(Path("."), neb_settings)
-aseio.write("reactant.con", reactant)
-aseio.write("product.con", product)
+write_con("reactant.con", reactant)
+write_con("product.con", product)
 
 # %%
 # Run the main C++ client
@@ -374,17 +391,47 @@ run_command_or_exit(["eonclient"], capture=True, timeout=300)
 # command-line, here we define a helper.
 
 
+def _strip_common_flags() -> list[str]:
+    """Shared xyzrender structure-strip flags for all gallery figures."""
+    return [
+        "--facecolor",
+        "white",
+        "--fontsize-base",
+        "14",
+        # Always render every path image (not only R/SP/P).
+        "--plot-structures",
+        "all",
+        "--strip-renderer",
+        "xyzrender",
+        "--strip-dividers",
+        "--strip-spacing",
+        "2.0",
+        "--xyzrender-config",
+        "paton",
+        "--rotation",
+        "90x,0y,0z",
+        "--show-legend",
+    ]
+
+
 def run_neb_plot(
     mode: str,
     con_file: str = "neb.con",
     output_file: str = "plot.png",
     title: str = "",
-    rotation: str = "90x,0y,0z",
 ) -> None:
     """
-    Constructs the CLI command for rgpycrumbs plotting to avoid clutter in notebooks.
+    Build and run an rgpycrumbs NEB plot.
+
+    Always use the full optimization history and a full structure strip
+    (``--plot-structures all``): every image on the path, not only R/SP/P.
+
     mode: 'profile' (1D) or 'landscape' (2D)
     """
+    # Target: in-process chemparseplot/rgpycrumbs library API when the full
+    # plot pipeline is exposed as stable functions. Today: CLI + uv PEP 723
+    # for plot deps (jax, adjustText,
+    # chemparseplot, …). Host env only needs bare rgpycrumbs + readcon.
     base_cmd = [
         sys.executable,
         "-m",
@@ -395,36 +442,22 @@ def run_neb_plot(
         con_file,
         "--output-file",
         output_file,
-        "--rotation",
-        rotation,
-        "--facecolor",
-        "white",
         "--figsize",
-        "7",
-        "7",
-        "--fontsize-base",
-        "16",
-        "--show-pts",
+        "12",
+        "8",
         "--zoom-ratio",
-        "0.4",
-        "--plot-structures",
-        "crit_points",
-        "--strip-renderer",
-        "xyzrender",
-        "--strip-dividers",
-        "--show-legend",
+        "0.35",
+        # Full history: all optimizer paths / points.
+        "--show-pts",
+        "--highlight-last",
+        *_strip_common_flags(),
     ]
 
     if title:
         base_cmd.extend(["--title", title])
 
     if mode == "profile":
-        base_cmd.extend(
-            [
-                "--plot-type",
-                "profile",
-            ]
-        )
+        base_cmd.extend(["--plot-type", "profile"])
     elif mode == "landscape":
         base_cmd.extend(
             [
@@ -434,6 +467,7 @@ def run_neb_plot(
                 "path",
                 "--landscape-mode",
                 "surface",
+                # Use all path points for the surface (not last-only).
                 "--landscape-path",
                 "all",
                 "--surface-type",
@@ -444,27 +478,70 @@ def run_neb_plot(
     else:
         raise ValueError(f"Unknown plot mode: {mode}")
 
-    # Run the generated command
-    run_command_or_exit(base_cmd, capture=False, timeout=60)
+    # Landscape GP (grad_imq, full history) can exceed 3 min on CI runners.
+    run_command_or_exit(base_cmd, capture=False, timeout=600)
+
+
+def run_min_plot(
+    job_dirs: list[Path],
+    labels: list[str],
+    plot_type: str,
+    output_file: str,
+) -> None:
+    """Plot endpoint minimizations (profile / landscape / convergence) with strips."""
+    base_cmd = [
+        sys.executable,
+        "-m",
+        "rgpycrumbs.cli",
+        "eon",
+        "plt-min",
+        "--plot-type",
+        plot_type,
+        "-o",
+        output_file,
+        "--surface-type",
+        "grad_imq",
+        "--project-path",
+        # Start/end structures for each minimization trajectory.
+        "--plot-structures",
+        "endpoints",
+        "--strip-renderer",
+        "xyzrender",
+        "--strip-dividers",
+        "--xyzrender-config",
+        "paton",
+        "--rotation",
+        "90x,0y,0z",
+    ]
+    for d, lab in zip(job_dirs, labels, strict=True):
+        base_cmd.extend(["--job-dir", str(d), "--label", lab])
+    run_command_or_exit(base_cmd, capture=False, timeout=600)
+
+
+def show_png(path: str, figsize=(10, 8)) -> None:
+    img = mpimg.imread(path)
+    plt.figure(figsize=figsize)
+    plt.imshow(img)
+    plt.axis("off")
+    plt.tight_layout()
+    plt.show()
 
 
 # %%
 #
-# We check both the standard 1D profile against the path reaction
-# coordinate, or the distance between intermediate images:
+# NEB figures use the full optimization history and a structure strip for
+# **every** image on the path (``--plot-structures all``).
 
-# Clean env to prevent backend conflicts in notebooks
-os.environ.pop("MPLBACKEND", None)
+# Prefer Agg for headless/CI; notebooks can still override.
+os.environ.setdefault("MPLBACKEND", "Agg")
+# Prefer uv PEP 723 isolation for plot scripts so host need not carry
+# chemparseplot/jax/adjustText (avoids partial in-env stack).
+os.environ.setdefault("RGPKGS_FORCE_UV", "1")
+os.environ.setdefault("RGPYCRUMBS_FORCE_UV", "1")  # legacy alias
 
 # Run the 1D plotting command using the helper
 run_neb_plot("profile", title="NEB Path Optimization", output_file="1D_oxad.png")
-
-# Display the result
-img = mpimg.imread("1D_oxad.png")
-plt.figure(figsize=(8, 8))
-plt.imshow(img)
-plt.axis("off")
-plt.show()
+show_png("1D_oxad.png")
 
 
 # %%
@@ -473,18 +550,10 @@ plt.show()
 # permutation-corrected RMSD distances to the reactant and product. The energy
 # surface is interpolated using a gradient-enhanced inverse multiquadric (IMQ)
 # Gaussian process that incorporates both energies and projected tangential
-# forces from the NEB optimization history.
+# forces from the full NEB optimization history.
 
-# Run the 2D plotting command using the helper
 run_neb_plot("landscape", title="NEB-RMSD Surface", output_file="2D_oxad.png")
-
-# Display the result
-img = mpimg.imread("2D_oxad.png")
-plt.figure(figsize=(8, 8))
-plt.imshow(img)
-plt.axis("off")
-plt.show()
-
+show_png("2D_oxad.png")
 # %%
 # Each black dot is a configuration evaluated during NEB optimization [7]. The
 # horizontal axis measures progress along the converged path; the vertical axis
@@ -534,12 +603,12 @@ ax2.set_axis_off()
 # Reactant setup
 dir_reactant = Path("min_reactant")
 dir_reactant.mkdir(exist_ok=True)
-aseio.write(dir_reactant / "pos.con", reactant)
+write_con(dir_reactant / "pos.con", reactant)
 
 # Product setup
 dir_product = Path("min_product")
 dir_product.mkdir(exist_ok=True)
-aseio.write(dir_product / "pos.con", product)
+write_con(dir_product / "pos.con", product)
 
 # Shared minimization settings
 min_settings = {
@@ -552,6 +621,9 @@ min_settings = {
         "max_move": 0.1,
         "converged_force": 0.01,
     },
+    # Movie frames for plt-min landscape / profile / convergence figures.
+    # write_deprecated_outs keeps legacy .dat sidecars for older tooling.
+    "Debug": {"write_movies": True, "write_deprecated_outs": True},
 }
 
 write_eon_config(dir_reactant, min_settings)
@@ -573,11 +645,32 @@ with chdir(dir_product):
 
 
 # %%
+# Minimization figures
+# ^^^^^^^^^^^^^^^^^^^^
+#
+# Energy profile and optimizer convergence overlay both endpoints. The 2D
+# landscapes are **separate** for reactant and product (each trajectory has its
+# own RMSD frame). Structure strips show start/end geometries (xyzrender).
+
+min_jobs = [dir_reactant, dir_product]
+min_labels = ["reactant", "product"]
+# One landscape per endpoint — do not overlay on a shared (s, d) frame.
+run_min_plot([dir_reactant], ["reactant"], "landscape", "min_2D_reactant_oxad.png")
+show_png("min_2D_reactant_oxad.png")
+run_min_plot([dir_product], ["product"], "landscape", "min_2D_product_oxad.png")
+show_png("min_2D_product_oxad.png")
+run_min_plot(min_jobs, min_labels, "profile", "min_1D_oxad.png")
+show_png("min_1D_oxad.png")
+run_min_plot(min_jobs, min_labels, "convergence", "min_conv_oxad.png")
+show_png("min_conv_oxad.png")
+
+# %%
 # Additionally, the relative ordering must be preserved, for which we use
 # IRA [4].
 #
-reactant = aseio.read(dir_reactant / "min.con")
-product = aseio.read(dir_product / "min.con")
+# Prefer readcon so eOn 2.16 min.con metadata (energy, …) is available if needed.
+reactant = readcon.read_con_as_ase(str(dir_reactant / "min.con"))[0]
+product = readcon.read_con_as_ase(str(dir_product / "min.con"))[0]
 
 ira = ira_mod.IRA()
 # Default value
