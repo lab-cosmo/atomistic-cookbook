@@ -12,6 +12,7 @@ efficient domain decomposition scheme. Learn more about LAMMPS on its `homepage
 - examples/heat-capacity/heat-capacity
 - examples/water-model/water-model
 - examples/pet-mad/pet-mad
+- examples/lammps-flashmd/lammps-flashmd
 - examples/metatomic-plumed/metatomic-plumed
 - examples/water-md/water-md
 - examples/water-ir-spectrum/water-ir-spectrum
