@@ -11,5 +11,6 @@ for post-processing, diagnostics or visualization purposes.
 - examples/water-pulsed/water-pulsed
 - examples/pet-phonons/pet-phonons
 - examples/thermal-conductivity-bte/thermal-conductivity-bte
+- examples/kaldo-phonons-uq/kaldo-phonons-uq
 - examples/shiftml-structure-match/shiftml-structure-match
 - examples/water-ir-spectrum/water-ir-spectrum
