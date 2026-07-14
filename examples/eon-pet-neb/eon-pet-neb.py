@@ -482,6 +482,56 @@ def run_neb_plot(
     run_command_or_exit(base_cmd, capture=False, timeout=600)
 
 
+def thin_min_movie(
+    job_dir: Path,
+    *,
+    max_frames: int = 64,
+    prefix: str = "minimization",
+) -> int:
+    """Thin a dense eOn minimization movie before landscape surface fits.
+
+    ``write_movies`` records every force evaluation, so long LBFGS paths can
+    exceed ~150 frames and make gradient surface fits numerically unstable.
+    This keeps the first and last frames plus evenly spaced intermediates
+    (``max_frames`` default 64).
+
+    Returns the number of frames after thinning (or the original count if no
+    thinning was needed).
+    """
+    job_dir = Path(job_dir)
+    movie = None
+    for candidate in (job_dir / prefix, job_dir / f"{prefix}.con"):
+        if candidate.exists():
+            movie = candidate
+            break
+    if movie is None:
+        return 0
+
+    frames = list(readcon.read_con(str(movie)))
+    n = len(frames)
+    if n <= max_frames:
+        return n
+
+    # Inclusive endpoints via linspace; unique keeps order and first/last.
+    idx = np.unique(np.linspace(0, n - 1, num=max_frames, dtype=int))
+    if idx[-1] != n - 1:
+        idx = np.unique(np.append(idx, n - 1))
+    thinned = [frames[i] for i in idx]
+    readcon.write_con(str(movie), thinned)
+
+    dat_path = job_dir / f"{prefix}.dat"
+    if dat_path.exists():
+        lines = dat_path.read_text().splitlines()
+        if lines:
+            header, rows = lines[0], lines[1:]
+            if len(rows) == n:
+                kept = [rows[i] for i in idx]
+                dat_path.write_text(header + "\n" + "\n".join(kept) + "\n")
+
+    print(f"Thinned {movie.name} in {job_dir}: {n} -> {len(thinned)} frames")
+    return len(thinned)
+
+
 def run_min_plot(
     job_dirs: list[Path],
     labels: list[str],
@@ -643,6 +693,11 @@ with chdir(dir_reactant):
 with chdir(dir_product):
     run_command_or_exit(["eonclient"], capture=True, timeout=300)
 
+# Thin dense force-eval movies (every LBFGS potential call) so gradient-enhanced
+# surface fits for the 2D landscapes below remain well-conditioned.
+for _min_dir in (dir_reactant, dir_product):
+    thin_min_movie(_min_dir, max_frames=64)
+
 
 # %%
 # Minimization figures
@@ -651,6 +706,7 @@ with chdir(dir_product):
 # Energy profile and optimizer convergence overlay both endpoints. The 2D
 # landscapes are **separate** for reactant and product (each trajectory has its
 # own RMSD frame). Structure strips show start/end geometries (xyzrender).
+# Trajectories were thinned above before these plots.
 
 min_jobs = [dir_reactant, dir_product]
 min_labels = ["reactant", "product"]
