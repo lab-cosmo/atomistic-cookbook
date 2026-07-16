@@ -21,6 +21,7 @@ import ipi
 import matplotlib.pyplot as plt
 import numpy as np
 import upet
+from atomistic_cookbook_utils import run_command
 from huggingface_hub import hf_hub_download
 
 
@@ -457,8 +458,7 @@ print(
     ]
 )
 
-ipi_process = subprocess.Popen(["i-pi", "data/input_pet_piglet.xml"])
-ipi_process.wait()
+run_command("i-pi data/input_pet_piglet.xml")
 
 # %%
 # Even this very short trajectory shows the fast equilibration of the
