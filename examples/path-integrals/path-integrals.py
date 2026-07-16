@@ -11,6 +11,7 @@ as the driver to simulate the `q-TIP4P/f water
 model <http://doi.org/10.1063/1.3167790>`_.
 """
 
+import os
 import subprocess
 import time
 
@@ -428,9 +429,9 @@ ase.io.write("water_lioh.xyz", atoms)
 # example on CPU. The ``upet`` package provides a utility to fetch the model
 # and save it as a torchscript file.
 
-upet.save_upet(
-    model="pet-mad", size="xs", version="1.5.0", output="pet-mad-xs-v1.5.0.pt"
-)
+model_path = "pet-mad-xs-v1.5.0.pt"
+if not os.path.exists(model_path):
+    upet.save_upet(model="pet-mad", size="xs", version="1.5.0", output=model_path)
 
 # %%
 # ``i-PI`` can evaluate the model directly, through the ``metatomic`` interface:
