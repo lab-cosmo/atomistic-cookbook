@@ -11,7 +11,7 @@ dependencies:
   - pip:
     # pyeonclient 0.3 abi3 wheel + rgpot multi-ABI metatomic engines (torch 2.7+).
     - "pyeonclient>=0.3.1"
-    - "rgpot>=2.4.1"
+    - "rgpot>=2.4.2"
     - torch>=2.9,<2.14
     - ase>=3.23
     - matplotlib

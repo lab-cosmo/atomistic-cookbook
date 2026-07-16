@@ -43,6 +43,7 @@ statements are at the top of the file.
 
 import os
 import sys
+from contextlib import chdir
 from pathlib import Path
 
 import ase.io as aseio
@@ -79,17 +80,40 @@ def write_con(path, atoms_or_list):
     return path
 
 
-def run_eon_workdir(workdir=None) -> list[str]:
-    """Run eOn client job via pip pyeonclient (no eonclient binary / conda eOn).
-
-    Uses RGPOT + rgpot multi-ABI ``libmetatomic_engine.so`` for Metatomic models.
-    """
-    if workdir is None:
-        workdir = Path(".")
+def _ensure_rgpot_engine() -> str | None:
+    """Point RGPOT at the pip ``rgpot`` multi-ABI engine matching installed torch."""
     eng = rgpot.default_metatomic_engine_path()
     if eng:
         os.environ.setdefault("RGPOT_METATOMIC_ENGINE", eng)
-    return pc.run_job_in_directory(workdir)
+    return eng
+
+
+def run_eon_job_steps(workdir: Path) -> list[str]:
+    """ClientEON **stepper** pipeline (same stages as the eonclient main loop).
+
+    Compose bound steps explicitly — not a subprocess and not a single black-box
+    entry point::
+
+        load_parameters → steady_clock_now → run_job (make_job + Job.run)
+          → write_potcall_summary → append_timing
+
+    For minimization workdirs, prefer :func:`pyeonclient.minimize_workdir`
+    (Matter.con2matter → relax → matter2con → results → potcalls → timing).
+    """
+    workdir = Path(workdir)
+    _ensure_rgpot_engine()
+    with chdir(workdir):
+        params = pc.load_parameters("config.ini")
+        eng = os.environ.get("RGPOT_METATOMIC_ENGINE")
+        if eng and hasattr(params, "rgpot_engine_path"):
+            params.rgpot_engine_path = eng
+        t0 = pc.steady_clock_now()
+        files = pc.run_job(params)  # make_job + Job.run + drop Job
+        pc.write_potcall_summary("_potcalls.json")
+        if "_potcalls.json" not in files:
+            files.append("_potcalls.json")
+        pc.append_timing("results.dat", t0)
+        return files
 
 
 # sphinx_gallery_thumbnail_number = 4
@@ -332,10 +356,10 @@ plt.show()
 #    iteratively switching to the dimer method for
 #    faster convergence by the climbing image.
 #
-# To use eOn, we write a ``config.ini`` and run the **pip** client
-# (``pyeonclient``) — no conda-forge ``eon`` package and no ``eonclient`` binary.
-# Forces for Metatomic models go through RGPOT + ``rgpot`` multi-ABI engines
-# (same PEF path as a fat eOn Metatomic build for this recipe; see parity notes).
+# To use eOn, we write a ``config.ini`` and drive the **pip** client
+# (``pyeonclient``) through its **stepper** API — the same ClientEON stages as
+# the ``eonclient`` main loop, composed in Python (no binary, no conda eOn).
+# Forces for Metatomic models go through RGPOT + ``rgpot`` multi-ABI engines.
 
 # Define configuration as a dictionary for clarity
 neb_settings = {
@@ -389,11 +413,12 @@ write_con("reactant.con", reactant)
 write_con("product.con", product)
 
 # %%
-# Run the eOn client (pyeonclient)
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# Run NEB via pyeonclient steppers
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# In-process NEB via pip ``pyeonclient`` + ``rgpot`` engines (no ``eonclient``).
-run_eon_workdir(Path("."))
+# Compose ClientEON steps in Python (load → run_job → potcalls → timing).
+# No ``eonclient`` binary and no conda-forge eOn package.
+run_eon_job_steps(Path("."))
 
 
 # %%
@@ -709,9 +734,12 @@ write_eon_config(dir_product, min_settings)
 # Run the minimization
 # ^^^^^^^^^^^^^^^^^^^^
 #
-# Minimizations via the same pyeonclient workdir helper.
-run_eon_workdir(dir_reactant)
-run_eon_workdir(dir_product)
+# Minimizations via Matter **steppers** (``minimize_workdir``):
+# load_parameters → make_potential → Matter → con2matter → relax →
+# matter2con → results.dat → potcalls → timing.
+_ensure_rgpot_engine()
+pc.minimize_workdir(dir_reactant)
+pc.minimize_workdir(dir_product)
 
 # Thin dense force-eval movies (every LBFGS potential call) so gradient-enhanced
 # surface fits for the 2D landscapes below remain well-conditioned.
