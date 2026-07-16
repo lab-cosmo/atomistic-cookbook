@@ -11,3 +11,4 @@ statistical sampling to compute accurate statistical and dynamical properties.
 - examples/heat-capacity/heat-capacity
 - examples/pi-mts-rpc/mts-rpc
 - examples/ring-polymer-instanton/rpi-rates
+- examples/bosons-fermions-pimd/bosons-fermions-pimd

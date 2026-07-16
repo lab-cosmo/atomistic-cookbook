@@ -1,0 +1,65 @@
+<simulation threading='False' verbosity='low'>
+
+    <!-- Three FERMIONS in a 3D harmonic trap.
+         The particles are propagated as BOSONS (all three in <bosons>), and the
+         fermionic statistics are recovered by REWEIGHTING with the fermionic
+         sign, which i-PI 3.x records natively as the 'fermionic_sign' property.
+         In the analysis, multiply each estimator by the sign and divide by the
+         average sign  ->  <A>_F = <A * s> / <s>.
+         A higher temperature (30 K) and fewer beads (12) are used because the
+         average sign shrinks at low T (the fermionic "sign problem"). -->
+
+    <ffsocket mode='unix' name='driver'>
+            <address>bf-3fermions</address>
+    </ffsocket>
+
+    <total_steps> 3000 </total_steps>
+
+    <output prefix="data">
+      <trajectory stride="100" filename="pos" cell_units="angstrom">positions{angstrom}</trajectory>
+      <properties stride="1"> [ step, time{femtosecond}, conserved, temperature{kelvin},
+            kinetic_td, potential, virial_fq, fermionic_sign ] </properties>
+    </output>
+
+    <prng>
+      <seed> 18885 </seed>
+    </prng>
+
+    <system>
+
+      <forces>
+          <force forcefield="driver"></force>
+      </forces>
+
+      <initialize nbeads="12">
+        <positions mode="manual" bead="0"> [-55, -81, -49, -83, -93, -38, 5, 22, -99] </positions>
+        <masses mode="manual"> ['1.0', '1.0', '1.0'] </masses>
+        <labels mode="manual"> ['E', 'E', 'E'] </labels>
+        <cell>
+         [ 2500, 0, 0, 0, 2500, 0, 0, 0, 2500 ]
+        </cell>
+        <velocities mode='thermal' units='kelvin'> 30.0 </velocities>
+      </initialize>
+
+      <normal_modes propagator='bab'>
+          <nmts> 10 </nmts>
+          <bosons> [0, 1, 2] </bosons>
+      </normal_modes>
+
+      <ensemble>
+         <temperature units="kelvin"> 30.0 </temperature>
+      </ensemble>
+
+      <motion mode="dynamics">
+        <fixcom> False </fixcom>
+        <dynamics mode="nvt">
+         <timestep units="femtosecond"> 10 </timestep>
+          <thermostat mode='pile_l'>
+                <tau units='femtosecond'>100</tau>
+          </thermostat>
+        </dynamics>
+      </motion>
+
+    </system>
+
+</simulation>

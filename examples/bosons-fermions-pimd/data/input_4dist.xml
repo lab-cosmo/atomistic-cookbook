@@ -1,0 +1,62 @@
+<simulation threading='False' verbosity='low'>
+
+    <!-- Four DISTINGUISHABLE particles in a 3D harmonic trap.
+         Baseline for the four-particle statistics comparison (a larger system
+         than the three-particle sweep, so exchange effects are bigger and the
+         distinguishable / mixture / boson energies separate clearly).
+         <bosons> is empty  ->  ordinary (distinguishable) PIMD. -->
+
+    <ffsocket mode='unix' name='driver'>
+            <address>bf-4dist</address>
+    </ffsocket>
+
+    <total_steps> 1000 </total_steps>
+
+    <output prefix="data">
+      <trajectory stride="100" filename="pos" cell_units="angstrom">positions{angstrom}</trajectory>
+      <properties stride="1"> [ step, time{femtosecond}, conserved, temperature{kelvin},
+            kinetic_cv, kinetic_td, potential, virial_fq ] </properties>
+    </output>
+
+    <prng>
+      <seed> 18885 </seed>
+    </prng>
+
+    <system>
+
+      <forces>
+          <force forcefield="driver"></force>
+      </forces>
+
+      <initialize nbeads="32">
+        <positions mode="manual" bead="0"> [-55, -81, -49, -83, -93, -38, 5, 22, -99, 30, -60, 15] </positions>
+        <masses mode="manual"> ['1.0', '1.0', '1.0', '1.0'] </masses>
+        <labels mode="manual"> ['E', 'E', 'E', 'E'] </labels>
+        <cell>
+         [ 2500, 0, 0, 0, 2500, 0, 0, 0, 2500 ]
+        </cell>
+        <velocities mode='thermal' units='kelvin'> 17.4 </velocities>
+      </initialize>
+
+      <normal_modes propagator='bab'>
+          <nmts> 10 </nmts>
+          <bosons> [] </bosons>
+      </normal_modes>
+
+      <ensemble>
+         <temperature units="kelvin"> 17.4 </temperature>
+      </ensemble>
+
+      <motion mode="dynamics">
+        <fixcom> False </fixcom>
+        <dynamics mode="nvt">
+         <timestep units="femtosecond"> 10 </timestep>
+          <thermostat mode='pile_l'>
+                <tau units='femtosecond'>100</tau>
+          </thermostat>
+        </dynamics>
+      </motion>
+
+    </system>
+
+</simulation>
