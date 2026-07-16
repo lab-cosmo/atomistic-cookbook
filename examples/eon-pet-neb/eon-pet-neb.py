@@ -51,25 +51,24 @@ import ira_mod
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import numpy as np
+import pyeonclient as pc
 import readcon
+import rgpot
 from ase.mep import NEB
 from ase.optimize import LBFGS
 from ase.visualize import view
 from ase.visualize.plot import plot_atoms
-from metatomic_ase import MetatomicCalculator
 from atomistic_cookbook_utils import run_command
-from rgpycrumbs.eon.helpers import write_eon_config
+from metatomic_ase import MetatomicCalculator
 from rgpycrumbs.run.jupyter import run_command_or_exit
-import pyeonclient as pc
-import rgpot
 
 
 def write_con(path, atoms_or_list):
-    """Write ASE atoms via readcon (con_spec_version=2 metadata path).
+    """Optional plot/export helper: ASE → ``.con`` via readcon.
 
-    eOn 2.16+ uses readcon-core for all CON I/O. Prefer the same stack when
-    writing endpoints/path images so rgpycrumbs/chemparseplot see a single
-    metadata-native format.
+    Not part of the eOn compute path. Live work uses :class:`pyeonclient.Matter`
+    objects; this only dumps frames for tools that still read files (e.g.
+    ``rgpycrumbs`` structure strips).
     """
     path = Path(path)
     items = (
@@ -80,40 +79,56 @@ def write_con(path, atoms_or_list):
     return path
 
 
-def _ensure_rgpot_engine() -> str | None:
-    """Point RGPOT at the pip ``rgpot`` multi-ABI engine matching installed torch."""
+def make_rgpot_params(model_path: Path) -> pc.Parameters:
+    """In-memory Parameters for RGPOT + multi-ABI ``libmetatomic_engine``.
+
+    No ``config.ini``. Fields are set as attributes on a live Parameters object.
+    """
+    params = pc.Parameters()
+    params.potential = pc.PotType.RGPOT
+    params.rgpot_backend = "metatomic"
+    model = str(Path(model_path).resolve())
+    params.rgpot_model_path = model
+    params.metatomic_model_path = model
     eng = rgpot.default_metatomic_engine_path()
     if eng:
+        params.rgpot_engine_path = eng
         os.environ.setdefault("RGPOT_METATOMIC_ENGINE", eng)
-    return eng
+    return params
 
 
-def run_eon_job_steps(workdir: Path) -> list[str]:
-    """ClientEON **stepper** pipeline (same stages as the eonclient main loop).
+def ase_path_to_matter(
+    images: list, pot: pc.Potential, params: pc.Parameters
+) -> list[pc.Matter]:
+    """ASE ``Atoms`` list → ``list[Matter]`` (the NEB band data model)."""
+    return [pc.ase_to_matter(img, pot, params) for img in images]
 
-    Compose bound steps explicitly — not a subprocess and not a single black-box
-    entry point::
 
-        load_parameters → steady_clock_now → run_job (make_job + Job.run)
-          → write_potcall_summary → append_timing
+def matter_path_to_ase(path: list[pc.Matter]) -> list:
+    """``list[Matter]`` → ASE ``Atoms`` list."""
+    return [pc.matter_to_ase(m) for m in path]
 
-    For minimization workdirs, prefer :func:`pyeonclient.minimize_workdir`
-    (Matter.con2matter → relax → matter2con → results → potcalls → timing).
-    """
-    workdir = Path(workdir)
-    _ensure_rgpot_engine()
-    with chdir(workdir):
-        params = pc.load_parameters("config.ini")
-        eng = os.environ.get("RGPOT_METATOMIC_ENGINE")
-        if eng and hasattr(params, "rgpot_engine_path"):
-            params.rgpot_engine_path = eng
-        t0 = pc.steady_clock_now()
-        files = pc.run_job(params)  # make_job + Job.run + drop Job
-        pc.write_potcall_summary("_potcalls.json")
-        if "_potcalls.json" not in files:
-            files.append("_potcalls.json")
-        pc.append_timing("results.dat", t0)
-        return files
+
+def relax_matter(
+    atoms,
+    pot: pc.Potential,
+    params: pc.Parameters,
+    *,
+    write_movie: bool = False,
+    movie_prefix: str = "minimization",
+) -> tuple[pc.Matter, bool]:
+    """ASE → Matter → :meth:`Matter.relax` → live Matter (no workdir)."""
+    matter = pc.ase_to_matter(atoms, pot, params)
+    ok = bool(
+        matter.relax(
+            quiet=bool(params.quiet),
+            write_movie=write_movie,
+            checkpoint=bool(params.checkpoint),
+            prefix_movie=movie_prefix,
+            prefix_checkpoint="pos",
+        )
+    )
+    return matter, ok
 
 
 # sphinx_gallery_thumbnail_number = 4
@@ -237,8 +252,9 @@ neb.interpolate("idpp")
 # intermediate images may cause kinks but too few will be unable to resolve the
 # tangent to any reasonable quality.
 #
-# For eOn, we write the initial path to a file called ``idppPath.dat``.
-#
+# The IDPP path stays in memory as the ASE list ``images``. Optional ``.con``
+# dumps below are only for inspection / external tools — eOn will take
+# ``list[Matter]`` built from these ASE frames, not a path file.
 
 output_dir = Path("path")
 output_dir.mkdir(exist_ok=True)
@@ -248,10 +264,7 @@ output_files = [output_dir / f"{num:02d}.con" for num in range(TOTAL_IMGS)]
 for outfile, img in zip(output_files, images, strict=True):
     write_con(outfile, img)
 
-print(f"Wrote {len(output_files)} IDPP images to '{output_dir}/' (readcon).")
-
-summary_file = Path("idppPath.dat")
-summary_file.write_text("\n".join(str(f.resolve()) for f in output_files) + "\n")
+print(f"Exported {len(output_files)} IDPP images to '{output_dir}/' (optional).")
 
 print(f"Wrote absolute paths to '{summary_file}'.")
 
@@ -356,69 +369,71 @@ plt.show()
 #    iteratively switching to the dimer method for
 #    faster convergence by the climbing image.
 #
-# To use eOn, we write a ``config.ini`` and drive the **pip** client
-# (``pyeonclient``) through its **stepper** API — the same ClientEON stages as
-# the ``eonclient`` main loop, composed in Python (no binary, no conda eOn).
+# With **pyeonclient** the client is an in-memory Matter API — not a workdir
+# and not ``config.ini`` / ``eonclient``::
+#
+#     ASE images → list[Matter] → NudgedElasticBand(path, params, pot)
+#       → neb.compute() → path_images() : list[Matter]
+#
 # Forces for Metatomic models go through RGPOT + ``rgpot`` multi-ABI engines.
 
-# Define configuration as a dictionary for clarity
-neb_settings = {
-    "Main": {"job": "nudged_elastic_band", "random_seed": 706253457},
-    "Potential": {"potential": "RGPOT"},
-    "RgpotPot": {
-        "backend": "metatomic",
-        "model_path": str(fname.absolute()),
-    },
-    "Metatomic": {"model_path": str(fname.absolute())},
-    "Nudged Elastic Band": {
-        "images": N_INTERMEDIATE_IMGS,
-        # initialization
-        "initializer": "file",
-        "initial_path_in": "idppPath.dat",
-        "minimize_endpoints": "false",
-        # CI-NEB settings
-        "climbing_image_method": "true",
-        "climbing_image_converged_only": "true",
-        "ci_after": 0.5,
-        "ci_after_rel": 0.8,
-        # energy weighing
-        "energy_weighted": "true",
-        "ew_ksp_min": 0.972,
-        "ew_ksp_max": 9.72,
-        # OCI-NEB settings
-        "ci_mmf": "true",
-        "ci_mmf_after": 0.1,
-        "ci_mmf_after_rel": 0.5,
-        "ci_mmf_penalty_strength": 1.5,
-        "ci_mmf_penalty_base": 0.4,
-        "ci_mmf_angle": 0.9,
-        "ci_mmf_nsteps": 1000,
-    },
-    "Optimizer": {
-        "max_iterations": 1000,
-        "opt_method": "lbfgs",
-        "max_move": 0.1,
-        "converged_force": 0.01,
-    },
-    "Debug": {"write_movies": "true"},
-}
+# Live Parameters (attributes, not an INI file).
+params_neb = make_rgpot_params(fname)
+params_neb.job = pc.JobType.Nudged_Elastic_Band
+params_neb.random_seed = 706253457
+params_neb.neb_images = N_INTERMEDIATE_IMGS
+params_neb.neb_minimize_endpoints = False
+params_neb.neb_climbing_image = True
+params_neb.neb_climbing_converged_only = True
+params_neb.neb_ci_after = 0.5
+params_neb.neb_ci_after_rel = 0.8
+params_neb.neb_energy_weighted = True
+params_neb.neb_ew_ksp_min = 0.972
+params_neb.neb_ew_ksp_max = 9.72
+params_neb.neb_ci_mmf = True
+params_neb.neb_ci_mmf_after = 0.1
+params_neb.neb_ci_mmf_after_rel = 0.5
+params_neb.neb_ci_mmf_angle = 0.9
+params_neb.neb_ci_mmf_nsteps = 1000
+params_neb.neb_max_iterations = 1000
+params_neb.opt_max_iterations = 1000
+params_neb.opt_max_move = 0.1
+params_neb.opt_converged_force = 0.01
+# Optional path-history dumps for rgpycrumbs landscapes (side effect of compute).
+params_neb.write_movies = True
 
+# Shared potential handle (one RGPOT metatomic engine for the whole band).
+pot_neb = pc.make_potential(params_neb.potential, params_neb)
 
-# %%
-# Which now let's us write out the final triplet of reactant, product, and
-# configuration of the eOn-NEB.
+# The band *is* a list of Matter. Build it from the ASE IDPP images already
+# in hand (``images`` from the IDPP section above) — no idppPath.dat for compute.
+path_matter = ase_path_to_matter(images, pot_neb, params_neb)
+assert len(path_matter) == TOTAL_IMGS
 
-write_eon_config(Path("."), neb_settings)
-write_con("reactant.con", reactant)
-write_con("product.con", product)
+neb_eon = pc.NudgedElasticBand(path_matter, params_neb, pot_neb)
+status = neb_eon.compute()
+print("NEB status:", status, "n_path:", neb_eon.n_path, "E_ref:", neb_eon.energy_reference)
+if status == pc.NEBStatus.GOOD:
+    neb_eon.find_extrema()
+    print(
+        "extrema:",
+        neb_eon.num_extrema,
+        "positions:",
+        list(neb_eon.extremum_positions)[: neb_eon.num_extrema],
+    )
 
-# %%
-# Run NEB via pyeonclient steppers
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
-# Compose ClientEON steps in Python (load → run_job → potcalls → timing).
-# No ``eonclient`` binary and no conda-forge eOn package.
-run_eon_job_steps(Path("."))
+# Keep the optimized band in memory; ASE view is a conversion, not the source.
+path_matter = list(neb_eon.path_images())
+path_ase = matter_path_to_ase(path_matter)
+energies_eon = np.array(
+    [neb_eon.image_energy(i) for i in range(neb_eon.n_path)]
+)
+print("image energies (eV relative to ref):", energies_eon - neb_eon.energy_reference)
+
+# Plot tools still want ``neb.con`` on disk — export only, after the fact.
+write_con("neb.con", path_ase)
+# Optional full artifact set (results.dat, sp.con, …) for the same plots.
+pc.neb_write_results(neb_eon, params_neb, 0)
 
 
 # %%
@@ -696,50 +711,49 @@ ax2.text(0.3, -1, "product")
 ax1.set_axis_off()
 ax2.set_axis_off()
 
-# Reactant setup
-dir_reactant = Path("min_reactant")
-dir_reactant.mkdir(exist_ok=True)
-write_con(dir_reactant / "pos.con", reactant)
-
-# Product setup
-dir_product = Path("min_product")
-dir_product.mkdir(exist_ok=True)
-write_con(dir_product / "pos.con", product)
-
-# Shared minimization settings
-min_settings = {
-    "Main": {"job": "minimization", "random_seed": 706253457},
-    "Potential": {"potential": "RGPOT"},
-    "RgpotPot": {
-        "backend": "metatomic",
-        "model_path": str(fname.absolute()),
-    },
-    "Metatomic": {"model_path": str(fname.absolute())},
-    "Optimizer": {
-        "max_iterations": 2000,
-        "opt_method": "lbfgs",
-        "max_move": 0.1,
-        "converged_force": 0.01,
-    },
-    # Movie frames for plt-min landscape / profile / convergence figures.
-    # write_deprecated_outs keeps legacy .dat sidecars for older tooling.
-    "Debug": {"write_movies": True, "write_deprecated_outs": True},
-}
-
-write_eon_config(dir_reactant, min_settings)
-write_eon_config(dir_product, min_settings)
-
-
 # %%
 # Run the minimization
 # ^^^^^^^^^^^^^^^^^^^^
 #
-# Minimizations via Matter **steppers** (``minimize_workdir``):
-# load_parameters → make_potential → Matter → con2matter → relax →
-# matter2con → results.dat → potcalls → timing.
-_ensure_rgpot_engine()
-pc.minimize_workdir(dir_reactant)
-pc.minimize_workdir(dir_product)
+# Endpoints are live :class:`~pyeonclient.Matter` objects::
+#
+#     atoms → ase_to_matter → Matter.relax → matter_to_ase
+#
+# No ``min_reactant/`` workdir for the optimizer. Optional movie dumps under
+# those dirs exist only so ``rgpycrumbs plt-min`` can read a trajectory.
+
+params_min = make_rgpot_params(fname)
+params_min.job = pc.JobType.Minimization
+params_min.random_seed = 706253457
+params_min.opt_max_iterations = 2000
+params_min.opt_max_move = 0.1
+params_min.opt_converged_force = 0.01
+params_min.write_movies = True
+pot_min = pc.make_potential(params_min.potential, params_min)
+
+dir_reactant = Path("min_reactant")
+dir_product = Path("min_product")
+dir_reactant.mkdir(exist_ok=True)
+dir_product.mkdir(exist_ok=True)
+
+# Movie files land in cwd during relax; chdir only for that plot-side dump.
+with chdir(dir_reactant):
+    matter_r, ok_r = relax_matter(
+        reactant, pot_min, params_min, write_movie=True, movie_prefix="minimization"
+    )
+with chdir(dir_product):
+    matter_p, ok_p = relax_matter(
+        product, pot_min, params_min, write_movie=True, movie_prefix="minimization"
+    )
+print("min reactant converged:", ok_r, "E =", matter_r.potential_energy)
+print("min product  converged:", ok_p, "E =", matter_p.potential_energy)
+
+# Live results stay on Matter; ASE copies for IRA / view.
+reactant = pc.matter_to_ase(matter_r)
+product = pc.matter_to_ase(matter_p)
+# Optional export for tools that still open min.con
+write_con(dir_reactant / "min.con", reactant)
+write_con(dir_product / "min.con", product)
 
 # Thin dense force-eval movies (every LBFGS potential call) so gradient-enhanced
 # surface fits for the 2D landscapes below remain well-conditioned.
@@ -772,9 +786,7 @@ show_png("min_conv_oxad.png")
 # Additionally, the relative ordering must be preserved, for which we use
 # IRA [4].
 #
-# Prefer readcon so eOn 2.16 min.con metadata (energy, …) is available if needed.
-reactant = readcon.read_con_as_ase(str(dir_reactant / "min.con"))[0]
-product = readcon.read_con_as_ase(str(dir_product / "min.con"))[0]
+# ``reactant`` / ``product`` are already the relaxed ASE views of the Matter.
 
 ira = ira_mod.IRA()
 # Default value
