@@ -588,6 +588,11 @@ os.environ.setdefault("MPLBACKEND", "Agg")
 # chemparseplot/jax/adjustText (avoids partial in-env stack).
 os.environ.setdefault("RGPKGS_FORCE_UV", "1")
 os.environ.setdefault("RGPYCRUMBS_FORCE_UV", "1")  # legacy alias
+# chemparseplot 1.9.10-1.9.12 fail to import on Python <= 3.13 (class-body
+# annotation without `from __future__ import annotations`). Freeze uv's
+# PEP 723 resolution at the last known-good snapshot; remove together with
+# the rgpycrumbs cap in environment.yml once a fixed release is published.
+os.environ.setdefault("UV_EXCLUDE_NEWER", "2026-07-15T00:00:00Z")
 
 # Run the 1D plotting command using the helper
 run_neb_plot("profile", title="NEB Path Optimization", output_file="1D_oxad.png")

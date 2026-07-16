@@ -22,5 +22,8 @@ dependencies:
     # Prefer library API when plot pipelines are public; today full NEB
     # plots still go through CLI uv PEP 723 / ensure_import — not host pins.
     - "readcon>=0.13.1"
-    - "rgpycrumbs>=1.9.16,<2"
+    # rgpycrumbs 1.9.21+ plot-script headers require chemparseplot>=1.9.10,
+    # whose 1.9.10-1.9.12 releases fail to import on Python <=3.13. Drop the
+    # cap (and UV_EXCLUDE_NEWER in the recipe) once a fixed release is out.
+    - "rgpycrumbs>=1.9.16,<1.9.21"
     - atomistic-cookbook-utils >=0.1,<0.2
