@@ -442,7 +442,12 @@ upet.save_upet(
 
 with open("data/input_pet_piglet.xml", "r") as file:
     xml_content = file.read()
-print(xml_content[: xml_content.find("<A shape")], "...")
+print(
+    xml_content[
+        xml_content.find("<ffdirect") : xml_content.find("</ffdirect>")
+        + len("</ffdirect>")
+    ]
+)
 
 ipi_process = subprocess.Popen(["i-pi", "data/input_pet_piglet.xml"])
 ipi_process.wait()
@@ -474,9 +479,8 @@ plt.show()
 # %%
 # We visualize the ring polymers by simply superimposing the
 # configurations of all the beads in each frame. Note the large
-# spread of the beads of the protons -- particularly those of the
-# hydroxide ion -- compared with the compact ring polymer of the
-# (heavier) Li\ :sup:`+` ion, that is easy to spot given that atoms
+# spread of the beads of the protons compared with the compact ring polymer
+# of the (heavier) Li\ :sup:`+` ion, that is easy to spot given that atoms
 # are colored by element.
 
 traj_pet = [ipi.read_trajectory(f"simulation_pet.pos_{i}.xyz")[1:] for i in range(8)]
