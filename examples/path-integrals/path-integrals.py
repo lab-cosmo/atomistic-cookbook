@@ -21,6 +21,7 @@ import ipi
 import matplotlib.pyplot as plt
 import numpy as np
 import upet
+from huggingface_hub import hf_hub_download
 
 
 # %%
@@ -426,12 +427,18 @@ ase.io.write("water_lioh.xyz", atoms)
 
 # %%
 # We use the extra-small version of PET-MAD, which is fast enough to run this
-# example on CPU. The ``upet`` package provides a utility to fetch the model
-# and save it as a torchscript file.
+# example on CPU. We download the model checkpoint directly from the
+# Hugging Face repository, and use the ``upet`` package to export it as a
+# torchscript file.
 
 model_path = "pet-mad-xs-v1.5.0.pt"
 if not os.path.exists(model_path):
-    upet.save_upet(model="pet-mad", size="xs", version="1.5.0", output=model_path)
+    checkpoint = hf_hub_download(
+        repo_id="lab-cosmo/upet",
+        filename="pet-mad-xs-v1.5.0.ckpt",
+        subfolder="models",
+    )
+    upet.save_upet(checkpoint_path=checkpoint, output=model_path)
 
 # %%
 # ``i-PI`` can evaluate the model directly, through the ``metatomic`` interface:
