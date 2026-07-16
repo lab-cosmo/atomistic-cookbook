@@ -7,5 +7,8 @@ dependencies:
   - pip:
     - ase
     - chemiscope>=1.0
-    - ipi>=3.2.0  
+    - ipi>=3.2.0
     - matplotlib
+    - metatomic-torch
+    - upet>=0.2.6
+    - vesin>=0.5
