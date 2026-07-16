@@ -43,7 +43,6 @@ statements are at the top of the file.
 
 import os
 import sys
-from contextlib import chdir
 from pathlib import Path
 
 import ase.io as aseio
@@ -80,8 +79,6 @@ def write_con(path, atoms_or_list):
     return path
 
 
-
-
 def run_eon_workdir(workdir: Path = Path(".")) -> list[str]:
     """Run eOn client job via pip pyeonclient (no eonclient binary / conda eOn).
 
@@ -91,6 +88,7 @@ def run_eon_workdir(workdir: Path = Path(".")) -> list[str]:
     if eng:
         os.environ.setdefault("RGPOT_METATOMIC_ENGINE", eng)
     return pc.run_job_in_directory(workdir)
+
 
 # sphinx_gallery_thumbnail_number = 4
 
