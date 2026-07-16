@@ -79,11 +79,13 @@ def write_con(path, atoms_or_list):
     return path
 
 
-def run_eon_workdir(workdir: Path = Path(".")) -> list[str]:
+def run_eon_workdir(workdir=None) -> list[str]:
     """Run eOn client job via pip pyeonclient (no eonclient binary / conda eOn).
 
     Uses RGPOT + rgpot multi-ABI ``libmetatomic_engine.so`` for Metatomic models.
     """
+    if workdir is None:
+        workdir = Path(".")
     eng = rgpot.default_metatomic_engine_path()
     if eng:
         os.environ.setdefault("RGPOT_METATOMIC_ENGINE", eng)
