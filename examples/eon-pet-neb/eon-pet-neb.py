@@ -60,6 +60,8 @@ from metatomic_ase import MetatomicCalculator
 from atomistic_cookbook_utils import run_command
 from rgpycrumbs.eon.helpers import write_eon_config
 from rgpycrumbs.run.jupyter import run_command_or_exit
+import pyeonclient as pc
+import rgpot
 
 
 def write_con(path, atoms_or_list):
@@ -77,6 +79,18 @@ def write_con(path, atoms_or_list):
     readcon.write_con(str(path), frames)
     return path
 
+
+
+
+def run_eon_workdir(workdir: Path = Path(".")) -> list[str]:
+    """Run eOn client job via pip pyeonclient (no eonclient binary / conda eOn).
+
+    Uses RGPOT + rgpot multi-ABI ``libmetatomic_engine.so`` for Metatomic models.
+    """
+    eng = rgpot.default_metatomic_engine_path()
+    if eng:
+        os.environ.setdefault("RGPOT_METATOMIC_ENGINE", eng)
+    return pc.run_job_in_directory(workdir)
 
 # sphinx_gallery_thumbnail_number = 4
 
@@ -318,17 +332,20 @@ plt.show()
 #    iteratively switching to the dimer method for
 #    faster convergence by the climbing image.
 #
-# To use eOn, we setup a function that writes the desired eOn input for us and
-# runs the ``eonclient`` binary. Since we are in a notebook environment, we will
-# use several abstractions over raw ``subprocess`` calls. In practice, writing
-# and using eOn involves a configuration file, which we define as a dictionary
-# to be used with a helper to generate the final output.
+# To use eOn, we write a ``config.ini`` and run the **pip** client
+# (``pyeonclient``) — no conda-forge ``eon`` package and no ``eonclient`` binary.
+# Forces for Metatomic models go through RGPOT + ``rgpot`` multi-ABI engines
+# (same PEF path as a fat eOn Metatomic build for this recipe; see parity notes).
 
 # Define configuration as a dictionary for clarity
 neb_settings = {
     "Main": {"job": "nudged_elastic_band", "random_seed": 706253457},
-    "Potential": {"potential": "Metatomic"},
-    "Metatomic": {"model_path": fname.absolute()},
+    "Potential": {"potential": "RGPOT"},
+    "RgpotPot": {
+        "backend": "metatomic",
+        "model_path": str(fname.absolute()),
+    },
+    "Metatomic": {"model_path": str(fname.absolute())},
     "Nudged Elastic Band": {
         "images": N_INTERMEDIATE_IMGS,
         # initialization
@@ -372,12 +389,11 @@ write_con("reactant.con", reactant)
 write_con("product.con", product)
 
 # %%
-# Run the main C++ client
-# ^^^^^^^^^^^^^^^^^^^^^^^
+# Run the eOn client (pyeonclient)
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# This runs 'eonclient' and streams output live.
-# If it fails, the notebook execution stops here.
-run_command_or_exit(["eonclient"], capture=True, timeout=300)
+# In-process NEB via pip ``pyeonclient`` + ``rgpot`` engines (no ``eonclient``).
+run_eon_workdir(Path("."))
 
 
 # %%
@@ -668,8 +684,12 @@ write_con(dir_product / "pos.con", product)
 # Shared minimization settings
 min_settings = {
     "Main": {"job": "minimization", "random_seed": 706253457},
-    "Potential": {"potential": "Metatomic"},
-    "Metatomic": {"model_path": fname.absolute()},
+    "Potential": {"potential": "RGPOT"},
+    "RgpotPot": {
+        "backend": "metatomic",
+        "model_path": str(fname.absolute()),
+    },
+    "Metatomic": {"model_path": str(fname.absolute())},
     "Optimizer": {
         "max_iterations": 2000,
         "opt_method": "lbfgs",
@@ -689,14 +709,9 @@ write_eon_config(dir_product, min_settings)
 # Run the minimization
 # ^^^^^^^^^^^^^^^^^^^^
 #
-# The 'eonclient' will use the correct configuration within the folder.
-#
-with chdir(dir_reactant):
-    run_command_or_exit(["eonclient"], capture=True, timeout=300)
-
-
-with chdir(dir_product):
-    run_command_or_exit(["eonclient"], capture=True, timeout=300)
+# Minimizations via the same pyeonclient workdir helper.
+run_eon_workdir(dir_reactant)
+run_eon_workdir(dir_product)
 
 # Thin dense force-eval movies (every LBFGS potential call) so gradient-enhanced
 # surface fits for the 2D landscapes below remain well-conditioned.
