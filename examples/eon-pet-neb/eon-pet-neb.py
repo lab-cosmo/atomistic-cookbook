@@ -24,8 +24,9 @@ can efficiently locate and refine the transition state along the path.
 
 Our approach will be:
 
-1. Download **PET-MAD** and build one shared force backend via
-   ``pyeonclient.backends.make_backend``.
+1. Download **PET-MAD** and call
+   ``make_backend("rgpot_metatomic", model_path=...)`` (or ``metatomic`` /
+   ``ase_metatomic``).
 2. ASE half: ASE IDPP + short ASE NEB with ``MetatomicCalculator`` (baseline).
 3. eOn half: **Matter** + eOn-native IDPP + ``NudgedElasticBand`` (EW springs +
    MMF) — path never goes through ASE after the endpoints.
@@ -73,23 +74,6 @@ def write_con(path, atoms_or_list):
     frames = [readcon.ConFrame.from_ase(atoms) for atoms in items]
     readcon.write_con(str(path), frames)
     return path
-
-
-def make_potential(model_path: Path | str):
-    """Shared eOn potential for PET-MAD (ASE calculator analogue).
-
-    Uses the pyeonclient **key → factory** backend registry. Thin wheels
-    take RGPOT + multi-ABI ``libmetatomic_engine`` (engine path from rgpot /
-    env). Fat-linked builds can use ``make_backend("metatomic", ...)`` instead.
-
-    Returns ``(pot, params)`` — *params* is a fresh :class:`~pyeonclient.Parameters`
-    for job knobs only (optimizer / NEB); pot plumbing stays inside the factory.
-    """
-    model = str(Path(model_path).resolve())
-    pot = make_backend("rgpot_metatomic", model_path=model, device="cpu")
-    # Job settings live on Parameters; potential type is already on *pot*.
-    params = pyec.Parameters()
-    return pot, params
 
 
 # sphinx_gallery_thumbnail_number = 4
@@ -322,9 +306,13 @@ plt.show()
 # 2. **Off-path climbing image (OCI / MMF)** [6] — hybrid steps that mix in
 #    single-ended dimer searches at the climbing image.
 #
-# Forces: ``make_backend("rgpot_metatomic", model_path=...)`` — RGPOT + the
-# multi-ABI ``libmetatomic_engine`` from ``rgpot`` (same PET-MAD file as ASE).
-# Fat builds can use ``make_backend("metatomic", ...)`` instead.
+# Forces via the named backend registry (not a custom wrapper)::
+#
+#     pot = make_backend("rgpot_metatomic", model_path="pet-mad.pt")
+#
+# Thin wheel: RGPOT + multi-ABI libmetatomic_engine (from rgpot / env).
+# Fat build: make_backend("metatomic", model_path=...).
+# ASE wrap as eOn pot: make_backend("ase_metatomic", model_path=...).
 
 def configure_neb_ew_mmf(params: pyec.Parameters, *, n_images: int) -> pyec.Parameters:
     """Energy-weighted CI-NEB + light MMF (cookbook recipe; all live attrs).
@@ -358,8 +346,10 @@ def configure_neb_ew_mmf(params: pyec.Parameters, *, n_images: int) -> pyec.Para
     return params
 
 
-# One factory for the pot; NEB knobs on a separate Parameters object.
-pot, params = make_potential(fname)
+# Shared force engine (same .pt as the ASE calculator above).
+# Engine .so: RGPOT_METATOMIC_ENGINE or rgpot.default_metatomic_engine_path().
+pot = make_backend("rgpot_metatomic", model_path=str(Path(fname).resolve()), device="cpu")
+params = pyec.Parameters()
 configure_neb_ew_mmf(params, n_images=N_INTERMEDIATE_IMGS)
 
 # Endpoints only from ASE; path is eOn IDPP.
@@ -682,7 +672,11 @@ ax2.set_axis_off()
 # Movie files under ``min_reactant/`` / ``min_product/`` are only for the
 # ``rgpycrumbs`` plots that follow; the optimizer itself is in-memory.
 
-pot_min, params_min = make_potential(fname)
+# Same backend key as the NEB — one model, one pot type for the whole example.
+pot_min = make_backend(
+    "rgpot_metatomic", model_path=str(Path(fname).resolve()), device="cpu"
+)
+params_min = pyec.Parameters()
 params_min.job = pyec.JobType.Minimization
 params_min.random_seed = 706253457
 params_min.opt_max_iterations = 2000
