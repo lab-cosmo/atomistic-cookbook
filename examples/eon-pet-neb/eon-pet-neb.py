@@ -345,9 +345,7 @@ pot = make_backend(
 # Endpoints only from ASE; path is eOn IDPP.
 initial = pyec.from_ase(reactant, pot, params)
 final = pyec.from_ase(product, pot, params)
-path = pyec.neb_idpp_path(
-    initial, final, N_INTERMEDIATE_IMGS, params
-)
+path = pyec.neb_idpp_path(initial, final, N_INTERMEDIATE_IMGS, params)
 # Equivalent: NudgedElasticBand(initial, final, params, pot) with
 # params.neb_init_method = NEBInit.IDPP and params.neb_images set.
 neb = pyec.NudgedElasticBand(path, params, pot)
@@ -843,7 +841,9 @@ m_rg = pyec.from_ase(
 )
 t_rg = _timed("pyeonclient rgpot_metatomic", _matter_loop(m_rg), m_rg)
 
-print(f"vs ASE: ase_metatomic {t_ase / t_wrap:.2f}×, rgpot_metatomic {t_ase / t_rg:.2f}×")
+print(
+    f"vs ASE: ase_metatomic {t_ase / t_wrap:.2f}×, rgpot_metatomic {t_ase / t_rg:.2f}×"
+)
 
 fig, ax = plt.subplots(figsize=(6, 3.5))
 labs = ["ASE calc", "ase_metatomic", "rgpot_metatomic"]
