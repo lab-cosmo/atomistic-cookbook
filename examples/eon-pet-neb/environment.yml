@@ -20,6 +20,7 @@ dependencies:
     - requests
     - metatomic-ase
     - "readcon>=0.13.1,<0.14"
-    - "rgpycrumbs>=1.10.3"
-    - "chemparseplot[neb,plot]>=1.9.13,<2"
+    # 1.10.3 miswired Click onto plot_*_from_settings (library kwargs → argv)
+    - "rgpycrumbs>=1.10.4"
+    - "chemparseplot[neb,plot]>=1.9.14,<2"
     - atomistic-cookbook-utils >=0.1,<0.2
