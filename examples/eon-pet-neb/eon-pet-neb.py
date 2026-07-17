@@ -781,9 +781,9 @@ ax2.set_axis_off()
 # Appendix: force cost (same PET-MAD weights)
 # -------------------------------------------
 #
-# NEB above mixes algorithm and pot. Here: single-point forces only.
-# ASE caches results — rattle before each call (metatomic profiling recipe).
-# ``Matter.force_calls`` must advance or the timed loop is rejected.
+# Single-point forces only. Rattle before each ASE call (metatomic profiling
+# recipe so the calculator cache is not timed). Matter must advance
+# ``force_calls`` each iteration.
 
 N_WARM, N_FORCE, SIG = 2, 12, 1e-6
 _model = str(Path(fname).resolve())
@@ -804,51 +804,39 @@ def _timed(label, once, matter=None):
         d = int(matter.force_calls) - n0
         if d != N_FORCE:
             raise RuntimeError(f"{label}: force_calls Δ={d}, want {N_FORCE}")
-    print(f"{label:24s} {ms:7.2f} ms/call")
+    print(f"{label:28s} {ms:7.2f} ms/call")
     return ms
 
 
-def _ase():
+def _ase_once():
     atoms_bench.rattle(SIG)
     atoms_bench.get_forces()
 
 
-def _matter_loop(m):
-    def once():
-        p = np.asarray(m.positions, dtype=float)
-        m.positions = p + _rng.normal(0.0, SIG, size=p.shape)
-        _ = m.forces
+t_ase = _timed("ASE MetatomicCalculator", _ase_once)
 
-    return once
-
-
-t_ase = _timed("ASE MetatomicCalculator", _ase)
-
-# ase_metatomic: do not pass params= into the factory (it is not a calc kwarg).
-p_ase = pyec.Parameters()
-m_ase = pyec.from_ase(
-    atoms_bench,
-    make_backend("ase_metatomic", model_path=_model, device="cpu"),
-    p_ase,
-)
-t_wrap = _timed("pyeonclient ase_metatomic", _matter_loop(m_ase), m_ase)
-
+# NEB path only: RGPOT metatomic (no ase_metatomic here — avoids calculator kwargs).
 p_rg = pyec.Parameters()
 m_rg = pyec.from_ase(
     atoms_bench,
     make_backend("rgpot_metatomic", model_path=_model, device="cpu", params=p_rg),
     p_rg,
 )
-t_rg = _timed("pyeonclient rgpot_metatomic", _matter_loop(m_rg), m_rg)
 
-print(
-    f"vs ASE: ase_metatomic {t_ase / t_wrap:.2f}×, rgpot_metatomic {t_ase / t_rg:.2f}×"
-)
 
-fig, ax = plt.subplots(figsize=(6, 3.5))
-labs = ["ASE calc", "ase_metatomic", "rgpot_metatomic"]
-vals = [t_ase, t_wrap, t_rg]
-ax.bar(labs, vals, color=["xkcd:blue", "xkcd:orange", "xkcd:green"])
+def _rg_once():
+    p = np.asarray(m_rg.positions, dtype=float)
+    m_rg.positions = p + _rng.normal(0.0, SIG, size=p.shape)
+    _ = m_rg.forces
+
+
+t_rg = _timed("pyeonclient rgpot_metatomic", _rg_once, m_rg)
+print(f"speedup rgpot_metatomic vs ASE: {t_ase / t_rg:.2f}×")
+
+fig, ax = plt.subplots(figsize=(5, 3.5))
+labs = ["ASE MetatomicCalculator", "pyeonclient\nrgpot_metatomic"]
+vals = [t_ase, t_rg]
+ax.bar(labs, vals, color=["xkcd:blue", "xkcd:green"])
 ax.set_ylabel("ms / force call")
 ax.set_title("PET-MAD forces (CPU)")
 for x, v in zip(labs, vals):
