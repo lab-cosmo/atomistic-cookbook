@@ -8,7 +8,6 @@ dependencies:
   - pip
   - uv
   - pip:
-    # In-process eOn client + shared schema (upper bounds for gallery stability).
     - "pyeonclient[models]>=0.3.2,<0.4"
     - "eon-schema>=0.2.1,<0.3"
     - "rgpot>=2.4.2,<3"
