@@ -10,16 +10,16 @@ dependencies:
   - uv
   - pip:
     # pyeonclient 0.3.2: make_backend, neb_idpp_path, find_extrema, write_neb_results
-    # models extra → eon-schema>=0.2.1 (NebSpec optional; pure knobs also fine)
-    - "pyeonclient[models]>=0.3.2"
-    - "eon-schema>=0.2.1"
-    - "rgpot>=2.4.2"
+    # Upper bounds keep the gallery stable across dependency bumps (Luthaf).
+    - "pyeonclient[models]>=0.3.2,<0.4"
+    - "eon-schema>=0.2.1,<0.3"
+    - "rgpot>=2.4.2,<3"
     - torch>=2.9,<2.14
-    - ase>=3.23
+    - ase>=3.23,<4
     - matplotlib
-    - metatrain>=2026.3.1
+    - metatrain>=2026.3.1,<2027
     - requests
     - metatomic-ase
-    - "readcon>=0.13.1"
+    - "readcon>=0.13.1,<0.14"
     - "rgpycrumbs>=1.9.16,<1.9.21"
     - atomistic-cookbook-utils >=0.1,<0.2
