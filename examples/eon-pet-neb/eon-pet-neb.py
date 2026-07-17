@@ -24,11 +24,12 @@ can efficiently locate and refine the transition state along the path.
 
 Our approach will be:
 
-1. Set up the **PET-MAD metatomic** model.
-2. ASE half: ASE's own IDPP interpolate + short ASE NEB (reference baseline).
-3. eOn half: **eOn-native** IDPP (``pyeonclient.neb_idpp_path`` / endpoint
-   ``NEBInit.IDPP``) → ``NudgedElasticBand`` — no ASE path into Matter.
-4. Plot the converged pathway and relax the endpoints the same way.
+1. Download **PET-MAD** and build one shared force backend via
+   ``pyeonclient.backends.make_backend``.
+2. ASE half: ASE IDPP + short ASE NEB with ``MetatomicCalculator`` (baseline).
+3. eOn half: **Matter** + eOn-native IDPP + ``NudgedElasticBand`` (EW springs +
+   MMF) — path never goes through ASE after the endpoints.
+4. Plot the band and relax endpoints with the same potential.
 
 
 Importing Required Packages
@@ -50,13 +51,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pyeonclient as pyec
 import readcon
-import rgpot
 from ase.mep import NEB
 from ase.optimize import LBFGS
 from ase.visualize import view
 from ase.visualize.plot import plot_atoms
 from atomistic_cookbook_utils import run_command
-from metatomic_ase import MetatomicCalculator
+from pyeonclient.backends import (
+    ensure_metatomic_load_compat,
+    make_backend,
+    make_metatomic_ase_calculator,
+)
 from rgpycrumbs.run.jupyter import run_command_or_exit
 
 
@@ -72,23 +76,19 @@ def write_con(path, atoms_or_list):
 
 
 def make_potential(model_path: Path | str):
-    """Build a shared RGPOT metatomic potential (ASE's calculator analogue).
+    """Shared eOn potential for PET-MAD (ASE calculator analogue).
 
-    Returns ``(pot, params)``. Attach the same ``pot`` to every
-    :class:`~pyeonclient.Matter` on a path, the way ASE attaches one
-    calculator instance style to each image.
+    Uses the pyeonclient **key → factory** backend registry. Thin wheels
+    take RGPOT + multi-ABI ``libmetatomic_engine`` (engine path from rgpot /
+    env). Fat-linked builds can use ``make_backend("metatomic", ...)`` instead.
+
+    Returns ``(pot, params)`` — *params* is a fresh :class:`~pyeonclient.Parameters`
+    for job knobs only (optimizer / NEB); pot plumbing stays inside the factory.
     """
-    params = pyec.Parameters()
-    params.potential = pyec.PotType.RGPOT
-    params.rgpot_backend = "metatomic"
     model = str(Path(model_path).resolve())
-    params.rgpot_model_path = model
-    params.metatomic_model_path = model
-    eng = rgpot.default_metatomic_engine_path()
-    if eng:
-        params.rgpot_engine_path = eng
-        os.environ.setdefault("RGPOT_METATOMIC_ENGINE", eng)
-    pot = pyec.make_potential(params.potential, params)
+    pot = make_backend("rgpot_metatomic", model_path=model, device="cpu")
+    # Job settings live on Parameters; potential type is already on *pot*.
+    params = pyec.Parameters()
     return pot, params
 
 
@@ -221,9 +221,13 @@ neb.interpolate("idpp")  # ASE only — not used for the eOn band
 # We first consider using metatomic with the ASE calculator.
 
 
-# define the calculator
+# PET-MAD export: patch load_atomistic_model once, then ASE calculator.
+ensure_metatomic_load_compat()
+
+
 def mk_mta_calc():
-    return MetatomicCalculator(
+    """ASE calculator for the ASE-half NEB (same model file as eOn)."""
+    return make_metatomic_ase_calculator(
         fname,
         device="cpu",
         non_conservative=False,
@@ -318,35 +322,45 @@ plt.show()
 # 2. **Off-path climbing image (OCI / MMF)** [6] — hybrid steps that mix in
 #    single-ended dimer searches at the climbing image.
 #
-# Forces use RGPOT + the multi-ABI ``libmetatomic_engine`` shipped with
-# ``rgpot`` (same PET-MAD model as the ASE calculator above).
+# Forces: ``make_backend("rgpot_metatomic", model_path=...)`` — RGPOT + the
+# multi-ABI ``libmetatomic_engine`` from ``rgpot`` (same PET-MAD file as ASE).
+# Fat builds can use ``make_backend("metatomic", ...)`` instead.
 
+def configure_neb_ew_mmf(params: pyec.Parameters, *, n_images: int) -> pyec.Parameters:
+    """Energy-weighted CI-NEB + light MMF (cookbook recipe; all live attrs).
+
+    This is the "why eOn" knob set: weighted springs near the climb, then
+    off-path dimer-style steps at the climbing image. Defaults match a
+    short PET-MAD band — tune here rather than scattering flags.
+    """
+    params.job = pyec.JobType.Nudged_Elastic_Band
+    params.random_seed = 706253457
+    params.neb_images = n_images
+    params.neb_init_method = pyec.NEBInit.IDPP  # eOn-native IDPP (not ASE)
+    params.neb_minimize_endpoints = False
+    params.neb_climbing_image = True
+    params.neb_climbing_converged_only = True
+    params.neb_ci_after = 0.5
+    params.neb_ci_after_rel = 0.8
+    params.neb_energy_weighted = True
+    params.neb_ew_ksp_min = 0.972
+    params.neb_ew_ksp_max = 9.72
+    params.neb_ci_mmf = True
+    params.neb_ci_mmf_after = 0.1
+    params.neb_ci_mmf_after_rel = 0.5
+    params.neb_ci_mmf_angle = 0.9
+    params.neb_ci_mmf_nsteps = 1000
+    params.neb_max_iterations = 1000
+    params.opt_max_iterations = 1000
+    params.opt_max_move = 0.1
+    params.opt_converged_force = 0.01  # like ASE fmax
+    params.write_movies = True  # path history for landscape plots
+    return params
+
+
+# One factory for the pot; NEB knobs on a separate Parameters object.
 pot, params = make_potential(fname)
-
-# Optimizer / band settings (live attributes — no config.ini).
-params.job = pyec.JobType.Nudged_Elastic_Band
-params.random_seed = 706253457
-params.neb_images = N_INTERMEDIATE_IMGS
-params.neb_init_method = pyec.NEBInit.IDPP  # eOn-native IDPP (not ASE)
-params.neb_minimize_endpoints = False
-params.neb_climbing_image = True
-params.neb_climbing_converged_only = True
-params.neb_ci_after = 0.5
-params.neb_ci_after_rel = 0.8
-params.neb_energy_weighted = True
-params.neb_ew_ksp_min = 0.972
-params.neb_ew_ksp_max = 9.72
-params.neb_ci_mmf = True
-params.neb_ci_mmf_after = 0.1
-params.neb_ci_mmf_after_rel = 0.5
-params.neb_ci_mmf_angle = 0.9
-params.neb_ci_mmf_nsteps = 1000
-params.neb_max_iterations = 1000
-params.opt_max_iterations = 1000
-params.opt_max_move = 0.1
-params.opt_converged_force = 0.01  # like ASE fmax
-# Path-history frames for the landscape plots below (optional side effect).
-params.write_movies = True
+configure_neb_ew_mmf(params, n_images=N_INTERMEDIATE_IMGS)
 
 # Endpoints only from ASE; path is eOn IDPP.
 initial = pyec.from_ase(reactant, pot, params)

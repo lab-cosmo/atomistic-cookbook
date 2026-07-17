@@ -10,7 +10,7 @@ dependencies:
   - uv
   - pip:
     # pyeonclient 0.3 abi3 wheel + rgpot multi-ABI metatomic engines (torch 2.7+).
-    - "pyeonclient>=0.3.1"
+    - "pyeonclient>=0.3.1"  # backends.make_backend (rgpot_metatomic / ase_metatomic)
     - "rgpot>=2.4.2"
     - torch>=2.9,<2.14
     - ase>=3.23
