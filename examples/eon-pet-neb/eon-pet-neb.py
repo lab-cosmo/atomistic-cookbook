@@ -42,7 +42,6 @@ statements are at the top of the file.
 
 import os
 import sys
-import time
 from contextlib import chdir
 from pathlib import Path
 
