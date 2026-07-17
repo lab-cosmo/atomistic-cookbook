@@ -50,11 +50,7 @@ from ase.optimize import LBFGS
 from ase.visualize import view
 from ase.visualize.plot import plot_atoms
 from atomistic_cookbook_utils import run_command
-from pyeonclient.backends import (
-    ensure_metatomic_load_compat,
-    make_backend,
-    make_metatomic_ase_calculator,
-)
+from pyeonclient.backends import make_backend, make_metatomic_ase_calculator
 from pyeonclient.models import NebSpec, PathInit
 
 
@@ -190,10 +186,6 @@ neb.interpolate("idpp")
 # We first consider using metatomic with the ASE calculator.
 
 
-# PET-MAD export: patch load_atomistic_model once, then ASE calculator.
-ensure_metatomic_load_compat()
-
-
 def mk_mta_calc():
     """ASE calculator for the ASE-half NEB (same model file as eOn)."""
     return make_metatomic_ase_calculator(
@@ -275,11 +267,11 @@ plt.show()
 # ``[Main] parallel`` is on (the default). Paths start from linear
 # interpolation, IDPP [5], or sequential IDPP (SIDPP) [8] via
 # ``neb_idpp_path`` and related helpers. This run uses energy-weighted springs
-# and off-path climbing-image / MMF steps [6]:
+# and off-path climbing-image NEB (OCINEB) with minimum-mode following [6]:
 #
 # 1. **Energy-weighted springs** — larger spring constants near the climb.
-# 2. **Off-path climbing image (OCI / MMF)** — dimer-style steps at the
-#    climbing image.
+# 2. **OCINEB** — dimer-style off-path refinement at the climbing image when
+#    the band force drops below a threshold [6].
 #
 # ``write_movies=True`` records every NEB iteration as ``neb_NNN.dat`` /
 # ``neb_path_NNN.con`` so the full band evolution is available for the
@@ -783,9 +775,9 @@ ax2.set_axis_off()
 #     Initial Guess for Minimum Energy Path Calculations. J. Chem. Phys.
 #     2014, 140 (21), 214106. https://doi.org/10.1063/1.4878664.
 #
-# (6) Goswami, R; Gunde, M; Jónsson, H. Enhanced climbing image nudged elastic
-#     band method with hessian eigenmode alignment, Jan. 22, 2026, arXiv:
-#     arXiv:2601.12630. doi: 10.48550/arXiv.2601.12630.
+# (6) Goswami, R.; Gunde, M.; Jónsson, H. Enhanced Climbing Image Nudged
+#     Elastic Band Method with Hessian Eigenmode Alignment. Front. Chem.
+#     2026, 14. https://doi.org/10.3389/fchem.2026.1807063.
 #
 # (7) R. Goswami, Two-dimensional RMSD projections for reaction path
 #     visualization and validation, MethodsX, p. 103851, Mar. 2026, doi:
