@@ -826,13 +826,14 @@ def _matter_loop(m):
 
 t_ase = _timed("ASE MetatomicCalculator", _ase)
 
+# ase_metatomic: do not pass params= into the factory (it is not a calc kwarg).
 p_ase = pyec.Parameters()
 m_ase = pyec.from_ase(
     atoms_bench,
-    make_backend("ase_metatomic", model_path=_model, device="cpu", params=p_ase),
+    make_backend("ase_metatomic", model_path=_model, device="cpu"),
     p_ase,
 )
-t_wrap = _timed('pyeonclient ase_metatomic', _matter_loop(m_ase), m_ase)
+t_wrap = _timed("pyeonclient ase_metatomic", _matter_loop(m_ase), m_ase)
 
 p_rg = pyec.Parameters()
 m_rg = pyec.from_ase(
@@ -840,7 +841,7 @@ m_rg = pyec.from_ase(
     make_backend("rgpot_metatomic", model_path=_model, device="cpu", params=p_rg),
     p_rg,
 )
-t_rg = _timed('pyeonclient rgpot_metatomic', _matter_loop(m_rg), m_rg)
+t_rg = _timed("pyeonclient rgpot_metatomic", _matter_loop(m_rg), m_rg)
 
 print(f"vs ASE: ase_metatomic {t_ase / t_wrap:.2f}×, rgpot_metatomic {t_ase / t_rg:.2f}×")
 
