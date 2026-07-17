@@ -339,12 +339,23 @@ print("written:", written)
 # :func:`rgpycrumbs.eon.plot_neb`.
 
 
-def show_png(path: str, figsize=(10, 8)) -> None:
+def show_png(path: str, *, max_width: float = 12.0, max_height: float = 9.0) -> None:
+    """Display a saved plot in the gallery, preserving the image aspect ratio.
+
+    Fixed ``figsize`` boxes squash landscape+structure-strip PNGs; size the
+    axes from the pixel shape instead so each figure stays readable.
+    """
     img = mpimg.imread(path)
-    plt.figure(figsize=figsize)
-    plt.imshow(img)
-    plt.axis("off")
-    plt.tight_layout()
+    h, w = img.shape[:2]
+    aspect = w / float(h)
+    if aspect >= max_width / max_height:
+        fw, fh = max_width, max_width / aspect
+    else:
+        fh, fw = max_height, max_height * aspect
+    fig, ax = plt.subplots(figsize=(fw, fh))
+    ax.imshow(img)
+    ax.axis("off")
+    fig.tight_layout(pad=0.15)
     plt.show()
 
 
@@ -500,6 +511,8 @@ product, matter_p = relax_endpoint(product, dir_product)
 # Energy profile and optimizer convergence overlay both endpoints. The 2D
 # landscapes are **separate** for reactant and product (each trajectory has its
 # own RMSD frame). ``auto_thin`` keeps long force-eval movies fit-safe.
+# Each figure is its own gallery cell so sphinx-gallery does not pack them into
+# a cramped multi-image grid.
 
 _min_style = dict(
     surface_type="grad_imq",
@@ -509,9 +522,14 @@ _min_style = dict(
     xyzrender_config="paton",
     rotation="90x,0y,0z",
     strip_dividers=True,
+    strip_spacing=2.5,
     auto_thin=True,
     max_surface_points=64,
+    dpi=160,
 )
+
+# %%
+# Reactant landscape (RMSD frame of the reactant movie; strip = initial → minimized):
 
 plot_min(
     job_dir=[dir_reactant],
@@ -520,7 +538,11 @@ plot_min(
     output="min_2D_reactant_oxad.png",
     **_min_style,
 )
-show_png("min_2D_reactant_oxad.png")
+show_png("min_2D_reactant_oxad.png", max_width=11.0, max_height=10.0)
+
+# %%
+# Product landscape (separate RMSD frame):
+
 plot_min(
     job_dir=[dir_product],
     label=["product"],
@@ -528,21 +550,31 @@ plot_min(
     output="min_2D_product_oxad.png",
     **_min_style,
 )
-show_png("min_2D_product_oxad.png")
+show_png("min_2D_product_oxad.png", max_width=11.0, max_height=10.0)
+
+# %%
+# Energy profiles for both endpoints on one axis:
+
 plot_min(
     job_dir=[dir_reactant, dir_product],
     label=["reactant", "product"],
     plot_type="profile",
     output="min_1D_oxad.png",
+    dpi=160,
 )
-show_png("min_1D_oxad.png")
+show_png("min_1D_oxad.png", max_width=11.0, max_height=5.0)
+
+# %%
+# Optimizer force convergence for both endpoints:
+
 plot_min(
     job_dir=[dir_reactant, dir_product],
     label=["reactant", "product"],
     plot_type="convergence",
     output="min_conv_oxad.png",
+    dpi=160,
 )
-show_png("min_conv_oxad.png")
+show_png("min_conv_oxad.png", max_width=11.0, max_height=5.0)
 
 # %%
 # Additionally, the relative ordering must be preserved, for which we use
