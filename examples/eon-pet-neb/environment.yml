@@ -8,12 +8,14 @@ dependencies:
   - pip
   - uv
   - pip:
-    - "pyeonclient[models]>=0.3.2,<0.4"
+    - "pyeonclient[models]>=0.3.3,<0.4"
     - "eon-schema>=0.2.1,<0.3"
     - "rgpot>=2.4.2,<3"
     - torch>=2.9,<2.14
     - ase>=3.23,<4
     - matplotlib
+    # rgpycrumbs.eon.plot_neb imports adjustText at module load
+    - "adjustText>=1.0"
     - metatrain>=2026.3.1,<2027
     - requests
     - metatomic-ase
