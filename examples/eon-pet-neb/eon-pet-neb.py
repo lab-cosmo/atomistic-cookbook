@@ -343,8 +343,7 @@ def report_neb_run(
     if dats:
         print("NEB path evolution (write_movies → neb_NNN.dat)")
         print(
-            f"{'step':>6} {'E_max (eV)':>12} {'E_min (eV)':>12} "
-            f"{'path length (Å)':>16}"
+            f"{'step':>6} {'E_max (eV)':>12} {'E_min (eV)':>12} {'path length (Å)':>16}"
         )
         for i, dat in enumerate(dats):
             data = np.loadtxt(dat, skiprows=1)
@@ -353,13 +352,9 @@ def report_neb_run(
             e = data[:, 2]
             rc_end = float(data[-1, 1]) if data.shape[1] > 1 else float("nan")
             print(
-                f"{i:6d} {float(e.max()):12.4f} {float(e.min()):12.4f} "
-                f"{rc_end:16.4f}"
+                f"{i:6d} {float(e.max()):12.4f} {float(e.min()):12.4f} {rc_end:16.4f}"
             )
-        print(
-            f"  ({len(dats)} band snapshots; "
-            "step 0 is the IDPP guess on PET-MAD)"
-        )
+        print(f"  ({len(dats)} band snapshots; step 0 is the IDPP guess on PET-MAD)")
 
     neb_dat = cwd / "neb.dat"
     if neb_dat.exists():
