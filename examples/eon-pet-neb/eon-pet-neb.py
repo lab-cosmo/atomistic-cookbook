@@ -38,10 +38,6 @@ import os
 from contextlib import chdir
 from pathlib import Path
 
-# Library plot_* uses ensure_import (jax, adjustText, …). CLI dispatch sets this
-# automatically; gallery imports need it so uv can stage heavies into the cache.
-os.environ.setdefault("RGPYCRUMBS_AUTO_DEPS", "1")
-
 import ase.io as aseio
 import ira_mod
 import matplotlib.image as mpimg
@@ -56,7 +52,11 @@ from ase.visualize.plot import plot_atoms
 from atomistic_cookbook_utils import run_command
 from pyeonclient.backends import make_backend, make_metatomic_ase_calculator
 from pyeonclient.models import NebSpec, PathInit
-from rgpycrumbs.eon import plot_min, plot_neb
+
+# Library plot_* uses ensure_import (jax, adjustText, …). CLI dispatch sets this
+# automatically; gallery imports need it so uv can stage heavies into the cache.
+os.environ.setdefault("RGPYCRUMBS_AUTO_DEPS", "1")
+from rgpycrumbs.eon import plot_min, plot_neb  # noqa: E402
 
 
 def write_con(path, atoms_or_list):
