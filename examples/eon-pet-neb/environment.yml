@@ -23,4 +23,6 @@ dependencies:
     # 1.10.3 miswired Click onto plot_*_from_settings (library kwargs → argv)
     - "rgpycrumbs>=1.10.4"
     - "chemparseplot[neb,plot]>=1.9.14,<2"
+    # strip_renderer="xyzrender" needs the xyzrender CLI on PATH
+    - "xyzrender>=0.1.3"
     - atomistic-cookbook-utils >=0.1,<0.2
