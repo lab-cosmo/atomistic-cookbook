@@ -534,13 +534,16 @@ plot_min(
     output="min_2D_product_oxad.png",
     **_min_style,
 )
-show_png_row(
-    "min_2D_reactant_oxad.png",
-    "min_2D_product_oxad.png",
-    labels=["reactant", "product"],
-    max_width=14.0,
-    max_height=7.5,
-)
+fig, (ax_r, ax_p) = plt.subplots(1, 2, figsize=(14, 7))
+for ax, path, lab in (
+    (ax_r, "min_2D_reactant_oxad.png", "reactant"),
+    (ax_p, "min_2D_product_oxad.png", "product"),
+):
+    ax.imshow(mpimg.imread(path))
+    ax.set_title(lab)
+    ax.axis("off")
+fig.tight_layout()
+plt.show()
 
 # %%
 # Energy profiles for both endpoints on one axis:
@@ -552,7 +555,7 @@ plot_min(
     output="min_1D_oxad.png",
     dpi=160,
 )
-show_png("min_1D_oxad.png", max_width=11.0, max_height=5.0)
+show_png("min_1D_oxad.png", figsize=(10, 5))
 
 # %%
 # Optimizer force convergence for both endpoints:
@@ -564,7 +567,7 @@ plot_min(
     output="min_conv_oxad.png",
     dpi=160,
 )
-show_png("min_conv_oxad.png", max_width=11.0, max_height=5.0)
+show_png("min_conv_oxad.png", figsize=(10, 5))
 
 # %%
 # Additionally, the relative ordering must be preserved, for which we use
