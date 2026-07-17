@@ -776,8 +776,7 @@ ax2.set_axis_off()
 # -------------------------------------------
 #
 # Single-point forces only (rattle / position noise so caches are not timed).
-# Expect similar cost: PET-MAD dominates. The NEB win above is the optimizer
-# path (EW + MMF), not a free force-eval miracle.
+# PET-MAD dominates the cost; the NEB win above is the optimizer path.
 
 N_WARM, N_FORCE, SIG = 2, 12, 1e-6
 _model = str(Path(fname).resolve())
