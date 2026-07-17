@@ -19,7 +19,8 @@ dependencies:
     - metatomic-ase
     - "readcon>=0.13.1,<0.14"
     # 1.10.3 miswired Click onto plot_*_from_settings (library kwargs → argv)
-    - "rgpycrumbs>=1.10.4"
+    - "rgpycrumbs>=1.10.7"  # library plot enables AUTO_DEPS (no host jax pin)
+    # plt_neb still hard-imports chemparseplot at module load (not ensure_import)
     - "chemparseplot[neb,plot]>=1.9.14,<2"
     # strip_renderer="xyzrender" needs the xyzrender CLI on PATH (not ensure_import)
     - "xyzrender>=0.1.3"
