@@ -31,6 +31,9 @@ Our approach will be:
 3. eOn half: **Matter** + eOn-native IDPP + ``NudgedElasticBand`` (EW springs +
    MMF) — path never goes through ASE after the endpoints.
 4. Plot the band and relax endpoints with the same potential.
+5. Appendix: a short wall-time comparison of *single-point force* cost for the
+   same PET-MAD weights under ASE vs pyeonclient backends (not the NEB
+   algorithm itself).
 
 
 Importing Required Packages
@@ -42,6 +45,7 @@ statements are at the top of the file.
 
 import os
 import sys
+import time
 from contextlib import chdir
 from pathlib import Path
 
@@ -370,7 +374,7 @@ if neb.num_extrema:
 # Convert back to ASE when you want ASE tools; export .con only for plotters.
 path_ase = [pyec.to_ase(m) for m in path]
 write_con("neb.con", path_ase)
-pyec.neb_write_results(neb, params, 0)
+pyec.write_neb_results(neb, params, 0)
 
 
 # %%
@@ -662,9 +666,6 @@ ax2.set_axis_off()
 # ``rgpycrumbs`` plots that follow; the optimizer itself is in-memory.
 
 # Same backend key as the NEB — one model, one pot type for the whole example.
-pot_min = make_backend(
-    "rgpot_metatomic", model_path=str(Path(fname).resolve()), device="cpu"
-)
 params_min = pyec.Parameters()
 params_min.job = pyec.JobType.Minimization
 params_min.random_seed = 706253457
@@ -672,6 +673,12 @@ params_min.opt_max_iterations = 2000
 params_min.opt_max_move = 0.1
 params_min.opt_converged_force = 0.01  # like ASE fmax
 params_min.write_movies = True
+pot_min = make_backend(
+    "rgpot_metatomic",
+    model_path=str(Path(fname).resolve()),
+    device="cpu",
+    params=params_min,
+)
 
 dir_reactant = Path("min_reactant")
 dir_product = Path("min_product")
@@ -774,6 +781,131 @@ ax1.text(0.3, -1, "reactant")
 ax2.text(0.3, -1, "product")
 ax1.set_axis_off()
 ax2.set_axis_off()
+
+# %%
+# Appendix: force-call cost (ASE Metatomic vs pyeonclient)
+# --------------------------------------------------------
+#
+# The main text compared **NEB algorithms** (ASE LBFGS band vs eOn EW + MMF).
+# That confounds optimizer logic with the force engine. Here we hold the
+# **same PET-MAD weights** fixed and time only repeated single-point force
+# evaluations on the reactant geometry, so the Python ASE calculator path can
+# be contrasted with pyeonclient backends:
+#
+# * ``ASE MetatomicCalculator`` — standard ASE ``atoms.get_forces()``
+# * ``make_backend("ase_metatomic", ...)`` — same ASE stack, exposed as an eOn
+#   ``Potential`` on ``Matter``
+# * ``make_backend("rgpot_metatomic", ...)`` — RGPOT + multi-ABI engine (the
+#   thin-wheel path used for the NEB above)
+#
+# Numbers are **host-dependent** (CPU, torch build, thermal state). Treat
+# ratios as illustrative, not as a guaranteed speedup on every machine. We
+# warm a few calls, then report mean wall time over a short loop.
+
+N_WARM = 2
+N_FORCE = 12
+_model = str(Path(fname).resolve())
+atoms_bench = reactant.copy()
+
+
+def _mean_force_s(label: str, once) -> float:
+    """Warm, then time *N_FORCE* calls of *once*; print ms/call."""
+    for _ in range(N_WARM):
+        once()
+    t0 = time.perf_counter()
+    for _ in range(N_FORCE):
+        once()
+    dt = (time.perf_counter() - t0) / N_FORCE
+    print(f"{label:28s}  {1e3 * dt:8.2f} ms / force call  (n={N_FORCE})")
+    return dt
+
+
+# --- ASE MetatomicCalculator ---
+atoms_bench.calc = mk_mta_calc()
+
+
+def _ase_once():
+    # Copy so ASE does not skip work via cached calculator state alone.
+    atoms_bench.positions = atoms_bench.positions + 1e-8
+    atoms_bench.get_forces()
+
+
+t_ase = _mean_force_s("ASE MetatomicCalculator", _ase_once)
+
+# --- pyeonclient: ASE calculator as Matter pot ---
+params_ase_pot = pyec.Parameters()
+pot_ase = make_backend(
+    "ase_metatomic",
+    model_path=_model,
+    device="cpu",
+    params=params_ase_pot,
+)
+matter_ase = pyec.from_ase(atoms_bench, pot_ase, params_ase_pot)
+_pos0 = np.array(matter_ase.positions, copy=True)
+_step_ase = [0]
+
+
+def _ase_backend_once():
+    _step_ase[0] += 1
+    # Tiny displacement forces a fresh evaluation (no free lunch from cache).
+    matter_ase.positions = _pos0 + 1e-8 * _step_ase[0]
+    _ = matter_ase.forces
+
+
+t_ase_backend = _mean_force_s('pyeonclient "ase_metatomic"', _ase_backend_once)
+
+# --- pyeonclient: RGPOT metatomic engine (NEB path) ---
+params_rg = pyec.Parameters()
+pot_rg = make_backend(
+    "rgpot_metatomic",
+    model_path=_model,
+    device="cpu",
+    params=params_rg,
+)
+matter_rg = pyec.from_ase(atoms_bench, pot_rg, params_rg)
+_pos1 = np.array(matter_rg.positions, copy=True)
+_step_rg = [0]
+
+
+def _rgpot_once():
+    _step_rg[0] += 1
+    matter_rg.positions = _pos1 + 1e-8 * _step_rg[0]
+    _ = matter_rg.forces
+
+
+t_rg = _mean_force_s('pyeonclient "rgpot_metatomic"', _rgpot_once)
+
+# Relative to ASE calculator (higher is faster).
+print(
+    f"speedup vs ASE calc:  ase_metatomic={t_ase / t_ase_backend:.2f}×,  "
+    f"rgpot_metatomic={t_ase / t_rg:.2f}×"
+)
+
+labels = [
+    "ASE\nMetatomicCalculator",
+    'pyeonclient\n"ase_metatomic"',
+    'pyeonclient\n"rgpot_metatomic"',
+]
+times_ms = [1e3 * t_ase, 1e3 * t_ase_backend, 1e3 * t_rg]
+colors = ["xkcd:blue", "xkcd:orange", "xkcd:green"]
+
+fig, ax = plt.subplots(figsize=(7, 4))
+bars = ax.bar(labels, times_ms, color=colors, edgecolor="k", linewidth=0.4)
+ax.set_ylabel("Mean wall time per force call (ms)")
+ax.set_title("PET-MAD single-point forces (same .pt, CPU)")
+ax.grid(True, axis="y", alpha=0.3)
+for bar, ms in zip(bars, times_ms):
+    ax.text(
+        bar.get_x() + bar.get_width() / 2,
+        bar.get_height(),
+        f"{ms:.1f}",
+        ha="center",
+        va="bottom",
+        fontsize=10,
+    )
+fig.tight_layout()
+plt.show()
+
 
 # %%
 # References
