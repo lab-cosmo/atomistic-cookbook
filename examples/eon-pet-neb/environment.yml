@@ -18,8 +18,6 @@ dependencies:
     - requests
     - metatomic-ase
     - "readcon>=0.13.1,<0.14"
-    # 1.10.3 miswired Click onto plot_*_from_settings (library kwargs → argv)
-    - "rgpycrumbs>=1.10.8"  # library plot enables AUTO_DEPS (no host jax pin)
-    # jax / adjustText / xyzrender / chemparseplot: lazy via
-    # RGPYCRUMBS_AUTO_DEPS + ensure_import (rgpycrumbs>=1.10.8)
+    # plot stack (jax, adjustText, chemparseplot, xyzrender): ensure_import + uv
+    - "rgpycrumbs>=1.10.8"
     - atomistic-cookbook-utils >=0.1,<0.2
