@@ -296,9 +296,6 @@ neb_spec = NebSpec(
 params = pyec.Parameters()
 params.job = pyec.JobType.Nudged_Elastic_Band
 neb_spec.apply_to_parameters(params)
-# Keep the NEB iteration / OCINEB log where the client would write it.
-if hasattr(params, "write_log"):
-    params.write_log = True
 pot = make_backend(
     "rgpot_metatomic",
     model_path=str(Path(fname).resolve()),
@@ -317,72 +314,15 @@ f_neb = pyec.pot_registry_total_force_calls() - f0
 if status == pyec.NEBStatus.GOOD:
     neb.find_extrema()
 
-# Final artifacts: results.dat, neb.con, sp.con, neb.dat, MMF peaks, …
 written = pyec.write_neb_results(neb, params, f_neb)
-
-
-def report_neb_run(neb, status, written, *, force_calls: int, cwd=None) -> None:
-    """Print the full NEB movie trace plus a short status summary.
-
-    ``write_movies`` leaves one ``neb_NNN.dat`` per optimizer step (energies
-    relative to the reactant). That series is the band evolution used for the
-    1D profile plot. ``neb.dat`` / ``results.dat`` hold the converged band.
-    """
-    cwd = Path.cwd() if cwd is None else Path(cwd)
-    dats = sorted(cwd.glob("neb_*.dat"))
-    if dats:
-        print("NEB path evolution (write_movies → neb_NNN.dat)")
-        print(
-            f"{'step':>6} {'E_max (eV)':>12} {'E_min (eV)':>12} {'path length (Å)':>16}"
-        )
-        for i, dat in enumerate(dats):
-            data = np.loadtxt(dat, skiprows=1)
-            if data.ndim == 1:
-                data = data.reshape(1, -1)
-            e = data[:, 2]
-            rc_end = float(data[-1, 1]) if data.shape[1] > 1 else float("nan")
-            print(
-                f"{i:6d} {float(e.max()):12.4f} {float(e.min()):12.4f} {rc_end:16.4f}"
-            )
-        print(f"  ({len(dats)} band snapshots; step 0 is the IDPP guess on PET-MAD)")
-
-    neb_dat = cwd / "neb.dat"
-    if neb_dat.exists():
-        print("\nFinal band (neb.dat; energies relative to reactant):")
-        print(neb_dat.read_text().rstrip())
-
-    results = cwd / "results.dat"
-    if results.exists():
-        print("\nresults.dat:")
-        print(results.read_text().rstrip())
-
-    # Short summary (same quantities the thin printout used to show alone).
-    energies = np.array([neb.image_energy(i) for i in range(neb.n_path)])
-    e_react = float(energies[0])
-    print("\n--- summary ---")
-    print(f"NEB status: {status}")
-    print(f"force_calls_neb: {force_calls}")
-    print(f"E_ref (eOn min endpoint) = {neb.energy_reference:.6f} eV")
-    print(f"E_reactant = {e_react:.6f} eV,  n_path = {neb.n_path}")
-    print("ΔE vs reactant (eV):", np.round(energies - e_react, 4))
-    if neb.num_extrema:
-        n_ext = int(neb.num_extrema)
-        pos = list(neb.extremum_positions)[:n_ext]
-        e_ext = list(neb.extremum_energies)[:n_ext]
-        print(f"extrema ({n_ext}):")
-        for k, (p, e) in enumerate(zip(pos, e_ext, strict=True)):
-            print(f"  #{k}: position={p:.6f},  energy={e:.6f} eV")
-    print("written:", written)
-
-
-report_neb_run(neb, status, written, force_calls=f_neb)
-
-# Surface any client log the potential/NEB wrote during compute.
-for log_name in ("client_quill.log", "client.log"):
-    log_path = Path(log_name)
-    if log_path.exists() and log_path.stat().st_size:
-        print(f"\n--- {log_name} ---")
-        print(log_path.read_text().rstrip())
+energies = np.array([neb.image_energy(i) for i in range(neb.n_path)])
+e_react = float(energies[0])
+print("NEB status:", status, "  force_calls:", f_neb)
+print(f"E_ref = {neb.energy_reference:.6f} eV,  n_path = {neb.n_path}")
+print("ΔE vs reactant (eV):", np.round(energies - e_react, 4))
+if neb.num_extrema:
+    print("extrema positions:", list(neb.extremum_positions)[: neb.num_extrema])
+print("written:", written)
 
 
 # %%
@@ -390,10 +330,8 @@ for log_name in ("client_quill.log", "client.log"):
 # ---------------------
 #
 # `chemparseplot <https://pypi.org/project/chemparseplot>`_ / `rgpycrumbs
-# <https://pypi.org/project/rgpycrumbs>`_ map the NEB movie onto a 1D energy
-# profile (every ``neb_NNN.dat`` overlaid, first = IDPP guess, last =
-# converged) and a 2D RMSD landscape. The plot entry points are imported and
-# called in-process — no ``python -m …`` / uv subprocess.
+# <https://pypi.org/project/rgpycrumbs>`_ plot the NEB movie: 1D energy
+# profiles from every ``neb_NNN.dat`` and a 2D RMSD landscape.
 
 
 def thin_min_movie(
