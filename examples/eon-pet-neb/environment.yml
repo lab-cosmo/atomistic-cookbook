@@ -3,14 +3,12 @@ channels:
   - conda-forge
   - https://repo.prefix.dev/rg-forge
 dependencies:
-  # Client via pip (pyeonclient); no conda-forge eOn / eonclient binary.
   - ira
   - python=3.13
   - pip
   - uv
   - pip:
-    # pyeonclient 0.3.2: make_backend, neb_idpp_path, find_extrema, write_neb_results
-    # Upper bounds keep the gallery stable across dependency bumps (Luthaf).
+    # In-process eOn client + shared schema (upper bounds for gallery stability).
     - "pyeonclient[models]>=0.3.2,<0.4"
     - "eon-schema>=0.2.1,<0.3"
     - "rgpot>=2.4.2,<3"

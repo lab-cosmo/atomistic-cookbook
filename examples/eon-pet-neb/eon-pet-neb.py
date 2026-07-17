@@ -8,29 +8,23 @@ Finding Reaction Paths with eOn and a Metatomic Potential
           Arslan Mazitov `@abmazitov <https://github.com/abmazitov>`_,
           Michele Ceriotti `@ceriottim <https://github.com/ceriottim/>`_
 
-This example describes how to find the reaction pathway for oxadiazole
-formation from N₂O and ethylene. We will use the **PET-MAD** `metatomic
-model <https://docs.metatensor.org/metatomic/latest/overview.html>`__ to
-calculate the potential energy and forces.
+This example finds a reaction path for oxadiazole formation from N₂O and
+ethylene with the **PET-MAD** `metatomic model
+<https://docs.metatensor.org/metatomic/latest/overview.html>`__. Energies and
+forces come from that model under two drivers: a climbing-image NEB in the
+`atomic simulation environment (ASE)
+<https://databases.fysik.dtu.dk/ase/>`__, and an energy-weighted NEB with
+optional off-path climbing steps (OCI / MMF) in `eOn
+<https://eondocs.org/>`__ via ``pyeonclient``.
 
-The primary goal is to contrast a standard Nudged Elastic Band (NEB) calculation
-using the `atomic simulation environment (ASE)
-<https://databases.fysik.dtu.dk/ase/>`__ with more sophisticated methods
-available in the `eOn package <https://eondocs.org/>`__. For even a relatively
-simple reaction like this, a basic NEB implementation can struggle to converge
-or may time out. We will show how eOn's advanced features, such as
-**energy-weighted springs** and mixing in **single-ended dimer search steps**,
-can efficiently locate and refine the transition state along the path.
+Outline:
 
-Our approach will be:
-
-1. Download **PET-MAD** and call
-   ``make_backend("rgpot_metatomic", model_path=...)`` (or ``metatomic`` /
-   ``ase_metatomic``).
-2. ASE half: ASE IDPP + short ASE NEB with ``MetatomicCalculator`` (baseline).
-3. eOn half: **Matter** + eOn-native IDPP + ``NudgedElasticBand`` (EW springs +
-   MMF) — path never goes through ASE after the endpoints.
-4. Plot the band and relax endpoints with the same potential.
+1. Export PET-MAD and load it for ASE and for eOn
+   (``make_backend("rgpot_metatomic", ...)``).
+2. Build an IDPP guess and run a short ASE climbing-image NEB.
+3. Run eOn's ``NudgedElasticBand`` with energy-weighted springs and MMF
+   (``NebSpec``), then plot the path.
+4. Relax the endpoints with the same potential and check ordering with IRA.
 
 
 Importing Required Packages
