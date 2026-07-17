@@ -50,8 +50,16 @@ from ase.optimize import LBFGS
 from ase.visualize import view
 from ase.visualize.plot import plot_atoms
 from atomistic_cookbook_utils import run_command
+from chemparseplot.parse.eon.min_trajectory import load_min_trajectory
+from chemparseplot.plot.optimization import (
+    plot_single_ended_convergence,
+    plot_single_ended_profile,
+    render_single_ended_landscape,
+)
+from chemparseplot.plot.theme import get_theme, setup_global_theme
 from pyeonclient.backends import make_backend, make_metatomic_ase_calculator
 from pyeonclient.models import NebSpec, PathInit
+from rgpycrumbs.eon import plot_neb
 
 
 def write_con(path, atoms_or_list):
@@ -331,7 +339,7 @@ print("written:", written)
 #
 # ``write_movies`` leaves ``neb_NNN.dat`` for every optimizer step. Plot the
 # full band evolution (1D) and the reaction-valley landscape (2D) with
-# :func:`pyeonclient.plot_neb`.
+# :func:`rgpycrumbs.eon.plot_neb`.
 
 
 def show_png(path: str, figsize=(10, 8)) -> None:
@@ -345,11 +353,30 @@ def show_png(path: str, figsize=(10, 8)) -> None:
 
 os.environ.setdefault("MPLBACKEND", "Agg")
 
+# Shared style for the gallery NEB figures.
+_neb_style = dict(
+    con_file="neb.con",
+    figsize=(12, 8),
+    zoom_ratio=0.35,
+    show_pts=True,
+    highlight_last=True,
+    facecolor="white",
+    fontsize_base=14,
+    plot_structures="all",
+    strip_renderer="xyzrender",
+    strip_dividers=True,
+    strip_spacing=2.0,
+    xyzrender_config="paton",
+    rotation="90x,0y,0z",
+    show_legend=True,
+)
+
 # 1D: every neb_NNN.dat overlaid; step 0 = IDPP on PET-MAD, last = converged.
-pyec.plot_neb(
+plot_neb(
     plot_type="profile",
-    output="1D_oxad.png",
+    output_file="1D_oxad.png",
     title="NEB Path Optimization",
+    **_neb_style,
 )
 show_png("1D_oxad.png")
 
@@ -362,10 +389,16 @@ show_png("1D_oxad.png")
 # Gaussian process that incorporates both energies and projected tangential
 # forces from the full NEB optimization history.
 
-pyec.plot_neb(
+plot_neb(
     plot_type="landscape",
-    output="2D_oxad.png",
+    output_file="2D_oxad.png",
     title="NEB-RMSD Surface",
+    rc_mode="path",
+    landscape_mode="surface",
+    landscape_path="all",
+    surface_type="grad_imq",
+    project_path=True,
+    **_neb_style,
 )
 show_png("2D_oxad.png")
 # %%
@@ -462,9 +495,41 @@ def relax_endpoint(atoms, out_dir: Path):
 reactant, matter_r = relax_endpoint(reactant, dir_reactant)
 product, matter_p = relax_endpoint(product, dir_product)
 
-# Thin dense force-eval movies so gradient surface fits stay well-conditioned.
+
+def thin_min_movie(
+    job_dir: Path, *, max_frames: int = 64, prefix: str = "minimization"
+) -> int:
+    """Thin a dense minimization movie so landscape fits stay well-conditioned."""
+    job_dir = Path(job_dir)
+    movie = None
+    for candidate in (job_dir / prefix, job_dir / f"{prefix}.con"):
+        if candidate.exists():
+            movie = candidate
+            break
+    if movie is None:
+        return 0
+    frames = list(readcon.read_con(str(movie)))
+    n = len(frames)
+    if n <= max_frames:
+        return n
+    idx = np.unique(np.linspace(0, n - 1, num=max_frames, dtype=int))
+    if idx[-1] != n - 1:
+        idx = np.unique(np.append(idx, n - 1))
+    thinned = [frames[i] for i in idx]
+    readcon.write_con(str(movie), thinned)
+    dat_path = job_dir / f"{prefix}.dat"
+    if dat_path.exists():
+        lines = dat_path.read_text().splitlines()
+        if lines:
+            header, rows = lines[0], lines[1:]
+            if len(rows) == n:
+                kept = [rows[i] for i in idx]
+                dat_path.write_text(header + "\n" + "\n".join(kept) + "\n")
+    return len(thinned)
+
+
 for _min_dir in (dir_reactant, dir_product):
-    pyec.thin_min_movie(_min_dir, max_frames=64)
+    thin_min_movie(_min_dir, max_frames=64)
 
 
 # %%
@@ -475,29 +540,52 @@ for _min_dir in (dir_reactant, dir_product):
 # landscapes are **separate** for reactant and product (each trajectory has its
 # own RMSD frame).
 
+setup_global_theme(get_theme("ruhi"))
 min_jobs = [dir_reactant, dir_product]
 min_labels = ["reactant", "product"]
-pyec.plot_min(
-    [dir_reactant],
-    labels=["reactant"],
-    plot_type="landscape",
+min_trajs = [load_min_trajectory(d, prefix="minimization") for d in min_jobs]
+
+render_single_ended_landscape(
+    atoms_list=min_trajs[0].atoms_list,
+    energies_eV=min_trajs[0].dat_df["energy"].to_numpy(),
+    ref_a=min_trajs[0].initial_atoms,
+    ref_b=min_trajs[0].final_atoms or min_trajs[0].atoms_list[-1],
+    project_path=True,
+    surface_type="grad_imq",
+    title="Reactant minimization",
     output="min_2D_reactant_oxad.png",
+    plot_structures="endpoints",
+    strip_renderer="xyzrender",
+    xyzrender_config="paton",
+    rotation="90x,0y,0z",
 )
 show_png("min_2D_reactant_oxad.png")
-pyec.plot_min(
-    [dir_product],
-    labels=["product"],
-    plot_type="landscape",
+render_single_ended_landscape(
+    atoms_list=min_trajs[1].atoms_list,
+    energies_eV=min_trajs[1].dat_df["energy"].to_numpy(),
+    ref_a=min_trajs[1].initial_atoms,
+    ref_b=min_trajs[1].final_atoms or min_trajs[1].atoms_list[-1],
+    project_path=True,
+    surface_type="grad_imq",
+    title="Product minimization",
     output="min_2D_product_oxad.png",
+    plot_structures="endpoints",
+    strip_renderer="xyzrender",
+    xyzrender_config="paton",
+    rotation="90x,0y,0z",
 )
 show_png("min_2D_product_oxad.png")
-pyec.plot_min(
-    min_jobs, labels=min_labels, plot_type="profile", output="min_1D_oxad.png"
+plot_single_ended_profile(
+    min_trajs,
+    min_labels,
+    "min_1D_oxad.png",
+    dpi=200,
+    energy_unit="eV",
+    energy_column="energy",
+    title="Minimization Energy Profile",
 )
 show_png("min_1D_oxad.png")
-pyec.plot_min(
-    min_jobs, labels=min_labels, plot_type="convergence", output="min_conv_oxad.png"
-)
+plot_single_ended_convergence(min_trajs, min_labels, "min_conv_oxad.png", dpi=200)
 show_png("min_conv_oxad.png")
 
 # %%

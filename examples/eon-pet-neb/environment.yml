@@ -8,7 +8,7 @@ dependencies:
   - pip
   - uv
   - pip:
-    - "pyeonclient[models,plot]>=0.3.3,<0.4"
+    - "pyeonclient[models]>=0.3.2,<0.4"
     - "eon-schema>=0.2.1,<0.3"
     - "rgpot>=2.4.2,<3"
     - torch>=2.9,<2.14
@@ -18,4 +18,6 @@ dependencies:
     - requests
     - metatomic-ase
     - "readcon>=0.13.1,<0.14"
+    - "rgpycrumbs>=1.10.2"
+    - "chemparseplot[neb,plot]>=1.9.13,<2"
     - atomistic-cookbook-utils >=0.1,<0.2
