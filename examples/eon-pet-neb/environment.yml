@@ -19,9 +19,7 @@ dependencies:
     - requests
     - metatomic-ase
     - "readcon>=0.13.1,<0.14"
-    # NEB/min plots: in-process chemparseplot + rgpycrumbs (no CLI/uv subprocess).
     - "rgpycrumbs>=1.9.16,<1.9.21"
-    # 1.9.13+ fixes SurfaceFitConfig NameError on Py3.13 (1.9.10–1.9.12 broken).
     - "chemparseplot[neb,plot]>=1.9.13,<2"
     - "xyzrender>=0.1.3"
     - "adjustText>=1.0"
