@@ -25,13 +25,6 @@ Outline:
 3. Run eOn ``NudgedElasticBand`` with energy-weighted springs and MMF
    (``NebSpec``), then plot the path.
 4. Relax the endpoints with the same potential and check ordering with IRA.
-
-
-Importing Required Packages
----------------------------
-First, we import all the necessary python packages for this task.
-By convention, all ``import``
-statements are at the top of the file.
 """
 
 import os
@@ -54,9 +47,13 @@ from pyeonclient.backends import make_backend, make_metatomic_ase_calculator
 from pyeonclient.models import NebSpec, PathInit
 from rgpycrumbs.eon import plot_min, plot_neb
 
+os.environ.setdefault("MPLBACKEND", "Agg")
+
+# sphinx_gallery_thumbnail_number = 4
+
 
 def write_con(path, atoms_or_list):
-    """ASE → ``.con`` via readcon (export for plot tools only)."""
+    """ASE → ``.con`` via readcon (for plot tools / on-disk export)."""
     path = Path(path)
     items = (
         atoms_or_list if isinstance(atoms_or_list, (list, tuple)) else [atoms_or_list]
@@ -66,7 +63,13 @@ def write_con(path, atoms_or_list):
     return path
 
 
-# sphinx_gallery_thumbnail_number = 4
+def show_png(path: str, *, figsize=(10, 8)) -> None:
+    """Display a saved plot PNG in the sphinx-gallery page."""
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.imshow(mpimg.imread(path))
+    ax.axis("off")
+    fig.tight_layout(pad=0.15)
+    plt.show()
 
 
 # %%
@@ -134,57 +137,31 @@ ax1.set_axis_off()
 ax2.set_axis_off()
 
 # %%
-# Endpoint minimization
-# ^^^^^^^^^^^^^^^^^^^^^
+# Initial path (IDPP)
+# ^^^^^^^^^^^^^^^^^^^
 #
-# Endpoints should be minimized before a path search. The input geometries
-# here are already relaxed; the tutorial end shows endpoint relaxation with eOn.
-
-
-# %%
-# Initial path generation
-# ^^^^^^^^^^^^^^^^^^^^^^^
-#
-# To begin an NEB method, an initial path is required, the optimal construction
-# of which still forms an active area of research. The simplest approximation to
-# an initial path for NEB methods linearly interpolate between the two known
-# configurations building on intuition developed from "drag coordinate" methods.
-# This may break bonds or otherwise also unphysically pass atoms through each
-# other, similar to the effect of incorrect permutations. To ameliorate this
-# effect, the NEB algorithm is often started from the linear interpolation but
-# then the path is optimized on a surrogate potential energy surface, commonly
-# something cheap and analytic, like the IDPP (Image dependent pair potential,
-# [5]) which provides a surface based on bond distances, and thus preventing
-# atom-in-atom collisions.
-#
-# ASE's IDPP initializer [5]; see also the
+# Endpoints above are already minimized; relaxation with eOn is shown at the
+# end. An NEB needs an initial band. Linear interpolation can break bonds or
+# pass atoms through each other; a common fix is to refine the band on a cheap
+# surrogate such as the image-dependent pair potential (IDPP) [5] (bond-length
+# surface). ASE's IDPP initializer is used here; eOn builds its own path later
+# with ``neb_idpp_path``. See also the
 # `ASE tutorial
 # <https://ase-lib.org/examples_generated/tutorials/neb_idpp.html>`_.
-# eOn builds its own IDPP path later with ``neb_idpp_path``.
+# Too many images kink the band; too few under-resolve the tangent.
 
 N_INTERMEDIATE_IMGS = 10
-images = [reactant]
-images += [reactant.copy() for _ in range(N_INTERMEDIATE_IMGS)]
-images += [product]
 
-neb = NEB(images)
-neb.interpolate("idpp")
-
-# %%
-# Too many images can kink the band; too few under-resolve the tangent.
-# Here the path is the ASE list ``images``.
 
 # %%
 # Running NEBs
 # ------------
 #
-# We will now consider actually running the Nudged Elastic Band with different
-# codes.
+# ASE climbing-image NEB
+# ^^^^^^^^^^^^^^^^^^^^^^
 #
-# ASE and Metatomic
-# ^^^^^^^^^^^^^^^^^
-#
-# We first consider using metatomic with the ASE calculator.
+# Short ASE + metatomic calculator run on the same PET-MAD export (comparison
+# only; full convergence on this system needs many more steps).
 
 
 def mk_mta_calc():
@@ -197,8 +174,7 @@ def mk_mta_calc():
     )
 
 
-# set calculators for images
-ipath = [reactant] + [reactant.copy() for _ in range(10)] + [product]
+ipath = [reactant] + [reactant.copy() for _ in range(N_INTERMEDIATE_IMGS)] + [product]
 for img in ipath:
     img.calc = mk_mta_calc()
 
@@ -206,54 +182,38 @@ print(img.calc._model.capabilities().outputs)
 
 neb = NEB(ipath, climb=True, k=5, method="improvedtangent")
 neb.interpolate("idpp")
-
-# store initial path guess for plotting
 initial_energies = np.array([img.get_potential_energy() for img in ipath])
-
-# setup the NEB calculation
 optimizer = LBFGS(neb, trajectory="A2B.traj", logfile="opt.log")
 conv = optimizer.run(fmax=0.01, steps=100)
-
-print("Check if calculation has converged:", conv)
-
-if conv:
-    print(neb)
-
+print("ASE NEB converged:", conv)
 final_energies = np.array([img.get_potential_energy() for img in ipath])
 
-# Plot initial and final path
 plt.figure(figsize=(8, 6))
-# Initial Path (Blue)
 plt.plot(
     initial_energies - initial_energies[0],
     "o-",
-    label="Initial Path (IDPP)",
+    label="Initial path (IDPP)",
     color="xkcd:blue",
 )
-# Final Path (Orange)
 plt.plot(
     final_energies - initial_energies[0],
     "o-",
-    label="Optimized Path (LBFGS)",
+    label="After 100 LBFGS steps",
     color="xkcd:orange",
 )
-# Metadata
 plt.xlabel("Image number")
-plt.ylabel("Potential Energy (eV)")
+plt.ylabel("Potential energy (eV)")
 plt.legend()
 plt.grid(True, alpha=0.3)
-plt.title("NEB Path Evolution")
+plt.title("ASE NEB path evolution")
 plt.show()
 
 # %%
 # After 100 LBFGS steps the band has not converged. PET-MAD v1.5.0 also
 # reports large `LLPR energy uncertainties
 # <https://atomistic-cookbook.org/examples/pet-mad-uq/pet-mad-uq.html>`__ on
-# some images, so we stop the ASE run here. FIRE can do better on this
-# system but needs many more steps; we keep LBFGS for the short ASE example.
-#
-# The next section uses the same model with eOn's energy-weighted NEB and
-# OCI-MMF refinements.
+# some images. The next section uses the same model with eOn's energy-weighted
+# NEB and OCI-MMF refinements.
 
 
 # %%
@@ -334,20 +294,6 @@ print("written:", written)
 # full band evolution (1D) and the reaction-valley landscape (2D) with
 # :func:`rgpycrumbs.eon.plot_neb`.
 
-
-def show_png(path: str, *, figsize=(10, 8)) -> None:
-    """Display a saved plot PNG in the gallery."""
-    img = mpimg.imread(path)
-    fig, ax = plt.subplots(figsize=figsize)
-    ax.imshow(img)
-    ax.axis("off")
-    fig.tight_layout(pad=0.15)
-    plt.show()
-
-
-os.environ.setdefault("MPLBACKEND", "Agg")
-
-# Shared style for the gallery NEB figures.
 _neb_style = dict(
     con_file="neb.con",
     figsize=(12, 8),
@@ -376,12 +322,11 @@ show_png("1D_oxad.png")
 
 
 # %%
-# The 2D PES landscape is projected onto reaction-valley coordinates [3, 7]:
-# *progress* along the path and *orthogonal deviation*, computed from
-# permutation-corrected RMSD distances to the reactant and product. The energy
-# surface is interpolated using a gradient-enhanced inverse multiquadric (IMQ)
-# Gaussian process that incorporates both energies and projected tangential
-# forces from the full NEB optimization history.
+# 2D landscape in reaction-valley coordinates [3, 7]: progress along the path
+# and orthogonal deviation from permutation-corrected RMSD to the endpoints
+# (IRA [4]). Energies and projected tangential forces feed a gradient-enhanced
+# inverse multiquadric GP [7]; black dots are configurations evaluated during
+# NEB (see [3, Chapter 4]).
 
 plot_neb(
     plot_type="landscape",
@@ -395,32 +340,22 @@ plot_neb(
     **_neb_style,
 )
 show_png("2D_oxad.png")
+
+
 # %%
-# Each black dot is a configuration evaluated during NEB optimization [7]. The
-# horizontal axis measures progress along the converged path; the vertical axis
-# measures perpendicular displacement. Both coordinates derive from
-# permutation-corrected RMSD (via IRA [4]) to the reactant and product. The
-# energy surface is interpolated by a gradient-enhanced inverse multiquadric GP
-# that uses both the energy and the tangential NEB force at each evaluated
-# configuration. See [3, Chapter 4] for details.
-#
 # Relaxing the endpoints with eOn
 # -------------------------------
 #
-# In this final part we come back to an essential
-# point of performing NEB calculations, and that is the
-# relaxation of the initial states. In the tutorials above
-# we used directly relaxed structures, and here we are
-# demonstrating how these can be relaxed.
-# We first load structures which are not relaxed.
+# The NEB above started from pre-minimized geometries. Here unrelaxed
+# structures are boxed, minimized with the same PET-MAD backend, then checked
+# with IRA.
 
 reactant = aseio.read("data/reactant.con")
 product = aseio.read("data/product.con")
 
 
-# For compatibility with eOn, we also need to provide
-# a unit cell
 def center_cell(atoms):
+    """Assign a cubic cell and center (eOn expects a unit cell)."""
     atoms.set_cell([20, 20, 20])
     atoms.pbc = True
     atoms.center()
@@ -430,9 +365,6 @@ def center_cell(atoms):
 reactant = center_cell(reactant)
 product = center_cell(product)
 
-# %%
-# The resulting reactant has a larger box:
-#
 fig, (ax1, ax2) = plt.subplots(1, 2)
 plot_atoms(reactant, ax1, rotation=("-90x,0y,0z"))
 plot_atoms(product, ax2, rotation=("-90x,0y,0z"))
@@ -445,10 +377,9 @@ ax2.set_axis_off()
 # Run the minimization
 # ^^^^^^^^^^^^^^^^^^^^
 #
-# Endpoints are relaxed in place with ``Matter.relax``. Movies under
-# ``min_reactant/`` and ``min_product/`` feed the plots below.
+# ``Matter.relax`` writes movies under ``min_reactant/`` and ``min_product/``
+# for the plots below.
 
-# Same model and backend as the NEB.
 params_min = pyec.Parameters()
 params_min.job = pyec.JobType.Minimization
 params_min.random_seed = 706253457
@@ -470,7 +401,7 @@ dir_product.mkdir(exist_ok=True)
 
 
 def relax_endpoint(atoms, out_dir: Path):
-    """ASE Atoms → Matter.relax → ASE Atoms (movie written in *out_dir*)."""
+    """ASE Atoms → Matter.relax → ASE Atoms (movie in *out_dir*)."""
     matter = pyec.from_ase(atoms, pot_min, params_min)
     with chdir(out_dir):
         ok = bool(
@@ -483,21 +414,20 @@ def relax_endpoint(atoms, out_dir: Path):
     print(f"{out_dir.name}: converged={ok},  E = {matter.potential_energy:.6f} eV")
     atoms_out = pyec.to_ase(matter)
     write_con(out_dir / "min.con", atoms_out)
-    return atoms_out, matter
+    return atoms_out
 
 
-reactant, matter_r = relax_endpoint(reactant, dir_reactant)
-product, matter_p = relax_endpoint(product, dir_product)
+reactant = relax_endpoint(reactant, dir_reactant)
+product = relax_endpoint(product, dir_product)
 
 
 # %%
 # Minimization figures
 # ^^^^^^^^^^^^^^^^^^^^
 #
-# Energy profile and optimizer convergence overlay both endpoints. The 2D
-# landscapes use **separate** RMSD frames for reactant and product; they are
-# rendered as two files and shown **side by side** below. ``auto_thin`` keeps
-# long force-eval movies fit-safe.
+# Landscapes use separate RMSD frames per endpoint and are shown side by side.
+# Profile and convergence overlay both jobs. ``auto_thin`` keeps long force-eval
+# movies fit-safe.
 
 _min_style = dict(
     surface_type="grad_imq",
@@ -512,9 +442,6 @@ _min_style = dict(
     max_surface_points=64,
     dpi=160,
 )
-
-# %%
-# Reactant and product landscapes (side by side; strip = initial → minimized):
 
 plot_min(
     job_dir=[dir_reactant],
@@ -542,7 +469,7 @@ fig.tight_layout()
 plt.show()
 
 # %%
-# Energy profiles for both endpoints on one axis:
+# Energy profiles for both endpoints:
 
 plot_min(
     job_dir=[dir_reactant, dir_product],
@@ -554,7 +481,7 @@ plot_min(
 show_png("min_1D_oxad.png", figsize=(10, 5))
 
 # %%
-# Optimizer force convergence for both endpoints:
+# Optimizer force convergence:
 
 plot_min(
     job_dir=[dir_reactant, dir_product],
@@ -566,45 +493,30 @@ plot_min(
 show_png("min_conv_oxad.png", figsize=(10, 5))
 
 # %%
-# Additionally, the relative ordering must be preserved, for which we use
-# IRA [4]. ``reactant`` / ``product`` are the relaxed ASE views.
+# Atom ordering after relaxation is aligned with IRA [4] (rotation,
+# translation, and permutation of the product onto the reactant).
 
 ira = ira_mod.IRA()
-# Default value
 kmax_factor = 1.8
-
 nat1 = len(reactant)
 typ1 = reactant.get_atomic_numbers()
 coords1 = reactant.get_positions()
-
 nat2 = len(product)
 typ2 = product.get_atomic_numbers()
 coords2 = product.get_positions()
 
-print("Running ira.match to find rotation, translation, AND permutation...")
-# r = rotation, t = translation, p = permutation, hd = Hausdorff distance
 r, t, p, hd = ira.match(nat1, typ1, coords1, nat2, typ2, coords2, kmax_factor)
+print(f"IRA match: Hausdorff distance = {hd:.6f} Å")
 
-print(f"Matching complete. Hausdorff Distance (hd) = {hd:.6f} Angstrom")
-
-# Apply rotation (r) and translation (t) to the original product coordinates
-# This aligns the product's orientation to the reactant's
+# Align product: rotate/translate, then permute so atom *i* matches reactant *i*.
 coords2_aligned = (coords2 @ r.T) + t
-
-# Apply the permutation (p)
-# This re-orders the aligned product atoms to match the reactant's atom order
-# p[i] = j means reactant atom 'i' matches product atom 'j'
-# So, the new coordinate array's i-th element should be coords2_aligned[j]
 coords2_aligned_permuted = coords2_aligned[p]
-
-# Save the new aligned-and-permuted structure
-# CRUCIAL: Use chemical symbols from the reactant,
-# because we have now permuted the product coordinates to match the reactant order.
 product = reactant.copy()
 product.positions = coords2_aligned_permuted
+
 # %%
-# Finally we can visualize these with ASE.
-#
+# Aligned endpoints:
+
 view(reactant, viewer="x3d")
 view(product, viewer="x3d")
 fig, (ax1, ax2) = plt.subplots(1, 2)
