@@ -38,6 +38,10 @@ import os
 from contextlib import chdir
 from pathlib import Path
 
+# Library plot_* uses ensure_import (jax, adjustText, …). CLI dispatch sets this
+# automatically; gallery imports need it so uv can stage heavies into the cache.
+os.environ.setdefault("RGPYCRUMBS_AUTO_DEPS", "1")
+
 import ase.io as aseio
 import ira_mod
 import matplotlib.image as mpimg

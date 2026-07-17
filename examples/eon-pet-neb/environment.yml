@@ -14,8 +14,6 @@ dependencies:
     - torch>=2.9,<2.14
     - ase>=3.23,<4
     - matplotlib
-    # rgpycrumbs.eon.plot_neb imports adjustText at module load
-    - "adjustText>=1.0"
     - metatrain>=2026.3.1,<2027
     - requests
     - metatomic-ase
@@ -23,8 +21,7 @@ dependencies:
     # 1.10.3 miswired Click onto plot_*_from_settings (library kwargs → argv)
     - "rgpycrumbs>=1.10.4"
     - "chemparseplot[neb,plot]>=1.9.14,<2"
-    # strip_renderer="xyzrender" needs the xyzrender CLI on PATH
+    # strip_renderer="xyzrender" needs the xyzrender CLI on PATH (not ensure_import)
     - "xyzrender>=0.1.3"
-    # grad_imq / gradient-enhanced surface fits (chemparseplot landscape)
-    - "jax[cpu]>=0.4"
+    # jax / adjustText: lazy via RGPYCRUMBS_AUTO_DEPS=1 + uv (see eon-pet-neb.py)
     - atomistic-cookbook-utils >=0.1,<0.2
