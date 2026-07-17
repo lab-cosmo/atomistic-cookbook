@@ -18,6 +18,6 @@ dependencies:
     - requests
     - metatomic-ase
     - "readcon>=0.13.1,<0.14"
-    - "rgpycrumbs>=1.10.2"
+    - "rgpycrumbs>=1.10.3"
     - "chemparseplot[neb,plot]>=1.9.13,<2"
     - atomistic-cookbook-utils >=0.1,<0.2

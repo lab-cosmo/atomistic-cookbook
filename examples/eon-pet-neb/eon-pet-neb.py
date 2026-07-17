@@ -50,16 +50,9 @@ from ase.optimize import LBFGS
 from ase.visualize import view
 from ase.visualize.plot import plot_atoms
 from atomistic_cookbook_utils import run_command
-from chemparseplot.parse.eon.min_trajectory import load_min_trajectory
-from chemparseplot.plot.optimization import (
-    plot_single_ended_convergence,
-    plot_single_ended_profile,
-    render_single_ended_landscape,
-)
-from chemparseplot.plot.theme import get_theme, setup_global_theme
 from pyeonclient.backends import make_backend, make_metatomic_ase_calculator
 from pyeonclient.models import NebSpec, PathInit
-from rgpycrumbs.eon import plot_neb
+from rgpycrumbs.eon import plot_min, plot_neb
 
 
 def write_con(path, atoms_or_list):
@@ -496,96 +489,55 @@ reactant, matter_r = relax_endpoint(reactant, dir_reactant)
 product, matter_p = relax_endpoint(product, dir_product)
 
 
-def thin_min_movie(
-    job_dir: Path, *, max_frames: int = 64, prefix: str = "minimization"
-) -> int:
-    """Thin a dense minimization movie so landscape fits stay well-conditioned."""
-    job_dir = Path(job_dir)
-    movie = None
-    for candidate in (job_dir / prefix, job_dir / f"{prefix}.con"):
-        if candidate.exists():
-            movie = candidate
-            break
-    if movie is None:
-        return 0
-    frames = list(readcon.read_con(str(movie)))
-    n = len(frames)
-    if n <= max_frames:
-        return n
-    idx = np.unique(np.linspace(0, n - 1, num=max_frames, dtype=int))
-    if idx[-1] != n - 1:
-        idx = np.unique(np.append(idx, n - 1))
-    thinned = [frames[i] for i in idx]
-    readcon.write_con(str(movie), thinned)
-    dat_path = job_dir / f"{prefix}.dat"
-    if dat_path.exists():
-        lines = dat_path.read_text().splitlines()
-        if lines:
-            header, rows = lines[0], lines[1:]
-            if len(rows) == n:
-                kept = [rows[i] for i in idx]
-                dat_path.write_text(header + "\n" + "\n".join(kept) + "\n")
-    return len(thinned)
-
-
-for _min_dir in (dir_reactant, dir_product):
-    thin_min_movie(_min_dir, max_frames=64)
-
-
 # %%
 # Minimization figures
 # ^^^^^^^^^^^^^^^^^^^^
 #
 # Energy profile and optimizer convergence overlay both endpoints. The 2D
 # landscapes are **separate** for reactant and product (each trajectory has its
-# own RMSD frame).
+# own RMSD frame). ``auto_thin`` keeps long force-eval movies fit-safe.
 
-setup_global_theme(get_theme("ruhi"))
-min_jobs = [dir_reactant, dir_product]
-min_labels = ["reactant", "product"]
-min_trajs = [load_min_trajectory(d, prefix="minimization") for d in min_jobs]
-
-render_single_ended_landscape(
-    atoms_list=min_trajs[0].atoms_list,
-    energies_eV=min_trajs[0].dat_df["energy"].to_numpy(),
-    ref_a=min_trajs[0].initial_atoms,
-    ref_b=min_trajs[0].final_atoms or min_trajs[0].atoms_list[-1],
-    project_path=True,
+_min_style = dict(
     surface_type="grad_imq",
-    title="Reactant minimization",
-    output="min_2D_reactant_oxad.png",
+    project_path=True,
     plot_structures="endpoints",
     strip_renderer="xyzrender",
     xyzrender_config="paton",
     rotation="90x,0y,0z",
+    strip_dividers=True,
+    auto_thin=True,
+    max_surface_points=64,
+)
+
+plot_min(
+    job_dir=[dir_reactant],
+    label=["reactant"],
+    plot_type="landscape",
+    output="min_2D_reactant_oxad.png",
+    **_min_style,
 )
 show_png("min_2D_reactant_oxad.png")
-render_single_ended_landscape(
-    atoms_list=min_trajs[1].atoms_list,
-    energies_eV=min_trajs[1].dat_df["energy"].to_numpy(),
-    ref_a=min_trajs[1].initial_atoms,
-    ref_b=min_trajs[1].final_atoms or min_trajs[1].atoms_list[-1],
-    project_path=True,
-    surface_type="grad_imq",
-    title="Product minimization",
+plot_min(
+    job_dir=[dir_product],
+    label=["product"],
+    plot_type="landscape",
     output="min_2D_product_oxad.png",
-    plot_structures="endpoints",
-    strip_renderer="xyzrender",
-    xyzrender_config="paton",
-    rotation="90x,0y,0z",
+    **_min_style,
 )
 show_png("min_2D_product_oxad.png")
-plot_single_ended_profile(
-    min_trajs,
-    min_labels,
-    "min_1D_oxad.png",
-    dpi=200,
-    energy_unit="eV",
-    energy_column="energy",
-    title="Minimization Energy Profile",
+plot_min(
+    job_dir=[dir_reactant, dir_product],
+    label=["reactant", "product"],
+    plot_type="profile",
+    output="min_1D_oxad.png",
 )
 show_png("min_1D_oxad.png")
-plot_single_ended_convergence(min_trajs, min_labels, "min_conv_oxad.png", dpi=200)
+plot_min(
+    job_dir=[dir_reactant, dir_product],
+    label=["reactant", "product"],
+    plot_type="convergence",
+    output="min_conv_oxad.png",
+)
 show_png("min_conv_oxad.png")
 
 # %%
