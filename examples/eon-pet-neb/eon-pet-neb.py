@@ -782,9 +782,9 @@ ax2.set_axis_off()
 # Appendix: force cost (same PET-MAD weights)
 # -------------------------------------------
 #
-# Single-point forces only. Rattle before each ASE call (metatomic profiling
-# recipe so the calculator cache is not timed). Matter must advance
-# ``force_calls`` each iteration.
+# Single-point forces only (rattle / position noise so caches are not timed).
+# Expect similar cost: PET-MAD dominates. The NEB win above is the optimizer
+# path (EW + MMF), not a free force-eval miracle.
 
 N_WARM, N_FORCE, SIG = 2, 12, 1e-6
 _model = str(Path(fname).resolve())
@@ -816,7 +816,6 @@ def _ase_once():
 
 t_ase = _timed("ASE MetatomicCalculator", _ase_once)
 
-# NEB path only: RGPOT metatomic (no ase_metatomic here — avoids calculator kwargs).
 p_rg = pyec.Parameters()
 m_rg = pyec.from_ase(
     atoms_bench,
@@ -832,7 +831,7 @@ def _rg_once():
 
 
 t_rg = _timed("pyeonclient rgpot_metatomic", _rg_once, m_rg)
-print(f"speedup rgpot_metatomic vs ASE: {t_ase / t_rg:.2f}×")
+print(f"ratio ASE/rgpot_metatomic: {t_ase / t_rg:.2f}")
 
 fig, ax = plt.subplots(figsize=(5, 3.5))
 labs = ["ASE MetatomicCalculator", "pyeonclient\nrgpot_metatomic"]
