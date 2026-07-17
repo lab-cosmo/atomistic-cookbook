@@ -309,30 +309,23 @@ plt.show()
 # 2. **Off-path climbing image (OCI / MMF)** [6] — hybrid steps that mix in
 #    single-ended dimer searches at the climbing image.
 #
-# Forces via the named backend registry (not a custom wrapper)::
-#
-#     pot = make_backend("rgpot_metatomic", model_path="pet-mad.pt")
-#
-# Thin wheel: RGPOT + multi-ABI libmetatomic_engine (from rgpot / env).
-# Fat build: make_backend("metatomic", model_path=...).
-# ASE wrap as eOn pot: make_backend("ase_metatomic", model_path=...).
+# The potential is the same PET-MAD model as above, loaded with
+# ``make_backend("rgpot_metatomic", ...)`` (other keys such as
+# ``"metatomic"`` or ``"ase_metatomic"`` select different loaders).
+# ``NebSpec`` sets the NEB options on a shared ``Parameters`` object.
 
-# Energy-weighted CI-NEB + light MMF via released NebSpec (eon-schema 0.2.1).
-# One typed model owns the knobs instead of hand-assigning Parameters.neb_*.
 neb_spec = NebSpec(
     n_images=N_INTERMEDIATE_IMGS,
-    path_init=PathInit.idpp,  # eOn-native IDPP (not ASE)
+    path_init=PathInit.idpp,
     energy_weighted=True,
     ci_mmf=True,
     max_iterations=1000,
-    force_tolerance=0.01,  # like ASE fmax
+    force_tolerance=0.01,
     max_move=0.1,
-    write_movies=True,  # path history for landscape plots
+    write_movies=True,
     random_seed=706253457,
 )
 
-# Shared force engine (same .pt as the ASE calculator above).
-# Engine .so: RGPOT_METATOMIC_ENGINE or rgpot.default_metatomic_engine_path().
 params = pyec.Parameters()
 params.job = pyec.JobType.Nudged_Elastic_Band
 neb_spec.apply_to_parameters(params)
