@@ -1,7 +1,5 @@
 Finding Reaction Paths with EON and a Metatomic Potential
 =========================================================
 
-Describes the usage of the Nudged Elastic Band with energy weighted springs and
-single ended dimer searches using EON and PET-MAD via ``pyeonclient``. Contrasts
-with ASE NEB, and includes a short appendix timing single-point PET-MAD forces
-under ASE vs pyeonclient backends.
+NEB with energy-weighted springs and OCI-MMF via ``pyeonclient`` + PET-MAD;
+contrasts ASE NEB. Appendix: single-point force cost (ASE vs pyeonclient).

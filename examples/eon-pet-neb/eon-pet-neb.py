@@ -31,9 +31,6 @@ Our approach will be:
 3. eOn half: **Matter** + eOn-native IDPP + ``NudgedElasticBand`` (EW springs +
    MMF) — path never goes through ASE after the endpoints.
 4. Plot the band and relax endpoints with the same potential.
-5. Appendix: a short wall-time comparison of *single-point force* cost for the
-   same PET-MAD weights under ASE vs pyeonclient backends (not the NEB
-   algorithm itself).
 
 
 Importing Required Packages
@@ -783,162 +780,78 @@ ax1.set_axis_off()
 ax2.set_axis_off()
 
 # %%
-# Appendix: force-call cost (ASE Metatomic vs pyeonclient)
-# --------------------------------------------------------
+# Appendix: force cost (same PET-MAD weights)
+# -------------------------------------------
 #
-# The main text compared **NEB algorithms** (ASE LBFGS band vs eOn EW + MMF).
-# That confounds optimizer logic with the force engine. Here we hold the
-# **same PET-MAD weights** fixed and time only repeated single-point force
-# evaluations on the reactant geometry, so the Python ASE calculator path can
-# be contrasted with pyeonclient backends:
-#
-# * ``ASE MetatomicCalculator`` — standard ASE ``atoms.get_forces()``
-# * ``make_backend("ase_metatomic", ...)`` — same ASE stack, exposed as an eOn
-#   ``Potential`` on ``Matter``
-# * ``make_backend("rgpot_metatomic", ...)`` — RGPOT + multi-ABI engine (the
-#   thin-wheel path used for the NEB above)
-#
-# **Cache invalidation (do not skip this).** ASE calculators cache the last
-# result until the atoms change. Metatomic's own profiling example forces a
-# re-run with ``atoms.rattle(1e-6)`` before each energy/force call
-# (``docs.metatensor.org/metatomic`` → *Profiling your models*). Without
-# that jitter you time a no-op cache hit and the ASE path looks "free."
-# For ``Matter``, assigning new positions sets ``needs_force_update``; we
-# still rattle and check ``force_calls`` so a silent cache cannot fake a
-# speedup. PET-MAD itself usually dominates wall time, so expect a modest
-# backend ratio unless the Python wrapper is the bottleneck on your host.
-# Numbers are host-dependent; treat ratios as illustrative.
+# NEB above mixes algorithm and pot. Here: single-point forces only.
+# ASE caches results — rattle before each call (metatomic profiling recipe).
+# ``Matter.force_calls`` must advance or the timed loop is rejected.
 
-N_WARM = 2
-N_FORCE = 12
-_RATTLE_STD = 1e-6  # same scale as metatomic profiling examples
+N_WARM, N_FORCE, SIG = 2, 12, 1e-6
 _model = str(Path(fname).resolve())
-atoms_bench = reactant.copy()
 _rng = np.random.default_rng(0)
-
-
-def _rattle_like(positions: np.ndarray) -> np.ndarray:
-    """Gaussian position noise (metatomic-style cache bust; independent of ASE)."""
-    return np.asarray(positions, dtype=float) + _rng.normal(
-        0.0, _RATTLE_STD, size=np.shape(positions)
-    )
-
-
-def _mean_force_s(label: str, once, *, force_calls_of=None) -> float:
-    """Warm, then time *N_FORCE* real force evals; print ms/call.
-
-    If *force_calls_of* is a Matter-like object with ``force_calls``, assert
-    the counter advances by exactly *N_FORCE* during the timed loop.
-    """
-    for _ in range(N_WARM):
-        once()
-    n0 = None if force_calls_of is None else int(force_calls_of.force_calls)
-    t0 = time.perf_counter()
-    for _ in range(N_FORCE):
-        once()
-    dt = (time.perf_counter() - t0) / N_FORCE
-    if force_calls_of is not None:
-        n1 = int(force_calls_of.force_calls)
-        dfc = n1 - n0
-        if dfc != N_FORCE:
-            raise RuntimeError(
-                f"{label}: expected {N_FORCE} force_calls during timed loop, "
-                f"got Δ={dfc} (n0={n0}, n1={n1}) — cache not invalidated"
-            )
-        print(
-            f"{label:28s}  {1e3 * dt:8.2f} ms / force call  "
-            f"(n={N_FORCE}, force_calls Δ={dfc})"
-        )
-    else:
-        print(f"{label:28s}  {1e3 * dt:8.2f} ms / force call  (n={N_FORCE})")
-    return dt
-
-
-# --- ASE MetatomicCalculator ---
-# Pattern from metatomic profiling: rattle, then get_forces / get_potential_energy.
+atoms_bench = reactant.copy()
 atoms_bench.calc = mk_mta_calc()
 
 
-def _ase_once():
-    # "force the model to re-run every time, otherwise ASE caches results"
-    atoms_bench.rattle(_RATTLE_STD)
+def _timed(label, once, matter=None):
+    for _ in range(N_WARM):
+        once()
+    n0 = None if matter is None else int(matter.force_calls)
+    t0 = time.perf_counter()
+    for _ in range(N_FORCE):
+        once()
+    ms = 1e3 * (time.perf_counter() - t0) / N_FORCE
+    if matter is not None:
+        d = int(matter.force_calls) - n0
+        if d != N_FORCE:
+            raise RuntimeError(f"{label}: force_calls Δ={d}, want {N_FORCE}")
+    print(f"{label:24s} {ms:7.2f} ms/call")
+    return ms
+
+
+def _ase():
+    atoms_bench.rattle(SIG)
     atoms_bench.get_forces()
 
 
-t_ase = _mean_force_s("ASE MetatomicCalculator", _ase_once)
+def _matter_loop(m):
+    def once():
+        p = np.asarray(m.positions, dtype=float)
+        m.positions = p + _rng.normal(0.0, SIG, size=p.shape)
+        _ = m.forces
 
-# --- pyeonclient: ASE calculator as Matter pot ---
-params_ase_pot = pyec.Parameters()
-pot_ase = make_backend(
-    "ase_metatomic",
-    model_path=_model,
-    device="cpu",
-    params=params_ase_pot,
+    return once
+
+
+t_ase = _timed("ASE MetatomicCalculator", _ase)
+
+p_ase = pyec.Parameters()
+m_ase = pyec.from_ase(
+    atoms_bench,
+    make_backend("ase_metatomic", model_path=_model, device="cpu", params=p_ase),
+    p_ase,
 )
-matter_ase = pyec.from_ase(atoms_bench, pot_ase, params_ase_pot)
+t_wrap = _timed('pyeonclient ase_metatomic', _matter_loop(m_ase), m_ase)
 
-
-def _ase_backend_once():
-    matter_ase.positions = _rattle_like(matter_ase.positions)
-    _ = matter_ase.forces
-
-
-t_ase_backend = _mean_force_s(
-    'pyeonclient "ase_metatomic"',
-    _ase_backend_once,
-    force_calls_of=matter_ase,
+p_rg = pyec.Parameters()
+m_rg = pyec.from_ase(
+    atoms_bench,
+    make_backend("rgpot_metatomic", model_path=_model, device="cpu", params=p_rg),
+    p_rg,
 )
+t_rg = _timed('pyeonclient rgpot_metatomic', _matter_loop(m_rg), m_rg)
 
-# --- pyeonclient: RGPOT metatomic engine (NEB path) ---
-params_rg = pyec.Parameters()
-pot_rg = make_backend(
-    "rgpot_metatomic",
-    model_path=_model,
-    device="cpu",
-    params=params_rg,
-)
-matter_rg = pyec.from_ase(atoms_bench, pot_rg, params_rg)
+print(f"vs ASE: ase_metatomic {t_ase / t_wrap:.2f}×, rgpot_metatomic {t_ase / t_rg:.2f}×")
 
-
-def _rgpot_once():
-    matter_rg.positions = _rattle_like(matter_rg.positions)
-    _ = matter_rg.forces
-
-
-t_rg = _mean_force_s(
-    'pyeonclient "rgpot_metatomic"',
-    _rgpot_once,
-    force_calls_of=matter_rg,
-)
-
-# Relative to ASE calculator (higher is faster).
-print(
-    f"speedup vs ASE calc:  ase_metatomic={t_ase / t_ase_backend:.2f}×,  "
-    f"rgpot_metatomic={t_ase / t_rg:.2f}×"
-)
-
-labels = [
-    "ASE\nMetatomicCalculator",
-    'pyeonclient\n"ase_metatomic"',
-    'pyeonclient\n"rgpot_metatomic"',
-]
-times_ms = [1e3 * t_ase, 1e3 * t_ase_backend, 1e3 * t_rg]
-colors = ["xkcd:blue", "xkcd:orange", "xkcd:green"]
-
-fig, ax = plt.subplots(figsize=(7, 4))
-bars = ax.bar(labels, times_ms, color=colors, edgecolor="k", linewidth=0.4)
-ax.set_ylabel("Mean wall time per force call (ms)")
-ax.set_title("PET-MAD single-point forces (same .pt, CPU)")
-ax.grid(True, axis="y", alpha=0.3)
-for bar, ms in zip(bars, times_ms):
-    ax.text(
-        bar.get_x() + bar.get_width() / 2,
-        bar.get_height(),
-        f"{ms:.1f}",
-        ha="center",
-        va="bottom",
-        fontsize=10,
-    )
+fig, ax = plt.subplots(figsize=(6, 3.5))
+labs = ["ASE calc", "ase_metatomic", "rgpot_metatomic"]
+vals = [t_ase, t_wrap, t_rg]
+ax.bar(labs, vals, color=["xkcd:blue", "xkcd:orange", "xkcd:green"])
+ax.set_ylabel("ms / force call")
+ax.set_title("PET-MAD forces (CPU)")
+for x, v in zip(labs, vals):
+    ax.text(x, v, f"{v:.1f}", ha="center", va="bottom", fontsize=9)
 fig.tight_layout()
 plt.show()
 
