@@ -181,15 +181,18 @@ plots.plot_boson_energy_curve(SWEEP_BHW, sweep_e, sweep_err)
 #
 # .. code-block:: xml
 #
-#     <bosons> []           </bosons>   <!-- distinguishable: no exchange -->
-#     <bosons> [0, 1, 2, 3] </bosons>   <!-- four bosons: every pair may exchange -->
-#     <bosons> [0, 1, 2]    </bosons>   <!-- mixture: 0-2 exchange, atom 3 stays distinct -->
+#     <!-- distinguishable: no exchange -->
+#     <bosons> [] </bosons>
+#     <!-- four bosons: every pair may exchange -->
+#     <bosons> [0, 1, 2, 3] </bosons>
+#     <!-- mixture: 0-2 exchange, atom 3 stays distinct -->
+#     <bosons> [0, 1, 2] </bosons>
 #
 # Exchange means the ring polymers of the listed atoms are allowed to connect
 # into longer rings; the atoms left out stay closed on themselves.
 #
 # .. warning::
-#    The **centroid-virial** kinetic estimator is *not* valid under bosonic
+#    The **centroid-viria   l** kinetic estimator is *not* valid under bosonic
 #    exchange, so the boson and mixture inputs record the primitive/quantum
 #    virial (``virial_fq``) and thermodynamic (``kinetic_td``) estimators
 #    instead. The total energy from the (always-valid) primitive virial is what
@@ -201,7 +204,8 @@ plots.plot_boson_energy_curve(SWEEP_BHW, sweep_e, sweep_err)
 # .. code-block:: xml
 #
 #     <!-- distinguishable -->
-#     <properties ...> [ ..., kinetic_cv, kinetic_td, potential, virial_fq ] </properties>
+#     <properties ...> [ ..., kinetic_cv, kinetic_td,
+#            potential, virial_fq ] </properties>
 #
 #     <!-- bosons / mixture: no kinetic_cv -->
 #     <properties ...> [ ..., kinetic_td, potential, virial_fq ] </properties>
@@ -391,7 +395,8 @@ cold_traj = np.array(cold_E)
 cold_ref = analysis.analytical_energy(cold_T, "fermionic")
 
 print(
-    f"average sign:  30 K -> {np.mean(signs):.3f},   17.4 K -> {np.mean(cold_signs):.3f}"
+    f"average sign:  30 K -> {np.mean(signs):.3f},"
+    f"   17.4 K -> {np.mean(cold_signs):.3f}"
 )
 
 plots.plot_sign_scatter(

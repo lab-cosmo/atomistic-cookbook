@@ -134,7 +134,7 @@ def plot_sign_scatter(cases):
     as a jittered column of grey points with a dashed line at its exact value.
     """
     fig, ax = plt.subplots(figsize=(6, 4), constrained_layout=True)
-    for x, (label, traj, exact) in enumerate(cases):
+    for x, (_label, traj, exact) in enumerate(cases):
         traj = np.asarray(traj) * 1e3
         n = len(traj)
         jitter = x + 0.12 * (np.arange(n) - (n - 1) / 2) / max((n - 1) / 2, 1)
