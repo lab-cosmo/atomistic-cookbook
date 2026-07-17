@@ -296,11 +296,11 @@ plt.show()
 # **eOn** IDPP/SIDPP/linear — the same ``helpers::neb_paths`` engines as
 # ``eonclient`` — not ASE ``interpolate("idpp")`` rewrapped as Matter::
 #
-#     # ASE                                      # eOn (pyeonclient)
-#     neb.interpolate("idpp")                    initial/final = from_ase(...)
-#     LBFGS(neb).run(fmax=0.01)                  path = neb_idpp_path(R, P, n, params)
-#                                           neb = NudgedElasticBand(path, params, pot)
-#                                                neb.compute()
+#     # ASE                         # eOn (pyeonclient)
+#     neb.interpolate("idpp")       initial/final = from_ase(...)
+#     LBFGS(neb).run(fmax=0.01)     path = neb_idpp_path(R, P, n, params)
+#                                   neb = NudgedElasticBand(path, params, pot)
+#                                   neb.compute()
 #
 # Beyond a plain climbing-image NEB, eOn adds:
 #
