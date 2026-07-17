@@ -329,16 +329,14 @@ if status == pyec.NEBStatus.GOOD:
 written = pyec.write_neb_results(neb, params, f_neb)
 
 
-def report_neb_run(
-    neb, status, written, *, force_calls: int, cwd: Path = Path(".")
-) -> None:
+def report_neb_run(neb, status, written, *, force_calls: int, cwd=None) -> None:
     """Print the full NEB movie trace plus a short status summary.
 
     ``write_movies`` leaves one ``neb_NNN.dat`` per optimizer step (energies
     relative to the reactant). That series is the band evolution used for the
     1D profile plot. ``neb.dat`` / ``results.dat`` hold the converged band.
     """
-    cwd = Path(cwd)
+    cwd = Path.cwd() if cwd is None else Path(cwd)
     dats = sorted(cwd.glob("neb_*.dat"))
     if dats:
         print("NEB path evolution (write_movies → neb_NNN.dat)")
