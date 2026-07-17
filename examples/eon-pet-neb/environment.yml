@@ -19,10 +19,7 @@ dependencies:
     - metatomic-ase
     - "readcon>=0.13.1,<0.14"
     # 1.10.3 miswired Click onto plot_*_from_settings (library kwargs → argv)
-    - "rgpycrumbs>=1.10.7"  # library plot enables AUTO_DEPS (no host jax pin)
-    # plt_neb still hard-imports chemparseplot at module load (not ensure_import)
-    - "chemparseplot[neb,plot]>=1.9.14,<2"
-    # strip_renderer="xyzrender" needs the xyzrender CLI on PATH (not ensure_import)
-    - "xyzrender>=0.1.3"
-    # jax / adjustText: lazy via RGPYCRUMBS_AUTO_DEPS=1 + uv (see eon-pet-neb.py)
+    - "rgpycrumbs>=1.10.8"  # library plot enables AUTO_DEPS (no host jax pin)
+    # jax / adjustText / xyzrender / chemparseplot: lazy via
+    # RGPYCRUMBS_AUTO_DEPS + ensure_import (rgpycrumbs>=1.10.8)
     - atomistic-cookbook-utils >=0.1,<0.2
