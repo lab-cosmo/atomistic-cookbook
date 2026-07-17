@@ -339,57 +339,13 @@ print("written:", written)
 # :func:`rgpycrumbs.eon.plot_neb`.
 
 
-def show_png(path: str, *, max_width: float = 12.0, max_height: float = 9.0) -> None:
-    """Display a saved plot in the gallery, preserving the image aspect ratio.
-
-    Fixed ``figsize`` boxes squash landscape+structure-strip PNGs; size the
-    axes from the pixel shape instead so each figure stays readable.
-    """
+def show_png(path: str, *, figsize=(10, 8)) -> None:
+    """Display a saved plot PNG in the gallery."""
     img = mpimg.imread(path)
-    h, w = img.shape[:2]
-    aspect = w / float(h)
-    if aspect >= max_width / max_height:
-        fw, fh = max_width, max_width / aspect
-    else:
-        fh, fw = max_height, max_height * aspect
-    fig, ax = plt.subplots(figsize=(fw, fh))
+    fig, ax = plt.subplots(figsize=figsize)
     ax.imshow(img)
     ax.axis("off")
     fig.tight_layout(pad=0.15)
-    plt.show()
-
-
-def show_png_row(
-    *paths: str,
-    labels: list[str] | tuple[str, ...] | None = None,
-    max_width: float = 14.0,
-    max_height: float = 8.0,
-) -> None:
-    """Side-by-side gallery panel for several saved PNGs (equal height)."""
-    imgs = [mpimg.imread(p) for p in paths]
-    n = len(imgs)
-    aspects = [im.shape[1] / float(im.shape[0]) for im in imgs]
-    total_aspect = sum(aspects)
-    # Fit the whole row into the max box, preserving each panel aspect.
-    if total_aspect >= max_width / max_height:
-        fw, fh = max_width, max_width / total_aspect
-    else:
-        fh, fw = max_height, max_height * total_aspect
-    fig, axes = plt.subplots(
-        1,
-        n,
-        figsize=(fw, fh),
-        gridspec_kw={"width_ratios": aspects},
-    )
-    if n == 1:
-        axes = [axes]
-    for ax, im, path in zip(axes, imgs, paths, strict=True):
-        ax.imshow(im)
-        ax.axis("off")
-    if labels is not None:
-        for ax, lab in zip(axes, labels, strict=True):
-            ax.set_title(lab, fontsize=12, pad=4)
-    fig.tight_layout(pad=0.2, w_pad=0.35)
     plt.show()
 
 
@@ -543,10 +499,9 @@ product, matter_p = relax_endpoint(product, dir_product)
 # ^^^^^^^^^^^^^^^^^^^^
 #
 # Energy profile and optimizer convergence overlay both endpoints. The 2D
-# landscapes are **separate** for reactant and product (each trajectory has its
-# own RMSD frame). ``auto_thin`` keeps long force-eval movies fit-safe.
-# Each figure is its own gallery cell so sphinx-gallery does not pack them into
-# a cramped multi-image grid.
+# landscapes use **separate** RMSD frames for reactant and product; they are
+# rendered as two files and shown **side by side** below. ``auto_thin`` keeps
+# long force-eval movies fit-safe.
 
 _min_style = dict(
     surface_type="grad_imq",
@@ -563,7 +518,7 @@ _min_style = dict(
 )
 
 # %%
-# Reactant landscape (RMSD frame of the reactant movie; strip = initial → minimized):
+# Reactant and product landscapes (side by side; strip = initial → minimized):
 
 plot_min(
     job_dir=[dir_reactant],
@@ -572,11 +527,6 @@ plot_min(
     output="min_2D_reactant_oxad.png",
     **_min_style,
 )
-show_png("min_2D_reactant_oxad.png", max_width=11.0, max_height=10.0)
-
-# %%
-# Product landscape (separate RMSD frame):
-
 plot_min(
     job_dir=[dir_product],
     label=["product"],
@@ -584,7 +534,13 @@ plot_min(
     output="min_2D_product_oxad.png",
     **_min_style,
 )
-show_png("min_2D_product_oxad.png", max_width=11.0, max_height=10.0)
+show_png_row(
+    "min_2D_reactant_oxad.png",
+    "min_2D_product_oxad.png",
+    labels=["reactant", "product"],
+    max_width=14.0,
+    max_height=7.5,
+)
 
 # %%
 # Energy profiles for both endpoints on one axis:
