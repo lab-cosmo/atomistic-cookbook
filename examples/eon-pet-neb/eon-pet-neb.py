@@ -359,6 +359,40 @@ def show_png(path: str, *, max_width: float = 12.0, max_height: float = 9.0) -> 
     plt.show()
 
 
+def show_png_row(
+    *paths: str,
+    labels: list[str] | tuple[str, ...] | None = None,
+    max_width: float = 14.0,
+    max_height: float = 8.0,
+) -> None:
+    """Side-by-side gallery panel for several saved PNGs (equal height)."""
+    imgs = [mpimg.imread(p) for p in paths]
+    n = len(imgs)
+    aspects = [im.shape[1] / float(im.shape[0]) for im in imgs]
+    total_aspect = sum(aspects)
+    # Fit the whole row into the max box, preserving each panel aspect.
+    if total_aspect >= max_width / max_height:
+        fw, fh = max_width, max_width / total_aspect
+    else:
+        fh, fw = max_height, max_height * total_aspect
+    fig, axes = plt.subplots(
+        1,
+        n,
+        figsize=(fw, fh),
+        gridspec_kw={"width_ratios": aspects},
+    )
+    if n == 1:
+        axes = [axes]
+    for ax, im, path in zip(axes, imgs, paths, strict=True):
+        ax.imshow(im)
+        ax.axis("off")
+    if labels is not None:
+        for ax, lab in zip(axes, labels, strict=True):
+            ax.set_title(lab, fontsize=12, pad=4)
+    fig.tight_layout(pad=0.2, w_pad=0.35)
+    plt.show()
+
+
 os.environ.setdefault("MPLBACKEND", "Agg")
 
 # Shared style for the gallery NEB figures.
