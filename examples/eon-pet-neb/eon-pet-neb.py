@@ -35,7 +35,6 @@ statements are at the top of the file.
 """
 
 import os
-import sys
 from contextlib import chdir
 from pathlib import Path
 
@@ -57,7 +56,6 @@ from pyeonclient.backends import (
     make_metatomic_ase_calculator,
 )
 from pyeonclient.models import NebSpec, PathInit
-from rgpycrumbs.run.jupyter import run_command_or_exit
 
 
 def write_con(path, atoms_or_list):
@@ -270,14 +268,23 @@ plt.show()
 # ^^^^^^^^^^^^^^^^^
 #
 # With `eOn <https://eondocs.org>`__ through ``pyeonclient``, geometries are
-# :class:`~pyeonclient.Matter` objects and share one potential. Paths can be
-# started with linear interpolation, IDPP [5], or sequential IDPP (SIDPP)
-# [8] via ``neb_idpp_path`` and related helpers. This run uses energy-weighted
-# springs and off-path climbing-image / MMF steps [6]:
+# :class:`~pyeonclient.Matter` objects driven by a registered potential.
+# Thread-safe empirical pots can share one instance across images; ML backends
+# such as metatomic typically set ``needsPerImageInstance()`` so NEB clones
+# the potential per image and evaluates forces in parallel when
+# ``[Main] parallel`` is on (the default). Paths start from linear
+# interpolation, IDPP [5], or sequential IDPP (SIDPP) [8] via
+# ``neb_idpp_path`` and related helpers. This run uses energy-weighted springs
+# and off-path climbing-image / MMF steps [6]:
 #
 # 1. **Energy-weighted springs** — larger spring constants near the climb.
 # 2. **Off-path climbing image (OCI / MMF)** — dimer-style steps at the
 #    climbing image.
+#
+# ``write_movies=True`` records every NEB iteration as ``neb_NNN.dat`` /
+# ``neb_path_NNN.con`` so the full band evolution is available for the
+# profile plot below (initial IDPP on the true PES is step 0; the converged
+# band is the last file).
 #
 # Load PET-MAD with ``make_backend("rgpot_metatomic", ...)`` and set NEB
 # options with ``NebSpec`` on a shared ``Parameters`` object.
@@ -297,6 +304,9 @@ neb_spec = NebSpec(
 params = pyec.Parameters()
 params.job = pyec.JobType.Nudged_Elastic_Band
 neb_spec.apply_to_parameters(params)
+# Keep the NEB iteration / OCINEB log where the client would write it.
+if hasattr(params, "write_log"):
+    params.write_log = True
 pot = make_backend(
     "rgpot_metatomic",
     model_path=str(Path(fname).resolve()),
@@ -308,127 +318,97 @@ initial = pyec.from_ase(reactant, pot, params)
 final = pyec.from_ase(product, pot, params)
 path = pyec.neb_idpp_path(initial, final, N_INTERMEDIATE_IMGS, params)
 neb = pyec.NudgedElasticBand(path, params, pot)
+f0 = pyec.pot_registry_total_force_calls()
 status = neb.compute()
-print("NEB status:", status)
+f_neb = pyec.pot_registry_total_force_calls() - f0
 
 if status == pyec.NEBStatus.GOOD:
     neb.find_extrema()
 
-path = list(neb.path_images())
-energies = np.array([neb.image_energy(i) for i in range(neb.n_path)])
-print(f"E_ref = {neb.energy_reference:.6f} eV,  n_path = {neb.n_path}")
-print("ΔE (eV):", np.round(energies - neb.energy_reference, 4))
-if neb.num_extrema:
-    print(
-        "extrema positions:",
-        list(neb.extremum_positions)[: neb.num_extrema],
-    )
+# Final artifacts: results.dat, neb.con, sp.con, neb.dat, MMF peaks, …
+written = pyec.write_neb_results(neb, params, f_neb)
 
-path_ase = [pyec.to_ase(m) for m in path]
-write_con("neb.con", path_ase)
-pyec.write_neb_results(neb, params, 0)
+
+def report_neb_run(
+    neb, status, written, *, force_calls: int, cwd: Path = Path(".")
+) -> None:
+    """Print the full NEB movie trace plus a short status summary.
+
+    ``write_movies`` leaves one ``neb_NNN.dat`` per optimizer step (energies
+    relative to the reactant). That series is the band evolution used for the
+    1D profile plot. ``neb.dat`` / ``results.dat`` hold the converged band.
+    """
+    cwd = Path(cwd)
+    dats = sorted(cwd.glob("neb_*.dat"))
+    if dats:
+        print("NEB path evolution (write_movies → neb_NNN.dat)")
+        print(
+            f"{'step':>6} {'E_max (eV)':>12} {'E_min (eV)':>12} "
+            f"{'path length (Å)':>16}"
+        )
+        for i, dat in enumerate(dats):
+            data = np.loadtxt(dat, skiprows=1)
+            if data.ndim == 1:
+                data = data.reshape(1, -1)
+            e = data[:, 2]
+            rc_end = float(data[-1, 1]) if data.shape[1] > 1 else float("nan")
+            print(
+                f"{i:6d} {float(e.max()):12.4f} {float(e.min()):12.4f} "
+                f"{rc_end:16.4f}"
+            )
+        print(
+            f"  ({len(dats)} band snapshots; "
+            "step 0 is the IDPP guess on PET-MAD)"
+        )
+
+    neb_dat = cwd / "neb.dat"
+    if neb_dat.exists():
+        print("\nFinal band (neb.dat; energies relative to reactant):")
+        print(neb_dat.read_text().rstrip())
+
+    results = cwd / "results.dat"
+    if results.exists():
+        print("\nresults.dat:")
+        print(results.read_text().rstrip())
+
+    # Short summary (same quantities the thin printout used to show alone).
+    energies = np.array([neb.image_energy(i) for i in range(neb.n_path)])
+    e_react = float(energies[0])
+    print("\n--- summary ---")
+    print(f"NEB status: {status}")
+    print(f"force_calls_neb: {force_calls}")
+    print(f"E_ref (eOn min endpoint) = {neb.energy_reference:.6f} eV")
+    print(f"E_reactant = {e_react:.6f} eV,  n_path = {neb.n_path}")
+    print("ΔE vs reactant (eV):", np.round(energies - e_react, 4))
+    if neb.num_extrema:
+        n_ext = int(neb.num_extrema)
+        pos = list(neb.extremum_positions)[:n_ext]
+        e_ext = list(neb.extremum_energies)[:n_ext]
+        print(f"extrema ({n_ext}):")
+        for k, (p, e) in enumerate(zip(pos, e_ext, strict=True)):
+            print(f"  #{k}: position={p:.6f},  energy={e:.6f} eV")
+    print("written:", written)
+
+
+report_neb_run(neb, status, written, force_calls=f_neb)
+
+# Surface any client log the potential/NEB wrote during compute.
+for log_name in ("client_quill.log", "client.log"):
+    log_path = Path(log_name)
+    if log_path.exists() and log_path.stat().st_size:
+        print(f"\n--- {log_name} ---")
+        print(log_path.read_text().rstrip())
 
 
 # %%
 # Visual interpretation
 # ---------------------
 #
-# `rgpycrumbs <http://pypi.org/project/rgpycrumbs>`_ is a visualization toolkit
-# designed to bridge the gap between raw computational output and physical
-# intuition, mapping high-dimensional NEB trajectories onto interpretable 1D
-# energy profiles and 2D RMSD landscapes.  As it is normally used from the
-# command-line, here we define a helper.
-
-
-def _strip_common_flags() -> list[str]:
-    """Shared xyzrender structure-strip flags for all gallery figures."""
-    return [
-        "--facecolor",
-        "white",
-        "--fontsize-base",
-        "14",
-        # Always render every path image (not only R/SP/P).
-        "--plot-structures",
-        "all",
-        "--strip-renderer",
-        "xyzrender",
-        "--strip-dividers",
-        "--strip-spacing",
-        "2.0",
-        "--xyzrender-config",
-        "paton",
-        "--rotation",
-        "90x,0y,0z",
-        "--show-legend",
-    ]
-
-
-def run_neb_plot(
-    mode: str,
-    con_file: str = "neb.con",
-    output_file: str = "plot.png",
-    title: str = "",
-) -> None:
-    """
-    Build and run an rgpycrumbs NEB plot.
-
-    Always use the full optimization history and a full structure strip
-    (``--plot-structures all``): every image on the path, not only R/SP/P.
-
-    mode: 'profile' (1D) or 'landscape' (2D)
-    """
-    # Target: in-process chemparseplot/rgpycrumbs library API when the full
-    # plot pipeline is exposed as stable functions. Today: CLI + uv PEP 723
-    # for plot deps (jax, adjustText,
-    # chemparseplot, …). Host env only needs bare rgpycrumbs + readcon.
-    base_cmd = [
-        sys.executable,
-        "-m",
-        "rgpycrumbs.cli",
-        "eon",
-        "plt-neb",
-        "--con-file",
-        con_file,
-        "--output-file",
-        output_file,
-        "--figsize",
-        "12",
-        "8",
-        "--zoom-ratio",
-        "0.35",
-        # Full history: all optimizer paths / points.
-        "--show-pts",
-        "--highlight-last",
-        *_strip_common_flags(),
-    ]
-
-    if title:
-        base_cmd.extend(["--title", title])
-
-    if mode == "profile":
-        base_cmd.extend(["--plot-type", "profile"])
-    elif mode == "landscape":
-        base_cmd.extend(
-            [
-                "--plot-type",
-                "landscape",
-                "--rc-mode",
-                "path",
-                "--landscape-mode",
-                "surface",
-                # Use all path points for the surface (not last-only).
-                "--landscape-path",
-                "all",
-                "--surface-type",
-                "grad_imq",
-                "--project-path",
-            ]
-        )
-    else:
-        raise ValueError(f"Unknown plot mode: {mode}")
-
-    # Landscape GP (grad_imq, full history) can exceed 3 min on CI runners.
-    run_command_or_exit(base_cmd, capture=False, timeout=600)
+# `chemparseplot <https://pypi.org/project/chemparseplot>`_ / `rgpycrumbs
+# <https://pypi.org/project/rgpycrumbs>`_ map the NEB movie onto a 1D energy
+# profile (every ``neb_NNN.dat`` overlaid, first = IDPP guess, last =
+# converged) and a 2D RMSD landscape. The plot entry points are imported and
+# called in-process — no ``python -m …`` / uv subprocess.
 
 
 def thin_min_movie(
@@ -481,19 +461,85 @@ def thin_min_movie(
     return len(thinned)
 
 
+def run_neb_plot(
+    mode: str,
+    con_file: str = "neb.con",
+    output_file: str = "plot.png",
+    title: str = "",
+) -> None:
+    """In-process NEB profile / landscape via ``rgpycrumbs.eon.plt_neb``.
+
+    Profile uses every ``neb_*.dat`` snapshot (full optimization trace) with
+    the first and last paths labeled; structure strip shows all band images.
+    Landscape fits the GP surface on the full history and projects the final
+    path into reaction-valley coordinates.
+    """
+    from rgpycrumbs.eon.plt_neb import main as plt_neb_main
+
+    args = [
+        "--con-file",
+        con_file,
+        "--output-file",
+        output_file,
+        "--figsize",
+        "12",
+        "8",
+        "--zoom-ratio",
+        "0.35",
+        "--show-pts",
+        "--highlight-last",
+        "--facecolor",
+        "white",
+        "--fontsize-base",
+        "14",
+        "--plot-structures",
+        "all",
+        "--strip-renderer",
+        "xyzrender",
+        "--strip-dividers",
+        "--strip-spacing",
+        "2.0",
+        "--xyzrender-config",
+        "paton",
+        "--rotation",
+        "90x,0y,0z",
+        "--show-legend",
+    ]
+    if title:
+        args.extend(["--title", title])
+    if mode == "profile":
+        args.extend(["--plot-type", "profile"])
+    elif mode == "landscape":
+        args.extend(
+            [
+                "--plot-type",
+                "landscape",
+                "--rc-mode",
+                "path",
+                "--landscape-mode",
+                "surface",
+                "--landscape-path",
+                "all",
+                "--surface-type",
+                "grad_imq",
+                "--project-path",
+            ]
+        )
+    else:
+        raise ValueError(f"Unknown plot mode: {mode}")
+    plt_neb_main.main(args, standalone_mode=False)
+
+
 def run_min_plot(
     job_dirs: list[Path],
     labels: list[str],
     plot_type: str,
     output_file: str,
 ) -> None:
-    """Plot endpoint minimizations (profile / landscape / convergence) with strips."""
-    base_cmd = [
-        sys.executable,
-        "-m",
-        "rgpycrumbs.cli",
-        "eon",
-        "plt-min",
+    """In-process minimization plots via ``rgpycrumbs.eon.plt_min``."""
+    from rgpycrumbs.eon.plt_min import main as plt_min_main
+
+    args = [
         "--plot-type",
         plot_type,
         "-o",
@@ -501,7 +547,6 @@ def run_min_plot(
         "--surface-type",
         "grad_imq",
         "--project-path",
-        # Start/end structures for each minimization trajectory.
         "--plot-structures",
         "endpoints",
         "--strip-renderer",
@@ -513,8 +558,8 @@ def run_min_plot(
         "90x,0y,0z",
     ]
     for d, lab in zip(job_dirs, labels, strict=True):
-        base_cmd.extend(["--job-dir", str(d), "--label", lab])
-    run_command_or_exit(base_cmd, capture=False, timeout=600)
+        args.extend(["--job-dir", str(d), "--label", lab])
+    plt_min_main.main(args, standalone_mode=False)
 
 
 def show_png(path: str, figsize=(10, 8)) -> None:
@@ -528,22 +573,12 @@ def show_png(path: str, figsize=(10, 8)) -> None:
 
 # %%
 #
-# NEB figures use the full optimization history and a structure strip for
-# **every** image on the path (``--plot-structures all``).
+# The 1D figure overlays every ``neb_NNN.dat`` written during the run: step 0
+# is the IDPP path evaluated on PET-MAD; the last step is the converged band
+# (highlighted). Structure strip: every image on the final path.
 
-# Prefer Agg for headless/CI; notebooks can still override.
 os.environ.setdefault("MPLBACKEND", "Agg")
-# Prefer uv PEP 723 isolation for plot scripts so host need not carry
-# chemparseplot/jax/adjustText (avoids partial in-env stack).
-os.environ.setdefault("RGPKGS_FORCE_UV", "1")
-os.environ.setdefault("RGPYCRUMBS_FORCE_UV", "1")  # legacy alias
-# chemparseplot 1.9.10-1.9.12 fail to import on Python <= 3.13 (class-body
-# annotation without `from __future__ import annotations`). Freeze uv's
-# PEP 723 resolution at the last known-good snapshot; remove together with
-# the rgpycrumbs cap in environment.yml once a fixed release is published.
-os.environ.setdefault("UV_EXCLUDE_NEWER", "2026-07-15T00:00:00Z")
 
-# Run the 1D plotting command using the helper
 run_neb_plot("profile", title="NEB Path Optimization", output_file="1D_oxad.png")
 show_png("1D_oxad.png")
 
