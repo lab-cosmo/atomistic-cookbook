@@ -25,12 +25,10 @@ can efficiently locate and refine the transition state along the path.
 Our approach will be:
 
 1. Set up the **PET-MAD metatomic** model.
-2. Build an initial IDPP path with ASE (``list`` of ``Atoms``).
-3. Run a short ASE NEB and show where it stalls.
-4. Re-run the same path with **pyeonclient** as ``list[Matter]`` +
-   ``NudgedElasticBand`` — ASE-shaped API, energy-weighted springs and
-   off-path dimer (OCI) steps under the hood.
-5. Plot the converged pathway and relax the endpoints the same way.
+2. ASE half: ASE's own IDPP interpolate + short ASE NEB (reference baseline).
+3. eOn half: **eOn-native** IDPP (``pyeonclient.neb_idpp_path`` / endpoint
+   ``NEBInit.IDPP``) → ``NudgedElasticBand`` — no ASE path into Matter.
+4. Plot the converged pathway and relax the endpoints the same way.
 
 
 Importing Required Packages
@@ -50,7 +48,7 @@ import ira_mod
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import numpy as np
-import pyeonclient as pc
+import pyeonclient as pyec
 import readcon
 import rgpot
 from ase.mep import NEB
@@ -80,8 +78,8 @@ def make_potential(model_path: Path | str):
     :class:`~pyeonclient.Matter` on a path, the way ASE attaches one
     calculator instance style to each image.
     """
-    params = pc.Parameters()
-    params.potential = pc.PotType.RGPOT
+    params = pyec.Parameters()
+    params.potential = pyec.PotType.RGPOT
     params.rgpot_backend = "metatomic"
     model = str(Path(model_path).resolve())
     params.rgpot_model_path = model
@@ -90,7 +88,7 @@ def make_potential(model_path: Path | str):
     if eng:
         params.rgpot_engine_path = eng
         os.environ.setdefault("RGPOT_METATOMIC_ENGINE", eng)
-    pot = pc.make_potential(params.potential, params)
+    pot = pyec.make_potential(params.potential, params)
     return pot, params
 
 
@@ -192,13 +190,10 @@ ax2.set_axis_off()
 # [5]) which provides a surface based on bond distances, and thus preventing
 # atom-in-atom collisions.
 #
-# Here we use the IDPP from ASE to setup the initial path. You can find
-# more information about this method in the corresponding
-# `ASE tutorial <https://ase-lib.org/examples_generated/tutorials/neb_idpp.html>`_
-# or in the original IDPP publication [5].
-# A brief pedagogical discussion of the transition state methods may be found on
-# the `Rowan blog <https://rowansci.com/blog/guessing-transition-states>`_,
-# though the software is proprietary there.
+# ASE baseline: ASE's own IDPP. eOn has the same class of initializer
+# natively (``neb_idpp_path`` / ``NEBInit.IDPP``) — use that for the eOn
+# band below, not ASE frames re-imported as Matter. IDPP background: [5]
+# and the `ASE tutorial <https://ase-lib.org/examples_generated/tutorials/neb_idpp.html>`_.
 
 N_INTERMEDIATE_IMGS = 10
 images = [reactant]
@@ -206,7 +201,7 @@ images += [reactant.copy() for _ in range(N_INTERMEDIATE_IMGS)]
 images += [product]
 
 neb = NEB(images)
-neb.interpolate("idpp")
+neb.interpolate("idpp")  # ASE only — not used for the eOn band
 
 # %%
 # We don't cover subtleties in setting the number of images: too many can kink
@@ -305,16 +300,16 @@ plt.show()
 # eOn and Metatomic
 # ^^^^^^^^^^^^^^^^^
 #
-# `eOn <https://eondocs.org>`_ (via the pip package ``pyeonclient``) mirrors the
-# ASE NEB shape, but keeps geometries as :class:`~pyeonclient.Matter` and a
-# shared potential handle instead of per-image ASE calculators::
+# `eOn <https://eondocs.org>`_ (via ``pyeonclient``) keeps geometries as
+# :class:`~pyeonclient.Matter` and a shared potential. Initial paths use
+# **eOn** IDPP/SIDPP/linear — the same ``helpers::neb_paths`` engines as
+# ``eonclient`` — not ASE ``interpolate("idpp")`` rewrapped as Matter::
 #
-#     # ASE                                         # eOn (pyeonclient)
-#     for img in images: img.calc = calc            pot, params = make_potential(...)
-#     neb = NEB(images, climb=True, ...)            path = [pc.from_ase(a, pot, params)
-#     opt = LBFGS(neb); opt.run(fmax=0.01)              for a in images]
-#                                                   neb = pc.NudgedElasticBand(path, params, pot)
-#                                                   status = neb.compute()
+#     # ASE                                      # eOn (pyeonclient)
+#     neb.interpolate("idpp")                    initial/final = from_ase(...)
+#     LBFGS(neb).run(fmax=0.01)                  path = neb_idpp_path(R, P, n, params)
+#                                                neb = NudgedElasticBand(path, params, pot)
+#                                                neb.compute()
 #
 # Beyond a plain climbing-image NEB, eOn adds:
 #
@@ -329,9 +324,10 @@ plt.show()
 pot, params = make_potential(fname)
 
 # Optimizer / band settings (live attributes — no config.ini).
-params.job = pc.JobType.Nudged_Elastic_Band
+params.job = pyec.JobType.Nudged_Elastic_Band
 params.random_seed = 706253457
 params.neb_images = N_INTERMEDIATE_IMGS
+params.neb_init_method = pyec.NEBInit.IDPP  # eOn-native IDPP (not ASE)
 params.neb_minimize_endpoints = False
 params.neb_climbing_image = True
 params.neb_climbing_converged_only = True
@@ -352,13 +348,19 @@ params.opt_converged_force = 0.01  # like ASE fmax
 # Path-history frames for the landscape plots below (optional side effect).
 params.write_movies = True
 
-# ASE Atoms → Matter band, then optimize in place.
-path = [pc.from_ase(img, pot, params) for img in images]
-neb = pc.NudgedElasticBand(path, params, pot)
+# Endpoints only from ASE; path is eOn IDPP.
+initial = pyec.from_ase(reactant, pot, params)
+final = pyec.from_ase(product, pot, params)
+path = pyec.neb_idpp_path(
+    initial, final, N_INTERMEDIATE_IMGS, params
+)
+# Equivalent: NudgedElasticBand(initial, final, params, pot) with
+# params.neb_init_method = NEBInit.IDPP and params.neb_images set.
+neb = pyec.NudgedElasticBand(path, params, pot)
 status = neb.compute()  # like LBFGS(neb).run(...)
 print("NEB status:", status)
 
-if status == pc.NEBStatus.GOOD:
+if status == pyec.NEBStatus.GOOD:
     neb.find_extrema()
 
 # Results stay on the band object (ASE would read image energies / positions).
@@ -373,9 +375,9 @@ if neb.num_extrema:
     )
 
 # Convert back to ASE when you want ASE tools; export .con only for plotters.
-path_ase = [pc.to_ase(m) for m in path]
+path_ase = [pyec.to_ase(m) for m in path]
 write_con("neb.con", path_ase)
-pc.neb_write_results(neb, params, 0)
+pyec.neb_write_results(neb, params, 0)
 
 
 # %%
@@ -659,15 +661,15 @@ ax2.set_axis_off()
 #
 # Endpoint relaxation is the ASE ``LBFGS(atoms).run()`` pattern with Matter::
 #
-#     matter = pc.from_ase(atoms, pot, params)
+#     matter = pyec.from_ase(atoms, pot, params)
 #     matter.relax()                 # like dyn.run(fmax=...)
-#     atoms = pc.to_ase(matter)
+#     atoms = pyec.to_ase(matter)
 #
 # Movie files under ``min_reactant/`` / ``min_product/`` are only for the
 # ``rgpycrumbs`` plots that follow; the optimizer itself is in-memory.
 
 pot_min, params_min = make_potential(fname)
-params_min.job = pc.JobType.Minimization
+params_min.job = pyec.JobType.Minimization
 params_min.random_seed = 706253457
 params_min.opt_max_iterations = 2000
 params_min.opt_max_move = 0.1
@@ -682,7 +684,7 @@ dir_product.mkdir(exist_ok=True)
 
 def relax_endpoint(atoms, out_dir: Path):
     """ASE Atoms → Matter.relax → ASE Atoms (movie written in *out_dir*)."""
-    matter = pc.from_ase(atoms, pot_min, params_min)
+    matter = pyec.from_ase(atoms, pot_min, params_min)
     with chdir(out_dir):
         ok = bool(
             matter.relax(
@@ -692,7 +694,7 @@ def relax_endpoint(atoms, out_dir: Path):
             )
         )
     print(f"{out_dir.name}: converged={ok},  E = {matter.potential_energy:.6f} eV")
-    atoms_out = pc.to_ase(matter)
+    atoms_out = pyec.to_ase(matter)
     write_con(out_dir / "min.con", atoms_out)
     return atoms_out, matter
 
