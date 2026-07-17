@@ -179,7 +179,8 @@ ax2.set_axis_off()
 # ASE baseline: ASE's own IDPP. eOn has the same class of initializer
 # natively (``neb_idpp_path`` / ``NEBInit.IDPP``) — use that for the eOn
 # band below, not ASE frames re-imported as Matter. IDPP background: [5]
-# and the `ASE tutorial <https://ase-lib.org/examples_generated/tutorials/neb_idpp.html>`_.
+# and the `ASE tutorial
+# <https://ase-lib.org/examples_generated/tutorials/neb_idpp.html>`_.
 
 N_INTERMEDIATE_IMGS = 10
 images = [reactant]
@@ -298,7 +299,7 @@ plt.show()
 #     # ASE                                      # eOn (pyeonclient)
 #     neb.interpolate("idpp")                    initial/final = from_ase(...)
 #     LBFGS(neb).run(fmax=0.01)                  path = neb_idpp_path(R, P, n, params)
-#                                                neb = NudgedElasticBand(path, params, pot)
+#                                           neb = NudgedElasticBand(path, params, pot)
 #                                                neb.compute()
 #
 # Beyond a plain climbing-image NEB, eOn adds:
