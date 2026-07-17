@@ -329,160 +329,9 @@ print("written:", written)
 # Visual interpretation
 # ---------------------
 #
-# `chemparseplot <https://pypi.org/project/chemparseplot>`_ / `rgpycrumbs
-# <https://pypi.org/project/rgpycrumbs>`_ plot the NEB movie: 1D energy
-# profiles from every ``neb_NNN.dat`` and a 2D RMSD landscape.
-
-
-def thin_min_movie(
-    job_dir: Path,
-    *,
-    max_frames: int = 64,
-    prefix: str = "minimization",
-) -> int:
-    """Thin a dense eOn minimization movie before landscape surface fits.
-
-    ``write_movies`` records every force evaluation, so long LBFGS paths can
-    exceed ~150 frames and make gradient surface fits numerically unstable.
-    This keeps the first and last frames plus evenly spaced intermediates
-    (``max_frames`` default 64).
-
-    Returns the number of frames after thinning (or the original count if no
-    thinning was needed).
-    """
-    job_dir = Path(job_dir)
-    movie = None
-    for candidate in (job_dir / prefix, job_dir / f"{prefix}.con"):
-        if candidate.exists():
-            movie = candidate
-            break
-    if movie is None:
-        return 0
-
-    frames = list(readcon.read_con(str(movie)))
-    n = len(frames)
-    if n <= max_frames:
-        return n
-
-    # Inclusive endpoints via linspace; unique keeps order and first/last.
-    idx = np.unique(np.linspace(0, n - 1, num=max_frames, dtype=int))
-    if idx[-1] != n - 1:
-        idx = np.unique(np.append(idx, n - 1))
-    thinned = [frames[i] for i in idx]
-    readcon.write_con(str(movie), thinned)
-
-    dat_path = job_dir / f"{prefix}.dat"
-    if dat_path.exists():
-        lines = dat_path.read_text().splitlines()
-        if lines:
-            header, rows = lines[0], lines[1:]
-            if len(rows) == n:
-                kept = [rows[i] for i in idx]
-                dat_path.write_text(header + "\n" + "\n".join(kept) + "\n")
-
-    print(f"Thinned {movie.name} in {job_dir}: {n} -> {len(thinned)} frames")
-    return len(thinned)
-
-
-def run_neb_plot(
-    mode: str,
-    con_file: str = "neb.con",
-    output_file: str = "plot.png",
-    title: str = "",
-) -> None:
-    """In-process NEB profile / landscape via ``rgpycrumbs.eon.plt_neb``.
-
-    Profile uses every ``neb_*.dat`` snapshot (full optimization trace) with
-    the first and last paths labeled; structure strip shows all band images.
-    Landscape fits the GP surface on the full history and projects the final
-    path into reaction-valley coordinates.
-    """
-    from rgpycrumbs.eon.plt_neb import main as plt_neb_main
-
-    args = [
-        "--con-file",
-        con_file,
-        "--output-file",
-        output_file,
-        "--figsize",
-        "12",
-        "8",
-        "--zoom-ratio",
-        "0.35",
-        "--show-pts",
-        "--highlight-last",
-        "--facecolor",
-        "white",
-        "--fontsize-base",
-        "14",
-        "--plot-structures",
-        "all",
-        "--strip-renderer",
-        "xyzrender",
-        "--strip-dividers",
-        "--strip-spacing",
-        "2.0",
-        "--xyzrender-config",
-        "paton",
-        "--rotation",
-        "90x,0y,0z",
-        "--show-legend",
-    ]
-    if title:
-        args.extend(["--title", title])
-    if mode == "profile":
-        args.extend(["--plot-type", "profile"])
-    elif mode == "landscape":
-        args.extend(
-            [
-                "--plot-type",
-                "landscape",
-                "--rc-mode",
-                "path",
-                "--landscape-mode",
-                "surface",
-                "--landscape-path",
-                "all",
-                "--surface-type",
-                "grad_imq",
-                "--project-path",
-            ]
-        )
-    else:
-        raise ValueError(f"Unknown plot mode: {mode}")
-    plt_neb_main.main(args, standalone_mode=False)
-
-
-def run_min_plot(
-    job_dirs: list[Path],
-    labels: list[str],
-    plot_type: str,
-    output_file: str,
-) -> None:
-    """In-process minimization plots via ``rgpycrumbs.eon.plt_min``."""
-    from rgpycrumbs.eon.plt_min import main as plt_min_main
-
-    args = [
-        "--plot-type",
-        plot_type,
-        "-o",
-        output_file,
-        "--surface-type",
-        "grad_imq",
-        "--project-path",
-        "--plot-structures",
-        "endpoints",
-        "--strip-renderer",
-        "xyzrender",
-        "--strip-dividers",
-        "--xyzrender-config",
-        "paton",
-        "--rotation",
-        "90x,0y,0z",
-    ]
-    for d, lab in zip(job_dirs, labels, strict=True):
-        args.extend(["--job-dir", str(d), "--label", lab])
-    plt_min_main.main(args, standalone_mode=False)
+# ``write_movies`` leaves ``neb_NNN.dat`` for every optimizer step. Plot the
+# full band evolution (1D) and the reaction-valley landscape (2D) with
+# :func:`pyeonclient.plot_neb`.
 
 
 def show_png(path: str, figsize=(10, 8)) -> None:
@@ -494,15 +343,14 @@ def show_png(path: str, figsize=(10, 8)) -> None:
     plt.show()
 
 
-# %%
-#
-# The 1D figure overlays every ``neb_NNN.dat`` written during the run: step 0
-# is the IDPP path evaluated on PET-MAD; the last step is the converged band
-# (highlighted). Structure strip: every image on the final path.
-
 os.environ.setdefault("MPLBACKEND", "Agg")
 
-run_neb_plot("profile", title="NEB Path Optimization", output_file="1D_oxad.png")
+# 1D: every neb_NNN.dat overlaid; step 0 = IDPP on PET-MAD, last = converged.
+pyec.plot_neb(
+    plot_type="profile",
+    output="1D_oxad.png",
+    title="NEB Path Optimization",
+)
 show_png("1D_oxad.png")
 
 
@@ -514,7 +362,11 @@ show_png("1D_oxad.png")
 # Gaussian process that incorporates both energies and projected tangential
 # forces from the full NEB optimization history.
 
-run_neb_plot("landscape", title="NEB-RMSD Surface", output_file="2D_oxad.png")
+pyec.plot_neb(
+    plot_type="landscape",
+    output="2D_oxad.png",
+    title="NEB-RMSD Surface",
+)
 show_png("2D_oxad.png")
 # %%
 # Each black dot is a configuration evaluated during NEB optimization [7]. The
@@ -612,7 +464,7 @@ product, matter_p = relax_endpoint(product, dir_product)
 
 # Thin dense force-eval movies so gradient surface fits stay well-conditioned.
 for _min_dir in (dir_reactant, dir_product):
-    thin_min_movie(_min_dir, max_frames=64)
+    pyec.thin_min_movie(_min_dir, max_frames=64)
 
 
 # %%
@@ -621,19 +473,31 @@ for _min_dir in (dir_reactant, dir_product):
 #
 # Energy profile and optimizer convergence overlay both endpoints. The 2D
 # landscapes are **separate** for reactant and product (each trajectory has its
-# own RMSD frame). Structure strips show start/end geometries (xyzrender).
-# Trajectories were thinned above before these plots.
+# own RMSD frame).
 
 min_jobs = [dir_reactant, dir_product]
 min_labels = ["reactant", "product"]
-# One landscape per endpoint — do not overlay on a shared (s, d) frame.
-run_min_plot([dir_reactant], ["reactant"], "landscape", "min_2D_reactant_oxad.png")
+pyec.plot_min(
+    [dir_reactant],
+    labels=["reactant"],
+    plot_type="landscape",
+    output="min_2D_reactant_oxad.png",
+)
 show_png("min_2D_reactant_oxad.png")
-run_min_plot([dir_product], ["product"], "landscape", "min_2D_product_oxad.png")
+pyec.plot_min(
+    [dir_product],
+    labels=["product"],
+    plot_type="landscape",
+    output="min_2D_product_oxad.png",
+)
 show_png("min_2D_product_oxad.png")
-run_min_plot(min_jobs, min_labels, "profile", "min_1D_oxad.png")
+pyec.plot_min(
+    min_jobs, labels=min_labels, plot_type="profile", output="min_1D_oxad.png"
+)
 show_png("min_1D_oxad.png")
-run_min_plot(min_jobs, min_labels, "convergence", "min_conv_oxad.png")
+pyec.plot_min(
+    min_jobs, labels=min_labels, plot_type="convergence", output="min_conv_oxad.png"
+)
 show_png("min_conv_oxad.png")
 
 # %%
