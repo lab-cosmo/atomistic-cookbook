@@ -92,7 +92,9 @@ fname = Path(f"models/pet-mad-xs-{tag}.pt")
 url = f"https://huggingface.co/{repo_id}/resolve/main/{url_path}"
 fname.parent.mkdir(parents=True, exist_ok=True)
 run_command(f"mtt export {url} -o {fname}")
-print(f"Successfully exported {fname}.")
+# Absolute path once, before any chdir (endpoint movies under min_*/).
+model_path = str(fname.resolve())
+print(f"Successfully exported {fname} ({model_path}).")
 
 
 # %%
@@ -259,7 +261,7 @@ params.job = pyec.JobType.Nudged_Elastic_Band
 neb_spec.apply_to_parameters(params)
 pot = make_backend(
     "rgpot_metatomic",
-    model_path=str(Path(fname).resolve()),
+    model_path=model_path,
     device="cpu",
     params=params,
 )
@@ -389,7 +391,7 @@ params_min.opt_converged_force = 0.01
 params_min.write_movies = True
 pot_min = make_backend(
     "rgpot_metatomic",
-    model_path=str(Path(fname).resolve()),
+    model_path=model_path,
     device="cpu",
     params=params_min,
 )
