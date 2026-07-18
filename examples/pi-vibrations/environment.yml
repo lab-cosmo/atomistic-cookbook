@@ -3,5 +3,10 @@ channels:
   - conda-forge
 dependencies:
   - python >=3.10,<3.14
-  - numpy >=1.26,<3.0
-  - matplotlib >=3.8,<4.0
+  - pip
+  - pip:
+    - numpy >=1.26,<3.0
+    - matplotlib >=3.8,<4.0
+    # not imported by the recipe itself, which only post-processes the
+    # precomputed spectra, but needed to run the i-PI inputs in data/inputs
+    - ipi >=3.2.0,<4.0

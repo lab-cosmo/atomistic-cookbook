@@ -1,11 +1,14 @@
-Morse oscillator: real-time correlations from PI approximations  recipe.
+Path integral approximations to real-time correlations
+======================================================
 
-This folder brings a new Atomistic Cookbook 
-recipe: a short README, a dedicated environment file, a sphinx-gallery Python
-script, and the small data files needed to execute the example quickly.
+This example compares the vibrational spectra that different path-integral
+approximations to real-time quantum correlation functions -- classical MD,
+RPMD, TRPMD, TRPMD-GLE and partially-adiabatic CMD -- predict for a Morse
+oscillator parameterized to resemble an OH radical, and shows where each
+approximation breaks down.
 
-The example inputs bundled in ``data/inputs`` use ``ffdirect`` together with a
-custom Python PES so the Morse model is evaluated inside i-PI, without launching
-external socket drivers.
+The i-PI inputs bundled in ``data/inputs`` use ``ffdirect`` together with a
+custom Python PES, so the Morse model is evaluated inside i-PI without
+launching external socket drivers.
 
-This is based on the tutorial for the PIMD schools.
+It is based on the tutorial given at the PIMD schools.

@@ -13,6 +13,7 @@ import numpy as np
 try:
     from ipi.pes.dummy import Dummy_driver
 except ModuleNotFoundError:
+
     class Dummy_driver:
         """Minimal fallback used when this helper is imported outside i-PI."""
 
@@ -45,8 +46,7 @@ class MorseDiatomic_driver(Dummy_driver):
         pos3 = np.asarray(pos, dtype=float).reshape(-1, 3)
         if pos3.shape[0] != 2:
             raise ValueError(
-                "MorseDiatomic_driver expects exactly two atoms, got "
-                f"{pos3.shape[0]}"
+                f"MorseDiatomic_driver expects exactly two atoms, got {pos3.shape[0]}"
             )
 
         diff = pos3[0] - pos3[1]
