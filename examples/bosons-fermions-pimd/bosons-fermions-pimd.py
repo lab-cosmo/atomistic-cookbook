@@ -38,7 +38,7 @@ driver, so the whole recipe installs from PyPI---no compiled driver required.
 
 import numpy as np
 
-from scripts import analysis, plots
+from data import analysis, plots
 
 
 # %%
@@ -75,7 +75,7 @@ from scripts import analysis, plots
 # --------------------
 #
 # The mechanics of driving i-PI from Python are not
-# the subject of this tutorial, so they live in ``scripts/ipi_runs.py``. From
+# the subject of this tutorial, so they live in ``data/ipi_runs.py``. From
 # here, we only need two calls:
 #
 # .. code-block:: python
@@ -97,7 +97,7 @@ from scripts import analysis, plots
 #    converged numbers, increase the step counts (and, for fermions, the number
 #    of trajectories) -- the analysis is identical.
 
-from scripts.ipi_runs import run_parallel
+from data.ipi_runs import run_parallel
 
 
 # %%
