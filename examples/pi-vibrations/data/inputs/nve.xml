@@ -1,0 +1,34 @@
+<simulation verbosity='low'>
+  <output prefix='simulation'>
+    <properties stride='200' filename='out'>  [ step, time{picosecond}, conserved, temperature{kelvin}, kinetic_md{electronvolt}, kinetic_cv{electronvolt}, potential{electronvolt} ] </properties>
+    <trajectory filename='pos' stride='2' flush='200'> positions{angstrom} </trajectory>
+    <trajectory filename='vel' stride='2' flush='200'> velocities </trajectory>
+    <checkpoint stride='4000'/>
+  </output>
+  <total_steps>20000</total_steps>
+  <prng>
+    <seed>32415</seed>
+  </prng>
+  <ffdirect name='driver' pbc='false'>
+    <pes> custom </pes>
+    <pes_path> ../../morsedia_ffdirect.py </pes_path>
+    <parameters> { D: 0.18748563, a: 1.1605, r0: 1.8323918 } </parameters>
+  </ffdirect>
+  <system>
+    <initialize nbeads='1'>
+      <file mode='chk'> therm.chk </file>
+    </initialize>
+    <forces>
+      <force forcefield='driver'> </force>
+    </forces>
+    <motion mode='dynamics'>
+      <fixcom> False </fixcom>
+      <dynamics mode='nve'>
+        <timestep units='femtosecond'> 0.5 </timestep>
+      </dynamics>
+    </motion>
+    <ensemble>
+      <temperature units='kelvin'> 109 </temperature>
+    </ensemble>
+  </system>
+</simulation>

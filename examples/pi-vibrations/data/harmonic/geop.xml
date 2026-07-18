@@ -1,0 +1,32 @@
+<simulation mode='static' verbosity='high'>
+  <output prefix='simulation'>
+    <properties stride='1' filename='out'>  [ step, potential ] </properties>
+    <trajectory filename='pos' stride='1'> positions </trajectory>
+  </output>
+  <total_steps> 1000 </total_steps>
+  <prng>
+    <seed> 32342 </seed>
+  </prng>
+  <ffdirect name='driver' pbc='false'>
+    <pes> custom </pes>
+    <pes_path> ../../morsedia_ffdirect.py </pes_path>
+    <parameters> { D: 0.18748563, a: 1.1605, r0: 1.8323918 } </parameters>
+  </ffdirect>
+  <system>
+    <initialize nbeads='1'>
+      <file mode='xyz'> oh.xyz </file>
+      <cell mode='abc'> [100.0, 100.0, 100.0] </cell>
+    </initialize>
+    <forces>
+      <force forcefield='driver'> </force>
+    </forces>
+    <motion mode='minimize'>
+      <optimizer mode='lbfgs'>
+        <tolerances>
+          <energy> 1e-5 </energy>
+          <force> 2e-5 </force>
+        </tolerances>
+      </optimizer>
+    </motion>
+  </system>
+</simulation>

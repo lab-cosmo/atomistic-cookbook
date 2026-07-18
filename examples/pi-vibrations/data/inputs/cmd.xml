@@ -1,0 +1,45 @@
+<simulation verbosity='low'>
+  <output prefix='simulation'>
+    <properties stride='200' filename='out'>  [ step, time{picosecond}, conserved, temperature{kelvin}, kinetic_md{electronvolt}, kinetic_cv{electronvolt}, potential{electronvolt} ] </properties>
+    <trajectory filename='vel' stride='40' bead='1' flush='200'> velocities </trajectory>
+    <trajectory filename='pos' stride='40' bead='1' flush='200'> positions{angstrom} </trajectory>
+    <trajectory filename='xc' stride='40' flush='200'> x_centroid{angstrom} </trajectory>
+    <trajectory filename='vc' stride='40' flush='200' > v_centroid </trajectory>
+    <!-- <checkpoint stride='4000' overwrite='False'/> -->
+  </output>
+  <total_steps>400000</total_steps>
+  <prng>
+    <seed>3241</seed>
+  </prng>
+  <ffdirect name='driver' pbc='False'>
+    <pes> custom </pes>
+    <pes_path> ../../morsedia_ffdirect.py </pes_path>
+    <parameters> { D: 0.18748563, a: 1.1605, r0: 1.8323918 } </parameters>
+  </ffdirect>
+  <system>
+  <normal_modes>
+     <frequencies style='pa-cmd' units="inversecm"> [13000]   </frequencies>
+  </normal_modes>
+    <initialize nbeads='32'>
+      <file mode='chk'> therm_checkpoint.chk </file>
+      <!-- <cell mode='abc'> [100.0, 100.0, 100.0] </cell> -->
+      <!-- <velocities mode='thermal' units='kelvin'> 109 </velocities> -->
+    </initialize>
+    <forces>
+      <force forcefield='driver'> </force>
+    </forces>
+    <motion mode='dynamics'>
+      <fixcom> False </fixcom>
+      <dynamics mode='nvt'>
+        <timestep units='femtosecond'> 0.025 </timestep>
+        <thermostat mode='pile_g'>
+          <tau units='femtosecond'> 1000 </tau>
+          <pile_lambda> 0.01 </pile_lambda>
+        </thermostat>
+      </dynamics>
+    </motion>
+    <ensemble>
+      <temperature units='kelvin'> 109 </temperature>
+    </ensemble>
+  </system>
+</simulation>

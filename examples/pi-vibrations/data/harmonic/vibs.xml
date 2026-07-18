@@ -1,0 +1,30 @@
+<simulation mode='static' verbosity='high'>
+  <output prefix='vibrations'>
+    <properties stride='1' filename='out'>  [ step, potential ] </properties>
+    <trajectory filename='pos' stride='1'> positions </trajectory>
+  </output>
+  <total_steps> 1000 </total_steps>
+  <prng>
+    <seed> 32342 </seed>
+  </prng>
+  <ffdirect name='driver' pbc='false'>
+    <pes> custom </pes>
+    <pes_path> ../../morsedia_ffdirect.py </pes_path>
+    <parameters> { D: 0.18748563, a: 1.1605, r0: 1.8323918 } </parameters>
+  </ffdirect>
+  <system>
+    <initialize nbeads='1'>
+      <file mode='chk'> final_state_of_geop.chk </file>
+    </initialize>
+    <forces>
+      <force forcefield='driver'> </force>
+    </forces>
+    <motion mode='vibrations'>
+      <vibrations mode='fd'>
+        <pos_shift> 0.01 </pos_shift>
+        <prefix> simulation-fd </prefix>
+        <asr> none </asr>
+      </vibrations>
+    </motion>
+  </system>
+</simulation>
