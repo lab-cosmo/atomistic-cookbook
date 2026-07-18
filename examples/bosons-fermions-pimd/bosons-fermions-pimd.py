@@ -192,7 +192,7 @@ plots.plot_boson_energy_curve(SWEEP_BHW, sweep_e, sweep_err)
 # into longer rings; the atoms left out stay closed on themselves.
 #
 # .. warning::
-#    The **centroid-viria   l** kinetic estimator is *not* valid under bosonic
+#    The **centroid-virial** kinetic estimator is *not* valid under bosonic
 #    exchange, so the boson and mixture inputs record the primitive/quantum
 #    virial (``virial_fq``) and thermodynamic (``kinetic_td``) estimators
 #    instead. The total energy from the (always-valid) primitive virial is what
