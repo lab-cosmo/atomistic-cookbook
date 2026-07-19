@@ -91,6 +91,9 @@ def block_average(series, n_blocks=10):
     time the block means are approximately independent, and the standard error
     is their spread, ``std(block_means)/sqrt(n_blocks)``.
 
+    ``n_blocks=10`` was chosen once from a block-averaging convergence check
+    (blocks comfortably longer than the autocorrelation time) and is kept fixed.
+
     Returns ``(mean, error)``.
     """
     series = np.asarray(series, dtype=float)

@@ -68,6 +68,13 @@ from data import analysis, plots
 # quadratic-scaling algorithm of Hirshberg *et al.*
 # (`PNAS 2019 <https://doi.org/10.1073/pnas.1913365116>`_) and Feldman &
 # Hirshberg (`JCP 2023 <https://doi.org/10.1063/5.0173749>`_).
+#
+# .. note::
+#    **Bosons require** ``propagator='bab'``. i-PI's *default* free ring-polymer
+#    propagator is the ``exact`` normal-mode propagator, but bosonic exchange is
+#    implemented only for the Cartesian ``bab`` (Verlet-type) propagator -- pairing
+#    ``<bosons>`` with the ``exact`` or ``cayley`` propagator raises an error. This
+#    is why every input in this tutorial sets ``propagator='bab'`` explicitly.
 
 
 # %%
@@ -239,8 +246,8 @@ switch_err = [e for _, e in switch]
 switch_ref = [analysis.mixture_energy(nb, nd, T_SWITCH) for _, _, (nb, nd) in cases]
 for (name, _, _), m, e, ref in zip(cases, switch_sim, switch_err, switch_ref):
     print(
-        f"{name:20s} (T = {T_SWITCH:.1f} K): PIMD {m * 1e3:.3f} +/- {e * 1e3:.3f} mHa  "
-        f"exact {ref * 1e3:.3f} mHa"
+        f"{name:20s} (T = {T_SWITCH:.1f} K): "
+        f"PIMD {m / omega0:.3f} +/- {e / omega0:.3f}  exact {ref / omega0:.3f}  (E/hw0)"
     )
 
 # %%
@@ -296,7 +303,8 @@ plots.plot_statistics_levels(
 #
 # .. note::
 #    **The exact reference value.** The exact three-fermion energy at 30 K is
-#    **1.053 mHa**, computed by ``analysis.analytical_energy`` from the canonical
+#    :math:`9.55\,\hbar\omega_0` (1.053 mHa), computed by
+#    ``analysis.analytical_energy`` from the canonical
 #    partition-function recursion. Note the Pauli exclusion principle lifts the
 #    fermionic ground state to :math:`6.5\,\hbar\omega_0`, well above the bosonic
 #    :math:`4.5\,\hbar\omega_0`.
@@ -324,16 +332,19 @@ fer_mean, fer_err, n_eff = analysis.weighted_average(E, W)
 fer_traj = np.array(E)
 fer_ref = analysis.analytical_energy(30.0, "fermionic")
 
+# energies in hbar*omega0, to match the figures
+e_hw, err_hw, ref_hw = fer_mean / omega0, fer_err / omega0, fer_ref / omega0
 print("Three fermions (T = 30 K, 8 short trajectories)")
 print(f"  average sign <s>          : {np.mean(signs):.3f}")
-print(f"  fermionic energy          : {fer_mean * 1e3:.3f} +/- {fer_err * 1e3:.3f} mHa")
-print(f"  exact                     : {fer_ref * 1e3:.3f} mHa")
+print(f"  fermionic energy          : {e_hw:.3f} +/- {err_hw:.3f} hw0")
+print(f"  exact                     : {ref_hw:.3f} hw0")
 print(f"  effective sample size     : n_eff = {n_eff:.1f} of 8")
 
 # %%
-# The 8-trajectory fermionic energy brackets the exact 1.053 mHa within its error
-# bar. The individual trajectories (grey) scatter around the mean
-# (blue, with its error bar), which sits on the exact value.
+# The 8-trajectory fermionic energy brackets the exact
+# :math:`9.55\,\hbar\omega_0` within its error bar. The individual trajectories
+# (grey) scatter around the mean (blue, with its error bar), which sits on the
+# exact value.
 
 plots.plot_fermion_ensemble(fer_traj, fer_mean, fer_err, fer_ref)
 

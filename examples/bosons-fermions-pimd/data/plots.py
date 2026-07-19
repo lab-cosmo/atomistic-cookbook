@@ -67,9 +67,10 @@ def plot_statistics_levels(labels, sim, err, ref, title):
     """Energy-level comparison at one temperature: the exact total energy of each
     case is drawn as a horizontal level, with the PIMD value (point + error bar)
     on it. Ordered low to high, this shows how exchange orders the energies."""
-    sim = np.array(sim) * 1e3
-    err = np.array(err) * 1e3
-    ref = np.array(ref) * 1e3
+    omega0 = analysis.omega0()
+    sim = np.array(sim) / omega0
+    err = np.array(err) / omega0
+    ref = np.array(ref) / omega0
     fig, ax = plt.subplots(figsize=(6, 4), constrained_layout=True)
     for i, lab in enumerate(labels):
         ax.hlines(ref[i], i + 0.15, i + 0.85, color="gray", lw=2.5)
@@ -85,7 +86,7 @@ def plot_statistics_levels(labels, sim, err, ref, title):
     ax.set_xlim(0, len(labels))
     ax.plot([], [], color="gray", lw=2.5, label="exact")
     ax.plot([], [], "o", color="C0", label="PIMD")
-    ax.set_ylabel("total energy / mHa")
+    ax.set_ylabel(r"total energy $/\,\hbar\omega_0$")
     ax.set_title(title)
     ax.legend(loc="upper left")
     return ax
@@ -94,15 +95,21 @@ def plot_statistics_levels(labels, sim, err, ref, title):
 def plot_fermion_ensemble(traj_energies, mean, err, exact):
     """One-run-vs-many fermion picture: scattered per-trajectory energies (grey)
     and the sign-weighted mean with its error bar (blue), against the exact line."""
+    omega0 = analysis.omega0()
     traj = np.asarray(traj_energies)
     n = len(traj)
     jitter = 0.15 * (np.arange(n) - (n - 1) / 2) / max((n - 1) / 2, 1)
 
     fig, ax = plt.subplots(figsize=(6, 4), constrained_layout=True)
-    ax.axhline(exact * 1e3, color="k", ls="--", label=f"exact ({exact * 1e3:.3f} mHa)")
+    ax.axhline(
+        exact / omega0,
+        color="k",
+        ls="--",
+        label=rf"exact ({exact / omega0:.2f}$\,\hbar\omega_0$)",
+    )
     ax.plot(
         jitter,
-        traj * 1e3,
+        traj / omega0,
         "o",
         color="gray",
         alpha=0.6,
@@ -110,8 +117,8 @@ def plot_fermion_ensemble(traj_energies, mean, err, exact):
     )
     ax.errorbar(
         [0],
-        [mean * 1e3],
-        yerr=[err * 1e3],
+        [mean / omega0],
+        yerr=[err / omega0],
         fmt="s",
         color="C0",
         ms=9,
@@ -120,7 +127,7 @@ def plot_fermion_ensemble(traj_energies, mean, err, exact):
     )
     ax.set_xlim(-1, 1)
     ax.set_xticks([])
-    ax.set_ylabel("fermionic total energy / mHa")
+    ax.set_ylabel(r"fermionic total energy $/\,\hbar\omega_0$")
     ax.set_title("Three fermions at 30 K: one run vs. eight")
     ax.legend()
     return ax
@@ -133,15 +140,16 @@ def plot_sign_scatter(cases):
     ``cases`` is a list of ``(label, traj_energies_Ha, exact_Ha)``. Each is drawn
     as a jittered column of grey points with a dashed line at its exact value.
     """
+    omega0 = analysis.omega0()
     fig, ax = plt.subplots(figsize=(6, 4), constrained_layout=True)
     for x, (_label, traj, exact) in enumerate(cases):
-        traj = np.asarray(traj) * 1e3
+        traj = np.asarray(traj) / omega0
         n = len(traj)
         jitter = x + 0.12 * (np.arange(n) - (n - 1) / 2) / max((n - 1) / 2, 1)
         ax.plot(jitter, traj, "o", color="gray", alpha=0.6)
-        ax.hlines(exact * 1e3, x - 0.28, x + 0.28, color="k", ls="--")
+        ax.hlines(exact / omega0, x - 0.28, x + 0.28, color="k", ls="--")
     ax.set_xticks(range(len(cases)), [c[0] for c in cases])
-    ax.set_ylabel("per-trajectory energy / mHa")
+    ax.set_ylabel(r"per-trajectory energy $/\,\hbar\omega_0$")
     ax.set_title("The sign problem: colder = much wider scatter")
     ax.text(
         0.98,
