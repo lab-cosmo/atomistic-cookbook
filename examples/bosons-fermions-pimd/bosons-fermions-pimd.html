@@ -1,0 +1,850 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="search" title="Search" href="../../search.html"><link rel="next" title="Periodic Hamiltonian learning" href="../periodic-hamiltonian/periodic-hamiltonian.html"><link rel="prev" title="Path integral molecular dynamics" href="../path-integrals/path-integrals.html">
+        <link rel="canonical" href="https://atomistic-cookbook.org/examples/bosons-fermions-pimd/bosons-fermions-pimd.html">
+        <link rel="prefetch" href="../../_static/cookbook-icon.svg" as="image">
+
+    <link rel="shortcut icon" href="../../_static/cookbook-icon.png"><!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>Path integral molecular dynamics of bosons and fermions - The Atomistic Cookbook</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/cookbook.css?v=d86cfb60" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">The Atomistic Cookbook</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/cookbook-icon.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">The Atomistic Cookbook</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../topics/index.html">Recipes grouped by topic</a><input aria-label="Toggle navigation of Recipes grouped by topic" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/sampling.html">Statistical sampling and dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/analysis.html">Analysis and post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/ml-models.html">Machine learning models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/universal.html">Universal ML models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/nqes.html">Nuclear quantum effects</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../software/index.html">Recipes grouped by software used</a><input aria-label="Toggle navigation of Recipes grouped by software used" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../software/chemiscope.html">chemiscope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/cp2k.html">cp2k</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/eon.html">eon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/featomic.html">featomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/gromacs.html">GROMACS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/i-pi.html">i-PI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/kaldo.html">kALDo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/lammps.html">LAMMPS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/metatensor.html">metatensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/plumed.html">PLUMED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/scikit-matter.html">scikit-matter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/torch-pme.html">torch-pme</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../all-examples.html">List of all recipes</a><input aria-label="Toggle navigation of List of all recipes" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-dos/pet-mad-dos.html">A Guide to PET-MAD-DOS: Model Inference and Fine-Tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dos-align/dos-align.html">A ML model for the electron density of states</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-model/water-model.html">Atomistic Water Model for Molecular Dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../batch-cp2k/reference-trajectory.html">Batch run of CP2K calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../shiftml/shiftml-example.html">Computing NMR shielding tensors using ShiftML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft-nc.html">Conservative fine-tuning for a PET model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermostats/thermostats.html">Constant-temperature MD and thermostats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../polarizability/polarizability.html">Equivariant linear model for polarizability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../learn-tensors-with-mcov/learn-tensors-with-mcov.html">Equivariant model for tensorial properties based on scalar features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../eon-pet-neb/eon-pet-neb.html">Finding Reaction Paths with eOn and a Metatomic Potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft.html">Fine-tuning the PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../roy-gch/roy-gch.html">Generalized Convex Hull construction for the polymorphs of ROY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-relaxation/pet-relaxation.html">Geometry relaxation with unconstrained MLIPs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hamiltonian-qm7/hamiltonian-qm7.html">Hamiltonian Learning for Molecules with Indirect Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-md/water-md.html">Introduction to foundational models for molecular dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../torchpme/torchpme_learning.html">Learning Capabilities with torchpme</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lpr/lpr.html">Local Prediction Rigidity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lode-linear/lode-linear.html">Long-distance Equivariants: a tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flashmd/flashmd-demo.html">Long-stride trajectories with a universal FlashMD model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-nc/pet-mad-nc.html">MD using direct-force predictions with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metatomic-plumed/metatomic-plumed.html">ML collective variables in PLUMED with metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ml-density/ml-density.html">ML surrogate for the electron density and derived properties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ml-mm/ml-mm.html">ML/MM Simulations with GROMACS and Metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-ir-spectrum/water-ir-spectrum.html">Machine-learned dipoles and infrared spectroscopy of liquid water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../mendeleev/mendeleev.html">Mendeleev clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-mts-rpc/mts-rpc.html">Multiple time stepping and ring-polymer contraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../shiftml-structure-match/shiftml-structure-match.html">NMR-shielding-driven structure determination with ShiftML3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../gaas-map/gaas-map.html">PCA/PCovR Visualization of a training dataset for a potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-metad/pi-metad.html">Path integral metadynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../path-integrals/path-integrals.html">Path integral molecular dynamics</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Path integral molecular dynamics of bosons and fermions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../periodic-hamiltonian/periodic-hamiltonian.html">Periodic Hamiltonian learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-phonons/pet-phonons.html">Phonon dispersions with unconstrained models and uncertainty quantification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../heat-capacity/heat-capacity.html">Quantum heat capacity of water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ring-polymer-instanton/rpi-rates.html">Ring Polymer Instanton Rate Theory: Tunneling Rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rotate-equivariants/rotate-equivariants.html">Rotating equivariants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sample-selection/sample-selection.html">Sample and Feature Selection with FPS and CUR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad/pet-mad.html">The PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermal-conductivity-bte/thermal-conductivity-bte.html">Thermal conductivity from the Boltzmann transport equation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../llpr-from-scratch/llpr-from-scratch.html">Training a Model with Uncertainties from Scratch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-uq/pet-mad-uq.html">Uncertainty Quantification with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-pulsed/water-pulsed.html">Water orientation in a pulsed electric field</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../downloading.html">Downloading and running the recipes</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../contributing.html">Contributing a recipe</a><input aria-label="Toggle navigation of Contributing a recipe" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../utils.html">Shared utilities</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-examples-bosons-fermions-pimd-bosons-fermions-pimd-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="path-integral-molecular-dynamics-of-bosons-and-fermions">
+<span id="sphx-glr-examples-bosons-fermions-pimd-bosons-fermions-pimd-py"></span><h1>Path integral molecular dynamics of bosons and fermions<a class="headerlink" href="#path-integral-molecular-dynamics-of-bosons-and-fermions" title="Link to this heading">¶</a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Authors<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Barak Hirshberg <a class="reference external" href="https://github.com/bhirshberg">&#64;bhirshberg</a></p>
+</dd>
+</dl>
+<p>This example shows how to run path integral molecular dynamics (PIMD)
+simulations of <strong>indistinguishable</strong> particles – bosons and fermions – with
+<code class="docutils literal notranslate"><span class="pre">i-PI</span></code>, and how to analyze the output. It is a modernized version of the
+“Bosonic and Fermionic PIMD” module of the <a class="reference external" href="https://github.com/i-pi/piqm2023-tutorial">PIQM 2023 tutorial</a>, updated to i-PI 3.x.</p>
+<p>We simulate a few non-interacting particles (<span class="math notranslate nohighlight">\(m=1\)</span>) in a three-dimensional
+isotropic harmonic trap with <span class="math notranslate nohighlight">\(\hbar\omega_0 = 3\,\mathrm{meV}\)</span> and study
+how quantum statistics changes the average energy. Most of the tutorial uses
+three particles; the statistics-comparison section uses four, so the energy
+differences between the cases are large enough to see clearly. We work in the
+natural dimensionless inverse temperature
+<span class="math notranslate nohighlight">\(\beta\hbar\omega_0 = \hbar\omega_0 / k_\mathrm{B}T\)</span>, so the whole
+problem is controlled by a single number.</p>
+<p>The tutorial is built in three steps:</p>
+<ol class="arabic simple">
+<li><p><strong>Bosons.</strong> Switch on bosonic exchange with a one-line tag and trace the
+energy as a function of temperature, comparing against the exact result.</p></li>
+<li><p><strong>Switching statistics.</strong> See how trivially the <em>same</em> input flips between
+distinguishable particles, bosons, and mixtures, and compare their energies at
+one temperature.</p></li>
+<li><p><strong>Fermions.</strong> Obtain fermionic averages by reweighting, meet the <strong>sign
+problem</strong>, and learn how to get an honest error bar by averaging several
+trajectories.</p></li>
+</ol>
+<p>The forces come from the built-in <code class="docutils literal notranslate"><span class="pre">harmonic</span></code> potential of i-PI’s Python
+driver, so the whole recipe installs from PyPI—no compiled driver required.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">data</span><span class="w"> </span><span class="kn">import</span> <span class="n">analysis</span><span class="p">,</span> <span class="n">plots</span>
+</pre></div>
+</div>
+<section id="indistinguishable-particles-and-ring-polymer-exchange">
+<h2>Indistinguishable particles and ring-polymer exchange<a class="headerlink" href="#indistinguishable-particles-and-ring-polymer-exchange" title="Link to this heading">¶</a></h2>
+<p>In path integral molecular dynamics each quantum particle is represented by a
+ring polymer of <span class="math notranslate nohighlight">\(P\)</span> beads. For <strong>distinguishable</strong> particles every ring
+polymer is closed on itself. Quantum <strong>exchange</strong> between identical particles
+is captured by also allowing ring polymers of different particles to be
+connected into longer rings. Averaging over all such connectivities with the
+appropriate weights yields bosonic statistics; fermions additionally require a
+sign for every pair exchange.</p>
+<p>In i-PI, this is switched on with a single tag inside <code class="docutils literal notranslate"><span class="pre">&lt;normal_modes&gt;</span></code>:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;normal_modes</span><span class="w"> </span><span class="na">propagator=</span><span class="s">&#39;bab&#39;</span><span class="nt">&gt;</span>
+<span class="w">    </span><span class="nt">&lt;nmts&gt;</span><span class="w"> </span>10<span class="w"> </span><span class="nt">&lt;/nmts&gt;</span>
+<span class="w">    </span><span class="nt">&lt;bosons&gt;</span><span class="w"> </span>[0,<span class="w"> </span>1,<span class="w"> </span>2]<span class="w"> </span><span class="nt">&lt;/bosons&gt;</span>
+<span class="nt">&lt;/normal_modes&gt;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;bosons&gt;</span></code> holds the (zero-based) indices of the atoms that participate in
+bosonic exchange. An empty list recovers distinguishable particles; listing a
+subset gives a mixture. The exchange spring potential is evaluated with the
+quadratic-scaling algorithm of Hirshberg <em>et al.</em>
+(<a class="reference external" href="https://doi.org/10.1073/pnas.1913365116">PNAS 2019</a>) and Feldman &amp;
+Hirshberg (<a class="reference external" href="https://doi.org/10.1063/5.0173749">JCP 2023</a>).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Bosons require</strong> <code class="docutils literal notranslate"><span class="pre">propagator='bab'</span></code>. i-PI’s <em>default</em> free ring-polymer
+propagator is the <code class="docutils literal notranslate"><span class="pre">exact</span></code> normal-mode propagator, but bosonic exchange is
+implemented only for the Cartesian <code class="docutils literal notranslate"><span class="pre">bab</span></code> (Verlet-type) propagator – pairing
+<code class="docutils literal notranslate"><span class="pre">&lt;bosons&gt;</span></code> with the <code class="docutils literal notranslate"><span class="pre">exact</span></code> or <code class="docutils literal notranslate"><span class="pre">cayley</span></code> propagator raises an error. This
+is why every input in this tutorial sets <code class="docutils literal notranslate"><span class="pre">propagator='bab'</span></code> explicitly.</p>
+</div>
+</section>
+<section id="how-we-run-each-case">
+<h2>How we run each case<a class="headerlink" href="#how-we-run-each-case" title="Link to this heading">¶</a></h2>
+<p>The mechanics of driving i-PI from Python are not
+the subject of this tutorial, so they live in <code class="docutils literal notranslate"><span class="pre">data/ipi_runs.py</span></code>. From
+here, we only need two calls:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">out</span> <span class="o">=</span> <span class="n">run_ipi</span><span class="p">(</span><span class="s2">&quot;input_3bosons.xml&quot;</span><span class="p">,</span> <span class="n">temp</span><span class="o">=</span><span class="mf">17.4</span><span class="p">,</span> <span class="n">nbeads</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>   <span class="c1"># -&gt; path to data.out</span>
+<span class="n">outs</span> <span class="o">=</span> <span class="n">run_parallel</span><span class="p">(</span><span class="n">jobs</span><span class="p">)</span>                                  <span class="c1"># several at once</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">run_ipi</span></code> starts from one of the template inputs in <code class="docutils literal notranslate"><span class="pre">data/</span></code> (one per case),
+overrides only the knobs we vary – which atoms exchange, temperature, beads,
+seed, length – runs the simulation with i-PI’s built-in <code class="docutils literal notranslate"><span class="pre">harmonic</span></code> driver,
+and returns the output file for analysis. Every case in this tutorial runs
+several inputs at once, so we import <code class="docutils literal notranslate"><span class="pre">run_parallel</span></code>; everything below is
+physics and analysis.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The step counts here (<code class="docutils literal notranslate"><span class="pre">SWEEP_STEPS</span></code>, <code class="docutils literal notranslate"><span class="pre">FERMION_STEPS</span></code> below) are kept
+deliberately small so the whole recipe runs in a couple of minutes. The
+results are therefore only qualitative, with sizeable error bars. For
+converged numbers, increase the step counts (and, for fermions, the number
+of trajectories) – the analysis is identical.</p>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">data.ipi_runs</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_parallel</span>
+</pre></div>
+</div>
+</section>
+<section id="bosons-and-the-energy-temperature-curve">
+<h2>Bosons and the energy-temperature curve<a class="headerlink" href="#bosons-and-the-energy-temperature-curve" title="Link to this heading">¶</a></h2>
+<p>We start with <strong>bosons</strong>. Listing all three atoms in
+<code class="docutils literal notranslate"><span class="pre">&lt;bosons&gt;</span> <span class="pre">[0,</span> <span class="pre">1,</span> <span class="pre">2]</span> <span class="pre">&lt;/bosons&gt;</span></code> turns on bosonic exchange, nothing else in
+the input changes.</p>
+<p>Rather than a single number, let us trace the whole <strong>energy-temperature
+curve</strong> and compare it to the exact result. We sweep the dimensionless inverse
+temperature <span class="math notranslate nohighlight">\(\beta\hbar\omega_0\)</span> from warm (near-classical) to cold,
+where the system settles into its quantum ground state.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>How many beads?</strong> The number of beads needed grows with
+<span class="math notranslate nohighlight">\(\beta\hbar\omega_0\)</span>, so a warm run needs far fewer beads than
+a cold one. We therefore <em>scale</em> <span class="math notranslate nohighlight">\(P\)</span> with the inverse temperature, and
+the warm point runs with only 8 beads instead of 32.</p>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># beta*hbar*omega0 and the (temperature-scaled) number of beads for each point</span>
+<span class="n">SWEEP_BHW</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+<span class="n">SWEEP_BEADS</span> <span class="o">=</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">32</span><span class="p">]</span>
+<span class="n">SWEEP_STEPS</span> <span class="o">=</span> <span class="mi">1500</span>  <span class="c1"># short runs to keep the recipe within the cookbook CI budget</span>
+<span class="n">FERMION_STEPS</span> <span class="o">=</span> <span class="mi">2000</span>  <span class="c1"># fermions need a little more sampling for the sign</span>
+<span class="n">SKIP</span> <span class="o">=</span> <span class="mi">300</span>  <span class="c1"># rows discarded as thermalisation (properties written every step)</span>
+
+<span class="n">omega0</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">omega0</span><span class="p">()</span>
+
+<span class="c1"># Run bosons at each temperature: the *same* input (``&lt;bosons&gt; [0, 1, 2]``), only</span>
+<span class="c1"># the temperature and bead count change. The runs are independent, so we launch</span>
+<span class="c1"># them together.</span>
+<span class="n">jobs</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span>
+        <span class="s2">&quot;input_3bosons.xml&quot;</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">&quot;bsweep-</span><span class="si">{</span><span class="n">bhw</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="nb">dict</span><span class="p">(</span><span class="n">temp</span><span class="o">=</span><span class="n">analysis</span><span class="o">.</span><span class="n">temperature_for</span><span class="p">(</span><span class="n">bhw</span><span class="p">),</span> <span class="n">nbeads</span><span class="o">=</span><span class="n">P</span><span class="p">,</span> <span class="n">total_steps</span><span class="o">=</span><span class="n">SWEEP_STEPS</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">bhw</span><span class="p">,</span> <span class="n">P</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">SWEEP_BHW</span><span class="p">,</span> <span class="n">SWEEP_BEADS</span><span class="p">)</span>
+<span class="p">]</span>
+<span class="n">outputs</span> <span class="o">=</span> <span class="n">run_parallel</span><span class="p">(</span><span class="n">jobs</span><span class="p">)</span>
+
+<span class="c1"># Analysis: block-averaged total energy (the estimator valid under exchange),</span>
+<span class="c1"># in units of hbar*omega0.</span>
+<span class="n">sweep</span> <span class="o">=</span> <span class="p">[</span><span class="n">analysis</span><span class="o">.</span><span class="n">block_average</span><span class="p">(</span><span class="n">analysis</span><span class="o">.</span><span class="n">total_energy_series</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">SKIP</span><span class="p">))</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]</span>
+<span class="n">sweep_e</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span> <span class="o">/</span> <span class="n">omega0</span> <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">sweep</span><span class="p">]</span>
+<span class="n">sweep_err</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="o">/</span> <span class="n">omega0</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">sweep</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">bhw</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">SWEEP_BHW</span><span class="p">,</span> <span class="n">SWEEP_BEADS</span><span class="p">,</span> <span class="n">sweep_e</span><span class="p">,</span> <span class="n">sweep_err</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;beta*hbar*omega0 = </span><span class="si">{</span><span class="n">bhw</span><span class="si">}</span><span class="s2">  (T = </span><span class="si">{</span><span class="n">analysis</span><span class="o">.</span><span class="n">temperature_for</span><span class="p">(</span><span class="n">bhw</span><span class="p">)</span><span class="si">:</span><span class="s2">5.1f</span><span class="si">}</span><span class="s2"> K, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;P = </span><span class="si">{</span><span class="n">P</span><span class="si">:</span><span class="s2">2d</span><span class="si">}</span><span class="s2">)  -&gt;  E/hw0 = </span><span class="si">{</span><span class="n">m</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> +/- </span><span class="si">{</span><span class="n">e</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>beta*hbar*omega0 = 1  (T =  34.8 K, P =  8)  -&gt;  E/hw0 = 8.014 +/- 0.671
+beta*hbar*omega0 = 2  (T =  17.4 K, P = 16)  -&gt;  E/hw0 = 5.154 +/- 0.435
+beta*hbar*omega0 = 3  (T =  11.6 K, P = 24)  -&gt;  E/hw0 = 4.736 +/- 0.302
+beta*hbar*omega0 = 5  (T =   7.0 K, P = 32)  -&gt;  E/hw0 = 4.213 +/- 0.129
+</pre></div>
+</div>
+<p>The PIMD points (with block-averaged error bars) sit on the exact bosonic curve
+(solid line). The distinguishable curve (dashed) is shown for reference:
+bosonic exchange always lies below it. At low temperature both approach the
+<strong>ground-state energy</strong> <span class="math notranslate nohighlight">\(4.5\,\hbar\omega_0\)</span> (three particles, each
+contributing <span class="math notranslate nohighlight">\(\tfrac{3}{2}\hbar\omega_0\)</span> of zero-point energy in 3D).
+By <span class="math notranslate nohighlight">\(\beta\hbar\omega_0 = 5\)</span>, the boson energy is within ~0.5% of it.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">plots</span><span class="o">.</span><span class="n">plot_boson_energy_curve</span><span class="p">(</span><span class="n">SWEEP_BHW</span><span class="p">,</span> <span class="n">sweep_e</span><span class="p">,</span> <span class="n">sweep_err</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_bosons-fermions-pimd_001.png" srcset="../../_images/sphx_glr_bosons-fermions-pimd_001.png" alt="Three bosons in a harmonic trap" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;Axes: title={&#39;center&#39;: &#39;Three bosons in a harmonic trap&#39;}, xlabel=&#39;$\\beta\\hbar\\omega_0$&#39;, ylabel=&#39;$\\langle E\\rangle\\,/\\,\\hbar\\omega_0$&#39;&gt;
+</pre></div>
+</div>
+</section>
+<section id="switching-statistics-at-a-single-temperature">
+<h2>Switching statistics at a single temperature<a class="headerlink" href="#switching-statistics-at-a-single-temperature" title="Link to this heading">¶</a></h2>
+<p>Only the <code class="docutils literal notranslate"><span class="pre">&lt;bosons&gt;</span></code> tag is what changes between cases.
+We now compare, at one temperature (<span class="math notranslate nohighlight">\(\beta\hbar\omega_0 = 2\)</span>, i.e.
+17.4 K), <strong>four</strong> particles under three kinds of statistics. We use four here
+(rather than the three of the other sections), so the exchange effect is large
+enough that the energies separate clearly given these short runs:</p>
+<ul class="simple">
+<li><p><strong>distinguishable</strong> – <code class="docutils literal notranslate"><span class="pre">&lt;bosons&gt;</span> <span class="pre">[]</span></code> (empty list),</p></li>
+<li><p><strong>four bosons</strong> – <code class="docutils literal notranslate"><span class="pre">&lt;bosons&gt;</span> <span class="pre">[0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3]</span></code>,</p></li>
+<li><p>a <strong>mixture</strong> – <code class="docutils literal notranslate"><span class="pre">&lt;bosons&gt;</span> <span class="pre">[0,</span> <span class="pre">1,</span> <span class="pre">2]</span></code>: atoms 0-2 exchange, atom 3 does not.</p></li>
+</ul>
+<p>Each is a separate template in <code class="docutils literal notranslate"><span class="pre">data/</span></code> differing only in that one line:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="cm">&lt;!-- distinguishable: no exchange --&gt;</span>
+<span class="nt">&lt;bosons&gt;</span><span class="w"> </span>[]<span class="w"> </span><span class="nt">&lt;/bosons&gt;</span>
+<span class="cm">&lt;!-- four bosons: every pair may exchange --&gt;</span>
+<span class="nt">&lt;bosons&gt;</span><span class="w"> </span>[0,<span class="w"> </span>1,<span class="w"> </span>2,<span class="w"> </span>3]<span class="w"> </span><span class="nt">&lt;/bosons&gt;</span>
+<span class="cm">&lt;!-- mixture: 0-2 exchange, atom 3 stays distinct --&gt;</span>
+<span class="nt">&lt;bosons&gt;</span><span class="w"> </span>[0,<span class="w"> </span>1,<span class="w"> </span>2]<span class="w"> </span><span class="nt">&lt;/bosons&gt;</span>
+</pre></div>
+</div>
+<p>Exchange means the ring polymers of the listed atoms are allowed to connect
+into longer rings; the atoms left out stay closed on themselves.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The <strong>centroid-virial</strong> kinetic estimator is <em>not</em> valid under bosonic
+exchange, so the boson and mixture inputs record the primitive/quantum
+virial (<code class="docutils literal notranslate"><span class="pre">virial_fq</span></code>) and thermodynamic (<code class="docutils literal notranslate"><span class="pre">kinetic_td</span></code>) estimators
+instead. The total energy from the (always-valid) primitive virial is what
+we compare below.</p>
+</div>
+<p>You can see this in the <code class="docutils literal notranslate"><span class="pre">&lt;properties&gt;</span></code> line of each input: the
+distinguishable case keeps <code class="docutils literal notranslate"><span class="pre">kinetic_cv</span></code>, while the exchange cases drop it.</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="cm">&lt;!-- distinguishable --&gt;</span>
+<span class="nt">&lt;properties</span><span class="w"> </span><span class="err">...</span><span class="nt">&gt;</span><span class="w"> </span>[<span class="w"> </span>...,<span class="w"> </span>kinetic_cv,<span class="w"> </span>kinetic_td,
+<span class="w">       </span>potential,<span class="w"> </span>virial_fq<span class="w"> </span>]<span class="w"> </span><span class="nt">&lt;/properties&gt;</span>
+
+<span class="cm">&lt;!-- bosons / mixture: no kinetic_cv --&gt;</span>
+<span class="nt">&lt;properties</span><span class="w"> </span><span class="err">...</span><span class="nt">&gt;</span><span class="w"> </span>[<span class="w"> </span>...,<span class="w"> </span>kinetic_td,<span class="w"> </span>potential,<span class="w"> </span>virial_fq<span class="w"> </span>]<span class="w"> </span><span class="nt">&lt;/properties&gt;</span>
+</pre></div>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">BHW_SWITCH</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">BEADS_SWITCH</span> <span class="o">=</span> <span class="mi">16</span>
+<span class="n">T_SWITCH</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">temperature_for</span><span class="p">(</span><span class="n">BHW_SWITCH</span><span class="p">)</span>
+
+<span class="c1"># (label, input template, (n_bosons, n_dist) for the exact reference)</span>
+<span class="c1"># Ordered low energy -&gt; high, i.e. bosons &lt; mixture &lt; distinguishable.</span>
+<span class="n">cases</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s2">&quot;4 bosons&quot;</span><span class="p">,</span> <span class="s2">&quot;input_4bosons.xml&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s2">&quot;3 bosons + 1 dist&quot;</span><span class="p">,</span> <span class="s2">&quot;input_3bosons1dist.xml&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s2">&quot;distinguishable&quot;</span><span class="p">,</span> <span class="s2">&quot;input_4dist.xml&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">)),</span>
+<span class="p">]</span>
+<span class="n">jobs</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span>
+        <span class="n">xml</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">&quot;switch-</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="nb">dict</span><span class="p">(</span><span class="n">temp</span><span class="o">=</span><span class="n">T_SWITCH</span><span class="p">,</span> <span class="n">nbeads</span><span class="o">=</span><span class="n">BEADS_SWITCH</span><span class="p">,</span> <span class="n">total_steps</span><span class="o">=</span><span class="n">SWEEP_STEPS</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">xml</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cases</span><span class="p">)</span>
+<span class="p">]</span>
+<span class="n">outputs</span> <span class="o">=</span> <span class="n">run_parallel</span><span class="p">(</span><span class="n">jobs</span><span class="p">)</span>
+
+<span class="n">switch</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">analysis</span><span class="o">.</span><span class="n">block_average</span><span class="p">(</span><span class="n">analysis</span><span class="o">.</span><span class="n">total_energy_series</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">SKIP</span><span class="p">))</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">outputs</span>
+<span class="p">]</span>
+<span class="n">switch_sim</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">switch</span><span class="p">]</span>
+<span class="n">switch_err</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">switch</span><span class="p">]</span>
+<span class="n">switch_ref</span> <span class="o">=</span> <span class="p">[</span><span class="n">analysis</span><span class="o">.</span><span class="n">mixture_energy</span><span class="p">(</span><span class="n">nb</span><span class="p">,</span> <span class="n">nd</span><span class="p">,</span> <span class="n">T_SWITCH</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="p">(</span><span class="n">nb</span><span class="p">,</span> <span class="n">nd</span><span class="p">)</span> <span class="ow">in</span> <span class="n">cases</span><span class="p">]</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">),</span> <span class="n">m</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">ref</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">cases</span><span class="p">,</span> <span class="n">switch_sim</span><span class="p">,</span> <span class="n">switch_err</span><span class="p">,</span> <span class="n">switch_ref</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">:</span><span class="s2">20s</span><span class="si">}</span><span class="s2"> (T = </span><span class="si">{</span><span class="n">T_SWITCH</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> K): &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;PIMD </span><span class="si">{</span><span class="n">m</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">omega0</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> +/- </span><span class="si">{</span><span class="n">e</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">omega0</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">  exact </span><span class="si">{</span><span class="n">ref</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">omega0</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">  (E/hw0)&quot;</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>4 bosons             (T = 17.4 K): PIMD 6.520 +/- 0.429  exact 6.787  (E/hw0)
+3 bosons + 1 dist    (T = 17.4 K): PIMD 7.431 +/- 0.572  exact 7.233  (E/hw0)
+distinguishable      (T = 17.4 K): PIMD 7.824 +/- 0.494  exact 7.878  (E/hw0)
+</pre></div>
+</div>
+<p>Exchange orders the energies: at fixed temperature the bosonic energy is the
+lowest, distinguishable is highest, and the mixture sits in between. With four
+particles the gaps are large enough to resolve with these short runs – each
+PIMD point (with its error bar) sits on its exact energy level.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">plots</span><span class="o">.</span><span class="n">plot_statistics_levels</span><span class="p">(</span>
+    <span class="p">[</span><span class="s2">&quot;4 bosons&quot;</span><span class="p">,</span> <span class="s2">&quot;3B+1D&quot;</span><span class="p">,</span> <span class="s2">&quot;dist&quot;</span><span class="p">],</span>
+    <span class="n">switch_sim</span><span class="p">,</span>
+    <span class="n">switch_err</span><span class="p">,</span>
+    <span class="n">switch_ref</span><span class="p">,</span>
+    <span class="sa">r</span><span class="s2">&quot;Four particles at $\beta\hbar\omega_0 = 2$ (17.4 K)&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_bosons-fermions-pimd_002.png" srcset="../../_images/sphx_glr_bosons-fermions-pimd_002.png" alt="Four particles at $\beta\hbar\omega_0 = 2$ (17.4 K)" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;Axes: title={&#39;center&#39;: &#39;Four particles at $\\beta\\hbar\\omega_0 = 2$ (17.4 K)&#39;}, ylabel=&#39;total energy $/\\,\\hbar\\omega_0$&#39;&gt;
+</pre></div>
+</div>
+</section>
+<section id="fermions-reweighting-and-the-sign-problem">
+<h2>Fermions: reweighting and the sign problem<a class="headerlink" href="#fermions-reweighting-and-the-sign-problem" title="Link to this heading">¶</a></h2>
+<p>Fermions are harder. We cannot sample the fermionic density directly;
+instead we simulate <strong>bosons</strong> and reweight each sample by the fermionic sign
+<span class="math notranslate nohighlight">\(s\)</span>,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\langle A \rangle_F = \frac{\langle A\, s \rangle}{\langle s \rangle},\]</div>
+</div>
+<p>where the sign follows from the recursive configuration weight</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[W^{(N)} = \frac{1}{N}\sum_{k=1}^{N} \xi^{k-1}
+          e^{-\beta E_N^{(k)}} \, W^{(N-k)}, \qquad W^{(0)} = 1,\]</div>
+</div>
+<p>with <span class="math notranslate nohighlight">\(\xi = -1\)</span> for fermions. <strong>i-PI 3.x computes the sign for us</strong> and
+writes it to the <code class="docutils literal notranslate"><span class="pre">fermionic_sign</span></code> column, so we just request that property
+and reweight in two lines (see <code class="docutils literal notranslate"><span class="pre">analysis.reweighted_fermionic_energy</span></code>).</p>
+<p>In the input, there is no separate “fermion mode”: you run an ordinary
+<em>bosonic</em> simulation and simply add <code class="docutils literal notranslate"><span class="pre">fermionic_sign</span></code> to the property list:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;bosons&gt;</span><span class="w"> </span>[0,<span class="w"> </span>1,<span class="w"> </span>2]<span class="w"> </span><span class="nt">&lt;/bosons&gt;</span><span class="w">                     </span><span class="cm">&lt;!-- still a bosonic run --&gt;</span>
+<span class="nt">&lt;properties</span><span class="w"> </span><span class="err">...</span><span class="nt">&gt;</span><span class="w"> </span>[<span class="w"> </span>...,<span class="w"> </span>virial_fq,<span class="w"> </span>fermionic_sign<span class="w"> </span>]<span class="w"> </span><span class="nt">&lt;/properties&gt;</span>
+</pre></div>
+</div>
+<p>When the average sign <span class="math notranslate nohighlight">\(\langle s\rangle\)</span> approaches zero, the denominator
+is small, and we encounter the fermionic <strong>sign problem</strong>. It becomes worse with
+increasing system size and decreasing temperature. This is why the fermion input
+uses a higher temperature (<span class="math notranslate nohighlight">\(\beta\hbar\omega_0 = 1.16\)</span>, 30 K).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>The exact reference value.</strong> The exact three-fermion energy at 30 K is
+<span class="math notranslate nohighlight">\(9.55\,\hbar\omega_0\)</span> (1.053 mHa), computed by
+<code class="docutils literal notranslate"><span class="pre">analysis.analytical_energy</span></code> from the canonical
+partition-function recursion. Note the Pauli exclusion principle lifts the
+fermionic ground state to <span class="math notranslate nohighlight">\(6.5\,\hbar\omega_0\)</span>, well above the bosonic
+<span class="math notranslate nohighlight">\(4.5\,\hbar\omega_0\)</span>.</p>
+</div>
+<p>We estimate the fermionic energy from <strong>eight independent trajectories</strong>
+(different random seeds).</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Eight independent fermionic trajectories with different random seeds, together.</span>
+<span class="n">seeds</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4001</span> <span class="o">+</span> <span class="mi">137</span> <span class="o">*</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">)]</span>
+<span class="n">jobs</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s2">&quot;input_3fermions.xml&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;fmulti-</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">s</span><span class="p">,</span> <span class="n">total_steps</span><span class="o">=</span><span class="n">FERMION_STEPS</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">seeds</span><span class="p">)</span>
+<span class="p">]</span>
+<span class="n">outputs</span> <span class="o">=</span> <span class="n">run_parallel</span><span class="p">(</span><span class="n">jobs</span><span class="p">)</span>
+
+<span class="c1"># Per-trajectory reweighted energy E_j and total sign weight W_j, combined with</span>
+<span class="c1"># the sign-weighted estimator (see &quot;How the error bar is estimated&quot; below).</span>
+<span class="n">E</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">signs</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
+    <span class="n">e_j</span><span class="p">,</span> <span class="n">w_j</span><span class="p">,</span> <span class="n">s_j</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">fermionic_trajectory_estimate</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">SKIP</span><span class="p">)</span>
+    <span class="n">E</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e_j</span><span class="p">)</span>
+    <span class="n">W</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">w_j</span><span class="p">)</span>
+    <span class="n">signs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s_j</span><span class="p">)</span>
+<span class="n">fer_mean</span><span class="p">,</span> <span class="n">fer_err</span><span class="p">,</span> <span class="n">n_eff</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">weighted_average</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">W</span><span class="p">)</span>
+<span class="n">fer_traj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+<span class="n">fer_ref</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">analytical_energy</span><span class="p">(</span><span class="mf">30.0</span><span class="p">,</span> <span class="s2">&quot;fermionic&quot;</span><span class="p">)</span>
+
+<span class="c1"># energies in hbar*omega0, to match the figures</span>
+<span class="n">e_hw</span><span class="p">,</span> <span class="n">err_hw</span><span class="p">,</span> <span class="n">ref_hw</span> <span class="o">=</span> <span class="n">fer_mean</span> <span class="o">/</span> <span class="n">omega0</span><span class="p">,</span> <span class="n">fer_err</span> <span class="o">/</span> <span class="n">omega0</span><span class="p">,</span> <span class="n">fer_ref</span> <span class="o">/</span> <span class="n">omega0</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Three fermions (T = 30 K, 8 short trajectories)&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  average sign &lt;s&gt;          : </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">signs</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  fermionic energy          : </span><span class="si">{</span><span class="n">e_hw</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> +/- </span><span class="si">{</span><span class="n">err_hw</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> hw0&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  exact                     : </span><span class="si">{</span><span class="n">ref_hw</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> hw0&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  effective sample size     : n_eff = </span><span class="si">{</span><span class="n">n_eff</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> of 8&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Three fermions (T = 30 K, 8 short trajectories)
+  average sign &lt;s&gt;          : 0.374
+  fermionic energy          : 9.307 +/- 0.402 hw0
+  exact                     : 9.548 hw0
+  effective sample size     : n_eff = 7.1 of 8
+</pre></div>
+</div>
+<p>The 8-trajectory fermionic energy brackets the exact
+<span class="math notranslate nohighlight">\(9.55\,\hbar\omega_0\)</span> within its error bar. The individual trajectories
+(grey) scatter around the mean (blue, with its error bar), which sits on the
+exact value.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">plots</span><span class="o">.</span><span class="n">plot_fermion_ensemble</span><span class="p">(</span><span class="n">fer_traj</span><span class="p">,</span> <span class="n">fer_mean</span><span class="p">,</span> <span class="n">fer_err</span><span class="p">,</span> <span class="n">fer_ref</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_bosons-fermions-pimd_003.png" srcset="../../_images/sphx_glr_bosons-fermions-pimd_003.png" alt="Three fermions at 30 K: one run vs. eight" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;Axes: title={&#39;center&#39;: &#39;Three fermions at 30 K: one run vs. eight&#39;}, ylabel=&#39;fermionic total energy $/\\,\\hbar\\omega_0$&#39;&gt;
+</pre></div>
+</div>
+</section>
+<section id="how-the-error-bar-is-estimated">
+<h2>How the error bar is estimated<a class="headerlink" href="#how-the-error-bar-is-estimated" title="Link to this heading">¶</a></h2>
+<p>Combining fermionic averages takes more care than a plain average, because
+they carry different <em>effective</em> amounts of information: a trajectory that
+sampled a smaller average sign has a more poorly-determined ratio and must count
+for less. We therefore weight each trajectory <span class="math notranslate nohighlight">\(j\)</span> by its total sign
+<span class="math notranslate nohighlight">\(W_j = \sum_\mathrm{steps} s\)</span>, and measure an <em>effective sample size</em>:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\bar E_F = \frac{\sum_j W_j E_j}{\sum_j W_j}, \qquad
+n_\mathrm{eff} = \frac{\left(\sum_j W_j\right)^2}{\sum_j W_j^2}, \qquad
+\sigma_E^2 = \frac{n_\mathrm{eff}}{n_\mathrm{eff}-1}
+             \frac{\sum_j W_j (E_j - \bar E_F)^2}{\sum_j W_j},\]</div>
+</div>
+<p>with statistical error <span class="math notranslate nohighlight">\(\sigma_E/\sqrt{n_\mathrm{eff}}\)</span>
+(see SI of Hirshberg, Invernizzi &amp; Parrinello, <em>J. Chem. Phys.</em> 152, 171102,
+2020). The effective sample size came out <span class="math notranslate nohighlight">\(n_\mathrm{eff} \approx 7\)</span> of 8
+above: the trajectories are worth fewer than eight fully independent samples
+because they carry unequal weight, so the honest error bar is a little larger
+than <span class="math notranslate nohighlight">\(\mathrm{std}/\sqrt{8}\)</span> would give. When all the weights are equal, as
+for the sign-free bosons, <span class="math notranslate nohighlight">\(n_\mathrm{eff} = M\)</span>, and this reduces to the
+ordinary mean and standard error, which is why the boson runs needed no special
+treatment. Both estimators are in <code class="docutils literal notranslate"><span class="pre">analysis.py</span></code> (<code class="xref py py-func docutils literal notranslate"><span class="pre">weighted_average()</span></code>,
+<code class="xref py py-func docutils literal notranslate"><span class="pre">fermionic_trajectory_estimate()</span></code>).</p>
+</section>
+<section id="the-sign-problem-made-concrete">
+<h2>The sign problem, made concrete<a class="headerlink" href="#the-sign-problem-made-concrete" title="Link to this heading">¶</a></h2>
+<p>The sign problem is not abstract. Recall the statistics comparison above at
+<span class="math notranslate nohighlight">\(\beta\hbar\omega_0 = 2\)</span> (17.4 K): computing bosons, mixtures, and
+distinguishable particles was relatively easy. Now run three <strong>fermions</strong> at
+that <em>same</em> <span class="math notranslate nohighlight">\(\beta\hbar\omega_0 = 2\)</span> and put the eight per-trajectory
+energies next to the well-behaved 30 K ones.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">cold_T</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">temperature_for</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># the statistics-comparison temperature</span>
+<span class="n">cold_jobs</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span>
+        <span class="s2">&quot;input_3fermions.xml&quot;</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">&quot;fcold-</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="nb">dict</span><span class="p">(</span><span class="n">temp</span><span class="o">=</span><span class="n">cold_T</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">s</span><span class="p">,</span> <span class="n">total_steps</span><span class="o">=</span><span class="n">FERMION_STEPS</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">seeds</span><span class="p">)</span>
+<span class="p">]</span>
+<span class="n">cold_E</span><span class="p">,</span> <span class="n">cold_signs</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">run_parallel</span><span class="p">(</span><span class="n">cold_jobs</span><span class="p">):</span>
+    <span class="n">e_j</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">s_j</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">fermionic_trajectory_estimate</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">SKIP</span><span class="p">)</span>
+    <span class="n">cold_E</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e_j</span><span class="p">)</span>
+    <span class="n">cold_signs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s_j</span><span class="p">)</span>
+<span class="n">cold_traj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cold_E</span><span class="p">)</span>
+<span class="n">cold_ref</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">analytical_energy</span><span class="p">(</span><span class="n">cold_T</span><span class="p">,</span> <span class="s2">&quot;fermionic&quot;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;average sign:  30 K -&gt; </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">signs</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">,&quot;</span>
+    <span class="sa">f</span><span class="s2">&quot;   17.4 K -&gt; </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">cold_signs</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+
+<span class="n">plots</span><span class="o">.</span><span class="n">plot_sign_scatter</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;30 K</span><span class="se">\n</span><span class="s2">&lt;s&gt; = </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">signs</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">fer_traj</span><span class="p">,</span> <span class="n">fer_ref</span><span class="p">),</span>
+        <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;17.4 K</span><span class="se">\n</span><span class="s2">&lt;s&gt; = </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">cold_signs</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">cold_traj</span><span class="p">,</span> <span class="n">cold_ref</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_bosons-fermions-pimd_004.png" srcset="../../_images/sphx_glr_bosons-fermions-pimd_004.png" alt="The sign problem: colder = much wider scatter" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>average sign:  30 K -&gt; 0.374,   17.4 K -&gt; 0.077
+
+&lt;Axes: title={&#39;center&#39;: &#39;The sign problem: colder = much wider scatter&#39;}, ylabel=&#39;per-trajectory energy $/\\,\\hbar\\omega_0$&#39;&gt;
+</pre></div>
+</div>
+<p>At <span class="math notranslate nohighlight">\(\beta\hbar\omega_0 = 2\)</span> the average sign has collapsed (the plot
+labels show it dropping from ~0.37 at 30 K to below 0.1) and the per-trajectory
+energies spread over a much wider range – from below the true value to well
+above it. What was trivial for bosons is, for fermions,
+barely possible with eight short trajectories: this is the <strong>sign problem</strong>. It
+is why we run the fermions warmer, at 30 K; colder still, or with more
+particles, both the scatter and the number of trajectories you need grow
+exponentially.</p>
+<p>The runs here are deliberately short and use only 12 beads for the fermions –
+enough to “make sense”, not to be tightly converged. For production you would
+run more (and longer) trajectories and, if needed, more beads; the sign-weighted
+estimator above is exactly what you would use.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>B. Hirshberg, V. Rizzi, M. Parrinello,
+<a class="reference external" href="https://doi.org/10.1073/pnas.1913365116">PNAS 116, 21445 (2019)</a></p></li>
+<li><p>Y. M. Y. Feldman, B. Hirshberg,
+<a class="reference external" href="https://doi.org/10.1063/5.0173749">JCP 159, 154107 (2023)</a></p></li>
+<li><p>B. Hirshberg, M. Invernizzi, M. Parrinello,
+<a class="reference external" href="https://doi.org/10.1063/5.0008720">JCP 152, 171102 (2020)</a></p></li>
+</ul>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (7 minutes 37.259 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-bosons-fermions-pimd-bosons-fermions-pimd-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/7ab2be9bdde7b6213eaac7d17b1060a1/bosons-fermions-pimd.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">bosons-fermions-pimd.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/7b7d471bf22c459b887e181c055d9c28/bosons-fermions-pimd.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">bosons-fermions-pimd.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/49eb4f459182ef3cdf59652cfdd68a50/bosons-fermions-pimd.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">recipe:</span> <span class="pre">bosons-fermions-pimd.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../periodic-hamiltonian/periodic-hamiltonian.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Periodic Hamiltonian learning</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../path-integrals/path-integrals.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Path integral molecular dynamics</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; BSD 3-Clause License, Copyright (c) 2026, The atomistic cookbook team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Path integral molecular dynamics of bosons and fermions</a><ul>
+<li><a class="reference internal" href="#indistinguishable-particles-and-ring-polymer-exchange">Indistinguishable particles and ring-polymer exchange</a></li>
+<li><a class="reference internal" href="#how-we-run-each-case">How we run each case</a></li>
+<li><a class="reference internal" href="#bosons-and-the-energy-temperature-curve">Bosons and the energy-temperature curve</a></li>
+<li><a class="reference internal" href="#switching-statistics-at-a-single-temperature">Switching statistics at a single temperature</a></li>
+<li><a class="reference internal" href="#fermions-reweighting-and-the-sign-problem">Fermions: reweighting and the sign problem</a></li>
+<li><a class="reference internal" href="#how-the-error-bar-is-estimated">How the error bar is estimated</a></li>
+<li><a class="reference internal" href="#the-sign-problem-made-concrete">The sign problem, made concrete</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script data-domain="atomistic-cookbook.org" defer="defer" src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"></script>
+    <script src="../../_static/all-examples-data.js?v=3c6a1490"></script>
+    <script src="../../_static/daily-recipe.js?v=b5e71911"></script>
+    </body>
+</html>

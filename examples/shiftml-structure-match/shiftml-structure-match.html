@@ -1,0 +1,1037 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="search" title="Search" href="../../search.html"><link rel="next" title="PCA/PCovR Visualization of a training dataset for a potential" href="../gaas-map/gaas-map.html"><link rel="prev" title="Multiple time stepping and ring-polymer contraction" href="../pi-mts-rpc/mts-rpc.html">
+        <link rel="canonical" href="https://atomistic-cookbook.org/examples/shiftml-structure-match/shiftml-structure-match.html">
+        <link rel="prefetch" href="../../_static/cookbook-icon.svg" as="image">
+
+    <link rel="shortcut icon" href="../../_static/cookbook-icon.png"><!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>NMR-shielding-driven structure determination with ShiftML3 - The Atomistic Cookbook</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/cookbook.css?v=d86cfb60" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">The Atomistic Cookbook</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/cookbook-icon.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">The Atomistic Cookbook</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../topics/index.html">Recipes grouped by topic</a><input aria-label="Toggle navigation of Recipes grouped by topic" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/sampling.html">Statistical sampling and dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/analysis.html">Analysis and post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/ml-models.html">Machine learning models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/universal.html">Universal ML models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/nqes.html">Nuclear quantum effects</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../software/index.html">Recipes grouped by software used</a><input aria-label="Toggle navigation of Recipes grouped by software used" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../software/chemiscope.html">chemiscope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/cp2k.html">cp2k</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/eon.html">eon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/featomic.html">featomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/gromacs.html">GROMACS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/i-pi.html">i-PI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/kaldo.html">kALDo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/lammps.html">LAMMPS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/metatensor.html">metatensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/plumed.html">PLUMED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/scikit-matter.html">scikit-matter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/torch-pme.html">torch-pme</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../all-examples.html">List of all recipes</a><input aria-label="Toggle navigation of List of all recipes" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-dos/pet-mad-dos.html">A Guide to PET-MAD-DOS: Model Inference and Fine-Tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dos-align/dos-align.html">A ML model for the electron density of states</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-model/water-model.html">Atomistic Water Model for Molecular Dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../batch-cp2k/reference-trajectory.html">Batch run of CP2K calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../shiftml/shiftml-example.html">Computing NMR shielding tensors using ShiftML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft-nc.html">Conservative fine-tuning for a PET model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermostats/thermostats.html">Constant-temperature MD and thermostats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../polarizability/polarizability.html">Equivariant linear model for polarizability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../learn-tensors-with-mcov/learn-tensors-with-mcov.html">Equivariant model for tensorial properties based on scalar features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../eon-pet-neb/eon-pet-neb.html">Finding Reaction Paths with eOn and a Metatomic Potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft.html">Fine-tuning the PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../roy-gch/roy-gch.html">Generalized Convex Hull construction for the polymorphs of ROY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-relaxation/pet-relaxation.html">Geometry relaxation with unconstrained MLIPs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hamiltonian-qm7/hamiltonian-qm7.html">Hamiltonian Learning for Molecules with Indirect Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-md/water-md.html">Introduction to foundational models for molecular dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../torchpme/torchpme_learning.html">Learning Capabilities with torchpme</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lpr/lpr.html">Local Prediction Rigidity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lode-linear/lode-linear.html">Long-distance Equivariants: a tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flashmd/flashmd-demo.html">Long-stride trajectories with a universal FlashMD model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-nc/pet-mad-nc.html">MD using direct-force predictions with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metatomic-plumed/metatomic-plumed.html">ML collective variables in PLUMED with metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ml-density/ml-density.html">ML surrogate for the electron density and derived properties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ml-mm/ml-mm.html">ML/MM Simulations with GROMACS and Metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-ir-spectrum/water-ir-spectrum.html">Machine-learned dipoles and infrared spectroscopy of liquid water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../mendeleev/mendeleev.html">Mendeleev clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-mts-rpc/mts-rpc.html">Multiple time stepping and ring-polymer contraction</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">NMR-shielding-driven structure determination with ShiftML3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../gaas-map/gaas-map.html">PCA/PCovR Visualization of a training dataset for a potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-metad/pi-metad.html">Path integral metadynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../path-integrals/path-integrals.html">Path integral molecular dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bosons-fermions-pimd/bosons-fermions-pimd.html">Path integral molecular dynamics of bosons and fermions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../periodic-hamiltonian/periodic-hamiltonian.html">Periodic Hamiltonian learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-phonons/pet-phonons.html">Phonon dispersions with unconstrained models and uncertainty quantification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../heat-capacity/heat-capacity.html">Quantum heat capacity of water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ring-polymer-instanton/rpi-rates.html">Ring Polymer Instanton Rate Theory: Tunneling Rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rotate-equivariants/rotate-equivariants.html">Rotating equivariants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sample-selection/sample-selection.html">Sample and Feature Selection with FPS and CUR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad/pet-mad.html">The PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermal-conductivity-bte/thermal-conductivity-bte.html">Thermal conductivity from the Boltzmann transport equation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../llpr-from-scratch/llpr-from-scratch.html">Training a Model with Uncertainties from Scratch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-uq/pet-mad-uq.html">Uncertainty Quantification with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-pulsed/water-pulsed.html">Water orientation in a pulsed electric field</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../downloading.html">Downloading and running the recipes</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../contributing.html">Contributing a recipe</a><input aria-label="Toggle navigation of Contributing a recipe" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../utils.html">Shared utilities</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-examples-shiftml-structure-match-shiftml-structure-match-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="nmr-shielding-driven-structure-determination-with-shiftml3">
+<span id="sphx-glr-examples-shiftml-structure-match-shiftml-structure-match-py"></span><h1>NMR-shielding-driven structure determination with ShiftML3<a class="headerlink" href="#nmr-shielding-driven-structure-determination-with-shiftml3" title="Link to this heading">¶</a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Authors<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Joseph W. Abbott <a class="reference external" href="https://github.com/jwa7">&#64;jwa7</a>;
+Matthias Kellner <a class="reference external" href="https://github.com/bananenpampe">&#64;bananempampe</a></p>
+</dd>
+</dl>
+<p>This recipe shows how to use a fast machine-learning surrogate for <em>ab initio</em>
+NMR chemical-shielding calculations –
+<a class="reference external" href="https://github.com/lab-cosmo/shiftml">ShiftML3</a> – to pick out an
+experimentally observed crystal structure from a pool of candidate polymorphs.
+In a nutshell, the NMR-shielding-driven structure determination protocol,
+also sometimes referred to as NMR crystallography or NMR crystal-structure prediction
+(NMR-CSP), aims to enhance the confidence in a classical crystal structure prediction
+(CSP) workflow by
+anchoring the final structure selection step to experimental solid-state NMR data.
+This method is particularly useful to determine the structure of organic solids,
+for which it is difficult to obtain single crystals suitable for X-ray diffraction,
+or to unambiguously determine protonation states who cannot be resolved by XRD.</p>
+<p>We work through the cocaine benchmark from
+<a class="reference external" href="https://www.nature.com/articles/s41467-018-06972-x">Paruzzo et al., Nat. Commun. (2018)</a>, where the pool consists
+of geometry-optimized candidate structures of solid cocaine and a measured solid-state
+<sup>1</sup>H spectrum is available for comparison.</p>
+<p>The basic workflow of NMR crystallography is:</p>
+<ol class="arabic simple">
+<li><p>enumerate candidate structures (typically by computational crystal-structure
+prediction workflows);</p></li>
+<li><p>compute <sup>1</sup>H chemical shieldings for each candidate (traditionally
+with GIPAW-DFT, here with the ML-accelerated ShiftML3 model);</p></li>
+<li><p>assign each predicted shielding to one of the experimentally observed
+chemical-shift peaks;</p></li>
+<li><p>score each candidate against experiment via a calibrated RMSE;</p></li>
+<li><p>take the structure with the lowest RMSE as the best match.</p></li>
+</ol>
+<p>The chemical <em>shielding</em> is a rank-2 Cartesian tensor; its isotropic part
+(the trace divided by three) is rotation-invariant and is the quantity we
+use here for structure matching, as they are the observable most reliably measured
+using solid-state NMR spectroscopy. For background on running ShiftML3 itself
+– calculator setup, ensemble uncertainties, anisotropic tensor predictions
+– see the companion recipe <a class="reference external" href="https://atomistic-cookbook.org/examples/shiftml/shiftml-example.html">Computing NMR shielding tensors using ShiftML</a>.
+For background on learning and predicting rotationally equivariant tensor properties,
+see the <a class="reference external" href="https://atomistic-cookbook.org/examples/polarizability/polarizability.html">polarizability recipe</a>
+and the <a class="reference external" href="https://atomistic-cookbook.org/examples/rotate-equivariants/rotate-equivariants.html">rotating-equivariants recipe</a>.</p>
+<p>This recipe is meant to be a starting point for users interested in applying ShiftML3 to
+their own NMR crystallography problems.
+Note however that modern shielding-driven NMR-CSP workflows make use of more
+sophisticated
+similarity measures than the simple RMSE used here and often combine information
+from multiple nuclei, as well as carefully calibrated shielding-to-shift regressors.
+This recipy should only serve as a demonstration of the basic workflow.</p>
+<section id="chemical-shifts-chemical-shieldings-and-structure-matching">
+<h2>Chemical shifts, chemical shieldings, and structure matching<a class="headerlink" href="#chemical-shifts-chemical-shieldings-and-structure-matching" title="Link to this heading">¶</a></h2>
+<p>A solid-state NMR experiment on a powdered organic solid reports a set of <em>chemical
+shifts</em> <span class="math notranslate nohighlight">\(\delta_i\)</span> (in ppm), one for each magnetically distinct nuclear site
+<span class="math notranslate nohighlight">\(i\)</span>. Computationally, what is naturally accessible is the <em>chemical shielding</em>
+<span class="math notranslate nohighlight">\(\sigma_i\)</span> – the response of the local electronic structure to an applied
+magnetic field. The two are related by an approximately linear calibration,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\delta_i \;=\; a\,\sigma_i + b\;,\]</div>
+</div>
+<p>where the slope <span class="math notranslate nohighlight">\(a \approx -1\)</span> (since shielding <em>reduces</em> the resonance
+frequency, while chemical shift is measured relative to a reference compound such as
+TMS for <sup>1</sup>H), and <span class="math notranslate nohighlight">\(b\)</span> is the shielding of the reference compound. The
+constants <span class="math notranslate nohighlight">\(a\)</span> and <span class="math notranslate nohighlight">\(b\)</span> depend on the level of theory used to compute
+<span class="math notranslate nohighlight">\(\sigma\)</span>, and are usually obtained by linear regression against a benchmark of
+known experimental shifts.</p>
+<p>Given a candidate structure <span class="math notranslate nohighlight">\(X\)</span>, we predict <span class="math notranslate nohighlight">\(\{\sigma_i(X)\}\)</span> for the
+relevant nuclei, calibrate via the linear form above to obtain predicted shifts
+<span class="math notranslate nohighlight">\(\{\delta_i^{\,\mathrm{pred}}(X)\}\)</span>, and compute the RMSE against the assigned
+experimental shifts:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\mathrm{RMSE}(X) \;=\; \sqrt{ \frac{1}{N}\,
+\sum_{i=1}^{N}\!\left(\delta_i^{\,\mathrm{pred}}(X)
+                      - \delta_i^{\,\mathrm{exp}}\right)^{2} }\;.\]</div>
+</div>
+<p>The candidate <span class="math notranslate nohighlight">\(X^\star\)</span> minimising this score is taken as the best match. The
+reason this works as a structural fingerprint is that the chemical shielding at a
+nucleus is highly sensitive to changes in its local environment,  so different
+polymorphs produce visibly different <sup>1</sup>H spectra.</p>
+<p>Until recently this workflow relied on GIPAW-DFT shielding calculations, at a cost of
+typically hundreds of CPU-hours per candidate. Instead ShiftML3, an ensemble of 8 PET
+models trained on shieldings computed at the PBE/GIPAW level for ~14k molecular
+crystals from the Cambridge Structural Database (<a class="reference external" href="https://doi.org/10.1021/acs.jpclett.5c01819">Kellner et al., J. Phys. Chem. Lett.
+(2025)</a>), delivers comparable accuracy
+in only a matter of seconds per candidate.</p>
+</section>
+<section id="the-cocaine-benchmark-dataset">
+<h2>The cocaine benchmark dataset<a class="headerlink" href="#the-cocaine-benchmark-dataset" title="Link to this heading">¶</a></h2>
+<p>We use a curated set of 29 cocaine candidate crystal structures with pre-computed
+GIPAW shieldings, provided together with the original ShiftML release (<a class="reference external" href="https://www.nature.com/articles/s41467-018-06972-x">Paruzzo et
+al., Nat. Commun. (2018)</a>) and
+hosted on Materials Cloud. The same archive is used by the
+<a class="reference external" href="https://atomistic-cookbook.org/examples/shiftml/shiftml-example.html">introductory ShiftML recipe</a>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">zipfile</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">chemiscope</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ase.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">read</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">atomistic_cookbook_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_with_retry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">shiftml.ase</span><span class="w"> </span><span class="kn">import</span> <span class="n">ShiftML</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">root_mean_squared_error</span>
+
+<span class="c1"># Download the reference chemical shieldings</span>
+<span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;ShiftML_poly.zip&quot;</span>
+<span class="n">download_with_retry</span><span class="p">(</span>
+    <span class="s2">&quot;https://archive.materialscloud.org/records/j2fka-sda13/files/ShiftML_poly.zip&quot;</span><span class="p">,</span>
+    <span class="n">filename</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Extract the .xyz file containing the reference data</span>
+<span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">zip_ref</span><span class="p">:</span>
+    <span class="n">file</span> <span class="o">=</span> <span class="s2">&quot;ShiftML_poly/Cocaine/cocaine_QuantumEspresso.xyz&quot;</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">zip_ref</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">source</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">dest</span><span class="p">:</span>
+        <span class="n">dest</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+
+<span class="c1"># Load the frames</span>
+<span class="n">frames</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s2">&quot;cocaine_QuantumEspresso.xyz&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loaded </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span><span class="si">}</span><span class="s2"> candidate cocaine structures&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Atoms per unit cell: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Per-atom arrays available: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">frames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">arrays</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Loaded 29 candidate cocaine structures
+Atoms per unit cell: 86
+Per-atom arrays available: [&#39;numbers&#39;, &#39;positions&#39;, &#39;CS&#39;]
+</pre></div>
+</div>
+<p>Browse the candidate pool interactively with chemiscope</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">chemiscope</span><span class="o">.</span><span class="n">show</span><span class="p">(</span>
+    <span class="n">frames</span><span class="p">,</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;structure&quot;</span><span class="p">,</span>
+    <span class="n">settings</span><span class="o">=</span><span class="n">chemiscope</span><span class="o">.</span><span class="n">quick_settings</span><span class="p">(</span>
+        <span class="n">trajectory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">structure_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;unitCell&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<!-- begin headers -->
+<!-- Load all dependencies -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
+
+<!-- JS scripts -->
+<script src="../../_static/chemiscope.min.js"></script>
+<script src="../../_static/chemiscope-sphinx.js"></script>
+
+<!-- CSS styles -->
+<link rel="stylesheet" href="../../_static/chemiscope-sphinx.css" type="text/css" />
+<!-- end headers -->
+
+<!-- Error display -->
+<div id="chsp-cbe9e851-1048-48d1-9838-f838b2e1b841-error-display" class="chemiscope-sphinx-error">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-cbe9e851-1048-48d1-9838-f838b2e1b841-error-display')">
+        &times;
+    </button>
+</div>
+
+<!-- Warning Display -->
+<div id="chsp-cbe9e851-1048-48d1-9838-f838b2e1b841-warning-display" class="chemiscope-sphinx-warning">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-cbe9e851-1048-48d1-9838-f838b2e1b841-warning-display')">
+        &times;
+    </button>
+</div>
+<div style="padding: 0.5rem 1.25rem" />
+
+<!-- Loading Spinner -->
+<div id="chsp-cbe9e851-1048-48d1-9838-f838b2e1b841-loading" class="chemiscope-sphinx-spinner">
+    <img src="../../_static/chemiscope-loading.svg" alt="Loading icon" />
+</div>
+
+<!-- Chemiscope Visualization -->
+<div id="chsp-cbe9e851-1048-48d1-9838-f838b2e1b841">
+    <!-- This will be replaced by the chemiscope HTML -->
+</div>
+
+<!-- Load Visualization Script -->
+<script>
+    loadChemiscopeSphinx('chsp-cbe9e851-1048-48d1-9838-f838b2e1b841', '../../_datasets/a11ff307227aa969b45228ed060fa176a43a030c81242ce67ba4e9242be3e3f0-fig_shiftml-structure-match_001.json.gz', 'structure', '2000.0');
+</script>
+<div class="output_subarea output_html rendered_html output_result">
+
+</div>
+<br />
+<br /><p>Each structure carries a <code class="docutils literal notranslate"><span class="pre">CS</span></code> array of GIPAW-computed shieldings, one entry per
+atom. We will use those values both as the reference DFT predictions and to illustrate
+that ShiftML3 reproduces DFT-level accuracy on this task at a fraction of the cost.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span>
+    <span class="s2">&quot;atom types (every tenth atom; 1 = H, 6 = C, 8 = O):&quot;</span><span class="p">,</span>
+    <span class="n">frames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="s2">&quot;numbers&quot;</span><span class="p">][::</span><span class="mi">10</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="s2">&quot;chemical shieldings (every tenth atom):&quot;</span><span class="p">,</span> <span class="n">frames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="s2">&quot;CS&quot;</span><span class="p">][::</span><span class="mi">10</span><span class="p">]</span>
+<span class="p">)</span>  <span class="c1"># GIPAW shieldings for the first 10 atoms of the first candidate</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>atom types (every tenth atom; 1 = H, 6 = C, 8 = O): [6 6 6 6 8 1 1 1 1]
+chemical shieldings (every tenth atom): [ 100.01  147.62   34.73  -10.69 -104.2    27.19   28.43   22.47   26.47]
+</pre></div>
+</div>
+</section>
+<section id="experimental-1h-shifts-and-atom-labelling">
+<h2>Experimental <sup>1</sup>H shifts and atom labelling<a class="headerlink" href="#experimental-1h-shifts-and-atom-labelling" title="Link to this heading">¶</a></h2>
+<p>Cocaine has 21 protons, but only 17 chemically distinct proton sites. The experimental
+<sup>1</sup>H spectrum of cocaine, assigned to its 17 chemically distinct proton sites,
+is reproduced in the supplementary information of Paruzzo et al.</p>
+<p>The dict below pairs an experimental shift (in ppm) with the corresponding 1-based
+atom index in the asymmetric unit - while there may be multiple molecules per unit
+cell, the shifts are indexed by unique index within a single molecule. Entries like
+<code class="docutils literal notranslate"><span class="pre">&quot;11,12,13&quot;</span></code> denote chemically equivalent protons (e.g. a rotating methyl) whose
+predicted shieldings should be averaged before being compared with the single observed
+peak.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">assigned_experimental_shifts</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;1&quot;</span><span class="p">:</span> <span class="mf">3.76</span><span class="p">,</span>
+        <span class="s2">&quot;2&quot;</span><span class="p">:</span> <span class="mf">3.78</span><span class="p">,</span>
+        <span class="s2">&quot;3&quot;</span><span class="p">:</span> <span class="mf">5.63</span><span class="p">,</span>
+        <span class="s2">&quot;4&quot;</span><span class="p">:</span> <span class="mf">3.32</span><span class="p">,</span>
+        <span class="s2">&quot;5&quot;</span><span class="p">:</span> <span class="mf">3.49</span><span class="p">,</span>
+        <span class="s2">&quot;6&quot;</span><span class="p">:</span> <span class="mf">3.06</span><span class="p">,</span>
+        <span class="s2">&quot;7&quot;</span><span class="p">:</span> <span class="mf">2.91</span><span class="p">,</span>
+        <span class="s2">&quot;8&quot;</span><span class="p">:</span> <span class="mf">3.38</span><span class="p">,</span>
+        <span class="s2">&quot;9&quot;</span><span class="p">:</span> <span class="mf">2.56</span><span class="p">,</span>
+        <span class="s2">&quot;10&quot;</span><span class="p">:</span> <span class="mf">2.12</span><span class="p">,</span>
+        <span class="s2">&quot;11,12,13&quot;</span><span class="p">:</span> <span class="mf">1.04</span><span class="p">,</span>
+        <span class="s2">&quot;14&quot;</span><span class="p">:</span> <span class="mf">8.01</span><span class="p">,</span>
+        <span class="s2">&quot;15&quot;</span><span class="p">:</span> <span class="mf">8.01</span><span class="p">,</span>
+        <span class="s2">&quot;16&quot;</span><span class="p">:</span> <span class="mf">8.01</span><span class="p">,</span>
+        <span class="s2">&quot;17&quot;</span><span class="p">:</span> <span class="mf">8.01</span><span class="p">,</span>
+        <span class="s2">&quot;18&quot;</span><span class="p">:</span> <span class="mf">8.01</span><span class="p">,</span>
+        <span class="s2">&quot;19,20,21&quot;</span><span class="p">:</span> <span class="mf">3.78</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="n">NUM_H_PER_MOLECULE</span> <span class="o">=</span> <span class="mi">21</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Comparing </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">assigned_experimental_shifts</span><span class="p">)</span><span class="si">}</span><span class="s2"> assigned 1H environments&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Comparing 17 assigned 1H environments
+</pre></div>
+</div>
+<p>The cocaine crystal contains two molecules per unit cell, so we take the
+first molecule’s hydrogens and average shieldings over symmetry-equivalent
+groups (e.g. the three methyl protons <code class="docutils literal notranslate"><span class="pre">&quot;11,12,13&quot;</span></code> share a single
+observed NMR peak).</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">assign_shieldings</span><span class="p">(</span><span class="n">per_h_shieldings</span><span class="p">,</span> <span class="n">assigned_experimental_shifts</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Pick one cocaine molecule&#39;s H shieldings out of the unit cell and average over the</span>
+<span class="sd">    symmetry-equivalent groups listed in ``assigned_experimental_shifts``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">per_mol</span> <span class="o">=</span> <span class="n">per_h_shieldings</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">NUM_H_PER_MOLECULE</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[:,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">atom_string</span> <span class="ow">in</span> <span class="n">assigned_experimental_shifts</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">atom_string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)]</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">per_mol</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="predicting-shieldings-with-shiftml3">
+<h2>Predicting shieldings with ShiftML3<a class="headerlink" href="#predicting-shieldings-with-shiftml3" title="Link to this heading">¶</a></h2>
+<p>We instantiate the ShiftML3 surrogate model as the calculator for the shieldings
+tensors. The <code class="docutils literal notranslate"><span class="pre">get_cs_iso</span></code> method computes this tensor and returns the isotropic part
+(the mean trace) of the passed candidate <code class="docutils literal notranslate"><span class="pre">frame</span></code> for every atom in the unit cell.</p>
+<p>As we are only interested in the hydrogen spectrum in this exercise, we filter the
+redictions only the the H atoms (atomic number 1) before passing them to the
+assignment function above.</p>
+<p>Inference on the full set of 29 cocaine candidates takes a matter of seconds on a
+single CPU/GPU. Remember that the GIPAW reference for the same task takes hundreds of
+CPU-hours.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">calculator</span> <span class="o">=</span> <span class="n">ShiftML</span><span class="p">(</span><span class="s2">&quot;ShiftML3&quot;</span><span class="p">)</span>
+
+<span class="n">shieldings_sml</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># ShiftML3-predicted shieldings</span>
+<span class="n">shieldings_gipaw</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># GIPAW reference shieldings</span>
+
+<span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">frames</span><span class="p">:</span>
+    <span class="n">is_h</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">get_atomic_numbers</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span>  <span class="c1"># mask for H atoms</span>
+
+    <span class="n">sml</span> <span class="o">=</span> <span class="n">calculator</span><span class="o">.</span><span class="n">get_cs_iso</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()[</span><span class="n">is_h</span><span class="p">]</span>  <span class="c1"># model predictions</span>
+    <span class="n">shieldings_sml</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">assign_shieldings</span><span class="p">(</span><span class="n">sml</span><span class="p">,</span> <span class="n">assigned_experimental_shifts</span><span class="p">))</span>
+
+    <span class="n">gipaw</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="s2">&quot;CS&quot;</span><span class="p">][</span><span class="n">is_h</span><span class="p">]</span>  <span class="c1"># GIPAW reference</span>
+    <span class="n">shieldings_gipaw</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">assign_shieldings</span><span class="p">(</span><span class="n">gipaw</span><span class="p">,</span> <span class="n">assigned_experimental_shifts</span><span class="p">))</span>
+
+<span class="n">shieldings_sml</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">shieldings_sml</span><span class="p">)</span>
+<span class="n">shieldings_gipaw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">shieldings_gipaw</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>2026-07-19 08:16:33,134 - INFO - Found model version in url_resolve
+2026-07-19 08:16:33,135 - INFO - Resolving model version to model files at url: https://zenodo.org/records/15767390/files/model_0.pt?download=1
+2026-07-19 08:16:33,135 - INFO - Model not found in cache, downloading it
+2026-07-19 08:16:42,193 - INFO - Downloaded ShiftML30 and saved to /home/runner/.cache/shiftml/ShiftML30
+2026-07-19 08:16:42,357 - INFO - Found model version in url_resolve
+2026-07-19 08:16:42,357 - INFO - Resolving model version to model files at url: https://zenodo.org/records/15767390/files/model_1.pt?download=1
+2026-07-19 08:16:42,357 - INFO - Model not found in cache, downloading it
+2026-07-19 08:16:51,745 - INFO - Downloaded ShiftML31 and saved to /home/runner/.cache/shiftml/ShiftML31
+2026-07-19 08:16:51,905 - INFO - Found model version in url_resolve
+2026-07-19 08:16:51,905 - INFO - Resolving model version to model files at url: https://zenodo.org/records/15767390/files/model_2.pt?download=1
+2026-07-19 08:16:51,905 - INFO - Model not found in cache, downloading it
+2026-07-19 08:17:00,723 - INFO - Downloaded ShiftML32 and saved to /home/runner/.cache/shiftml/ShiftML32
+2026-07-19 08:17:00,882 - INFO - Found model version in url_resolve
+2026-07-19 08:17:00,882 - INFO - Resolving model version to model files at url: https://zenodo.org/records/15767390/files/model_3.pt?download=1
+2026-07-19 08:17:00,882 - INFO - Model not found in cache, downloading it
+2026-07-19 08:17:03,795 - INFO - Downloaded ShiftML33 and saved to /home/runner/.cache/shiftml/ShiftML33
+2026-07-19 08:17:03,953 - INFO - Found model version in url_resolve
+2026-07-19 08:17:03,954 - INFO - Resolving model version to model files at url: https://zenodo.org/records/15767390/files/model_4.pt?download=1
+2026-07-19 08:17:03,954 - INFO - Model not found in cache, downloading it
+2026-07-19 08:17:12,835 - INFO - Downloaded ShiftML34 and saved to /home/runner/.cache/shiftml/ShiftML34
+2026-07-19 08:17:12,993 - INFO - Found model version in url_resolve
+2026-07-19 08:17:12,993 - INFO - Resolving model version to model files at url: https://zenodo.org/records/15767390/files/model_5.pt?download=1
+2026-07-19 08:17:12,993 - INFO - Model not found in cache, downloading it
+2026-07-19 08:17:22,022 - INFO - Downloaded ShiftML35 and saved to /home/runner/.cache/shiftml/ShiftML35
+2026-07-19 08:17:22,179 - INFO - Found model version in url_resolve
+2026-07-19 08:17:22,179 - INFO - Resolving model version to model files at url: https://zenodo.org/records/15767390/files/model_6.pt?download=1
+2026-07-19 08:17:22,180 - INFO - Model not found in cache, downloading it
+2026-07-19 08:17:29,659 - INFO - Downloaded ShiftML36 and saved to /home/runner/.cache/shiftml/ShiftML36
+2026-07-19 08:17:29,816 - INFO - Found model version in url_resolve
+2026-07-19 08:17:29,816 - INFO - Resolving model version to model files at url: https://zenodo.org/records/15767390/files/model_7.pt?download=1
+2026-07-19 08:17:29,817 - INFO - Model not found in cache, downloading it
+2026-07-19 08:17:36,839 - INFO - Downloaded ShiftML37 and saved to /home/runner/.cache/shiftml/ShiftML37
+</pre></div>
+</div>
+</section>
+<section id="calibrating-shielding-to-shift">
+<h2>Calibrating shielding to shift<a class="headerlink" href="#calibrating-shielding-to-shift" title="Link to this heading">¶</a></h2>
+<p>To compare predictions to experiment we need to map shieldings to shifts via
+<span class="math notranslate nohighlight">\(\delta = a\,\sigma + b\)</span>. Two parameters, two choices to make.</p>
+<p><em>Slope.</em> Chemical shift and chemical shielding are defined so that <span class="math notranslate nohighlight">\(\delta
+\approx -\sigma + \sigma_{\mathrm{ref}}\)</span>, i.e. the slope is <em>exactly</em> <span class="math notranslate nohighlight">\(-1\)</span> if
+both quantities are perfectly consistent. Letting the slope float effectively rescales
+the predicted spectrum, which lets every candidate cheat its way to a better RMSE and
+erodes the discrimination between polymorphs. We therefore fix <span class="math notranslate nohighlight">\(a = -1\)</span>.</p>
+<p><em>Intercept.</em> <span class="math notranslate nohighlight">\(b\)</span> is the shielding of the reference compound used experimentally
+(TMS for <sup>1</sup>H). It is not known <em>a priori</em> for an arbitrary candidate pool, so
+we fit it per-structure — equivalent to saying we compare <em>spectral patterns</em>, not
+absolute shifts. Concretely, for each candidate the intercept is set to the value that
+makes the predicted and experimental shifts coincide on average, <span class="math notranslate nohighlight">\(b =
+\overline{\delta^{\,\mathrm{exp}}} - a\,\overline{\sigma^{\,\mathrm{pred}}}\)</span>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">calibrated_rmse</span><span class="p">(</span>
+    <span class="n">shieldings_per_candidate</span><span class="p">,</span>
+    <span class="n">experimental_shifts</span><span class="p">,</span>
+    <span class="n">slope</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">intercept</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;RMSE for each candidate after fitting the intercept that aligns the</span>
+<span class="sd">    predicted and experimental shift means.&quot;&quot;&quot;</span>
+    <span class="n">rmses</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">sigmas</span> <span class="ow">in</span> <span class="n">shieldings_per_candidate</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">intercept</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">intercept</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">experimental_shifts</span><span class="p">)</span> <span class="o">-</span> <span class="n">slope</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">sigmas</span><span class="p">)</span>
+        <span class="n">predicted_shifts</span> <span class="o">=</span> <span class="n">slope</span> <span class="o">*</span> <span class="n">sigmas</span> <span class="o">+</span> <span class="n">intercept</span>
+        <span class="n">rmses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">root_mean_squared_error</span><span class="p">(</span><span class="n">predicted_shifts</span><span class="p">,</span> <span class="n">experimental_shifts</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rmses</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>An alternative is to apply a single <em>global</em> calibration – e.g. the values determined
+by Kellner et al. by regressing predicted ShiftML3 shieldings against experimental
+shifts on a held-out benchmark of organic crystals. That is preferred when you also
+care about absolute shift accuracy; for ranking candidates by spectral pattern, the
+per-structure scheme above gives the same answer with one fewer parameter to argue
+about.</p>
+<p>Note that the regression parameters can be attributed to systematic errors in the DFT
+functional used to compute shieldings and relax geometries, hence for each pair of
+NMR-functional and geometry-functional, the optimal calibration parameters need to be
+determined individually.</p>
+<p>In the function above, these global calibration parameters can be passed in the
+<code class="docutils literal notranslate"><span class="pre">slope</span></code> and <code class="docutils literal notranslate"><span class="pre">intercept</span></code> arguments, which are then applied to all candidates. We
+attach them there but leave them at the default values for the rest of this recipe,
+which performs a per-structure intercept fit with the slope pinned at <span class="math notranslate nohighlight">\(-1\)</span>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Calibrate shieldings -&gt; shifts</span>
+<span class="n">experimental_shifts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">assigned_experimental_shifts</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+<span class="n">rmse_sml</span> <span class="o">=</span> <span class="n">calibrated_rmse</span><span class="p">(</span>
+    <span class="n">shieldings_sml</span><span class="p">,</span> <span class="n">experimental_shifts</span><span class="p">,</span> <span class="n">slope</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">intercept</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">)</span>
+<span class="n">rmse_gipaw</span> <span class="o">=</span> <span class="n">calibrated_rmse</span><span class="p">(</span>
+    <span class="n">shieldings_gipaw</span><span class="p">,</span> <span class="n">experimental_shifts</span><span class="p">,</span> <span class="n">slope</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">intercept</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">)</span>
+
+<span class="c1"># Find the best candidate (lowest RMSE vs experiment)</span>
+<span class="n">best</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">rmse_sml</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Best ShiftML3 match: candidate #</span><span class="si">{</span><span class="n">best</span><span class="si">}</span><span class="s2"> (RMSE = </span><span class="si">{</span><span class="n">rmse_sml</span><span class="p">[</span><span class="n">best</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> ppm)&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;Best GIPAW   match: candidate #</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">rmse_gipaw</span><span class="p">))</span><span class="si">}</span><span class="s2"> &quot;</span>
+    <span class="sa">f</span><span class="s2">&quot;(RMSE = </span><span class="si">{</span><span class="n">rmse_gipaw</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> ppm)&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Best ShiftML3 match: candidate #0 (RMSE = 0.429 ppm)
+Best GIPAW   match: candidate #0 (RMSE = 0.364 ppm)
+</pre></div>
+</div>
+</section>
+<section id="the-lollipop-diagram">
+<h2>The lollipop diagram<a class="headerlink" href="#the-lollipop-diagram" title="Link to this heading">¶</a></h2>
+<p>The canonical visualisation for this task is the <em>lollipop diagram</em>: RMSE vs candidate
+index, plotted as a stem plot. We overlay the ShiftML3 prediction (orange) and the
+GIPAW reference (blue). The shaded band at <span class="math notranslate nohighlight">\(0.33 \pm 0.16\,\mathrm{ppm}\)</span> marks
+the irreducible spread of GIPAW-vs-experiment errors estimated by <a class="reference external" href="https://doi.org/10.1021/ja909449k">Salager et. al,
+JACS (2010)</a> across a benchmark of molecular
+solids: candidates with RMSEs in this range are, statistically, indistinguishable from
+experiment.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">make_lollipop_plot</span><span class="p">(</span><span class="n">frames</span><span class="p">,</span> <span class="n">rmse_gipaw</span><span class="p">,</span> <span class="n">rmse_sml</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plots the lollipop plot comparing the RMSE of the GIPAW and ShiftML3 predictions</span>
+<span class="sd">    against experiment for each candidate structure.&quot;&quot;&quot;</span>
+
+    <span class="n">candidate_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">))</span>
+    <span class="n">dx</span> <span class="o">=</span> <span class="mf">0.18</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">8.5</span><span class="p">,</span> <span class="mf">5.2</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">120</span><span class="p">)</span>
+
+    <span class="n">band_lo</span><span class="p">,</span> <span class="n">band_hi</span> <span class="o">=</span> <span class="mf">0.33</span> <span class="o">-</span> <span class="mf">0.16</span><span class="p">,</span> <span class="mf">0.33</span> <span class="o">+</span> <span class="mf">0.16</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">axhspan</span><span class="p">(</span>
+        <span class="n">band_lo</span><span class="p">,</span>
+        <span class="n">band_hi</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="s2">&quot;0.85&quot;</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+        <span class="n">zorder</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;DFT vs experiment noise floor ($0.33 \pm 0.16$ ppm)&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">vlines</span><span class="p">(</span>
+        <span class="n">candidate_idx</span> <span class="o">-</span> <span class="n">dx</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">rmse_gipaw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;C0&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.85</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">2</span>
+    <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">vlines</span><span class="p">(</span><span class="n">candidate_idx</span> <span class="o">+</span> <span class="n">dx</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">rmse_sml</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;C1&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.85</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+        <span class="n">candidate_idx</span> <span class="o">-</span> <span class="n">dx</span><span class="p">,</span>
+        <span class="n">rmse_gipaw</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="s2">&quot;C0&quot;</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="s2">&quot;GIPAW (DFT reference)&quot;</span><span class="p">,</span>
+        <span class="n">s</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span>
+        <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;white&quot;</span><span class="p">,</span>
+        <span class="n">lw</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+        <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+        <span class="n">candidate_idx</span> <span class="o">+</span> <span class="n">dx</span><span class="p">,</span>
+        <span class="n">rmse_sml</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="s2">&quot;C1&quot;</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="s2">&quot;ShiftML3&quot;</span><span class="p">,</span>
+        <span class="n">s</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span>
+        <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;white&quot;</span><span class="p">,</span>
+        <span class="n">lw</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+        <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Candidate structure index&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$^1$H shift RMSE / ppm&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">candidate_idx</span><span class="p">[::</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.7</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.3</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">rmse_sml</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">rmse_gipaw</span><span class="o">.</span><span class="n">max</span><span class="p">())</span> <span class="o">*</span> <span class="mf">1.15</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;0.92&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[[</span><span class="s2">&quot;top&quot;</span><span class="p">,</span> <span class="s2">&quot;right&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper left&quot;</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+
+
+<span class="n">make_lollipop_plot</span><span class="p">(</span><span class="n">frames</span><span class="p">,</span> <span class="n">rmse_gipaw</span><span class="p">,</span> <span class="n">rmse_sml</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_shiftml-structure-match_001.png" srcset="../../_images/sphx_glr_shiftml-structure-match_001.png" alt="shiftml structure match" class = "sphx-glr-single-img"/><p>Two things stand out:</p>
+<ol class="arabic simple">
+<li><p><strong>ShiftML3 tracks the DFT reference candidate-by-candidate.</strong> The
+orange stems closely follow the blue ones, confirming that the ShiftML
+model is transferable and acts almost as a drop-in replacement for GIPAW-DFT.</p></li>
+<li><p><strong>The minimum is unambiguous.</strong> The best-matching candidate sits well
+below the rest of the pool, inside the experimental noise band – this
+is the structure that best reproduces the measured spectrum. The other
+candidates carry markedly larger RMSEs and can be confidently rejected.</p></li>
+</ol>
+</section>
+<section id="browsing-parity-plots-linked-to-crystal-structure">
+<h2>Browsing parity plots linked to crystal structure<a class="headerlink" href="#browsing-parity-plots-linked-to-crystal-structure" title="Link to this heading">¶</a></h2>
+<p>The parity plot (x = GIPAW reference shift, y = ShiftML3 predicted shift) has one
+point per H atom in the dataset. Each point is linked to its atom in the structure
+viewer.</p>
+<p>Here we sort candidates by ShiftML3 RMSE (in ascending order). Step through the
+trajectory to watch the parity plot evolve: the best candidate scatters tightly around
+<span class="math notranslate nohighlight">\(y = x\)</span>, while poor candidates show structured residuals – specific protons
+whose shifts are systematically off because they sit in chemically wrong environments.</p>
+<p>The H-atom environments in the chemiscope viewer have been set to have a local
+neighborhood of 10 Å, with atoms outisde this greyed-out. This value represents the
+effective cutoff (i.e., receptive field) of the ShiftML3 model (a base cutoff of 5 Å,
+with 2 message passing layers).</p>
+<p>This helps to visualize the locality of the model: in principle only geometric
+information from atoms within this sphere influence the prediction on a given atom.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Sort frames and the shieldings by the RMSE vs experiment</span>
+<span class="n">sort_order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">rmse_sml</span><span class="p">)</span>
+<span class="n">frames_sorted</span> <span class="o">=</span> <span class="p">[</span><span class="n">frames</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sort_order</span><span class="p">]</span>
+<span class="n">X_sml_sorted</span> <span class="o">=</span> <span class="n">shieldings_sml</span><span class="p">[</span><span class="n">sort_order</span><span class="p">]</span>
+<span class="n">X_gipaw_sorted</span> <span class="o">=</span> <span class="n">shieldings_gipaw</span><span class="p">[</span><span class="n">sort_order</span><span class="p">]</span>
+
+<span class="c1"># Convert shieldings to shifts with the same per-structure calibration as above</span>
+<span class="n">slope</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
+<span class="n">pred_sml</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">slope</span> <span class="o">*</span> <span class="n">X_sml_sorted</span>
+    <span class="o">+</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">assigned_experimental_shifts</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+        <span class="o">-</span> <span class="n">slope</span> <span class="o">*</span> <span class="n">X_sml_sorted</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">)[:,</span> <span class="kc">None</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">pred_gipaw</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">slope</span> <span class="o">*</span> <span class="n">X_gipaw_sorted</span>
+    <span class="o">+</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">assigned_experimental_shifts</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+        <span class="o">-</span> <span class="n">slope</span> <span class="o">*</span> <span class="n">X_gipaw_sorted</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">)[:,</span> <span class="kc">None</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Build the atomic environments for viewing</span>
+<span class="n">site_for_h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">NUM_H_PER_MOLECULE</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">site_idx</span><span class="p">,</span> <span class="n">atom_string</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">assigned_experimental_shifts</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">atom_string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)]:</span>
+        <span class="n">site_for_h</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">site_idx</span>
+
+<span class="n">environments</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">gipaw_env</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">sml_env</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">A</span><span class="p">,</span> <span class="n">frame</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">frames_sorted</span><span class="p">):</span>
+    <span class="n">h_counter</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">atom_type</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">numbers</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">atom_type</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">environments</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">A</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">))</span>
+            <span class="n">site</span> <span class="o">=</span> <span class="n">site_for_h</span><span class="p">[</span><span class="n">h_counter</span> <span class="o">%</span> <span class="n">NUM_H_PER_MOLECULE</span><span class="p">]</span>
+            <span class="n">gipaw_env</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pred_gipaw</span><span class="p">[</span><span class="n">A</span><span class="p">,</span> <span class="n">site</span><span class="p">])</span>
+            <span class="n">sml_env</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pred_sml</span><span class="p">[</span><span class="n">A</span><span class="p">,</span> <span class="n">site</span><span class="p">])</span>
+            <span class="n">h_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="n">chemiscope</span><span class="o">.</span><span class="n">show</span><span class="p">(</span>
+    <span class="n">frames_sorted</span><span class="p">,</span>
+    <span class="n">properties</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;GIPAW shift / ppm&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">gipaw_env</span><span class="p">),</span>
+        <span class="s2">&quot;ShiftML3 shift / ppm&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sml_env</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="n">environments</span><span class="o">=</span><span class="n">environments</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+
+
+<!-- Error display -->
+<div id="chsp-01662e86-bac0-4a14-883f-a7be530bbf21-error-display" class="chemiscope-sphinx-error">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-01662e86-bac0-4a14-883f-a7be530bbf21-error-display')">
+        &times;
+    </button>
+</div>
+
+<!-- Warning Display -->
+<div id="chsp-01662e86-bac0-4a14-883f-a7be530bbf21-warning-display" class="chemiscope-sphinx-warning">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-01662e86-bac0-4a14-883f-a7be530bbf21-warning-display')">
+        &times;
+    </button>
+</div>
+<div style="padding: 0.5rem 1.25rem" />
+
+<!-- Loading Spinner -->
+<div id="chsp-01662e86-bac0-4a14-883f-a7be530bbf21-loading" class="chemiscope-sphinx-spinner">
+    <img src="../../_static/chemiscope-loading.svg" alt="Loading icon" />
+</div>
+
+<!-- Chemiscope Visualization -->
+<div id="chsp-01662e86-bac0-4a14-883f-a7be530bbf21">
+    <!-- This will be replaced by the chemiscope HTML -->
+</div>
+
+<!-- Load Visualization Script -->
+<script>
+    loadChemiscopeSphinx('chsp-01662e86-bac0-4a14-883f-a7be530bbf21', '../../_datasets/2da9d7c67fecbd16be49f05b8abe7b3034cefa555800d85ea95e0195f19b6b1a-fig_shiftml-structure-match_002.json.gz', 'default', '2000.0');
+</script>
+<div class="output_subarea output_html rendered_html output_result">
+
+</div>
+<br />
+<br /></section>
+<section id="calibration-choices-and-their-effect">
+<h2>Calibration choices and their effect<a class="headerlink" href="#calibration-choices-and-their-effect" title="Link to this heading">¶</a></h2>
+<p>We used a per-structure intercept fit with the slope pinned at <span class="math notranslate nohighlight">\(-1\)</span>. Two
+alternatives are worth being aware of:</p>
+<ul class="simple">
+<li><p><strong>Per-structure free fit.</strong> Also let the slope float, fitting it independently for
+each candidate. Because every candidate gets two free parameters instead of one, the
+RMSEs shrink overall and the gap between the correct structure and the rest tends to
+narrow. This makes the ranking less diagnostic and is generally <em>not</em> recommended
+for structure matching.</p></li>
+<li><p><strong>Global calibration.</strong> Use the slope/intercept obtained by Kellner et al. on a
+held-out experimental benchmark (<span class="math notranslate nohighlight">\(a = -0.9024,\, b = 28.05\,\mathrm{ppm}\)</span> for
+the ShiftML3 <sup>1</sup>H output). Preferred when you also care about absolute
+<sup>1</sup>H shift accuracy; for the ranking task here it gives the same winner with
+slightly inflated RMSEs across the pool.</p></li>
+</ul>
+<p>Note that in many cases, the regression slope can be attributed to systematic errors
+in the potential energy surface used to generate the candidate pool, or the
+neglectance of finite temperature effects and quantum delocalization of acidic
+protons (<a class="reference external" href="https://arxiv.org/abs/2603.06236">Kellner et al.</a>). Here we use
+geometries relaxed at the PBE-D2 level of theory and at 0K.</p>
+</section>
+<section id="outlook">
+<h2>Outlook<a class="headerlink" href="#outlook" title="Link to this heading">¶</a></h2>
+<p>The same workflow can be repeated for a different cocaine-class molecule, AZD8329,
+whose dataset is included in the same Materials Cloud archive under
+<code class="docutils literal notranslate"><span class="pre">ShiftML_poly/AZD/AZD_QuantumEspresso.xyz</span></code>. The assignment list and experimental
+shifts for AZD8329 are given in Cordova et al.</p>
+<p>Going beyond isotropic shifts, ShiftML3 also predicts the full chemical shielding
+<em>tensor</em> for each atom. The introductory ShiftML recipe shows how to extract and
+visualise this tensor with chemiscope ellipsoids; the anisotropic information can be
+incorporated into the structure-matching score whenever experimental CSA values are
+available, typically improving the discrimination between candidates that have similar
+isotropic spectra.</p>
+<p>Modern NMR-CSP workflows move to more sophisticated similarity measures between
+computed and experimental values, such as full bayesian treatment, considering also
+prediction uncertainties of the ML model (<a class="reference external" href="https://doi.org/10.1039/C9CP04489B">Engel et al.</a>) and metrics that allow for combining NMR
+measurements of different nuclei in the structure selection process
+(<a class="reference external" href="https://doi.org/10.1039/D4FD00114A">Mueller et al.</a>).</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (2 minutes 53.591 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-shiftml-structure-match-shiftml-structure-match-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/73a0d7758f529577f63e1883826e8815/shiftml-structure-match.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">shiftml-structure-match.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/9f5f6058e644e6f379c138e8b634a89a/shiftml-structure-match.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">shiftml-structure-match.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/739b39852de7ff5e3523dc8fd7663aa3/shiftml-structure-match.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">recipe:</span> <span class="pre">shiftml-structure-match.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../gaas-map/gaas-map.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">PCA/PCovR Visualization of a training dataset for a potential</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../pi-mts-rpc/mts-rpc.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Multiple time stepping and ring-polymer contraction</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; BSD 3-Clause License, Copyright (c) 2026, The atomistic cookbook team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">NMR-shielding-driven structure determination with ShiftML3</a><ul>
+<li><a class="reference internal" href="#chemical-shifts-chemical-shieldings-and-structure-matching">Chemical shifts, chemical shieldings, and structure matching</a></li>
+<li><a class="reference internal" href="#the-cocaine-benchmark-dataset">The cocaine benchmark dataset</a></li>
+<li><a class="reference internal" href="#experimental-1h-shifts-and-atom-labelling">Experimental <sup>1</sup>H shifts and atom labelling</a></li>
+<li><a class="reference internal" href="#predicting-shieldings-with-shiftml3">Predicting shieldings with ShiftML3</a></li>
+<li><a class="reference internal" href="#calibrating-shielding-to-shift">Calibrating shielding to shift</a></li>
+<li><a class="reference internal" href="#the-lollipop-diagram">The lollipop diagram</a></li>
+<li><a class="reference internal" href="#browsing-parity-plots-linked-to-crystal-structure">Browsing parity plots linked to crystal structure</a></li>
+<li><a class="reference internal" href="#calibration-choices-and-their-effect">Calibration choices and their effect</a></li>
+<li><a class="reference internal" href="#outlook">Outlook</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script data-domain="atomistic-cookbook.org" defer="defer" src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"></script>
+    <script src="../../_static/all-examples-data.js?v=3c6a1490"></script>
+    <script src="../../_static/daily-recipe.js?v=b5e71911"></script>
+    </body>
+</html>

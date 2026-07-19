@@ -1,0 +1,1729 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="search" title="Search" href="../../search.html"><link rel="next" title="Mendeleev clusters" href="../mendeleev/mendeleev.html"><link rel="prev" title="ML/MM Simulations with GROMACS and Metatomic" href="../ml-mm/ml-mm.html">
+        <link rel="canonical" href="https://atomistic-cookbook.org/examples/water-ir-spectrum/water-ir-spectrum.html">
+        <link rel="prefetch" href="../../_static/cookbook-icon.svg" as="image">
+
+    <link rel="shortcut icon" href="../../_static/cookbook-icon.png"><!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>Machine-learned dipoles and infrared spectroscopy of liquid water - The Atomistic Cookbook</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/cookbook.css?v=d86cfb60" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">The Atomistic Cookbook</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/cookbook-icon.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">The Atomistic Cookbook</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../topics/index.html">Recipes grouped by topic</a><input aria-label="Toggle navigation of Recipes grouped by topic" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/sampling.html">Statistical sampling and dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/analysis.html">Analysis and post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/ml-models.html">Machine learning models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/universal.html">Universal ML models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/nqes.html">Nuclear quantum effects</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../software/index.html">Recipes grouped by software used</a><input aria-label="Toggle navigation of Recipes grouped by software used" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../software/chemiscope.html">chemiscope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/cp2k.html">cp2k</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/eon.html">eon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/featomic.html">featomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/gromacs.html">GROMACS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/i-pi.html">i-PI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/kaldo.html">kALDo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/lammps.html">LAMMPS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/metatensor.html">metatensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/plumed.html">PLUMED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/scikit-matter.html">scikit-matter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/torch-pme.html">torch-pme</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../all-examples.html">List of all recipes</a><input aria-label="Toggle navigation of List of all recipes" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-dos/pet-mad-dos.html">A Guide to PET-MAD-DOS: Model Inference and Fine-Tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dos-align/dos-align.html">A ML model for the electron density of states</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-model/water-model.html">Atomistic Water Model for Molecular Dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../batch-cp2k/reference-trajectory.html">Batch run of CP2K calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../shiftml/shiftml-example.html">Computing NMR shielding tensors using ShiftML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft-nc.html">Conservative fine-tuning for a PET model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermostats/thermostats.html">Constant-temperature MD and thermostats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../polarizability/polarizability.html">Equivariant linear model for polarizability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../learn-tensors-with-mcov/learn-tensors-with-mcov.html">Equivariant model for tensorial properties based on scalar features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../eon-pet-neb/eon-pet-neb.html">Finding Reaction Paths with eOn and a Metatomic Potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft.html">Fine-tuning the PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../roy-gch/roy-gch.html">Generalized Convex Hull construction for the polymorphs of ROY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-relaxation/pet-relaxation.html">Geometry relaxation with unconstrained MLIPs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hamiltonian-qm7/hamiltonian-qm7.html">Hamiltonian Learning for Molecules with Indirect Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-md/water-md.html">Introduction to foundational models for molecular dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../torchpme/torchpme_learning.html">Learning Capabilities with torchpme</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lpr/lpr.html">Local Prediction Rigidity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lode-linear/lode-linear.html">Long-distance Equivariants: a tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flashmd/flashmd-demo.html">Long-stride trajectories with a universal FlashMD model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-nc/pet-mad-nc.html">MD using direct-force predictions with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metatomic-plumed/metatomic-plumed.html">ML collective variables in PLUMED with metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ml-density/ml-density.html">ML surrogate for the electron density and derived properties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ml-mm/ml-mm.html">ML/MM Simulations with GROMACS and Metatomic</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Machine-learned dipoles and infrared spectroscopy of liquid water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../mendeleev/mendeleev.html">Mendeleev clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-mts-rpc/mts-rpc.html">Multiple time stepping and ring-polymer contraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../shiftml-structure-match/shiftml-structure-match.html">NMR-shielding-driven structure determination with ShiftML3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../gaas-map/gaas-map.html">PCA/PCovR Visualization of a training dataset for a potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-metad/pi-metad.html">Path integral metadynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../path-integrals/path-integrals.html">Path integral molecular dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bosons-fermions-pimd/bosons-fermions-pimd.html">Path integral molecular dynamics of bosons and fermions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../periodic-hamiltonian/periodic-hamiltonian.html">Periodic Hamiltonian learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-phonons/pet-phonons.html">Phonon dispersions with unconstrained models and uncertainty quantification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../heat-capacity/heat-capacity.html">Quantum heat capacity of water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ring-polymer-instanton/rpi-rates.html">Ring Polymer Instanton Rate Theory: Tunneling Rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rotate-equivariants/rotate-equivariants.html">Rotating equivariants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sample-selection/sample-selection.html">Sample and Feature Selection with FPS and CUR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad/pet-mad.html">The PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermal-conductivity-bte/thermal-conductivity-bte.html">Thermal conductivity from the Boltzmann transport equation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../llpr-from-scratch/llpr-from-scratch.html">Training a Model with Uncertainties from Scratch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-uq/pet-mad-uq.html">Uncertainty Quantification with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-pulsed/water-pulsed.html">Water orientation in a pulsed electric field</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../downloading.html">Downloading and running the recipes</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../contributing.html">Contributing a recipe</a><input aria-label="Toggle navigation of Contributing a recipe" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../utils.html">Shared utilities</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-examples-water-ir-spectrum-water-ir-spectrum-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="machine-learned-dipoles-and-infrared-spectroscopy-of-liquid-water">
+<span id="sphx-glr-examples-water-ir-spectrum-water-ir-spectrum-py"></span><h1>Machine-learned dipoles and infrared spectroscopy of liquid water<a class="headerlink" href="#machine-learned-dipoles-and-infrared-spectroscopy-of-liquid-water" title="Link to this heading">¶</a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Authors<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Paolo Pegolo <a class="reference external" href="https://github.com/ppegolo">&#64;ppegolo</a></p>
+</dd>
+</dl>
+<p>This recipe shows how to combine a machine-learning interatomic potential (MLIP) with a
+machine-learned dipole model to compute the infrared (IR) spectrum of liquid water.</p>
+<p>The workflow has four steps:</p>
+<ol class="arabic simple">
+<li><p><strong>Point-charge baseline</strong>: compute the dipole time series from a TIP3P trajectory
+with fixed atomic charges; identify where this approach fails.</p></li>
+<li><p><strong>Training</strong>: fine-tune the PET-MAD-XS foundational MLIP on a small water dataset
+with an added dipole output head, using <a class="reference external" href="https://metatensor.github.io/metatrain">metatrain</a>.</p></li>
+<li><p><strong>Simulation</strong>: run a new NVT trajectory driven by the joint MLIP.</p></li>
+<li><p><strong>Spectrum</strong>: evaluate ML dipoles along the trajectory and compare against the
+point-charge baseline and experiment.</p></li>
+</ol>
+<p>Along the way we discuss <em>equivariance</em>, the symmetry constraint that any dipole model
+must satisfy, and quantify how well an unconstrained architecture satisfies it.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># sphinx_gallery_thumbnail_number = 4</span>
+</pre></div>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">zipfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZipFile</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">ase.build</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ase.io</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ase.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_distances</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">chemiscope</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.signal</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">atomistic_cookbook_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_with_retry</span><span class="p">,</span> <span class="n">run_command</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.spatial.transform</span><span class="w"> </span><span class="kn">import</span> <span class="n">Rotation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">metatomic.torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelOutput</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">metatomic.torch.ase_calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetatomicCalculator</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/home/runner/work/atomistic-cookbook/atomistic-cookbook/examples/water-ir-spectrum/water-ir-spectrum.py:42: DeprecationWarning: Importing MetatomicCalculator from metatomic.torch.ase_calculator is deprecated and will be removed in a future release. Please import from metatomic_ase instead.
+  from metatomic.torch.ase_calculator import MetatomicCalculator
+</pre></div>
+</div>
+<section id="data-and-model-downloads">
+<h2>Data and model downloads<a class="headerlink" href="#data-and-model-downloads" title="Link to this heading">¶</a></h2>
+<p>All data and model files are included in a single zip archive, which we download and
+extract:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">download_with_retry</span><span class="p">(</span>
+    <span class="s2">&quot;https://github.com/ppegolo/labcosmo_ictp_school/raw/refs/heads/tmp/water-ir-spectrum.zip&quot;</span><span class="p">,</span>  <span class="c1"># noqa: E501</span>
+    <span class="s2">&quot;water-ir-spectrum.zip&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="k">with</span> <span class="n">ZipFile</span><span class="p">(</span><span class="s2">&quot;water-ir-spectrum.zip&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">z</span><span class="p">:</span>
+    <span class="n">z</span><span class="o">.</span><span class="n">extractall</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="fixed-point-charge-dipole-model-for-liquid-water">
+<h2>Fixed point-charge dipole model for liquid water<a class="headerlink" href="#fixed-point-charge-dipole-model-for-liquid-water" title="Link to this heading">¶</a></h2>
+<p>A simple (and simplistic) dipole model assigns fixed partial charges to each atom. We
+use the TIP3P values <span class="math notranslate nohighlight">\(q_\mathrm{H} = +0.417\,e\)</span> and <span class="math notranslate nohighlight">\(q_\mathrm{O} =
+-0.834\,e\)</span>, which match the force-field charges used in the MD simulation. The total
+dipole of the simulation cell is then</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\boldsymbol{\mu} = \sum_i q_i\,\mathbf{r}_i\]</div>
+</div>
+<p>Note that, as long as charge neutrality is maintained (<span class="math notranslate nohighlight">\(q_\mathrm{O} =
+-2\,q_\mathrm{H}\)</span>), rescaling all charges by a factor <span class="math notranslate nohighlight">\(k\)</span> maps
+<span class="math notranslate nohighlight">\(\boldsymbol{\mu}\)</span> to <span class="math notranslate nohighlight">\(k\boldsymbol{\mu}\)</span> and therefore the IR spectrum by
+<span class="math notranslate nohighlight">\(k^2\)</span>. This is a global rescaling that cannot change the relative intensities
+between peaks, so tuning the charge value is not a meaningful way to improve the
+<em>shape</em> of the spectrum. For systems that carry a net ionic current (electrolytes,
+ionic liquids), the zero-frequency limit of the spectrum is proportional to the ionic
+conductivity, which <em>does</em> depend on the actual transported charge: in that case <a class="reference external" href="https://doi.org/10.1038/s41567-019-0562-0">only
+formal (oxidation-number) charges yield the correct DC limit,</a> even though they produce incorrect
+intensities. Here, pure water has zero ionic conductivity, so the choice of charge
+value is truly nothing else than an overall scale factor.</p>
+<p>Under periodic boundary conditions the raw sum <span class="math notranslate nohighlight">\(\sum_i q_i \mathbf{r}_i\)</span> is
+<a class="reference external" href="https://www.physics.rutgers.edu/~dhv/pubs/local_preprint/dv_fchap.pdf">gauge-dependent</a>: shifting a
+molecule across the simulation box by a lattice vector changes its value. To get a
+physically meaningful cell dipole, we unwrap each hydrogen into the minimum-image
+frame of its bonded oxygen before summing, using ASE’s minimum-image convention
+(<code class="docutils literal notranslate"><span class="pre">mic=True</span></code>), which handles any cell shape.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">compute_pc_dipole</span><span class="p">(</span>
+    <span class="n">atoms</span><span class="p">:</span> <span class="n">ase</span><span class="o">.</span><span class="n">Atoms</span><span class="p">,</span> <span class="n">q_H</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.417</span><span class="p">,</span> <span class="n">q_O</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.834</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Total point-charge dipole of a periodic water box (e·Å).</span>
+<span class="sd">    It assumes that each O is bonded to exactly two H&#39;s, and that each water molecule is</span>
+<span class="sd">    overall charge-neutral.</span>
+
+<span class="sd">    :param atoms: ASE Atoms object containing the water box</span>
+<span class="sd">    :param q_H: partial charge on each H atom in units of e</span>
+<span class="sd">    :param q_O: partial charge on each O atom in units of e</span>
+<span class="sd">    :returns: total cell dipole as a 3D vector in e·Å</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">q_sum</span> <span class="o">=</span> <span class="n">q_O</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">q_H</span>
+    <span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">q_sum</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-6</span><span class="p">,</span> <span class="s2">&quot;Net charge is not zero&quot;</span>
+
+    <span class="n">syms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">get_chemical_symbols</span><span class="p">())</span>
+    <span class="n">i_O</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">syms</span> <span class="o">==</span> <span class="s2">&quot;O&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">i_H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">syms</span> <span class="o">==</span> <span class="s2">&quot;H&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># D_vec: shape (n_O, n_H, 3), displacement vectors pointing from O to H</span>
+    <span class="c1"># D_len: shape (n_O, n_H), scalar distances</span>
+    <span class="n">D_vec</span><span class="p">,</span> <span class="n">D_len</span> <span class="o">=</span> <span class="n">get_distances</span><span class="p">(</span>
+        <span class="n">p1</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">i_O</span><span class="p">],</span> <span class="n">p2</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">i_H</span><span class="p">],</span> <span class="n">cell</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span>
+    <span class="p">)</span>
+
+    <span class="c1"># For each H (axis 1), find the index of its nearest O (axis 0)</span>
+    <span class="n">nearest_o</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">D_len</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># (n_H,)</span>
+
+    <span class="c1"># Extract the minimum-image O-&gt;H bond vectors</span>
+    <span class="n">bond_vec</span> <span class="o">=</span> <span class="n">D_vec</span><span class="p">[</span><span class="n">nearest_o</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">i_H</span><span class="p">))]</span>  <span class="c1"># (n_H, 3)</span>
+
+    <span class="c1"># If the molecules were not neutral, the expression would be</span>
+    <span class="c1"># dipole = (q_O + 2 * q_H) * atoms.positions[i_O].sum(axis=0)</span>
+    <span class="c1">#          + q_H * bond_vec.sum(axis=0)</span>
+    <span class="c1"># The simplified expression for neutral molecules is</span>
+    <span class="k">return</span> <span class="n">q_H</span> <span class="o">*</span> <span class="n">bond_vec</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>By the fluctuation-dissipation theorem, the linear infrared absorption spectrum is
+proportional to the Fourier transform of the equilibrium dipole-dipole autocorrelation
+function. In practice this is most easily computed via the <a class="reference external" href="https://en.wikipedia.org/wiki/Spectral_density">power spectral density</a> of the total cell dipole:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[n(\omega)\,\alpha(\omega) = \frac{\omega^2}{6\,V\,\varepsilon_0\,k_\mathrm{B} T\,c}
+\tilde{S}_{\boldsymbol{\mu}}(\omega)\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(\tilde{S}_{\boldsymbol{\mu}}\)</span> is the isotropic two-sided power spectral
+density of <span class="math notranslate nohighlight">\(\boldsymbol{\mu}(t)\)</span>, <span class="math notranslate nohighlight">\(n(\omega)\)</span> is the refractive index, and
+<span class="math notranslate nohighlight">\(1/6 = (1/3) \times (1/2)\)</span> combines the orientational average (liquid water is
+isotropic) with the cosine-transform convention.
+Given a dipole time series sampled at regular intervals, we can compute the power
+spectral density with <cite>scipy.signal.periodogram</cite>, which uses a fast Fourier transform
+(FFT) and is therefore very efficient even for long trajectories:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">ir_spectrum</span><span class="p">(</span>
+    <span class="n">dipoles_eA</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">dt_fs</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">volume_A3</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">temperature_K</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">300.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;IR absorption from a dipole time series.</span>
+
+<span class="sd">    :param dipoles_eA: total cell dipole in e·Å, shape ``(n_frames, 3)``</span>
+<span class="sd">    :param dt_fs: time between saved frames in fs</span>
+<span class="sd">    :param volume_A3: simulation box volume in Å³</span>
+<span class="sd">    :param temperature_K: temperature in K</span>
+<span class="sd">    :returns: tuple with frequencies in cm⁻¹ and :math:`n(\\omega)\\alpha(\\omega)` in</span>
+<span class="sd">        10³ cm⁻¹</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">c_cms</span> <span class="o">=</span> <span class="mf">2.99792458e10</span>  <span class="c1"># cm/s</span>
+    <span class="n">kb_J</span> <span class="o">=</span> <span class="mf">1.380649e-23</span>  <span class="c1"># J/K</span>
+    <span class="n">e_C</span> <span class="o">=</span> <span class="mf">1.602176634e-19</span>  <span class="c1"># C</span>
+    <span class="n">A_m</span> <span class="o">=</span> <span class="mf">1e-10</span>  <span class="c1"># Å to m</span>
+
+    <span class="c1"># Convert dipole to SI (C·m)</span>
+    <span class="n">mu_Cm</span> <span class="o">=</span> <span class="n">dipoles_eA</span> <span class="o">*</span> <span class="n">e_C</span> <span class="o">*</span> <span class="n">A_m</span>
+    <span class="n">vol_m3</span> <span class="o">=</span> <span class="n">volume_A3</span> <span class="o">*</span> <span class="n">A_m</span><span class="o">**</span><span class="mi">3</span>
+
+    <span class="n">f</span><span class="p">,</span> <span class="n">S</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">periodogram</span><span class="p">(</span><span class="n">mu_Cm</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">detrend</span><span class="o">=</span><span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># mu.mu dot product: sum over Cartesian components</span>
+
+    <span class="n">S</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*=</span> <span class="mf">0.5</span>  <span class="c1"># undo scipy&#39;s one-sided doubling: recover the two-sided PSD</span>
+    <span class="n">S</span> <span class="o">*=</span> <span class="n">dt_fs</span> <span class="o">*</span> <span class="mf">1e-15</span>  <span class="c1"># normalise to physical time step (s)</span>
+
+    <span class="n">freqs_hz</span> <span class="o">=</span> <span class="n">f</span> <span class="o">/</span> <span class="p">(</span><span class="n">dt_fs</span> <span class="o">*</span> <span class="mf">1e-15</span><span class="p">)</span>
+    <span class="n">freqs_cm</span> <span class="o">=</span> <span class="n">freqs_hz</span> <span class="o">/</span> <span class="n">c_cms</span>
+
+    <span class="n">omega</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">freqs_hz</span>
+    <span class="c1"># n(ω) α(ω) = ω² S(ω) / (6 V k_B T ε₀ c)  [cm⁻¹]</span>
+    <span class="c1"># the 1/6 = (1/3 orientational average) × (1/2 one-sided cosine transform)</span>
+    <span class="n">eps0</span> <span class="o">=</span> <span class="mf">8.854187817e-12</span>
+    <span class="n">prefactor</span> <span class="o">=</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mf">6.0</span> <span class="o">*</span> <span class="n">vol_m3</span> <span class="o">*</span> <span class="n">kb_J</span> <span class="o">*</span> <span class="n">temperature_K</span> <span class="o">*</span> <span class="n">eps0</span> <span class="o">*</span> <span class="n">c_cms</span><span class="p">)</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="n">prefactor</span> <span class="o">*</span> <span class="n">S</span> <span class="o">*</span> <span class="mf">1e-3</span>  <span class="c1"># cm⁻¹ to 10³ cm⁻¹</span>
+
+    <span class="k">return</span> <span class="n">freqs_cm</span><span class="p">,</span> <span class="n">alpha</span>
+</pre></div>
+</div>
+<p>We compute the spectrum from a 5 ps production trajectory (after 1 ps of
+equilibration) at 300 K (<a class="reference external" href="https://doi.org/10.1063/1.2408420">canonical</a> NVT, CSVR
+thermostat, flexible TIP3P force field), giving a frequency resolution of ~7 cm⁻¹ (the
+minimum resolvable frequency is the inverse of the total simulation time, i.e. 1/(5
+ps) = 0.2 THz, or around 6.7 cm⁻¹). The trajectory is generated by running LAMMPS with
+<code class="docutils literal notranslate"><span class="pre">in_tip3p.lmp</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>units real
+atom_style full
+special_bonds lj/coul 0.0 0.0 0.0
+
+variable seed       index 24680
+variable t_target   equal 300.0
+variable tdamp      equal 100*dt
+variable nequil     equal 2000     # equilibration:  2000 * 0.5 fs = 1 ps
+variable nprod      equal 10000    # production:    10000 * 0.5 fs = 5 ps
+variable dump_every equal 4        # dump every 4 steps = 2 fs
+
+read_data data/initial.data
+
+pair_style lj/cut/coul/long 9.0
+kspace_style ewald 1.0e-6
+pair_modify tail yes
+
+pair_coeff 1 1 0.1020 3.188
+pair_coeff 1 2 0.0 1.0
+pair_coeff 2 2 0.0 1.0
+
+bond_style harmonic
+bond_coeff 1 450.0 0.9572
+
+angle_style harmonic
+angle_coeff 1 55.0 104.52
+
+
+set type 1 charge -0.834
+set type 2 charge 0.417
+
+timestep 0.5
+neighbor 2.0 bin
+neigh_modify every 1 delay 0 check yes
+
+thermo_style custom step temp press density etotal pe ke ebond eangle evdwl ecoul elong
+thermo 1000
+
+# Energy minimization to remove bad contacts
+min_style cg
+minimize 1.0e-4 1.0e-6 1000 10000
+
+velocity all create ${t_target} ${seed} mom yes rot yes dist gaussian
+velocity all zero linear
+reset_timestep 0
+
+# Equilibration (no dump)
+fix nve_int   all nve
+fix thermostat all temp/csvr ${t_target} ${t_target} ${tdamp} ${seed}
+run ${nequil}
+
+# Production (dump every 2 fs)
+dump traj all custom ${dump_every} tip3p.lammpstrj id mol type xu yu zu
+dump_modify traj sort id
+run ${nprod}
+</pre></div>
+</div>
+<p>and it’s run with:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">run_command</span><span class="p">(</span><span class="s2">&quot;lmp -in in_tip3p.lmp&quot;</span><span class="p">,</span> <span class="n">print_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>LAMMPS (30 Mar 2026)
+OMP_NUM_THREADS environment is not set. Defaulting to 1 thread.
+  using 1 OpenMP thread(s) per MPI task
+Reading data file ...
+  orthogonal box = (0 0 0) to (15.6 15.6 15.6)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  384 atoms
+  reading velocities ...
+  384 velocities
+  scanning bonds ...
+  2 = max bonds/atom
+  scanning angles ...
+  1 = max angles/atom
+  orthogonal box = (0 0 0) to (15.6 15.6 15.6)
+  1 by 1 by 1 MPI processor grid
+  reading bonds ...
+  256 bonds
+  reading angles ...
+  128 angles
+Finding 1-2 1-3 1-4 neighbors ...
+  special bond factors lj:    0        0        0
+  special bond factors coul:  0        0        0
+     2 = max # of 1-2 neighbors
+     1 = max # of 1-3 neighbors
+     1 = max # of 1-4 neighbors
+     2 = max # of special neighbors
+  special bonds CPU = 0.000 seconds
+  read_data CPU = 0.004 seconds
+Setting atom values ...
+  128 settings made for charge
+Setting atom values ...
+  256 settings made for charge
+Ewald initialization ...
+  using 12-bit tables for long-range coulomb
+  G vector (1/distance) = 0.37198615
+  estimated absolute RMS force accuracy = 0.00033302913
+  estimated relative force accuracy = 1.0029073e-06
+  KSpace vectors: actual max1d max3d = 709 7 1687
+                  kxmax kymax kzmax  = 7 7 7
+Generated 0 of 1 mixed pair_coeff terms from geometric mixing rule
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 11
+  ghost atom cutoff = 11
+  binsize = 5.5, bins = 3 3 3
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair lj/cut/coul/long, perpetual
+      attributes: half, newton on
+      pair build: half/bin/newton
+      stencil: half/bin/3d
+      bin: standard
+Setting up cg style minimization ...
+  Unit style    : real
+  Current step  : 0
+Per MPI rank memory allocation (min/avg/max) = 20.23 | 20.23 | 20.23 Mbytes
+   Step          Temp          Press         Density         TotEng         PotEng         KinEng         E_bond        E_angle         E_vdwl         E_coul         E_long
+         0   0              6042.9195      1.0086236      17.568067      17.568067      0              3.6619754e-09  1.7284233e-10 -48.615046      9116.7794     -9050.5963
+       181   0             -3756.4254      1.0086236     -1653.1096     -1653.1096      0              82.780888      43.389309      425.96638      7092.2537     -9297.4998
+Loop time of 1.15488 on 1 procs for 181 steps with 384 atoms
+
+100.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+Minimization stats:
+  Stopping criterion = energy tolerance
+  Energy initial, next-to-last, final =
+      17.5680669678197  -1652.97946951365  -1653.10959478015
+  Force two-norm initial, final = 321.03407 16.293241
+  Force max component initial, final = 36.096223 2.1110701
+  Final line search alpha, max atom move = 0.020702257 0.043703917
+  Iterations, force evaluations = 181 340
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.71127    | 0.71127    | 0.71127    |   0.0 | 61.59
+Bond    | 0.003229   | 0.003229   | 0.003229   |   0.0 |  0.28
+Kspace  | 0.41602    | 0.41602    | 0.41602    |   0.0 | 36.02
+Neigh   | 0.016156   | 0.016156   | 0.016156   |   0.0 |  1.40
+Comm    | 0.0059275  | 0.0059275  | 0.0059275  |   0.0 |  0.51
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 0.002274   |            |       |  0.20
+
+Nlocal:            384 ave         384 max         384 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:           5011 ave        5011 max        5011 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:         107860 ave      107860 max      107860 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 107860
+Ave neighs/atom = 280.88542
+Ave special neighs/atom = 2
+Neighbor list builds = 6
+Dangerous builds = 0
+Ewald initialization ...
+  using 12-bit tables for long-range coulomb
+  G vector (1/distance) = 0.37198615
+  estimated absolute RMS force accuracy = 0.00033302913
+  estimated relative force accuracy = 1.0029073e-06
+  KSpace vectors: actual max1d max3d = 709 7 1687
+                  kxmax kymax kzmax  = 7 7 7
+Generated 0 of 1 mixed pair_coeff terms from geometric mixing rule
+Setting up Verlet run ...
+  Unit style    : real
+  Current step  : 0
+  Time step     : 0.5
+Per MPI rank memory allocation (min/avg/max) = 19.11 | 19.11 | 19.11 Mbytes
+   Step          Temp          Press         Density         TotEng         PotEng         KinEng         E_bond        E_angle         E_vdwl         E_coul         E_long
+         0   300            367.52459      1.0086236     -1310.6145     -1653.1096      342.49507      82.780888      43.389309      425.96638      7092.2537     -9297.4998
+      1000   305.34641     -618.76697      1.0086236     -934.41933     -1283.0181      348.5988       139.26516      84.623295      322.71675      7462.6257     -9292.249
+      2000   318.63916      2087.0242      1.0086236     -909.48526     -1273.2597      363.77447      129.44604      75.774757      332.68453      7480.158      -9291.323
+Loop time of 5.4812 on 1 procs for 2000 steps with 384 atoms
+
+Performance: 15.763 ns/day, 1.523 hours/ns, 364.883 timesteps/s, 140.115 katom-step/s
+100.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 2.8601     | 2.8601     | 2.8601     |   0.0 | 52.18
+Bond    | 0.016775   | 0.016775   | 0.016775   |   0.0 |  0.31
+Kspace  | 2.4628     | 2.4628     | 2.4628     |   0.0 | 44.93
+Neigh   | 0.091819   | 0.091819   | 0.091819   |   0.0 |  1.68
+Comm    | 0.034524   | 0.034524   | 0.034524   |   0.0 |  0.63
+Output  | 4.2491e-05 | 4.2491e-05 | 4.2491e-05 |   0.0 |  0.00
+Modify  | 0.010298   | 0.010298   | 0.010298   |   0.0 |  0.19
+Other   |            | 0.004929   |            |       |  0.09
+
+Nlocal:            384 ave         384 max         384 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:           5060 ave        5060 max        5060 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:         108155 ave      108155 max      108155 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 108155
+Ave neighs/atom = 281.65365
+Ave special neighs/atom = 2
+Neighbor list builds = 34
+Dangerous builds = 0
+Ewald initialization ...
+  using 12-bit tables for long-range coulomb
+  G vector (1/distance) = 0.37198615
+  estimated absolute RMS force accuracy = 0.00033302913
+  estimated relative force accuracy = 1.0029073e-06
+  KSpace vectors: actual max1d max3d = 709 7 1687
+                  kxmax kymax kzmax  = 7 7 7
+Generated 0 of 1 mixed pair_coeff terms from geometric mixing rule
+Setting up Verlet run ...
+  Unit style    : real
+  Current step  : 2000
+  Time step     : 0.5
+Per MPI rank memory allocation (min/avg/max) = 19.11 | 19.11 | 19.11 Mbytes
+   Step          Temp          Press         Density         TotEng         PotEng         KinEng         E_bond        E_angle         E_vdwl         E_coul         E_long
+      2000   318.63916      2087.0242      1.0086236     -909.48526     -1273.2597      363.77447      129.44604      75.774757      332.68453      7480.158      -9291.323
+      3000   297.44317      3753.2438      1.0086236     -1004.9892     -1344.5652      339.57607      122.90188      74.748228      377.92898      7375.8274     -9295.9718
+      4000   296.16114      4260.793       1.0086236     -1000.3441     -1338.4565      338.11244      127.88525      72.747457      369.84869      7383.9459     -9292.8838
+      5000   298.08711     -1173.5316      1.0086236     -971.14551     -1311.4567      340.31122      125.46752      85.241099      321.91837      7450.6743     -9294.758
+      6000   294.84173     -3875.4421      1.0086236     -991.83978     -1328.4459      336.60613      142.80954      70.755649      351.50991      7399.3134     -9292.8344
+      7000   296.45979     -5553.3703      1.0086236     -972.59899     -1311.0524      338.45339      161.2721       73.313238      356.24391      7390.405      -9292.2866
+      8000   320.10021     -3888.9803      1.0086236     -929.94359     -1295.3861      365.44249      147.69094      74.830382      335.68555      7438.2767     -9291.8696
+      9000   302.59167     -5162.9434      1.0086236     -965.87423     -1311.3281      345.45386      159.99801      76.127183      333.91545      7413.1893     -9294.5581
+     10000   302.01101     -5516.2862      1.0086236     -962.61179     -1307.4027      344.79094      154.94608      76.88971       346.30408      7407.1264     -9292.669
+     11000   280.22856     -3019.1832      1.0086236     -986.90238     -1306.8254      319.92301      154.04111      77.76947       350.46493      7403.1225     -9292.2234
+     12000   307.47583     -1813.6682      1.0086236     -952.08597     -1303.1158      351.02985      154.20667      77.89724       368.7088       7386.4893     -9290.4179
+Loop time of 30.126 on 1 procs for 10000 steps with 384 atoms
+
+Performance: 14.340 ns/day, 1.674 hours/ns, 331.939 timesteps/s, 127.465 katom-step/s
+99.8% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 16.357     | 16.357     | 16.357     |   0.0 | 54.30
+Bond    | 0.09176    | 0.09176    | 0.09176    |   0.0 |  0.30
+Kspace  | 12.25      | 12.25      | 12.25      |   0.0 | 40.66
+Neigh   | 0.50693    | 0.50693    | 0.50693    |   0.0 |  1.68
+Comm    | 0.17321    | 0.17321    | 0.17321    |   0.0 |  0.57
+Output  | 0.66863    | 0.66863    | 0.66863    |   0.0 |  2.22
+Modify  | 0.051775   | 0.051775   | 0.051775   |   0.0 |  0.17
+Other   |            | 0.0264     |            |       |  0.09
+
+Nlocal:            384 ave         384 max         384 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:           4945 ave        4945 max        4945 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:         107998 ave      107998 max      107998 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 107998
+Ave neighs/atom = 281.24479
+Ave special neighs/atom = 2
+Neighbor list builds = 185
+Dangerous builds = 0
+Total wall time: 0:00:36
+
+CompletedProcess(args=[&#39;lmp&#39;, &#39;-in&#39;, &#39;in_tip3p.lmp&#39;], returncode=0, stdout=&#39;LAMMPS (30 Mar 2026)\nOMP_NUM_THREADS environment is not set. Defaulting to 1 thread.\n  using 1 OpenMP thread(s) per MPI task\nReading data file ...\n  orthogonal box = (0 0 0) to (15.6 15.6 15.6)\n  1 by 1 by 1 MPI processor grid\n  reading atoms ...\n  384 atoms\n  reading velocities ...\n  384 velocities\n  scanning bonds ...\n  2 = max bonds/atom\n  scanning angles ...\n  1 = max angles/atom\n  orthogonal box = (0 0 0) to (15.6 15.6 15.6)\n  1 by 1 by 1 MPI processor grid\n  reading bonds ...\n  256 bonds\n  reading angles ...\n  128 angles\nFinding 1-2 1-3 1-4 neighbors ...\n  special bond factors lj:    0        0        0       \n  special bond factors coul:  0        0        0       \n     2 = max # of 1-2 neighbors\n     1 = max # of 1-3 neighbors\n     1 = max # of 1-4 neighbors\n     2 = max # of special neighbors\n  special bonds CPU = 0.000 seconds\n  read_data CPU = 0.004 seconds\nSetting atom values ...\n  128 settings made for charge\nSetting atom values ...\n  256 settings made for charge\nEwald initialization ...\n  using 12-bit tables for long-range coulomb\n  G vector (1/distance) = 0.37198615\n  estimated absolute RMS force accuracy = 0.00033302913\n  estimated relative force accuracy = 1.0029073e-06\n  KSpace vectors: actual max1d max3d = 709 7 1687\n                  kxmax kymax kzmax  = 7 7 7\nGenerated 0 of 1 mixed pair_coeff terms from geometric mixing rule\nNeighbor list info ...\n  update: every = 1 steps, delay = 0 steps, check = yes\n  max neighbors/atom: 2000, page size: 100000\n  master list distance cutoff = 11\n  ghost atom cutoff = 11\n  binsize = 5.5, bins = 3 3 3\n  1 neighbor lists, perpetual/occasional/extra = 1 0 0\n  (1) pair lj/cut/coul/long, perpetual\n      attributes: half, newton on\n      pair build: half/bin/newton\n      stencil: half/bin/3d\n      bin: standard\nSetting up cg style minimization ...\n  Unit style    : real\n  Current step  : 0\nPer MPI rank memory allocation (min/avg/max) = 20.23 | 20.23 | 20.23 Mbytes\n   Step          Temp          Press         Density         TotEng         PotEng         KinEng         E_bond        E_angle         E_vdwl         E_coul         E_long    \n         0   0              6042.9195      1.0086236      17.568067      17.568067      0              3.6619754e-09  1.7284233e-10 -48.615046      9116.7794     -9050.5963    \n       181   0             -3756.4254      1.0086236     -1653.1096     -1653.1096      0              82.780888      43.389309      425.96638      7092.2537     -9297.4998    \nLoop time of 1.15488 on 1 procs for 181 steps with 384 atoms\n\n100.0% CPU use with 1 MPI tasks x 1 OpenMP threads\n\nMinimization stats:\n  Stopping criterion = energy tolerance\n  Energy initial, next-to-last, final = \n      17.5680669678197  -1652.97946951365  -1653.10959478015\n  Force two-norm initial, final = 321.03407 16.293241\n  Force max component initial, final = 36.096223 2.1110701\n  Final line search alpha, max atom move = 0.020702257 0.043703917\n  Iterations, force evaluations = 181 340\n\nMPI task timing breakdown:\nSection |  min time  |  avg time  |  max time  |%varavg| %total\n---------------------------------------------------------------\nPair    | 0.71127    | 0.71127    | 0.71127    |   0.0 | 61.59\nBond    | 0.003229   | 0.003229   | 0.003229   |   0.0 |  0.28\nKspace  | 0.41602    | 0.41602    | 0.41602    |   0.0 | 36.02\nNeigh   | 0.016156   | 0.016156   | 0.016156   |   0.0 |  1.40\nComm    | 0.0059275  | 0.0059275  | 0.0059275  |   0.0 |  0.51\nOutput  | 0          | 0          | 0          |   0.0 |  0.00\nModify  | 0          | 0          | 0          |   0.0 |  0.00\nOther   |            | 0.002274   |            |       |  0.20\n\nNlocal:            384 ave         384 max         384 min\nHistogram: 1 0 0 0 0 0 0 0 0 0\nNghost:           5011 ave        5011 max        5011 min\nHistogram: 1 0 0 0 0 0 0 0 0 0\nNeighs:         107860 ave      107860 max      107860 min\nHistogram: 1 0 0 0 0 0 0 0 0 0\n\nTotal # of neighbors = 107860\nAve neighs/atom = 280.88542\nAve special neighs/atom = 2\nNeighbor list builds = 6\nDangerous builds = 0\nEwald initialization ...\n  using 12-bit tables for long-range coulomb\n  G vector (1/distance) = 0.37198615\n  estimated absolute RMS force accuracy = 0.00033302913\n  estimated relative force accuracy = 1.0029073e-06\n  KSpace vectors: actual max1d max3d = 709 7 1687\n                  kxmax kymax kzmax  = 7 7 7\nGenerated 0 of 1 mixed pair_coeff terms from geometric mixing rule\nSetting up Verlet run ...\n  Unit style    : real\n  Current step  : 0\n  Time step     : 0.5\nPer MPI rank memory allocation (min/avg/max) = 19.11 | 19.11 | 19.11 Mbytes\n   Step          Temp          Press         Density         TotEng         PotEng         KinEng         E_bond        E_angle         E_vdwl         E_coul         E_long    \n         0   300            367.52459      1.0086236     -1310.6145     -1653.1096      342.49507      82.780888      43.389309      425.96638      7092.2537     -9297.4998    \n      1000   305.34641     -618.76697      1.0086236     -934.41933     -1283.0181      348.5988       139.26516      84.623295      322.71675      7462.6257     -9292.249     \n      2000   318.63916      2087.0242      1.0086236     -909.48526     -1273.2597      363.77447      129.44604      75.774757      332.68453      7480.158      -9291.323     \nLoop time of 5.4812 on 1 procs for 2000 steps with 384 atoms\n\nPerformance: 15.763 ns/day, 1.523 hours/ns, 364.883 timesteps/s, 140.115 katom-step/s\n100.0% CPU use with 1 MPI tasks x 1 OpenMP threads\n\nMPI task timing breakdown:\nSection |  min time  |  avg time  |  max time  |%varavg| %total\n---------------------------------------------------------------\nPair    | 2.8601     | 2.8601     | 2.8601     |   0.0 | 52.18\nBond    | 0.016775   | 0.016775   | 0.016775   |   0.0 |  0.31\nKspace  | 2.4628     | 2.4628     | 2.4628     |   0.0 | 44.93\nNeigh   | 0.091819   | 0.091819   | 0.091819   |   0.0 |  1.68\nComm    | 0.034524   | 0.034524   | 0.034524   |   0.0 |  0.63\nOutput  | 4.2491e-05 | 4.2491e-05 | 4.2491e-05 |   0.0 |  0.00\nModify  | 0.010298   | 0.010298   | 0.010298   |   0.0 |  0.19\nOther   |            | 0.004929   |            |       |  0.09\n\nNlocal:            384 ave         384 max         384 min\nHistogram: 1 0 0 0 0 0 0 0 0 0\nNghost:           5060 ave        5060 max        5060 min\nHistogram: 1 0 0 0 0 0 0 0 0 0\nNeighs:         108155 ave      108155 max      108155 min\nHistogram: 1 0 0 0 0 0 0 0 0 0\n\nTotal # of neighbors = 108155\nAve neighs/atom = 281.65365\nAve special neighs/atom = 2\nNeighbor list builds = 34\nDangerous builds = 0\nEwald initialization ...\n  using 12-bit tables for long-range coulomb\n  G vector (1/distance) = 0.37198615\n  estimated absolute RMS force accuracy = 0.00033302913\n  estimated relative force accuracy = 1.0029073e-06\n  KSpace vectors: actual max1d max3d = 709 7 1687\n                  kxmax kymax kzmax  = 7 7 7\nGenerated 0 of 1 mixed pair_coeff terms from geometric mixing rule\nSetting up Verlet run ...\n  Unit style    : real\n  Current step  : 2000\n  Time step     : 0.5\nPer MPI rank memory allocation (min/avg/max) = 19.11 | 19.11 | 19.11 Mbytes\n   Step          Temp          Press         Density         TotEng         PotEng         KinEng         E_bond        E_angle         E_vdwl         E_coul         E_long    \n      2000   318.63916      2087.0242      1.0086236     -909.48526     -1273.2597      363.77447      129.44604      75.774757      332.68453      7480.158      -9291.323     \n      3000   297.44317      3753.2438      1.0086236     -1004.9892     -1344.5652      339.57607      122.90188      74.748228      377.92898      7375.8274     -9295.9718    \n      4000   296.16114      4260.793       1.0086236     -1000.3441     -1338.4565      338.11244      127.88525      72.747457      369.84869      7383.9459     -9292.8838    \n      5000   298.08711     -1173.5316      1.0086236     -971.14551     -1311.4567      340.31122      125.46752      85.241099      321.91837      7450.6743     -9294.758     \n      6000   294.84173     -3875.4421      1.0086236     -991.83978     -1328.4459      336.60613      142.80954      70.755649      351.50991      7399.3134     -9292.8344    \n      7000   296.45979     -5553.3703      1.0086236     -972.59899     -1311.0524      338.45339      161.2721       73.313238      356.24391      7390.405      -9292.2866    \n      8000   320.10021     -3888.9803      1.0086236     -929.94359     -1295.3861      365.44249      147.69094      74.830382      335.68555      7438.2767     -9291.8696    \n      9000   302.59167     -5162.9434      1.0086236     -965.87423     -1311.3281      345.45386      159.99801      76.127183      333.91545      7413.1893     -9294.5581    \n     10000   302.01101     -5516.2862      1.0086236     -962.61179     -1307.4027      344.79094      154.94608      76.88971       346.30408      7407.1264     -9292.669     \n     11000   280.22856     -3019.1832      1.0086236     -986.90238     -1306.8254      319.92301      154.04111      77.76947       350.46493      7403.1225     -9292.2234    \n     12000   307.47583     -1813.6682      1.0086236     -952.08597     -1303.1158      351.02985      154.20667      77.89724       368.7088       7386.4893     -9290.4179    \nLoop time of 30.126 on 1 procs for 10000 steps with 384 atoms\n\nPerformance: 14.340 ns/day, 1.674 hours/ns, 331.939 timesteps/s, 127.465 katom-step/s\n99.8% CPU use with 1 MPI tasks x 1 OpenMP threads\n\nMPI task timing breakdown:\nSection |  min time  |  avg time  |  max time  |%varavg| %total\n---------------------------------------------------------------\nPair    | 16.357     | 16.357     | 16.357     |   0.0 | 54.30\nBond    | 0.09176    | 0.09176    | 0.09176    |   0.0 |  0.30\nKspace  | 12.25      | 12.25      | 12.25      |   0.0 | 40.66\nNeigh   | 0.50693    | 0.50693    | 0.50693    |   0.0 |  1.68\nComm    | 0.17321    | 0.17321    | 0.17321    |   0.0 |  0.57\nOutput  | 0.66863    | 0.66863    | 0.66863    |   0.0 |  2.22\nModify  | 0.051775   | 0.051775   | 0.051775   |   0.0 |  0.17\nOther   |            | 0.0264     |            |       |  0.09\n\nNlocal:            384 ave         384 max         384 min\nHistogram: 1 0 0 0 0 0 0 0 0 0\nNghost:           4945 ave        4945 max        4945 min\nHistogram: 1 0 0 0 0 0 0 0 0 0\nNeighs:         107998 ave      107998 max      107998 min\nHistogram: 1 0 0 0 0 0 0 0 0 0\n\nTotal # of neighbors = 107998\nAve neighs/atom = 281.24479\nAve special neighs/atom = 2\nNeighbor list builds = 185\nDangerous builds = 0\nTotal wall time: 0:00:36\n&#39;)
+</pre></div>
+</div>
+<p>We can now load the trajectory and compute the point-charge dipole time series. The
+LAMMPS dump file contains atomic types (1 for O, 2 for H) but not chemical symbols,
+so we assign those based on the type array before computing the dipole.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">type_map_pc</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;O&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;H&quot;</span><span class="p">}</span>
+<span class="n">traj_pc</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;tip3p.lammpstrj&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;lammps-dump-text&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">traj_pc</span><span class="p">:</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">set_chemical_symbols</span><span class="p">([</span><span class="n">type_map_pc</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">t</span><span class="p">)]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]])</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">set_pbc</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">pc_timeseries</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">compute_pc_dipole</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">traj_pc</span><span class="p">])</span>
+<span class="n">volume_A3</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">traj_pc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">cell</span><span class="p">)))</span>
+<span class="n">DT_FS</span> <span class="o">=</span> <span class="mf">2.0</span>  <span class="c1"># time between saved frames (MD timestep × dump frequency), in fs</span>
+</pre></div>
+</div>
+<p>We use the <code class="docutils literal notranslate"><span class="pre">ir_spectrum</span></code> function defined above to compute the IR spectrum from the
+dipole time series. The resulting frequencies and <span class="math notranslate nohighlight">\(n(\omega)\,\alpha(\omega)\)</span>
+values are stored in <code class="docutils literal notranslate"><span class="pre">freqs_pc</span></code> and <code class="docutils literal notranslate"><span class="pre">alpha_pc</span></code> for plotting.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">freqs_pc</span><span class="p">,</span> <span class="n">alpha_pc</span> <span class="o">=</span> <span class="n">ir_spectrum</span><span class="p">(</span><span class="n">pc_timeseries</span><span class="p">,</span> <span class="n">DT_FS</span><span class="p">,</span> <span class="n">volume_A3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>As a benchmark we use the experimental IR spectrum of liquid H₂O at 25°C taken
+from <a class="reference external" href="https://doi.org/10.1366/0003702963905385">Bertie &amp; Lan, Appl. Spectrosc. 50, 1047–1057
+(1996)</a>. The file
+<code class="docutils literal notranslate"><span class="pre">data/IR_light_expt.txt</span></code> has two columns: frequency in <span class="math notranslate nohighlight">\(\mathrm{cm}^{-1}\)</span>
+and <span class="math notranslate nohighlight">\(n(\omega)\,\alpha(\omega)\)</span> in units of
+<span class="math notranslate nohighlight">\(10^{3}\,\mathrm{cm}^{-1}\)</span>, which is the same combination we just computed from
+the simulated dipole time series, which makes the two directly comparable.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">expt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="s2">&quot;data/IR_light_expt.txt&quot;</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">freqs_pc</span><span class="p">,</span> <span class="n">alpha_pc</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Point charges&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">expt</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">expt</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;k-&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Experiment&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4000</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Frequency / cm$^{-1}$&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$n(\omega)\,\alpha(\omega)$ / $10^3\,\mathrm</span><span class="si">{cm}</span><span class="s2">^{-1}$&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Point-charge model vs experiment&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_water-ir-spectrum_001.png" srcset="../../_images/sphx_glr_water-ir-spectrum_001.png" alt="Point-charge model vs experiment" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Text(0.5, 1.0, &#39;Point-charge model vs experiment&#39;)
+</pre></div>
+</div>
+<p>The point-charge model captures the main bands (the O–H stretch at ~3400 cm⁻¹, the
+H–O–H bend at ~1600 cm⁻¹, and the librational band at ~650 cm⁻¹) but gets their
+shapes wrong in two visible ways: the O–H stretch is narrower than the experimental
+band, and the bending mode is blue-shifted relative to experiment. The reason is that
+IR intensities and peak shapes are governed by dipole <em>derivatives</em> (dynamical, or
+Born effective, charges), not by static charges: a band’s intensity scales as
+<span class="math notranslate nohighlight">\(|\partial\boldsymbol{\mu}/\partial Q|^2\)</span> along its vibrational mode <span class="math notranslate nohighlight">\(Q\)</span>.
+With fixed charges the only contribution to <span class="math notranslate nohighlight">\(\partial\boldsymbol{\mu}/\partial
+Q\)</span> is the rigid displacement of the charges, <span class="math notranslate nohighlight">\(q\,\partial\mathbf{r}/\partial Q\)</span>.
+In reality the partial charges themselves change as a bond stretches, resulting in an
+intramolecular <em>charge flux</em> <span class="math notranslate nohighlight">\(\partial q/\partial Q\)</span> that a fixed-charge model
+omits entirely. The same charge-flux and induced-dipole effects shape the
+low-frequency intermolecular (librational and hindered-translational) bands, which the
+point-charge model therefore also misrepresents.</p>
+</section>
+<section id="equivariance-and-the-dipole-moment">
+<h2>Equivariance and the dipole moment<a class="headerlink" href="#equivariance-and-the-dipole-moment" title="Link to this heading">¶</a></h2>
+<p>The charge-flux effect discussed above calls for a model that learns the full
+electronic-structure response rather than relying on fixed charges. Before building
+one, it is worth understanding the key symmetry constraint any dipole model must
+satisfy.</p>
+<p>The dipole moment <span class="math notranslate nohighlight">\(\boldsymbol{\mu}\)</span> of a molecule is a <em>vector</em> property: under
+a rotation <span class="math notranslate nohighlight">\(R\)</span> of the whole system, the dipole must rotate accordingly:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\boldsymbol{\mu}(R\{\mathbf{r}_i\}) = R\,\boldsymbol{\mu}(\{\mathbf{r}_i\})\]</div>
+</div>
+<p>This is an example of <em>covariance</em>, in contrast to <em>invariant</em> quantities such as the
+energy, which are unchanged by rotation. Together, invariance and covariance are
+instances of a more general principle known as <em>equivariance</em>: a property is
+equivariant to a symmetry operation if it transforms in a well-defined way under that
+operation.</p>
+<p>Some ML architectures guarantee equivariance under rotations and inversion by
+construction. Others, including <a class="reference external" href="https://proceedings.neurips.cc/paper_files/paper/2023/file/fb4a7e3522363907b26a86cc5be627ac-Paper-Conference.pdf">PET</a>
+(Point-Edge Transformer, a message-passing graph neural network with transformer
+attention), which we will fine-tune below, are <em>unconstrained</em>: equivariance is not
+built into the architecture but <strong>learned</strong> during training via data augmentation
+(each frame is shown to the model in random orientations). The resulting equivariance
+is therefore approximate. We will quantify the residual error explicitly later in the
+recipe. In return, unconstrained models are more flexible and can be <a class="reference external" href="https://iopscience.iop.org/article/10.1088/2632-2153/ae6417">very expressive</a>, improving accuracy at
+equivalent computational cost.</p>
+<p>To build intuition, we verify what <em>exact</em> equivariance looks like for a simple
+point-charge dipole: rotating the molecule must rotate the arrow by the same amount.
+This gives a visual reference for the approximate equivariance we will measure on the
+ML model later.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">water</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">build</span><span class="o">.</span><span class="n">molecule</span><span class="p">(</span><span class="s2">&quot;H2O&quot;</span><span class="p">)</span>
+<span class="n">water</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">about</span><span class="o">=</span><span class="n">water</span><span class="o">.</span><span class="n">get_center_of_mass</span><span class="p">())</span>
+
+<span class="n">q_H</span><span class="p">,</span> <span class="n">q_O</span> <span class="o">=</span> <span class="mf">0.417</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.834</span>  <span class="c1"># TIP3P charges in units of e</span>
+
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">rot_angles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">360</span><span class="p">,</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+
+<span class="n">rotated</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">angles</span> <span class="ow">in</span> <span class="n">rot_angles</span><span class="p">:</span>
+    <span class="n">mol</span> <span class="o">=</span> <span class="n">water</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">Rotation</span><span class="o">.</span><span class="n">from_euler</span><span class="p">(</span><span class="s2">&quot;xyz&quot;</span><span class="p">,</span> <span class="n">angles</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">positions</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">positions</span> <span class="o">@</span> <span class="n">R</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">rotated</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+
+    <span class="n">syms</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">get_chemical_symbols</span><span class="p">()</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">positions</span>
+    <span class="n">mu</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">q_H</span> <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="s2">&quot;H&quot;</span> <span class="k">else</span> <span class="n">q_O</span><span class="p">)</span> <span class="o">*</span> <span class="n">p</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">syms</span><span class="p">,</span> <span class="n">pos</span><span class="p">))</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;dipole&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mu</span>
+
+<span class="n">arrows</span> <span class="o">=</span> <span class="n">chemiscope</span><span class="o">.</span><span class="n">ase_vectors_to_arrows</span><span class="p">(</span><span class="n">rotated</span><span class="p">,</span> <span class="s2">&quot;dipole&quot;</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">arrows</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">][</span><span class="s2">&quot;global&quot;</span><span class="p">][</span><span class="s2">&quot;color&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;green&quot;</span>
+
+<span class="n">chemiscope</span><span class="o">.</span><span class="n">show</span><span class="p">(</span>
+    <span class="n">rotated</span><span class="p">,</span>
+    <span class="n">shapes</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dipole&quot;</span><span class="p">:</span> <span class="n">arrows</span><span class="p">},</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;structure&quot;</span><span class="p">,</span>
+    <span class="n">settings</span><span class="o">=</span><span class="n">chemiscope</span><span class="o">.</span><span class="n">quick_settings</span><span class="p">(</span>
+        <span class="n">trajectory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">structure_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dipole&quot;</span><span class="p">]},</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<!-- begin headers -->
+<!-- Load all dependencies -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
+
+<!-- JS scripts -->
+<script src="../../_static/chemiscope.min.js"></script>
+<script src="../../_static/chemiscope-sphinx.js"></script>
+
+<!-- CSS styles -->
+<link rel="stylesheet" href="../../_static/chemiscope-sphinx.css" type="text/css" />
+<!-- end headers -->
+
+<!-- Error display -->
+<div id="chsp-e7ea23af-9a9b-41e3-bcad-fb8d81607c6c-error-display" class="chemiscope-sphinx-error">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-e7ea23af-9a9b-41e3-bcad-fb8d81607c6c-error-display')">
+        &times;
+    </button>
+</div>
+
+<!-- Warning Display -->
+<div id="chsp-e7ea23af-9a9b-41e3-bcad-fb8d81607c6c-warning-display" class="chemiscope-sphinx-warning">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-e7ea23af-9a9b-41e3-bcad-fb8d81607c6c-warning-display')">
+        &times;
+    </button>
+</div>
+<div style="padding: 0.5rem 1.25rem" />
+
+<!-- Loading Spinner -->
+<div id="chsp-e7ea23af-9a9b-41e3-bcad-fb8d81607c6c-loading" class="chemiscope-sphinx-spinner">
+    <img src="../../_static/chemiscope-loading.svg" alt="Loading icon" />
+</div>
+
+<!-- Chemiscope Visualization -->
+<div id="chsp-e7ea23af-9a9b-41e3-bcad-fb8d81607c6c">
+    <!-- This will be replaced by the chemiscope HTML -->
+</div>
+
+<!-- Load Visualization Script -->
+<script>
+    loadChemiscopeSphinx('chsp-e7ea23af-9a9b-41e3-bcad-fb8d81607c6c', '../../_datasets/3fd2cdf29e544ec3781327315f3e5b0024025e04633fc245d587204999dace53-fig_water-ir-spectrum_001.json.gz', 'structure', '2000.0');
+</script>
+<div class="output_subarea output_html rendered_html output_result">
+
+</div>
+<br />
+<br /></section>
+<section id="joint-mlip-dipole-training-with-metatrain">
+<h2>Joint MLIP + dipole training with metatrain<a class="headerlink" href="#joint-mlip-dipole-training-with-metatrain" title="Link to this heading">¶</a></h2>
+<p>We will now train a single neural network with two output heads that
+share the same atomic representation: an energy/forces (MLIP) head, which drives the
+molecular dynamics, and a dipole head, which provides the <span class="math notranslate nohighlight">\(\boldsymbol{\mu}(t)\)</span>
+time series needed for the IR spectrum. Because both heads are attached to the same
+backbone features, each structure in the dataset simultaneously constrains the
+potential-energy surface and the electric dipole, potentially making joint training
+more data-efficient than fitting two separate models.</p>
+<p><a class="reference external" href="https://huggingface.co/lab-cosmo/pet-mad">PET-MAD-XS</a> is a foundational MLIP
+pre-trained on a diverse dataset of materials at r2SCAN meta-GGA level. <a class="reference external" href="https://docs.metatensor.org/metatrain/latest/concepts/fine-tuning.html">Fine-tuning</a> starts from
+PET-MAD’s pre-trained weights, which already encode good atomic representations from
+a broad training distribution, and continues training on our 654-frame water
+dataset, rather than training from scratch. We also add a <code class="docutils literal notranslate"><span class="pre">mtt::dipole</span></code> output head
+alongside the standard energy/forces; the new head is randomly initialized and trained
+from scratch, but it benefits from the shared backbone features that are already
+well-trained on the base dataset.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">finetune</span></code> section in <code class="docutils literal notranslate"><span class="pre">training</span></code> tells metatrain to start from the pre-trained
+model checkpoint (<code class="docutils literal notranslate"><span class="pre">finetune.read_from</span></code>) and fine-tune the <code class="docutils literal notranslate"><span class="pre">energy</span></code> head on the
+new dataset. The <code class="docutils literal notranslate"><span class="pre">energy/scan</span></code> key sets the name of the fine-tuned head (called a
+<code class="docutils literal notranslate"><span class="pre">variant</span></code> in metatomic). The LAMMPS input must reference this same name via
+<code class="docutils literal notranslate"><span class="pre">variant</span> <span class="pre">scan</span></code> to select this head at inference time. The <code class="docutils literal notranslate"><span class="pre">mtt::dipole</span></code> head is
+trained from scratch, with <code class="docutils literal notranslate"><span class="pre">type:</span> <span class="pre">cartesian</span> <span class="pre">rank</span> <span class="pre">1</span></code>, meaning it is a Cartesian
+vector.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cpu</span>
+<span class="nt">seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+
+<span class="nt">architecture</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pet</span>
+<span class="w">  </span><span class="nt">training</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">32</span>
+<span class="w">    </span><span class="nt">num_epochs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5000</span>
+<span class="w">    </span><span class="nt">learning_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5e-5</span>
+<span class="w">    </span><span class="nt">warmup_fraction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+<span class="w">    </span><span class="nt">scale_targets</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">finetune</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">full</span>
+<span class="w">      </span><span class="nt">read_from</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pet-mad-xs-v1.5.1.ckpt</span>
+<span class="w">      </span><span class="nt">inherit_heads</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">energy/scan</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">energy</span>
+<span class="w">    </span><span class="nt">loss</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">energy/scan</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.001</span>
+<span class="w">        </span><span class="nt">gradients</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">positions</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.001</span>
+<span class="w">          </span><span class="nt">strain</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.001</span>
+
+<span class="nt">training_set</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">systems</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">read_from</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">water_mlip_dipole_data.xyz</span>
+<span class="w">    </span><span class="nt">reader</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ase</span>
+<span class="w">    </span><span class="nt">length_unit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">angstrom</span>
+<span class="w">  </span><span class="nt">targets</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">energy/scan</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">energy</span>
+<span class="w">      </span><span class="nt">quantity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">energy</span>
+<span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">eV</span>
+<span class="w">      </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SCAN</span>
+<span class="w">      </span><span class="nt">forces</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">forces</span>
+<span class="w">      </span><span class="nt">stress</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stress</span>
+<span class="w">    </span><span class="nt">mtt::dipole</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dft_dipole</span>
+<span class="w">      </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SCAN</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">cartesian</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">rank</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+
+<span class="nt">validation_set</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.05</span>
+<span class="nt">test_set</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.05</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Given the small dataset and the need to train a new dipole head, training takes a
+few hours on a GPU. Therefore we provide the fine-tuned checkpoint in
+<code class="docutils literal notranslate"><span class="pre">pet-mad-xs-v1.5.0_SCAN_dipole.ckpt</span></code> (downloaded above); the <code class="docutils literal notranslate"><span class="pre">mtt</span> <span class="pre">train</span></code> command
+is shown for reference only.</p>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mtt<span class="w"> </span>train<span class="w"> </span>options.yaml
+</pre></div>
+</div>
+<p>We can monitor convergence by loading the loss log written during training.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">train_log</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span>
+    <span class="s2">&quot;data/train.csv&quot;</span><span class="p">,</span>
+    <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span>
+    <span class="n">names</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span>
+<span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+
+<span class="n">epochs</span> <span class="o">=</span> <span class="n">train_log</span><span class="p">[</span><span class="s2">&quot;Epoch&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="n">train_mae</span> <span class="o">=</span> <span class="n">train_log</span><span class="p">[</span><span class="s2">&quot;training_mttdipole_MAE_per_atom&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+<span class="n">val_mae</span> <span class="o">=</span> <span class="n">train_log</span><span class="p">[</span><span class="s2">&quot;validation_mttdipole_MAE_per_atom&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">epochs</span><span class="p">,</span> <span class="n">train_mae</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Training&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">epochs</span><span class="p">,</span> <span class="n">val_mae</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Validation&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Epoch&quot;</span><span class="p">)</span>
+<span class="c1"># the per_atom suffix means metatrain divides by the number of atoms for consistent</span>
+<span class="c1"># loss scaling; here all frames are the same box of water so it is a constant factor</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Dipole MAE / D per atom&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_water-ir-spectrum_002.png" srcset="../../_images/sphx_glr_water-ir-spectrum_002.png" alt="water ir spectrum" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;matplotlib.legend.Legend object at 0x7f5a4ce51520&gt;
+</pre></div>
+</div>
+<section id="model-evaluation-on-the-test-set">
+<h3>Model evaluation on the test set<a class="headerlink" href="#model-evaluation-on-the-test-set" title="Link to this heading">¶</a></h3>
+<p>metatrain holds out 5% of the dataset as a test set (<code class="docutils literal notranslate"><span class="pre">test_set:</span> <span class="pre">0.05</span></code> in
+<code class="docutils literal notranslate"><span class="pre">options.yaml</span></code>). A representative subset of ten frames from this test set is listed
+in <code class="docutils literal notranslate"><span class="pre">data/test.txt</span></code>. We select the corresponding frames from the full dataset and
+write them to disk so that <code class="docutils literal notranslate"><span class="pre">data/eval.yaml</span></code> can point to them:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ref_frames</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;water_mlip_dipole_data.xyz&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+<span class="n">test_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="s2">&quot;data/test.txt&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+<span class="n">test_set</span> <span class="o">=</span> <span class="p">[</span><span class="n">ref_frames</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">test_idx</span><span class="p">]</span>
+<span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;test_set.xyz&quot;</span><span class="p">,</span> <span class="n">test_set</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;extxyz&quot;</span><span class="p">)</span>
+
+<span class="c1"># Before evaluating the model we export the fine-tuned checkpoint to TorchScript.</span>
+<span class="c1"># The base checkpoint ``pet-mad-xs-v1.5.0.ckpt`` (also downloaded) is only needed to</span>
+<span class="c1"># re-run fine-tuning; its path is referenced in ``options.yaml`` under</span>
+<span class="c1"># ``finetune.read_from``.</span>
+
+<span class="n">run_command</span><span class="p">(</span>
+    <span class="s2">&quot;mtt export pet-mad-xs-v1.5.0_SCAN_dipole.ckpt -o pet-mad-xs-v1.5.0_SCAN_dipole.pt&quot;</span><span class="p">,</span>
+    <span class="n">print_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[2026-07-19 08:19:49][INFO] - Logging to file is disabled.
+[2026-07-19 08:19:49][INFO] - Package version: 2026.3.1
+[2026-07-19 08:19:49][INFO] - Package directory: /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/metatrain
+[2026-07-19 08:19:49][INFO] - Working directory: /home/runner/work/atomistic-cookbook/atomistic-cookbook/examples/water-ir-spectrum
+[2026-07-19 08:19:49][INFO] - Executed command: mtt export pet-mad-xs-v1.5.0_SCAN_dipole.ckpt -o pet-mad-xs-v1.5.0_SCAN_dipole.pt
+[2026-07-19 08:19:49][WARNING] - /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/torch/jit/_script.py:1480: DeprecationWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+
+[2026-07-19 08:19:49][INFO] - Using best model from epoch 4383
+[W719 08:19:49.615989421 model.cpp:365] Warning: output &#39;energy&#39; has an empty unit. Consider adding a unit to ensure correct unit conversion. (function set_outputs)
+[W719 08:19:49.616388439 model.cpp:147] Warning: ModelOutput.quantity is deprecated and will be removed in a future version (function set_quantity)
+[W719 08:19:49.623195718 model.cpp:365] Warning: output &#39;energy&#39; has an empty unit. Consider adding a unit to ensure correct unit conversion. (function set_outputs)
+[W719 08:19:49.654771341 quantities.cpp:881] Warning: the &#39;non_conservative_forces&#39; quantity is deprecated, please update this code to use &#39;non_conservative_force&#39; instead. (function validate_quantity_name)
+[W719 08:19:49.654821125 model.cpp:345] Warning: &#39;energy&#39; defines 2 output variants and &#39;energy&#39; has an empty description. Consider adding meaningful descriptions helping users to distinguish between them. (function set_outputs)
+[2026-07-19 08:19:49][WARNING] - /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/metatrain/pet/model.py:1428: UserWarning: the &#39;non_conservative_forces&#39; output name is deprecated, please update the model to use &#39;non_conservative_force&#39; instead
+  return AtomisticModel(self.eval(), metadata, capabilities)
+
+[2026-07-19 08:19:49][WARNING] - /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/torch/jit/_script.py:1480: DeprecationWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+
+[2026-07-19 08:19:50][WARNING] - /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/torch/jit/_serialization.py:89: DeprecationWarning: `torch.jit.save` is deprecated. Please switch to `torch.export`.
+  warnings.warn(
+
+[2026-07-19 08:19:50][INFO] - Model exported to &#39;/home/runner/work/atomistic-cookbook/atomistic-cookbook/examples/water-ir-spectrum/pet-mad-xs-v1.5.0_SCAN_dipole.pt&#39;
+
+CompletedProcess(args=[&#39;mtt&#39;, &#39;export&#39;, &#39;pet-mad-xs-v1.5.0_SCAN_dipole.ckpt&#39;, &#39;-o&#39;, &#39;pet-mad-xs-v1.5.0_SCAN_dipole.pt&#39;], returncode=0, stdout=&quot;[2026-07-19 08:19:49][INFO] - Logging to file is disabled.\n[2026-07-19 08:19:49][INFO] - Package version: 2026.3.1\n[2026-07-19 08:19:49][INFO] - Package directory: /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/metatrain\n[2026-07-19 08:19:49][INFO] - Working directory: /home/runner/work/atomistic-cookbook/atomistic-cookbook/examples/water-ir-spectrum\n[2026-07-19 08:19:49][INFO] - Executed command: mtt export pet-mad-xs-v1.5.0_SCAN_dipole.ckpt -o pet-mad-xs-v1.5.0_SCAN_dipole.pt\n[2026-07-19 08:19:49][WARNING] - /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/torch/jit/_script.py:1480: DeprecationWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.\n  warnings.warn(\n\n[2026-07-19 08:19:49][INFO] - Using best model from epoch 4383\n[W719 08:19:49.615989421 model.cpp:365] Warning: output &#39;energy&#39; has an empty unit. Consider adding a unit to ensure correct unit conversion. (function set_outputs)\n[W719 08:19:49.616388439 model.cpp:147] Warning: ModelOutput.quantity is deprecated and will be removed in a future version (function set_quantity)\n[W719 08:19:49.623195718 model.cpp:365] Warning: output &#39;energy&#39; has an empty unit. Consider adding a unit to ensure correct unit conversion. (function set_outputs)\n[W719 08:19:49.654771341 quantities.cpp:881] Warning: the &#39;non_conservative_forces&#39; quantity is deprecated, please update this code to use &#39;non_conservative_force&#39; instead. (function validate_quantity_name)\n[W719 08:19:49.654821125 model.cpp:345] Warning: &#39;energy&#39; defines 2 output variants and &#39;energy&#39; has an empty description. Consider adding meaningful descriptions helping users to distinguish between them. (function set_outputs)\n[2026-07-19 08:19:49][WARNING] - /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/metatrain/pet/model.py:1428: UserWarning: the &#39;non_conservative_forces&#39; output name is deprecated, please update the model to use &#39;non_conservative_force&#39; instead\n  return AtomisticModel(self.eval(), metadata, capabilities)\n\n[2026-07-19 08:19:49][WARNING] - /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/torch/jit/_script.py:1480: DeprecationWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.\n  warnings.warn(\n\n[2026-07-19 08:19:50][WARNING] - /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/torch/jit/_serialization.py:89: DeprecationWarning: `torch.jit.save` is deprecated. Please switch to `torch.export`.\n  warnings.warn(\n\n[2026-07-19 08:19:50][INFO] - Model exported to &#39;/home/runner/work/atomistic-cookbook/atomistic-cookbook/examples/water-ir-spectrum/pet-mad-xs-v1.5.0_SCAN_dipole.pt&#39;\n&quot;)
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">data/eval.yaml</span></code> points to <code class="docutils literal notranslate"><span class="pre">test_set.xyz</span></code> and restricts the output to the dipole:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">run_command</span><span class="p">(</span>
+    <span class="s2">&quot;mtt eval pet-mad-xs-v1.5.0_SCAN_dipole.pt data/eval.yaml -o test_set_dipoles.xyz&quot;</span><span class="p">,</span>
+    <span class="n">print_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># We load the predictions and visualize a parity plot. Reference dipoles are under</span>
+<span class="c1"># ``dft_dipole``; model predictions under the ``mtt::dipole`` key, as seen earlier in</span>
+<span class="c1"># the options file. Each point is one Cartesian component of the cell dipole.</span>
+
+<span class="n">pred_frames</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;test_set_dipoles.xyz&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+
+<span class="c1"># mtt::dipole is stored with shape (3, 1); [..., 0] drops the trailing dim to (3,)</span>
+<span class="n">pred_dipoles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;mtt::dipole&quot;</span><span class="p">][</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">pred_frames</span><span class="p">])</span>
+<span class="n">ref_dipoles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;dft_dipole&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">test_set</span><span class="p">])</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s2">&quot;equal&quot;</span><span class="p">)</span>
+<span class="n">lim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ref_dipoles</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">*</span> <span class="mf">1.05</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ref_dipoles</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">pred_dipoles</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="o">-</span><span class="n">lim</span><span class="p">,</span> <span class="n">lim</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="n">lim</span><span class="p">,</span> <span class="n">lim</span><span class="p">],</span> <span class="s2">&quot;k--&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Reference dipole / D&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Predicted dipole / D&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Dipole parity (test set)&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_water-ir-spectrum_003.png" srcset="../../_images/sphx_glr_water-ir-spectrum_003.png" alt="Dipole parity (test set)" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[2026-07-19 08:19:52][INFO] - Logging to file is disabled.
+[2026-07-19 08:19:52][INFO] - Package version: 2026.3.1
+[2026-07-19 08:19:52][INFO] - Package directory: /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/metatrain
+[2026-07-19 08:19:52][INFO] - Working directory: /home/runner/work/atomistic-cookbook/atomistic-cookbook/examples/water-ir-spectrum
+[2026-07-19 08:19:52][INFO] - Executed command: mtt eval pet-mad-xs-v1.5.0_SCAN_dipole.pt data/eval.yaml -o test_set_dipoles.xyz
+[2026-07-19 08:19:52][WARNING] - /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/torch/jit/_serialization.py:176: DeprecationWarning: `torch.jit.load` is deprecated. Please switch to `torch.export`.
+  warnings.warn(
+
+[W719 08:19:52.870047697 model.cpp:345] Warning: &#39;energy&#39; defines 2 output variants and &#39;energy&#39; has an empty description. Consider adding meaningful descriptions helping users to distinguish between them. (function set_outputs)
+[2026-07-19 08:19:52][WARNING] - /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/metatomic/torch/model.py:74: UserWarning: the &#39;non_conservative_forces&#39; output name is deprecated, please update the model to use &#39;non_conservative_force&#39; instead
+  return AtomisticModel(model, model.metadata(), model.capabilities())
+
+[2026-07-19 08:19:52][INFO] - Setting up evaluation set.
+[2026-07-19 08:19:52][INFO] - Evaluating dataset
+[2026-07-19 08:19:52][WARNING] - /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/ase/atoms.py:432: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  a.shape = (-1,) + shape
+
+[W719 08:19:53.001591325 model.cpp:147] Warning: ModelOutput.quantity is deprecated and will be removed in a future version (function set_quantity)
+[2026-07-19 08:19:53][INFO] - Running on device cpu with dtype torch.float32
+
+  0%|                                                                        | 0/10 [00:00&lt;?, ?it/s][2026-07-19 08:19:56][WARNING] - /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/ase/atoms.py:432: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  a.shape = (-1,) + shape
+
+
+ 10%|██████▍                                                         | 1/10 [00:00&lt;00:02,  4.41it/s][2026-07-19 08:19:56][WARNING] - /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/ase/atoms.py:432: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  a.shape = (-1,) + shape
+
+
+ 20%|████████████▊                                                   | 2/10 [00:00&lt;00:01,  4.26it/s][2026-07-19 08:19:56][WARNING] - /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/ase/atoms.py:432: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  a.shape = (-1,) + shape
+
+
+ 30%|███████████████████▏                                            | 3/10 [00:00&lt;00:01,  4.57it/s][2026-07-19 08:19:57][WARNING] - /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/ase/atoms.py:432: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  a.shape = (-1,) + shape
+
+
+ 40%|█████████████████████████▌                                      | 4/10 [00:00&lt;00:01,  4.74it/s][2026-07-19 08:19:57][WARNING] - /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/ase/atoms.py:432: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  a.shape = (-1,) + shape
+
+
+ 50%|████████████████████████████████                                | 5/10 [00:01&lt;00:01,  4.82it/s][2026-07-19 08:19:57][WARNING] - /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/ase/atoms.py:432: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  a.shape = (-1,) + shape
+
+
+ 60%|██████████████████████████████████████▍                         | 6/10 [00:01&lt;00:00,  4.88it/s][2026-07-19 08:19:57][WARNING] - /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/ase/atoms.py:432: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  a.shape = (-1,) + shape
+
+
+ 70%|████████████████████████████████████████████▊                   | 7/10 [00:01&lt;00:00,  4.84it/s][2026-07-19 08:19:57][WARNING] - /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/ase/atoms.py:432: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  a.shape = (-1,) + shape
+
+
+ 80%|███████████████████████████████████████████████████▏            | 8/10 [00:01&lt;00:00,  4.89it/s][2026-07-19 08:19:58][WARNING] - /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/ase/atoms.py:432: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  a.shape = (-1,) + shape
+
+
+ 90%|█████████████████████████████████████████████████████████▌      | 9/10 [00:01&lt;00:00,  4.81it/s][2026-07-19 08:19:58][WARNING] - /home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/ase/atoms.py:432: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  a.shape = (-1,) + shape
+
+
+100%|███████████████████████████████████████████████████████████████| 10/10 [00:02&lt;00:00,  4.90it/s]
+100%|███████████████████████████████████████████████████████████████| 10/10 [00:02&lt;00:00,  4.79it/s]
+[2026-07-19 08:19:58][INFO] - mtt::dipole RMSE (per atom): 0.0030978 | mtt::dipole MAE (per atom): 0.0025115
+[2026-07-19 08:19:58][INFO] - Evaluation time: 1.57 s [0.4082 ± 0.0150 ms per atom]
+
+Text(0.5, 1.0, &#39;Dipole parity (test set)&#39;)
+</pre></div>
+</div>
+<p>We can also visualize the predicted and reference dipole arrows side by side on all
+test frames (green = reference, orange = predicted).</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">test_frames</span> <span class="o">=</span> <span class="p">[</span><span class="n">ref_frames</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">test_idx</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">mu_ref</span><span class="p">,</span> <span class="n">mu_pred</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">test_frames</span><span class="p">,</span> <span class="n">ref_dipoles</span><span class="p">,</span> <span class="n">pred_dipoles</span><span class="p">):</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;dipole_ref&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mu_ref</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;dipole_pred&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mu_pred</span>
+
+<span class="n">arrows_ref</span> <span class="o">=</span> <span class="n">chemiscope</span><span class="o">.</span><span class="n">ase_vectors_to_arrows</span><span class="p">(</span><span class="n">test_frames</span><span class="p">,</span> <span class="s2">&quot;dipole_ref&quot;</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="n">arrows_ref</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">][</span><span class="s2">&quot;global&quot;</span><span class="p">][</span><span class="s2">&quot;color&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;green&quot;</span>
+
+<span class="n">arrows_pred</span> <span class="o">=</span> <span class="n">chemiscope</span><span class="o">.</span><span class="n">ase_vectors_to_arrows</span><span class="p">(</span><span class="n">test_frames</span><span class="p">,</span> <span class="s2">&quot;dipole_pred&quot;</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="n">arrows_pred</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">][</span><span class="s2">&quot;global&quot;</span><span class="p">][</span><span class="s2">&quot;color&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;orange&quot;</span>
+
+<span class="n">chemiscope</span><span class="o">.</span><span class="n">show</span><span class="p">(</span>
+    <span class="n">test_frames</span><span class="p">,</span>
+    <span class="n">shapes</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;reference&quot;</span><span class="p">:</span> <span class="n">arrows_ref</span><span class="p">,</span> <span class="s2">&quot;predicted&quot;</span><span class="p">:</span> <span class="n">arrows_pred</span><span class="p">},</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;structure&quot;</span><span class="p">,</span>
+    <span class="n">settings</span><span class="o">=</span><span class="n">chemiscope</span><span class="o">.</span><span class="n">quick_settings</span><span class="p">(</span>
+        <span class="n">trajectory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">structure_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;reference&quot;</span><span class="p">,</span> <span class="s2">&quot;predicted&quot;</span><span class="p">],</span> <span class="s2">&quot;unitCell&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+
+
+<!-- Error display -->
+<div id="chsp-435c5b95-c2b5-4d85-8e05-d7fd7a802869-error-display" class="chemiscope-sphinx-error">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-435c5b95-c2b5-4d85-8e05-d7fd7a802869-error-display')">
+        &times;
+    </button>
+</div>
+
+<!-- Warning Display -->
+<div id="chsp-435c5b95-c2b5-4d85-8e05-d7fd7a802869-warning-display" class="chemiscope-sphinx-warning">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-435c5b95-c2b5-4d85-8e05-d7fd7a802869-warning-display')">
+        &times;
+    </button>
+</div>
+<div style="padding: 0.5rem 1.25rem" />
+
+<!-- Loading Spinner -->
+<div id="chsp-435c5b95-c2b5-4d85-8e05-d7fd7a802869-loading" class="chemiscope-sphinx-spinner">
+    <img src="../../_static/chemiscope-loading.svg" alt="Loading icon" />
+</div>
+
+<!-- Chemiscope Visualization -->
+<div id="chsp-435c5b95-c2b5-4d85-8e05-d7fd7a802869">
+    <!-- This will be replaced by the chemiscope HTML -->
+</div>
+
+<!-- Load Visualization Script -->
+<script>
+    loadChemiscopeSphinx('chsp-435c5b95-c2b5-4d85-8e05-d7fd7a802869', '../../_datasets/18eb93285fe7af80178a5995449e16c175b000757c397415e8e312373aea12a6-fig_water-ir-spectrum_002.json.gz', 'structure', '2000.0');
+</script>
+<div class="output_subarea output_html rendered_html output_result">
+
+</div>
+<br />
+<br /></section>
+<section id="how-equivariant-is-the-dipole-head">
+<h3>How equivariant is the dipole head?<a class="headerlink" href="#how-equivariant-is-the-dipole-head" title="Link to this heading">¶</a></h3>
+<p>As discussed above, PET does not enforce rotation equivariance by construction, but it
+<em>learns</em> it via data augmentation. The residual error can be quantified
+directly: take a test frame, apply <span class="math notranslate nohighlight">\(N\)</span> Haar-uniform random rotations <span class="math notranslate nohighlight">\(R\)</span>,
+predict the dipole on each rotated copy, and back-rotate the predictions to the
+original orientation:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\tilde{\boldsymbol{\mu}}_R \;=\; R^{-1}\,
+\boldsymbol{\mu}_{\mathrm{ML}}\!\left(R\{\mathbf{r}_i\}\right)\]</div>
+</div>
+<p>If the model were exactly equivariant, all <span class="math notranslate nohighlight">\(\tilde{\boldsymbol{\mu}}_R\)</span> would
+coincide. Any spread is the equivariance error.</p>
+<p>To evaluate the model directly in Python (rather than through <code class="docutils literal notranslate"><span class="pre">mtt</span> <span class="pre">eval</span></code> as we did
+above) we wrap it in a <code class="docutils literal notranslate"><span class="pre">MetatomicCalculator</span></code>, which exposes any model output as an
+ASE calculator quantity. We request <code class="docutils literal notranslate"><span class="pre">mtt::dipole</span></code> as an <em>additional output</em>
+alongside the energy.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">dipole_request</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;mtt::dipole&quot;</span><span class="p">:</span> <span class="n">ModelOutput</span><span class="p">(</span>
+        <span class="n">quantity</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>  <span class="c1"># unused, as the dipole is not a &quot;standard output&quot; in metatomic</span>
+        <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>  <span class="c1"># unused, as the dipole is not a &quot;standard output&quot; in metatomic</span>
+        <span class="n">sample_kind</span><span class="o">=</span><span class="s2">&quot;system&quot;</span><span class="p">,</span>
+        <span class="n">explicit_gradients</span><span class="o">=</span><span class="p">[],</span>
+    <span class="p">)</span>
+<span class="p">}</span>
+<span class="n">calc_eq</span> <span class="o">=</span> <span class="n">MetatomicCalculator</span><span class="p">(</span>
+    <span class="s2">&quot;pet-mad-xs-v1.5.0_SCAN_dipole.pt&quot;</span><span class="p">,</span>
+    <span class="n">additional_outputs</span><span class="o">=</span><span class="n">dipole_request</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">predict_dipole</span><span class="p">(</span><span class="n">atoms</span><span class="p">:</span> <span class="n">ase</span><span class="o">.</span><span class="n">Atoms</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run the model on ``atoms`` and return the predicted dipole (3,).&quot;&quot;&quot;</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="n">calc_eq</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">get_potential_energy</span><span class="p">()</span>  <span class="c1"># ASE runs one forward pass for any property</span>
+    <span class="n">block</span> <span class="o">=</span> <span class="n">calc_eq</span><span class="o">.</span><span class="n">additional_outputs</span><span class="p">[</span><span class="s2">&quot;mtt::dipole&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">block</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">block</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/water-ir-spectrum/lib/python3.12/site-packages/metatomic/torch/model.py:74: UserWarning: the &#39;non_conservative_forces&#39; output name is deprecated, please update the model to use &#39;non_conservative_force&#39; instead
+  return AtomisticModel(model, model.metadata(), model.capabilities())
+</pre></div>
+</div>
+<p>We use a held-out test frame (not seen during training) so the measurement reflects
+how well the learned equivariance generalizes to unseen structures (note that, even
+though the frame is not used during training, it contains the same number of
+molecules, so it is not strictly out of distribution).</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">frame_eq</span> <span class="o">=</span> <span class="n">ref_frames</span><span class="p">[</span><span class="n">test_idx</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+<span class="n">n_rot</span> <span class="o">=</span> <span class="mi">32</span>
+<span class="n">rots</span> <span class="o">=</span> <span class="n">Rotation</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">n_rot</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="n">back_rotated</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">R</span> <span class="ow">in</span> <span class="n">rots</span><span class="p">:</span>
+    <span class="n">Rmat</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span>
+    <span class="n">fR</span> <span class="o">=</span> <span class="n">frame_eq</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">fR</span><span class="o">.</span><span class="n">positions</span> <span class="o">=</span> <span class="n">fR</span><span class="o">.</span><span class="n">positions</span> <span class="o">@</span> <span class="n">Rmat</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">fR</span><span class="o">.</span><span class="n">cell</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">fR</span><span class="o">.</span><span class="n">cell</span><span class="p">)</span> <span class="o">@</span> <span class="n">Rmat</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">mu_R</span> <span class="o">=</span> <span class="n">predict_dipole</span><span class="p">(</span><span class="n">fR</span><span class="p">)</span>
+    <span class="n">back_rotated</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Rmat</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">mu_R</span><span class="p">)</span>
+
+<span class="n">back_rotated</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">back_rotated</span><span class="p">)</span>
+<span class="n">mu_mean</span> <span class="o">=</span> <span class="n">back_rotated</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">err_per_rot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">back_rotated</span> <span class="o">-</span> <span class="n">mu_mean</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">rel_err</span> <span class="o">=</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="n">err_per_rot</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">mu_mean</span><span class="p">)</span>
+
+<span class="n">mu_ref_eq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">frame_eq</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;dft_dipole&quot;</span><span class="p">])</span>
+<span class="n">model_err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">mu_mean</span> <span class="o">-</span> <span class="n">mu_ref_eq</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;|&lt;mu_back&gt;|           = </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">mu_mean</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> D&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;mean ||delta_mu||    = </span><span class="si">{</span><span class="n">err_per_rot</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> D &quot;</span>
+    <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">rel_err</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> % of the mean dipole)&quot;</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;||mu_mean - mu_ref|| = </span><span class="si">{</span><span class="n">model_err</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> D  (model error on this frame)&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>|&lt;mu_back&gt;|           = 42.871 D
+mean ||delta_mu||    = 1.069 D (2.5 % of the mean dipole)
+||mu_mean - mu_ref|| = 1.313 D  (model error on this frame)
+</pre></div>
+</div>
+<p>A few-percent residual is consistent with what one expects from an unconstrained
+model trained with rotational data augmentation. To put it in perspective, we also
+compare the spread to the model’s actual error on this frame—the distance between
+the mean back-rotated prediction (our proxy for the equivariant result) and the DFT
+reference. If the equivariance error is small compared to the model error, the lack of
+equivariance is not the bottleneck, and enforcing it exactly would not
+meaningfully improve accuracy. Note that the spread measures rotational
+<em>consistency</em>, not baseline accuracy: it would be zero for an exactly equivariant
+model regardless of how far that model is from the DFT reference.</p>
+<p>To <em>see</em> the equivariance error directly, we repeat the same protocol on a single
+(isolated) water molecule and overlay the resulting cloud of back-rotated dipoles on
+the molecule. The blue arrows are the individual <span class="math notranslate nohighlight">\(\tilde{\boldsymbol{\mu}}_R\)</span>,
+the orange one their mean. The tighter the blue cluster around the orange arrow, the
+closer the model is to exact equivariance.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">water_iso</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">build</span><span class="o">.</span><span class="n">molecule</span><span class="p">(</span><span class="s2">&quot;H2O&quot;</span><span class="p">)</span>
+<span class="n">water_iso</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">about</span><span class="o">=</span><span class="n">water_iso</span><span class="o">.</span><span class="n">get_center_of_mass</span><span class="p">())</span>
+
+<span class="n">back_iso</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">R</span> <span class="ow">in</span> <span class="n">Rotation</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">n_rot</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="n">Rmat</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span>
+    <span class="n">fR</span> <span class="o">=</span> <span class="n">water_iso</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">fR</span><span class="o">.</span><span class="n">positions</span> <span class="o">=</span> <span class="n">fR</span><span class="o">.</span><span class="n">positions</span> <span class="o">@</span> <span class="n">Rmat</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">back_iso</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Rmat</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">predict_dipole</span><span class="p">(</span><span class="n">fR</span><span class="p">))</span>
+
+<span class="n">back_iso</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">back_iso</span><span class="p">)</span>
+<span class="n">mu_iso_mean</span> <span class="o">=</span> <span class="n">back_iso</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="n">shapes_eq</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">mu</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">back_iso</span><span class="p">):</span>
+    <span class="n">shapes_eq</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;sample_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;arrow&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;global&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;baseRadius&quot;</span><span class="p">:</span> <span class="mf">0.03</span><span class="p">,</span>
+                <span class="s2">&quot;headRadius&quot;</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">,</span>
+                <span class="s2">&quot;headLength&quot;</span><span class="p">:</span> <span class="mf">0.06</span><span class="p">,</span>
+                <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;blue&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;structure&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;vector&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.5</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">mu</span><span class="p">]}],</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+<span class="n">shapes_eq</span><span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;arrow&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;global&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;baseRadius&quot;</span><span class="p">:</span> <span class="mf">0.06</span><span class="p">,</span>
+            <span class="s2">&quot;headRadius&quot;</span><span class="p">:</span> <span class="mf">0.10</span><span class="p">,</span>
+            <span class="s2">&quot;headLength&quot;</span><span class="p">:</span> <span class="mf">0.12</span><span class="p">,</span>
+            <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;orange&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;structure&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;vector&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.5</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">mu_iso_mean</span><span class="p">]}],</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+<span class="n">chemiscope</span><span class="o">.</span><span class="n">show</span><span class="p">(</span>
+    <span class="p">[</span><span class="n">water_iso</span><span class="p">],</span>
+    <span class="n">shapes</span><span class="o">=</span><span class="n">shapes_eq</span><span class="p">,</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;structure&quot;</span><span class="p">,</span>
+    <span class="n">settings</span><span class="o">=</span><span class="n">chemiscope</span><span class="o">.</span><span class="n">quick_settings</span><span class="p">(</span>
+        <span class="n">structure_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;rotation&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">shapes_eq</span><span class="o">.</span><span class="n">keys</span><span class="p">())},</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+
+
+<!-- Error display -->
+<div id="chsp-2bdc5982-4128-4f06-b8be-a661d5805020-error-display" class="chemiscope-sphinx-error">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-2bdc5982-4128-4f06-b8be-a661d5805020-error-display')">
+        &times;
+    </button>
+</div>
+
+<!-- Warning Display -->
+<div id="chsp-2bdc5982-4128-4f06-b8be-a661d5805020-warning-display" class="chemiscope-sphinx-warning">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-2bdc5982-4128-4f06-b8be-a661d5805020-warning-display')">
+        &times;
+    </button>
+</div>
+<div style="padding: 0.5rem 1.25rem" />
+
+<!-- Loading Spinner -->
+<div id="chsp-2bdc5982-4128-4f06-b8be-a661d5805020-loading" class="chemiscope-sphinx-spinner">
+    <img src="../../_static/chemiscope-loading.svg" alt="Loading icon" />
+</div>
+
+<!-- Chemiscope Visualization -->
+<div id="chsp-2bdc5982-4128-4f06-b8be-a661d5805020">
+    <!-- This will be replaced by the chemiscope HTML -->
+</div>
+
+<!-- Load Visualization Script -->
+<script>
+    loadChemiscopeSphinx('chsp-2bdc5982-4128-4f06-b8be-a661d5805020', '../../_datasets/133de6714adb19efe68c0a375cb3b6ddb04d0111f9deee841913f71aed75cabb-fig_water-ir-spectrum_003.json.gz', 'structure', '2000.0');
+</script>
+<div class="output_subarea output_html rendered_html output_result">
+
+</div>
+<br />
+<br /></section>
+</section>
+<section id="md-simulation-with-the-joint-model">
+<h2>MD simulation with the joint model<a class="headerlink" href="#md-simulation-with-the-joint-model" title="Link to this heading">¶</a></h2>
+<p>The point-charge baseline used a TIP3P trajectory, so its peak <em>positions</em> reflect the
+TIP3P force field. To obtain dynamics governed by the DFT-quality potential-energy
+surface, we run a new trajectory driven by the fine-tuned joint model.</p>
+<p>We use LAMMPS for this. First we generate a LAMMPS data file to be used as initial
+frame for the MLIP run from the last frame of the TIP3P trajectory (a 15.6 Å cubic box
+at ~1 g/cm³). The type map follows the TIP3P dump: type 1 = O, type 2 = H;
+<code class="docutils literal notranslate"><span class="pre">pair_coeff</span> <span class="pre">*</span> <span class="pre">*</span> <span class="pre">8</span> <span class="pre">1</span></code> passes atomic numbers Z=8 (O) and Z=1 (H) to the model
+accordingly.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">initial_frame_mlip</span> <span class="o">=</span> <span class="n">traj_pc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">initial_frame_mlip</span><span class="o">.</span><span class="n">wrap</span><span class="p">()</span>
+<span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+    <span class="s2">&quot;water.data&quot;</span><span class="p">,</span> <span class="n">initial_frame_mlip</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;lammps-data&quot;</span><span class="p">,</span> <span class="n">atom_style</span><span class="o">=</span><span class="s2">&quot;atomic&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The LAMMPS input mirrors the TIP3P setup: 1 ps NVT equilibration followed by 5 ps
+production at 330 K with the Bussi CSVR thermostat, saving snapshots every 2 fs.
+SCAN-level water is slightly over-structured compared to experiment; running at 330 K
+compensates, bringing the liquid dynamics closer to room-temperature behaviour.
+<code class="docutils literal notranslate"><span class="pre">variant</span> <span class="pre">scan</span></code> is required to select the fine-tuned energy head of the joint
+model; without it LAMMPS would use the base PET-MAD head instead:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>units metal
+atom_style atomic
+
+variable seed       index 24680
+variable t_target   equal 330.0
+variable tdamp      equal 100*dt
+variable nequil     equal 2000     # 1 ps @ 0.5 fs
+variable nprod      equal 10000    # 5 ps @ 0.5 fs
+variable dump_every equal 4        # dump every 2 fs (= 4 * 0.5 fs)
+
+read_data water.data
+mass 1 15.999
+mass 2 1.008
+
+pair_style metatomic pet-mad-xs-v1.5.0_SCAN_dipole.pt device cpu variant scan
+pair_coeff * * 8 1
+
+timestep 0.0005   # 0.5 fs in metal (ps)
+neighbor 2.0 bin
+neigh_modify one 100000 page 1000000 binsize 5.5
+
+thermo_style custom step temp press etotal pe ke
+thermo 1000
+
+velocity all create ${t_target} ${seed} mom yes rot yes
+reset_timestep 0
+
+fix nve_int   all nve
+fix thermostat all temp/csvr ${t_target} ${t_target} ${tdamp} ${seed}
+run ${nequil}
+
+dump traj all custom ${dump_every} pet-xs-scan.lammpstrj id type xu yu zu
+dump_modify traj sort id
+run ${nprod}
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The pre-run trajectory is provided in <code class="docutils literal notranslate"><span class="pre">pet-xs-scan.lammpstrj</span></code> (downloaded above);
+the LAMMPS run is shown for reference only (it takes several minutes on a GPU):</p>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>lmp<span class="w"> </span>-in<span class="w"> </span>in_metatomic.lmp
+</pre></div>
+</div>
+<p>We load the pre-run trajectory and restore chemical symbols from the type map
+(type 1 = O, type 2 = H).</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">type_map</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;O&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;H&quot;</span><span class="p">}</span>
+<span class="n">traj_ml</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;pet-xs-scan.lammpstrj&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;lammps-dump-text&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">traj_ml</span><span class="p">:</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">set_chemical_symbols</span><span class="p">([</span><span class="n">type_map</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">t</span><span class="p">)]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">arrays</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]])</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">set_pbc</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To evaluate dipoles we need to pass the trajectory through <code class="docutils literal notranslate"><span class="pre">mtt</span> <span class="pre">eval</span></code>. That
+command requires a reference target in the dataset to restrict its output to a single
+property (<code class="docutils literal notranslate"><span class="pre">mtt::dipole</span></code>); without one it would compute and store all targets the
+model was trained on (energy, forces, dipole), producing a much larger file. We write
+placeholder zeros, and disregard the accuracy report output by metatrain.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">traj_ml</span><span class="p">:</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;dft_dipole&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;pet-xs-scan.xyz&quot;</span><span class="p">,</span> <span class="n">traj_ml</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;extxyz&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We also write the evaluation config, which mirrors the dataset section of
+<code class="docutils literal notranslate"><span class="pre">options.yaml</span></code> but restricts the target to the dipole only:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">traj_eval_yaml</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;systems&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;read_from&quot;</span><span class="p">:</span> <span class="s2">&quot;pet-xs-scan.xyz&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;reader&quot;</span><span class="p">:</span> <span class="s2">&quot;ase&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;length_unit&quot;</span><span class="p">:</span> <span class="s2">&quot;angstrom&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;targets&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;mtt::dipole&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;reader&quot;</span><span class="p">:</span> <span class="s2">&quot;ase&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;dft_dipole&quot;</span><span class="p">,</span>  <span class="c1"># placeholder: restricts output to dipole only</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;cartesian&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;rank&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}},</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;traj_eval.yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+    <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">traj_eval_yaml</span><span class="p">,</span> <span class="n">fh</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Finally we run the evaluation to get the dipole time series for the whole trajectory.
+The <code class="docutils literal notranslate"><span class="pre">-b</span> <span class="pre">64</span></code> flag batches the evaluation on 64 frames at a time, which speeds it up
+compared to the default of one frame at a time. Depending on the available memory,
+this batch size might be too large, or even larger batch sizes may be possible.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Dipole evaluation on the whole trajectory takes a few minutes on a GPU. The
+pre-computed output is provided in <code class="docutils literal notranslate"><span class="pre">ml_traj_dipoles.xyz</span></code> (downloaded above).</p>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mtt<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>pet-mad-xs-v1.5.0_SCAN_dipole.pt<span class="w"> </span>traj_eval.yaml<span class="w"> </span>-o<span class="w"> </span>ml_traj_dipoles.xyz<span class="w"> </span>-b
+<span class="m">64</span>
+</pre></div>
+</div>
+<section id="ir-spectrum-from-the-ml-dipole-model">
+<h3>IR spectrum from the ML dipole model<a class="headerlink" href="#ir-spectrum-from-the-ml-dipole-model" title="Link to this heading">¶</a></h3>
+<p>We load the pre-computed dipole predictions and convert from Debye to e·Å (1 D =
+3.33564×10⁻³⁰ C·m; 1 e·Å = 1.602×10⁻¹⁹ C × 10⁻¹⁰ m).</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">dipole_frames</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;ml_traj_dipoles.xyz&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+<span class="c1"># mtt eval stores dipoles as shape (3, 1); drop the trailing axis to get (3,)</span>
+<span class="n">ml_timeseries</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;mtt::dipole&quot;</span><span class="p">][</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">dipole_frames</span><span class="p">])</span>
+
+<span class="n">D_TO_EA</span> <span class="o">=</span> <span class="mf">3.33564e-30</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.602176634e-19</span> <span class="o">*</span> <span class="mf">1e-10</span><span class="p">)</span>
+<span class="n">ml_volume_A3</span> <span class="o">=</span> <span class="n">dipole_frames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_volume</span><span class="p">()</span>
+<span class="n">freqs_ml</span><span class="p">,</span> <span class="n">alpha_ml</span> <span class="o">=</span> <span class="n">ir_spectrum</span><span class="p">(</span>
+    <span class="n">ml_timeseries</span> <span class="o">*</span> <span class="n">D_TO_EA</span><span class="p">,</span> <span class="n">DT_FS</span><span class="p">,</span> <span class="n">ml_volume_A3</span><span class="p">,</span> <span class="n">temperature_K</span><span class="o">=</span><span class="mf">330.0</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>To isolate the dipole model’s contribution from the force field’s, we recompute the
+fixed-charge dipole on the <em>same</em> ML trajectory. Because the prefactor carries no
+empirical constants, both spectra are in absolute units and can be compared to
+experiment directly. Any difference between the two curves then reflects the dipole
+model alone. Note that this point-charge curve will look slightly different from the
+baseline earlier in the recipe, as that one used the TIP3P trajectory, which gives
+different peak positions.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">pc_timeseries</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">compute_pc_dipole</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">dipole_frames</span><span class="p">])</span>
+<span class="n">freqs_pc</span><span class="p">,</span> <span class="n">alpha_pc</span> <span class="o">=</span> <span class="n">ir_spectrum</span><span class="p">(</span>
+    <span class="n">pc_timeseries</span><span class="p">,</span> <span class="n">DT_FS</span><span class="p">,</span> <span class="n">ml_volume_A3</span><span class="p">,</span> <span class="n">temperature_K</span><span class="o">=</span><span class="mf">330.0</span>
+<span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">freqs_pc</span><span class="p">,</span> <span class="n">alpha_pc</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Point charges&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">freqs_ml</span><span class="p">,</span> <span class="n">alpha_ml</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;ML dipole&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">expt</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">expt</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;k-&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Experiment&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4000</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">40</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Frequency / cm$^{-1}$&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$n(\omega)\,\alpha(\omega)$ / $10^3\,\mathrm</span><span class="si">{cm}</span><span class="s2">^{-1}$&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;IR spectrum: point charges vs ML vs experiment&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_water-ir-spectrum_004.png" srcset="../../_images/sphx_glr_water-ir-spectrum_004.png" alt="IR spectrum: point charges vs ML vs experiment" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Text(0.5, 1.0, &#39;IR spectrum: point charges vs ML vs experiment&#39;)
+</pre></div>
+</div>
+<p>The MLIP dynamics alone shifts and broadens the peaks relative to the TIP3P
+baseline, improving agreement with experimental data. The main contribution of the ML
+dipole model is to correct the intensities, especially for the O–H stretch and the
+bending modes.</p>
+<p>The main lesson is that the failure modes of fixed partial charges are <em>systematic</em>:
+they follow from the absence of charge flux, not from a poor choice of charge value,
+and cannot be remedied by tuning one scalar parameter. An ML dipole model trained on a
+few hundred DFT snapshots already recovers much of the missing physics.</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (4 minutes 50.591 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-water-ir-spectrum-water-ir-spectrum-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/fff2e2dea6eff88343fcc5ced78d5051/water-ir-spectrum.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">water-ir-spectrum.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/9622d899cf4c32ccd90868f8bd09306d/water-ir-spectrum.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">water-ir-spectrum.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/0f48cd2966b991f5a19851bb22c3c856/water-ir-spectrum.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">recipe:</span> <span class="pre">water-ir-spectrum.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../mendeleev/mendeleev.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Mendeleev clusters</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../ml-mm/ml-mm.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">ML/MM Simulations with GROMACS and Metatomic</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; BSD 3-Clause License, Copyright (c) 2026, The atomistic cookbook team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Machine-learned dipoles and infrared spectroscopy of liquid water</a><ul>
+<li><a class="reference internal" href="#data-and-model-downloads">Data and model downloads</a></li>
+<li><a class="reference internal" href="#fixed-point-charge-dipole-model-for-liquid-water">Fixed point-charge dipole model for liquid water</a></li>
+<li><a class="reference internal" href="#equivariance-and-the-dipole-moment">Equivariance and the dipole moment</a></li>
+<li><a class="reference internal" href="#joint-mlip-dipole-training-with-metatrain">Joint MLIP + dipole training with metatrain</a><ul>
+<li><a class="reference internal" href="#model-evaluation-on-the-test-set">Model evaluation on the test set</a></li>
+<li><a class="reference internal" href="#how-equivariant-is-the-dipole-head">How equivariant is the dipole head?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#md-simulation-with-the-joint-model">MD simulation with the joint model</a><ul>
+<li><a class="reference internal" href="#ir-spectrum-from-the-ml-dipole-model">IR spectrum from the ML dipole model</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script data-domain="atomistic-cookbook.org" defer="defer" src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"></script>
+    <script src="../../_static/all-examples-data.js?v=3c6a1490"></script>
+    <script src="../../_static/daily-recipe.js?v=b5e71911"></script>
+    </body>
+</html>
