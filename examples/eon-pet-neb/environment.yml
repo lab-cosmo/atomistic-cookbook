@@ -13,8 +13,8 @@ dependencies:
     - "pyeonclient[models]>=0.3.5,<0.4"
     - "rgpot>=2.5.4,<3"
     - "vesin>=0.6.0"
-    # torch major must match an rgpot multi-ABI engine (lib/.../torch-X.Y/).
-    - torch>=2.10,<2.11
+    # rgpot 2.5.4 multi-ABI engines cover torch 2.7–2.13; floor 2.10, cap <2.14.
+    - torch>=2.10,<2.14
     - ase>=3.23,<4
     - matplotlib
     - metatrain>=2026.3.1,<2027
