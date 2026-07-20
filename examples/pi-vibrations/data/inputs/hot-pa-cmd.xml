@@ -8,9 +8,6 @@
     <!-- <checkpoint stride='4000' overwrite='False'/> -->
   </output>
   <total_steps>400000</total_steps>
-  <prng>
-    <seed>3241</seed>
-  </prng>
   <ffdirect name='driver' pbc='False'>
     <pes> custom </pes>
     <pes_path> ../../morsedia_ffdirect.py </pes_path>
@@ -21,7 +18,7 @@
      <frequencies style='pa-cmd' units="inversecm"> [13000]   </frequencies>
   </normal_modes>
     <initialize nbeads='16'>
-      <file mode='chk'> therm_checkpoint.chk </file>
+      <file mode='chk'> therm.chk </file>
       <!-- <cell mode='abc'> [100.0, 100.0, 100.0] </cell> -->
       <!-- <velocities mode='thermal' units='kelvin'> 109 </velocities> -->
     </initialize>
@@ -35,7 +32,7 @@
         <thermostat mode='pile_g'>
           <tau units='femtosecond'> 10 </tau>
           <pile_lambda> 0.001 </pile_lambda>
-          <pile_centroid_t> 109 </pile_centroid_t>
+          <pile_centroid_t units='kelvin'> 109 </pile_centroid_t>
         </thermostat>
       </dynamics>
     </motion>
