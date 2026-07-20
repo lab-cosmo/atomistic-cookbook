@@ -1,0 +1,54 @@
+<simulation>
+   <output prefix='simulation'>
+      <properties shape='(7)' stride='200'>
+       [ step, time{picosecond}, conserved, temperature{kelvin}, kinetic_md{electronvolt}, 
+         kinetic_cv{electronvolt}, potential{electronvolt} ]
+      </properties>
+      <trajectory filename='pos' stride='200'>positions{angstrom}</trajectory>
+      <trajectory filename='vel' stride='200'>velocities</trajectory>
+      <checkpoint stride='4000' overwrite='False'>15</checkpoint>
+   </output>
+   <step>56000</step>
+   <total_steps>100000</total_steps>
+   <ffsocket mode='unix' name='driver' pbc='False'>
+      <address>oh-pimd</address>
+   </ffsocket>
+   <system>
+      <forces>
+         <force forcefield='driver'>
+         </force>
+      </forces>
+      <ensemble>
+         <temperature>  3.45182857e-04</temperature>
+         <hamiltonian_weights shape='(1)'> [   1.00000000e+00 ] </hamiltonian_weights>
+         <time>  5.78779222e+05</time>
+      </ensemble>
+      <motion mode='dynamics'>
+         <fixcom>False</fixcom>
+         <dynamics mode='nvt'>
+            <thermostat mode='langevin'>
+               <ethermo>  4.29014319e-04</ethermo>
+               <tau>  4.13413730e+02</tau>
+            </thermostat>
+            <timestep>  1.03353433e+01</timestep>
+            <nmts shape='(1)'> [ 1 ] </nmts>
+         </dynamics>
+      </motion>
+      <beads natoms='2' nbeads='1'>
+         <q shape='(1, 6)'>
+          [   3.20339128e+00,   7.05300233e-01,   2.88391380e+00,   3.72782012e+00,   4.57053859e-01, 
+              1.17668337e+00 ]
+         </q>
+         <p shape='(1, 6)'>
+          [  -1.64308825e+00,  -3.79784564e+00,   5.69846018e+00,   3.56850414e-01,   2.46019001e-01, 
+             -2.12086546e-03 ]
+         </p>
+         <m shape='(2)'> [   2.91651223e+04,   1.83736223e+03 ] </m>
+         <names shape='(2)'> [ O, H ] </names>
+      </beads>
+      <cell shape='(3, 3)'>
+       [   1.00000000e+02,   6.12323400e-15,   6.12323400e-15,   0.00000000e+00,   1.00000000e+02, 
+           6.12323400e-15,   0.00000000e+00,   0.00000000e+00,   1.00000000e+02 ]
+      </cell>
+   </system>
+</simulation>

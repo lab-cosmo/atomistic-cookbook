@@ -22,3 +22,4 @@ it on the `ipi-code website <http://ipi-code.org>`_, the `documentation pages
 - examples/mendeleev/mendeleev
 - examples/pet-phonons/pet-phonons
 - examples/bosons-fermions-pimd/bosons-fermions-pimd
+- examples/pi-vibrations/morse_time_correlation_recipe

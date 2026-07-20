@@ -1,0 +1,120 @@
+<simulation verbosity='low'>
+  <output prefix='simulation'>
+    <properties stride='200' filename='out'>  [ step, time{picosecond}, conserved, temperature{kelvin}, kinetic_md{electronvolt}, kinetic_cv{electronvolt}, potential{electronvolt} ] </properties>
+    <!-- <trajectory filename='vel' stride='200' bead='1'> velocities </trajectory>
+    <trajectory filename='pos' stride='200' bead='1'> positions{angstrom} </trajectory> -->
+    <trajectory filename='xc' stride='4' flush='200'> x_centroid{angstrom} </trajectory> 
+    <trajectory filename='vc' stride='4' flush='200' > v_centroid </trajectory> 
+    <!-- <checkpoint stride='4000' overwrite='False'/> -->
+  </output>
+  <total_steps>40000</total_steps>
+  <prng>
+    <seed>3241</seed>
+  </prng>
+  <ffdirect name='driver' pbc='false'>
+    <pes> custom </pes>
+    <pes_path> ../../morsedia_ffdirect.py </pes_path>
+    <parameters> { D: 0.18748563, a: 1.1605, r0: 1.8323918 } </parameters>
+  </ffdirect>
+  <system>
+    <initialize nbeads='32'>
+      <file mode='chk'> therm_checkpoint.chk </file>
+      <!-- <cell mode='abc'> [100.0, 100.0, 100.0] </cell> -->
+      <!-- <velocities mode='thermal' units='kelvin'> 109 </velocities> -->
+    </initialize>
+    <forces>
+      <force forcefield='driver'> </force>
+    </forces>
+    <motion mode='dynamics'>
+      <fixcom> False </fixcom>
+      <dynamics mode='nvt'>
+        <timestep units='femtosecond'> 0.25 </timestep>
+<!--
+ # Generated at http://cosmo-epfl.github.io/gle4md
+# Please cite:
+# M. Rossi, V. Kapil, M. Ceriotti, J. Chem. Phys. (2017) 
+# TRPMD+GLE parameters. Designed to minimize spurious coupling on high-frequency stretches and bends.
+# Use for simulations with 32 beads, using a RPMD (physical masses) representation
+# of the path.
+# The parameters were picked from
+# library/trpmd/trpmd-1_jcp2017D.a, 
+# and shifted to match free ring-polymer modes at 
+# T=109 K.
+-->
+  <thermostat mode='nm_gle'>
+    <A shape='(32,2,2)'>
+[
+  2.418884300000e-45,    0.000000000000e+0, 
+   0.000000000000e+0,   2.418884300000e-45, 
+   3.949626581428e-1,   -8.011852166274e-3, 
+   6.063023260964e-3,    1.299219270207e-3, 
+   7.861216099792e-1,   -1.594654581646e-2, 
+   1.206765629354e-2,    2.585926348616e-3, 
+   1.169709780974e+0,   -2.372766551317e-2, 
+   1.795607119916e-2,    3.847729542677e-3, 
+   1.542033007349e+0,   -3.128027482013e-2, 
+   2.367155932334e-2,    5.072476997858e-3, 
+   1.899505612902e+0,   -3.853163798103e-2, 
+   2.915907739105e-2,    6.248373726653e-3, 
+   2.238684941028e+0,   -4.541192040463e-2, 
+   3.436577760351e-2,    7.364095200751e-3, 
+   2.556304509382e+0,   -5.185486121006e-2, 
+   3.924151659140e-2,    8.408896412442e-3, 
+   2.849305467893e+0,   -5.779841135529e-2, 
+   4.373933832292e-2,    9.372715354911e-3, 
+   3.114866057159e+0,   -6.318533120334e-2, 
+   4.781592631604e-2,    1.024626992487e-2, 
+   3.350428783536e+0,   -6.796374177128e-2, 
+   5.143202079989e-2,    1.102114731426e-2, 
+   3.553725049196e+0,   -7.208762435321e-2, 
+   5.455279680783e-2,    1.168988503025e-2, 
+   3.722796999969e+0,   -7.551726370551e-2, 
+   5.714819956092e-2,    1.224604276306e-2, 
+   3.856016380544e+0,   -7.821963052639e-2, 
+   5.919323391186e-2,    1.268426440968e-2, 
+   3.952100215462e+0,   -8.016869954610e-2, 
+   6.066820506192e-2,    1.300032965612e-2, 
+   4.010123164867e+0,   -8.134570016452e-2, 
+   6.155890823261e-2,    1.319119462127e-2, 
+   4.029526436038e+0,   -8.173929722227e-2, 
+   6.185676546550e-2,    1.325502117118e-2, 
+   4.010123164867e+0,   -8.134570016452e-2, 
+   6.155890823261e-2,    1.319119462127e-2, 
+   3.952100215462e+0,   -8.016869954610e-2, 
+   6.066820506192e-2,    1.300032965612e-2, 
+   3.856016380544e+0,   -7.821963052639e-2, 
+   5.919323391186e-2,    1.268426440968e-2, 
+   3.722796999969e+0,   -7.551726370551e-2, 
+   5.714819956092e-2,    1.224604276306e-2, 
+   3.553725049196e+0,   -7.208762435321e-2, 
+   5.455279680783e-2,    1.168988503025e-2, 
+   3.350428783536e+0,   -6.796374177128e-2, 
+   5.143202079989e-2,    1.102114731426e-2, 
+   3.114866057159e+0,   -6.318533120334e-2, 
+   4.781592631604e-2,    1.024626992487e-2, 
+   2.849305467893e+0,   -5.779841135529e-2, 
+   4.373933832292e-2,    9.372715354911e-3, 
+   2.556304509382e+0,   -5.185486121006e-2, 
+   3.924151659140e-2,    8.408896412442e-3, 
+   2.238684941028e+0,   -4.541192040463e-2, 
+   3.436577760351e-2,    7.364095200751e-3, 
+   1.899505612902e+0,   -3.853163798103e-2, 
+   2.915907739105e-2,    6.248373726653e-3, 
+   1.542033007349e+0,   -3.128027482013e-2, 
+   2.367155932334e-2,    5.072476997858e-3, 
+   1.169709780974e+0,   -2.372766551317e-2, 
+   1.795607119916e-2,    3.847729542677e-3, 
+   7.861216099792e-1,   -1.594654581646e-2, 
+   1.206765629354e-2,    2.585926348616e-3, 
+   3.949626581428e-1,   -8.011852166274e-3, 
+   6.063023260964e-3,    1.299219270207e-3
+]
+    </A>
+  </thermostat>
+      </dynamics>
+    </motion>
+    <ensemble>
+      <temperature units='kelvin'> 109 </temperature>
+    </ensemble>
+  </system>
+</simulation>
