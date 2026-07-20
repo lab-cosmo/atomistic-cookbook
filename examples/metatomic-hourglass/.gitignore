@@ -1,0 +1,6 @@
+mace-omat-0-small.model
+mace_dummy_dataset.xyz
+mace_train.yaml
+outputs
+model.ckpt
+model.pt
