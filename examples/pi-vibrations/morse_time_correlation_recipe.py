@@ -2,19 +2,20 @@ r"""
 Path integral approximations to real-time correlations
 ======================================================
 
-:Authors: Mariana Rossi, MPSD Hamburg and University of Cambridge
+:Authors: Mariana Rossi (translator to Cookbook format - older tutorials by
+   more authors)
 
 Vibrational spectra are the Fourier transform of a real-time quantum
-correlation function, and computing that object exactly is out of reach for
-anything but the smallest systems. Path-integral methods sidestep the problem
-by replacing the exact correlation function with a classical correlation
-function evaluated on the ring polymer -- a family of approximations
-(RPMD, TRPMD, CMD) that agree with each other in some limits and disagree,
-sometimes dramatically, in others.
+correlation function, and computing that (quantum) object exactly is out of
+reach for anything but the smallest systems. Path-integral methods sidestep
+the problem by replacing the exact correlation function with an approximate
+correlation function evaluated with some protocol on top of the dynamics of
+the ring-polymer.
 
-This recipe uses a 3D Morse oscillator, a model cheap enough that all of these
-methods can be compared side by side, to show what each approximation does to a
-vibrational lineshape and where each one breaks down. Its radial part is
+This recipe uses a 3D Morse oscillator, a model cheap enough that different
+approximations can be compared side by side, to show what each approximation
+does to a vibrational lineshape and where each one breaks down. Its radial
+part is
 
 .. math::
 
@@ -23,13 +24,18 @@ vibrational lineshape and where each one breaks down. Its radial part is
 where :math:`D` is 5.101744 eV, :math:`a` is 2.1930272 :math:`\mathring{A}^{-1}`
 and :math:`r_0` is 0.96966 :math:`\mathring{A}`. These parameters are very close
 to those that describe an OH radical, as tabulated in books such as
-[Huber1979]_. To avoid any conversion problems, the values of these quantities
-in atomic units are :math:`D=0.18748563`, :math:`a=1.1605` and
-:math:`r_0=1.8323918`.
+[Huber1979]_.
 
-.. [Huber1979] K. P. Huber and G. Herzberg, Molecular Spectra and Molecular
-   Structure IV. Constants of Diatomic Molecules (Van Nostrand Reinhold,
-   New York, 1979), p. 508.
+The potential is central: it depends only on the interatomic distance
+:math:`r = |\mathbf{r}_1 - \mathbf{r}_2|`, so the molecule rotates freely and
+the two angular degrees of freedom are unconstrained. This is why the spectra
+below show a rotational band at low frequency in addition to the stretch.
+
+This tutorial will use the i-PI code to perform the simulations.
+To avoid any conversion problems, the values of these quantities
+in atomic units are :math:`D=0.18748563`, :math:`a=1.1605` and
+:math:`r_0=1.8323918`. These are parameters that can be passed directly
+into the i-PI potential.
 """
 
 import numpy as np
@@ -51,6 +57,7 @@ COLORS = {
     "trpmd": "#55a868",
     "trpmd-gle": "#c44e52",
     "cmd": "#8172b3",
+    "hot-pa-cmd": "#937860",
 }
 LABELS = {
     "nve": "Classical (NVE)",
@@ -58,7 +65,11 @@ LABELS = {
     "trpmd": "TRPMD",
     "trpmd-gle": "TRPMD-GLE",
     "cmd": "PA-CMD",
+    "hot-pa-cmd": "PA-Te-CMD",
 }
+
+# order used consistently in every comparison figure and table
+METHODS = ["nve", "rpmd", "trpmd", "trpmd-gle", "cmd", "hot-pa-cmd"]
 
 # %%
 # The potential
@@ -154,9 +165,9 @@ ax.set_title("Morse potential for an OH-like diatomic")
 # Vibrational Spectra
 # --------------------
 # We will now run: classical simulations, RPMD simulations, two flavors of
-# TRPMD simulations, and partially-adiabatic CMD simulations (PA-CMD). The
-# goal is to compare these spectra and understand the limitations of each
-# method.
+# TRPMD simulations, and two flavors of partially-adiabatic CMD simulations
+# (PA-CMD). The goal is to compare these spectra and understand the
+# differences between the methods.
 #
 # .. warning::
 #
@@ -200,8 +211,7 @@ ax.set_title("Morse potential for an OH-like diatomic")
 #    A single thermostatted (NVT) trajectory is used as a reservoir of
 #    initial conditions: configurations are harvested along it and each one
 #    seeds an independent constant-energy (NVE) trajectory. The correlation
-#    function is then averaged over the NVE segments, so that the dynamics
-#    is not contaminated by the thermostat.
+#    function is then averaged over the NVE segments.
 #
 # An input for the NVE simulations is found in ``data/inputs/nve.xml``. Read
 # the input carefully! Let us echo it here:
@@ -214,8 +224,25 @@ with open("data/inputs/nve.xml") as f:
 #
 #     Can you understand all entries of the input?
 #
+#
+# The block that governs the dynamics is the following:
+#
+# .. code-block:: xml
+#
+#     <motion mode='dynamics'>
+#       <fixcom> False </fixcom>
+#       <dynamics mode='nve'>
+#         <timestep units='femtosecond'> 0.5 </timestep>
+#       </dynamics>
+#     </motion>
+#
+# Note that ``mode='nve'`` means no thermostat is attached, so the dynamics is
+# purely Hamiltonian, and that ``fixcom`` is set to ``False``, so the centre of
+# mass is free to drift.
+#
 # You will run i-PI in a **separate terminal** - not directly from this
-# recipe.
+# recipe. Pre-thermalized starting points for these child NVE trajectories
+# can be found in ``data/class-therm/``.
 #
 # 1. Make several different folders and add different thermalized checkpoints
 #    to each of them.
@@ -228,7 +255,8 @@ with open("data/inputs/nve.xml") as f:
 #
 #        i-pi nve.xml &> log.ipi
 #
-# Around 10 trajectories should give a reasonably converged result. However,
+# Around 10 trajectories starting from different starting points should give a
+# reasonably converged result. However,
 # a single one is already fine to see qualitative results.
 #
 # You can watch the trajectory to see how the OH molecule is moving, if you
@@ -252,8 +280,6 @@ with open("data/inputs/nve.xml") as f:
 # ``mlag``, and play with different window functions to see how they affect
 # the spectrum.
 #
-# Note that units of time and frequency are atomic units. We will convert
-# them before plotting below.
 #
 # If you have many trajectories, run the script above for each trajectory in
 # each directory and average the VDOS.
@@ -261,15 +287,23 @@ with open("data/inputs/nve.xml") as f:
 # %%
 # 2. RPMD spectrum
 # ^^^^^^^^^^^^^^^^^
+#
+# We will now start to introduce nuclear quantum effects on these spectra.
+# The first method we will try out is ring-polymer molecular dynamics
+# ([Craig2004]_).
+#
 # We provide several i-PI checkpoints from a quantum PIMD simulation in the
 # folder ``data/pimd-therm``. From these checkpoints we can start several
 # RPMD simulations from which we can extract the vibrational spectra. In this
-# case the spectra can be calculated from the centroid velocities.
+# case the spectra can be calculated from the centroid velocities. For other
+# quantities, the bead correlations needs to be used.
 #
 # .. admonition:: Question
 #
 #     Can you show why the centroid velocities are all that is needed, based
-#     on the RPMD formulation for the velocity autocorrelation function?
+#     on the RPMD formulation for the velocity autocorrelation function? Can
+#     you tell why that is not the case for other quantities like a dipole
+#     which is not a simple linear function of positions, for example?
 #
 # The workflow mirrors the classical case, with PIMD playing the role of the
 # thermostatted reservoir and RPMD the role of the constant-energy segments:
@@ -284,6 +318,41 @@ with open("data/inputs/nve.xml") as f:
 #    is averaged over the resulting segments.
 #
 # An input for the RPMD simulations is found in ``data/inputs/rpmd.xml``.
+# Let us echo it here as well:
+
+with open("data/inputs/rpmd.xml") as f:
+    print(f.read())
+
+# %%
+# The block that governs the dynamics is the following:
+#
+# .. code-block:: xml
+#
+#     <initialize nbeads='32'>
+#       <file mode='chk'> therm_checkpoint.chk </file>
+#     </initialize>
+#     ...
+#     <motion mode='dynamics'>
+#       <fixcom> False  </fixcom>
+#       <dynamics mode='nve'>
+#         <timestep units='femtosecond'> 0.25 </timestep>
+#       </dynamics>
+#     </motion>
+#
+# Compared with the classical input, two things have changed. The system is
+# now initialized with ``nbeads='32'`` instead of a single replica, so that
+# the ring polymer can represent the quantum statistics of the nucleus. And
+# the time step has been reduced from 0.5 fs to 0.25 fs, because the internal
+# ring-polymer modes oscillate much faster than the physical vibration and
+# have to be integrated stably.
+#
+# .. admonition:: Question
+#
+#     The dynamics is still ``mode='nve'``, with the thermostat left
+#     commented out in the input, exactly as in the classical case. Why must
+#     the thermostat be switched off here, given that we are computing a
+#     *quantum* correlation function at 109 K? Where did the temperature
+#     enter the calculation instead?
 #
 # 1. Make several different folders and add different thermalized checkpoints
 #    to each of them.
@@ -306,10 +375,21 @@ with open("data/inputs/nve.xml") as f:
 #         -ftwin cosine-hanning -dt "1.0 femtosecond" -oprefix rpmd
 
 # %%
-# 3. TRPMD, TRPMD-GLE and CMD spectra
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-# The files ``data/inputs/trpmd.xml``, ``data/inputs/trpmd-gle.xml`` and
-# ``data/inputs/cmd.xml`` contain the corresponding inputs for these methods,
+# 3. TRPMD, TRPMD-GLE, CMD and Te-CMD spectra
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# We will now try out other approximations based on path integrals, which
+# include nuclear quantum effects to some degree.
+#
+# We will try thermostatted RPMD (TRPMD, [Rossi2014]_), TRPMD with GLE
+# thermostats (TRPMD-GLE, [Rossi2018]_), partially-adiabatic centroid
+# molecular dynamics (PA-CMD, [Cao1994]_, [Hone2006]_) and partially-adiabatic
+# elevated-temperature centroid molecular dynamics (PA-Te-CMD,
+# [Castro2025]_).
+#
+# The files ``data/inputs/trpmd.xml``, ``data/inputs/trpmd-gle.xml``,
+# ``data/inputs/cmd.xml`` and ``data/inputs/hot-pa-cmd.xml``
+# contain the corresponding inputs for these methods,
 # and are run in exactly the same way as the RPMD input above.
 #
 # The TRPMD-GLE setting corresponds to the one discussed in
@@ -329,30 +409,106 @@ with open("data/inputs/nve.xml") as f:
 #     physical system. Check out the discussion in the supplementary material
 #     of `this paper <https://doi.org/10.1063/1.4901214>`_, Figs. S1 and S2.
 #
-# A second PA-CMD protocol is provided in ``data/inputs/hot-pa-cmd.xml``. It
-# differs from ``cmd.xml`` in how the adiabatic separation is enforced: it uses
-# fewer beads (16 instead of 32), a strongly damped thermostat on the internal
-# modes, and an elevated ensemble temperature of 400 K while the centroid is
-# still thermostatted at 109 K (``pile_centroid_t``). No precomputed output is
-# shipped for this one -- it is left as an exercise.
-#
 # .. admonition:: Question
 #
-#     Run ``hot-pa-cmd.xml`` yourself and compare its stretch peak with the
-#     PA-CMD curve below. Does decoupling the internal-mode temperature from
-#     the centroid temperature change the size of the red shift?
+#     Look at the dynamics blocks of these other methods more carefully. They
+#     use thermostats. Do you understand why they can still work? How is
+#     the ring-polymer centroid being thermalized?
+#
+# .. dropdown:: Click here to see an explanation
+#
+#     Have a look at the original references. In TRPMD methods, it was shown
+#     that it is possible to apply different thermostating protocols to the
+#     internal modes of the ring-polymer, as long as the centroid is following
+#     Newtonian dynamics (very weak global or absent thermostat). The same is
+#     true in CMD.
+
+# %%
+# How the reference data was generated
+# --------------------------------------
+#
+# If you could not run all the simulations, we provide pre-computed data
+# for you to answer the questions above (and below).
+# The spectra plotted below are shipped with the recipe, in the ``data``
+# directory, as ``<method>_facf_avg.dat``. They were produced as follows.
+#
+# For each method, **ten independent trajectories of 10 ps each** were run
+# with i-PI 3.3.0, using the inputs in ``data/inputs`` unchanged apart from
+# the random seed and the name of the checkpoint used to initialize. The
+# classical trajectories start from the checkpoints in ``data/class-therm``,
+# and all path-integral ones from those in ``data/pimd-therm``, so that each
+# trajectory begins from an independent, pre-thermalized configuration.
+#
+# The time step and bead number differ between methods, but the total
+# simulated time does not:
+#
+# .. list-table::
+#    :header-rows: 1
+#    :widths: 24 12 14 14 14
+#
+#    * - method
+#      - beads
+#      - time step
+#      - steps
+#      - ensemble T
+#    * - Classical (NVE)
+#      - 1
+#      - 0.5 fs
+#      - 20000
+#      - 109 K
+#    * - RPMD, TRPMD, TRPMD-GLE
+#      - 32
+#      - 0.25 fs
+#      - 40000
+#      - 109 K
+#    * - PA-CMD
+#      - 32
+#      - 0.025 fs
+#      - 400000
+#      - 109 K
+#    * - PA-Te-CMD
+#      - 16
+#      - 0.025 fs
+#      - 400000
+#      - 400 K
+#
+# Each trajectory was then post-processed with ``i-pi-getacf`` using the same
+# settings quoted earlier in this recipe -- ``-mlag 1024 -ftpad 3072 -ftwin
+# cosine-hanning -dt "1.0 femtosecond"`` -- applied to the full-system
+# velocities (``simulation.vel_0.xyz``) for the classical run, and to the
+# centroid velocities (``simulation.vc.xyz``) for all path-integral runs. The
+# ``cmd-bead`` spectrum instead uses the velocities of a single bead.
+#
+# Finally the ten resulting ``facf`` spectra were combined into the shipped
+# files by taking a plain arithmetic mean of the intensities, on the common
+# frequency grid. No smoothing, windowing or baseline correction was applied
+# beyond the window function already used by ``i-pi-getacf``.
+#
+# .. note::
+#
+#     Ten trajectories of 10 ps are enough to make the qualitative
+#     comparisons below, but not to converge the lineshapes.
 
 # %%
 # Plotting and Analysing
 # ------------------------
 # Let us now plot everything and try to make sense of what we got. You should
 # try plotting your own trajectories, but just in case they are not
-# available, we provide some pre-computed simulations in the ``data``
-# directory.
+# available, we provide the pre-computed spectra described above.
+#
+# ``i-pi-getacf`` writes frequencies in atomic units (inverse hartree), so
+# they have to be converted before plotting. The conversion factor is
+#
+# .. math::
+#
+#     1\ E_\mathrm{h} / \hbar = 219474.63\ \mathrm{cm}^{-1},
+#
+# and it is the same factor needed for the harmonic frequencies in the bonus
+# question at the end of this recipe.
 
 fig, ax = plt.subplots(figsize=(7, 4.5), constrained_layout=True)
 
-for mm in ["nve", "trpmd", "trpmd-gle", "rpmd", "cmd"]:
+for mm in METHODS:
     velFT = np.loadtxt(f"data/{mm}_facf_avg.dat", usecols=(0, 1))
     # Here we convert from atomic units of frequency (1/Ha) to cm-1
     ax.plot(
@@ -366,7 +522,7 @@ for mm in ["nve", "trpmd", "trpmd-gle", "rpmd", "cmd"]:
 # Exact fundamental transition, and the harmonic frequency for reference
 ax.axvline(x=3568, color="black", lw=1.2, ls="--")
 ax.text(
-    3548,
+    3568,
     5.85e-5,
     r"exact $0\rightarrow1$",
     rotation=90,
@@ -397,18 +553,11 @@ ax.legend(frameon=False)
 # In the plot above, simulations are not fully converged. More statistics
 # would be needed for that, and that would remove some of the noise.
 # Nevertheless, the qualitative features we may want to look at are already
-# clear. It helps to read the peak positions off directly:
-
-print(f"{'method':<16}{'stretch peak / cm^-1':>22}{'shift vs exact':>18}")
-print("-" * 56)
-for mm in ["nve", "rpmd", "trpmd", "trpmd-gle", "cmd"]:
-    velFT = np.loadtxt(f"data/{mm}_facf_avg.dat", usecols=(0, 1))
-    freq = velFT[:, 0] * HARTREE_TO_CM1
-    band = (freq > 1500) & (freq < 4500)
-    peak = freq[band][velFT[band, 1].argmax()]
-    print(f"{LABELS[mm]:<16}{peak:>22.0f}{peak - 3568:>+18.0f}")
-
-# %%
+# clear. The lineshapes are best compared by eye against the two vertical
+# markers: with this amount of noise, the position of the single highest point
+# of a band is not a robust estimate of where the band actually lies, and small
+# apparent shifts between methods should not be over-interpreted.
+#
 # Think about these questions:
 #
 # .. admonition:: Question
@@ -439,6 +588,20 @@ for mm in ["nve", "rpmd", "trpmd", "trpmd-gle", "cmd"]:
 #     Do you understand why this red-shift is so pronounced for this
 #     particular molecule? Hint: calculate the average OH distances as
 #     computed from the beads and from the centroid.
+#
+# .. admonition:: Question
+#
+#     Do you understand why the Te-CMD spectrum does not show the curvature problem?
+#
+# The elevated-temperature proposal was first discussed in [Musil2022]_, where
+# the centroid potential of mean force is evaluated at a temperature high
+# enough that the curvature problem is negligible, while the system itself
+# evolves at the physical temperature. It is a very practical method that
+# yields accurate spectra. The partially-adiabatic version of this method
+# ([Castro2025]_), which obtains the centroid force on the fly with a
+# two-temperature path-integral Langevin thermostat rather than from a
+# precomputed potential of mean force, is what we are running here.
+#
 
 # %%
 # The rotational band
@@ -449,7 +612,7 @@ for mm in ["nve", "rpmd", "trpmd", "trpmd-gle", "cmd"]:
 
 fig, ax = plt.subplots(figsize=(7, 4.5), constrained_layout=True)
 
-for mm in ["nve", "trpmd", "trpmd-gle", "rpmd", "cmd"]:
+for mm in METHODS:
     velFT = np.loadtxt(f"data/{mm}_facf_avg.dat", usecols=(0, 1))
     ax.plot(
         velFT[:, 0] * HARTREE_TO_CM1,
@@ -520,8 +683,50 @@ ax.legend(frameon=False)
 #     conclude about the harmonic and anharmonic vibrational lines? Hint:
 #     example i-PI inputs are in the ``data/harmonic`` folder. i-PI generates
 #     a file ``*.eigval`` where the **squared** vibrational frequencies are
-#     written, in atomic units. The conversion factor to cm :math:`^{-1}` is
-#     the same one used throughout this recipe.
+#     written, in atomic units. Take the square root and multiply by
+#     219474.63 to get cm :math:`^{-1}`, the same conversion factor used for
+#     the spectra above.
+
+# %%
+# References
+# ----------
+#
+# .. [Huber1979] K. P. Huber and G. Herzberg, Molecular Spectra and Molecular
+#    Structure IV. Constants of Diatomic Molecules (Van Nostrand Reinhold,
+#    New York, 1979), p. 508.
+#
+# .. [Cao1994] J. Cao and G. A. Voth, *The formulation of quantum statistical
+#    mechanics based on the Feynman path centroid density. II. Dynamical
+#    properties*, J. Chem. Phys. **100**, 5106 (1994).
+#    https://doi.org/10.1063/1.467176
+#
+# .. [Craig2004] I. R. Craig and D. E. Manolopoulos, *Quantum statistics and
+#    classical mechanics: Real time correlation functions from ring polymer
+#    molecular dynamics*, J. Chem. Phys. **121**, 3368 (2004).
+#    https://doi.org/10.1063/1.1777575
+#
+# .. [Hone2006] T. D. Hone, P. J. Rossky and G. A. Voth, *A comparative study
+#    of imaginary time path integral based methods for quantum dynamics*,
+#    J. Chem. Phys. **124**, 154103 (2006). https://doi.org/10.1063/1.2186636
+#
+# .. [Rossi2014] M. Rossi, M. Ceriotti and D. E. Manolopoulos, *How to remove
+#    the spurious resonances from ring polymer molecular dynamics*,
+#    J. Chem. Phys. **140**, 234116 (2014). https://doi.org/10.1063/1.4883861
+#
+# .. [Rossi2018] M. Rossi, V. Kapil and M. Ceriotti, *Fine tuning classical and
+#    quantum molecular dynamics using a generalized Langevin equation*,
+#    J. Chem. Phys. **148**, 102301 (2018).
+#    https://doi.org/10.1063/1.4990536
+#
+# .. [Musil2022] F. Musil, I. Zaporozhets, F. Noe, C. Clementi and V. Kapil,
+#    *Quantum dynamics using path integral coarse-graining*, J. Chem. Phys.
+#    **157**, 181102 (2022). https://doi.org/10.1063/5.0120386
+#
+# .. [Castro2025] J. Castro, G. Trenins, V. Kapil and M. Rossi, *Vibrational
+#    spectra of materials and molecules from partially adiabatic
+#    elevated-temperature centroid molecular dynamics*, J. Chem. Phys.
+#    **163**, 204102 (2025). https://doi.org/10.1063/5.0300048
+#
 
 # %%
 # sphinx_gallery_thumbnail_number = 2
