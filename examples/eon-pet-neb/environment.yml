@@ -9,9 +9,9 @@ dependencies:
   - uv
   - pip:
     # pyeonclient[models] pulls eon-schema; plot stack via rgpycrumbs ensure_import + uv.
-    # 0.3.5+ declares rgpot>=2.5.2 / vesin>=0.6 (VesinOptions ABI).
+    # 0.3.5+ declares rgpot / vesin>=0.6 (VesinOptions ABI); floor rgpot to PyPI tip.
     - "pyeonclient[models]>=0.3.5,<0.4"
-    - "rgpot>=2.5.2,<3"
+    - "rgpot>=2.5.3,<3"
     - "vesin>=0.6.0"
     # torch major must match an rgpot multi-ABI engine (lib/.../torch-X.Y/).
     - torch>=2.10,<2.11
