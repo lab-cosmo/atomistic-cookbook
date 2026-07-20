@@ -3,27 +3,20 @@ channels:
   - conda-forge
   - https://repo.prefix.dev/rg-forge
 dependencies:
-  # eOn 2.16 writes CON via readcon-core (con_spec_version=2 metadata).
-  - eon>=2.16.0
   - ira
   - python=3.13
   - pip
   - uv
   - pip:
-    - torch>=2.9,<2.10
-    - ase>=3.23
+    - "pyeonclient[models]>=0.3.5,<0.4"
+    - "rgpot>=2.5.4,<3"
+    - "vesin>=0.6.0"
+    - torch>=2.10,<2.14
+    - ase>=3.23,<4
     - matplotlib
-    # eOn 2.16 is built against libmetatomic-torch >=0.1.15; metatrain
-    # 2026.3.1 is the first release that requires the same floor.
-    - metatrain>=2026.3.1
+    - metatrain>=2026.3.1,<2027
     - requests
     - metatomic-ase
-    # Notebook CON I/O only. Plot deps (chemparseplot, jax, adjustText, …)
-    # Prefer library API when plot pipelines are public; today full NEB
-    # plots still go through CLI uv PEP 723 / ensure_import — not host pins.
-    - "readcon>=0.13.1"
-    # rgpycrumbs 1.9.21+ plot-script headers require chemparseplot>=1.9.10,
-    # whose 1.9.10-1.9.12 releases fail to import on Python <=3.13. Drop the
-    # cap (and UV_EXCLUDE_NEWER in the recipe) once a fixed release is out.
-    - "rgpycrumbs>=1.9.16,<1.9.21"
+    - "readcon>=0.13.1,<0.14"
+    - "rgpycrumbs>=1.10.10,<2"
     - atomistic-cookbook-utils >=0.1,<0.2
