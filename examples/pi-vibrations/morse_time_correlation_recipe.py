@@ -38,9 +38,17 @@ in atomic units are :math:`D=0.18748563`, :math:`a=1.1605` and
 into the i-PI potential.
 """
 
+from zipfile import ZipFile
+
 import numpy as np
+from atomistic_cookbook_utils import download_with_retry
 from matplotlib import pyplot as plt
 
+
+# The i-PI inputs, checkpoints and pre-computed spectra for this recipe are
+# hosted on Zenodo; see the "Vibrational Spectra" section below for the
+# download step.
+ZENODO_RECORD_ID = "21607883"
 
 # Conversion factors used throughout
 HARTREE_TO_CM1 = 219474.63  # atomic units of frequency -> cm^-1
@@ -188,6 +196,17 @@ ax.set_title("Morse potential for an OH-like diatomic")
 #     started. The ``pes_path`` entry in each XML is a relative path, so it
 #     must match the location of ``morsedia_ffdirect.py`` relative to wherever
 #     you run ``i-pi`` from.
+#
+# The i-PI inputs, checkpoints and pre-computed spectra used below are
+# fetched from Zenodo.
+
+with ZipFile(
+    download_with_retry(
+        f"https://zenodo.org/records/{ZENODO_RECORD_ID}/files/pi-vibrations-data.zip",
+        "pi-vibrations-data.zip",
+    )
+) as archive:
+    archive.extractall(path=".")
 
 # %%
 # 1. Classical spectrum
@@ -220,11 +239,6 @@ with open("data/inputs/nve.xml") as f:
     print(f.read())
 
 # %%
-# .. admonition:: Question
-#
-#     Can you understand all entries of the input?
-#
-#
 # The block that governs the dynamics is the following:
 #
 # .. code-block:: xml
@@ -238,7 +252,9 @@ with open("data/inputs/nve.xml") as f:
 #
 # Note that ``mode='nve'`` means no thermostat is attached, so the dynamics is
 # purely Hamiltonian, and that ``fixcom`` is set to ``False``, so the centre of
-# mass is free to drift.
+# mass is free to drift. We note that one could also attach a very gently
+# global thermostat to the centroid to improve ergodicity without further
+# consequences.
 #
 # You will run i-PI in a **separate terminal** - not directly from this
 # recipe. Pre-thermalized starting points for these child NVE trajectories
@@ -294,16 +310,13 @@ with open("data/inputs/nve.xml") as f:
 #
 # We provide several i-PI checkpoints from a quantum PIMD simulation in the
 # folder ``data/pimd-therm``. From these checkpoints we can start several
-# RPMD simulations from which we can extract the vibrational spectra. In this
-# case the spectra can be calculated from the centroid velocities. For other
-# quantities, the bead correlations needs to be used.
-#
-# .. admonition:: Question
-#
-#     Can you show why the centroid velocities are all that is needed, based
-#     on the RPMD formulation for the velocity autocorrelation function? Can
-#     you tell why that is not the case for other quantities like a dipole
-#     which is not a simple linear function of positions, for example?
+# RPMD simulations from which we can extract the vibrational spectra. For
+# linear observables such as velocity, the RPMD centroid trajectory already
+# gives the correct Kubo-transformed correlation function to a good
+# approximation [Craig2004]_, which is why only the centroid velocities are
+# needed here. For genuinely non-linear quantities (e.g. a dipole moment),
+# centroid and bead-averaged expectation values no longer coincide, so a
+# bead-averaged estimator has to be used instead.
 #
 # The workflow mirrors the classical case, with PIMD playing the role of the
 # thermostatted reservoir and RPMD the role of the constant-energy segments:
@@ -342,17 +355,12 @@ with open("data/inputs/rpmd.xml") as f:
 # Compared with the classical input, two things have changed. The system is
 # now initialized with ``nbeads='32'`` instead of a single replica, so that
 # the ring polymer can represent the quantum statistics of the nucleus. And
-# the time step has been reduced from 0.5 fs to 0.25 fs, because the internal
-# ring-polymer modes oscillate much faster than the physical vibration and
-# have to be integrated stably.
-#
-# .. admonition:: Question
-#
-#     The dynamics is still ``mode='nve'``, with the thermostat left
-#     commented out in the input, exactly as in the classical case. Why must
-#     the thermostat be switched off here, given that we are computing a
-#     *quantum* correlation function at 109 K? Where did the temperature
-#     enter the calculation instead?
+# the time step has been reduced from 0.5 fs to 0.25 fs. Although the dynamics
+# would be stable here with a time step of 0.5 fs, the smaller one is more
+# accurate. The dynamics is still ``mode='nve'``, with no
+# thermostat, exactly as in the classical case: the 109 K quantum statistics
+# already entered through the thermostatted PIMD reservoir that generated the
+# initial conditions, not through the correlation segment itself.
 #
 # 1. Make several different folders and add different thermalized checkpoints
 #    to each of them.
@@ -388,49 +396,113 @@ with open("data/inputs/rpmd.xml") as f:
 # [Castro2025]_).
 #
 # The files ``data/inputs/trpmd.xml``, ``data/inputs/trpmd-gle.xml``,
-# ``data/inputs/cmd.xml`` and ``data/inputs/hot-pa-cmd.xml``
-# contain the corresponding inputs for these methods,
-# and are run in exactly the same way as the RPMD input above.
+# ``data/inputs/cmd.xml`` and ``data/inputs/hot-pa-cmd.xml`` contain the
+# corresponding inputs, and are run in exactly the same way as the RPMD input
+# above. Unlike RPMD, all four attach a thermostat somewhere in the dynamics,
+# and yet they still yield meaningful real-time correlation functions. The
+# reason is that the thermostat is applied mainly to the internal
+# ring-polymer modes rather than to the centroid, since the centroid has to
+# stay close to Newtonian dynamics for the correlation function to remain
+# physical.
 #
-# The TRPMD-GLE setting corresponds to the one discussed in
-# `this paper <https://pubs.aip.org/aip/jcp/article/148/10/102301/197471>`_.
+# **TRPMD** couples a global PILE thermostat to the ring-polymer normal
+# modes:
 #
-# .. admonition:: Question
+# .. code-block:: xml
 #
-#     Look at the thermostat options used for the CMD run. These are
-#     underdamped (weakly coupled) Langevin thermostats acting on the internal
-#     modes of the ring polymer. Can you guess why that is?
+#     <thermostat mode='pile_g'>
+#       <tau units='femtosecond'> 1000 </tau>
+#       <pile_lambda> 0.5 </pile_lambda>
+#     </thermostat>
 #
-# .. dropdown:: Click here to see an explanation
+# ``pile_lambda`` sets the damping strength of the Langevin thermostat to damp
+# each internal ring-polymer normal mode optimally, and ``tau``
+# sets the centroid
+# coupling relaxation time for the global stochastic velocity-rescaling
+# thermostat that couples to it.
 #
-#     There is a neat reason why this leads to a much more effective adiabatic
-#     separation for CMD, rooted in how stronger Langevin thermostats broaden
-#     the internal RP modes so much that they end up interacting with the
-#     physical system. Check out the discussion in the supplementary material
-#     of `this paper <https://doi.org/10.1063/1.4901214>`_, Figs. S1 and S2.
+# **TRPMD-GLE** replaces this thermostat with a colored-noise (generalized
+# Langevin equation) one, fitted to a target spectral density:
 #
-# .. admonition:: Question
+# .. code-block:: xml
 #
-#     Look at the dynamics blocks of these other methods more carefully. They
-#     use thermostats. Do you understand why they can still work? How is
-#     the ring-polymer centroid being thermalized?
+#     <thermostat mode='nm_gle'>
+#       <A shape='(32,2,2)'>
+#         [ ... ]
+#       </A>
+#     </thermostat>
 #
-# .. dropdown:: Click here to see an explanation
+# The ``A`` matrix (one 2x2 drift block per ring-polymer normal mode, omitted
+# above for brevity) was generated with `gle4md <http://gle4md.org/>`_ and is
+# tuned to minimize spurious coupling on high-frequency stretches and bends
+# [Rossi2018]_; see `this paper
+# <https://pubs.aip.org/aip/jcp/article/148/10/102301/197471>`_ for the exact
+# fitting procedure used here.
 #
-#     Have a look at the original references. In TRPMD methods, it was shown
-#     that it is possible to apply different thermostating protocols to the
-#     internal modes of the ring-polymer, as long as the centroid is following
-#     Newtonian dynamics (very weak global or absent thermostat). The same is
-#     true in CMD.
+# **PA-CMD** instead pushes the internal modes to high frequency rather than
+# damping them at the physical frequency. Effectively, this creates
+# the centroid potential of mean force on the fly. The code is:
+#
+# .. code-block:: xml
+#
+#     <normal_modes>
+#       <frequencies style='pa-cmd' units="inversecm"> [13000] </frequencies>
+#     </normal_modes>
+#     ...
+#     <thermostat mode='pile_g'>
+#       <tau units='femtosecond'> 1000 </tau>
+#       <pile_lambda> 0.01 </pile_lambda>
+#     </thermostat>
+#
+# The ``<frequencies style='pa-cmd'>`` tag rescales the mass of every
+# non-centroid mode so that it oscillates at 13000 cm
+# :math:`^{-1}` for the free ring-polymer,
+# far above the physical stretch -- this adiabatic separation
+# is revisited in the "Where do the beads vibrate?" figure below.
+# The underdamped thermostat acting on the internal modes of the RP
+# (``pile_lambda=0.01``) is needed, so it
+# does not broaden them enough to interact with the physical system -- see
+# the supplementary material of `this paper
+# <https://doi.org/10.1063/1.4901214>`_, Figs. S1 and S2, for the underlying
+# argument.
+#
+# **PA-Te-CMD** (``hot-pa-cmd.xml``) combines the same adiabatic separation
+# with an elevated ensemble temperature, therefore also requiring fewer beads:
+#
+# .. code-block:: xml
+#
+#     <initialize nbeads='16'>
+#       ...
+#     </initialize>
+#     ...
+#     <thermostat mode='pile_g'>
+#       <tau units='femtosecond'> 10 </tau>
+#       <pile_lambda> 0.001 </pile_lambda>
+#       <pile_centroid_t units='kelvin'> 109 </pile_centroid_t>
+#     </thermostat>
+#     ...
+#     <ensemble>
+#       <temperature units='kelvin'> 400 </temperature>
+#     </ensemble>
+#
+# Raising the ensemble temperature to 400 K dramatically alleviates
+# the curvature-driven smearing of the centroid potential of mean force.
+# The ``pile_centroid_t`` entry decouples the centroid from this elevated
+# temperature, so that it is still thermostatted at the physical 109 K.
+#
+# .. important::
+#
+#     ``pile_centroid_t`` needs an
+#     explicit ``units='kelvin'`` (or any other temperature unit) attribute,
+#     unless you define the temperature in atomic units.
 
 # %%
 # How the reference data was generated
 # --------------------------------------
 #
-# If you could not run all the simulations, we provide pre-computed data
-# for you to answer the questions above (and below).
-# The spectra plotted below are shipped with the recipe, in the ``data``
-# directory, as ``<method>_facf_avg.dat``. They were produced as follows.
+# If you could not run all the simulations yourself, the ``data`` directory
+# fetched above already contains pre-computed spectra, as
+# ``<method>_facf_avg.dat``. They were produced as follows.
 #
 # For each method, **ten independent trajectories of 10 ps each** were run
 # with i-PI 3.3.0, using the inputs in ``data/inputs`` unchanged apart from
@@ -487,7 +559,9 @@ with open("data/inputs/rpmd.xml") as f:
 # .. note::
 #
 #     Ten trajectories of 10 ps are enough to make the qualitative
-#     comparisons below, but not to converge the lineshapes.
+#     comparisons below, but not to converge the lineshapes. All the raw
+#     checkpoints and the resulting spectra are hosted on Zenodo (see above)
+#     rather than checked into this repository.
 
 # %%
 # Plotting and Analysing
@@ -503,8 +577,8 @@ with open("data/inputs/rpmd.xml") as f:
 #
 #     1\ E_\mathrm{h} / \hbar = 219474.63\ \mathrm{cm}^{-1},
 #
-# and it is the same factor needed for the harmonic frequencies in the bonus
-# question at the end of this recipe.
+# and it is the same factor used for the harmonic frequencies discussed at
+# the end of this recipe.
 
 fig, ax = plt.subplots(figsize=(7, 4.5), constrained_layout=True)
 
@@ -554,44 +628,27 @@ ax.legend(frameon=False)
 # would be needed for that, and that would remove some of the noise.
 # Nevertheless, the qualitative features we may want to look at are already
 # clear. The lineshapes are best compared by eye against the two vertical
-# markers: with this amount of noise, the position of the single highest point
-# of a band is not a robust estimate of where the band actually lies, and small
-# apparent shifts between methods should not be over-interpreted.
+# markers.
 #
-# Think about these questions:
+# The classical NVE peak sits close to the harmonic frequency rather than the
+# (lower) quantum fundamental.
+# At 109 K the thermal amplitude of the classical trajectory is
+# much smaller than the zero-point delocalization of the quantum particle, so
+# the classical motion probes a more harmonic region of the well than the
+# quantum ground state does.
 #
-# .. admonition:: Question
+# RPMD spectra can show extra, unphysical high-frequency features tied to the
+# free ring-polymer normal modes -- a well documented artifact [Rossi2014]_ --
+# which is why thermostatted variants were developed. TRPMD removes these
+# spurious resonances by damping the internal modes; TRPMD-GLE instead
+# couples a colored-noise thermostat fitted to the physical spectral density
+# [Rossi2018]_, which makes the stretch band sharper.
+# See `this reference <https://doi.org/10.1063/1.4990536>`_ for a detailed
+# discussion of the trade-offs between the two.
 #
-#     Why is the NVE peak blue-shifted with respect to the true (quantum)
-#     fundamental vibrational transition in this potential?
-#
-# .. admonition:: Question
-#
-#     Can you spot the spurious resonances of RPMD? Can you calculate, for
-#     this temperature, the first Matsubara frequency of the ring polymer,
-#     :math:`\omega_M = 2 \pi / (\beta \hbar)`? What is its value? How do the
-#     resonances relate to it?
-#
-# .. admonition:: Question
-#
-#     Can you see that the TRPMD spectra do not show the spurious
-#     resonances? The TRPMD-GLE peak is narrower than the TRPMD peak - as
-#     expected. In this case it is also slightly red-shifted. Look at the
-#     full range of the spectra, including the rotational bands. Can you see
-#     the differences between the methods also there? Check out
-#     `this reference <https://doi.org/10.1063/1.4990536>`_ to understand why
-#     TRPMD-GLE broadens and blue-shifts the rotational band.
-#
-# .. admonition:: Question
-#
-#     Can you spot the curvature problem of CMD? How large is the red-shift?
-#     Do you understand why this red-shift is so pronounced for this
-#     particular molecule? Hint: calculate the average OH distances as
-#     computed from the beads and from the centroid.
-#
-# .. admonition:: Question
-#
-#     Do you understand why the Te-CMD spectrum does not show the curvature problem?
+# PA-CMD shows a pronounced red-shift relative to all the other methods, a
+# well known artifact known as the curvature problem: the centroid potential
+# of mean force is smeared out by the delocalization of the ring polymer.
 #
 # The elevated-temperature proposal was first discussed in [Musil2022]_, where
 # the centroid potential of mean force is evaluated at a temperature high
@@ -606,9 +663,10 @@ ax.legend(frameon=False)
 # %%
 # The rotational band
 # ^^^^^^^^^^^^^^^^^^^^
-# The questions above ask you to look at the low-frequency part of the
-# spectrum too, so let us zoom in on it. This region is dominated by the free
-# rotation of the diatomic, and the methods differ here as well:
+# The discussion above focused on the stretch band, but the low-frequency
+# part of the spectrum is worth a look too. Let us zoom in on it. This region
+# is dominated by the free rotation of the diatomic, and the methods differ
+# here as well:
 
 fig, ax = plt.subplots(figsize=(7, 4.5), constrained_layout=True)
 
@@ -675,17 +733,15 @@ ax.legend(frameon=False)
 # that they no longer mix with the physical stretch, and the centroid is left
 # to move on the (curvature-affected) centroid potential of mean force.
 #
-# .. admonition:: Bonus Question
+# .. tip::
 #
-#     i-PI can optimize and calculate harmonic frequencies of vibrations.
-#     Can you do it for this potential? Can you calculate the harmonic
-#     frequency of vibration analytically? Where does it lie? What can you
-#     conclude about the harmonic and anharmonic vibrational lines? Hint:
-#     example i-PI inputs are in the ``data/harmonic`` folder. i-PI generates
-#     a file ``*.eigval`` where the **squared** vibrational frequencies are
-#     written, in atomic units. Take the square root and multiply by
-#     219474.63 to get cm :math:`^{-1}`, the same conversion factor used for
-#     the spectra above.
+#     ``data/harmonic`` contains i-PI inputs to compute the harmonic
+#     vibrational frequency of this potential directly, using i-PI's
+#     geometry optimization and normal-mode analysis. The resulting
+#     ``*.eigval`` file stores the **squared** frequencies in atomic units --
+#     take the square root and multiply by 219474.63 to get cm
+#     :math:`^{-1}`, the same conversion factor used for the spectra above --
+#     if you would like to compare it with the anharmonic spectra.
 
 # %%
 # References
