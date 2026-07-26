@@ -181,8 +181,8 @@ def rst_to_html(rst_text):
     return parts["fragment"]
 
 
-def get_example_metadata(rst_file):
-    metadata = {}
+def get_example_meta(rst_file):
+    meta = {}
     # Path to the generated RST file (stripping docs/src/)
     gallery_dir, example_file = os.path.split(rst_file)
     gallery_dir = os.path.join(*(gallery_dir.split(os.sep)[2:]))
@@ -225,7 +225,7 @@ def get_example_metadata(rst_file):
         if match:
             rst_title = match.group(1).strip()
 
-    metadata["title"] = rst_title or ""
+    meta["title"] = rst_title or ""
     metadata["description"] = rst_description or ""
     metadata["html"] = html_description or ""
     metadata["thumbnail"] = thumbnail_file
@@ -320,13 +320,9 @@ def post_process_gallery(name, example_dir, files_before):
     # We create a zip file for each notebook.
     for py_file, notebook in zip(source_py_files, notebooks):
         with zipfile.ZipFile(docs_example_dir / f"{notebook.stem}.zip", "w") as zipf:
-            # Add files from the data dir (if present), recursing into any
-            # sub-directories. Note the "**" in the pattern: "data/*" would
-            # only match the direct children of data/, adding sub-directories
-            # as bare entries without the files they contain.
-            for file in example_dir.rglob("data/**/*"):
-                if file.is_file() and "__pycache__" not in file.parts:
-                    zipf.write(file, file.relative_to(example_dir))
+            # Add files from the data dir (if present)
+            for file in example_dir.rglob("data/*"):
+                zipf.write(file, file.relative_to(example_dir))
 
             # Add the rest of files in the example dir (with an extra check
             # to make sure that they are still there)
