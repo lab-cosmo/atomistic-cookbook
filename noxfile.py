@@ -181,8 +181,8 @@ def rst_to_html(rst_text):
     return parts["fragment"]
 
 
-def get_example_meta(rst_file):
-    meta = {}
+def get_example_metadata(rst_file):
+    metadata = {}
     # Path to the generated RST file (stripping docs/src/)
     gallery_dir, example_file = os.path.split(rst_file)
     gallery_dir = os.path.join(*(gallery_dir.split(os.sep)[2:]))
@@ -225,7 +225,7 @@ def get_example_meta(rst_file):
         if match:
             rst_title = match.group(1).strip()
 
-    meta["title"] = rst_title or ""
+    metadata["title"] = rst_title or ""
     metadata["description"] = rst_description or ""
     metadata["html"] = html_description or ""
     metadata["thumbnail"] = thumbnail_file
