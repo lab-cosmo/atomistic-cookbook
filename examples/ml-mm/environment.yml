@@ -3,13 +3,12 @@ channels:
   - conda-forge
 dependencies:
   - chemiscope
-  - metatensor::gromacs-metatomic=*=mpi_*
-  # gromacs-metatomic mta3+ links libgromacs against MKL but the feedstock does
-  # not declare mkl as a runtime dependency; install it so gmx_mpi can load.
-  - mkl
-  # Share MKL between libgromacs and libtorch. cpu_generic libtorch pulls nomkl
-  # and leaves gmx_mpi unable to resolve libmkl_*.so.3; with both on MKL there is
-  # no openblas/mkl interposition of cblas_sgemm_batch.
+  # Single-precision OpenMPI only. The mpi_* glob also matches mpi_*_dblprec_*,
+  # which installs gmx_mpi_d and leaves shutil.which("gmx_mpi") empty (main CI).
+  # Build string mpi_openmpi_h* excludes dblprec and cuda variants.
+  - metatensor::gromacs-metatomic=*=mpi_openmpi_h*
+  # Feedstock #4 links GROMACS to flexible libblas/liblapack (not MKL sonames).
+  # Default libtorch/pytorch-cpu is fine; do not force cpu_generic/nomkl.
   - libtorch
   - pytorch-cpu
   - matplotlib
@@ -18,8 +17,8 @@ dependencies:
   - pip
   - uv
   - pip:
-    # Align Python metatomic stack with published metatensor::gromacs-metatomic
-    # mta3 (libmetatomic-torch >=0.1.16, libtorch >=2.12).
+    # Align Python metatomic with published mta3 (libmetatomic-torch >=0.1.15,
+    # libtorch >=2.12).
     - torch>=2.12,<2.13
     - ase>=3.23
     - cmcrameri
