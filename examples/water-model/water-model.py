@@ -887,8 +887,7 @@ atomistic_model = AtomisticModel(
     qtip4pf_model.eval(), ModelMetadata(), model_capabilities
 )
 
-# Collect Torch extensions (e.g. vesin_torch) next to the model so engines that
-# load the TorchScript file outside Python can resolve them (LAMMPS pair_style).
+# Bundle native Torch extensions next to the model for non-Python engines.
 atomistic_model.save("qtip4pf-mta.pt", collect_extensions="extensions")
 
 
@@ -1106,13 +1105,11 @@ for line in lines[:7] + lines[16:]:
 
 ase.io.write("water_32.data", atoms, format="lammps-data", masses=True)
 
-# LAMMPS 2026.07 metatomic builds sometimes hit a C++ std::terminate on process
-# exit after a successful run (SIGABRT, returncode -6). Accept that exit status
-# only when the trajectory was written; any other failure still raises.
+# Some metatomic-enabled LAMMPS builds abort in C++ teardown after a successful
+# run (returncode -6). Treat that as success only when the trajectory exists.
 _lmp = run_command("lmp -in data/spcfw.in", check=False)
 if _lmp.returncode not in (0, -6) or not Path("trajectory.xyz").is_file():
     raise RuntimeError(
         f"LAMMPS failed (returncode={_lmp.returncode}); "
         f"trajectory.xyz exists={Path('trajectory.xyz').is_file()}"
     )
-print(f"LAMMPS finished (returncode={_lmp.returncode})")

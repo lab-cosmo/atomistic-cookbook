@@ -104,13 +104,12 @@ if __name__ == "__main__":
 
     example_dir = sys.argv[1]
 
-    # Outer driver: run the real gallery build in a child process so a flaky
-    # C++ std::terminate during interpreter teardown (SIGABRT after a successful
-    # recipe, seen with water-model + LAMMPS/torch) does not lose a finished build.
-    # Retry once if the child dies without producing output.
+    # Run the gallery build in a child process. Some torch/native stacks abort
+    # during interpreter teardown after a successful recipe (SIGABRT: -6 or
+    # 134). If the gallery artifacts already exist, treat that as success;
+    # otherwise retry once.
     if os.environ.get("_ATOMISTIC_COOKBOOK_GALLERY_INNER") != "1":
         env = {**os.environ, "_ATOMISTIC_COOKBOOK_GALLERY_INNER": "1"}
-        # SIGABRT is -6 from subprocess; some platforms surface 134 (128+6).
         abort_codes = {-6, 134}
         last_code = 1
         for attempt in range(2):
@@ -123,12 +122,11 @@ if __name__ == "__main__":
                 sys.exit(0)
             if last_code in abort_codes and _gallery_has_output(example_dir):
                 print(
-                    f"generate-gallery: child exited {last_code} after writing gallery "
-                    f"for {example_dir}; treating as success",
+                    f"generate-gallery: child exited {last_code} after writing "
+                    f"gallery for {example_dir}; treating as success",
                     file=sys.__stderr__,
                 )
                 sys.exit(0)
-            # Only retry pure teardowns that left no gallery (flaky abort mid-cleanup).
             if last_code in abort_codes and attempt == 0:
                 print(
                     f"generate-gallery: child exited {last_code} "
