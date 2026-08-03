@@ -1109,8 +1109,6 @@ ase.io.write("water_32.data", atoms, format="lammps-data", masses=True)
 # LAMMPS 2026.07 metatomic builds sometimes hit a C++ std::terminate on process
 # exit after a successful run (SIGABRT, returncode -6). Accept that exit status
 # only when the trajectory was written; any other failure still raises.
-from pathlib import Path
-
 _lmp = run_command("lmp -in data/spcfw.in", check=False)
 if _lmp.returncode not in (0, -6) or not Path("trajectory.xyz").is_file():
     raise RuntimeError(
