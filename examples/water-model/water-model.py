@@ -835,7 +835,7 @@ system.add_neighbor_list(nlo, calculator.compute(system))
 energy_unit = "kcal/mol"
 length_unit = "angstrom"
 
-outputs = {"energy": ModelOutput(quantity="", unit=energy_unit, sample_kind="system")}
+outputs = {"energy": ModelOutput(unit=energy_unit, sample_kind="system")}
 
 nrg = qtip4pf_model.forward([system], outputs)
 nrg["energy"].block(0).values.backward()
