@@ -1,6 +1,6 @@
 """
-The metatomic hourglass
-=======================
+The metatomic hourglass design
+==============================
 
 :Authors: Joseph W. Abbott `@jwa7 <https://github.com/jwa7>`_; Filippo Bigi
           `@frostedoyster <https://github.com/frostedoyster>`_; Michele Ceriotti
@@ -51,6 +51,7 @@ import subprocess
 from typing import List, Literal, Tuple
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 from metatomic.torch import AtomisticModel, load_atomistic_model
 
@@ -245,6 +246,11 @@ for name, model in models.items():
 # that all engines follow the same deterministic trajectory, while NVT runs use each
 # engine's thermostat at 300 K.
 #
+# Engines differ in what they report by default: some skip the initial configuration,
+# some subsample the trajectory. Each function below is written so that all of them
+# return the same 101 snapshots, from :math:`t = 0` to :math:`t = 50` fs, which lets us
+# compare the trajectories point by point.
+#
 # Inside each function, the engine loads the very same ``model.pt`` file.
 #
 # ASE
@@ -260,10 +266,13 @@ def run_ase(
 ) -> Tuple[List[float], List[float]]:
     import ase.io
     import ase.md
+    from ase.constraints import FixCom
     from metatomic_ase import MetatomicCalculator
 
     atoms = ase.io.read("data/ethanol.xyz")
     atoms.calc = MetatomicCalculator(model, device="cpu")
+    fixcom = FixCom()  # remove center-of-mass motion
+    atoms.set_constraint(fixcom)
 
     dt_fs = 0.5
     if ensemble == "nve":
@@ -274,9 +283,12 @@ def run_ase(
             timestep=dt_fs * ase.units.fs,
             temperature_K=300,
             friction=0.01 / ase.units.fs,
+            fixcm=False,  # deprecated, we use the FixCom constraint instead
         )
 
-    times, energies = [], []
+    # ASE integrators only report the steps they take, so we record the initial
+    # configuration ourselves
+    times, energies = [0.0], [atoms.get_potential_energy()]
     for step in range(100):
         integrator.run(1)
         times.append((step + 1) * dt_fs)
@@ -366,6 +378,11 @@ run 100
 # ``.mdp`` parameter file, selecting the model file and the index group of atoms it
 # applies to. The topology only provides masses, through inert atom types with no
 # classical interactions, so that all forces come from the model.
+#
+# GROMACS' default integrator is leap-frog, which stores velocities half a step behind
+# the positions: starting it "at rest" means :math:`v(-\\Delta t/2) = 0` rather than
+# :math:`v(0) = 0`, and the resulting half-step offset never goes away. We ask instead
+# for ``md-vv``, the velocity Verlet integrator the other engines use.
 
 
 def run_gromacs(
@@ -374,6 +391,7 @@ def run_gromacs(
     import shutil
 
     import ase.io
+    import ase.units
     import numpy as np
 
     model.save("model.pt")
@@ -405,7 +423,8 @@ ref-t = 300
 
     with open("grompp.mdp", "w") as f:
         f.write(f"""\
-integrator = md
+; velocity Verlet, rather than the default leap-frog
+integrator = md-vv
 dt = 0.0005
 nsteps = 100
 
@@ -451,7 +470,7 @@ nstlog = 100
     data = np.loadtxt("energy.xvg", comments=["@", "#"])
 
     time_fs = data[:, 0] * 1000  # ps -> fs
-    energy_ev = data[:, 1] / 96.485  # kJ/mol -> eV
+    energy_ev = data[:, 1] * ase.units.kJ / ase.units.mol  # kJ/mol -> eV
     return time_fs.tolist(), energy_ev.tolist()
 
 
@@ -476,6 +495,7 @@ def run_ipi(
         motion_nvt_xml,
         simulation_xml,
     )
+    from ipi.utils.softexit import softexit
 
     model.save("model.pt")
 
@@ -495,6 +515,16 @@ def run_ipi(
         motion = motion_nvt_xml(timestep=0.5 * ase.units.fs)
         temperature = 300
 
+    # i-PI's default scripting output only prints every other step; ask for every step
+    # instead, so that the trajectory can be compared to the other engines
+    output = """
+    <output prefix='simulation'>
+        <properties stride='1' filename='out'>
+            [ step, time{picosecond}, potential{electronvolt} ]
+        </properties>
+    </output>
+    """
+
     input_xml = simulation_xml(
         structures=structure,
         forcefield=forcefield_xml(
@@ -505,8 +535,13 @@ def run_ipi(
         ),
         motion=motion,
         temperature=temperature,
+        output=output,
         prefix="ethanol-ipi",
     )
+
+    # softexit is global: if anything trips it, every later simulation in this
+    # process quits after a few steps without saying anything
+    softexit.reset()
 
     sim = InteractiveSimulation(input_xml)
     sim.run(100)
@@ -558,7 +593,8 @@ def run_torchsim(
         # start from zero velocities, like the other engines
         md_state.momenta = torch.zeros_like(md_state.momenta)
 
-    times, energies = [], []
+    # like ASE, TorchSim leaves it to us to record the initial configuration
+    times, energies = [0.0], [md_state.energy.sum().item()]
     for step in range(100):
         md_state = step_fn(md_state, ts_model, dt=dt, kT=kt)
         times.append((step + 1) * 0.5)
@@ -600,6 +636,7 @@ fig, axes = plt.subplots(
     figsize=(11, 12),
     sharex=True,
     constrained_layout=True,
+    dpi=200,
 )
 
 for col, (model_name, model) in enumerate(models.items()):
@@ -638,15 +675,22 @@ plt.show()
 # deterministic trajectory, and for each model the five curves should superimpose.
 
 fig, axes = plt.subplots(
-    1, len(models), figsize=(12, 4), constrained_layout=True, sharex=True
+    1, len(models), figsize=(12, 4), constrained_layout=True, sharex=True, dpi=200
 )
 
+nve_trajectories = {}
+
 for col, (model_name, model) in enumerate(models.items()):
+    nve_trajectories[model_name] = {}
     for engine_name, run_engine in engines.items():
         if (engine_name, model_name) in unsupported:
             continue
         print(f"Running {engine_name} with {model_name} (NVE)")
         times, energies = run_engine(model, ensemble="nve")
+        nve_trajectories[model_name][engine_name] = (
+            np.array(times),
+            np.array(energies),
+        )
         axes[col].plot(times, energies, label=engine_name)
     axes[col].set_title(model_name)
     axes[col].set_xlabel("t / fs")
@@ -654,6 +698,36 @@ for col, (model_name, model) in enumerate(models.items()):
     axes[col].legend()
 
 plt.show()
+
+# %%
+#
+# The curves are hard to tell apart by eye, so we also check the agreement numerically,
+# taking ASE as the reference. The engines do not agree exactly: GROMACS runs in mixed
+# precision, so its trajectory slowly drifts away from the others, but 1 meV is a
+# generous bound on that, and a small fraction of the range the energy spans here.
+
+TIME_TOLERANCE = 1e-6  # fs
+ENERGY_TOLERANCE = 0.001  # eV
+
+for model_name, trajectories in nve_trajectories.items():
+    reference_times, reference_energies = trajectories["ASE"]
+    for engine_name, (times, energies) in trajectories.items():
+        assert len(times) == len(reference_times), (
+            f"NVE trajectories are not sampled at the same times across engines: "
+            f"{engine_name} reports {len(times)} snapshots for {model_name}, "
+            f"ASE reports {len(reference_times)}"
+        )
+        assert np.abs(times - reference_times).max() < TIME_TOLERANCE, (
+            f"NVE trajectories are not sampled at the same times across engines: "
+            f"{engine_name} differs from ASE for {model_name}"
+        )
+
+        energy_error = np.abs(energies - reference_energies).max()
+        print(f"{model_name} / {engine_name}: max |ΔU| = {1000 * energy_error:.3f} meV")
+        assert energy_error < ENERGY_TOLERANCE, (
+            f"NVE trajectories don't match across engines: {engine_name} differs by "
+            f"{1000 * energy_error:.3f} meV for {model_name}"
+        )
 
 # %%
 #
