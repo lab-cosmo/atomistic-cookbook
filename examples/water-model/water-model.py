@@ -722,7 +722,7 @@ class WaterModel(torch.nn.Module):
                 "keys. Only 'energy' is supported."
             )
 
-        if outputs["energy"].per_atom:
+        if outputs["energy"].sample_kind == "atom":
             raise NotImplementedError("per-atom energies are not supported.")
 
         system, neighbors = self._setup_systems(systems, selected_atoms)
@@ -835,7 +835,7 @@ system.add_neighbor_list(nlo, calculator.compute(system))
 energy_unit = "kcal/mol"
 length_unit = "angstrom"
 
-outputs = {"energy": ModelOutput(quantity="energy", unit=energy_unit, per_atom=False)}
+outputs = {"energy": ModelOutput(quantity="", unit=energy_unit, sample_kind="system")}
 
 nrg = qtip4pf_model.forward([system], outputs)
 nrg["energy"].block(0).values.backward()
