@@ -1,5 +1,5 @@
-The metatomic hourglass: one model, many engines
-================================================
+The metatomic hourglass
+=======================
 
 This example takes three machine-learning models with very different origins,
 PET-MAD trained with metatrain, a MACE foundation model, and a branch of the
