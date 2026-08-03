@@ -11,4 +11,4 @@ dependencies:
     - featomic
     - scikit-learn
     - skmatter>=0.3
-    - requests
+    - atomistic-cookbook-utils >=0.1,<0.2

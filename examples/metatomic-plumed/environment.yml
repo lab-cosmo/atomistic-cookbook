@@ -16,8 +16,9 @@ dependencies:
     - ase
     - numpy
     - chemiscope>=1.0
-    - ipi>=3.1.5
+    - ipi>=3.2.0
     - metatomic-torch==0.1.7
     - featomic-torch
+    - atomistic-cookbook-utils >=0.1,<0.2
 variables:
   PIP_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu

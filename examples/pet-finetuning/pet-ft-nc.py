@@ -40,11 +40,11 @@ large (potentially universal) datasets.
 
 # %%
 
-import subprocess
 from time import time
 
 import ase.io
 import numpy as np
+from atomistic_cookbook_utils import run_command
 
 
 # %%
@@ -100,9 +100,7 @@ ase.io.write("data/ethanol_test.xyz", test, format="extxyz")
 # or from Python:
 
 time_nc = -time()
-subprocess.run(
-    ["mtt", "train", "nc_train_options.yaml", "-o", "nc_model.pt"], check=True
-)
+run_command("mtt train nc_train_options.yaml -o nc_model.pt")
 time_nc += time()
 print(f"Training time (non-cons.): {time_nc:.2f} seconds")
 
@@ -119,7 +117,7 @@ print(f"Training time (non-cons.): {time_nc:.2f} seconds")
 #
 # Or from Python:
 
-subprocess.run("mtt eval nc_model.pt nc_model_eval.yaml".split(), check=True)
+run_command("mtt eval nc_model.pt nc_model_eval.yaml")
 
 
 # %%
@@ -175,10 +173,7 @@ subprocess.run("mtt eval nc_model.pt nc_model_eval.yaml".split(), check=True)
 # Or in Python:
 
 time_c_ft = -time()
-subprocess.run(
-    "mtt train c_ft_options.yaml -o c_ft_model.pt --restart=nc_model.ckpt".split(" "),
-    check=True,
-)
+run_command("mtt train c_ft_options.yaml -o c_ft_model.pt --restart=nc_model.ckpt")
 time_c_ft += time()
 print(f"Training time (conservative fine-tuning): {time_c_ft:.2f} seconds")
 
@@ -192,7 +187,7 @@ print(f"Training time (conservative fine-tuning): {time_c_ft:.2f} seconds")
 #
 # Or from Python:
 
-subprocess.run("mtt eval c_ft_model.pt nc_model_eval.yaml".split(), check=True)
+run_command("mtt eval c_ft_model.pt nc_model_eval.yaml")
 
 # %%
 # Converged results

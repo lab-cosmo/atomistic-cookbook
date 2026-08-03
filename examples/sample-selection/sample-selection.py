@@ -15,18 +15,15 @@ First, import all the necessary packages
 
 # %%
 
-import os
-
 import ase.io
 import chemiscope
 import metatensor
 import numpy as np
-import requests
+from atomistic_cookbook_utils import download_with_retry
 from featomic import SoapPowerSpectrum
 from matplotlib import pyplot as plt
 from sklearn.decomposition import PCA
 from skmatter import feature_selection, sample_selection
-from urllib3.util.retry import Retry
 
 
 # %%
@@ -37,30 +34,10 @@ from urllib3.util.retry import Retry
 # `ASE <https://wiki.fysik.dtu.dk/ase/>`_.
 
 
-def fetch_dataset(filename, base_url, local_path=""):
-    """Helper function to load data with retries on errors."""
-
-    local_file = local_path + filename
-    if os.path.isfile(local_file):
-        return
-
-    # Retry strategy: wait 1s, 2s, 4s, 8s, 16s on 429/5xx errors
-    retry_strategy = Retry(
-        total=5, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504]
-    )
-    session = requests.Session()
-    session.mount("https://", requests.adapters.HTTPAdapter(max_retries=retry_strategy))
-
-    # Fetch with automatic retry and error raising
-    response = session.get(base_url + filename)
-    response.raise_for_status()
-
-    with open(local_file, "wb") as file:
-        file.write(response.content)
-
-
 filename = "gaas_training.xyz"
-fetch_dataset(filename, "https://zenodo.org/records/10566825/files/")
+download_with_retry(
+    "https://zenodo.org/records/10566825/files/gaas_training.xyz", filename
+)
 
 
 # Load a subset of structures from the example dataset

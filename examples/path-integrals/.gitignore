@@ -5,3 +5,5 @@ log.lammps
 *.kod.xyz
 *.out
 *.pos_*.xyz
+*.pt
+water_lioh.xyz

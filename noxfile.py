@@ -6,6 +6,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import zipfile
 from pathlib import Path
 
@@ -62,6 +63,11 @@ def get_lint_files():
         "noxfile.py",
         "docs/src/conf.py",
         "src/get_examples.py",
+        "src/atomistic-cookbook-utils/src/atomistic_cookbook_utils/__init__.py",
+        "src/atomistic-cookbook-utils/src/atomistic_cookbook_utils/_command.py",
+        "src/atomistic-cookbook-utils/src/atomistic_cookbook_utils/_download.py",
+        "src/atomistic-cookbook-utils/tests/test_command.py",
+        "src/atomistic-cookbook-utils/tests/test_download.py",
     ]
     return LINT_FILES + get_example_files()
 
@@ -346,24 +352,38 @@ DEPENCENCIES_UPDATES = {
 
 
 def update_dependencies(environment_yml, session):
-    output = session.run(
-        "conda",
-        "env",
-        "create",
-        f"--file={environment_yml}",
-        "--name=atomistic-cookbook-tmp-env",
-        "--solver=libmamba",
-        "--json",
-        "--quiet",
-        "--dry-run",
-        silent=True,
-    )
+    with tempfile.TemporaryFile(mode="w+", encoding="utf-8") as stderr:
+        output = session.run(
+            "conda",
+            "env",
+            "create",
+            f"--file={environment_yml}",
+            "--name=atomistic-cookbook-tmp-env",
+            "--solver=libmamba",
+            "--json",
+            "--quiet",
+            "--dry-run",
+            stderr=stderr,
+            silent=True,
+        )
+
+        stderr.seek(0)
+        stderr_output = stderr.read().strip()
+
+    if stderr_output:
+        session.warn(
+            f"Conda emitted warnings while resolving dependencies:\n{stderr_output}"
+        )
 
     try:
         data = json.loads(output)
         dependencies = data["dependencies"]
     except json.JSONDecodeError:
-        session.error(f"Conda did not return valid JSON. Output was: {output}")
+        session.error(
+            "Conda did not return valid JSON while resolving dependencies. "
+            "stdout was:\n"
+            f"{output}"
+        )
 
     new_deps = set()
     for dep in dependencies:

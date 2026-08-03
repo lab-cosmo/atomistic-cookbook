@@ -80,14 +80,13 @@ from zipfile import ZipFile
 
 import matplotlib.pyplot as plt
 import numpy as np
-import requests
 import torch
 from ase.units import Hartree
+from atomistic_cookbook_utils import download_with_retry
 from IPython.utils import io
 from mlelec.features.acdc import compute_features_for_target
 from mlelec.targets import drop_zero_blocks  # noqa: F401
 from mlelec.utils.plot_utils import plot_losses
-from urllib3.util.retry import Retry
 
 
 os.environ["PYSCFAD_BACKEND"] = "torch"
@@ -190,29 +189,10 @@ save_parameters(
 # and unzip the downloaded datafile.
 
 
-def fetch_dataset(filename, base_url, local_path=""):
-    """Helper function to load data with retries on errors."""
-
-    local_file = local_path + filename
-    if os.path.isfile(local_file):
-        return
-
-    # Retry strategy: wait 1s, 2s, 4s, 8s, 16s on 429/5xx errors
-    retry_strategy = Retry(
-        total=5, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504]
-    )
-    session = requests.Session()
-    session.mount("https://", requests.adapters.HTTPAdapter(max_retries=retry_strategy))
-
-    # Fetch with automatic retry and error raising
-    response = session.get(base_url + filename)
-    response.raise_for_status()
-
-    with open(local_file, "wb") as file:
-        file.write(response.content)
-
-
-fetch_dataset("hamiltonian-qm7-data.zip", "https://zenodo.org/records/15524259/files/")
+download_with_retry(
+    "https://zenodo.org/records/15524259/files/hamiltonian-qm7-data.zip",
+    "hamiltonian-qm7-data.zip",
+)
 
 with ZipFile("hamiltonian-qm7-data.zip", "r") as zObject:
     zObject.extractall(path=".")

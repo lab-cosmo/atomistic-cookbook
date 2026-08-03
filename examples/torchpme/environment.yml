@@ -10,3 +10,4 @@ dependencies:
     - numpy
     - vesin
     - torch-pme
+    - atomistic-cookbook-utils >=0.1,<0.2

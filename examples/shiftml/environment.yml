@@ -8,4 +8,4 @@ dependencies:
     - chemiscope>=1.0
     - matplotlib
     - shiftml==0.1.1
-    - requests
+    - atomistic-cookbook-utils >=0.1,<0.2

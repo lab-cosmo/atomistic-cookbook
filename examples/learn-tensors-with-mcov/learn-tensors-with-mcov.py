@@ -22,7 +22,6 @@ and can then be used in an ASE calculator.
 # %%
 
 # Core packages
-import subprocess
 from glob import glob
 
 import ase.io
@@ -32,6 +31,7 @@ import chemiscope
 import matplotlib.pyplot as plt
 import metatensor as mts
 import numpy as np
+from atomistic_cookbook_utils import run_command
 
 # Model wrapping and execution tools
 from featomic.clebsch_gordan import cartesian_to_spherical
@@ -328,14 +328,7 @@ for idx, filename in zip(
 # %%
 # To execute ``metatrain`` from within a script, use
 
-subprocess.run(
-    [
-        "mtt",
-        "train",
-        "options.yaml",
-    ],
-    check=True,
-)
+run_command("mtt train options.yaml")
 # %%
 # We visualize training and validation losses as functions of the epoch.
 # The training log is stored in CSV format in the ``outputs`` directory.
@@ -372,19 +365,7 @@ plt.title("Training and validation loss")
 # %%
 # We can evaluate the model from within the script with
 
-subprocess.run(
-    [
-        "mtt",
-        "eval",
-        "model.pt",
-        "eval.yaml",
-        "-e",
-        "extensions",
-        "-o",
-        "test_results.mts",
-    ],
-    check=True,
-)
+run_command("mtt eval model.pt eval.yaml -e extensions -o test_results.mts")
 
 # %%
 # We load the test set predictions and targets from disk and prepare them for

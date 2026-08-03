@@ -1,0 +1,8 @@
+pet-mad-xs-v1.5.1.ckpt
+pet-mad-xs-v1.5.1.pt
+pet-mad-xs-v1.5.0.pt
+*.lammpstrj
+*_thermo.out
+*json.gz
+data.zip
+log.lammps

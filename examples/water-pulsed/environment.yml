@@ -7,3 +7,4 @@ dependencies:
   - pip:
     - maicos
     - pyedr
+    - atomistic-cookbook-utils >=0.1,<0.2

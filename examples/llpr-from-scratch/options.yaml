@@ -1,0 +1,24 @@
+seed: 42
+
+architecture:
+  name: pet
+  model:
+    num_attention_layers: 1
+    d_pet: 32
+    d_node: 128
+    d_head: 32
+    d_feedforward: 64
+  training:
+    batch_size: 10
+    num_epochs: 100
+
+training_set:
+  systems:
+    read_from: dataset.xyz
+    length_unit: angstrom
+  targets:
+    energy:
+      key: energy
+      unit: eV
+
+validation_set: 0.2

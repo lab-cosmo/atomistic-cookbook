@@ -9,3 +9,4 @@ dependencies:
     - chemiscope>=1.0
     - featomic>=0.6.3,<0.7
     - matplotlib
+    - atomistic-cookbook-utils >=0.1,<0.2

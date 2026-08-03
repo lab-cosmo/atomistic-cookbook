@@ -5,3 +5,8 @@ Contributing a recipe
    :start-after: marker-contrib-start
    :end-before: marker-contrib-end
 
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   utils

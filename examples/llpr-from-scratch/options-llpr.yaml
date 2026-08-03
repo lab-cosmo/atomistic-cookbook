@@ -1,0 +1,20 @@
+seed: 42
+
+architecture:
+  name: llpr
+  model:
+    num_ensemble_members: {"energy": 64}  # optional
+  training:
+    model_checkpoint: model.ckpt
+    batch_size: 10
+
+training_set:
+  systems:
+    read_from: dataset.xyz
+    length_unit: angstrom
+  targets:
+    energy:
+      key: energy
+      unit: eV
+
+validation_set: 0.2

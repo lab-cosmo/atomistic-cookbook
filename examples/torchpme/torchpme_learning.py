@@ -15,7 +15,6 @@ through Coulomb forces.
 
 # %%
 import os
-import urllib.request
 from typing import Dict
 
 import ase.io
@@ -23,6 +22,7 @@ import ase.visualize.plot
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from atomistic_cookbook_utils import download_with_retry
 from torchpme import CombinedPotential, EwaldCalculator, InversePowerLawPotential
 from vesin import NeighborList
 
@@ -44,14 +44,10 @@ prefactor = 0.5292  # Unit conversion prefactor.
 
 
 data_dir = "data"
-os.makedirs(data_dir, exist_ok=True)
 dataset_url = "https://archive.materialscloud.org/records/405an-d8183/files/point_charges_Training_set_p1.xyz"  # noqa: E501
 dataset_path = os.path.join(data_dir, "point_charges_Training_set.xyz")
 
-if not os.path.isfile(dataset_path):
-    print(f"Downloading dataset from {dataset_url} ...")
-    urllib.request.urlretrieve(dataset_url, dataset_path)
-    print("Download complete.")
+download_with_retry(dataset_url, dataset_path)
 
 # The dataset consists of atomic configurations with reference energies.
 frames = ase.io.read(dataset_path, ":10")

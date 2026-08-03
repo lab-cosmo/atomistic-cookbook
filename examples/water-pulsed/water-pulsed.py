@@ -23,12 +23,11 @@ be ``MDAnalysis``, and for computing the dipole moment, we will use ``MAICoS``.
 
 # %%
 
-import subprocess
-
 import maicos
 import matplotlib.pyplot as plt
 import MDAnalysis as mda
 import numpy as np
+from atomistic_cookbook_utils import run_command
 
 
 # %%
@@ -84,9 +83,7 @@ plt.show()
 # molecules. We first create the topology using the ``pdb2gmx`` tool with rigid SPC/E
 # molecules.
 
-subprocess.check_call(
-    ["gmx", "pdb2gmx", "-f", "data/conf.gro.gz", "-ff", "amber99", "-water", "spce"]
-)
+run_command("gmx pdb2gmx -f data/conf.gro.gz -ff amber99 -water spce")
 
 # %%
 #
@@ -101,13 +98,13 @@ subprocess.check_call(
 # Before running the simulation, we use the GROMACS preprocessor (``grompp``) to create
 # the necessary tpr input file.
 
-subprocess.check_call(["gmx", "grompp", "-f", "data/grompp.mdp"])
+run_command("gmx grompp -f data/grompp.mdp")
 
 # %%
 #
 # And run the simulation, which should take about 30 seconds to complete.
 
-subprocess.check_call(["gmx", "mdrun"])
+run_command("gmx mdrun")
 
 # %%
 #

@@ -22,8 +22,8 @@ import zipfile
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import numpy as np
-import requests
 import torch
+from atomistic_cookbook_utils import download_with_retry
 from matplotlib.animation import FuncAnimation
 from mlelec.data.qmdataset import QMDataset
 from mlelec.utils.pbc_utils import blocks_to_matrix
@@ -274,15 +274,11 @@ torch.set_default_dtype(torch.float64)
 #
 
 filename = "precomputed.zip"
-if not os.path.exists(filename):
-    url = (
-        "https://github.com/curiosity54/mlelec/raw/"
-        "tutorial_periodic/examples/periodic_tutorial/precomputed.zip"
-    )
-    response = requests.get(url)
-    response.raise_for_status()
-    with open(filename, "wb") as f:
-        f.write(response.content)
+download_with_retry(
+    "https://github.com/curiosity54/mlelec/raw/"
+    "tutorial_periodic/examples/periodic_tutorial/precomputed.zip",
+    filename,
+)
 
 with zipfile.ZipFile(filename, "r") as zip_ref:
     zip_ref.extractall("./")

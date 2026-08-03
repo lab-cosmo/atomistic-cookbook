@@ -1,0 +1,13 @@
+name: water-md
+channels:
+  - metatensor
+  - conda-forge
+dependencies:
+  - python=3.12
+  - lammps-metatomic==2026.03.30.mta1
+  - pip
+  - pip:
+    - upet>=0.2.6
+    - chemiscope==1.0.3
+    - matplotlib
+    - atomistic-cookbook-utils >=0.1,<0.2

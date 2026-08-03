@@ -15,10 +15,10 @@ import zipfile
 import chemiscope
 import matplotlib.pyplot as plt
 import numpy as np
-import requests
 
 # %%
 from ase.io import read
+from atomistic_cookbook_utils import download_with_retry
 from shiftml.ase import ShiftML
 
 
@@ -29,14 +29,10 @@ from shiftml.ase import ShiftML
 calculator = ShiftML("ShiftML3")
 
 filename = "ShiftML_poly.zip"
-if not os.path.exists(filename):
-    url = (
-        "https://archive.materialscloud.org/records/j2fka-sda13/files/ShiftML_poly.zip"
-    )
-    response = requests.get(url)
-    response.raise_for_status()
-    with open(filename, "wb") as f:
-        f.write(response.content)
+download_with_retry(
+    "https://archive.materialscloud.org/records/j2fka-sda13/files/ShiftML_poly.zip",
+    filename,
+)
 
 
 with zipfile.ZipFile(filename, "r") as zip_ref:

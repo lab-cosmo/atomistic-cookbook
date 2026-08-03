@@ -18,10 +18,10 @@ to perform demonstrative molecular dynamics simulations.
 # sphinx_gallery_thumbnail_number = 3
 
 # %%
-import subprocess
 from typing import Dict, List, Optional, Tuple
 
 import ase.io
+from atomistic_cookbook_utils import run_command
 
 # Simulation and visualization tools
 import chemiscope
@@ -34,12 +34,13 @@ import torch
 # Core atomistic libraries
 import torchpme
 from ase.optimize import LBFGS
-from ipi.utils.parsing import read_output, read_trajectory
-from ipi.utils.scripting import (
+from ipi.scripting import (
     InteractiveSimulation,
     forcefield_xml,
     motion_nvt_xml,
     simulation_xml,
+    read_output,
+    read_trajectory,
 )
 from metatensor.torch import Labels, TensorBlock, TensorMap
 from metatomic.torch import (
@@ -54,7 +55,7 @@ from metatomic.torch import (
 )
 
 # Integration with ASE calculator for metatomic models
-from metatomic.torch.ase_calculator import MetatomicCalculator
+from metatomic_ase import MetatomicCalculator
 from vesin.metatomic import NeighborList
 
 
@@ -340,9 +341,8 @@ p3m_prefactor = torchpme.prefactors.kcalmol_A
 # energy between two point charges using the P3M algorithm.
 
 p3m_calculator = torchpme.P3MCalculator(
-    potential=torchpme.CoulombPotential(p3m_smearing),
+    potential=torchpme.CoulombPotential(p3m_smearing, prefactor=p3m_prefactor),
     **p3m_parameters,
-    prefactor=p3m_prefactor,
 )
 
 
@@ -479,7 +479,13 @@ def get_molecular_geometry(
     species = system.types
 
     # get neighbor idx and vectors as torch tensors
-    neigh_ij = neighbors.samples.view(["first_atom", "second_atom"]).values
+    neigh_ij = torch.stack(
+        (
+            neighbors.samples.column("first_atom"),
+            neighbors.samples.column("second_atom"),
+        ),
+        dim=1,
+    )
     neigh_dij = neighbors.values.squeeze()
 
     # get all OH distances and their sorting order
@@ -553,8 +559,8 @@ def get_molecular_geometry(
     # true, so one should use a slightly larger-than-usual cutoff nb - this is reshaped
     # to match the values in a NL tensorblock
     nl = system.get_neighbor_list(nlo)
-    i_idx = nl.samples.view(["first_atom"]).values.flatten()
-    j_idx = nl.samples.view(["second_atom"]).values.flatten()
+    i_idx = nl.samples.column("first_atom")
+    j_idx = nl.samples.column("second_atom")
     m_nl = TensorBlock(
         nl.values
         + (om_displacements[j_idx] - om_displacements[i_idx]).reshape(-1, 3, 1),
@@ -587,7 +593,7 @@ def get_molecular_geometry(
         blocks=[data],
     )
 
-    m_system.add_data(name="charges", tensor=tensor)
+    m_system.add_data(name="charge", tensor=tensor)
 
     # intra-molecular distances with M sites (for self-energy removal)
     hh_dist = torch.sqrt(((doh_1 - doh_2) ** 2).sum(dim=1))
@@ -648,9 +654,10 @@ class WaterModel(torch.nn.Module):
         p3m_smearing, p3m_parameters, _ = p3m_options
 
         self.p3m_calculator = torchpme.metatensor.P3MCalculator(
-            potential=torchpme.CoulombPotential(p3m_smearing),
+            potential=torchpme.CoulombPotential(
+                p3m_smearing, prefactor=torchpme.prefactors.kcalmol_A
+            ),
             **p3m_parameters,
-            prefactor=torchpme.prefactors.kcalmol_A,  # consistent units
         )
 
         self.coulomb = torchpme.CoulombPotential()
@@ -721,7 +728,13 @@ class WaterModel(torch.nn.Module):
         system, neighbors = self._setup_systems(systems, selected_atoms)
 
         # compute non-bonded LJ energy
-        neighbor_indices = neighbors.samples.view(["first_atom", "second_atom"]).values
+        neighbor_indices = torch.stack(
+            (
+                neighbors.samples.column("first_atom"),
+                neighbors.samples.column("second_atom"),
+            ),
+            dim=1,
+        )
         species = system.types
         oo_mask = (species[neighbor_indices[:, 0]] == 8) & (
             species[neighbor_indices[:, 1]] == 8
@@ -746,7 +759,7 @@ class WaterModel(torch.nn.Module):
         m_neighbors = m_system.get_neighbor_list(self.nlo)
 
         potentials = self.p3m_calculator(m_system, m_neighbors).block(0).values
-        charges = m_system.get_data("charges").block().values
+        charges = m_system.get_data("charge").block().values
         energy_coulomb = (potentials * charges).sum()
 
         # this is the intra-molecular Coulomb interactions, that must be removed
@@ -1090,4 +1103,4 @@ for line in lines[:7] + lines[16:]:
 
 ase.io.write("water_32.data", atoms, format="lammps-data", masses=True)
 
-subprocess.check_call(["lmp", "-in", "data/spcfw.in"])
+run_command("lmp -in data/spcfw.in")
