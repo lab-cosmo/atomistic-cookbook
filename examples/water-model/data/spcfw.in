@@ -2,8 +2,8 @@ units metal  # Angstroms, eV, picoseconds
 atom_style atomic
 read_data water_32.data
 
-# loads metatomic SPC/Fw model
-pair_style metatomic spcfw-mta.pt
+# loads metatomic SPC/Fw model (extensions/ holds vesin_torch from collect_extensions)
+pair_style metatomic spcfw-mta.pt device cpu extensions extensions/
 pair_coeff * * 1 8
 
 neighbor 2.0 bin

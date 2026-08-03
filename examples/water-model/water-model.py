@@ -886,7 +886,9 @@ atomistic_model = AtomisticModel(
     qtip4pf_model.eval(), ModelMetadata(), model_capabilities
 )
 
-atomistic_model.save("qtip4pf-mta.pt")
+# Collect Torch extensions (e.g. vesin_torch) next to the model so engines that
+# load the TorchScript file outside Python can resolve them (LAMMPS pair_style).
+atomistic_model.save("qtip4pf-mta.pt", collect_extensions="extensions")
 
 
 # %%
@@ -915,7 +917,7 @@ spcf_model = WaterModel(**spcf_parameters)
 
 atomistic_model = AtomisticModel(spcf_model.eval(), ModelMetadata(), model_capabilities)
 
-atomistic_model.save("spcfw-mta.pt")
+atomistic_model.save("spcfw-mta.pt", collect_extensions="extensions")
 
 # %%
 #
