@@ -1,5 +1,6 @@
 import os
 import shutil
+import subprocess
 import sys
 import traceback
 
@@ -83,10 +84,58 @@ class PseudoSphinxApp:
         pass
 
 
+def _gallery_has_output(example_dir: str) -> bool:
+    """True if sphinx-gallery wrote recipe artifacts for this example."""
+    gallery_dir = os.path.join(ROOT, "docs", "src", "examples", os.path.basename(example_dir))
+    if not os.path.isdir(gallery_dir):
+        return False
+    for name in os.listdir(gallery_dir):
+        if name.endswith((".rst", ".ipynb", ".py")):
+            return True
+    return False
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print(f"usage: {sys.argv[0]} <example/dir>")
         sys.exit(1)
+
+    example_dir = sys.argv[1]
+
+    # Outer driver: run the real gallery build in a child process so a flaky
+    # C++ std::terminate during interpreter teardown (SIGABRT after a successful
+    # recipe, seen with water-model + LAMMPS/torch) does not lose a finished build.
+    # Retry once if the child dies without producing output.
+    if os.environ.get("_ATOMISTIC_COOKBOOK_GALLERY_INNER") != "1":
+        env = {**os.environ, "_ATOMISTIC_COOKBOOK_GALLERY_INNER": "1"}
+        # SIGABRT is -6 from subprocess; some platforms surface 134 (128+6).
+        abort_codes = {-6, 134}
+        last_code = 1
+        for attempt in range(2):
+            proc = subprocess.run(
+                [sys.executable, "-u", __file__, example_dir],
+                env=env,
+            )
+            last_code = proc.returncode
+            if last_code == 0:
+                sys.exit(0)
+            if last_code in abort_codes and _gallery_has_output(example_dir):
+                print(
+                    f"generate-gallery: child exited {last_code} after writing gallery "
+                    f"for {example_dir}; treating as success",
+                    file=sys.__stderr__,
+                )
+                sys.exit(0)
+            # Only retry pure teardowns that left no gallery (flaky abort mid-cleanup).
+            if last_code in abort_codes and attempt == 0:
+                print(
+                    f"generate-gallery: child exited {last_code} without usable gallery; "
+                    "retrying once",
+                    file=sys.__stderr__,
+                )
+                continue
+            break
+        sys.exit(last_code if last_code > 0 else 1)
 
     # To change the download text, we change the ZIP_DOWNLOAD variable in
     # sphinx_gallery.gen_rst. This is a bit of a hack, but arguably not
@@ -101,7 +150,7 @@ if __name__ == "__main__":
         :download:`Download recipe: {0} <{0}>`
     """
 
-    app = PseudoSphinxApp(example=sys.argv[1])
+    app = PseudoSphinxApp(example=example_dir)
     sphinx_gallery.gen_gallery.fill_gallery_conf_defaults(app, app.config)
     sphinx_gallery.gen_gallery.update_gallery_conf_builder_inited(app)
 
