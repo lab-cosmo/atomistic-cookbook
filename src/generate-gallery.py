@@ -86,7 +86,9 @@ class PseudoSphinxApp:
 
 def _gallery_has_output(example_dir: str) -> bool:
     """True if sphinx-gallery wrote recipe artifacts for this example."""
-    gallery_dir = os.path.join(ROOT, "docs", "src", "examples", os.path.basename(example_dir))
+    gallery_dir = os.path.join(
+        ROOT, "docs", "src", "examples", os.path.basename(example_dir)
+    )
     if not os.path.isdir(gallery_dir):
         return False
     for name in os.listdir(gallery_dir):
@@ -129,8 +131,8 @@ if __name__ == "__main__":
             # Only retry pure teardowns that left no gallery (flaky abort mid-cleanup).
             if last_code in abort_codes and attempt == 0:
                 print(
-                    f"generate-gallery: child exited {last_code} without usable gallery; "
-                    "retrying once",
+                    f"generate-gallery: child exited {last_code} "
+                    "without usable gallery; retrying once",
                     file=sys.__stderr__,
                 )
                 continue
