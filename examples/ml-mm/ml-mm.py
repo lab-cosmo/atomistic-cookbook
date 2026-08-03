@@ -87,7 +87,6 @@ from MDAnalysis.analysis.rms import RMSD
 from metatomic_ase import MetatomicCalculator
 
 
-# Prefer single-precision MPI, then serial, then double-precision names.
 GMX = (
     shutil.which("gmx_mpi")
     or shutil.which("gmx")

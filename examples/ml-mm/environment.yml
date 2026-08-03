@@ -3,12 +3,11 @@ channels:
   - conda-forge
 dependencies:
   - chemiscope
-  # Single-precision OpenMPI only. The mpi_* glob also matches mpi_*_dblprec_*,
-  # which installs gmx_mpi_d and leaves shutil.which("gmx_mpi") empty (main CI).
-  # Build string mpi_openmpi_h* excludes dblprec and cuda variants.
+  # Single-precision OpenMPI build only. The broader mpi_* match also selects
+  # double-precision packages that ship gmx_mpi_d instead of gmx_mpi.
   - metatensor::gromacs-metatomic=*=mpi_openmpi_h*
-  # Feedstock #4 links GROMACS to flexible libblas/liblapack (not MKL sonames).
-  # Default libtorch/pytorch-cpu is fine; do not force cpu_generic/nomkl.
+  # gromacs-metatomic links against flexible libblas/liblapack; default
+  # libtorch/pytorch-cpu is compatible without a forced BLAS vendor pin.
   - libtorch
   - pytorch-cpu
   - matplotlib
@@ -17,8 +16,7 @@ dependencies:
   - pip
   - uv
   - pip:
-    # Align Python metatomic with published mta3 (libmetatomic-torch >=0.1.15,
-    # libtorch >=2.12).
+    # Match published mta3 (libmetatomic-torch >=0.1.15, libtorch >=2.12).
     - torch>=2.12,<2.13
     - ase>=3.23
     - cmcrameri
