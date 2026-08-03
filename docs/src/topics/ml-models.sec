@@ -27,3 +27,4 @@ data.
 - examples/ml-density/ml-density
 - examples/water-md/water-md
 - examples/water-ir-spectrum/water-ir-spectrum
+- examples/metatomic-hourglass/metatomic-hourglass

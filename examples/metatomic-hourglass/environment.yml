@@ -3,7 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - python==3.13
-  - lammps-metatomic=2026.03.30.mta1
+  - lammps-metatomic==2026.07.04.mta1
   - gromacs-metatomic
   - pip
   - pip:
@@ -11,7 +11,12 @@ dependencies:
     - upet>=0.2.1
     - ipi>=3.1.8
     - matplotlib
-    - requests
+    # deepmd-kit wheels are compiled against one exact torch version;
+    # keep these two pins in sync. mpich provides the MPI library that
+    # the deepmd-kit wheel loads at import time.
+    - torch==2.10.*
+    - deepmd-kit==3.1.3
+    - mpich
     - metatomic_torchsim
     - metatrain>=2026.3.1
     - mace-torch==0.3.14

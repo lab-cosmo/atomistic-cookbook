@@ -15,3 +15,4 @@ efficient domain decomposition scheme. Learn more about LAMMPS on its `homepage
 - examples/metatomic-plumed/metatomic-plumed
 - examples/water-md/water-md
 - examples/water-ir-spectrum/water-ir-spectrum
+- examples/metatomic-hourglass/metatomic-hourglass
