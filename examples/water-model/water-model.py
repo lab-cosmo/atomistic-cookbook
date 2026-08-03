@@ -18,6 +18,7 @@ to perform demonstrative molecular dynamics simulations.
 # sphinx_gallery_thumbnail_number = 3
 
 # %%
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import ase.io
@@ -1105,4 +1106,15 @@ for line in lines[:7] + lines[16:]:
 
 ase.io.write("water_32.data", atoms, format="lammps-data", masses=True)
 
-run_command("lmp -in data/spcfw.in")
+# LAMMPS 2026.07 metatomic builds sometimes hit a C++ std::terminate on process
+# exit after a successful run (SIGABRT, returncode -6). Accept that exit status
+# only when the trajectory was written; any other failure still raises.
+from pathlib import Path
+
+_lmp = run_command("lmp -in data/spcfw.in", check=False)
+if _lmp.returncode not in (0, -6) or not Path("trajectory.xyz").is_file():
+    raise RuntimeError(
+        f"LAMMPS failed (returncode={_lmp.returncode}); "
+        f"trajectory.xyz exists={Path('trajectory.xyz').is_file()}"
+    )
+print(f"LAMMPS finished (returncode={_lmp.returncode})")
