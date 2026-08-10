@@ -12,6 +12,7 @@ set of configurations of an atomistic system.
 - examples/heat-capacity/heat-capacity
 - examples/pi-mts-rpc/mts-rpc
 - examples/water-model/water-model
+- examples/lammps-flashmd/lammps-flashmd
 - examples/metatomic-plumed/metatomic-plumed
 - examples/mendeleev/mendeleev
 - examples/water-md/water-md

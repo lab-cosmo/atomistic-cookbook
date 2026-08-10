@@ -1,0 +1,5 @@
+*.data
+*.lammpstrj
+*.pt
+log.lammps
+__pycache__/

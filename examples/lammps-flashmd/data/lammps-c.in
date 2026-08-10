@@ -1,0 +1,25 @@
+units metal
+
+atom_style atomic
+read_data data/water.data
+
+pair_style metatomic pet-mad-s-v1.5.0.pt device cpu
+pair_coeff * * 8 1
+
+neighbor 2.0 bin
+neigh_modify one 100000 page 1000000 binsize 5.5
+
+run_style verlet
+timestep 0.0005
+
+thermo 10
+thermo_style custom step temp pe ke etotal
+
+velocity all create 300.0 87287 mom yes rot yes dist gaussian
+fix thermostat all langevin 300.0 300.0 0.1 928733 zero yes
+fix integration all nve
+
+dump trajectory all custom 10 conservative.lammpstrj id type element x y z
+dump_modify trajectory sort id element O H
+
+run 100
