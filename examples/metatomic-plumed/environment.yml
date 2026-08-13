@@ -2,23 +2,21 @@ channels:
   - metatensor
   - conda-forge
 dependencies:
-  - python=3.13
+  - python=3.12
   - pip
-  - plumed-metatomic
-  - py-plumed-metatomic
-  - lammps-metatomic
+  - plumed-metatomic=2.10.1.dev1
+  - py-plumed-metatomic=2.10.1.dev1
+  - lammps-metatomic=2026.07.04.mta1
   - matplotlib
-  - libtorch==2.9.1
-  - libmetatomic-torch==0.1.7
   - pip:
     - --extra-index-url https://download.pytorch.org/whl/cpu
-    - torch==2.9.1
+    - torch>=2.12,<2.13
     - ase
     - numpy
     - chemiscope>=1.0
     - ipi>=3.2.0
-    - metatomic-torch==0.1.7
-    - featomic-torch
+    - metatomic-torch>=0.1.16,<0.2
+    - featomic-torch>=0.7.4,<0.8
     - atomistic-cookbook-utils >=0.1,<0.2
 variables:
   PIP_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
