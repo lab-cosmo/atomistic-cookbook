@@ -53,6 +53,7 @@ import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
+from ase import Atoms
 from ase.build import bulk
 from ase.calculators.mixing import LinearCombinationCalculator, SumCalculator
 from ase.db import connect
@@ -72,6 +73,12 @@ warnings.filterwarnings("ignore")
 
 # Run on CPU for reproducibility in CI; set DEVICE = "cuda" if you have a GPU.
 DEVICE = "cpu"
+
+# Whether to pre-filter open-shell radicals and non-singlet spin states from the
+# molecular set. Off by default: we keep them and let the data-driven outlier prune
+# (below) handle the few that the surrogates describe badly. Molecules whose geometry
+# relaxation does not converge are always dropped regardless of this flag.
+FILTER_OPEN_SHELL = False
 
 
 # %%
@@ -103,17 +110,20 @@ MEMBERS = {
     "r2SCAN-D3": dict(model="pet-mad-xs", version="1.5.0", d3="r2scan"),
 }
 
-# if you want to use more expensive models
-# (e.g. the "s" instead of "xs" variants),
-# just change the model names here:
+# if you want to use the more expensive (and more accurate) "s" instead of "xs"
+# variants, swap in the model names below:
 # MEMBERS = {
-#    "PBE": dict(model="pet-omat-s", version="latest"),
-#    "PBEsol": dict(model="pet-omad-s", version="latest"),
-#    "r2SCAN": dict(model="pet-mad-s", version="1.5.0"),
-#    "r2SCAN-D3": dict(model="pet-mad-s", version="1.5.0", d3="r2scan"),
+#     "PBE": dict(model="pet-omat-s", version="latest"),
+#     "PBEsol": dict(model="pet-omad-s", version="latest"),
+#     "r2SCAN": dict(model="pet-mad-s", version="1.5.0"),
+#     "r2SCAN-D3": dict(model="pet-mad-s", version="1.5.0", d3="r2scan"),
 # }
 MEMBER_LABELS = list(MEMBERS)
-REF = 0  # reference member (PBE) for the sum-rule shift, see the fitting section
+# Reference member for the sum-rule shift (the differences are taken relative to it,
+# see the fitting section). The choice is a gauge convention and does not materially
+# change the calibrated result; we center on r2SCAN, the best single functional here.
+REF = MEMBER_LABELS.index("r2SCAN")
+OTHERS = [i for i in range(len(MEMBER_LABELS)) if i != REF]  # the free members
 
 
 def build_calculators(device=DEVICE):
@@ -173,23 +183,46 @@ for name, h in _CSV_URLS.items():
 # ---------------------------------------------
 #
 # Atomization and cohesive energies are differences between a structure and its
-# separated atoms. Universal MLIPs, however, are unreliable on *isolated atoms*
-# (far outside their training distribution), and the tabulated DFT atom energies in
-# the dataset were computed with different DFT settings than the MLIP training data,
-# so neither can be used directly.
+# separated atoms, so each surrogate needs a per-element atomic-energy reference
+# :math:`c_e`; the referenced energy is then :math:`\sum_e n_e\, c_e -
+# E_\mathrm{struct}`. ``REFERENCE_MODE`` selects how the :math:`c_e` are obtained:
 #
-# Instead we fix the (arbitrary) atomic-energy reference of each surrogate by a
-# **per-element least-squares alignment** to the experimental data: for member
-# ``j`` we choose atomic references :math:`c_e` so that
-# :math:`\sum_e n_e\, c_e - E_\mathrm{struct} \approx E_\mathrm{ref}`. This
-# 12-parameter gauge fix removes per-element offsets without using any DFT atom
-# energies, while leaving the functional-dependent *bonding* differences — the
-# actual UAFD signal — intact.
+# * ``"fit"`` (default) — fix the (arbitrary) reference of each surrogate by a
+#   **per-element least-squares alignment** to the experimental data, choosing the
+#   :math:`c_e` so that :math:`\sum_e n_e\, c_e - E_\mathrm{struct} \approx
+#   E_\mathrm{ref}`. This gauge fix needs no DFT atom energies and leaves the
+#   functional-dependent *bonding* differences — the actual UAFD signal — intact.
+# * ``"isolated"`` — compute :math:`c_e` directly as the surrogate's energy of a single
+#   atom in vacuum. This is the textbook definition, but universal MLIPs are unreliable
+#   far outside their training distribution (isolated atoms), so it is markedly less
+#   accurate here; it is offered mainly for comparison.
+
+REFERENCE_MODE = "fit"  # "fit" (per-element regression) or "isolated" (atom energies)
 
 
-def fit_reference(composition, energies, targets):
-    """Per-element atomic reference so that composition@c - energies ~ targets."""
-    c, *_ = np.linalg.lstsq(composition, targets + energies, rcond=None)
+def isolated_atom_energies(elements):
+    """``(len(elements), n_members)`` energy of a single atom in vacuum per member."""
+    out = np.zeros((len(elements), len(MEMBER_LABELS)))
+    for e, symbol in enumerate(elements):
+        atom = Atoms(symbol, positions=[[0.0, 0.0, 0.0]])
+        atom.center(vacuum=8.0)
+        atom.pbc = False
+        for j, label in enumerate(MEMBER_LABELS):
+            atom.calc = calculators[label]
+            out[e, j] = atom.get_potential_energy()
+    return out
+
+
+def atomic_references(composition, energies, targets, isolated=None):
+    """Referenced energy ``composition @ c - energies`` for one member.
+
+    With ``isolated`` given the references ``c`` are the precomputed isolated-atom
+    energies; otherwise they are fitted by least squares to match ``targets``.
+    """
+    if isolated is not None:
+        c = isolated
+    else:
+        c, *_ = np.linalg.lstsq(composition, targets + energies, rcond=None)
     return composition @ c - energies
 
 
@@ -205,23 +238,26 @@ def fit_reference(composition, energies, targets):
 # <https://doi.org/10.1103/PhysRevB.85.235149>`_, so the atomization energy is minus
 # the tabulated value. Database molecules and table rows are in the same order.
 #
-# Open-shell radicals and non-singlet spin states are dropped: universal MLIPs
-# trained on (mostly closed-shell) data are unreliable for them. They are flagged by
-# the nonzero magnetic moment stored in the database, or by an explicit spin-state
-# label such as ``(s3B1d)`` in the G3/99 name. Every remaining molecule is relaxed
-# with each member and referenced as above; the rare molecule a member fails to relax
-# is also skipped, so each retained row is complete.
+# Optionally (``FILTER_OPEN_SHELL``) we drop open-shell radicals and non-singlet spin
+# states, for which universal MLIPs trained on (mostly closed-shell) data are less
+# reliable; they are flagged by the nonzero magnetic moment stored in the database, or
+# by an explicit spin-state label such as ``(s3B1d)`` in the G3/99 name. By default we
+# keep them and let the outlier prune sort them out. Independently of that flag, any
+# molecule whose relaxation does not converge with some member is **always** dropped: a
+# diverged geometry would feed a garbage energy into the *global* per-element reference
+# fit and corrupt every atomization energy, not just its own.
 
 
-def relaxed_energy(atoms, calc, fmax=0.05, steps=50):
-    """Energy after a loose local relaxation (molecules: with vacuum, no PBC)."""
+def relaxed_energy(atoms, calc, fmax=0.03, steps=100):
+    """Energy after a local relaxation (vacuum, no PBC); also report convergence."""
     atoms = atoms.copy()
     atoms.center(vacuum=6.0)
     atoms.pbc = False
     atoms.calc = calc
+    converged = True
     if len(atoms) > 1:
-        LBFGS(atoms, logfile=None).run(fmax=fmax, steps=steps)
-    return atoms.get_potential_energy()
+        converged = bool(LBFGS(atoms, logfile=None).run(fmax=fmax, steps=steps))
+    return atoms.get_potential_energy(), converged
 
 
 def read_g3_table(path):
@@ -244,36 +280,53 @@ g3_table = read_g3_table(os.path.join(DATA_DIR, "G3-99.csv"))
 mol_rows = [row for row in connect(UAFD_DB).select() if row.natoms > 1]
 assert len(mol_rows) == len(g3_table), "database and G3/99 table are misaligned"
 
-# Relax every closed-shell molecule with every member; keep those that converge.
+# Relax every molecule with every member; keep those that converge everywhere.
 mol_atoms, mol_targets, mol_raw, mol_names = [], [], [], []
+n_shell, n_unconverged = 0, 0
 for row, (name, target) in zip(mol_rows, g3_table):
-    if is_open_shell(row, name):
+    if FILTER_OPEN_SHELL and is_open_shell(row, name):
+        n_shell += 1
         continue
     atoms = row.toatoms()
-    row_energies = []
+    row_energies, converged = [], True
     for label in MEMBER_LABELS:
         try:
-            row_energies.append(relaxed_energy(atoms, calculators[label]))
+            energy, conv = relaxed_energy(atoms, calculators[label])
         except Exception:
-            row_energies.append(np.nan)
-    if np.all(np.isfinite(row_energies)):
-        mol_atoms.append(atoms)
-        mol_targets.append(target)
-        mol_raw.append(row_energies)
-        mol_names.append(name)
+            energy, conv = np.nan, False
+        row_energies.append(energy)
+        converged = converged and conv
+    if not (converged and np.all(np.isfinite(row_energies))):
+        print(f"  dropping {name}: relaxation did not converge")
+        n_unconverged += 1
+        continue
+    mol_atoms.append(atoms)
+    mol_targets.append(target)
+    mol_raw.append(row_energies)
+    mol_names.append(name)
 mol_targets = np.array(mol_targets)
 mol_energy = np.array(mol_raw)
 mol_elements = sorted({s for a in mol_atoms for s in a.get_chemical_symbols()})
-print(f"{len(mol_atoms)} closed-shell G3/99 molecules retained (of {len(mol_rows)})")
+print(
+    f"{len(mol_atoms)} G3/99 molecules retained (of {len(mol_rows)}; dropped "
+    f"{n_unconverged} non-converged"
+    + (f", {n_shell} open-shell)" if FILTER_OPEN_SHELL else ")")
+)
 
-# Composition matrix and per-member fitted-reference atomization design matrix.
+# Composition matrix and per-member referenced atomization design matrix.
 mol_comp = np.zeros((len(mol_atoms), len(mol_elements)))
 for i, atoms in enumerate(mol_atoms):
     for s in atoms.get_chemical_symbols():
         mol_comp[i, mol_elements.index(s)] += 1
+mol_iso = isolated_atom_energies(mol_elements) if REFERENCE_MODE == "isolated" else None
 atomization = np.column_stack(
     [
-        fit_reference(mol_comp, mol_energy[:, j], mol_targets)
+        atomic_references(
+            mol_comp,
+            mol_energy[:, j],
+            mol_targets,
+            isolated=None if mol_iso is None else mol_iso[:, j],
+        )
         for j in range(len(MEMBER_LABELS))
     ]
 )
@@ -360,10 +413,17 @@ for i, mat in enumerate(materials):
             mat, structure, a_expt[i], calculators[label]
         )
 
-# Cohesive energy design matrix: per-member fitted reference (per atom).
+# Cohesive energy design matrix: per-member reference, per atom.
+sol_iso = isolated_atom_energies(sol_elements) if REFERENCE_MODE == "isolated" else None
 cohesive = np.column_stack(
     [
-        fit_reference(sol_comp, E0[:, j], coh_expt * natoms) / natoms
+        atomic_references(
+            sol_comp,
+            E0[:, j],
+            coh_expt * natoms,
+            isolated=None if sol_iso is None else sol_iso[:, j],
+        )
+        / natoms
         for j in range(len(MEMBER_LABELS))
     ]
 )
@@ -377,9 +437,9 @@ print(f"{len(materials)} solids: lattice constants, bulk moduli, cohesive energi
 #
 # The four datasets are stacked into a single design. Using the sum rule
 # :math:`\sum_i w_i = 1` we work with the *reduced* design
-# :math:`\Phi_{ni} = \phi_{i,n} - \phi_{0,n}` (differences from the reference
-# member ``PBE``) and shifted targets :math:`t_n - \phi_{0,n}`, so there are
-# :math:`m = 3` free weights. Each dataset is weighted to contribute equally, and
+# :math:`\Phi_{ni} = \phi_{i,n} - \phi_{r,n}` (differences from the reference member
+# ``r2SCAN``, index :math:`r`) and shifted targets :math:`t_n - \phi_{r,n}`, so there
+# are :math:`m = 3` free weights. Each dataset is weighted to contribute equally, and
 # rows where all functionals agree (zero spread — e.g. the elemental cohesive
 # energies that the per-element reference fit reproduces exactly) carry no
 # calibration information and are dropped.
@@ -396,7 +456,7 @@ DATASET_LABELS = [mol_names, materials, materials, materials]
 
 def constraining(pred):
     """Rows whose functionals disagree (non-zero spread) — those that inform K."""
-    return np.linalg.norm(pred[:, 1:] - pred[:, [REF]], axis=1) > 1e-6
+    return np.linalg.norm(pred[:, OTHERS] - pred[:, [REF]], axis=1) > 1e-6
 
 
 def assemble(masks):
@@ -404,7 +464,7 @@ def assemble(masks):
     phi_b, tprime_b, weight_b, id_b = [], [], [], []
     for k, (_name, pred, target) in enumerate(DATASETS):
         m = masks[k]
-        phi_b.append(pred[m][:, 1:] - pred[m][:, [REF]])
+        phi_b.append(pred[m][:, OTHERS] - pred[m][:, [REF]])
         tprime_b.append((target - pred[:, REF])[m])
         weight_b.append(np.full(int(m.sum()), 1.0 / int(m.sum())))
         id_b.append(np.full(int(m.sum()), k))
@@ -435,7 +495,7 @@ Phi, tprime, weights, dataset_id = assemble(use_masks)
 #    + \tfrac12 \sum_n \ln \sigma_n^2
 #    - \tfrac12 \lambda_S \ln\det(\mathbf{K} + \lambda_K),
 #
-# with mean prediction :math:`\bar y_n = \phi_{0,n} + \Phi_n \mathbf{w}_0` and
+# with mean prediction :math:`\bar y_n = \phi_{r,n} + \Phi_n \mathbf{w}_0` and
 # variance :math:`\sigma_n^2 = \Phi_n (\mathbf{K} + \lambda_K)\Phi_n^T`. Two
 # regularizers are essential: :math:`\lambda_K` adds a width to the mean (and keeps
 # the variance positive), while the entropy term :math:`\lambda_S` prevents
@@ -464,26 +524,56 @@ def uafd_cost(lflat, phi, target, wdata, lam_k, lam_s, m):
     return data_term - 0.5 * lam_s * np.log(np.linalg.det(Kr))
 
 
-def fit_uafd(phi, target, wdata, lam_k, lam_s):
+def fit_uafd(phi, target, wdata, lam_k, lam_s, restarts=3):
+    """Minimize the cost from a few starts, returning (w0, K) of the best one.
+
+    Several restarts are used because at small regularization the Nelder-Mead
+    surface is ill-conditioned and a single start can land in a parametrization-
+    dependent local optimum; the multi-start keeps the CV selection clean.
+    """
     m = phi.shape[1]
-    l0 = (0.1 * np.eye(m))[np.tril_indices(m)]
-    res = minimize(
-        uafd_cost,
-        l0,
-        args=(phi, target, wdata, lam_k, lam_s, m),
-        method="Nelder-Mead",
-        options=dict(maxiter=20000, xatol=1e-8, fatol=1e-10),
-    )
+    rng = np.random.default_rng(0)
+    best = None
+    for trial in range(restarts):
+        l0 = (
+            (0.1 * np.eye(m))[np.tril_indices(m)]
+            if trial == 0
+            else rng.normal(scale=1.0, size=m * (m + 1) // 2)
+        )
+        res = minimize(
+            uafd_cost,
+            l0,
+            args=(phi, target, wdata, lam_k, lam_s, m),
+            method="Nelder-Mead",
+            options=dict(maxiter=20000, xatol=1e-8, fatol=1e-10),
+        )
+        if best is None or res.fun < best.fun:
+            best = res
     L = np.zeros((m, m))
-    L[np.tril_indices(m)] = res.x
+    L[np.tril_indices(m)] = best.x
     Kr = L @ L.T + lam_k * np.eye(m)
     return solve_w0(phi, target, wdata / variances(phi, Kr)), Kr
 
 
 # %%
 #
-# The regularization strengths :math:`(\lambda_S, \lambda_K)` are selected by
-# 5-fold cross-validation, minimizing the held-out negative-log-likelihood.
+# The regularization is selected by 5-fold cross-validation, minimizing the held-out
+# negative-log-likelihood — the same procedure as Hansen et al. Scanning a wide grid in
+# both parameters shows that they play very different roles. The entropy weight
+# :math:`\lambda_S` has a genuine interior optimum: too small and the fit overfits and
+# the optimization becomes ill-conditioned; too large (:math:`\gtrsim 1`) and the
+# entropy term blows :math:`\mathbf{K}` up, inflating every :math:`\sigma` until the
+# held-out likelihood diverges. Its optimum also *shifts with the data* — pruning the
+# outliers shrinks the data-driven spread, so a larger :math:`\lambda_S` is needed to
+# keep the held-out uncertainties honest (here it moves from :math:`\sim 0.1` to
+# :math:`0.5`). We therefore cross-validate :math:`\lambda_S` over a wide range. The
+# floor :math:`\lambda_K`, by contrast, is only weakly identified: once
+# :math:`\lambda_S` is reasonable the CV score is essentially flat in :math:`\lambda_K`
+# over several decades, since its only job is to keep the variance positive and the
+# optimization well-conditioned. We therefore fix it to a small constant rather than
+# select it (the code below shows how to cross-validate it too, if desired). The fit
+# itself uses a few optimizer restarts so the CV picks are not perturbed by
+# ill-conditioned local optima at small regularization.
 
 
 def cv_score(phi, target, wdata, lam_k, lam_s, nfold=5, seed=0):
@@ -499,12 +589,35 @@ def cv_score(phi, target, wdata, lam_k, lam_s, nfold=5, seed=0):
     return total
 
 
+LAMBDA_S_GRID = (0.03, 0.1, 0.3, 0.5, 0.7)
+LAMBDA_K = 1e-4  # fixed numerical floor
+
+# lambda_K is only weakly identified by cross-validation (the held-out score is
+# essentially flat in it over many decades), so by default we fix it to LAMBDA_K rather
+# than search it. To cross-validate it as well, uncomment LAMBDA_K_GRID here and the 2D
+# selection in ``select_and_fit`` below.
+# LAMBDA_K_GRID = (1e-6, 1e-4, 1e-2)
+
+
 def select_and_fit(phi, target, wdata):
-    """Pick (lambda_S, lambda_K) by 5-fold CV, then fit the UAFD on all of ``phi``."""
-    grid = [(ls, lk) for ls in (1e-3, 1e-2, 1e-1) for lk in (1e-6, 1e-4)]
-    lam_s, lam_k = min(grid, key=lambda p: cv_score(phi, target, wdata, p[1], p[0]))
+    """Pick lambda_S by 5-fold CV (lambda_K fixed), then fit the UAFD on ``phi``."""
+    lam_s = min(
+        LAMBDA_S_GRID, key=lambda ls: cv_score(phi, target, wdata, LAMBDA_K, ls)
+    )
+    lam_k = LAMBDA_K
+    # to cross-validate lambda_K too, replace the two lines above with:
+    # grid = [(ls, lk) for ls in LAMBDA_S_GRID for lk in LAMBDA_K_GRID]
+    # lam_s, lam_k = min(grid, key=lambda p: cv_score(phi, target, wdata, p[1], p[0]))
     w0, K = fit_uafd(phi, target, wdata, lam_k, lam_s)
     return lam_s, lam_k, w0, K
+
+
+def expand_weights(w0):
+    """Expand the free weights to the full basis via the sum rule (w_REF = 1 - sum)."""
+    full = np.empty(len(MEMBER_LABELS))
+    full[REF] = 1.0 - w0.sum()
+    full[OTHERS] = w0
+    return full
 
 
 def weight_dict(fw):
@@ -512,10 +625,15 @@ def weight_dict(fw):
     return {MEMBER_LABELS[i]: round(float(fw[i]), 3) for i in range(len(fw))}
 
 
+def report_fit(tag, n, lam_s, lam_k, fw):
+    """Print the selected regularization and member weights of a fit."""
+    print(f"{tag} ({n} pts): lambda_S={lam_s:g}, lambda_K={lam_k:g}, {weight_dict(fw)}")
+
+
 lam_s, lam_k, w0, K = select_and_fit(Phi, tprime, weights)
-full_weights = np.concatenate([[1 - w0.sum()], w0])
+full_weights = expand_weights(w0)
 Kr = K + lam_k * np.eye(len(w0))
-print(f"first-pass fit on {len(tprime)} points: {weight_dict(full_weights)}")
+report_fit("first-pass", len(tprime), lam_s, lam_k, full_weights)
 
 
 # %%
@@ -547,7 +665,7 @@ def detect_outliers(full_weights, Kr, masks, k=3.0):
         m = masks[idx]
         rows = np.where(m)[0]
         err = np.abs((pred @ full_weights)[m] - target[m])
-        sigma = np.sqrt(variances(pred[m][:, 1:] - pred[m][:, [REF]], Kr))
+        sigma = np.sqrt(variances(pred[m][:, OTHERS] - pred[m][:, [REF]], Kr))
         spread = pred[m].std(axis=1)
         med = np.median(err)
         floor = med + k * 1.4826 * np.median(np.abs(err - med))
@@ -582,9 +700,9 @@ for name, label, err, sig, spr, reason in report:
 
 Phi, tprime, weights, dataset_id = assemble(use_masks)
 lam_s, lam_k, w0, K = select_and_fit(Phi, tprime, weights)
-full_weights = np.concatenate([[1 - w0.sum()], w0])
+full_weights = expand_weights(w0)
 Kr = K + lam_k * np.eye(len(w0))
-print(f"\nrefit on {len(tprime)} points: {weight_dict(full_weights)}")
+report_fit("\nrefit", len(tprime), lam_s, lam_k, full_weights)
 
 
 # %%
@@ -614,39 +732,78 @@ print(f"\nrefit on {len(tprime)} points: {weight_dict(full_weights)}")
 #
 # For any property the calibrated estimate is the weighted member average
 # :math:`\bar y = \sum_i w_i \phi_i` and its uncertainty is :math:`\sigma =
-# \sqrt{\Phi (\mathbf{K}+\lambda_K)\Phi^T}`. We plot each dataset against
-# experiment with the calibrated error bars, and check the calibration through the
-# root-mean-square normalized error (RMSNE), which should be close to 1.
+# \sqrt{\Phi (\mathbf{K}+\lambda_K)\Phi^T}`. We plot each dataset against experiment
+# with the calibrated error bars, and check the calibration through the root-mean-square
+# normalized error (RMSNE), which should be close to 1. To make the effect of the prune
+# explicit we draw the parity plot twice: first the *first-pass* fit on all constraining
+# points, with the flagged outliers in red, and then the clean refit on the retained
+# points.
 
-fig, axes = plt.subplots(2, 2, figsize=(9, 8), constrained_layout=True)
-for k, (ax, (name, pred, target)) in enumerate(zip(axes.flat, DATASETS)):
-    # show only the retained rows that constrain the fit (outliers pruned out)
-    use = use_masks[k]
-    phi = pred[:, 1:] - pred[:, [REF]]
-    mean, tgt = (pred @ full_weights)[use], target[use]
-    sigma = np.sqrt(variances(phi, Kr))[use]
-    rmse = np.sqrt(np.mean((mean - tgt) ** 2))
-    rmsne = np.sqrt(np.mean(((mean - tgt) / sigma) ** 2))
-    ax.errorbar(
-        tgt,
-        mean,
-        yerr=sigma,
-        fmt="o",
-        ms=4,
-        alpha=0.6,
-        ecolor="gray",
-        elinewidth=0.8,
-        capsize=0,
-    )
-    lims = [min(tgt.min(), mean.min()), max(tgt.max(), mean.max())]
-    ax.plot(lims, lims, "k--", lw=1)
-    ax.set(
-        xlabel="experiment",
-        ylabel="PET-UAFD",
-        title=f"{name}\nRMSE={rmse:.3g}, RMSNE={rmsne:.2f}",
-    )
-fig.suptitle("PET-UAFD calibrated predictions vs experiment")
-plt.show()
+
+def parity_plot(full_weights, Kr, masks, suptitle, highlight=None):
+    """2x2 parity vs experiment; ``highlight`` rows (per dataset) are drawn in red."""
+    style = dict(fmt="o", ms=4, elinewidth=0.8, capsize=0)
+    fig, axes = plt.subplots(2, 2, figsize=(9, 8), constrained_layout=True)
+    for k, (ax, (name, pred, target)) in enumerate(zip(axes.flat, DATASETS)):
+        use = masks[k]
+        hl = highlight[k] if highlight is not None else np.zeros(len(target), bool)
+        mean = pred @ full_weights
+        sigma = np.sqrt(variances(pred[:, OTHERS] - pred[:, [REF]], Kr))
+        rmse = np.sqrt(np.mean((mean[use] - target[use]) ** 2))
+        rmsne = np.sqrt(np.mean(((mean[use] - target[use]) / sigma[use]) ** 2))
+        kept = use & ~hl
+        ax.errorbar(
+            target[kept],
+            mean[kept],
+            yerr=sigma[kept],
+            alpha=0.6,
+            ecolor="gray",
+            **style,
+        )
+        if hl.any():
+            ax.errorbar(
+                target[hl],
+                mean[hl],
+                yerr=sigma[hl],
+                color="red",
+                label="removed",
+                ecolor="red",
+                **style,
+            )
+            ax.legend(fontsize=8, loc="upper left")
+        shown = use | hl
+        lims = [
+            min(target[shown].min(), mean[shown].min()),
+            max(target[shown].max(), mean[shown].max()),
+        ]
+        ax.plot(lims, lims, "k--", lw=1)
+        ax.set(
+            xlabel="experiment",
+            ylabel="PET-UAFD",
+            title=f"{name}\nRMSE={rmse:.3g}, RMSNE={rmsne:.2f}",
+        )
+    fig.suptitle(suptitle)
+    plt.show()
+
+
+parity_plot(
+    full_weights_first,
+    Kr_first,
+    preprune_masks,
+    "PET-UAFD first-pass fit (flagged outliers in red)",
+    highlight=outlier_masks,
+)
+
+# %%
+#
+# And the clean refit on the retained points:
+
+parity_plot(
+    full_weights,
+    Kr,
+    use_masks,
+    "PET-UAFD calibrated predictions vs experiment (outliers pruned)",
+)
 
 
 # %%
@@ -746,7 +903,7 @@ print(
 # benchmark solid, reusing the equation-of-state results computed above:
 
 i = materials.index("Cu")
-phi_a = a_pred[i, 1:] - a_pred[i, REF]
+phi_a = a_pred[i, OTHERS] - a_pred[i, REF]
 a_mean = float(full_weights @ a_pred[i])
 a_sigma = float(np.sqrt(phi_a @ Kr @ phi_a))
 print(
@@ -816,11 +973,11 @@ for k, (name, prop, target) in enumerate(DATASETS):
 #
 # The fit returns the full distribution :math:`\mathcal{N}(\mathbf{w}_0, \mathbf{K})`
 # over functional space. Its covariance :math:`\mathbf{K}` (here in the reduced basis,
-# relative to the ``PBE`` reference) encodes how the functionals co-vary: the diagonal
-# sets the per-direction variance, the off-diagonal terms the correlations.
+# relative to ``r2SCAN``) encodes how the functionals co-vary: the diagonal sets the
+# per-direction variance, the off-diagonal terms the correlations.
 
-free_labels = MEMBER_LABELS[1:]
-print("calibrated covariance K (reduced basis, relative to PBE):")
+free_labels = [MEMBER_LABELS[i] for i in OTHERS]
+print(f"calibrated covariance K (reduced basis, relative to {MEMBER_LABELS[REF]}):")
 print(" " * 14 + "".join(f"{m:>12s}" for m in free_labels))
 for i, m in enumerate(free_labels):
     row = "".join(f"{Kr[i, j]:12.4f}" for j in range(len(free_labels)))
@@ -852,17 +1009,11 @@ committee = [w0] + [w0 + np.sqrt(k) * u for k, u in zip(eigvals, eigvecs.T)]
 # -----------------
 #
 # Finally, the weights of the calibrated (central) model and of each committee member,
-# expanded to the full basis of MLIPs — the ``PBE`` weight is fixed by the sum rule
+# expanded to the full basis of MLIPs — the ``r2SCAN`` weight is fixed by the sum rule
 # :math:`\sum_i w_i = 1`. Each column is one PET surrogate, so one can read off how
 # much every functional contributes to each committee member.
-
-
-def to_full_weights(reduced):
-    """Expand the reduced free weights to the full basis via the sum rule."""
-    return np.concatenate([[1.0 - reduced.sum()], reduced])
-
 
 print(f"  {'model':17s}" + "".join(f"{m:>11s}" for m in MEMBER_LABELS))
 names = ["w0 (calibrated)"] + [f"committee {a}" for a in range(1, len(committee))]
 for label, w in zip(names, committee):
-    print(f"  {label:17s}" + "".join(f"{x:11.3f}" for x in to_full_weights(w)))
+    print(f"  {label:17s}" + "".join(f"{x:11.3f}" for x in expand_weights(w)))
