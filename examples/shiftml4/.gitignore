@@ -1,0 +1,6 @@
+manuscript/
+relax/
+example.ipynb
+render.ipynb
+data/*.svg
+*.json.gz
