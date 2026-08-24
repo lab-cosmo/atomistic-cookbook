@@ -515,7 +515,7 @@ dipole_request = {
     "mtt::dipole": ModelOutput(
         quantity="",  # unused, as the dipole is not a "standard output" in metatomic
         unit="",  # unused, as the dipole is not a "standard output" in metatomic
-        per_atom=False,
+        sample_kind="system",
         explicit_gradients=[],
     )
 }

@@ -131,6 +131,7 @@ forceconstants = ForceConstants(
     supercell=supercell,
     third_supercell=supercell,
     folder="fd_si/",
+    is_acoustic_sum=True,
 )
 
 forceconstants.second.calculate(calc, delta_shift=3e-2)
@@ -154,6 +155,7 @@ phonons = Phonons(
     temperature=temperature,
     folder="ald_si/",
     storage="memory",
+    is_unfolding=True,
 )
 
 # %%

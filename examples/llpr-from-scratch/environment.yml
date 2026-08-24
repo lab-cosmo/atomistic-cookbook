@@ -6,6 +6,5 @@ dependencies:
   - matplotlib
   - pip:
     - ase>=3.28
-    - metatrain
-    - upet>=0.2.3
+    - metatrain<2026.3 # Because of writing of mtt::aux::cutoff-stats in the XYZ file
     - atomistic-cookbook-utils >=0.1,<0.2

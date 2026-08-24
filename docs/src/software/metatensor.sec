@@ -21,6 +21,7 @@ training and evaluating ML models.
 - examples/shiftml-structure-match/shiftml-structure-match
 - examples/hamiltonian-qm7/hamiltonian-qm7
 - examples/metatomic-plumed/metatomic-plumed
+- examples/path-integrals/path-integrals
 - examples/pet-relaxation/pet-relaxation
 - examples/ml-density/ml-density
 - examples/water-md/water-md
