@@ -16,9 +16,9 @@ accuracy:
    (GIPAW) method with a GGA functional such as PBE, is shown to limit the prediction
    accuracy.
 2. the **geometry** the shieldings are computed on contributes to the prediction
-   error, unbiased bond lengths and errors are highly desirable for such purposes,
-   however relaxing periodic crystals at hybrid-functional quality is
-   prohibitively expensive.
+   error. Geometries with unbiased bond lengths and bond angles are highly
+   desirable for such purposes. However, relaxing periodic crystals at
+   hybrid-functional quality is prohibitively expensive.
 
 This recipe shows how to remove both bottlenecks with machine learning. We use
 `ShiftML4 <https://github.com/lab-cosmo/shiftml>`_ (`Kellner et al.,
@@ -37,7 +37,7 @@ for shift prediction:
   ``TESTOM01``), where GIPAW-PBE is off by more than 10 ppm;
 * the **C2' carbon of sucrose** (CSD refcode ``SUCROS04``), part of a commonly used
   experimental benchmark set of isotropic :sup:`13`\ C shifts for which ShiftML3
-  on PBE geometries showed the largest deviations. This example demonstrates,
+  on PBE geometries showed the largest deviations. This example demonstrates
   that the combination of improved shielding reference electronic structure
   and PBE0+MBD quality geometries from the PET-MOLS MLIP
   significantly improves the prediction accuracy for this site,
@@ -54,6 +54,8 @@ determination with ShiftML3
 <http://atomistic-cookbook.org/examples/shiftml-structure-match/shiftml-structure-match.html>`_.
 """
 
+# sphinx_gallery_thumbnail_path = '../../examples/shiftml4/testosterone-c5.png'
+
 # %%
 
 import ase.io
@@ -63,9 +65,6 @@ import numpy as np
 from ase.optimize import BFGSLineSearch
 from shiftml.ase import ShiftML
 from upet.calculator import UPETCalculator
-
-
-# sphinx_gallery_thumbnail_path = '../../examples/shiftml4/testosterone-c5.png'
 
 
 # %%
@@ -95,7 +94,7 @@ from upet.calculator import UPETCalculator
 # Chem. Phys. 21, 14992 (2019) <https://doi.org/10.1039/C9CP01666J>`_: individual
 # molecules are cut out of the unit cell and the difference between a hybrid and a
 # GGA calculation on the isolated molecule is added back onto the periodic GIPAW
-# result,
+# result:
 #
 # .. math::
 #
@@ -144,8 +143,10 @@ A_SML4_PBE0, B_SML4_PBE0 = -0.9255, 169.71
 # Loading the models
 # ------------------
 #
-# Both models are downloaded from Zenodo on first use and cached locally, so
-# subsequent runs start instantly.
+# Both are committees rather than single networks -- ShiftML3 has 8 members and
+# ShiftML4 has 7 -- so the first call fetches 15 checkpoints from Zenodo in
+# total, which is what you see scrolling past in the log below. They are cached
+# locally, so subsequent runs start instantly.
 
 calc_sML3 = ShiftML("ShiftML3")
 calc_sML4 = ShiftML("ShiftML4")

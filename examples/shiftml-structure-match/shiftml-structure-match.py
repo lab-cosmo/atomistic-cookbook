@@ -43,6 +43,9 @@ using solid-state NMR spectroscopy. For background on running ShiftML3 itself
 -- calculator setup, ensemble uncertainties, anisotropic tensor predictions
 -- see the companion recipe `Computing NMR shielding tensors using ShiftML
 <https://atomistic-cookbook.org/examples/shiftml/shiftml-example.html>`_.
+For the newer ShiftML4 model and machine-learned geometry relaxation, see
+`Accurate NMR chemical shifts with ShiftML4 and PET-MOLS
+<https://atomistic-cookbook.org/examples/shiftml4/shiftml-example.html>`_.
 For background on learning and predicting rotationally equivariant tensor properties,
 see the `polarizability recipe
 <https://atomistic-cookbook.org/examples/polarizability/polarizability.html>`_
