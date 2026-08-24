@@ -12,6 +12,6 @@ dependencies:
     - shiftml >=0.2.0,<0.3
     # the "pet-mols-s" model used here is not in a released version of upet yet
     # (0.2.6 on PyPI ships pet-mad/omat/oam/omad/omatpes/spice only), so we
-    # still need to install from git. Switch to a semantic pin once it ships.
-    - upet @ git+https://github.com/lab-cosmo/upet.git@main
+    # still need to install from git. Switch to pypi once it ships.
+    - upet @ git+https://github.com/lab-cosmo/upet.git@788225b
     - atomistic-cookbook-utils >=0.1,<0.2

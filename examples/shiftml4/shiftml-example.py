@@ -20,15 +20,17 @@ accuracy:
    desirable for such purposes. However, relaxing periodic crystals at
    hybrid-functional quality is prohibitively expensive.
 
-This recipe shows how to remove both bottlenecks with machine learning. We use
-`ShiftML4 <https://github.com/lab-cosmo/shiftml>`_ (`Kellner et al.,
-arXiv:2608.21313 <https://arxiv.org/abs/2608.21313>`_), trained on molecular
-corrected periodic GIPAW calculations, which predicts shielding tensors of
-approximate *hybrid-functional* quality directly from the periodic crystal
-structure,
-and `PET-MOLS <https://github.com/lab-cosmo/upet>`_, a machine-learned
-interatomic potential that relaxes molecular crystals to approximate PBE0+MBD
-geometries in seconds/minutes rather than CPU-hours.
+This recipe shows how to remove both bottlenecks with machine learning, using
+one model for each:
+
+1. `ShiftML4 <https://github.com/lab-cosmo/shiftml>`_ (`Kellner et al.,
+   arXiv:2608.21313 <https://arxiv.org/abs/2608.21313>`_), trained on molecular
+   corrected periodic GIPAW calculations, which predicts shielding tensors of
+   approximate *hybrid-functional* quality directly from the periodic crystal
+   structure.
+2. `PET-MOLS <https://github.com/lab-cosmo/upet>`_, a machine-learned
+   interatomic potential that relaxes molecular crystals to approximate PBE0+MBD
+   geometries in seconds/minutes rather than CPU-hours.
 
 We deliberately pick two :sup:`13`\ C sites that are known to be *hard* problems
 for shift prediction:
@@ -54,7 +56,9 @@ determination with ShiftML3
 <http://atomistic-cookbook.org/examples/shiftml-structure-match/shiftml-structure-match.html>`_.
 """
 
+# sphinx_gallery_start_ignore
 # sphinx_gallery_thumbnail_path = '../../examples/shiftml4/testosterone-c5.png'
+# sphinx_gallery_end_ignore
 
 # %%
 
