@@ -1,0 +1,1190 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="search" title="Search" href="../../search.html"><link rel="next" title="Atomistic Water Model for Molecular Dynamics" href="../water-model/water-model.html"><link rel="prev" title="A ML model for the electron density of states" href="../dos-align/dos-align.html">
+        <link rel="canonical" href="https://atomistic-cookbook.org/examples/shiftml4/shiftml-example.html">
+        <link rel="prefetch" href="../../_static/cookbook-icon.svg" as="image">
+
+    <link rel="shortcut icon" href="../../_static/cookbook-icon.png"><!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>Accurate NMR chemical shifts with ShiftML4 and PET-MOLS - The Atomistic Cookbook</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/cookbook.css?v=d86cfb60" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">The Atomistic Cookbook</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/cookbook-icon.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">The Atomistic Cookbook</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../topics/index.html">Recipes grouped by topic</a><input aria-label="Toggle navigation of Recipes grouped by topic" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/sampling.html">Statistical sampling and dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/analysis.html">Analysis and post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/ml-models.html">Machine learning models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/universal.html">Universal ML models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/nqes.html">Nuclear quantum effects</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../software/index.html">Recipes grouped by software used</a><input aria-label="Toggle navigation of Recipes grouped by software used" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../software/chemiscope.html">chemiscope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/cp2k.html">cp2k</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/eon.html">eon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/featomic.html">featomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/gromacs.html">GROMACS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/i-pi.html">i-PI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/kaldo.html">kALDo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/lammps.html">LAMMPS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/metatensor.html">metatensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/plumed.html">PLUMED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/scikit-matter.html">scikit-matter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/torch-pme.html">torch-pme</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../all-examples.html">List of all recipes</a><input aria-label="Toggle navigation of List of all recipes" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-dos/pet-mad-dos.html">A Guide to PET-MAD-DOS: Model Inference and Fine-Tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dos-align/dos-align.html">A ML model for the electron density of states</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Accurate NMR chemical shifts with ShiftML4 and PET-MOLS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-model/water-model.html">Atomistic Water Model for Molecular Dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../batch-cp2k/reference-trajectory.html">Batch run of CP2K calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../shiftml/shiftml-example.html">Computing NMR shielding tensors using ShiftML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft-nc.html">Conservative fine-tuning for a PET model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermostats/thermostats.html">Constant-temperature MD and thermostats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../polarizability/polarizability.html">Equivariant linear model for polarizability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../learn-tensors-with-mcov/learn-tensors-with-mcov.html">Equivariant model for tensorial properties based on scalar features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../eon-pet-neb/eon-pet-neb.html">Finding Reaction Paths with eOn and a Metatomic Potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft.html">Fine-tuning the PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../roy-gch/roy-gch.html">Generalized Convex Hull construction for the polymorphs of ROY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-relaxation/pet-relaxation.html">Geometry relaxation with unconstrained MLIPs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hamiltonian-qm7/hamiltonian-qm7.html">Hamiltonian Learning for Molecules with Indirect Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-md/water-md.html">Introduction to foundational models for molecular dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../torchpme/torchpme_learning.html">Learning Capabilities with torchpme</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lpr/lpr.html">Local Prediction Rigidity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lode-linear/lode-linear.html">Long-distance Equivariants: a tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flashmd/flashmd-demo.html">Long-stride trajectories with a universal FlashMD model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-nc/pet-mad-nc.html">MD using direct-force predictions with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metatomic-plumed/metatomic-plumed.html">ML collective variables in PLUMED with metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ml-density/ml-density.html">ML surrogate for the electron density and derived properties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ml-mm/ml-mm.html">ML/MM Simulations with GROMACS and Metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-ir-spectrum/water-ir-spectrum.html">Machine-learned dipoles and infrared spectroscopy of liquid water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../mendeleev/mendeleev.html">Mendeleev clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-mts-rpc/mts-rpc.html">Multiple time stepping and ring-polymer contraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../shiftml-structure-match/shiftml-structure-match.html">NMR-shielding-driven structure determination with ShiftML3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../gaas-map/gaas-map.html">PCA/PCovR Visualization of a training dataset for a potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-metad/pi-metad.html">Path integral metadynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../path-integrals/path-integrals.html">Path integral molecular dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bosons-fermions-pimd/bosons-fermions-pimd.html">Path integral molecular dynamics of bosons and fermions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../periodic-hamiltonian/periodic-hamiltonian.html">Periodic Hamiltonian learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-phonons/pet-phonons.html">Phonon dispersions with unconstrained models and uncertainty quantification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../heat-capacity/heat-capacity.html">Quantum heat capacity of water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ring-polymer-instanton/rpi-rates.html">Ring Polymer Instanton Rate Theory: Tunneling Rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rotate-equivariants/rotate-equivariants.html">Rotating equivariants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sample-selection/sample-selection.html">Sample and Feature Selection with FPS and CUR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad/pet-mad.html">The PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermal-conductivity-bte/thermal-conductivity-bte.html">Thermal conductivity from the Boltzmann transport equation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../llpr-from-scratch/llpr-from-scratch.html">Training a Model with Uncertainties from Scratch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-uq/pet-mad-uq.html">Uncertainty Quantification with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-pulsed/water-pulsed.html">Water orientation in a pulsed electric field</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../downloading.html">Downloading and running the recipes</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../contributing.html">Contributing a recipe</a><input aria-label="Toggle navigation of Contributing a recipe" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../utils.html">Shared utilities</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-examples-shiftml4-shiftml-example-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="accurate-nmr-chemical-shifts-with-shiftml4-and-pet-mols">
+<span id="sphx-glr-examples-shiftml4-shiftml-example-py"></span><h1>Accurate NMR chemical shifts with ShiftML4 and PET-MOLS<a class="headerlink" href="#accurate-nmr-chemical-shifts-with-shiftml4-and-pet-mols" title="Link to this heading">¶</a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Authors<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Matthias Kellner <a class="reference external" href="https://github.com/bananenpampe/">&#64;bananenpampe</a></p>
+</dd>
+</dl>
+<p>NMR crystallography determines the structure of a molecular solid by enumerating
+candidate crystal structures and keeping the one whose <em>predicted</em> chemical shifts
+are in best agreement with the experimental data. The whole procedure is therefore
+only as trustworthy as the shift predictions that are used for structure-experiment
+matching, and two rather different sources of errors limit the shift prediction
+accuracy:</p>
+<ol class="arabic simple">
+<li><p>the <strong>electronic-structure reference</strong> used to compute the shieldings –
+in practice many times the proven gauge-including projector augmented wave
+(GIPAW) method with a GGA functional such as PBE, is shown to limit the prediction
+accuracy.</p></li>
+<li><p>the <strong>geometry</strong> the shieldings are computed on contributes to the prediction
+error. Geometries with unbiased bond lengths and bond angles are highly
+desirable for such purposes. However, relaxing periodic crystals at
+hybrid-functional quality is prohibitively expensive.</p></li>
+</ol>
+<p>This recipe shows how to remove both bottlenecks with machine learning, using
+one model for each:</p>
+<ol class="arabic simple">
+<li><p><a class="reference external" href="https://github.com/lab-cosmo/shiftml">ShiftML4</a> (<a class="reference external" href="https://arxiv.org/abs/2608.21313">Kellner et al.,
+arXiv:2608.21313</a>), trained on molecular
+corrected periodic GIPAW calculations, which predicts shielding tensors of
+approximate <em>hybrid-functional</em> quality directly from the periodic crystal
+structure.</p></li>
+<li><p><a class="reference external" href="https://github.com/lab-cosmo/upet">PET-MOLS</a>, a machine-learned
+interatomic potential that relaxes molecular crystals to approximate PBE0+MBD
+geometries in seconds/minutes rather than CPU-hours.</p></li>
+</ol>
+<p>We deliberately pick two <sup>13</sup>C sites that are known to be <em>hard</em> problems
+for shift prediction:</p>
+<ul class="simple">
+<li><p>the <strong>C5 carbon of</strong> <span class="math notranslate nohighlight">\(\beta\)</span><strong>-testosterone monohydrate</strong> (CSD refcode
+<code class="docutils literal notranslate"><span class="pre">TESTOM01</span></code>), where GIPAW-PBE is off by more than 10 ppm;</p></li>
+<li><p>the <strong>C2’ carbon of sucrose</strong> (CSD refcode <code class="docutils literal notranslate"><span class="pre">SUCROS04</span></code>), part of a commonly used
+experimental benchmark set of isotropic <sup>13</sup>C shifts for which ShiftML3
+on PBE geometries showed the largest deviations. This example demonstrates
+that the combination of improved shielding reference electronic structure
+and PBE0+MBD quality geometries from the PET-MOLS MLIP
+significantly improves the prediction accuracy for this site,
+although it remains a challenging case for ShiftML4 presumably due
+to the limited coverage of the training set for this particular chemical environment.</p></li>
+</ul>
+<p>For an introduction to running ShiftML itself – calculator setup, ensemble
+uncertainties, anisotropic tensors – see the companion recipe <a class="reference external" href="http://atomistic-cookbook.org/examples/shiftml/shiftml-example.html">Computing NMR
+shielding tensors using ShiftML</a>, and for
+a full NMR-crystallography workflow see <a class="reference external" href="http://atomistic-cookbook.org/examples/shiftml-structure-match/shiftml-structure-match.html">NMR-shielding-driven structure
+determination with ShiftML3</a>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ase.io</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">chemiscope</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ase.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">BFGS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">shiftml.ase</span><span class="w"> </span><span class="kn">import</span> <span class="n">ShiftML</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">upet.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">UPETCalculator</span>
+</pre></div>
+</div>
+<section id="shieldings-shifts-and-where-the-error-comes-from">
+<h2>Shieldings, shifts, and where the error comes from<a class="headerlink" href="#shieldings-shifts-and-where-the-error-comes-from" title="Link to this heading">¶</a></h2>
+<p>What an electronic-structure calculation computes is the chemical <em>shielding</em>
+<span class="math notranslate nohighlight">\(\sigma_{\mathrm{iso}}\)</span>, the isotropic part of the response of the local
+electron density to an external magnetic field. What an experiment reports is
+the chemical <em>shift</em> <span class="math notranslate nohighlight">\(\delta_{\mathrm{iso}}\)</span>, measured relative to a
+reference compound. In practice, both are converted by a linear calibration,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\delta_{\mathrm{iso}}^{\mathrm{pred}}
+= A \, \sigma_{\mathrm{iso}}^{\mathrm{pred}} + B \;,\]</div>
+</div>
+<p>where ideally <span class="math notranslate nohighlight">\(A = -1\)</span> (shielding lowers the resonance frequency) and
+<span class="math notranslate nohighlight">\(B\)</span> is the absolute shielding of the reference compound. In practice
+<span class="math notranslate nohighlight">\(A\)</span> and <span class="math notranslate nohighlight">\(B\)</span> are fitted by linear regression against a benchmark of
+assigned experimental shifts, which absorbs part of the systematic error of the
+underlying method. Crucially, <strong>the regression is specific to the combination
+of shielding model and geometry</strong>, so each pair below gets its own constants.</p>
+<p>Improving the electronic-structure reference beyond GGA can be achieved with a
+<em>monomer correction</em>, introduced by <a class="reference external" href="https://doi.org/10.1039/C9CP01666J">Dračínský, Unzueta and Beran, Phys. Chem.
+Chem. Phys. 21, 14992 (2019)</a>: individual
+molecules are cut out of the unit cell and the difference between a hybrid and a
+GGA calculation on the isolated molecule is added back onto the periodic GIPAW
+result:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\sigma_{\mathrm{cryst}}^{\mathrm{PBE0}} \approx
+\sigma_{\mathrm{cryst}}^{\mathrm{GIPAW,PBE}}
++ \left( \sigma_{\mathrm{mol}}^{\mathrm{GIAO,PBE0}}
+       - \sigma_{\mathrm{mol}}^{\mathrm{GIAO,PBE}} \right) \;.\]</div>
+</div>
+<p>This works well, but it means every prediction either GIPAW-DFT or ShiftML,
+requires additional molecular DFT calculations along with it.
+The key idea of ShiftML4 is to <strong>train directly on
+the monomer-corrected shieldings</strong>: the correction is absorbed into the model
+weights, so at inference time only the periodic structure is taken as input
+and approximately hybrid-quality tensors are returned,
+<strong>with no fragment cutting and no molecular DFT required</strong>.</p>
+<p>ShiftML4 is an ensemble of 7 nanoPET models – the same architecture and the
+same linear evaluation cost as ShiftML3, which was trained on plain GIPAW-PBE
+targets. Against experiment, ShiftML4 lowers the <sup>13</sup>C isotropic RMSE
+from the 2.44 ppm of ShiftML3 to 1.67 ppm, which is also below the 2.34 ppm of
+the GIPAW-PBE calculations on identical geometries.</p>
+</section>
+<section id="referencing-constants">
+<h2>Referencing constants<a class="headerlink" href="#referencing-constants" title="Link to this heading">¶</a></h2>
+<p>The slopes and intercepts below are the <sup>13</sup>C regressions reported for
+<a class="reference external" href="https://doi.org/10.1021/acs.jpclett.5c01819">ShiftML3</a> and <a class="reference external" href="https://arxiv.org/abs/2608.21313">ShiftML4</a> by Kellner et al.,
+fitted against assigned experimental shifts on a benchmark of organic crystals.
+Two sets are given per model, one fitted on GGA-quality (PBE-D3(BJ)) geometries
+and one on hybrid-quality ones.</p>
+<p>One subtlety worth stating plainly: the “PBE0” regressions were fitted on
+geometries relaxed with <strong>PET-MOLS</strong>, which targets PBE0+MBD. We reuse them
+unchanged for the explicit PBE0-D3(BJ) DFT structures, for the PET-MOLS geometries
+they are exactly the constants that were fitted.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">A_SML3_PBE</span><span class="p">,</span> <span class="n">B_SML3_PBE</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.9732</span><span class="p">,</span> <span class="mf">166.23</span>
+<span class="n">A_SML3_PBE0</span><span class="p">,</span> <span class="n">B_SML3_PBE0</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.9860</span><span class="p">,</span> <span class="mf">170.67</span>
+
+<span class="n">A_SML4_PBE</span><span class="p">,</span> <span class="n">B_SML4_PBE</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.9128</span><span class="p">,</span> <span class="mf">165.53</span>
+<span class="n">A_SML4_PBE0</span><span class="p">,</span> <span class="n">B_SML4_PBE0</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.9255</span><span class="p">,</span> <span class="mf">169.71</span>
+</pre></div>
+</div>
+</section>
+<section id="loading-the-models">
+<h2>Loading the models<a class="headerlink" href="#loading-the-models" title="Link to this heading">¶</a></h2>
+<p>Both are committees rather than single networks – ShiftML3 has 8 members and
+ShiftML4 has 7 – so the first call fetches 15 checkpoints from Zenodo in
+total, which is what you see scrolling past in the log below. They are cached
+locally, so subsequent runs start instantly.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">calc_sML3</span> <span class="o">=</span> <span class="n">ShiftML</span><span class="p">(</span><span class="s2">"ShiftML3"</span><span class="p">)</span>
+<span class="n">calc_sML4</span> <span class="o">=</span> <span class="n">ShiftML</span><span class="p">(</span><span class="s2">"ShiftML4"</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>2026-08-24 21:18:51,120 - INFO - Found model version in url_resolve
+2026-08-24 21:18:51,120 - INFO - Resolving model version to model files at url: https://zenodo.org/records/15767390/files/model_0.pt?download=1
+2026-08-24 21:18:51,121 - INFO - Model not found in cache, downloading it
+2026-08-24 21:19:08,110 - INFO - Downloaded ShiftML30 and saved to /home/runner/.cache/shiftml/ShiftML30
+2026-08-24 21:19:08,263 - INFO - Found model version in url_resolve
+2026-08-24 21:19:08,263 - INFO - Resolving model version to model files at url: https://zenodo.org/records/15767390/files/model_1.pt?download=1
+2026-08-24 21:19:08,263 - INFO - Model not found in cache, downloading it
+2026-08-24 21:19:24,909 - INFO - Downloaded ShiftML31 and saved to /home/runner/.cache/shiftml/ShiftML31
+2026-08-24 21:19:25,055 - INFO - Found model version in url_resolve
+2026-08-24 21:19:25,055 - INFO - Resolving model version to model files at url: https://zenodo.org/records/15767390/files/model_2.pt?download=1
+2026-08-24 21:19:25,055 - INFO - Model not found in cache, downloading it
+2026-08-24 21:19:28,196 - INFO - Downloaded ShiftML32 and saved to /home/runner/.cache/shiftml/ShiftML32
+2026-08-24 21:19:28,341 - INFO - Found model version in url_resolve
+2026-08-24 21:19:28,342 - INFO - Resolving model version to model files at url: https://zenodo.org/records/15767390/files/model_3.pt?download=1
+2026-08-24 21:19:28,342 - INFO - Model not found in cache, downloading it
+2026-08-24 21:19:31,359 - INFO - Downloaded ShiftML33 and saved to /home/runner/.cache/shiftml/ShiftML33
+2026-08-24 21:19:31,505 - INFO - Found model version in url_resolve
+2026-08-24 21:19:31,505 - INFO - Resolving model version to model files at url: https://zenodo.org/records/15767390/files/model_4.pt?download=1
+2026-08-24 21:19:31,505 - INFO - Model not found in cache, downloading it
+2026-08-24 21:19:34,342 - INFO - Downloaded ShiftML34 and saved to /home/runner/.cache/shiftml/ShiftML34
+2026-08-24 21:19:34,487 - INFO - Found model version in url_resolve
+2026-08-24 21:19:34,487 - INFO - Resolving model version to model files at url: https://zenodo.org/records/15767390/files/model_5.pt?download=1
+2026-08-24 21:19:34,487 - INFO - Model not found in cache, downloading it
+2026-08-24 21:19:37,363 - INFO - Downloaded ShiftML35 and saved to /home/runner/.cache/shiftml/ShiftML35
+2026-08-24 21:19:37,508 - INFO - Found model version in url_resolve
+2026-08-24 21:19:37,508 - INFO - Resolving model version to model files at url: https://zenodo.org/records/15767390/files/model_6.pt?download=1
+2026-08-24 21:19:37,509 - INFO - Model not found in cache, downloading it
+2026-08-24 21:19:40,610 - INFO - Downloaded ShiftML36 and saved to /home/runner/.cache/shiftml/ShiftML36
+2026-08-24 21:19:40,756 - INFO - Found model version in url_resolve
+2026-08-24 21:19:40,756 - INFO - Resolving model version to model files at url: https://zenodo.org/records/15767390/files/model_7.pt?download=1
+2026-08-24 21:19:40,756 - INFO - Model not found in cache, downloading it
+2026-08-24 21:19:43,714 - INFO - Downloaded ShiftML37 and saved to /home/runner/.cache/shiftml/ShiftML37
+2026-08-24 21:19:43,858 - INFO - Found model version in url_resolve
+2026-08-24 21:19:43,858 - INFO - Resolving model version to model files at url: https://zenodo.org/records/17444862/files/model_1.pt?download=1
+2026-08-24 21:19:43,858 - INFO - Model not found in cache, downloading it
+2026-08-24 21:19:46,709 - INFO - Downloaded ShiftML41 and saved to /home/runner/.cache/shiftml/ShiftML41
+2026-08-24 21:19:46,857 - INFO - Found model version in url_resolve
+2026-08-24 21:19:46,857 - INFO - Resolving model version to model files at url: https://zenodo.org/records/17444862/files/model_2.pt?download=1
+2026-08-24 21:19:46,858 - INFO - Model not found in cache, downloading it
+2026-08-24 21:19:49,739 - INFO - Downloaded ShiftML42 and saved to /home/runner/.cache/shiftml/ShiftML42
+2026-08-24 21:19:49,888 - INFO - Found model version in url_resolve
+2026-08-24 21:19:49,888 - INFO - Resolving model version to model files at url: https://zenodo.org/records/17444862/files/model_3.pt?download=1
+2026-08-24 21:19:49,888 - INFO - Model not found in cache, downloading it
+2026-08-24 21:19:52,726 - INFO - Downloaded ShiftML43 and saved to /home/runner/.cache/shiftml/ShiftML43
+2026-08-24 21:19:52,873 - INFO - Found model version in url_resolve
+2026-08-24 21:19:52,873 - INFO - Resolving model version to model files at url: https://zenodo.org/records/17444862/files/model_4.pt?download=1
+2026-08-24 21:19:52,873 - INFO - Model not found in cache, downloading it
+2026-08-24 21:19:55,990 - INFO - Downloaded ShiftML44 and saved to /home/runner/.cache/shiftml/ShiftML44
+2026-08-24 21:19:56,139 - INFO - Found model version in url_resolve
+2026-08-24 21:19:56,140 - INFO - Resolving model version to model files at url: https://zenodo.org/records/17444862/files/model_5.pt?download=1
+2026-08-24 21:19:56,140 - INFO - Model not found in cache, downloading it
+2026-08-24 21:19:59,048 - INFO - Downloaded ShiftML45 and saved to /home/runner/.cache/shiftml/ShiftML45
+2026-08-24 21:19:59,197 - INFO - Found model version in url_resolve
+2026-08-24 21:19:59,197 - INFO - Resolving model version to model files at url: https://zenodo.org/records/17444862/files/model_6.pt?download=1
+2026-08-24 21:19:59,197 - INFO - Model not found in cache, downloading it
+2026-08-24 21:20:02,031 - INFO - Downloaded ShiftML46 and saved to /home/runner/.cache/shiftml/ShiftML46
+2026-08-24 21:20:02,179 - INFO - Found model version in url_resolve
+2026-08-24 21:20:02,179 - INFO - Resolving model version to model files at url: https://zenodo.org/records/17444862/files/model_7.pt?download=1
+2026-08-24 21:20:02,179 - INFO - Model not found in cache, downloading it
+2026-08-24 21:20:05,150 - INFO - Downloaded ShiftML47 and saved to /home/runner/.cache/shiftml/ShiftML47
+</pre></div>
+</div>
+</section>
+<section id="the-c5-carbon-of-beta-testosterone">
+<h2>The C5 carbon of <span class="math notranslate nohighlight">\(\beta\)</span>-testosterone<a class="headerlink" href="#the-c5-carbon-of-beta-testosterone" title="Link to this heading">¶</a></h2>
+<p><span class="math notranslate nohighlight">\(\beta\)</span>-testosterone monohydrate crystallises with one testosterone and
+one water molecule in the asymmetric unit. Most of its <sup>13</sup>C shifts are
+reproduced perfectly well by standard methods – but C5, the non-protonated
+olefinic carbon of the enone motif highlighted below, is a severe outlier.
+Ramos and co-workers found GIPAW-PBE errors of 7–11 ppm for this site, against a
+typical <sup>13</sup>C accuracy of ~2 ppm, and showed that the error does not reduce
+noticeably with hybrid functional quality geometries (<a class="reference external" href="https://doi.org/10.1039/D4FD00072B">Ramos, Mueller and Beran,
+“The interplay of density functional selection and crystal structure for accurate
+NMR chemical shift predictions”, Faraday Discuss. 255, 119 (2025)</a>).
+It is a failure of the <em>electronic structure</em> of the shift computation method,
+not of the geometry.</p>
+<figure class="align-center" id="id1">
+<a class="reference internal image-reference" href="../../_images/testosterone-c5.png"><img alt="../../_images/testosterone-c5.png" src="../../_images/testosterone-c5.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-text">The testosterone molecule, with the problematic C5 carbon highlighted.</span><a class="headerlink" href="#id1" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">IDX_C5</span> <span class="o">=</span> <span class="mi">58</span>  <span class="c1"># index of C5 in the crystal structures used here</span>
+</pre></div>
+</div>
+<p>We load the same crystal structure relaxed at two levels of theory, PBE-D3(BJ)
+and PBE0-D3(BJ), both with the experimental lattice parameters held fixed.
+These come from the supporting information of <a class="reference external" href="https://doi.org/10.1039/D4FD00072B">Ramos et al., Faraday Discuss.
+255, 119 (2025)</a>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">frame_PBE</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">"data/TESTOM01_pbe.cif"</span><span class="p">)</span>
+<span class="n">frame_PBE0</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">"data/TESTOM01_pbe0.cif"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Let us look at where C5 actually sits in the unit cell.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">show_highlighted</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">atom_index</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="mh">0x1FBF4A</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Structure-only chemiscope widget marking one atom with a coloured sphere.</span>
+
+<span class="sd">    The marker is a per-atom shape: every atom carries one, but all of them</span>
+<span class="sd">    except ``atom_index`` are shrunk to nothing so a single sphere is drawn.</span>
+<span class="sd">    The viewer reads the radius as ``radius || 1``, so it must be small rather</span>
+<span class="sd">    than zero -- a zero radius is falsy there and turns into a full-size sphere.</span>
+<span class="sd">    """</span>
+    <span class="n">marker</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"sphere"</span><span class="p">,</span>
+        <span class="s2">"parameters"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"global"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"color"</span><span class="p">:</span> <span class="n">color</span><span class="p">},</span>
+            <span class="s2">"atom"</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">{</span><span class="s2">"radius"</span><span class="p">:</span> <span class="n">radius</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">atom_index</span> <span class="k">else</span> <span class="mf">1e-6</span><span class="p">}</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frame</span><span class="p">))</span>
+            <span class="p">],</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">chemiscope</span><span class="o">.</span><span class="n">show</span><span class="p">(</span>
+        <span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="n">frame</span><span class="p">],</span>
+        <span class="n">shapes</span><span class="o">=</span><span class="p">{</span><span class="n">label</span><span class="p">:</span> <span class="n">marker</span><span class="p">},</span>
+        <span class="c1"># the atom of interest is the only environment, so it is the one the</span>
+        <span class="c1"># viewer selects when the widget opens</span>
+        <span class="n">environments</span><span class="o">=</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="n">atom_index</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">)],</span>
+        <span class="n">mode</span><span class="o">=</span><span class="s2">"structure"</span><span class="p">,</span>
+        <span class="n">settings</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"structure"</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">{</span>
+                    <span class="s2">"shape"</span><span class="p">:</span> <span class="p">[</span><span class="n">label</span><span class="p">],</span>
+                    <span class="s2">"unitCell"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="s2">"bonds"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="c1"># the green sphere already marks the atom, so chemiscope's</span>
+                    <span class="c1"># own translucent environment sphere would only get in the way</span>
+                    <span class="s2">"environments"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"activated"</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+                <span class="p">}</span>
+            <span class="p">]</span>
+        <span class="p">},</span>
+        <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> highlighted in green"</span><span class="p">},</span>
+    <span class="p">)</span>
+
+
+<span class="n">show_highlighted</span><span class="p">(</span><span class="n">frame_PBE</span><span class="p">,</span> <span class="n">IDX_C5</span><span class="p">,</span> <span class="s2">"C5"</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</pre></div>
+</div>
+<!-- begin headers -->
+<!-- Load all dependencies -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
+
+<!-- JS scripts -->
+<script src="../../_static/chemiscope.min.js"></script>
+<script src="../../_static/chemiscope-sphinx.js"></script>
+
+<!-- CSS styles -->
+<link rel="stylesheet" href="../../_static/chemiscope-sphinx.css" type="text/css" />
+<!-- end headers -->
+
+<!-- Error display -->
+<div id="chsp-0611b323-eafa-4628-b72c-2703a6844dde-error-display" class="chemiscope-sphinx-error">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-0611b323-eafa-4628-b72c-2703a6844dde-error-display')">
+        &times;
+    </button>
+</div>
+
+<!-- Warning Display -->
+<div id="chsp-0611b323-eafa-4628-b72c-2703a6844dde-warning-display" class="chemiscope-sphinx-warning">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-0611b323-eafa-4628-b72c-2703a6844dde-warning-display')">
+        &times;
+    </button>
+</div>
+<div style="padding: 0.5rem 1.25rem" />
+
+<!-- Loading Spinner -->
+<div id="chsp-0611b323-eafa-4628-b72c-2703a6844dde-loading" class="chemiscope-sphinx-spinner">
+    <img src="../../_static/chemiscope-loading.svg" alt="Loading icon" />
+</div>
+
+<!-- Chemiscope Visualization -->
+<div id="chsp-0611b323-eafa-4628-b72c-2703a6844dde">
+    <!-- This will be replaced by the chemiscope HTML -->
+</div>
+
+<!-- Load Visualization Script -->
+<script>
+    loadChemiscopeSphinx('chsp-0611b323-eafa-4628-b72c-2703a6844dde', '../../_datasets/27024c2a17e68788861ff74f7ed8c4466fde9218c2cc4f87905798e0463def91-fig_shiftml-example_001.json.gz', 'structure', '2000.0');
+</script>
+<div class="output_subarea output_html rendered_html output_result">
+
+</div>
+<br />
+<br /><section id="reference-values">
+<h3>Reference values<a class="headerlink" href="#reference-values" title="Link to this heading">¶</a></h3>
+<p>The experimental shift, and the two GIPAW numbers we will compare against, are
+taken from Ramos et al. <code class="docutils literal notranslate"><span class="pre">cs_iso_GIPAW_C5</span></code> is a plain periodic GIPAW-PBE
+calculation; <code class="docutils literal notranslate"><span class="pre">cs_iso_GIPAW_PBE0_C5</span></code> adds an explicit PBE0 monomer correction
+on top of it – that is, the reference theory level that ShiftML4 replicates.
+Note that both are computed on the <em>same</em> PBE0-D3(BJ) geometry, so the two
+differ only in the level of theory used for the shielding.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">cs_iso_ref_C5</span> <span class="o">=</span> <span class="mf">173.8</span>  <span class="c1"># experiment, beta-testosterone (TESTOM01)</span>
+
+<span class="c1"># both on the PBE0-D3(BJ) geometry</span>
+<span class="n">cs_iso_GIPAW_C5</span> <span class="o">=</span> <span class="mf">185.0</span>  <span class="c1"># plain GIPAW-PBE</span>
+<span class="n">cs_iso_GIPAW_PBE0_C5</span> <span class="o">=</span> <span class="mf">182.1</span>  <span class="c1"># GIPAW-PBE + PBE0 monomer correction</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="predicting-shifts-on-dft-relaxed-geometries">
+<h2>Predicting shifts on DFT-relaxed geometries<a class="headerlink" href="#predicting-shifts-on-dft-relaxed-geometries" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">get_cs_iso</span></code> returns the isotropic shielding for every atom in the frame, as
+the mean over the model ensemble. Each call takes a couple of seconds for this
+208-atom cell – the equivalent GIPAW calculation would take hours on a compute
+node.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">cs_iso_sML3_PBE</span> <span class="o">=</span> <span class="n">A_SML3_PBE</span> <span class="o">*</span> <span class="n">calc_sML3</span><span class="o">.</span><span class="n">get_cs_iso</span><span class="p">(</span><span class="n">frame_PBE</span><span class="p">)</span> <span class="o">+</span> <span class="n">B_SML3_PBE</span>
+<span class="n">cs_iso_sML3_PBE0</span> <span class="o">=</span> <span class="n">A_SML3_PBE0</span> <span class="o">*</span> <span class="n">calc_sML3</span><span class="o">.</span><span class="n">get_cs_iso</span><span class="p">(</span><span class="n">frame_PBE0</span><span class="p">)</span> <span class="o">+</span> <span class="n">B_SML3_PBE0</span>
+<span class="n">cs_iso_sML4_PBE</span> <span class="o">=</span> <span class="n">A_SML4_PBE</span> <span class="o">*</span> <span class="n">calc_sML4</span><span class="o">.</span><span class="n">get_cs_iso</span><span class="p">(</span><span class="n">frame_PBE</span><span class="p">)</span> <span class="o">+</span> <span class="n">B_SML4_PBE</span>
+<span class="n">cs_iso_sML4_PBE0</span> <span class="o">=</span> <span class="n">A_SML4_PBE0</span> <span class="o">*</span> <span class="n">calc_sML4</span><span class="o">.</span><span class="n">get_cs_iso</span><span class="p">(</span><span class="n">frame_PBE0</span><span class="p">)</span> <span class="o">+</span> <span class="n">B_SML4_PBE0</span>
+</pre></div>
+</div>
+<p>To compare methods on a single site, we plot each prediction as a point on the
+chemical-shift axis, with a bar connecting it to the experimental value. Colour
+identifies the shielding method family and the marker shape identifies the
+geometry the shieldings were computed on.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">MODEL_COLORS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"GIPAW"</span><span class="p">:</span> <span class="s2">"#1baf7a"</span><span class="p">,</span>
+    <span class="c1"># the monomer-corrected result comes from the same GIPAW calculation, so it</span>
+    <span class="c1"># keeps the same colour; the row label carries the distinction</span>
+    <span class="sa">r</span><span class="s2">"$\Delta$PBE0-GIPAW"</span><span class="p">:</span> <span class="s2">"#1baf7a"</span><span class="p">,</span>
+    <span class="s2">"ShiftML3"</span><span class="p">:</span> <span class="s2">"#2a78d6"</span><span class="p">,</span>
+    <span class="s2">"ShiftML4"</span><span class="p">:</span> <span class="s2">"#eb6834"</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">GEOMETRY_MARKERS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"PBE-D3(BJ)"</span><span class="p">:</span> <span class="s2">"o"</span><span class="p">,</span>
+    <span class="s2">"PBE0-D3(BJ)"</span><span class="p">:</span> <span class="s2">"s"</span><span class="p">,</span>
+    <span class="s2">"PET-MOLS"</span><span class="p">:</span> <span class="s2">"^"</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_site</span><span class="p">(</span><span class="n">entries</span><span class="p">,</span> <span class="n">experiment</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Dot plot of predicted shifts for a single site, against experiment.</span>
+
+<span class="sd">    ``entries`` is a list of ``(model, geometry, shift)`` tuples, drawn from top</span>
+<span class="sd">    to bottom in the order given.</span>
+<span class="sd">    """</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">6.6</span><span class="p">,</span> <span class="mf">0.42</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1.4</span><span class="p">))</span>
+
+    <span class="n">positions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entries</span><span class="p">)))[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">positions</span><span class="p">,</span> <span class="n">entries</span><span class="p">):</span>
+        <span class="c1"># the connector makes the signed deviation from experiment visible</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">experiment</span><span class="p">,</span> <span class="n">value</span><span class="p">],</span> <span class="p">[</span><span class="n">y</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">"0.85"</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="n">value</span><span class="p">,</span>
+            <span class="n">y</span><span class="p">,</span>
+            <span class="n">marker</span><span class="o">=</span><span class="n">GEOMETRY_MARKERS</span><span class="p">[</span><span class="n">geometry</span><span class="p">],</span>
+            <span class="n">markersize</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">MODEL_COLORS</span><span class="p">[</span><span class="n">model</span><span class="p">],</span>
+            <span class="n">markeredgecolor</span><span class="o">=</span><span class="s2">"white"</span><span class="p">,</span>
+            <span class="n">markeredgewidth</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span>
+            <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">value</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">experiment</span><span class="si">:</span><span class="s2">+.1f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+            <span class="n">textcoords</span><span class="o">=</span><span class="s2">"offset points"</span><span class="p">,</span>
+            <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">9</span><span class="p">),</span>
+            <span class="n">ha</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="s2">"0.25"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">experiment</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"0.35"</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">"--"</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="n">positions</span><span class="p">,</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s2">  /  </span><span class="si">{</span><span class="n">g</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">],</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">"predicted $^</span><span class="si">{13}</span><span class="s2">$C chemical shift / ppm"</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="se">\n</span><span class="s2">experiment: </span><span class="si">{</span><span class="n">experiment</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> ppm"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">margins</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mf">0.16</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">0.14</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">"x"</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"0.92"</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_axisbelow</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">side</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"top"</span><span class="p">,</span> <span class="s2">"right"</span><span class="p">,</span> <span class="s2">"left"</span><span class="p">):</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="n">side</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">"y"</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+
+<span class="n">plot_site</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="p">(</span><span class="s2">"GIPAW"</span><span class="p">,</span> <span class="s2">"PBE0-D3(BJ)"</span><span class="p">,</span> <span class="n">cs_iso_GIPAW_C5</span><span class="p">),</span>
+        <span class="p">(</span><span class="sa">r</span><span class="s2">"$\Delta$PBE0-GIPAW"</span><span class="p">,</span> <span class="s2">"PBE0-D3(BJ)"</span><span class="p">,</span> <span class="n">cs_iso_GIPAW_PBE0_C5</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"ShiftML3"</span><span class="p">,</span> <span class="s2">"PBE-D3(BJ)"</span><span class="p">,</span> <span class="n">cs_iso_sML3_PBE</span><span class="p">[</span><span class="n">IDX_C5</span><span class="p">]),</span>
+        <span class="p">(</span><span class="s2">"ShiftML3"</span><span class="p">,</span> <span class="s2">"PBE0-D3(BJ)"</span><span class="p">,</span> <span class="n">cs_iso_sML3_PBE0</span><span class="p">[</span><span class="n">IDX_C5</span><span class="p">]),</span>
+        <span class="p">(</span><span class="s2">"ShiftML4"</span><span class="p">,</span> <span class="s2">"PBE-D3(BJ)"</span><span class="p">,</span> <span class="n">cs_iso_sML4_PBE</span><span class="p">[</span><span class="n">IDX_C5</span><span class="p">]),</span>
+        <span class="p">(</span><span class="s2">"ShiftML4"</span><span class="p">,</span> <span class="s2">"PBE0-D3(BJ)"</span><span class="p">,</span> <span class="n">cs_iso_sML4_PBE0</span><span class="p">[</span><span class="n">IDX_C5</span><span class="p">]),</span>
+    <span class="p">],</span>
+    <span class="n">cs_iso_ref_C5</span><span class="p">,</span>
+    <span class="sa">r</span><span class="s2">"C5 of $\beta$-testosterone monohydrate"</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_shiftml-example_001.png" srcset="../../_images/sphx_glr_shiftml-example_001.png" alt="C5 of $\beta$-testosterone monohydrate experiment: 173.8 ppm" class = "sphx-glr-single-img"/><p>The pattern is exactly the one the built-in monomer correction is meant to
+produce. GIPAW-PBE overshoots by more than 11 ppm; the explicit PBE0 monomer
+correction recovers about 3 ppm of that. ShiftML3, trained on GIPAW-PBE
+targets, lands closer than its own training reference here – which for such an
+extreme outlier is at least partly fortuitous. ShiftML4 gets within 1–3 ppm
+of experiment, comparable to what the Faraday Discussions study only reached
+with a <em>double-hybrid</em> monomer correction, and at a fraction of the cost.</p>
+<p>Note also how little the choice of DFT geometry matters for this site: PBE and
+PBE0 structures give answers within about 1 ppm of each other for both ShiftML
+models.
+That is the quantitative version of the statement above – C5 is an
+shift prediction problem, not a matter of reference geometry.</p>
+</section>
+<section id="relaxing-the-structure-with-pet-mols">
+<h2>Relaxing the structure with PET-MOLS<a class="headerlink" href="#relaxing-the-structure-with-pet-mols" title="Link to this heading">¶</a></h2>
+<p>So far we have been handed DFT-relaxed geometries. In a real NMR-crystallography
+campaign you would have to <em>generate</em> them yourself, and periodic hybrid-functional
+relaxations of a 208-atom cell may certainly be the bottleneck when dealing with
+hundreds of candidate structures.</p>
+<p>PET-MOLS is a machine-learned interatomic potential trained on PBE0+MBD
+reference data for molecular systems, and it covers the same chemical space as
+ShiftML. It replaces periodic DFT energy and force calculations entirely.
+PET-MOLS can be invoked from the <a class="reference external" href="https://github.com/lab-cosmo/upet">upet</a>
+library.
+Below we start from the <strong>raw experimental CSD structure</strong>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">calculator</span> <span class="o">=</span> <span class="n">UPETCalculator</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"pet-mols-s"</span><span class="p">)</span>
+
+<span class="n">frame_CSD</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">"data/TESTOM01.cif"</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>2026-08-24 21:20:30,799 - INFO - HTTP Request: GET https://huggingface.co/api/agent-harnesses "HTTP/1.1 200 OK"
+2026-08-24 21:20:30,881 - INFO - HTTP Request: GET https://huggingface.co/api/models/lab-cosmo/upet/tree/main?recursive=true&amp;expand=false "HTTP/1.1 200 OK"
+2026-08-24 21:20:30,882 - INFO - Loading pre-trained model: pet-mols-s-v1.1.0.ckpt
+2026-08-24 21:20:30,965 - INFO - HTTP Request: HEAD https://huggingface.co/lab-cosmo/upet/resolve/main/models/pet-mols-s-v1.1.0.ckpt "HTTP/1.1 302 Found"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-08-24 21:20:30,966 - WARNING - Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-08-24 21:20:32,143 - INFO - Using best model from epoch None
+/home/runner/work/atomistic-cookbook/atomistic-cookbook/.nox/shiftml4/lib/python3.11/site-packages/ase/io/cif.py:411: UserWarning: crystal system 'orthorhombic' is not interpreted for space group Spacegroup(19, setting=1). This may result in wrong setting!
+  warnings.warn(
+</pre></div>
+</div>
+<p>We keep the cell fixed at its experimental values, which implicitly retains the
+finite-temperature thermal expansion that a 0 K relaxation would remove.
+For an actual structure determination campaign,
+this assumption would need to be critically evaluated,
+after all, a priori the experimental lattice parameters are not known.
+Luckily, PBE0+MBD the reference method PET-MOLS is trained on,
+is known to reproduce experimental lattice parameters of molecular crystals very well.</p>
+<p>A note on the optimiser, since it dominates the cost of this recipe. ASE’s
+<code class="docutils literal notranslate"><span class="pre">BFGSLineSearch</span></code> performs a line search at every step, which for this system
+costs roughly nine force evaluations per step, whereas plain <code class="docutils literal notranslate"><span class="pre">BFGS</span></code> costs
+one. Both converge to the same minimum in a similar number of steps, so
+<code class="docutils literal notranslate"><span class="pre">BFGS</span></code> gets there about eight times faster: relaxing the testosterone cell
+below takes ~20 s instead of ~160 s, and the resulting C5 shift moves by only
+0.1 ppm – far less than the ~1.5 ppm RMSE of the model itself.</p>
+<p>If you run this locally and want a more tightly converged structure, lower
+<code class="docutils literal notranslate"><span class="pre">fmax</span></code> (the recipe uses 0.05 eV/A) or swap in <code class="docutils literal notranslate"><span class="pre">BFGSLineSearch</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ase.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">BFGSLineSearch</span>
+
+<span class="n">relaxed</span> <span class="o">=</span> <span class="n">optimize</span><span class="p">(</span><span class="n">frame_CSD</span><span class="p">,</span> <span class="n">calculator</span><span class="p">,</span> <span class="n">fmax</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">)</span>   <span class="c1"># tighter</span>
+<span class="c1"># ...or, for the line-search optimiser used in the original workflow:</span>
+<span class="n">structure</span> <span class="o">=</span> <span class="n">frame_CSD</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">structure</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="n">calculator</span>
+<span class="n">BFGSLineSearch</span><span class="p">(</span><span class="n">structure</span><span class="p">,</span> <span class="n">logfile</span><span class="o">=</span><span class="s2">"-"</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">fmax</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Neither changes the conclusions below; both take considerably longer.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">optimize</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">calc</span><span class="p">,</span> <span class="n">fmax</span><span class="o">=</span><span class="mf">5e-2</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">200</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Relax atomic positions at fixed cell, returning the relaxed frame."""</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">structure</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="n">calc</span>
+
+    <span class="c1"># logfile="-" sends the convergence table to stdout, where sphinx-gallery</span>
+    <span class="c1"># picks it up and renders it below the cell</span>
+    <span class="n">dyn</span> <span class="o">=</span> <span class="n">BFGS</span><span class="p">(</span><span class="n">structure</span><span class="p">,</span> <span class="n">logfile</span><span class="o">=</span><span class="s2">"-"</span><span class="p">)</span>
+    <span class="n">dyn</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">fmax</span><span class="o">=</span><span class="n">fmax</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">steps</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">structure</span>
+
+
+<span class="n">relaxed_frame</span> <span class="o">=</span> <span class="n">optimize</span><span class="p">(</span><span class="n">frame_CSD</span><span class="p">,</span> <span class="n">calculator</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>      Step     Time          Energy          fmax
+BFGS:    0 21:20:34  -105234.539062       18.144607
+BFGS:    1 21:20:36  -105260.609375        6.855409
+BFGS:    2 21:20:38  -105267.718750        4.610329
+BFGS:    3 21:20:39  -105270.515625        4.343630
+BFGS:    4 21:20:40  -105271.601562        0.938363
+BFGS:    5 21:20:41  -105272.054688        0.763715
+BFGS:    6 21:20:42  -105272.664062        0.716352
+BFGS:    7 21:20:44  -105272.812500        0.886223
+BFGS:    8 21:20:45  -105273.000000        0.671727
+BFGS:    9 21:20:46  -105273.140625        0.328364
+BFGS:   10 21:20:47  -105273.187500        0.252060
+BFGS:   11 21:20:48  -105273.234375        0.225572
+BFGS:   12 21:20:49  -105273.265625        0.214277
+BFGS:   13 21:20:51  -105273.296875        0.197778
+BFGS:   14 21:20:52  -105273.320312        0.177394
+BFGS:   15 21:20:53  -105273.343750        0.139081
+BFGS:   16 21:20:54  -105273.359375        0.136820
+BFGS:   17 21:20:55  -105273.375000        0.202259
+BFGS:   18 21:20:57  -105273.382812        0.263568
+BFGS:   19 21:20:58  -105273.390625        0.132505
+BFGS:   20 21:20:59  -105273.398438        0.094052
+BFGS:   21 21:21:00  -105273.406250        0.071105
+BFGS:   22 21:21:01  -105273.414062        0.079088
+BFGS:   23 21:21:02  -105273.414062        0.055067
+BFGS:   24 21:21:04  -105273.421875        0.052462
+BFGS:   25 21:21:05  -105273.421875        0.055834
+BFGS:   26 21:21:06  -105273.429688        0.062334
+BFGS:   27 21:21:07  -105273.429688        0.048125
+</pre></div>
+</div>
+<p>This takes a couple of minutes on a laptop CPU, and is by far the most
+expensive step of the whole recipe – which is the point: the equivalent
+periodic hybrid-DFT relaxation would run for days.</p>
+<p>Since PET-MOLS targets PBE0-quality geometries, we reference the resulting
+shieldings with the hybrid-geometry constants.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">cs_iso_sML3_PET_MOLS</span> <span class="o">=</span> <span class="n">A_SML3_PBE0</span> <span class="o">*</span> <span class="n">calc_sML3</span><span class="o">.</span><span class="n">get_cs_iso</span><span class="p">(</span><span class="n">relaxed_frame</span><span class="p">)</span> <span class="o">+</span> <span class="n">B_SML3_PBE0</span>
+<span class="n">cs_iso_sML4_PET_MOLS</span> <span class="o">=</span> <span class="n">A_SML4_PBE0</span> <span class="o">*</span> <span class="n">calc_sML4</span><span class="o">.</span><span class="n">get_cs_iso</span><span class="p">(</span><span class="n">relaxed_frame</span><span class="p">)</span> <span class="o">+</span> <span class="n">B_SML4_PBE0</span>
+</pre></div>
+</div>
+<p>Adding the two new predictions to the comparison:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">plot_site</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="p">(</span><span class="s2">"GIPAW"</span><span class="p">,</span> <span class="s2">"PBE0-D3(BJ)"</span><span class="p">,</span> <span class="n">cs_iso_GIPAW_C5</span><span class="p">),</span>
+        <span class="p">(</span><span class="sa">r</span><span class="s2">"$\Delta$PBE0-GIPAW"</span><span class="p">,</span> <span class="s2">"PBE0-D3(BJ)"</span><span class="p">,</span> <span class="n">cs_iso_GIPAW_PBE0_C5</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"ShiftML3"</span><span class="p">,</span> <span class="s2">"PBE-D3(BJ)"</span><span class="p">,</span> <span class="n">cs_iso_sML3_PBE</span><span class="p">[</span><span class="n">IDX_C5</span><span class="p">]),</span>
+        <span class="p">(</span><span class="s2">"ShiftML3"</span><span class="p">,</span> <span class="s2">"PBE0-D3(BJ)"</span><span class="p">,</span> <span class="n">cs_iso_sML3_PBE0</span><span class="p">[</span><span class="n">IDX_C5</span><span class="p">]),</span>
+        <span class="p">(</span><span class="s2">"ShiftML3"</span><span class="p">,</span> <span class="s2">"PET-MOLS"</span><span class="p">,</span> <span class="n">cs_iso_sML3_PET_MOLS</span><span class="p">[</span><span class="n">IDX_C5</span><span class="p">]),</span>
+        <span class="p">(</span><span class="s2">"ShiftML4"</span><span class="p">,</span> <span class="s2">"PBE-D3(BJ)"</span><span class="p">,</span> <span class="n">cs_iso_sML4_PBE</span><span class="p">[</span><span class="n">IDX_C5</span><span class="p">]),</span>
+        <span class="p">(</span><span class="s2">"ShiftML4"</span><span class="p">,</span> <span class="s2">"PBE0-D3(BJ)"</span><span class="p">,</span> <span class="n">cs_iso_sML4_PBE0</span><span class="p">[</span><span class="n">IDX_C5</span><span class="p">]),</span>
+        <span class="p">(</span><span class="s2">"ShiftML4"</span><span class="p">,</span> <span class="s2">"PET-MOLS"</span><span class="p">,</span> <span class="n">cs_iso_sML4_PET_MOLS</span><span class="p">[</span><span class="n">IDX_C5</span><span class="p">]),</span>
+    <span class="p">],</span>
+    <span class="n">cs_iso_ref_C5</span><span class="p">,</span>
+    <span class="sa">r</span><span class="s2">"C5 of $\beta$-testosterone monohydrate"</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_shiftml-example_002.png" srcset="../../_images/sphx_glr_shiftml-example_002.png" alt="C5 of $\beta$-testosterone monohydrate experiment: 173.8 ppm" class = "sphx-glr-single-img"/><p>The PET-MOLS geometries reproduce the shift predictions from DFT geometries
+to within a few tenths of a ppm, for both models.
+In other words, the entire DFT geometry optimisation can be replaced by a
+machine-learned relaxation without any loss of accuracy in the predicted shift,
+and the resulting workflow, from CIF to
+chemical shift, contains no electronic-structure calculation at all.</p>
+<p>Across the full experimental benchmark this combination is what gives ShiftML4
+impressive accuracies against experiment:
+a <sup>13</sup>C RMSE of 1.49 ppm on PET-MOLS geometries,
+against 2.44 ppm for ShiftML3 on PBE geometries.</p>
+</section>
+<section id="the-c2-carbon-of-sucrose">
+<h2>The C2’ carbon of sucrose<a class="headerlink" href="#the-c2-carbon-of-sucrose" title="Link to this heading">¶</a></h2>
+<p>Sucrose (<code class="docutils literal notranslate"><span class="pre">SUCROS04</span></code>, two molecules per unit cell)
+contains a quaternary anomeric carbon, C2’ of the
+fructofuranose ring, which is bonded to two oxygens and sits at the glycosidic
+linkage. This site is poorly described by both ShiftML models.</p>
+<figure class="align-center" id="id2">
+<a class="reference internal image-reference" href="../../_images/sucrose-c2prime.png"><img alt="../../_images/sucrose-c2prime.png" src="../../_images/sucrose-c2prime.png" style="width: 560px;" />
+</a>
+<figcaption>
+<p><span class="caption-text">The sucrose molecule, with the C2’ carbon highlighted.</span><a class="headerlink" href="#id2" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">IDX_C2_prime</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="n">cs_iso_ref_C2_prime</span> <span class="o">=</span> <span class="mf">102.40</span>  <span class="c1"># https://doi.org/10.1006/jmra.1993.1201</span>
+
+<span class="c1"># GIPAW reference values, as above: both on the PBE0-D3(BJ) geometry</span>
+<span class="n">cs_iso_GIPAW_C2_prime</span> <span class="o">=</span> <span class="mf">106.3</span>  <span class="c1"># plain GIPAW-PBE</span>
+<span class="n">cs_iso_GIPAW_PBE0_C2_prime</span> <span class="o">=</span> <span class="mf">102.8</span>  <span class="c1"># GIPAW-PBE + PBE0 monomer correction</span>
+
+<span class="n">frame_sucrose_PBE</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">"data/succrose_pbe-d3bj.cif"</span><span class="p">)</span>
+<span class="n">frame_sucrose_PBE0</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">"data/succrose_pbe0-d3bj.cif"</span><span class="p">)</span>
+
+<span class="n">show_highlighted</span><span class="p">(</span><span class="n">frame_sucrose_PBE</span><span class="p">,</span> <span class="n">IDX_C2_prime</span><span class="p">,</span> <span class="s2">"C2'"</span><span class="p">)</span>
+</pre></div>
+</div>
+
+
+<!-- Error display -->
+<div id="chsp-fcc823a8-e141-4302-8d4e-f51899a6a866-error-display" class="chemiscope-sphinx-error">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-fcc823a8-e141-4302-8d4e-f51899a6a866-error-display')">
+        &times;
+    </button>
+</div>
+
+<!-- Warning Display -->
+<div id="chsp-fcc823a8-e141-4302-8d4e-f51899a6a866-warning-display" class="chemiscope-sphinx-warning">
+    <p></p>
+    <button type="button" aria-label="Close" onclick="hideElement('chsp-fcc823a8-e141-4302-8d4e-f51899a6a866-warning-display')">
+        &times;
+    </button>
+</div>
+<div style="padding: 0.5rem 1.25rem" />
+
+<!-- Loading Spinner -->
+<div id="chsp-fcc823a8-e141-4302-8d4e-f51899a6a866-loading" class="chemiscope-sphinx-spinner">
+    <img src="../../_static/chemiscope-loading.svg" alt="Loading icon" />
+</div>
+
+<!-- Chemiscope Visualization -->
+<div id="chsp-fcc823a8-e141-4302-8d4e-f51899a6a866">
+    <!-- This will be replaced by the chemiscope HTML -->
+</div>
+
+<!-- Load Visualization Script -->
+<script>
+    loadChemiscopeSphinx('chsp-fcc823a8-e141-4302-8d4e-f51899a6a866', '../../_datasets/5093c215a14c4d22206f94bb8ebd0429958609edf1c90b74efbf3248497937ef-fig_shiftml-example_002.json.gz', 'structure', '2000.0');
+</script>
+<div class="output_subarea output_html rendered_html output_result">
+
+</div>
+<br />
+<br /><p>The same four model/geometry combinations as before:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">cs_sucrose_sML3_PBE</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">A_SML3_PBE</span> <span class="o">*</span> <span class="n">calc_sML3</span><span class="o">.</span><span class="n">get_cs_iso</span><span class="p">(</span><span class="n">frame_sucrose_PBE</span><span class="p">)[</span><span class="n">IDX_C2_prime</span><span class="p">]</span> <span class="o">+</span> <span class="n">B_SML3_PBE</span>
+<span class="p">)</span>
+<span class="n">cs_sucrose_sML3_PBE0</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">A_SML3_PBE0</span> <span class="o">*</span> <span class="n">calc_sML3</span><span class="o">.</span><span class="n">get_cs_iso</span><span class="p">(</span><span class="n">frame_sucrose_PBE0</span><span class="p">)[</span><span class="n">IDX_C2_prime</span><span class="p">]</span> <span class="o">+</span> <span class="n">B_SML3_PBE0</span>
+<span class="p">)</span>
+<span class="n">cs_sucrose_sML4_PBE</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">A_SML4_PBE</span> <span class="o">*</span> <span class="n">calc_sML4</span><span class="o">.</span><span class="n">get_cs_iso</span><span class="p">(</span><span class="n">frame_sucrose_PBE</span><span class="p">)[</span><span class="n">IDX_C2_prime</span><span class="p">]</span> <span class="o">+</span> <span class="n">B_SML4_PBE</span>
+<span class="p">)</span>
+<span class="n">cs_sucrose_sML4_PBE0</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">A_SML4_PBE0</span> <span class="o">*</span> <span class="n">calc_sML4</span><span class="o">.</span><span class="n">get_cs_iso</span><span class="p">(</span><span class="n">frame_sucrose_PBE0</span><span class="p">)[</span><span class="n">IDX_C2_prime</span><span class="p">]</span> <span class="o">+</span> <span class="n">B_SML4_PBE0</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>We also relax sucrose with PET-MOLS. This cell is much smaller (90 atoms), and
+to keep the recipe fast we start from the PBE0-relaxed structure rather than
+from the raw experimental one, so the optimiser converges in a handful of steps.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">relaxed_sucrose</span> <span class="o">=</span> <span class="n">optimize</span><span class="p">(</span><span class="n">frame_sucrose_PBE0</span><span class="p">,</span> <span class="n">calculator</span><span class="p">)</span>
+
+<span class="n">cs_sucrose_sML3_PET_MOLS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">A_SML3_PBE0</span> <span class="o">*</span> <span class="n">calc_sML3</span><span class="o">.</span><span class="n">get_cs_iso</span><span class="p">(</span><span class="n">relaxed_sucrose</span><span class="p">)[</span><span class="n">IDX_C2_prime</span><span class="p">]</span> <span class="o">+</span> <span class="n">B_SML3_PBE0</span>
+<span class="p">)</span>
+<span class="n">cs_sucrose_sML4_PET_MOLS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">A_SML4_PBE0</span> <span class="o">*</span> <span class="n">calc_sML4</span><span class="o">.</span><span class="n">get_cs_iso</span><span class="p">(</span><span class="n">relaxed_sucrose</span><span class="p">)[</span><span class="n">IDX_C2_prime</span><span class="p">]</span> <span class="o">+</span> <span class="n">B_SML4_PBE0</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>      Step     Time          Energy          fmax
+BFGS:    0 21:21:24   -70600.882812        0.529625
+BFGS:    1 21:21:25   -70600.953125        0.150754
+BFGS:    2 21:21:25   -70600.960938        0.092358
+BFGS:    3 21:21:26   -70600.968750        0.090016
+BFGS:    4 21:21:27   -70600.976562        0.094672
+BFGS:    5 21:21:27   -70600.976562        0.073356
+BFGS:    6 21:21:28   -70600.976562        0.062903
+BFGS:    7 21:21:28   -70600.976562        0.052486
+BFGS:    8 21:21:29   -70600.984375        0.065515
+BFGS:    9 21:21:29   -70600.984375        0.054404
+BFGS:   10 21:21:30   -70600.984375        0.029733
+</pre></div>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">plot_site</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="p">(</span><span class="s2">"GIPAW"</span><span class="p">,</span> <span class="s2">"PBE0-D3(BJ)"</span><span class="p">,</span> <span class="n">cs_iso_GIPAW_C2_prime</span><span class="p">),</span>
+        <span class="p">(</span><span class="sa">r</span><span class="s2">"$\Delta$PBE0-GIPAW"</span><span class="p">,</span> <span class="s2">"PBE0-D3(BJ)"</span><span class="p">,</span> <span class="n">cs_iso_GIPAW_PBE0_C2_prime</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"ShiftML3"</span><span class="p">,</span> <span class="s2">"PBE-D3(BJ)"</span><span class="p">,</span> <span class="n">cs_sucrose_sML3_PBE</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"ShiftML3"</span><span class="p">,</span> <span class="s2">"PBE0-D3(BJ)"</span><span class="p">,</span> <span class="n">cs_sucrose_sML3_PBE0</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"ShiftML3"</span><span class="p">,</span> <span class="s2">"PET-MOLS"</span><span class="p">,</span> <span class="n">cs_sucrose_sML3_PET_MOLS</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"ShiftML4"</span><span class="p">,</span> <span class="s2">"PBE-D3(BJ)"</span><span class="p">,</span> <span class="n">cs_sucrose_sML4_PBE</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"ShiftML4"</span><span class="p">,</span> <span class="s2">"PBE0-D3(BJ)"</span><span class="p">,</span> <span class="n">cs_sucrose_sML4_PBE0</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"ShiftML4"</span><span class="p">,</span> <span class="s2">"PET-MOLS"</span><span class="p">,</span> <span class="n">cs_sucrose_sML4_PET_MOLS</span><span class="p">),</span>
+    <span class="p">],</span>
+    <span class="n">cs_iso_ref_C2_prime</span><span class="p">,</span>
+    <span class="s2">"C2' of sucrose"</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_shiftml-example_003.png" srcset="../../_images/sphx_glr_shiftml-example_003.png" alt="C2' of sucrose experiment: 102.4 ppm" class = "sphx-glr-single-img"/><p>Here the ordering is reversed: GIPAW does well on this site, and both ShiftML
+models overshoot badly. ShiftML3 on PBE geometries is off by more than 12 ppm.
+The trends within the ML predictions are nevertheless the ones we would hope
+for – moving to the ShiftML4 reference reduces prediction errors by about 5 ppm,
+and the PET-MOLS geometry improves predictions by another 1–2 ppm,
+so the best ML combination roughly halves the ShiftML3 error.
+But it is still a 5 ppm error on a site where a
+monomer-corrected GIPAW calculation is in good agreement with experiment.</p>
+</section>
+<section id="can-we-tell-in-advance-that-this-site-is-unreliable">
+<h2>Can we tell in advance that this site is unreliable?<a class="headerlink" href="#can-we-tell-in-advance-that-this-site-is-unreliable" title="Link to this heading">¶</a></h2>
+<p>ShiftML3 and ShiftML4 are committee models, and the ShiftML calculator function
+<code class="docutils literal notranslate"><span class="pre">get_cs_iso_ensemble</span></code> returns the individual member predictions rather than
+only their mean. The spread across the committee is a practical approach for
+uncertainty estimation of the model predictions, so it is worth asking whether
+it would have warned us about C2’ of sucrose.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s2">"testosterone C5"</span><span class="p">,</span> <span class="n">frame_PBE0</span><span class="p">,</span> <span class="n">IDX_C5</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"sucrose C2'"</span><span class="p">,</span> <span class="n">frame_sucrose_PBE0</span><span class="p">,</span> <span class="n">IDX_C2_prime</span><span class="p">),</span>
+<span class="p">]:</span>
+    <span class="n">spread</span> <span class="o">=</span> <span class="n">calc_sML4</span><span class="o">.</span><span class="n">get_cs_iso_ensemble</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">carbons</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">get_chemical_symbols</span><span class="p">())</span> <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="s2">"C"</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">:</span><span class="s2">16s</span><span class="si">}</span><span class="s2">  committee spread at this site: </span><span class="si">{</span><span class="n">spread</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> ppm  "</span>
+        <span class="sa">f</span><span class="s2">"(median over all C in the cell: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">spread</span><span class="p">[</span><span class="n">carbons</span><span class="p">])</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> ppm)"</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>testosterone C5   committee spread at this site: 3.01 ppm  (median over all C in the cell: 1.12 ppm)
+sucrose C2'       committee spread at this site: 1.95 ppm  (median over all C in the cell: 1.17 ppm)
+</pre></div>
+</div>
+<p>Both sites stand out from their surroundings: the committee disagrees roughly
+twice as much about them as about a typical carbon in the same crystal, so the
+uncertainty does succeed in flagging them as unusual environments.</p>
+<p>But note the ordering. The spread is <em>larger</em> for testosterone C5, where
+ShiftML4 is accurate to about 2 ppm, than for sucrose C2’, where it is off by
+5 ppm. The committee spread is a useful triage signal for finding environments
+that the training set covers poorly – it is not a calibrated error bar for an
+individual site against experiment, and it should not be read as one.
+Importantly it only gives a confidence interval against the reference theory level
+the model was trained on, and not against experiment, so further errors from
+the electronic structure reference might add to the total error.</p>
+</section>
+<section id="conclusions">
+<h2>Conclusions<a class="headerlink" href="#conclusions" title="Link to this heading">¶</a></h2>
+<p>ShiftML4 absorbs hybrid-functional monomer corrections directly into the model,
+so a single forward pass on a periodic structure returns shielding tensors that
+are closer to experiment than the GIPAW-PBE calculations the ShiftML family was
+originally trained to reproduce. Combined with PET-MOLS for geometry
+relaxation, it turns a workflow that used to cost CPU-days per candidate
+structure into one that runs end-to-end, from a CIF file to referenced chemical
+shifts, in a couple of minutes on a laptop.</p>
+<p>The testosterone C5 example shows the practical relevance of the approach
+on a site where the GIPAW reference genuinely fails.
+The sucrose C2’ example shows that the model is not perfect:
+it is still off by 5 ppm on a site where molecular corrected GIPAW DFT
+calculations are in excellent agreement with experiment. This is not a failure
+of the ML model per se, but rather a limitation of using a surrogate model for
+predictions in rare local environments.
+The committee spread flags such sites as unusual without ranking them reliably.
+These fast predictions are therefore perfect to screen a large pool of candidate
+structures or compute finite temperature effects from an ensemble of structures,
+and in case of doubt explicit calculations for the handful of cases that matter
+can be performed to verify ShiftML4s predictions.</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (2 minutes 54.331 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-shiftml4-shiftml-example-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/480317b65feb31667402c5e9f4896987/shiftml-example.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">shiftml-example.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/1a69abe6a9a4566a29acf86dfa0eefe5/shiftml-example.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">shiftml-example.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/439c93e59a6d2a7d80229026ab413bc5/shiftml-example.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">recipe:</span> <span class="pre">shiftml-example.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../water-model/water-model.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Atomistic Water Model for Molecular Dynamics</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../dos-align/dos-align.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">A ML model for the electron density of states</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; BSD 3-Clause License, Copyright (c) 2026, The atomistic cookbook team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Accurate NMR chemical shifts with ShiftML4 and PET-MOLS</a><ul>
+<li><a class="reference internal" href="#shieldings-shifts-and-where-the-error-comes-from">Shieldings, shifts, and where the error comes from</a></li>
+<li><a class="reference internal" href="#referencing-constants">Referencing constants</a></li>
+<li><a class="reference internal" href="#loading-the-models">Loading the models</a></li>
+<li><a class="reference internal" href="#the-c5-carbon-of-beta-testosterone">The C5 carbon of <span class="math notranslate nohighlight">\(\beta\)</span>-testosterone</a><ul>
+<li><a class="reference internal" href="#reference-values">Reference values</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#predicting-shifts-on-dft-relaxed-geometries">Predicting shifts on DFT-relaxed geometries</a></li>
+<li><a class="reference internal" href="#relaxing-the-structure-with-pet-mols">Relaxing the structure with PET-MOLS</a></li>
+<li><a class="reference internal" href="#the-c2-carbon-of-sucrose">The C2’ carbon of sucrose</a></li>
+<li><a class="reference internal" href="#can-we-tell-in-advance-that-this-site-is-unreliable">Can we tell in advance that this site is unreliable?</a></li>
+<li><a class="reference internal" href="#conclusions">Conclusions</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script data-domain="atomistic-cookbook.org" defer="defer" src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"></script>
+    <script src="../../_static/all-examples-data.js?v=0c0295e4"></script>
+    <script src="../../_static/daily-recipe.js?v=b5e71911"></script>
+    </body>
+</html>
