@@ -123,7 +123,8 @@ from upet.calculator import UPETCalculator
 # ---------------------
 #
 # The slopes and intercepts below are the :sup:`13`\ C regressions reported for
-# ShiftML3 and ShiftML4 by `Kellner et al. <https://arxiv.org/abs/2608.21313>`_,
+# `ShiftML3 <https://doi.org/10.1021/acs.jpclett.5c01819>`__ and `ShiftML4
+# <https://arxiv.org/abs/2608.21313>`__ by Kellner et al.,
 # fitted against assigned experimental shifts on a benchmark of organic crystals.
 # Two sets are given per model, one fitted on GGA-quality (PBE-D3(BJ)) geometries
 # and one on hybrid-quality ones.
@@ -150,8 +151,8 @@ calc_sML3 = ShiftML("ShiftML3")
 calc_sML4 = ShiftML("ShiftML4")
 
 # %%
-# A hard case: the C5 carbon of :math:`\beta`-testosterone
-# ---------------------------------------------------------
+# The C5 carbon of :math:`\beta`-testosterone
+# -------------------------------------------
 #
 # :math:`\beta`-testosterone monohydrate crystallises with one testosterone and
 # one water molecule in the asymmetric unit. Most of its :sup:`13`\ C shifts are
@@ -369,6 +370,8 @@ plot_site(
 # PET-MOLS is a machine-learned interatomic potential trained on PBE0+MBD
 # reference data for molecular systems, and it covers the same chemical space as
 # ShiftML. It replaces periodic DFT energy and force calculations entirely.
+# PET-MOLS can be invoked from the `upet <https://github.com/lab-cosmo/upet>`_
+# library.
 # Below we start from the **raw experimental CSD structure**.
 
 calculator = UPETCalculator(model="pet-mols-s")
@@ -443,8 +446,8 @@ plot_site(
 # against 2.44 ppm for ShiftML3 on PBE geometries.
 
 # %%
-# A case that is still hard: the C2' carbon of sucrose
-# ----------------------------------------------------
+# The C2' carbon of sucrose
+# -------------------------
 #
 # Sucrose (``SUCROS04``, two molecules per unit cell)
 # contains a quaternary anomeric carbon, C2' of the
@@ -524,15 +527,16 @@ plot_site(
 # and the PET-MOLS geometry improves predictions by another 1--2 ppm,
 # so the best ML combination roughly halves the ShiftML3 error.
 # But it is still a 5 ppm error on a site where a
-# monomer-corrected GIPAW calculation is essentially exact.
+# monomer-corrected GIPAW calculation is in good agreement with experiment.
 #
 # Can we tell in advance that this site is unreliable?
 # ----------------------------------------------------
 #
-# ShiftML is a committee of models, and ``get_cs_iso_ensemble`` returns the
-# individual member predictions rather than only their mean. The spread across
-# the committee is a cheap uncertainty estimate, so it is worth asking whether it
-# would have warned us about C2' of sucrose.
+# ShiftML3 and ShiftML4 are committee models, and the ShiftML calculator function
+# ``get_cs_iso_ensemble`` returns the individual member predictions rather than
+# only their mean. The spread across the committee is a practical approach for
+# uncertainty estimation of the model predictions, so it is worth asking whether
+# it would have warned us about C2' of sucrose.
 
 for label, frame, index in [
     ("testosterone C5", frame_PBE0, IDX_C5),
