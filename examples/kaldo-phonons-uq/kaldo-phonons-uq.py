@@ -20,18 +20,17 @@ within kALDo: kALDo builds the force constants and the phonon spectrum for each
 committee member and aggregates them, so no additional phonon backend is
 needed.
 
-The uncertainty-quantification methodology is unchanged from that recipe and is
-based on the construction of a shallow ensemble
-(cf. `Kellner and Ceriotti, 2024
-<https://iopscience.iop.org/article/10.1088/2632-2153/ad594a>`_), with the
-committee members obtained through the *last-layer prediction rigidity*
-framework (LLPR, `Bigi et al., 2024 <https://arxiv.org/abs/2403.02251>`_; see
-also the `PET-MAD UQ recipe
-<https://atomistic-cookbook.org/examples/pet-mad-uq/pet-mad-uq.html>`_). For a
-calibrated committee (e.g. 128 LLPR heads evaluated in a single batched pass),
-use ``uqphonon`` as in the companion recipe. Here, to keep the example
-self-contained within kALDo, we build a small committee from independent
-PET-MAD variants.
+The companion recipe uses a shallow ensemble (`Kellner and Ceriotti, 2024
+<https://iopscience.iop.org/article/10.1088/2632-2153/ad594a>`_): committee
+members that share all weights except the last layer, obtained through the
+*last-layer prediction rigidity* framework (LLPR, `Bigi et al., 2024
+<https://arxiv.org/abs/2403.02251>`_; see also the `PET-MAD UQ recipe
+<https://atomistic-cookbook.org/examples/pet-mad-uq/pet-mad-uq.html>`_), which
+gives a calibrated uncertainty. Here the committee is instead two independent
+PET-MAD models (XS and S) that do not share weights: the spread is a rougher,
+uncalibrated measure of model disagreement, but it exercises the same
+``PhononsEnsemble`` machinery and keeps the example dependent only on kALDo and
+UPET. For a calibrated committee, use ``uqphonon`` as in the companion recipe.
 
 The theory and implementation of kALDo are described in
 `Barbalinardo et al., J. Appl. Phys. 128, 135104 (2020)
@@ -86,7 +85,9 @@ members = [
 # We relax the silicon cell with the first model, keeping the diamond symmetry
 # with ``FixSymmetry``.  Unconstrained machine-learning potentials only respect
 # the crystal symmetry approximately, so constraining the relaxation avoids a
-# spuriously symmetry-broken cell.
+# spuriously symmetry-broken cell.  ``StrainFilter`` relaxes only the cell
+# degrees of freedom: with ``FixSymmetry`` the atoms stay on the fixed Wyckoff
+# sites of the diamond lattice, so the lattice parameter is the only variable.
 
 atoms = bulk("Si", "diamond", a=5.43)
 atoms.calc = members[0]
