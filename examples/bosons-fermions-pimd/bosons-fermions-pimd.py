@@ -105,8 +105,8 @@ from data import analysis, plots
 #    of trajectories) -- the analysis is identical.
 #
 # .. note::
-#    The runs are short to keep the example computational managable by 
-#    most users. To have better statistics, you can increase the number 
+#    The runs are short to keep the example computational managable by
+#    most users. To have better statistics, you can increase the number
 #    of steps in the input files.
 
 
