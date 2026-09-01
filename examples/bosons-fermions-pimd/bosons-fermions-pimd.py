@@ -103,6 +103,12 @@ from data import analysis, plots
 #    results are therefore only qualitative, with sizeable error bars. For
 #    converged numbers, increase the step counts (and, for fermions, the number
 #    of trajectories) -- the analysis is identical.
+#
+# .. note::
+#    The runs are short to keep the example computational managable by 
+#    most users. To have better statistics, you can increase the number 
+#    of steps in the input files.
+
 
 from data.ipi_runs import run_parallel
 
