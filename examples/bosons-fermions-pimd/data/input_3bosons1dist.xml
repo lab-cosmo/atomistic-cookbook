@@ -9,7 +9,7 @@
             <address>bf-3bosons1dist</address>
     </ffsocket>
 
-    <total_steps> 1000 </total_steps>
+    <total_steps> 500 </total_steps>
 
     <output prefix="data">
       <trajectory stride="100" filename="pos" cell_units="angstrom">positions{angstrom}</trajectory>
