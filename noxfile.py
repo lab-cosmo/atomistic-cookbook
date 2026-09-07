@@ -355,7 +355,7 @@ def _solved_packages_from_dry_run(data):
     """Return ``channel::name==ver`` strings from ``conda --json --dry-run``.
 
     Older ``conda env create`` printed a ``dependencies`` list. conda 26.7
-    aliases that command to ``conda create``, so the payload is now
+    aliases that command to ``conda create``, so the information is now
     ``actions.LINK`` (package records).
     """
     if "dependencies" in data:
