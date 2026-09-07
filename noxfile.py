@@ -351,6 +351,34 @@ DEPENCENCIES_UPDATES = {
 }
 
 
+def _solved_packages_from_dry_run(data):
+    """Return ``channel::name==ver`` strings from ``conda --json --dry-run``.
+
+    Older ``conda env create`` printed a ``dependencies`` list. conda 26.7
+    aliases that command to ``conda create``, so the payload is now
+    ``actions.LINK`` (package records).
+    """
+    if "dependencies" in data:
+        return data["dependencies"]
+
+    actions = data.get("actions")
+    if not isinstance(actions, dict) or "LINK" not in actions:
+        return None
+
+    packages = []
+    for pkg in actions["LINK"] or []:
+        if isinstance(pkg, str):
+            packages.append(pkg)
+            continue
+        name = pkg.get("name") if isinstance(pkg, dict) else None
+        if not name:
+            continue
+        channel = pkg.get("channel") or ""
+        version = pkg.get("version") or ""
+        packages.append(f"{channel}::{name}=={version}")
+    return packages
+
+
 def update_dependencies(environment_yml, session):
     with tempfile.TemporaryFile(mode="w+", encoding="utf-8") as stderr:
         output = session.run(
@@ -377,12 +405,18 @@ def update_dependencies(environment_yml, session):
 
     try:
         data = json.loads(output)
-        dependencies = data["dependencies"]
     except json.JSONDecodeError:
         session.error(
             "Conda did not return valid JSON while resolving dependencies. "
             "stdout was:\n"
             f"{output}"
+        )
+
+    dependencies = _solved_packages_from_dry_run(data)
+    if dependencies is None:
+        session.error(
+            "Conda dry-run JSON has neither 'dependencies' nor 'actions.LINK'. "
+            f"keys={list(data)!r}\n{output}"
         )
 
     new_deps = set()
