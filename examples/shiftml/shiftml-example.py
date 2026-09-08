@@ -7,6 +7,11 @@ Computing NMR shielding tensors using ShiftML
 This example shows how to compute NMR shielding tensors
 using a point-edge transformer model trained on the ShiftML
 dataset.
+
+For the newer ShiftML4 model, which predicts shieldings of approximate
+hybrid-functional quality, and for combining it with machine-learned geometry
+relaxation, see `Accurate NMR chemical shifts with ShiftML4 and PET-MOLS
+<https://atomistic-cookbook.org/examples/shiftml4/shiftml-example.html>`_.
 """
 
 import os

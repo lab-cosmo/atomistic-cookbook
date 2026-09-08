@@ -87,7 +87,12 @@ from MDAnalysis.analysis.rms import RMSD
 from metatomic_ase import MetatomicCalculator
 
 
-GMX = shutil.which("gmx_mpi") or shutil.which("gmx")
+GMX = (
+    shutil.which("gmx_mpi")
+    or shutil.which("gmx")
+    or shutil.which("gmx_mpi_d")
+    or shutil.which("gmx_d")
+)
 if GMX is None:
     raise RuntimeError("could not find a GROMACS executable")
 

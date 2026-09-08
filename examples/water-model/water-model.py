@@ -18,6 +18,7 @@ to perform demonstrative molecular dynamics simulations.
 # sphinx_gallery_thumbnail_number = 3
 
 # %%
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import ase.io
@@ -722,7 +723,7 @@ class WaterModel(torch.nn.Module):
                 "keys. Only 'energy' is supported."
             )
 
-        if outputs["energy"].per_atom:
+        if outputs["energy"].sample_kind == "atom":
             raise NotImplementedError("per-atom energies are not supported.")
 
         system, neighbors = self._setup_systems(systems, selected_atoms)
@@ -835,7 +836,7 @@ system.add_neighbor_list(nlo, calculator.compute(system))
 energy_unit = "kcal/mol"
 length_unit = "angstrom"
 
-outputs = {"energy": ModelOutput(quantity="energy", unit=energy_unit, per_atom=False)}
+outputs = {"energy": ModelOutput(unit=energy_unit, sample_kind="system")}
 
 nrg = qtip4pf_model.forward([system], outputs)
 nrg["energy"].block(0).values.backward()
@@ -886,7 +887,8 @@ atomistic_model = AtomisticModel(
     qtip4pf_model.eval(), ModelMetadata(), model_capabilities
 )
 
-atomistic_model.save("qtip4pf-mta.pt")
+# Bundle native Torch extensions next to the model for non-Python engines.
+atomistic_model.save("qtip4pf-mta.pt", collect_extensions="extensions")
 
 
 # %%
@@ -915,7 +917,7 @@ spcf_model = WaterModel(**spcf_parameters)
 
 atomistic_model = AtomisticModel(spcf_model.eval(), ModelMetadata(), model_capabilities)
 
-atomistic_model.save("spcfw-mta.pt")
+atomistic_model.save("spcfw-mta.pt", collect_extensions="extensions")
 
 # %%
 #
@@ -1103,4 +1105,11 @@ for line in lines[:7] + lines[16:]:
 
 ase.io.write("water_32.data", atoms, format="lammps-data", masses=True)
 
-run_command("lmp -in data/spcfw.in")
+# Some metatomic-enabled LAMMPS builds abort in C++ teardown after a successful
+# run (returncode -6). Treat that as success only when the trajectory exists.
+_lmp = run_command("lmp -in data/spcfw.in", check=False)
+if _lmp.returncode not in (0, -6) or not Path("trajectory.xyz").is_file():
+    raise RuntimeError(
+        f"LAMMPS failed (returncode={_lmp.returncode}); "
+        f"trajectory.xyz exists={Path('trajectory.xyz').is_file()}"
+    )
