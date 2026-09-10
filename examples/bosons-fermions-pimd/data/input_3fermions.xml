@@ -13,7 +13,7 @@
             <address>bf-3fermions</address>
     </ffsocket>
 
-    <total_steps> 3000 </total_steps>
+    <total_steps> 1500 </total_steps>
 
     <output prefix="data">
       <trajectory stride="100" filename="pos" cell_units="angstrom">positions{angstrom}</trajectory>
