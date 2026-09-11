@@ -1,0 +1,46 @@
+<simulation verbosity='low'>
+  <output prefix='metad'>
+    <properties stride='1' filename='out'> [ step, time{picosecond}, conserved{electronvolt},
+      temperature{kelvin}, potential{electronvolt}, ensemble_bias{electronvolt},
+      pressure_md{bar}, density{g/cm3} ] </properties>
+    <trajectory filename='pos' stride='10' format='ase'> positions </trajectory>
+    <trajectory filename='colvar' stride='1' extra_type='D'> extras_bias </trajectory>
+  </output>
+  <total_steps> 10000000 </total_steps>
+  <prng> <seed> 32342 </seed> </prng>
+  <!-- the MLIP is evaluated in-process through the metatomic interface -->
+  <ffdirect name='mlip'>
+    <pes> metatomic </pes>
+    <parameters> { template: data/initial_structure.xyz, model: __MODEL__, device: cpu } </parameters>
+  </ffdirect>
+  <!-- PLUMED computes the CV and the bias; the CV value is returned as an "extra" -->
+  <ffplumed name='plumed'>
+    <file mode='ase'> data/initial_structure.xyz </file>
+    <plumed_dat> __PLUMED__ </plumed_dat>
+    <plumed_extras> [ D ] </plumed_extras>
+  </ffplumed>
+  <system>
+    <initialize nbeads='1'>
+      <file mode='ase'> data/initial_structure.xyz </file>
+      <velocities mode='thermal' units='kelvin'> 300 </velocities>
+    </initialize>
+    <forces> <force forcefield='mlip'/> </forces>
+    <ensemble>
+      <temperature units='kelvin'> 300 </temperature>
+      <pressure units='bar'> 1.0 </pressure>
+      <bias> <force forcefield='plumed'/> </bias>
+    </ensemble>
+    <motion mode='dynamics'>
+      <dynamics mode='npt'>
+        <timestep units='femtosecond'> 0.5 </timestep>
+        <thermostat mode='svr'> <tau units='femtosecond'> 20 </tau> </thermostat>
+        <barostat mode='isotropic'>
+          <tau units='femtosecond'> 100 </tau>
+          <thermostat mode='svr'> <tau units='femtosecond'> 100 </tau> </thermostat>
+        </barostat>
+      </dynamics>
+    </motion>
+  </system>
+  <!-- tells i-PI that PLUMED deposits hills, so that they are accounted for in the conserved quantity -->
+  <smotion mode='metad'> <metad> <metaff> [ plumed ] </metaff> </metad> </smotion>
+</simulation>

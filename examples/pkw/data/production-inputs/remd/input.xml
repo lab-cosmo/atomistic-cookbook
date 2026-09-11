@@ -1,0 +1,66 @@
+<simulation verbosity="medium">
+    <total_time>86000</total_time>
+    <output prefix="water">
+        <properties stride="1" flush="1000" filename="out"> [step, time{picosecond}, conserved{electronvolt},
+            temperature{kelvin}, kinetic_md{electronvolt}, potential{electronvolt}, ensemble_bias,pressure_md{bar}, density{g/cm3}] </properties>
+        <trajectory filename="pos" stride="100" format="ase" bead='0' flush="1000"> positions </trajectory>
+        <trajectory stride='1' filename="colvar" extra_type="D, mtd.bias" flush="1000"> extras_bias </trajectory> 
+    </output>
+    <prng>
+        <seed>12345</seed>
+    </prng>
+    <ffdirect name='mta'>
+        <pes> metatomic </pes>
+        <parameters> {template:seeds/__IDX__.xyz,__MODEL__device:cuda:0,non_conservative:False,threaded:True } </parameters>
+        <batch_size> __BATCH_SIZE__ </batch_size>
+    </ffdirect>
+    <ffplumed name="plumed" threaded="True">
+        <file mode="ase"> seeds/__IDX__.xyz </file>
+        <plumed_dat> plumed.dat </plumed_dat>
+        <plumed_extras> [ D, mtd.bias ] </plumed_extras>
+    </ffplumed>
+    <system_template>
+        <labels>   [ IDX, TEMP ] </labels>
+        __TEMPLATE__
+        <template>
+            <system prefix="rep-IDX">
+                <initialize nbeads="1">
+                    <file mode="ase"> seeds/__IDX__.xyz </file>
+                    <velocities mode="thermal" units="kelvin"> TEMP </velocities>
+                </initialize>
+                <forces>
+                    <force forcefield="mta">
+                    </force>
+                </forces>
+                <motion mode="dynamics">
+                    <dynamics mode="npt">
+                        <timestep units="femtosecond"> 0.5 </timestep>
+                        <thermostat mode='svr'>
+                            <tau units='femtosecond'> 20 </tau>
+                        </thermostat>
+                        <barostat mode='isotropic'>
+                            <tau units='femtosecond'> 100 </tau>
+                            <thermostat mode='svr'>
+                                <tau units='femtosecond'> 100 </tau>
+                            </thermostat>
+                        </barostat>
+                    </dynamics>
+                </motion>
+                <ensemble>
+                    <temperature units='kelvin'> TEMP </temperature>
+                    <pressure units='bar'>1.0</pressure>
+                    <bias>
+                        <force forcefield="plumed" nbeads="1">
+                            <interpolate_extras> [D, mtd.bias] </interpolate_extras>
+                        </force>
+                    </bias> 
+                </ensemble>
+            </system>
+        </template>
+    </system_template>
+    <smotion mode="remd">
+        <remd> 
+            <stride> 50 </stride>
+        </remd>
+    </smotion>
+</simulation>

@@ -1,0 +1,62 @@
+<simulation verbosity='medium' safe_stride='100'>
+  <output prefix='pimd'>
+    <properties stride='1' filename='out' flush='100'>  [ step, time{picosecond}, conserved{electronvolt}, temperature{kelvin}, kinetic_cv{electronvolt}, potential{electronvolt}, pressure_cv{bar}, density{g/cm3}, kinetic_td{electronvolt}, ensemble_bias  ] </properties>
+    <trajectory filename='pos' stride='1' cell_units='angstrom' flush='100'> positions{angstrom} </trajectory>
+    <trajectory filename='kin' stride='1' cell_units='angstrom' flush='100'> kinetic_cv </trajectory>
+    <trajectory filename='kod' stride='1' cell_units='angstrom' flush='100'> kinetic_od </trajectory>
+    <trajectory stride="1" filename="COLVAR" bead="0" extra_type="D" flush='100'> extras_bias </trajectory>
+  </output>
+  <total_time> 129000 </total_time>
+  <total_steps> 1000000 </total_steps>
+  <prng>
+    <seed> __SEED__ </seed>
+  </prng>
+  <ffdirect name='mta'>
+      <pes> metatomic </pes>
+      <parameters> {template:__STRUCTURE__,__MODEL__device:cuda:0;cuda:1,non_conservative:False,threaded:True } </parameters>
+      <batch_size> 32 </batch_size>
+  </ffdirect>
+  <ffplumed name="plumed">
+    <file mode="ase"> __STRUCTURE__ </file>
+    <plumed_dat> __PLUMED_DAT__ </plumed_dat>
+    <plumed_extras> [ D ] </plumed_extras>
+  </ffplumed>
+  <system>
+    <initialize nbeads='32'>
+      <file mode='ase'> __STRUCTURE__ </file>
+      <masses mode="manual" units="dalton"> __MASSES__ </masses>
+      <velocities mode='thermal' units='kelvin'> __TEMPERATURE__ </velocities>
+    </initialize>
+    <forces>
+      <force forcefield='mta'> mta </force>
+    </forces>
+    <ensemble>
+      <temperature units='kelvin'> __TEMPERATURE__ </temperature>
+      <pressure units="bar">1.0</pressure>
+      <bias>
+        <force forcefield="plumed" nbeads="1">
+          <interpolate_extras> [ D ] </interpolate_extras>
+        </force>
+      </bias>
+    </ensemble>
+    <motion mode='dynamics'>
+      <dynamics mode='npt'>
+        <thermostat mode="pile_l">
+          <tau units="femtosecond"> 20 </tau>
+        </thermostat>
+        <barostat mode='isotropic'>
+            <tau units='femtosecond'> 100 </tau>
+            <thermostat mode='svr'>
+                <tau units='femtosecond'> 100 </tau>
+            </thermostat>
+        </barostat>
+        <timestep units='femtosecond'> 0.5 </timestep>
+      </dynamics>
+    </motion>
+  </system>
+  <smotion mode="metad">
+    <metad>
+      <metaff> [ plumed ] </metaff>
+    </metad>
+  </smotion>
+</simulation>

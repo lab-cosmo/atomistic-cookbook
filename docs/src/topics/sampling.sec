@@ -16,3 +16,4 @@ set of configurations of an atomistic system.
 - examples/mendeleev/mendeleev
 - examples/water-md/water-md
 - examples/water-ir-spectrum/water-ir-spectrum
+- examples/pkw/pkw

@@ -1,0 +1,59 @@
+<simulation verbosity='low'>
+  <output prefix='remd'>
+    <properties stride='1' filename='out'> [ step, time{picosecond}, conserved{electronvolt},
+      temperature{kelvin}, potential{electronvolt}, ensemble_bias{electronvolt},
+      pressure_md{bar}, density{g/cm3} ] </properties>
+    <trajectory filename='pos' stride='100' format='ase'> positions </trajectory>
+    <!-- CV and (fixed) bias for every step: all that is needed for reweighting -->
+    <trajectory filename='colvar' stride='1' extra_type='D, mtd.bias'> extras_bias </trajectory>
+  </output>
+  <total_steps> 20000000 </total_steps>
+  <prng> <seed> 12345 </seed> </prng>
+  <!-- all replicas are evaluated in a single batched call to the model -->
+  <ffdirect name='mlip' threaded='True'>
+    <pes> metatomic </pes>
+    <parameters> { template: data/initial_structure.xyz, model: __MODEL__, device: cpu } </parameters>
+    <batch_size> __NREPLICAS__ </batch_size>
+  </ffdirect>
+  <ffplumed name='plumed' threaded='True'>
+    <file mode='ase'> data/initial_structure.xyz </file>
+    <plumed_dat> __PLUMED__ </plumed_dat>
+    <plumed_extras> [ D, mtd.bias ] </plumed_extras>
+  </ffplumed>
+  <!-- one system per replica, generated from a template: IDX and TEMP are
+       replaced by the values in each <instance> -->
+  <system_template>
+    <labels> [ IDX, TEMP ] </labels>
+__INSTANCES__
+    <template>
+      <system prefix='rep-IDX'>
+        <initialize nbeads='1'>
+          <file mode='ase'> data/remd_seeds/IDX.xyz </file>
+          <velocities mode='thermal' units='kelvin'> TEMP </velocities>
+        </initialize>
+        <forces> <force forcefield='mlip'/> </forces>
+        <ensemble>
+          <temperature units='kelvin'> TEMP </temperature>
+          <pressure units='bar'> 1.0 </pressure>
+          <bias>
+            <force forcefield='plumed' nbeads='1'>
+              <interpolate_extras> [ D, mtd.bias ] </interpolate_extras>
+            </force>
+          </bias>
+        </ensemble>
+        <motion mode='dynamics'>
+          <dynamics mode='npt'>
+            <timestep units='femtosecond'> 0.5 </timestep>
+            <thermostat mode='svr'> <tau units='femtosecond'> 20 </tau> </thermostat>
+            <barostat mode='isotropic'>
+              <tau units='femtosecond'> 100 </tau>
+              <thermostat mode='svr'> <tau units='femtosecond'> 100 </tau> </thermostat>
+            </barostat>
+          </dynamics>
+        </motion>
+      </system>
+    </template>
+  </system_template>
+  <!-- attempt exchanges between neighboring temperatures every 50 steps -->
+  <smotion mode='remd'> <remd> <stride> __STRIDE__ </stride> </remd> </smotion>
+</simulation>

@@ -1,0 +1,59 @@
+<simulation verbosity='medium'>
+  <total_time> 175000 </total_time>
+  <output prefix='simulation_svr'>
+      <properties stride='1' filename='out' flush='100'>  
+      [ step, time{picosecond}, conserved{electronvolt}, 
+      temperature{kelvin}, kinetic_md{electronvolt}, potential{electronvolt}, 
+      temperature(H){kelvin}, temperature(O){kelvin}, ensemble_bias{ase}, pressure_md{bar}, density{g/cm3} ] </properties>
+    <trajectory filename='pos' stride='1' format="ase" flush='100'> positions </trajectory>
+  </output>
+  <total_steps> 10000000 </total_steps>
+  <prng>
+    <seed> 32342 </seed>
+  </prng>
+  <ffdirect name='cons' pbc='false'>
+      <pes>metatomic</pes>
+      <parameters>{template:initial_structure.xyz,model:pet_sol-s-ft-best.pt,device:cuda,non_conservative:False,energy_variant:pbe0} </parameters>
+  </ffdirect>
+  <ffplumed name="plumed">
+    <file mode="xyz" units="angstrom"> initial_structure.xyz </file>
+    <plumed_dat> plumed.dat </plumed_dat>
+    <plumed_extras> [D] </plumed_extras>
+  </ffplumed>
+  <system>
+    <initialize nbeads='1'>
+      <file mode='ase' units='angstrom'> initial_structure.xyz </file>
+      <velocities mode='thermal' units='kelvin'> 300 </velocities>
+    </initialize>
+    <forces>
+      <force forcefield='cons'>
+      </force>
+    </forces>
+    <ensemble>
+      <temperature units='kelvin'>300</temperature>
+      <pressure units='bar'>1.0</pressure>
+    <bias>
+      <force forcefield="plumed"> </force>
+    </bias>
+    </ensemble>
+    <motion mode="dynamics">
+            <dynamics mode="npt">
+                <timestep units="femtosecond"> 0.5 </timestep>
+                <thermostat mode='svr'>
+                    <tau units='femtosecond'> 20 </tau>
+                </thermostat>
+                <barostat mode='isotropic'>
+                    <tau units='femtosecond'> 100 </tau>
+                    <thermostat mode='svr'>
+                        <tau units='femtosecond'> 100 </tau>
+                    </thermostat>
+                </barostat>
+            </dynamics>
+        </motion>
+  </system>
+  <smotion mode="metad">
+    <metad>
+      <metaff> [ plumed ] </metaff>
+    </metad>
+  </smotion>
+</simulation>
