@@ -18,6 +18,7 @@ structural space.
 - examples/pet-phonons/pet-phonons
 - examples/ml-mm/ml-mm
 - examples/thermal-conductivity-bte/thermal-conductivity-bte
+- examples/kaldo-phonons-uq/kaldo-phonons-uq
 - examples/pet-mad-dos/pet-mad-dos
 - examples/water-md/water-md
 - examples/water-ir-spectrum/water-ir-spectrum
