@@ -92,9 +92,9 @@ ENV = dict(os.environ, OMP_NUM_THREADS=str(N_THREADS), MKL_NUM_THREADS=str(N_THR
 # number of MD steps for the live demonstrations. These are absurdly small (the
 # production runs are 5-7 orders of magnitude longer) and only serve to show
 # that the machinery works.
-N_STEPS_METAD = 200
-N_STEPS_REMD = 30
-N_STEPS_PIMD = 25
+N_STEPS_METAD = 300
+N_STEPS_REMD = 50
+N_STEPS_PIMD = 20
 
 # %%
 # Two sets of external data are used. The machine-learning potential for the live
@@ -751,23 +751,19 @@ run_ipi(demo_input, "rep-0_remd.out", N_STEPS_REMD)
 
 # %%
 # i-PI writes one set of output files per replica (``rep-*``) and a
-# ``remd.remd_idx`` file that records, every time an exchange is accepted,
-# which replica sits at each temperature. Replica files follow a given set
-# of atoms as it moves through the temperature ladder; to obtain a
-# continuous trajectory at a fixed temperature, one has to *demultiplex*
-# them, i.e. stitch together the segments of the replicas that occupied a
-# given temperature slot.
+# ``remd.remd_idx`` file that records, every time an exchange is accepted, the
+# step and the temperature slot occupied by each replica from the following
+# step on. Replica files follow a given set of atoms as it moves through the
+# temperature ladder; to obtain a continuous trajectory at a fixed temperature,
+# one has to *demultiplex* them, i.e. stitch together the segments of the
+# replicas that occupied a given temperature slot. The ``i-pi-remdsort`` tool
+# does this for all the output files, given the input of the simulation, and
+# writes the sorted files with a ``SRT_`` prefix: ``SRT_rep-0_*`` then contains
+# the trajectory at the lowest temperature, and so on. The convention of the
+# index file is easy to get wrong, so we recommend using the tool rather
+# than a home-made script.
 
-
-def demultiplex(replica_data, swaps, slot=0):
-    """Stitch the segments of the replicas that occupied the given temperature."""
-    chunks = []
-    for k in range(len(swaps)):
-        start = swaps[k, 0]
-        stop = swaps[k + 1, 0] if k + 1 < len(swaps) else None
-        chunks.append(replica_data[swaps[k, 1 + slot]][start:stop])
-    return np.concatenate(chunks)
-
+run_command(f"i-pi-remdsort {demo_input}", env=ENV)
 
 # the extras trajectory contains a (n_steps, 2) array with s and the bias
 replica_colvar = [
@@ -776,22 +772,19 @@ replica_colvar = [
     ]
     for i in range(len(demo_temperatures))
 ]
+sorted_colvar = ipi.scripting.read_trajectory(
+    "SRT_rep-0_remd.colvar_0", format="extras"
+)["D, mtd.bias"]
+s_300K, bias_300K = sorted_colvar[:, 0], sorted_colvar[:, 1]
 if os.path.exists("remd.remd_idx"):
     swaps = np.loadtxt("remd.remd_idx", dtype=int, ndmin=2)
-else:  # no exchange was accepted in this (very short) run
-    swaps = np.array([[0] + list(range(len(demo_temperatures)))])
-print(
-    f"{len(swaps) - 1} exchanges accepted; "
-    f"replica at 300 K after each swap: {swaps[:, 1]}"
-)
-
-s_300K = demultiplex([c[:, 0] for c in replica_colvar], swaps)
-bias_300K = demultiplex([c[:, 1] for c in replica_colvar], swaps)
+    print(f"{len(swaps)} exchanges accepted; slot of each replica after the last one:")
+    print(swaps[-1, 1:])
 
 fig, ax = plt.subplots(1, 2, figsize=(8, 3), constrained_layout=True)
 for i, c in enumerate(replica_colvar):
     ax[0].plot(c[:, 0], label=f"replica {i}")
-ax[0].plot(s_300K, "k--", label="300 K (demuxed)")
+ax[0].plot(s_300K, "k--", label="300 K (sorted)")
 ax[0].set_xlabel("step")
 ax[0].set_ylabel("$s$ / Å")
 ax[0].legend(fontsize=7)
@@ -821,8 +814,8 @@ plt.show()
 #     e^{\beta V_\mathrm{bias}(s(\mathbf{R}))}\rangle_\mathrm{bias}}
 #          {\langle e^{\beta V_\mathrm{bias}(s(\mathbf{R}))}\rangle_\mathrm{bias}},
 #
-# which in practice is a weighted histogram. We apply it to the demultiplexed
-# 300 K data of the ten production runs.
+# which in practice is a weighted histogram. We apply it to the 300 K series
+# of the production runs, sorted with ``i-pi-remdsort``.
 
 
 def reweight(s, bias, temperature=TEMPERATURE, bin_width=0.2, s_max=14.0):
@@ -843,7 +836,7 @@ colvar_files = sorted(glob.glob("data/production/remd/COLVAR_300K_*"))
 n_runs = len(colvar_files)
 profiles = []
 for run in range(n_runs):
-    s_run, bias_run = np.loadtxt(f"data/production/remd/COLVAR_300K_{run}").T
+    s_run, bias_run, rho_run = np.loadtxt(colvar_files[run]).T
     s_grid, fes = reweight(s_run, bias_run)
     profiles.append(fes - fes[np.isfinite(fes)].min())
 profiles = np.array(profiles)
@@ -870,6 +863,40 @@ plt.show()
 # beyond about 5.3 Å that is only weakly modulated by the residual Coulomb
 # attraction. The spread among independent runs is of a few kJ/mol in the
 # dissociated region.
+#
+# A remark on the thermodynamic ensemble
+# --------------------------------------
+#
+# Since the simulations are at constant pressure, the same reweighting gives
+# the volume of the associated and dissociated states, and we find that the
+# ions occupy less volume than the neutral molecules (electrostriction). Had
+# the simulation been run at constant volume, the dissociated state would be
+# under tension, and the free energy of dissociation would be a Helmholtz free
+# energy at the volume of the associated state, which differs from the Gibbs
+# free energy by about :math:`\Delta V^2/(2\kappa_T V)`, with :math:`\kappa_T`
+# the isothermal compressibility, which we estimate here from the volume
+# fluctuations. The correction is small for this system size, but it grows
+# as :math:`1/V`, and it is easy to avoid altogether.
+
+s_run, bias_run, rho_run = np.loadtxt(colvar_files[0]).T
+volume = 128 * 18.015 / (rho_run * 0.60221)  # Å^3
+logw = (bias_run - bias_run.max()) / KT
+weights = np.exp(logw)
+associated = s_run < 2.3
+dissociated = s_run > 5.3  # onset of the dissociated state, see below
+v_assoc = np.average(volume[associated], weights=weights[associated])
+v_dissoc = np.average(volume[dissociated], weights=weights[dissociated])
+delta_v = v_dissoc - v_assoc
+fluct = np.average((volume[associated] - v_assoc) ** 2, weights=weights[associated])
+kappa = fluct / (KT * v_assoc)  # Å^3 / (kJ/mol)
+helmholtz_shift = delta_v**2 / (2 * kappa * v_assoc)
+print(f"volume change on dissociation: {delta_v:.1f} Å^3")
+print(f"                              = {delta_v * 0.60221:.1f} cm^3/mol")
+print(f"compressibility: {kappa / 16605:.2e} /bar (experiment: 4.5e-5 /bar)")
+print(
+    f"constant-volume correction: {helmholtz_shift:.2f} kJ/mol, "
+    f"{helmholtz_shift / (KT * LN10):.3f} pK units"
+)
 
 # %%
 # From the free-energy profile to the equilibrium constant
@@ -990,7 +1017,6 @@ phi = pme_potential(probes, q_probes)
 energies = -2 * (phi[2:] - phi[1]) + e_ref  # pair energy at each grid point
 r_probes = grid - L_BOX * np.round(grid / L_BOX)
 r_probes = np.linalg.norm(r_probes, axis=1)
-
 
 
 def shell_fraction(r, box):

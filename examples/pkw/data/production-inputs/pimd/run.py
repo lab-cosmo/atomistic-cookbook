@@ -9,6 +9,7 @@ SIZE2TEMP = {
     "s-ft": 300,
 }
 
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--state")
@@ -19,17 +20,16 @@ def parse_args():
     args = parser.parse_args()
     return args.state, args.size, args.y, args.seed
 
+
 if __name__ == "__main__":
     state, size, y, seed = parse_args()
     initial_structure = f"{state}.xyz"
-    model_str = f"model:pet_sol-s-ft-best.pt,"
+    model_str = "model:pet_sol-s-ft-best.pt,"
     if size == "s-ft":
         model_str += "energy_variant:pbe0,"
     atoms = ase.io.read(initial_structure)
-    new_masses = "[" + ", ".join(map(str, atoms.get_masses() / y ** 2)) + "]"
-    with open(
-        "input.xml", "r", encoding="utf-8"
-    ) as file:
+    new_masses = "[" + ", ".join(map(str, atoms.get_masses() / y**2)) + "]"
+    with open("input.xml", "r", encoding="utf-8") as file:
         input_xml = file.read()
     input_xml = (
         input_xml.replace("__STRUCTURE__", initial_structure)
