@@ -165,6 +165,7 @@ def get_mace() -> AtomisticModel:
 
 
 def get_dpa3() -> AtomisticModel:
+    import textwrap
     import urllib.request
 
     from deepmd.pt.infer.inference import Tester
@@ -180,33 +181,48 @@ def get_dpa3() -> AtomisticModel:
     )
 
     # extract the branch trained on drug-like molecules
-    import ase.data
-    import torch
+    train_yaml = """\
+    architecture:
+        name: experimental.dpa3
+        model:
+            dpa3_model: dpa3-base.pt
+            dpa3_model_branch: Domains_Drug
+        training:
+            num_epochs: 0
+            batch_size: 1
 
-    branch = Tester("dpa3-base.pt", head="Domains_Drug").model
+    # declaring the units here is important: they end up in the
+    # capabilities of the exported model, and the engines rely on them
+    # to convert to their internal units
+    training_set:
+        systems:
+            read_from: dpa3_dummy_dataset.xyz
+            length_unit: angstrom
+        targets:
+            energy:
+                key: energy
+                unit: eV
+    validation_set: 0.0
+    """
 
-    # the atomic types must follow the order of the type map the model
-    # was trained with, so that species are mapped to the right outputs
-    checkpoint = torch.load("dpa3-base.pt", map_location="cpu", weights_only=False)
-    model_params = checkpoint["model"]["_extra_state"]["model_params"]
-    type_map = model_params["model_dict"]["Domains_Drug"]["type_map"]
-    atomic_types = [ase.data.atomic_numbers[symbol] for symbol in type_map]
+    # a dummy dataset with a single H2 molecule; only the names of the
+    # targets ("energy", "forces") matter
+    dummy_dataset = """\
+    2
+    Properties=species:S:1:pos:R:3:forces:R:3 energy=-2.1
+    H 0.0 0.0 0.0 0.0 0.0 0.0
+    H 1.0 0.0 0.0 0.0 0.0 0.0
+    """
 
-    # wrap the deepmd-kit module with metatrain's DPA3 architecture,
-    # declaring units and atomic types as we did for MACE
-    hypers = get_default_hypers("experimental.dpa3")["model"]
-    hypers["dpa3_model"] = branch
-    dataset_info = DatasetInfo(
-        length_unit="angstrom",
-        atomic_types=atomic_types,
-        targets={
-            "energy": get_energy_target_info(
-                "energy", {"quantity": "energy", "unit": "eV"}
-            )
-        },
+    with open("dpa3_train.yaml", "w") as f:
+        f.write(textwrap.dedent(train_yaml))
+    with open("dpa3_dummy_dataset.xyz", "w") as f:
+        f.write(textwrap.dedent(dummy_dataset))
+
+    subprocess.run(
+        ["mtt", "train", "dpa3_train.yaml", "--output", "dpa3.pt"],
+        check=True,
     )
-
-    DPA3(hypers, dataset_info).export().save("dpa3.pt")
     return load_atomistic_model("dpa3.pt")
 
 
