@@ -168,12 +168,6 @@ def get_dpa3() -> AtomisticModel:
     import textwrap
     import urllib.request
 
-    from deepmd.pt.infer.inference import Tester
-    from metatrain.experimental.dpa3 import DPA3
-    from metatrain.utils.architectures import get_default_hypers
-    from metatrain.utils.data import DatasetInfo
-    from metatrain.utils.data.target_info import get_energy_target_info
-
     # download the multitask checkpoint in its native format
     urllib.request.urlretrieve(
         "https://huggingface.co/deepmodelingcommunity/DPA/resolve/main/DPA-3.1-3M.pt",
