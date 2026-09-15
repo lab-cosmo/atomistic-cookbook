@@ -4,7 +4,7 @@ channels:
 dependencies:
   - python==3.13
   - lammps-metatomic==2026.07.04.mta2
-  - gromacs-metatomic
+  - gromacs-metatomic=*=nompi*
   - pip
   - pip:
     - ase
