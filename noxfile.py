@@ -348,6 +348,7 @@ DEPENCENCIES_UPDATES = {
     "libtorch": "pytorch-cpu",
     "lammps-metatomic": "lammps-metatomic * cpu*nompi*",
     "plumed-metatomic": "plumed-metatomic * *nompi*",
+    "gromacs-metatomic": "gromacs-metatomic * nompi*",
 }
 
 

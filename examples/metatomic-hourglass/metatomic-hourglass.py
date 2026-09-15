@@ -217,7 +217,7 @@ def get_dpa3() -> AtomisticModel:
         ["mtt", "train", "dpa3_train.yaml", "--output", "dpa3.pt"],
         check=True,
     )
-    return load_atomistic_model("dpa3.pt")
+    return load_atomistic_model("dpa3.pt", extensions_directory="extensions")
 
 
 # %%
