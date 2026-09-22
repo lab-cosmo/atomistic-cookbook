@@ -3,8 +3,6 @@
 mace-omat-0-small.model
 mace_dummy_dataset.xyz
 mace_train.yaml
-dpa3_dummy_dataset.xyz
-dpa3_train.yaml
 outputs
 extensions
 ethanol.data
