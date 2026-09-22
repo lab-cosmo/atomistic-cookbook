@@ -65,6 +65,8 @@ class PseudoSphinxApp:
             "within_subsection_order": "FileNameSortKey",
             "image_scrapers": ("matplotlib", ChemiscopeScraper()),
         }
+        self.config.rst_prolog = ""
+        self.config.rst_epilog = ""
 
         self.builder = AttrDict()
         self.builder.srcdir = os.path.join(ROOT, "docs", "src")
