@@ -2,7 +2,6 @@ import os
 import xml.etree.ElementTree as ET
 from datetime import datetime
 
-
 # Add any Sphinx extension module names here, as strings.
 extensions = [
     "sphinx_sitemap",
@@ -22,7 +21,7 @@ exclude_patterns = ["_build"]
 project = "atomistic-cookbook"
 copyright = (
     "BSD 3-Clause License, "
-    f"Copyright (c) {datetime.now().date().year}, "
+    f"Copyright (c) {datetime.now().date().year}, "  # noqa: DTZ005
     "The atomistic cookbook team"
 )
 
@@ -39,7 +38,7 @@ intersphinx_mapping = {
 
 html_js_files = [
     (  # plausible.io tracking
-        "https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js",  # noqa: E501
+        "https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js",
         {"data-domain": "atomistic-cookbook.org", "defer": "defer"},
     ),
     "all-examples-data.js",  # data for the recipe-of-the-day

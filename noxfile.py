@@ -39,7 +39,7 @@ directives.register_directive("toctree", DummyToctree)
 ROOT = os.path.realpath(os.path.dirname(__file__))
 
 sys.path.insert(0, ROOT)
-from src.get_examples import get_examples  # noqa: E402
+from src.get_examples import get_examples
 
 # global nox options
 nox.needs_version = ">=2024"
@@ -80,13 +80,13 @@ def filter_files(tracked_files):
     returns = []
     for file in tracked_files.splitlines():
         tmp = file.split(".")[-1]
-        if tmp in ["rst", "py"]:  # skips all files that are not rst or py
-            if os.path.split(file)[-1] not in [
-                ".gitignore",
-                "README.rst",
-                "INSTALLING.rst",
-            ]:
-                returns.append(file)
+        basename = os.path.basename(file)
+        if tmp in ["rst", "py"] and basename not in [
+            ".gitignore",
+            "README.rst",
+            "INSTALLING.rst",
+        ]:
+            returns.append(file)
 
     return returns
 
@@ -552,7 +552,7 @@ that are not part of any of the other sections.
     :gutter: 1 1 2 3
 """)
         # sort by title
-        for _, metadata in sorted(
+        for _, metadata in sorted(  # noqa: FURB122
             all_examples_rst.items(), key=(lambda kw: kw[1]["title"])
         ):
             # generates a thumbnail link
@@ -647,8 +647,7 @@ def lint(session):
     if not session.virtualenv._reused:
         session.install("blackdoc")
         session.install("ruff")
-        session.install("flake8", "flake8-bugbear", "flake8-sphinx-links")
-        # session.install("isort")
+        session.install("flake8-sphinx-links")
         session.install("sphinx-lint")
 
     # Get files
@@ -657,17 +656,8 @@ def lint(session):
     # Formatting
     session.run("ruff", "format", "--check", "--diff", *LINT_FILES)
     session.run("blackdoc", "--check", "--diff", *LINT_FILES)
-    # session.run("isort", "--check-only", "--diff", *LINT_FILES)
 
     # Linting
-    session.run(
-        "flake8",
-        "--max-line-length=88",
-        "--exclude=docs/src/examples/",
-        "--extend-ignore=E203",
-        *LINT_FILES,
-    )
-
     session.run(
         "sphinx-lint",
         "--enable=line-too-long",

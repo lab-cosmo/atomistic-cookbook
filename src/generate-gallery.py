@@ -9,7 +9,6 @@ import sphinx_gallery.gen_gallery
 import sphinx_gallery.gen_rst
 from chemiscope.sphinx import ChemiscopeScraper
 
-
 # Monkey-patch _LoggingTee.write to echo captured output to sys.__stderr__.
 # sphinx-gallery's _LoggingTee replaces both sys.stdout and sys.stderr during
 # recipe execution, so all print output vanishes from CI. sys.__stderr__ is
@@ -116,8 +115,7 @@ if __name__ == "__main__":
         last_code = 1
         for attempt in range(2):
             proc = subprocess.run(
-                [sys.executable, "-u", __file__, example_dir],
-                env=env,
+                [sys.executable, "-u", __file__, example_dir], env=env, check=False
             )
             last_code = proc.returncode
             if last_code == 0:
@@ -158,6 +156,6 @@ if __name__ == "__main__":
 
     try:
         sphinx_gallery.gen_gallery.generate_gallery_rst(app)
-    except Exception:
+    except Exception:  # noqa: BLE001
         traceback.print_exc(file=sys.__stderr__)
         sys.exit(1)
