@@ -20,3 +20,5 @@ dependencies:
     - metatomic_torchsim
     - git+https://github.com/metatensor/metatrain@main
     - mace-torch==0.3.14
+variables:
+    - SETUPTOOLS_SCM_PRETEND_VERSION_FOR_METATRAIN: 2026.4.1
