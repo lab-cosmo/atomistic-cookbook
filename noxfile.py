@@ -450,6 +450,7 @@ for name in EXAMPLES:
     def example(session, name=name):
         example_dir = Path("examples") / name
         environment_yml = example_dir / "environment.yml"
+        os.environ["VCS_VERSIONING_PRETEND_VERSION_FOR_METATRAIN"] = "2026.4.1"
         if should_reinstall_dependencies(session, environment_yml=environment_yml):
             environment_yml = update_dependencies(environment_yml, session)
 
