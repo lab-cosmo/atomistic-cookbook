@@ -3,7 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - python=3.12
-  - lammps-metatomic==2026.03.30.mta1
+  - lammps-metatomic==2026.07.04.mta2
   - pip
   - pip:
     - ase
@@ -11,5 +11,4 @@ dependencies:
     - ipi>=3.2.0
     - chemiscope>=1.0
     - matplotlib
-    - vesin>=0.4.2
     - atomistic-cookbook-utils >=0.1,<0.2
