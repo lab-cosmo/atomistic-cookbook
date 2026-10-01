@@ -1,0 +1,35 @@
+; Inert topology for a pure machine-learning potential: the atom types
+; carry no charges and no Lennard-Jones parameters, so all interactions
+; come from the metatomic model. The topology only provides masses.
+
+[ defaults ]
+; nbfunc        comb-rule       gen-pairs       fudgeLJ fudgeQQ
+1               2               yes             0.5     0.5
+
+[ atomtypes ]
+; name  at.num   mass      charge   ptype   sigma   epsilon
+C       6        12.011    0.000    A       0.0     0.0
+O       8        15.999    0.000    A       0.0     0.0
+H       1         1.008    0.000    A       0.0     0.0
+
+[ moleculetype ]
+; Name            nrexcl
+Ethanol           0
+
+[ atoms ]
+; nr  type  resnr  resname  atom  cgnr  charge    mass
+   1  C     1      ETOH     C1     1     0.000  12.011
+   2  C     1      ETOH     C2     2     0.000  12.011
+   3  O     1      ETOH     O1     3     0.000  15.999
+   4  H     1      ETOH     H11    4     0.000   1.008
+   5  H     1      ETOH     H12    5     0.000   1.008
+   6  H     1      ETOH     H13    6     0.000   1.008
+   7  H     1      ETOH     H21    7     0.000   1.008
+   8  H     1      ETOH     H22    8     0.000   1.008
+   9  H     1      ETOH     HO     9     0.000   1.008
+
+[ system ]
+Ethanol in vacuum
+
+[ molecules ]
+Ethanol           1
