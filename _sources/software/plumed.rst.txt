@@ -1,0 +1,43 @@
+PLUMED
+======
+
+PLUMED is an open-source, community-developed library that provides a wide range
+of different methods, which include enhanced-sampling algorithms, free-energy
+methods, tools to analyze the vast amounts of data produced by molecular
+dynamics (MD) simulations. These techniques can be used in combination with a
+large toolbox of collective variables that describe complex processes in
+physics, chemistry, material science, and biology. Documentation, examples and
+installation instructions for the various packages are discussed on the `PLUMED
+website <http://plumed.org>`_.
+
+
+
+.. grid:: 1 2 2 3
+    :gutter: 1 1 2 3
+
+    .. grid-item::
+
+        .. card:: Path integral metadynamics
+            :link: ../examples/pi-metad/pi-metad
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/pi-metad/images/thumb/sphx_glr_pi-metad_thumb.png
+                :alt: This example shows how to run a free-energy sampling calculation that combines path integral molecular dynamics to model nuclear quantum effects and metadynamics to accelerate sampling of the high-free-energy regions.
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: ML collective variables in PLUMED with metatomic
+            :link: ../examples/metatomic-plumed/metatomic-plumed
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/metatomic-plumed/images/thumb/sphx_glr_metatomic-plumed_thumb.png
+                :alt: This example shows how to build a metatomic model that computes order parameters for a Lennard-Jones cluster, and how to use it with the PLUMED package to run a metadynamics simulation.
+                :class: gallery-img
+
+                
