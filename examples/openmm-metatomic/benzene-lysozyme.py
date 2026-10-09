@@ -148,6 +148,15 @@ chemiscope.show(
 )
 
 
+# %%
+# Ligands
+# -------
+#
+# Benzene and o-xylene are the metatomic region. PET-SPICE sees only these
+# atoms. Use the structure list to switch from one ligand to the other.
+
+# We will print the number of atoms in the MM and ML systems for each ligand
+# and the total number of atoms in the complex, and the number of bonds
 molecules = [Molecule.from_file(name) for name in ("benzene.sdf", "o-xylene.sdf")]
 for molecule in molecules:
     molecule.assign_partial_charges("openff-gnn-am1bcc-1.0.0.pt")
@@ -158,9 +167,6 @@ forcefield = app.ForceField("amber14-all.xml", "amber14/tip3pfb.xml")
 forcefield.registerTemplateGenerator(
     SMIRNOFFTemplateGenerator(molecules=molecules, forcefield="openff-2.2.1").generator
 )
-
-# We will print the number of atoms in the MM and ML systems for each ligand
-# and the total number of atoms in the complex, and the number of bonds
 systems = {}
 for name, molecule in zip(("benzene", "o-xylene"), molecules):
     ligand_topology = OffTopology.from_molecules(molecules=[molecule]).to_openmm()
@@ -181,12 +187,6 @@ for name, molecule in zip(("benzene", "o-xylene"), molecules):
     )
 
 
-# %%
-# Ligands
-# -------
-#
-# Benzene and o-xylene are the metatomic region. PET-SPICE sees only these
-# atoms. Use the structure list to switch from one ligand to the other.
 
 ligand_frames = []
 for name in ("benzene", "o-xylene"):
@@ -405,8 +405,8 @@ chemiscope.show(
 # A custom force
 # --------------
 #
-# ``CustomCVForce`` is a spring written on top of another force. The
-# collective variable is the distance between the protein and benzene
+# We can use OpenMM's custom force module to introduce a ``CustomCVForce``. The
+# collective variable (CV) is the distance between the protein and benzene
 # centers,
 #
 # .. math::
