@@ -22,6 +22,7 @@ This approach is called a mechanical embedding, since the ligand is not polarise
 using the molecular mechanics force field [7]_.
 """
 
+# sphinx_gallery_thumbnail_path = '../../examples/openmm-metatomic/mechanical-embedding.png'
 
 # %%
 # Setuping Metatomic and OpenMM-ML
