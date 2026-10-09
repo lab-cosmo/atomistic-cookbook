@@ -11,3 +11,4 @@ applications.
 
 - examples/water-model/water-model
 - examples/torchpme/torchpme_learning
+- examples/pkw/pkw

@@ -1,0 +1,24 @@
+channels:
+  - metatensor
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - plumed-metatomic=2.10.1.dev1
+  - py-plumed-metatomic=2.10.1.dev1
+  - matplotlib
+  - pip:
+    - --extra-index-url https://download.pytorch.org/whl/cpu
+    - torch>=2.12,<2.13
+    - ase
+    - numpy
+    - scipy
+    - chemiscope>=1.0
+    - ipi>=3.3.0
+    - metatomic-torch>=0.1.16,<0.2
+    - metatomic-ase>=0.1.4,<0.2
+    - torch-pme>=0.5,<0.6
+    - upet>=0.3,<0.4
+    - atomistic-cookbook-utils >=0.1,<0.2
+variables:
+  PIP_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
