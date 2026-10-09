@@ -18,6 +18,7 @@ them in your own atomistic cooking.
     kaldo
     lammps
     metatensor
+    openmm
     plumed
     scikit-matter
     torch-pme
