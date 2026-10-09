@@ -121,6 +121,7 @@ forcefield.registerTemplateGenerator(
     SMIRNOFFTemplateGenerator(molecules=molecules, forcefield="openff-2.2.1").generator
 )
 systems = {}
+ligand_frames = []
 for name, molecule in zip(("benzene", "o-xylene"), molecules):
     ligand_topology = OffTopology.from_molecules(molecules=[molecule]).to_openmm()
     ligand_positions = to_openmm(molecule.conformers[0])
