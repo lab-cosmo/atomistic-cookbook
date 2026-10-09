@@ -28,9 +28,9 @@ using the molecular mechanics force field [7]_.
 # -----
 #
 # OpenMM-ML loads each potential
-# from an entry point in the group ``openmmml.potentials``. The wrapper in ``openmm_metatomic`` 
+# from an entry point in the group ``openmmml.potentials``. The wrapper in ``openmm_metatomic``
 # next to this file, so ``MLPotential("metatomic")`` uses the OpenMM-ML already
-# installed. 
+# installed.
 
 import sys
 import warnings
@@ -93,7 +93,7 @@ if not model_path.is_file():
 
 
 # Download the workshop structures, export , and build each
-# complex. An OpenFF molecule is appended to the protein with ``Modeller``. 
+# complex. An OpenFF molecule is appended to the protein with ``Modeller``.
 # OpenFF 2.2.1 expects AM1-BCC charges. The NAGL model ``openff-gnn-am1bcc-1.0.0``
 # assigns them, so AmberTools is not required.
 
@@ -118,6 +118,7 @@ def potential_energy(system, positions):
     context.setPositions(positions)
     energy = context.getState(getEnergy=True).getPotentialEnergy()
     return energy.value_in_unit(unit.kilojoule_per_mole)
+
 
 # %%
 # Building the MM and ML systems
@@ -171,7 +172,6 @@ for name, molecule in zip(("benzene", "o-xylene"), molecules):
     )
 
 
-
 # %%
 # Ligands
 # -------
@@ -188,7 +188,9 @@ chemiscope.show(
     ligand_frames,
     properties={"ligand": ["benzene", "o-xylene"]},
     mode="structure",
-    settings={"structure": [{"bonds": True, "keepOrientation": True, "spaceFilling": True}]},
+    settings={
+        "structure": [{"bonds": True, "keepOrientation": True, "spaceFilling": True}]
+    },
 )
 
 # %%
@@ -396,7 +398,6 @@ chemiscope.show(
 # :math:`r_0` starts at the bound value and then moves at constant speed.
 
 
-
 xyz_nm = to_atoms(benzene["topology"], nve_positions).positions * 0.1
 masses = np.array(
     [
@@ -527,19 +528,22 @@ chemiscope.show(
 # Solvated interaction energy
 # ---------------------------
 #
-# Solvent is added to the last vacuum frame of the benzene trajectory, and
-# to the deposited o-xylene coordinates. ``addSolvent`` neutralizes the
-# box. Nothing is integrated after this: each number is one configuration.
-# Benzene's closest contact in the workshop file is about 2.1 Å. The
-# o-xylene file is nearer 1 Å, a steric clash, so that interaction energy
-# is the clash rather than a binding enthalpy.
+# Solvent is added to the bound benzene frame and to the deposited
+# o-xylene coordinates. Nothing is integrated after this.
 #
-# Both ligands are neutral, so deleting the ligand does not change the
-# charge of the box. The Amber and mechanical evaluations share that box.
-# The metatomic ligand energy is the isolated ligand, which is also how
-# the mixed system evaluates the ligand region. Because that energy
-# cancels in :math:`E_\\mathrm{int}`, the mechanical and Amber interaction
-# energies are two ways of computing the same classical coupling.
+# ``createMixedSystem(..., interpolate=True)`` exposes
+# ``lambda_interpolate`` on the context. At 0 the ligand is Amber. At 1
+# that Amber energy of the ligand is switched off and the metatomic
+# energy is switched on. The coupling to the protein and the water stays
+# Amber either way, so the interaction energy does not follow lambda.
+# The total does: the model's energy zero replaces the Amber energy of
+# the ligand. Benzene is the system used for that switch.
+#
+# o-Xylene stays a plain comparison of the two routes. The workshop
+# coordinates place a ligand atom about 1 Å from the protein, and both
+# routes return the same large positive energy. That is the
+# Lennard-Jones wall, not a failed subtraction, so it is left off the
+# benzene axis.
 
 solvated_kwargs = dict(
     nonbondedMethod=app.PME,
@@ -547,14 +551,21 @@ solvated_kwargs = dict(
     rigidWater=True,
     removeCMMotion=False,
 )
-rows = []
+benzene_totals = None
 for name in ("benzene", "o-xylene"):
     entry = systems[name]
     positions = nve_positions if name == "benzene" else entry["positions"]
+    frame = to_atoms(entry["topology"], positions)
+    contact = np.linalg.norm(
+        frame.positions[entry["ligand_atoms"]][:, None, :]
+        - frame.positions[:n_protein][None, :, :],
+        axis=-1,
+    ).min()
     solvated = app.Modeller(entry["topology"], positions)
     solvated.addSolvent(forcefield, model="tip3p", padding=1.0 * unit.nanometer)
     print(
-        f"{name}: {entry['topology'].getNumAtoms()} atoms before solvent, "
+        f"{name}: contact {contact:.2f} A, "
+        f"{entry['topology'].getNumAtoms()} atoms before solvent, "
         f"{solvated.topology.getNumAtoms()} after"
     )
 
@@ -565,6 +576,7 @@ for name in ("benzene", "o-xylene"):
         entry["ligand_atoms"],
         embedding="mechanical",
         removeConstraints=True,
+        interpolate=(name == "benzene"),
     )
     ligand_positions = [positions[i] for i in entry["ligand_atoms"]]
     ligand_ml = potential.createSystem(entry["ligand_topology"])
@@ -578,23 +590,45 @@ for name in ("benzene", "o-xylene"):
         [atom for atom in receptor.topology.atoms() if atom.index in ligand_index]
     )
     mm_receptor = forcefield.createSystem(receptor.topology, **solvated_kwargs)
-
-    e_mixed = potential_energy(mixed_complex, solvated.positions)
-    e_mm = potential_energy(mm_complex, solvated.positions)
     e_receptor = potential_energy(mm_receptor, receptor.positions)
     e_ml = potential_energy(ligand_ml, ligand_positions)
     e_mm_ligand = potential_energy(mm_ligand, ligand_box.positions)
+
+    if name == "benzene":
+        switch = mm.Context(
+            mixed_complex, mm.VerletIntegrator(1.0 * unit.femtoseconds), CPU
+        )
+        switch.setPositions(solvated.positions)
+        benzene_totals = []
+        for lam in (0.0, 1.0):
+            switch.setParameter("lambda_interpolate", lam)
+            benzene_totals.append(
+                switch.getState(getEnergy=True)
+                .getPotentialEnergy()
+                .value_in_unit(unit.kilojoule_per_mole)
+            )
+        e_mm, e_mixed = benzene_totals
+        print(f"  lambda 0 {e_mm:12.2f} kJ/mol    lambda 1 {e_mixed:12.2f} kJ/mol")
+    else:
+        e_mixed = potential_energy(mixed_complex, solvated.positions)
+        e_mm = potential_energy(mm_complex, solvated.positions)
+
     mechanical = e_mixed - e_receptor - e_ml
     amber = e_mm - e_receptor - e_mm_ligand
     print(f"  mechanical {mechanical:10.2f} kJ/mol    Amber {amber:10.2f} kJ/mol")
-    rows.append({"ligand": name, "mechanical": mechanical, "amber": amber})
+    if name == "benzene":
+        benzene_interaction = (amber, mechanical)
 
-fig, axes = plt.subplots(1, len(rows), figsize=(7.2, 3.2), constrained_layout=True)
-for axis, row in zip(axes, rows):
-    axis.bar(["Amber", "mechanical"], [row["amber"], row["mechanical"]])
-    axis.axhline(0.0, color="0.5", linewidth=0.8)
-    axis.set_title(row["ligand"])
-    axis.set_ylabel("interaction energy / kJ/mol")
+fig, axes = plt.subplots(1, 2, figsize=(8.2, 3.4), constrained_layout=True)
+axes[0].bar(["Amber", "mechanical"], benzene_interaction)
+axes[0].axhline(0.0, color="0.5", linewidth=0.8)
+axes[0].set_ylabel("interaction energy / kJ/mol")
+axes[0].set_title("benzene")
+axes[1].plot([0.0, 1.0], benzene_totals, marker="o")
+axes[1].set_xticks([0.0, 1.0])
+axes[1].set_xlabel(r"$\lambda$")
+axes[1].set_ylabel("total energy / kJ/mol")
+axes[1].set_title("benzene")
 
 # %%
 # References
