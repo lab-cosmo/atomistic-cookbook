@@ -187,7 +187,6 @@ for name, molecule in zip(("benzene", "o-xylene"), molecules):
     )
 
 
-
 ligand_frames = []
 for name in ("benzene", "o-xylene"):
     entry = systems[name]
@@ -285,120 +284,71 @@ total = context.getState(getEnergy=True).getPotentialEnergy()
 print(f"{'sum of groups':24s} {sum(energies):14.2f} kJ/mol")
 print(f"{'total':24s} {total.value_in_unit(unit.kilojoule_per_mole):14.2f} kJ/mol")
 
-fig, axis = plt.subplots(figsize=(6.2, 3.2), constrained_layout=True)
-axis.barh(names, energies)
-axis.set_xlabel("energy / kJ/mol")
+# %%
+# Switching the ligand potential
+# ------------------------------
+#
+# ``interpolate=True`` adds ``lambda_interpolate``. At 0 the ligand is
+# Amber. At 1 the Amber energy of the ligand is off and the metatomic
+# model is on. The mix is linear, so the Amber piece left in the energy
+# is :math:`E(\lambda) - E(1)`, and that piece is zero at
+# :math:`\lambda = 1`. The coupling to the protein is not in the mix. It
+# stays Amber at every lambda.
+
+switched = potential.createMixedSystem(
+    benzene["topology"],
+    mm_vacuum,
+    benzene["ligand_atoms"],
+    embedding="mechanical",
+    removeConstraints=True,
+    interpolate=True,
+)
+switch = mm.Context(switched, mm.VerletIntegrator(1.0 * unit.femtoseconds), CPU)
+switch.setPositions(benzene["positions"])
+lambdas = np.linspace(0.0, 1.0, 5)
+switched_energy = []
+for lam in lambdas:
+    switch.setParameter("lambda_interpolate", float(lam))
+    switched_energy.append(
+        switch.getState(getEnergy=True)
+        .getPotentialEnergy()
+        .value_in_unit(unit.kilojoule_per_mole)
+    )
+amber_left = np.asarray(switched_energy) - switched_energy[-1]
+print(f"Amber ligand energy at lambda 0: {amber_left[0]:.2f} kJ/mol")
+print(f"Amber ligand energy at lambda 1: {amber_left[-1]:.2f} kJ/mol")
+
+fig, axis = plt.subplots(figsize=(5.2, 3.2), constrained_layout=True)
+axis.plot(lambdas, amber_left, marker="o")
+axis.set_xlabel(r"$\lambda$")
+axis.set_ylabel(r"$E(\lambda) - E(1)$ / kJ/mol")
 
 # %%
-# Constraints and NVE
-# -------------------
+# Constraints
+# -----------
 #
-# ``constraints=app.HBonds`` replaces every bond to hydrogen with a
-# holonomic constraint (SHAKE), held to the force field's equilibrium
-# length. ``app.AllBonds`` also constrains heavy-atom bonds, and
-# ``app.HAngles`` constrains the H–X–H angle.
-#
-# ``createMixedSystem(..., removeConstraints=True)`` drops constraints
-# whose two atoms are both in the ligand. Benzene has six hydrogens, so
-# six constraints leave with it. Those distances belong to the model;
-# leaving the constraint in as well would fight it. Protein X–H
-# constraints stay. The ligand hydrogens are then the fastest motion, so
-# the Verlet step is 0.5 fs rather than the 2 fs an all-constrained
-# hydrogen timestep would allow. ``setConstraintTolerance`` is the
-# allowed error in a constrained distance.
-#
-# Velocities are drawn once from a 300 K distribution. The Verlet
-# integrator has no thermostat, so the trajectory is NVE and the total
-# energy, kinetic plus potential, is the conserved quantity.
-# Center-of-mass motion is left in the Hamiltonian
-# (``removeCMMotion=False``). A short minimization removes the worst
-# contacts in the deposited coordinates before the first step. The run
-# is benzene only, and it stays in vacuum.
+# ``constraints=app.HBonds`` replaces each bond to hydrogen with a SHAKE
+# constraint. ``removeConstraints=True`` drops the ones inside the
+# ligand, because those distances belong to the model. What remains is
+# a short NVE segment, benzene only, in vacuum.
 
 print(
     f"constraints: {mm_vacuum.getNumConstraints()} on the MM system, "
     f"{mixed.getNumConstraints()} after the ligand constraints are removed"
 )
-constrained = None
-for index in range(mixed.getNumConstraints()):
-    i, j, distance = mixed.getConstraintParameters(index)
-    if i < n_protein and j < n_protein:
-        constrained = (i, j, distance.value_in_unit(unit.angstrom))
-        break
-ligand_set = set(benzene["ligand_atoms"])
-free = None
-for bond in benzene["topology"].bonds():
-    i = bond.atom1.index
-    j = bond.atom2.index
-    if i in ligand_set and j in ligand_set:
-        symbols = {bond.atom1.element.symbol, bond.atom2.element.symbol}
-        if symbols == {"C", "H"}:
-            free = (i, j)
-            break
-print(
-    f"protein constraint atoms {constrained[0]}, {constrained[1]} "
-    f"at {constrained[2]:.4f} A"
-)
-print(f"unconstrained ligand C-H atoms {free[0]}, {free[1]}")
-
-dt = 0.5 * unit.femtoseconds
-n_steps = 100
-integrator = mm.VerletIntegrator(dt)
+integrator = mm.VerletIntegrator(0.5 * unit.femtoseconds)
 integrator.setConstraintTolerance(1e-5)
 simulation = app.Simulation(benzene["topology"], mixed, integrator, CPU)
 simulation.context.setPositions(benzene["positions"])
-mm.LocalEnergyMinimizer.minimize(simulation.context, maxIterations=25)
 simulation.context.setVelocitiesToTemperature(300 * unit.kelvin, 1)
-
-times = []
-totals = []
-protein_d = []
-ligand_d = []
-md_frames = []
-for step in range(n_steps + 1):
-    if step:
-        simulation.step(1)
-    state = simulation.context.getState(getEnergy=True, getPositions=True)
-    xyz = state.getPositions(asNumpy=True).value_in_unit(unit.angstrom)
-    total_energy = state.getPotentialEnergy() + state.getKineticEnergy()
-    times.append(step * 0.5)
-    totals.append(total_energy.value_in_unit(unit.kilojoule_per_mole))
-    protein_d.append(float(np.linalg.norm(xyz[constrained[0]] - xyz[constrained[1]])))
-    ligand_d.append(float(np.linalg.norm(xyz[free[0]] - xyz[free[1]])))
-    if step % 25 == 0:
-        md_frames.append(to_atoms(benzene["topology"], state.getPositions()))
-
-print(
-    f"total energy drift over {n_steps * 0.5:.0f} fs: {totals[-1] - totals[0]:.3f} kJ/mol"
+start = simulation.context.getState(getEnergy=True)
+simulation.step(20)
+end = simulation.context.getState(getEnergy=True)
+drift = (end.getPotentialEnergy() + end.getKineticEnergy()) - (
+    start.getPotentialEnergy() + start.getKineticEnergy()
 )
-print(f"constrained distance std: {np.std(protein_d):.3e} A")
-print(f"ligand C-H std:           {np.std(ligand_d):.3e} A")
-
-fig, axes = plt.subplots(1, 2, figsize=(8.2, 3.4), constrained_layout=True)
-axes[0].plot(times, totals)
-axes[0].set_xlabel("time / fs")
-axes[0].set_ylabel("total energy / kJ/mol")
-axes[1].plot(times, protein_d, label="protein X–H")
-axes[1].plot(times, ligand_d, label="ligand C–H")
-axes[1].axhline(constrained[2], color="0.5", linewidth=0.8)
-axes[1].set_xlabel("time / fs")
-axes[1].set_ylabel("distance / Å")
-axes[1].legend()
-
-chemiscope.show(
-    md_frames,
-    shapes=ligand_spheres(md_frames, [benzene["ligand_atoms"]] * len(md_frames)),
-    mode="structure",
-    settings={
-        "structure": [
-            {
-                "bonds": True,
-                "keepOrientation": True,
-                "playbackDelay": 200,
-                "shape": "ligand",
-            }
-        ]
-    },
+print(
+    f"total energy drift over 10 fs: {drift.value_in_unit(unit.kilojoule_per_mole):.3f} kJ/mol"
 )
 
 # %%
@@ -428,7 +378,7 @@ pulling.addCollectiveVariable("r", cv)
 mixed.addForce(pulling)
 
 pulled = mm.Context(mixed, mm.VerletIntegrator(1.0 * unit.femtoseconds), CPU)
-pulled.setPositions(simulation.context.getState(getPositions=True).getPositions())
+pulled.setPositions(benzene["positions"])
 r = pulling.getCollectiveVariableValues(pulled)[0]
 pulled.setParameter("r0", r)
 print(f"centroid distance r = r0 = {r:.3f} nm")
@@ -437,19 +387,5 @@ print(f"centroid distance r = r0 = {r:.3f} nm")
 # References
 # ----------
 #
-# .. [1] Eriksson, Baase, Wozniak, and Matthews, Nature 355, 371 (1992).
-#    `DOI:10.1038/355371a0 <https://doi.org/10.1038/355371a0>`_
-# .. [2] Morton, Baase, and Matthews, Biochemistry 34, 8564 (1995).
-#    `DOI:10.1021/bi00027a006 <https://doi.org/10.1021/bi00027a006>`_
-# .. [3] Deng and Roux, J. Chem. Theory Comput. 2, 1255 (2006).
-#    `DOI:10.1021/ct060037v <https://doi.org/10.1021/ct060037v>`_
-# .. [4] Mobley et al., J. Mol. Biol. 371, 1118 (2007).
-#    `DOI:10.1016/j.jmb.2007.06.002 <https://doi.org/10.1016/j.jmb.2007.06.002>`_
-# .. [5] Maseras and Morokuma, J. Comput. Chem. 16, 1170 (1995).
-#    `DOI:10.1002/jcc.540160911 <https://doi.org/10.1002/jcc.540160911>`_
-# .. [6] Svensson et al., J. Phys. Chem. 100, 19357 (1996).
-#    `DOI:10.1021/jp962071j <https://doi.org/10.1021/jp962071j>`_
 # .. [7] Bakowies and Thiel, J. Phys. Chem. 100, 10580 (1996).
 #    `DOI:10.1021/jp9536514 <https://doi.org/10.1021/jp9536514>`_
-# .. [8] Eastman et al., Sci. Data 10, 11 (2023).
-#    `DOI:10.1038/s41597-022-01882-6 <https://doi.org/10.1038/s41597-022-01882-6>`_
