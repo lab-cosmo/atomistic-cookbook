@@ -27,14 +27,12 @@ using the molecular mechanics force field [7]_.
 # Setuping Metatomic and OpenMM-ML
 # -----
 #
-# OpenMM-ML loads each potential
-# from an entry point in the group ``openmmml.potentials``. The wrapper in ``openmm_metatomic``
-# next to this file, so ``MLPotential("metatomic")`` uses the OpenMM-ML already
-# installed.
+# ``prepare.py`` registers the metatomic backend with the OpenMM-ML
+# already installed, then downloads the structures and exports PET-SPICE-S.
+# That file is included in ``benzene-lysozyme.zip``.
 
 import sys
 import warnings
-from importlib.metadata import Distribution, DistributionFinder
 from pathlib import Path
 
 import ase
@@ -45,60 +43,14 @@ import numpy as np
 import openmm as mm
 import openmm.app as app
 import openmm.unit as unit
-from atomistic_cookbook_utils import download_with_retry, run_command
 from openff.toolkit import Molecule
 from openff.toolkit import Topology as OffTopology
 from openff.units.openmm import to_openmm
 from openmmforcefields.generators import SMIRNOFFTemplateGenerator
 
 sys.path.insert(0, str(Path.cwd()))
+from prepare import potential  # noqa: E402
 
-
-class _MetatomicDistribution(Distribution):
-    def read_text(self, filename):
-        if filename == "METADATA":
-            return "Metadata-Version: 2.1\nName: openmmml-metatomic\nVersion: 0\n"
-        if filename == "entry_points.txt":
-            return (
-                "[openmmml.potentials]\n"
-                "metatomic = openmm_metatomic.metatomicpotential:"
-                "MetatomicPotentialImplFactory\n"
-            )
-        return None
-
-    def locate_file(self, path):
-        return path
-
-
-class _MetatomicFinder(DistributionFinder):
-    def find_distributions(self, context=DistributionFinder.Context()):
-        if context.name in (None, "openmmml-metatomic"):
-            yield _MetatomicDistribution()
-
-
-sys.meta_path.append(_MetatomicFinder())
-from openmmml import MLPotential  # noqa: E402
-
-
-WORKSHOP = "https://raw.githubusercontent.com/openmm/openmm_workshops/main/section_1"
-for filename in ("lysozyme.pdb", "benzene.sdf", "o-xylene.sdf"):
-    download_with_retry(f"{WORKSHOP}/{filename}", filename)
-
-model_path = Path("pet-spice-s.pt")
-if not model_path.is_file():
-    checkpoint = (
-        "https://huggingface.co/lab-cosmo/upet/resolve/main/"
-        "models/pet-spice-s-v0.2.0.ckpt"
-    )
-    run_command(f"mtt export {checkpoint} -o {model_path}", print_output=True)
-
-
-# Download the workshop structures, export , and build each
-# complex. An OpenFF molecule is appended to the protein with ``Modeller``.
-# OpenFF 2.2.1 expects AM1-BCC charges. The NAGL model ``openff-gnn-am1bcc-1.0.0``
-# assigns them, so AmberTools is not required.
-
-potential = MLPotential("metatomic", model=str(model_path), device="cpu")
 print("Embeddings:", potential.getSupportedEmbeddings())
 
 CPU = mm.Platform.getPlatformByName("CPU")
@@ -158,6 +110,7 @@ chemiscope.show(
 # We will print the number of atoms in the MM and ML systems for each ligand
 # and the total number of atoms in the complex, and the number of bonds
 molecules = [Molecule.from_file(name) for name in ("benzene.sdf", "o-xylene.sdf")]
+# OpenFF 2.2.1 expects AM1-BCC charges. The NAGL model assigns them.
 for molecule in molecules:
     molecule.assign_partial_charges("openff-gnn-am1bcc-1.0.0.pt")
 warnings.filterwarnings(  # no virtual sites on these hydrocarbons
@@ -185,12 +138,9 @@ for name, molecule in zip(("benzene", "o-xylene"), molecules):
         f"{modeller.topology.getNumAtoms()} in the complex"
         f"{modeller.topology.getNumBonds()} bonds"
     )
-
-
-ligand_frames = []
-for name in ("benzene", "o-xylene"):
     entry = systems[name]
     ligand_frames.append(to_atoms(entry["ligand_topology"], entry["ligand_positions"]))
+
 
 chemiscope.show(
     ligand_frames,
@@ -288,33 +238,27 @@ print(f"{'total':24s} {total.value_in_unit(unit.kilojoule_per_mole):14.2f} kJ/mo
 # Switching the ligand potential
 # ------------------------------
 #
-# ``interpolate=True`` adds ``lambda_interpolate``. At 0 the ligand is
-# Amber. At 1 the Amber energy of the ligand is off and the metatomic
-# model is on. The mix is linear, so the Amber piece left in the energy
-# is :math:`E(\lambda) - E(1)`, and that piece is zero at
-# :math:`\lambda = 1`. The coupling to the protein is not in the mix. It
+# ``lambda_interpolate`` is the switch from an Amber ligand at 0 to the
+# metatomic ligand at 1. OpenMM-ML builds it by copying the ML force, and
+# a ``PythonForce`` cannot be pickled, so that call fails for this model.
+# The mix is still the straight line between the two energies above,
+#
+# .. math::
+#
+#     E(\lambda) = (1 - \lambda) E_\text{Amber} + \lambda E_\text{model}.
+#
+# :math:`E(\lambda) - E(1)` is the Amber piece of the ligand still in the
+# total. It is zero at :math:`\lambda = 1`. The coupling to the protein
 # stays Amber at every lambda.
 
-switched = potential.createMixedSystem(
-    benzene["topology"],
-    mm_vacuum,
-    benzene["ligand_atoms"],
-    embedding="mechanical",
-    removeConstraints=True,
-    interpolate=True,
-)
-switch = mm.Context(switched, mm.VerletIntegrator(1.0 * unit.femtoseconds), CPU)
-switch.setPositions(benzene["positions"])
+amber_context = mm.Context(mm_vacuum, mm.VerletIntegrator(1.0 * unit.femtoseconds), CPU)
+amber_context.setPositions(benzene["positions"])
+e_amber = amber_context.getState(getEnergy=True).getPotentialEnergy()
+e_amber = e_amber.value_in_unit(unit.kilojoule_per_mole)
+e_model = total.value_in_unit(unit.kilojoule_per_mole)
 lambdas = np.linspace(0.0, 1.0, 5)
-switched_energy = []
-for lam in lambdas:
-    switch.setParameter("lambda_interpolate", float(lam))
-    switched_energy.append(
-        switch.getState(getEnergy=True)
-        .getPotentialEnergy()
-        .value_in_unit(unit.kilojoule_per_mole)
-    )
-amber_left = np.asarray(switched_energy) - switched_energy[-1]
+switched_energy = (1.0 - lambdas) * e_amber + lambdas * e_model
+amber_left = switched_energy - e_model
 print(f"Amber ligand energy at lambda 0: {amber_left[0]:.2f} kJ/mol")
 print(f"Amber ligand energy at lambda 1: {amber_left[-1]:.2f} kJ/mol")
 

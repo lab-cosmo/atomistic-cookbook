@@ -56,6 +56,8 @@ class PseudoSphinxApp:
         self.config.default_role = ""
         self.config.sphinx_gallery_conf = {
             "filename_pattern": ".*",
+            # prepare.py is imported by a recipe. It is not a gallery page.
+            "ignore_pattern": r"(__init__\.py|prepare\.py)",
             "examples_dirs": os.path.join(ROOT, example),
             "gallery_dirs": gallery_dir,
             "write_computation_times": False,
