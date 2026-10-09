@@ -39,6 +39,7 @@ from pathlib import Path
 
 import ase
 import chemiscope
+from ase.data import vdw_radii
 import matplotlib.pyplot as plt
 import numpy as np
 import openmm as mm
@@ -112,12 +113,20 @@ def to_atoms(topology, positions):
     return ase.Atoms(symbols=symbols, positions=np.asarray(xyz, dtype=np.float64))
 
 
-def potential_energy(system, positions):
-    """Potential energy of one configuration, in kJ/mol."""
-    context = mm.Context(system, mm.VerletIntegrator(1.0 * unit.femtoseconds), CPU)
-    context.setPositions(positions)
-    energy = context.getState(getEnergy=True).getPotentialEnergy()
-    return energy.value_in_unit(unit.kilojoule_per_mole)
+def ligand_spheres(frames, ligand_atoms):
+    """van der Waals spheres on the ligand, drawn over a ball-and-stick protein."""
+    colors = {1: 0xFFFFFF, 6: 0x909090, 7: 0x3050F8, 8: 0xFF0D0D}
+    structure = []
+    for frame, atoms in zip(frames, ligand_atoms):
+        numbers = frame.numbers[list(atoms)]
+        structure.append(
+            {
+                "centers": frame.positions[list(atoms)].tolist(),
+                "radii": [float(vdw_radii[z]) for z in numbers],
+                "colors": [colors.get(int(z), 0xFF1493) for z in numbers],
+            }
+        )
+    return {"ligand": {"kind": "spheres", "parameters": {"structure": structure}}}
 
 
 # %%
@@ -217,8 +226,14 @@ for name in ("benzene", "o-xylene"):
 chemiscope.show(
     complex_frames,
     properties={"ligand": ["benzene", "o-xylene"]},
+    shapes=ligand_spheres(
+        complex_frames,
+        [systems[name]["ligand_atoms"] for name in ("benzene", "o-xylene")],
+    ),
     mode="structure",
-    settings={"structure": [{"bonds": True, "keepOrientation": True}]},
+    settings={
+        "structure": [{"bonds": True, "keepOrientation": True, "shape": "ligand"}]
+    },
 )
 
 # %%
@@ -281,8 +296,7 @@ axis.set_xlabel("energy / kJ/mol")
 # ``constraints=app.HBonds`` replaces every bond to hydrogen with a
 # holonomic constraint (SHAKE), held to the force field's equilibrium
 # length. ``app.AllBonds`` also constrains heavy-atom bonds, and
-# ``app.HAngles`` constrains the H–X–H angle. Water added later is held
-# rigid by SETTLE when ``rigidWater=True``.
+# ``app.HAngles`` constrains the H–X–H angle.
 #
 # ``createMixedSystem(..., removeConstraints=True)`` drops constraints
 # whose two atoms are both in the ligand. Benzene has six hydrogens, so
@@ -354,7 +368,6 @@ for step in range(n_steps + 1):
     if step % 25 == 0:
         md_frames.append(to_atoms(benzene["topology"], state.getPositions()))
 
-nve_positions = simulation.context.getState(getPositions=True).getPositions()
 print(
     f"total energy drift over {n_steps * 0.5:.0f} fs: {totals[-1] - totals[0]:.3f} kJ/mol"
 )
@@ -374,261 +387,51 @@ axes[1].legend()
 
 chemiscope.show(
     md_frames,
+    shapes=ligand_spheres(md_frames, [benzene["ligand_atoms"]] * len(md_frames)),
     mode="structure",
     settings={
-        "structure": [{"bonds": True, "keepOrientation": True, "playbackDelay": 200}]
+        "structure": [
+            {
+                "bonds": True,
+                "keepOrientation": True,
+                "playbackDelay": 200,
+                "shape": "ligand",
+            }
+        ]
     },
 )
 
 # %%
-# Pulling the ligand out
-# ----------------------
+# A custom force
+# --------------
 #
-# CustomForces available in OpenMM-ML can be used for enhanced sampling methods. Here, we will simply
-# pull the ligand away from the protein, using an harmonic
-# spring whose center moves at a fixed speed [9]_.
+# ``CustomCVForce`` is a spring written on top of another force. The
+# collective variable is the distance between the protein and benzene
+# centers,
 #
 # .. math::
 #
-#     r = \mathbf{u} \cdot (\mathbf{R}_\text{ligand}
-#     - \mathbf{R}_\text{protein}),
-#     \qquad
 #     V = \tfrac{1}{2} k (r - r_0)^2.
-#
-# :math:`r_0` starts at the bound value and then moves at constant speed.
 
 
-xyz_nm = to_atoms(benzene["topology"], nve_positions).positions * 0.1
-masses = np.array(
-    [
-        mixed.getParticleMass(i).value_in_unit(unit.dalton)
-        for i in range(mixed.getNumParticles())
-    ]
-)
-protein_ids = np.arange(n_protein)
-ligand_ids = np.asarray(benzene["ligand_atoms"])
-protein_com = np.average(xyz_nm[protein_ids], axis=0, weights=masses[protein_ids])
-ligand_com = np.average(xyz_nm[ligand_ids], axis=0, weights=masses[ligand_ids])
-origin = xyz_nm[ligand_ids].mean(axis=0)
-delta = xyz_nm[protein_ids] - origin
-n_directions = 200
-index = np.arange(n_directions)
-golden = np.pi * (3.0 - np.sqrt(5.0))
-height = 1.0 - 2.0 * (index + 0.5) / n_directions
-radius = np.sqrt(1.0 - height * height)
-directions = np.stack(
-    [
-        radius * np.cos(golden * index),
-        radius * np.sin(golden * index),
-        height,
-    ],
-    axis=1,
-)
-clearance = np.empty(n_directions)
-for i, direction in enumerate(directions):
-    along = delta @ direction
-    perpendicular = np.linalg.norm(delta - along[:, None] * direction, axis=1)
-    # a protein atom within 3 Å of the ray, and not on top of the ligand
-    blocked = (perpendicular < 0.3) & (along > 0.1)
-    clearance[i] = along[blocked].min() if blocked.any() else np.inf
-u = directions[int(np.argmax(clearance))]
-r_init = float(np.dot(ligand_com - protein_com, u))
-projection = (
-    f"({u[0]:.8f}) * (x1 - x2) + ({u[1]:.8f}) * (y1 - y2) + ({u[2]:.8f}) * (z1 - z2)"
-)
-cv = mm.CustomCentroidBondForce(2, projection)
+cv = mm.CustomCentroidBondForce(2, "distance(g1,g2)")
 cv.addBond(
     [
-        cv.addGroup(ligand_ids.tolist()),
-        cv.addGroup(protein_ids.tolist()),
+        cv.addGroup(list(range(n_protein))),
+        cv.addGroup(benzene["ligand_atoms"]),
     ]
 )
-k_pull = 8000.0  # kJ/mol/nm^2
 pulling = mm.CustomCVForce("0.5 * k * (r - r0)^2")
-pulling.addGlobalParameter("k", k_pull)
-pulling.addGlobalParameter("r0", r_init)
+pulling.addGlobalParameter("k", 5000.0)
+pulling.addGlobalParameter("r0", 0.0)
 pulling.addCollectiveVariable("r", cv)
-pulling.setForceGroup(mixed.getNumForces())
 mixed.addForce(pulling)
-print(f"pull axis = [{u[0]: .3f}, {u[1]: .3f}, {u[2]: .3f}]")
-print(f"clearance along that axis: {np.max(clearance) * 10:.2f} A")
-print(f"bound projection r0 = {r_init:.3f} nm, k = {k_pull:.0f} kJ/mol/nm^2")
 
-dt = 0.5 * unit.femtoseconds
-n_pull = 1600
-increment = 5
-v_pull = 3.0  # nm/ps
-dt_ps = dt.value_in_unit(unit.picosecond)
-pull_integrator = mm.LangevinMiddleIntegrator(
-    300 * unit.kelvin, 1.0 / unit.picosecond, dt
-)
-pull_integrator.setConstraintTolerance(1e-5)
-pulled = app.Simulation(benzene["topology"], mixed, pull_integrator, CPU)
-pulled.context.setPositions(nve_positions)
-pulled.context.setVelocitiesToTemperature(300 * unit.kelvin, 1)
-
-r0 = r_init
-pull_times = []
-pull_r = []
-pull_r0 = []
-contact_times = []
-contacts = []
-pull_frames = []
-for step in range(0, n_pull + 1, increment):
-    if step:
-        pulled.step(increment)
-        r0 += v_pull * dt_ps * increment
-        pulled.context.setParameter("r0", r0)
-    pull_times.append(step * dt_ps)
-    pull_r.append(pulling.getCollectiveVariableValues(pulled.context)[0])
-    pull_r0.append(r0)
-    if step % 50 == 0:
-        state = pulled.context.getState(getPositions=True)
-        xyz = state.getPositions(asNumpy=True).value_in_unit(unit.angstrom)
-        contacts.append(
-            np.linalg.norm(
-                xyz[ligand_ids][:, None, :] - xyz[protein_ids][None, :, :],
-                axis=-1,
-            ).min()
-        )
-        contact_times.append(step * dt_ps)
-        if step % 200 == 0:
-            pull_frames.append(to_atoms(benzene["topology"], state.getPositions()))
-
-print(
-    f"r0 moved from {r_init:.3f} nm to {r0:.3f} nm; "
-    f"projection followed to {pull_r[-1]:.3f} nm"
-)
-print(f"closest contact at the end of the pull: {contacts[-1]:.2f} A")
-spring = pulled.context.getState(getEnergy=True, groups={pulling.getForceGroup()})
-print(
-    "pulling restraint "
-    f"{spring.getPotentialEnergy().value_in_unit(unit.kilojoule_per_mole):.2f} kJ/mol"
-)
-
-fig, axes = plt.subplots(1, 2, figsize=(8.2, 3.4), constrained_layout=True)
-axes[0].plot(np.asarray(pull_times) * 1000.0, pull_r0, label=r"$r_0$")
-axes[0].plot(np.asarray(pull_times) * 1000.0, pull_r, label=r"$r$")
-axes[0].set_xlabel("time / fs")
-axes[0].set_ylabel("projection / nm")
-axes[0].legend()
-axes[1].plot(np.asarray(contact_times) * 1000.0, contacts)
-axes[1].set_xlabel("time / fs")
-axes[1].set_ylabel("closest contact / Å")
-
-chemiscope.show(
-    pull_frames,
-    mode="structure",
-    settings={
-        "structure": [{"bonds": True, "keepOrientation": True, "playbackDelay": 200}]
-    },
-)
-
-# %%
-# Solvated interaction energy
-# ---------------------------
-#
-# Solvent is added to the bound benzene frame and to the deposited
-# o-xylene coordinates. Nothing is integrated after this.
-#
-# ``createMixedSystem(..., interpolate=True)`` exposes
-# ``lambda_interpolate`` on the context. At 0 the ligand is Amber. At 1
-# that Amber energy of the ligand is switched off and the metatomic
-# energy is switched on. The coupling to the protein and the water stays
-# Amber either way, so the interaction energy does not follow lambda.
-# The total does: the model's energy zero replaces the Amber energy of
-# the ligand. Benzene is the system used for that switch.
-#
-# o-Xylene stays a plain comparison of the two routes. The workshop
-# coordinates place a ligand atom about 1 Å from the protein, and both
-# routes return the same large positive energy. That is the
-# Lennard-Jones wall, not a failed subtraction, so it is left off the
-# benzene axis.
-
-solvated_kwargs = dict(
-    nonbondedMethod=app.PME,
-    constraints=app.HBonds,
-    rigidWater=True,
-    removeCMMotion=False,
-)
-benzene_totals = None
-for name in ("benzene", "o-xylene"):
-    entry = systems[name]
-    positions = nve_positions if name == "benzene" else entry["positions"]
-    frame = to_atoms(entry["topology"], positions)
-    contact = np.linalg.norm(
-        frame.positions[entry["ligand_atoms"]][:, None, :]
-        - frame.positions[:n_protein][None, :, :],
-        axis=-1,
-    ).min()
-    solvated = app.Modeller(entry["topology"], positions)
-    solvated.addSolvent(forcefield, model="tip3p", padding=1.0 * unit.nanometer)
-    print(
-        f"{name}: contact {contact:.2f} A, "
-        f"{entry['topology'].getNumAtoms()} atoms before solvent, "
-        f"{solvated.topology.getNumAtoms()} after"
-    )
-
-    mm_complex = forcefield.createSystem(solvated.topology, **solvated_kwargs)
-    mixed_complex = potential.createMixedSystem(
-        solvated.topology,
-        mm_complex,
-        entry["ligand_atoms"],
-        embedding="mechanical",
-        removeConstraints=True,
-        interpolate=(name == "benzene"),
-    )
-    ligand_positions = [positions[i] for i in entry["ligand_atoms"]]
-    ligand_ml = potential.createSystem(entry["ligand_topology"])
-    ligand_box = app.Modeller(entry["ligand_topology"], ligand_positions)
-    ligand_box.topology.setPeriodicBoxVectors(solvated.topology.getPeriodicBoxVectors())
-    mm_ligand = forcefield.createSystem(ligand_box.topology, **solvated_kwargs)
-
-    receptor = app.Modeller(solvated.topology, solvated.positions)
-    ligand_index = set(entry["ligand_atoms"])
-    receptor.delete(
-        [atom for atom in receptor.topology.atoms() if atom.index in ligand_index]
-    )
-    mm_receptor = forcefield.createSystem(receptor.topology, **solvated_kwargs)
-    e_receptor = potential_energy(mm_receptor, receptor.positions)
-    e_ml = potential_energy(ligand_ml, ligand_positions)
-    e_mm_ligand = potential_energy(mm_ligand, ligand_box.positions)
-
-    if name == "benzene":
-        switch = mm.Context(
-            mixed_complex, mm.VerletIntegrator(1.0 * unit.femtoseconds), CPU
-        )
-        switch.setPositions(solvated.positions)
-        benzene_totals = []
-        for lam in (0.0, 1.0):
-            switch.setParameter("lambda_interpolate", lam)
-            benzene_totals.append(
-                switch.getState(getEnergy=True)
-                .getPotentialEnergy()
-                .value_in_unit(unit.kilojoule_per_mole)
-            )
-        e_mm, e_mixed = benzene_totals
-        print(f"  lambda 0 {e_mm:12.2f} kJ/mol    lambda 1 {e_mixed:12.2f} kJ/mol")
-    else:
-        e_mixed = potential_energy(mixed_complex, solvated.positions)
-        e_mm = potential_energy(mm_complex, solvated.positions)
-
-    mechanical = e_mixed - e_receptor - e_ml
-    amber = e_mm - e_receptor - e_mm_ligand
-    print(f"  mechanical {mechanical:10.2f} kJ/mol    Amber {amber:10.2f} kJ/mol")
-    if name == "benzene":
-        benzene_interaction = (amber, mechanical)
-
-fig, axes = plt.subplots(1, 2, figsize=(8.2, 3.4), constrained_layout=True)
-axes[0].bar(["Amber", "mechanical"], benzene_interaction)
-axes[0].axhline(0.0, color="0.5", linewidth=0.8)
-axes[0].set_ylabel("interaction energy / kJ/mol")
-axes[0].set_title("benzene")
-axes[1].plot([0.0, 1.0], benzene_totals, marker="o")
-axes[1].set_xticks([0.0, 1.0])
-axes[1].set_xlabel(r"$\lambda$")
-axes[1].set_ylabel("total energy / kJ/mol")
-axes[1].set_title("benzene")
+pulled = mm.Context(mixed, mm.VerletIntegrator(1.0 * unit.femtoseconds), CPU)
+pulled.setPositions(simulation.context.getState(getPositions=True).getPositions())
+r = pulling.getCollectiveVariableValues(pulled)[0]
+pulled.setParameter("r0", r)
+print(f"centroid distance r = r0 = {r:.3f} nm")
 
 # %%
 # References
@@ -650,8 +453,3 @@ axes[1].set_title("benzene")
 #    `DOI:10.1021/jp9536514 <https://doi.org/10.1021/jp9536514>`_
 # .. [8] Eastman et al., Sci. Data 10, 11 (2023).
 #    `DOI:10.1038/s41597-022-01882-6 <https://doi.org/10.1038/s41597-022-01882-6>`_
-# .. [9] Park, Khalili-Araghi, Tajkhorshid, and Schulten, J. Chem. Phys.
-#    119, 3559 (2003).
-#    `DOI:10.1063/1.1590311 <https://doi.org/10.1063/1.1590311>`_
-# .. [10] Grubmüller, Heymann, and Tavan, Science 271, 997 (1996).
-#    `DOI:10.1126/science.271.5251.997 <https://doi.org/10.1126/science.271.5251.997>`_
