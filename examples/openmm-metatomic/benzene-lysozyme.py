@@ -1,22 +1,16 @@
 """
-Ligand-protein interaction energies with OpenMM-ML
+Protein-ligand interaction energies with OpenMM-ML
 ==================================================
 
 :Authors: Eric Boittier `@EricBoittier <https://github.com/EricBoittier>`_
 
-Benzene in the L99A cavity of T4 lysozyme is the complex from Eriksson,
-Baase, Wozniak and Matthews [1]_. Morton, Baase and Matthews measured a
-wider set of ligands in the same cavity, xylenes included [2]_. Binding
-free energies for the site have been computed in explicit solvent [3]_
-[4]_. The coordinates are the prepared files from the `OpenMM workshop
-notebook
-<https://github.com/openmm/openmm_workshops/blob/main/section_1/protein_ligand_complex.ipynb>`_.
-The protein is Amber ff14SB and each ligand is OpenFF 2.2.1.
+QM/MM is a method that combines
+fast, empircal force fields (MM) with more detailed models (QM), for a trade-off between accuracy and computational cost.
+MLIPs fit to QM data can be faithful oracles that provide an even better trade-off to speed and quality.
+This notebook evaluates the interaction energy of benzene and o-xylene (ML region) with the protein lysozyme (MM region).
 
-What is evaluated here is one geometry. The ligand is a metatomic model
-and the protein is Amber. Maseras and Morokuma [5]_ subtract the classical
-energy of the piece the model replaces, so that piece is not counted
-twice. Svensson et al. [6]_ write the same split as
+The ligand is modelled with PET-SPICE-S in metatomic. Lysozyme is modelled by the Amber ff14SB force field.
+The total energy is the sum of the MM energy of the protein and ligand, the ML energy of the ligand, and the MM energy of the ligand.
 
 .. math::
 
@@ -24,56 +18,19 @@ twice. Svensson et al. [6]_ write the same split as
       + E_\\text{ML}(\\text{ligand})
       - E_\\text{MM}(\\text{ligand}).
 
-Once solvent is added, the MM part also contains the water and the
-neutralizing ions. The ligand is its own molecule, so the boundary has
-no link atom. Bakowies and Thiel [7]_ call this mechanical embedding.
-The model is shown the ligand and nothing else. Amber keeps the protein,
-the water, and the interactions between the ligand and its surroundings.
-The protein charges do not polarize the ligand.
-
-The interaction energy is then the difference of three calculations,
-
-.. math::
-
-    E_\\text{int} = E(\\text{protein + ligand + solvent})
-    - E(\\text{protein + solvent}) - E(\\text{ligand}).
-
-The model energy of the ligand sits in the complex and again in the free
-ligand, so it drops out. What remains is the classical coupling. The last
-section computes the same difference with Amber on the ligand as well.
-
-.. warning::
-
-    PET-SPICE is trained on the SPICE set of small organic molecules [8]_.
-    It is applied only to the ligand. The protein and the water stay on
-    Amber.
-
-    The NVE segment is a fraction of a picosecond in vacuum. It shows the
-    integrator and the constraints. A custom force then pulls benzene
-    away from the protein. That trajectory is not an unbinding free
-    energy. Solvent is placed by ``Modeller.addSolvent`` and is not
-    equilibrated. :math:`E_\\text{int}` is one configuration. The measured
-    and computed binding free energies are ensemble quantities [2]_ [3]_
-    [4]_.
+This approach is called a mechanical embedding, since the ligand is not polarised by the protein charges and only interacts
+using the molecular mechanics force field [7]_.
 """
 
+
 # %%
-# Setup
+# Setuping Metatomic and OpenMM-ML
 # -----
 #
-# While we get ready for a new release of Metatomic, the OpenMM interface
-# is not part of the OpenMM-ML release. OpenMM-ML loads each potential
-# from an entry point in the group ``openmmml.potentials``, and that
-# entry point can live in any package. The block below adds one for this
-# process, aimed at the wrapper in ``openmm_metatomic`` next to this
-# file, so ``MLPotential("metatomic")`` uses the OpenMM-ML you already
-# have installed.
-#
-# Download the workshop structures, export PET-SPICE-S, and build each
-# complex the way the workshop does: an OpenFF molecule appended to the
-# protein with ``Modeller``. OpenFF 2.2.1 expects AM1-BCC charges. The
-# NAGL model ``openff-gnn-am1bcc-1.0.0`` assigns them, so AmberTools is
-# not required.
+# OpenMM-ML loads each potential
+# from an entry point in the group ``openmmml.potentials``. The wrapper in ``openmm_metatomic`` 
+# next to this file, so ``MLPotential("metatomic")`` uses the OpenMM-ML already
+# installed. 
 
 import sys
 import warnings
@@ -134,6 +91,12 @@ if not model_path.is_file():
     )
     run_command(f"mtt export {checkpoint} -o {model_path}", print_output=True)
 
+
+# Download the workshop structures, export , and build each
+# complex. An OpenFF molecule is appended to the protein with ``Modeller``. 
+# OpenFF 2.2.1 expects AM1-BCC charges. The NAGL model ``openff-gnn-am1bcc-1.0.0``
+# assigns them, so AmberTools is not required.
+
 potential = MLPotential("metatomic", model=str(model_path), device="cpu")
 print("Embeddings:", potential.getSupportedEmbeddings())
 
@@ -156,9 +119,25 @@ def potential_energy(system, positions):
     energy = context.getState(getEnergy=True).getPotentialEnergy()
     return energy.value_in_unit(unit.kilojoule_per_mole)
 
-
+# %%
+# Building the MM and ML systems
+# --------------------
+#
+# The protein is the Amber region. It is the same structure for both
+# ligands, and it is the receptor that remains when the ligand is removed
+# from the supermolecule difference.
 protein_pdb = app.PDBFile("lysozyme.pdb")
 n_protein = protein_pdb.topology.getNumAtoms()
+protein_atoms = to_atoms(protein_pdb.topology, protein_pdb.positions)
+protein_xyz = protein_atoms.positions
+print(f"Total number of atoms in the complex: {protein_pdb.topology.getNumAtoms()}")
+print(f"Number of bonds in the MM system: {protein_pdb.topology.getNumBonds()}")
+print(f"Number of bonds in the ML system: {protein_pdb.topology.getNumBonds()}")
+chemiscope.show(
+    [protein_atoms], mode="structure", settings={"structure": [{"bonds": True}]}
+)
+
+
 molecules = [Molecule.from_file(name) for name in ("benzene.sdf", "o-xylene.sdf")]
 for molecule in molecules:
     molecule.assign_partial_charges("openff-gnn-am1bcc-1.0.0.pt")
@@ -170,6 +149,8 @@ forcefield.registerTemplateGenerator(
     SMIRNOFFTemplateGenerator(molecules=molecules, forcefield="openff-2.2.1").generator
 )
 
+# We will print the number of atoms in the MM and ML systems for each ligand
+# and the total number of atoms in the complex, and the number of bonds
 systems = {}
 for name, molecule in zip(("benzene", "o-xylene"), molecules):
     ligand_topology = OffTopology.from_molecules(molecules=[molecule]).to_openmm()
@@ -186,22 +167,10 @@ for name, molecule in zip(("benzene", "o-xylene"), molecules):
     print(
         f"{name}: {len(systems[name]['ligand_atoms'])} ligand atoms, "
         f"{modeller.topology.getNumAtoms()} in the complex"
+        f"{modeller.topology.getNumBonds()} bonds"
     )
 
-protein_atoms = to_atoms(protein_pdb.topology, protein_pdb.positions)
-protein_xyz = protein_atoms.positions
 
-# %%
-# Protein
-# -------
-#
-# The protein is the Amber region. It is the same structure for both
-# ligands, and it is the receptor that remains when the ligand is removed
-# from the supermolecule difference.
-
-chemiscope.show(
-    [protein_atoms], mode="structure", settings={"structure": [{"bonds": True}]}
-)
 
 # %%
 # Ligands
@@ -219,7 +188,7 @@ chemiscope.show(
     ligand_frames,
     properties={"ligand": ["benzene", "o-xylene"]},
     mode="structure",
-    settings={"structure": [{"bonds": True, "keepOrientation": True}]},
+    settings={"structure": [{"bonds": True, "keepOrientation": True, "spaceFilling": True}]},
 )
 
 # %%
@@ -263,11 +232,8 @@ chemiscope.show(
 #
 # The mixed system is benzene only. Bonds, angles, and torsions that lie
 # entirely inside the ligand have been removed, so those classical terms
-# are protein terms. The ligand's internal energy is the metatomic
-# ``PythonForce``, on the model's own energy zero: it is the largest
-# number on the plot and it is not an interaction. The nonbonded term is
-# the protein plus the classical protein–ligand coupling. The interaction
-# energy below is a difference of totals, which cancels this model zero.
+# are protein terms.  The nonbonded term is
+# the protein plus the classical protein–ligand coupling.
 
 benzene = systems["benzene"]
 vacuum = dict(
@@ -334,7 +300,7 @@ axis.set_xlabel("energy / kJ/mol")
 # is benzene only, and it stays in vacuum.
 
 print(
-    f"constraints: {mm_vacuum.getNumConstraints()} on the Amber system, "
+    f"constraints: {mm_vacuum.getNumConstraints()} on the MM system, "
     f"{mixed.getNumConstraints()} after the ligand constraints are removed"
 )
 constrained = None
@@ -416,14 +382,9 @@ chemiscope.show(
 # Pulling the ligand out
 # ----------------------
 #
-# The `custom forces notebook <https://github.com/openmm/openmm_workshops/blob/main/section_2/custom_forces.ipynb>`_
-# in the OpenMM workshop builds a constant-velocity pull as a harmonic
-# spring whose center moves at a fixed speed [9]_. Grubmüller, Heymann
-# and Tavan pulled a ligand off a protein the same way [10]_. The protein
-# center sits on the far side of the cavity wall, so a spring aimed at
-# that center drives benzene into the wall. The coordinate here is how
-# far the ligand centroid has moved, relative to the protein centroid,
-# along the direction that stays clear of protein atoms for longest,
+# CustomForces available in OpenMM-ML can be used for enhanced sampling methods. Here, we will simply
+# pull the ligand away from the protein, using an harmonic
+# spring whose center moves at a fixed speed [9]_.
 #
 # .. math::
 #
@@ -433,10 +394,8 @@ chemiscope.show(
 #     V = \tfrac{1}{2} k (r - r_0)^2.
 #
 # :math:`r_0` starts at the bound value and then moves at constant speed.
-# There is no box yet, so the centroids are plain coordinates. The spring
-# does work, and a Langevin thermostat takes that heat out. A vacuum pull
-# this short is not an unbinding free energy. The workshop goes on to
-# umbrella windows and WHAM, which are left out here.
+
+
 
 xyz_nm = to_atoms(benzene["topology"], nve_positions).positions * 0.1
 masses = np.array(
