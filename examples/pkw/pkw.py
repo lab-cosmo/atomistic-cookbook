@@ -110,8 +110,9 @@ if not os.path.exists(MODEL):
 # %%
 # The converged outputs of the production runs (the ``HILLS`` and ``COLVAR``
 # files of the metadynamics, the 300 K series of the replica-exchange runs,
-# the PIMD kinetic energies, a short trajectory of a dissociation event, and
-# the fine-tuned model ``production/model.pt``) are downloaded as a single
+# the PIMD kinetic energies, a short trajectory of a dissociation event, the
+# fine-tuned model ``production/model.pt`` and the template for the phosphate
+# species discussed at the end) are downloaded as a single
 # archive, unless it is already present, and unpacked in the
 # ``data/production`` folder. To reproduce the production runs, point
 # ``MODEL`` to the fine-tuned model, which
@@ -1353,6 +1354,7 @@ print("experiment:            13.93")
 # The ``metatomic`` model of the order parameter and the complete i-PI and
 # PLUMED inputs for :math:`\mathrm{NaH_2PO_4}` (metadynamics, fixed-bias replica
 # exchange and PIMD), with the parameters of the other species, are provided
-# in ``data/phosphate-template/`` as a starting point; the results, and a
+# in the data bundle (``data/production/phosphate-template/``, next to the
+# fine-tuned model that they require) as a starting point; the results, and a
 # discussion of the consistency check between conjugate pairs, can be found
 # in the paper.
