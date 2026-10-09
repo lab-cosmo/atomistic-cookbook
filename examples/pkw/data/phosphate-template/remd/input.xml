@@ -1,34 +1,34 @@
 <simulation verbosity="medium">
-    <total_time>170000</total_time>
-    <output prefix="water">
-        <properties stride="1" flush="1000" filename="out"> [step, time{picosecond}, conserved{electronvolt},
-            temperature{kelvin}, kinetic_md{electronvolt}, potential{electronvolt}, ensemble_bias,pressure_md{bar}, density{g/cm3}] </properties>
-        <trajectory filename="pos" stride="100" format="ase" bead='0' flush="1000"> positions </trajectory>
-        <trajectory stride='1' filename="colvar" extra_type="D, mtd.bias" flush="1000"> extras_bias </trajectory> 
+    <total_time>172000</total_time>
+    <output prefix="po4">
+        <properties stride="1" flush="100" filename="out"> [step, time{picosecond}, conserved{electronvolt},
+            temperature{kelvin}, kinetic_md{electronvolt}, potential{electronvolt}, pressure_cv{bar}, density{g/cm3}, ensemble_bias] </properties>
+        <trajectory filename="pos" stride="100" format="ase" bead='0' flush="1"> positions </trajectory>
+        <trajectory stride='1' filename="colvar" extra_type="r, q, ssc, metad.bias, up.bias, lo.bias" flush="100"> extras_bias </trajectory> 
     </output>
     <prng>
         <seed>12345</seed>
     </prng>
-    <ffdirect name='mta' threaded='True'>
+    <ffdirect name='mta'>
         <pes> metatomic </pes>
-        <parameters> {template:seeds/0.xyz,model:model.pt,energy_variant:pbe0,device:cuda:0,non_conservative:False } </parameters>
+        <parameters> {template:seeds/0.xyz,model:model.pt,energy_variant:pbe0,device:cuda:0,non_conservative:False,threaded:True } </parameters>
         <batch_size> 8 </batch_size>
     </ffdirect>
     <ffplumed name="plumed" threaded="True">
         <file mode="ase"> seeds/0.xyz </file>
         <plumed_dat> plumed.dat </plumed_dat>
-        <plumed_extras> [ D, mtd.bias ] </plumed_extras>
+        <plumed_extras> [ r, q, ssc, metad.bias, sw.bias, wider_sw.bias, up.bias, lo.bias ] </plumed_extras>
     </ffplumed>
     <system_template>
         <labels>   [ IDX, TEMP ] </labels>
-        <instance> [ 00, 300 ] </instance>
-        <instance> [ 01, 313 ] </instance>
-        <instance> [ 02, 326 ] </instance>
-        <instance> [ 03, 339 ] </instance>
-        <instance> [ 04, 354 ] </instance>
-        <instance> [ 05, 368 ] </instance>
-        <instance> [ 06, 384 ] </instance>
-        <instance> [ 07, 400 ] </instance>
+        <instance> [ 00,  300 ] </instance>
+        <instance> [ 01,  313 ] </instance>
+        <instance> [ 02,  326 ] </instance>
+        <instance> [ 03,  339 ] </instance>
+        <instance> [ 04,  354 ] </instance>
+        <instance> [ 05,  368 ] </instance>
+        <instance> [ 06,  384 ] </instance>
+        <instance> [ 07,  400 ] </instance>
         <template>
             <system prefix="rep-IDX">
                 <initialize nbeads="1">
@@ -40,8 +40,7 @@
                     </force>
                 </forces>
                 <motion mode="dynamics">
-                    <dynamics mode="npt">
-                        <timestep units="femtosecond"> 0.5 </timestep>
+                    <dynamics mode='npt'>
                         <thermostat mode='svr'>
                             <tau units='femtosecond'> 20 </tau>
                         </thermostat>
@@ -51,14 +50,15 @@
                                 <tau units='femtosecond'> 200 </tau>
                             </thermostat>
                         </barostat>
+                        <timestep units="femtosecond"> 0.5 </timestep>
                     </dynamics>
                 </motion>
                 <ensemble>
                     <temperature units='kelvin'> TEMP </temperature>
-                    <pressure units='bar'>1.0</pressure>
+                    <pressure units="bar">1.0</pressure>
                     <bias>
                         <force forcefield="plumed" nbeads="1">
-                            <interpolate_extras> [D, mtd.bias] </interpolate_extras>
+                            <interpolate_extras> [ r, q, ssc, metad.bias, sw.bias, wider_sw.bias, up.bias, lo.bias ] </interpolate_extras>
                         </force>
                     </bias> 
                 </ensemble>

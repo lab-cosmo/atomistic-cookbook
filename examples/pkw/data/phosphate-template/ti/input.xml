@@ -1,10 +1,10 @@
 <simulation verbosity='medium' safe_stride='100'>
   <output prefix='pimd'>
-    <properties stride='1' filename='out' flush='100'>  [ step, time{picosecond}, conserved{electronvolt}, temperature{kelvin}, kinetic_cv{electronvolt}, potential{electronvolt}, pressure_cv{bar}, density{g/cm3}, kinetic_td{electronvolt}, ensemble_bias  ] </properties>
-    <trajectory filename='pos' stride='1' cell_units='angstrom' flush='100'> positions{angstrom} </trajectory>
+    <properties stride='100' filename='out' flush='100'>  [ step, time{picosecond}, conserved{electronvolt}, temperature{kelvin}, kinetic_cv{electronvolt}, potential{electronvolt}, pressure_cv{bar}, density{g/cm3}, kinetic_td{electronvolt}, ensemble_bias  ] </properties>
+    <trajectory filename='pos' stride='100' cell_units='angstrom'> positions{angstrom} </trajectory>
     <trajectory filename='kin' stride='1' cell_units='angstrom' flush='100'> kinetic_cv </trajectory>
     <trajectory filename='kod' stride='1' cell_units='angstrom' flush='100'> kinetic_od </trajectory>
-    <trajectory stride="1" filename="COLVAR" bead="0" extra_type="D" flush='100'> extras_bias </trajectory>
+    <trajectory stride="1" filename="COLVAR" bead="0" extra_type="r" flush='100'> extras_bias </trajectory>
   </output>
   <total_time> 129000 </total_time>
   <total_steps> 1000000 </total_steps>
@@ -13,13 +13,13 @@
   </prng>
   <ffdirect name='mta'>
       <pes> metatomic </pes>
-      <parameters> {template:associated.xyz,model:model.pt,energy_variant:pbe0,device:cuda:0;cuda:1,non_conservative:False,threaded:True } </parameters>
+      <parameters> {template:associated.xyz,model:model.pt,energy_variant:pbe0,device:cuda:0;cuda:1,non_conservative:False,threaded:True,skin:0.0 } </parameters>
       <batch_size> 32 </batch_size>
   </ffdirect>
   <ffplumed name="plumed">
     <file mode="ase"> associated.xyz </file>
     <plumed_dat> plumed-associated.dat </plumed_dat>
-    <plumed_extras> [ D ] </plumed_extras>
+    <plumed_extras> [ r ] </plumed_extras>
   </ffplumed>
   <system>
     <initialize nbeads='32'>
@@ -34,7 +34,7 @@
       <pressure units="bar">1.0</pressure>
       <bias>
         <force forcefield="plumed" nbeads="1">
-          <interpolate_extras> [ D ] </interpolate_extras>
+          <interpolate_extras> [ r ] </interpolate_extras>
         </force>
       </bias>
     </ensemble>

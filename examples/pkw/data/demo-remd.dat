@@ -1,4 +1,5 @@
-# RESTART makes METAD read back the hills already in FILE, and rebuild the bias
+# demonstration input, identical to data/production-inputs/remd/plumed.dat
+# except for the file names. RESTART makes METAD read back the hills already in FILE, and rebuild the bias
 RESTART
 
 # The order parameter is computed by the metatomic model exported by the recipe.
@@ -27,7 +28,7 @@ mtd: METAD ...
     GRID_MAX=25
     GRID_BIN=500
     BIASFACTOR=12
-    FILE=HILLS
+    FILE=HILLS-remd
     TEMP=300
 ...
 
@@ -36,4 +37,4 @@ mtd: METAD ...
 LOWER_WALLS ARG=D AT=-2 KAPPA=10
 UPPER_WALLS ARG=D AT=12 KAPPA=10
 
-PRINT ARG=D,mtd.bias FILE=COLVAR
+PRINT ARG=D,mtd.bias FILE=COLVAR-remd

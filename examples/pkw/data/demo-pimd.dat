@@ -1,3 +1,5 @@
+# demonstration input, identical to data/production-inputs/pimd/plumed-dissociated.dat
+# except for the file name
 # The order parameter is computed by the metatomic model exported by the recipe.
 # SPECIES1 lists the oxygen atoms, SPECIES2 the hydrogen atoms (1-based indices),
 # and SPECIES_TO_TYPES maps them to the atomic types the model expects.
@@ -13,7 +15,8 @@ cv: METATOMIC ...
 # the model returns two components; the first one is the charge separation s
 D: SELECT_COMPONENTS ARG=cv COMPONENTS=1
 
-# dissociated state: prevent recombination by keeping the ions beyond 5 A
-LOWER_WALLS ARG=D AT=5 KAPPA=10
+# dissociated state: prevent recombination by keeping the ions beyond 5 A,
+# with a force constant of 5 kJ/mol/A^2
+LOWER_WALLS ARG=D AT=5 KAPPA=5
 
-PRINT ARG=D FILE=COLVAR
+PRINT ARG=D FILE=COLVAR-pimd

@@ -7,7 +7,7 @@ Computing the pKw of water with a machine-learning potential
 The autoionization of water, :math:`\\mathrm{2H_2O \\rightleftharpoons H_3O^+ + OH^-}`,
 is the prototypical acid-base equilibrium, and its equilibrium constant
 :math:`K_\\mathrm{w}=[\\mathrm{H_3O^+}][\\mathrm{OH^-}]/(c^\\circ)^2`
-(:math:`\\mathrm{p}K_\\mathrm{w}=-\\log_{10}K_\\mathrm{w}=14.0` at room temperature)
+(:math:`\\mathrm{p}K_\\mathrm{w}=-\\log_{10}K_\\mathrm{w}=13.93` at 300 K)
 sets the scale of every :math:`\\mathrm{p}K_\\mathrm{a}` and
 :math:`\\mathrm{p}K_\\mathrm{b}`. Computing it from first principles is a stringent test
 of a simulation protocol, because it combines several ingredients that are each worth
@@ -38,15 +38,24 @@ potential and for the collective variable. The stages are:
    correction to the free energy of dissociation by thermodynamic integration.
 
 Every stage is demonstrated live, on the actual 128-molecule water box used in the
-paper. Each converged stage takes days on a GPU, so the live runs are just a few
-tens of MD steps, meant to show the mechanics of the workflow; the analysis is then
-performed on the converged outputs of the production runs, that are downloaded
-as a data bundle. The live runs use the general-purpose `PET-MAD
+paper. Each converged stage takes of the order of a day on a modern GPU, so the live
+runs are just a few tens of MD steps, meant to show the mechanics of the workflow;
+the analysis is then performed on the converged outputs of the production runs, that
+are downloaded as a data bundle. The live runs use the general-purpose `PET-MAD
 <https://arxiv.org/abs/2503.14118>`_ potential (extra-small version, which is fast
-enough to run on CPU), whereas the production data were obtained with PET-MAD
-fine-tuned on revPBE0-D3 calculations for liquid water. At the end of each section
-we indicate how long the corresponding simulation should be to obtain converged
-results.
+enough to run on CPU), whereas the production data were obtained with the
+small PET-MAD-1.5 model fine-tuned to the revPBE0-D3 level of theory (CP2K,
+TZV2P basis) on about 6000 structures of water, aqueous NaCl, NaOH and HCl, and
+phosphate solutions (mean absolute errors of 1.07 meV/atom and 19.2 meV/Å on the
+test set; density of water 0.937 g/cm³ at 300 K and 1 bar). The same model is
+used for the acid and base dissociation of the phosphate species discussed at
+the end, and it is included in the data bundle. At the end of each section we
+indicate how long the corresponding simulation should be to obtain converged
+results. The production runs used i-PI 3.3, PLUMED 2.10 (built with the
+``metatomic`` module, which is needed to evaluate the collective variable) and
+metatomic-torch 0.1.16; this recipe is kept running with newer versions of the
+libraries, so the production inputs provided with it may need small adjustments
+to the syntax of the day.
 """
 
 # %%
@@ -55,9 +64,9 @@ results.
 #
 # Besides the usual scientific Python stack, we need ``torch`` and ``metatomic`` to
 # define the collective variable, ``ipi`` and ``plumed`` to run the simulations
-# (``plumed`` is used through i-PI, but we call its command-line tools to analyze
-# the metadynamics output), ``torch-pme`` to compute the Coulomb reference, and
-# ``chemiscope`` to visualize structures.
+# (PLUMED must be compiled with the ``metatomic`` module, as the conda package
+# used in the environment of this recipe is; it is called through i-PI), ``torch-pme``
+# to compute the Coulomb reference, and ``chemiscope`` to visualize structures.
 
 import glob
 import os
@@ -89,31 +98,28 @@ N_THREADS = 4
 torch.set_num_threads(N_THREADS)
 ENV = dict(os.environ, OMP_NUM_THREADS=str(N_THREADS), MKL_NUM_THREADS=str(N_THREADS))
 
-# number of MD steps for the live demonstrations. These are absurdly small (the
-# production runs are 5-7 orders of magnitude longer) and only serve to show
-# that the machinery works.
-N_STEPS_METAD = 300
-N_STEPS_REMD = 50
-N_STEPS_PIMD = 20
-
 # %%
 # Two sets of external data are used. The machine-learning potential for the live
 # runs is PET-MAD (extra-small, version 1.6), which we download and export as a
-# ``metatomic`` model. To reproduce the paper, this should be replaced with the
-# fine-tuned model (which is a plain ``metatomic`` model as well, and can be
-# used by pointing ``MODEL`` to it; note that the fine-tuned model requires
-# ``energy_variant:pbe0`` in the i-PI ``ffdirect`` parameters).
+# ``metatomic`` model.
 
 MODEL = "pet-mad-xs-v1.6.0.pt"
 if not os.path.exists(MODEL):
     upet.save_upet(model="pet-mad", size="xs", version="1.6.0", output=MODEL)
 
 # %%
-# The converged outputs of the production runs (metadynamics hills and colvar,
-# replica-exchange colvars, PIMD kinetic energies, a short trajectory of a
-# dissociation event, and the fine-tuned model) are downloaded as a single
-# archive, unless it is already present, and unpacked in the ``data/production``
-# folder.
+# The converged outputs of the production runs (the ``HILLS`` and ``COLVAR``
+# files of the metadynamics, the 300 K series of the replica-exchange runs,
+# the PIMD kinetic energies, a short trajectory of a dissociation event, and
+# the fine-tuned model ``production/model.pt``) are downloaded as a single
+# archive, unless it is already present, and unpacked in the
+# ``data/production`` folder. To reproduce the production runs, point
+# ``MODEL`` to the fine-tuned model, which
+# is a plain ``metatomic`` model with one peculiarity: it has two energy heads,
+# the one of the base model and the fine-tuned ``energy/pbe0``, and the latter
+# must be selected with ``energy_variant:pbe0`` in the ``ffdirect`` parameters
+# of the i-PI inputs, as done in the exact production inputs provided in
+# ``data/production-inputs/``.
 
 DATA_URL = "https://zenodo.org/records/0000000/files/pkw-data.zip"  # placeholder
 if not os.path.exists("data/production"):
@@ -179,6 +185,22 @@ print(initial_structure)
 # larger if additional ion pairs form. For the dissociation of a weak acid or base
 # it vanishes unless the solvent autoionizes, and it can then be used to detect
 # and suppress spurious ion pairs.
+#
+# The same construction applies to the dissociation of a solute, with two
+# changes: the reference point is an atom of the solute (the P atom for the
+# phosphate species), so that
+# :math:`s=\sum_i q_i |\mathrm{mic}(\mathbf{r}_i-\mathbf{r}_\mathrm{ref})|`
+# over the solvent oxygens is *signed*, positive
+# for an acidic dissociation (a hydronium in the solvent) and negative for a
+# basic one (a hydroxide); and the oxygen atoms of the solute are ionizable
+# sites too, with the charge of the central atom partitioned among them in the
+# same smooth way (:math:`\sigma=1.0` Å for P). Both branches then appear on
+# the same one-dimensional profile. For weak species, whose dissociation is
+# as hard as that of water, the bias also induces the autoionization of the
+# solvent, and :math:`\delta` (restricted to the solvent oxygens) is used to
+# suppress it with a one-sided restraint. The ``metatomic`` model and the
+# inputs for the phosphate species are provided as a template, see the last
+# section.
 #
 # Here is a straightforward NumPy implementation, that we will use as a reference.
 
@@ -408,7 +430,7 @@ for frame in trajectory:
 chemiscope.show(
     trajectory,
     properties={
-        "s": {"target": "structure", "values": separations, "units": "A"},
+        "s": {"target": "structure", "values": separations, "units": "Å"},
         "delta": {"target": "structure", "values": deltas},
         "q": {"target": "atom", "values": np.concatenate(charges)},
     },
@@ -456,9 +478,11 @@ chemiscope.show(
 # :math:`G(s)` the free energy along the order parameter.
 #
 # The exact inputs of the production runs (for this and for the following
-# stages) are collected in ``data/production-inputs/``; the files used below
-# are the same, with placeholders for the few quantities that the
-# demonstration modifies (model, number of steps, and so on).
+# stages) are collected in ``data/production-inputs/``, and they are the ones
+# we print and discuss. The live demonstrations use separate, much shorter
+# inputs (``data/demo-*``), that differ from the production ones only in the
+# model, the number of steps and a few parameters that are commented in the
+# files themselves, and that can be compared with the production inputs.
 #
 # The PLUMED input evaluates the order parameter with the ``METATOMIC`` action,
 # using the model we just exported, selects the first component :math:`s` and
@@ -467,7 +491,7 @@ chemiscope.show(
 # and a bias factor of 12. Harmonic walls keep :math:`s` in the range where the
 # ions do not interact with their periodic images.
 
-with open("data/plumed-metad.dat") as f:
+with open("data/production-inputs/metadynamics/plumed.dat") as f:
     plumed_metad = f.read()
 # the SPECIES lists are long, we do not print them in full
 print("\n".join(line[:70] for line in plumed_metad.splitlines()))
@@ -478,21 +502,21 @@ print("\n".join(line[:70] for line in plumed_metad.splitlines()))
 # barostat) with a 0.5 fs time step. The isothermal-isobaric ensemble is
 # important: the dissociated state has a different partial molar volume than
 # the associated state, and in a constant-volume simulation of a small box the
-# resulting pressure change would introduce a spurious contribution to the free
+# resulting pressure change would introduce a (small) contribution to the free
 # energy. The machine-learning potential is evaluated in the same process as
 # i-PI, through the ``ffdirect`` forcefield and the ``metatomic`` interface;
 # PLUMED is called through the ``ffplumed`` forcefield, and returns the value
 # of the collective variable as an "extra" that i-PI prints to a trajectory
 # file.
 
-with open("data/input-metad.xml") as f:
+with open("data/production-inputs/metadynamics/input.xml") as f:
     input_metad = f.read()
 print(input_metad)
 
 
 # %%
 # The simulation is far too short to see anything happen (the production run is
-# 10 million steps, i.e. 5 ns, and this one is 100 fs), so for the demonstration
+# 2.7 ns, and this one is 150 fs at most), so for the demonstration
 # we also deposit hills much more often than in the production run, and make
 # them much narrower (0.01 Å instead of 0.3 Å). In such a short run :math:`s`
 # only fluctuates by a few hundredths of an Å around the neutral state, and a
@@ -501,79 +525,22 @@ print(input_metad)
 # system away from where it has been. This is a poor choice for a real run,
 # because a bias that is rough on a scale much finer than the features of the
 # free energy converges slowly and introduces large, noisy forces; the width
-# should instead be comparable to the resolution one wants for the profile. The
-# function below prepares the modified inputs, cleaning up the files of any
-# previous run.
-
-
-def prepare_demo(
-    xml_template, plumed_template, tag, replacements=(), plumed_replacements=()
-):
-    """Create demo inputs from the templates, applying string replacements."""
-    with open(xml_template) as f:
-        xml = f.read()
-    with open(plumed_template) as f:
-        dat = f.read()
-    for old, new in replacements:
-        xml = xml.replace(old, new)
-    for old, new in plumed_replacements:
-        dat = dat.replace(old, new)
-    xml = xml.replace("__MODEL__", MODEL).replace(
-        "__PLUMED__", f"plumed-{tag}-demo.dat"
-    )
-    dat = dat.replace("FILE=COLVAR", f"FILE=COLVAR-{tag}").replace(
-        "FILE=HILLS", f"FILE=HILLS-{tag}"
-    )
-    with open(f"input-{tag}-demo.xml", "w") as f:
-        f.write(xml)
-    with open(f"plumed-{tag}-demo.dat", "w") as f:
-        f.write(dat)
-    for stale in [f"COLVAR-{tag}", f"HILLS-{tag}", "RESTART"]:
-        if os.path.exists(stale):
-            os.remove(stale)
-    return f"input-{tag}-demo.xml"
-
-
-demo_input = prepare_demo(
-    "data/input-metad.xml",
-    "data/plumed-metad.dat",
-    "metad",
-    replacements=[
-        (
-            "<total_steps> 10000000 </total_steps>",
-            f"<total_steps> {N_STEPS_METAD} </total_steps>",
-        )
-    ],
-    plumed_replacements=[
-        ("PACE=1000", "PACE=20"),
-        ("SIGMA=0.3", "SIGMA=0.01"),
-        ("GRID_BIN=500", "GRID_BIN=6000"),  # the grid must be finer than the hills
-    ],
-)
-
-# %%
+# should instead be comparable to the resolution one wants for the profile.
 # Everything runs in a single process, so we can simply invoke ``i-pi`` with the
-# input file (the equivalent shell command is ``i-pi input-metad-demo.xml``).
-# The small wrapper below only adds a check on the output: some combinations of
-# ``torch`` and PLUMED abort during the teardown of the process, after the
-# simulation has completed successfully, and we do not want to treat this as
-# an error.
+# demonstration input (``data/demo-metad.xml``, that points to
+# ``data/demo-metad.dat`` for PLUMED). The small wrapper only tolerates the
+# occasional abort of the process during its teardown, after the simulation
+# has completed and all outputs have been written, which the combination of
+# ``torch`` threads and PLUMED produces now and then.
 
 
-def run_ipi(input_file, output_file, n_steps):
-    """Run i-PI, checking that the expected number of steps was produced."""
+def run_ipi(input_file):
     result = run_command(f"i-pi {input_file}", env=ENV, check=False)
-    n_lines = 0
-    if os.path.exists(output_file):
-        with open(output_file) as f:
-            n_lines = sum(1 for line in f if not line.startswith("#"))
-    if result.returncode not in (0, -6) or n_lines < n_steps:
-        raise RuntimeError(
-            f"i-PI failed (returncode={result.returncode}, {n_lines} steps written)"
-        )
+    if result.returncode not in (0, -6):  # -6 is SIGABRT at exit
+        raise RuntimeError(f"i-PI failed with return code {result.returncode}")
 
 
-run_ipi(demo_input, "metad.out", N_STEPS_METAD)
+run_ipi("data/demo-metad.xml")
 
 # %%
 # The output of i-PI contains the usual thermodynamic quantities, and the bias
@@ -606,10 +573,10 @@ plt.show()
 # The production run tells a more interesting story. Plotting the bias against
 # the order parameter, with the trajectory colored by time, shows how the
 # metadynamics progressively fills the associated basin, pushes the system to
-# form a contact ion pair after a few tens of ps and to dissociate fully after
-# about 0.5 ns, and then keeps going back and forth over an increasingly flat
-# landscape. The ``COLVAR`` file provided with the data (subsampled every 100
-# steps) contains time (in MD steps), :math:`s` and the bias.
+# form a contact ion pair and then to dissociate fully, and then keeps going
+# back and forth over an increasingly flat landscape. The ``COLVAR`` file
+# provided with the data (subsampled every 100 steps) contains time (in MD
+# steps), :math:`s` and the bias.
 
 colvar_prod = np.loadtxt("data/production/metad/COLVAR")
 fig, ax = plt.subplots(1, 1, figsize=(5.5, 3.5), constrained_layout=True)
@@ -639,7 +606,7 @@ plt.show()
 # ``plumed sum_hills`` tool does. Here we do it explicitly, to show how the
 # estimate evolves.
 
-hills = np.loadtxt("data/production/HILLS")
+hills = np.loadtxt("data/production/metad/HILLS")
 gamma = hills[0, 4]
 s_grid = np.linspace(-1, 13, 281)
 
@@ -673,8 +640,9 @@ plt.show()
 # use the bias it has built as a fixed potential, and sample it with replica
 # exchange.
 #
-# **How long to run:** the production metadynamics is 10 million steps
-# (5 ns, about 2 days on one GPU with the fine-tuned model). Convergence
+# **How long to run:** the production metadynamics is about 5.6 million
+# steps (2.7 ns, of the order of a day on a modern GPU with the fine-tuned
+# model). Convergence
 # should be judged from the number of recrossings between the associated and
 # dissociated states (a handful is enough for the bias to be "reasonable"),
 # not from the flattening of the free-energy estimate.
@@ -698,56 +666,41 @@ plt.show()
 # ``plumed sum_hills`` and use the ``EXTERNAL`` action.) The bias value is
 # printed together with :math:`s`, as it is all that is needed to reweight.
 
-with open("data/plumed-fixed.dat") as f:
+with open("data/production-inputs/remd/plumed.dat") as f:
     plumed_fixed = f.read()
 print(plumed_fixed[plumed_fixed.find("mtd:") - 150 :])
 
 # %%
 # Since the frozen bias is only approximately the negative of the free energy,
 # the biased ensemble retains residual barriers, and we accelerate sampling
-# with parallel tempering: 12 replicas at temperatures between 300 and 500 K,
-# each with its own copy of the bias, attempt to exchange configurations every
-# 50 steps. Each of these runs is repeated 10 times from different starting
-# configurations (selected by farthest point sampling among the metadynamics
-# frames so that they span the whole range of :math:`s`), which provides a
-# straightforward estimate of the statistical error. In i-PI, replicas are
-# separate ``<system>`` blocks, that are conveniently generated from a
-# ``<system_template>`` with the temperature and the index of the starting
-# structure as labels; the ``<smotion mode="remd">`` block handles the
+# with parallel tempering: 8 replicas at temperatures between 300 and 400 K
+# (300, 313, 326, 339, 354, 368, 384 and 400 K), each with its own copy of the
+# bias, attempt to exchange configurations every 50 steps. Each of these runs
+# is repeated 10 times from different starting configurations, sampled from
+# the metadynamics trajectory so that they span the whole range of :math:`s`,
+# which provides a straightforward estimate of the statistical error. In
+# i-PI, replicas are separate ``<system>`` blocks, that are conveniently
+# generated from a ``<system_template>`` with the temperature and the index
+# of the starting structure as labels; the ``<smotion mode="remd">`` block
+# handles the
 # exchanges. All replicas are sent to the model in a single batch, which is
-# much more efficient on a GPU. The production input and the script that
-# fills in the temperature ladder are in ``data/production-inputs/remd/``.
+# much more efficient on a GPU. The production input, the ten starting
+# structures and a script that selects one of them are in
+# ``data/production-inputs/remd/``.
 
-with open("data/input-remd.xml") as f:
+with open("data/production-inputs/remd/input.xml") as f:
     input_remd = f.read()
 print(input_remd)
 
 # %%
-# For the demonstration we use only the four lowest temperatures of the
-# ladder (300, 314, 330, 344 K), four of the ten starting structures, and
-# attempt exchanges every 10 steps. The bias is read from the production
-# ``HILLS`` file.
+# For the demonstration (``data/demo-remd.xml``) we use only the four lowest
+# temperatures of the ladder (300, 313, 326, 339 K), four of the ten starting
+# structures, and attempt exchanges every 10 steps. The bias is read from the
+# production ``HILLS`` file.
 
-demo_temperatures = [300, 314, 330, 344]
-instances = "\n".join(
-    f"    <instance> [ {i}, {t} ] </instance>" for i, t in enumerate(demo_temperatures)
-)
-demo_input = prepare_demo(
-    "data/input-remd.xml",
-    "data/plumed-fixed.dat",
-    "remd",
-    replacements=[
-        (
-            "<total_steps> 20000000 </total_steps>",
-            f"<total_steps> {N_STEPS_REMD} </total_steps>",
-        ),
-        ("__INSTANCES__", instances),
-        ("__NREPLICAS__", str(len(demo_temperatures))),
-        ("__STRIDE__", "10"),
-    ],
-)
-shutil.copy("data/production/HILLS", "HILLS-remd")
-run_ipi(demo_input, "rep-0_remd.out", N_STEPS_REMD)
+demo_temperatures = [300, 313, 326, 339]
+shutil.copy("data/production/metad/HILLS", "HILLS-remd")
+run_ipi("data/demo-remd.xml")
 
 # %%
 # i-PI writes one set of output files per replica (``rep-*``) and a
@@ -763,7 +716,7 @@ run_ipi(demo_input, "rep-0_remd.out", N_STEPS_REMD)
 # index file is easy to get wrong, so we recommend using the tool rather
 # than a home-made script.
 
-run_command(f"i-pi-remdsort {demo_input}", env=ENV)
+run_command("i-pi-remdsort data/demo-remd.xml", env=ENV)
 
 # the extras trajectory contains a (n_steps, 2) array with s and the bias
 replica_colvar = [
@@ -794,10 +747,10 @@ ax[1].set_ylabel("$V_\\mathrm{bias}$ / kJ/mol")
 plt.show()
 
 # %%
-# **How long to run:** each production run is 20 million steps (10 ns per
-# replica, about one day on one GPU for 12 replicas with the fine-tuned model),
-# and 10 independent runs were performed. Convergence is monitored through the
-# spread of the reweighted profiles among the independent runs.
+# **How long to run:** each of the 10 independent production runs is about
+# 870 000 steps (435 ps per replica, 4.3 ns in total for the 8 replicas; about
+# one day on one GPU with the fine-tuned model). Convergence is monitored
+# through the spread of the reweighted profiles among the independent runs.
 
 # %%
 # Reweighting
@@ -815,7 +768,15 @@ plt.show()
 #          {\langle e^{\beta V_\mathrm{bias}(s(\mathbf{R}))}\rangle_\mathrm{bias}},
 #
 # which in practice is a weighted histogram. We apply it to the 300 K series
-# of the production runs, sorted with ``i-pi-remdsort``.
+# of the independent production runs, sorted with ``i-pi-remdsort`` (to keep
+# the data bundle small, :math:`s`, the bias and the density are stored every
+# 100 steps, i.e. every 50 fs, which is much shorter than the correlation time
+# of :math:`s`). Note that the dissociated state is visited only during a few
+# excursions in each run, which is why the statistical error cannot be
+# estimated reliably from blocks of a single trajectory, and why we use the
+# spread among independent runs started from different configurations.
+
+R_CUT = 7.0  # onset of the dissociated state, see below
 
 
 def reweight(s, bias, temperature=TEMPERATURE, bin_width=0.2, s_max=14.0):
@@ -833,22 +794,19 @@ def reweight(s, bias, temperature=TEMPERATURE, bin_width=0.2, s_max=14.0):
 
 
 colvar_files = sorted(glob.glob("data/production/remd/COLVAR_300K_*"))
-n_runs = len(colvar_files)
+runs = [np.loadtxt(f).T for f in colvar_files]  # (s, bias, density) per run
 profiles = []
-for run in range(n_runs):
-    s_run, bias_run, rho_run = np.loadtxt(colvar_files[run]).T
+for s_run, bias_run, _ in runs:
     s_grid, fes = reweight(s_run, bias_run)
     profiles.append(fes - fes[np.isfinite(fes)].min())
-profiles = np.array(profiles)
-fes_mean = np.nanmean(np.where(np.isfinite(profiles), profiles, np.nan), axis=0)
-fes_err = np.nanstd(
-    np.where(np.isfinite(profiles), profiles, np.nan), axis=0
-) / np.sqrt(n_runs)
+profiles = np.where(np.isfinite(profiles), profiles, np.nan)
+fes_mean = np.nanmean(profiles, axis=0)
+fes_err = np.nanstd(profiles, axis=0) / np.sqrt(len(runs))
 
 fig, ax = plt.subplots(1, 1, figsize=(5, 3.5), constrained_layout=True)
 for fes in profiles:
     ax.plot(s_grid, fes, color="gray", lw=0.5)
-ax.plot(s_grid, fes_mean, "k-", lw=2, label=f"mean of {n_runs} runs")
+ax.plot(s_grid, fes_mean, "k-", lw=2, label=f"mean of {len(runs)} run(s)")
 ax.fill_between(s_grid, fes_mean - fes_err, fes_mean + fes_err, color="C0", alpha=0.5)
 ax.set_xlabel("$s$ / Å")
 ax.set_ylabel("$G(s)$ / kJ/mol")
@@ -857,12 +815,12 @@ ax.legend()
 plt.show()
 
 # %%
-# The profile rises steeply up to about 2.3 Å (a proton transferred to a
-# neighboring molecule, i.e. a contact ion pair), jumps by more than 30 kJ/mol
-# when the ions become separated by one water molecule, and reaches a plateau
-# beyond about 5.3 Å that is only weakly modulated by the residual Coulomb
-# attraction. The spread among independent runs is of a few kJ/mol in the
-# dissociated region.
+# The profile rises steeply below 0.6 Å, more gently up to about 2.3 Å (a
+# proton transferred to a neighboring molecule, i.e. a contact ion pair),
+# jumps by about 20 kJ/mol when the ions become separated by one water
+# molecule, reaching about 110 kJ/mol, and beyond about 7 Å it is only weakly
+# modulated by the residual Coulomb attraction. The spread among independent
+# runs is of a few kJ/mol in the dissociated region.
 #
 # A remark on the thermodynamic ensemble
 # --------------------------------------
@@ -876,22 +834,29 @@ plt.show()
 # free energy by about :math:`\Delta V^2/(2\kappa_T V)`, with :math:`\kappa_T`
 # the isothermal compressibility, which we estimate here from the volume
 # fluctuations. The correction is small for this system size, but it grows
-# as :math:`1/V`, and it is easy to avoid altogether.
+# as :math:`1/V`, and it is easy to avoid altogether. Note that fixing the
+# volume to the *experimental* density would be worse: the model's density
+# differs from the experimental one by a few percent, so that one would be
+# simulating the model at a pressure of about 1 kbar, and the dissociation
+# volume makes :math:`\mathrm{p}K_\mathrm{w}` pressure dependent by about
+# 0.4 units per kbar.
 
-s_run, bias_run, rho_run = np.loadtxt(colvar_files[0]).T
+s_run, bias_run, rho_run = runs[0]
 volume = 128 * 18.015 / (rho_run * 0.60221)  # Å^3
 logw = (bias_run - bias_run.max()) / KT
 weights = np.exp(logw)
 associated = s_run < 2.3
-dissociated = s_run > 5.3  # onset of the dissociated state, see below
+dissociated = s_run > R_CUT
 v_assoc = np.average(volume[associated], weights=weights[associated])
 v_dissoc = np.average(volume[dissociated], weights=weights[dissociated])
 delta_v = v_dissoc - v_assoc
 fluct = np.average((volume[associated] - v_assoc) ** 2, weights=weights[associated])
 kappa = fluct / (KT * v_assoc)  # Å^3 / (kJ/mol)
 helmholtz_shift = delta_v**2 / (2 * kappa * v_assoc)
+print(f"density: {128 * 18.015 / (v_assoc * 0.60221):.4f} g/cm^3 (associated)")
 print(f"volume change on dissociation: {delta_v:.1f} Å^3")
 print(f"                              = {delta_v * 0.60221:.1f} cm^3/mol")
+print(f"                              = {100 * delta_v / v_assoc:.2f} %")
 print(f"compressibility: {kappa / 16605:.2e} /bar (experiment: 4.5e-5 /bar)")
 print(
     f"constant-volume correction: {helmholtz_shift:.2f} kJ/mol, "
@@ -916,7 +881,25 @@ print(
 #     e^{-\beta W(r)}\,\mathrm{d}r\right\}^{-1},
 #
 # with :math:`c^\circ=1\,\mathrm{mol/L}`, i.e. one molecule per 1660.5 Å³.
-# The integral is dominated by the associated basin, so the result is
+# This is the expression for the dissociation of a solute, of which there is one
+# in the box: the integral is the effective volume in which the second product
+# is bound to the first. For the autoionization of water both products come
+# from the solvent, :math:`K_\mathrm{w}=[\mathrm{H_3O^+}][\mathrm{OH^-}]/(c^\circ)^2`,
+# and the ratio between the probabilities of finding the box dissociated and
+# associated, which is what the simulation measures, involves the partition
+# functions of :math:`N` water molecules on one side and of a free ion pair in
+# the volume :math:`V` on the other (every molecule can dissociate, and the
+# products explore the whole box), so that
+#
+# .. math::
+#
+#     K_\mathrm{w} = \frac{1}{(c^\circ)^2 V}\left\{\int_0^{r_\mathrm{c}} 4\pi r^2
+#     e^{-\beta W(r)}\,\mathrm{d}r\right\}^{-1},
+#
+# i.e. :math:`\mathrm{p}K_\mathrm{w}` is larger than the solute-like estimate
+# by :math:`\log_{10}(c^\circ V)`, about 0.36 for a box of 128 molecules (see
+# the Supporting Information of the paper for the derivation). The integral
+# is dominated by the associated basin, so the result is
 # insensitive to :math:`r_\mathrm{c}` as long as it lies beyond the barrier, and
 # it is a *probability*: it does not depend on the details of how :math:`s` is
 # defined at short range. This is not the case for estimators that read the
@@ -978,7 +961,7 @@ print(
 # explicit.
 
 EPSILON = 80.0  # dielectric constant of water
-L_BOX = 15.714  # average box length in the NPT production runs, Å
+L_BOX = v_assoc ** (1 / 3)  # average box length of the NPT production run, Å
 CUTOFF_PME = 5.0  # real-space cutoff of the Ewald sum
 R_REF = 2.6  # reference distance for the two-charge calculation
 
@@ -1076,49 +1059,59 @@ plt.show()
 
 # %%
 # We can now convert each reweighted profile into a potential of mean force,
-# align it to :math:`W_L(r)` over the window 5.3-9 Å (using a Boltzmann-weighted
-# average of the difference, which emphasizes the region that is best sampled),
-# and evaluate the equilibrium constant with :math:`r_\mathrm{c}=5.3` Å. Since
+# align it to :math:`W_L(r)` over the window 7-10 Å (using a Boltzmann-weighted
+# average of the difference, which emphasizes the region that is best sampled;
+# the upper limit is kept a few Å below the wall), and evaluate the
+# equilibrium constant with :math:`r_\mathrm{c}=7` Å. Since
 # :math:`r_\mathrm{c}<L/2`, the phase-space factor only affects the offset.
 
-R_CUT = 5.3  # onset of the dissociated state
-R_MATCH = (R_CUT, 9.0)  # window used to determine the offset C
+R_MATCH = (R_CUT, 10.0)  # window used to determine the offset C
 STD_VOLUME = 1660.54  # Å^3 per molecule at 1 mol/L
 
 
-def pkw_from_profile(s_grid, fes):
-    """Classical pK from a free-energy profile along the ion separation."""
+def pkw_from_profile(s_grid, fes, r_cut=R_CUT, r_match=R_MATCH):
+    """Classical pKw from a free-energy profile along the ion separation."""
     ok = np.isfinite(fes) & (s_grid > 0)
     r, g = s_grid[ok], fes[ok]
     w_sim = g + KT * np.log(4 * np.pi * r**2)
     ok_ref = np.isfinite(w_periodic)
     w_ref = np.interp(r, r_ref_grid[ok_ref], w_periodic[ok_ref])
-    window = (r >= R_MATCH[0]) & (r <= R_MATCH[1])
+    window = (r >= r_match[0]) & (r <= r_match[1])
     prob = np.exp(-BETA * w_sim[window]) * 4 * np.pi * r[window] ** 2
     offset = np.trapezoid((w_sim - w_ref)[window] * prob, r[window]) / np.trapezoid(
         prob, r[window]
     )
     w = w_sim - offset
-    bound = r <= R_CUT
+    bound = r <= r_cut
     integral = np.trapezoid(
         4 * np.pi * r[bound] ** 2 * np.exp(-BETA * w[bound]), r[bound]
     )
-    return -np.log10(STD_VOLUME / integral), w, offset
+    # solute-like estimate, plus the log(c° V) term specific to autoionization
+    pk = np.log10(integral / STD_VOLUME) + np.log10(v_assoc / STD_VOLUME)
+    return pk, w, offset
 
 
-pkws = []
-for fes in profiles:
-    pk, w_run, _ = pkw_from_profile(s_grid, fes)
-    pkws.append(pk)
-pkws = np.array(pkws)
-pkw_classical, pkw_classical_err = pkws.mean(), pkws.std() / np.sqrt(len(pkws))
+pkws = np.array([pkw_from_profile(s_grid, fes)[0] for fes in profiles])
+pkw_classical = pkws.mean()
+# standard error of the mean over the independent runs
+pkw_classical_err = pkws.std(ddof=1) / np.sqrt(len(pkws))
+print(f"pKw of the individual runs: {np.round(pkws, 2)}")
 print(f"classical pKw = {pkw_classical:.2f} +/- {pkw_classical_err:.2f}")
 print(f"Gibbs free energy of dissociation: {pkw_classical * KT * LN10:.1f} kJ/mol")
 
-_, w_mean, offset_mean = pkw_from_profile(s_grid, fes_mean)
+# %%
+# The paper reports :math:`\mathrm{p}K_\mathrm{w}=17.86\pm0.37` (102.6 kJ/mol),
+# where the error is the standard deviation among the ten independent runs
+# (0.12 as a standard error of the mean).
+
 fig, ax = plt.subplots(1, 1, figsize=(5, 3.5), constrained_layout=True)
+for fes in profiles:  # aligned potential of mean force of each run
+    _, w_run, _ = pkw_from_profile(s_grid, fes)
+    ok = np.isfinite(fes) & (s_grid > 0)
+    ax.plot(s_grid[ok], w_run, color="gray", lw=0.5)
+_, w_mean, offset_mean = pkw_from_profile(s_grid, fes_mean)
 ok = np.isfinite(fes_mean) & (s_grid > 0)
-ax.plot(s_grid[ok], w_mean, "k-", label="$W_\\mathrm{sim}(r) - C$")
+ax.plot(s_grid[ok], w_mean, "k-", lw=2, label="$W_\\mathrm{sim}(r) - C$ (mean)")
 ax.plot(r_ref_grid, q_periodic, "C0--", label="$q_L(r)$")
 ax.plot(r_ref_grid, w_periodic, "C1-", label="$W_L(r)$")
 ax.plot(
@@ -1143,11 +1136,23 @@ plt.show()
 # sampling, and it is essential to be explicit about the estimator when
 # comparing with experiment or with other calculations.
 
-plateau = np.nanmean(fes_mean[(s_grid > 6) & (s_grid < 9)])
+plateau = np.nanmean(fes_mean[(s_grid > R_MATCH[0]) & (s_grid < R_MATCH[1])])
 print(
     f"minimum-to-plateau estimate: {plateau:.1f} kJ/mol, "
     f"i.e. pK = {plateau / (KT * LN10):.2f}"
 )
+
+# %%
+# The reversible-work estimator, instead, is insensitive to the choice of
+# :math:`r_\mathrm{c}` as long as it lies in the region where the profile
+# follows the Coulomb reference: moving it between 6 and 8 Å changes the
+# result by about 0.1 pK units, and only the values below the onset of the
+# plateau are significantly off.
+
+print("r_c / Å   pKw")
+for r_cut in [4.0, 5.0, 6.0, 7.0, 8.0]:
+    pk_scan = pkw_from_profile(s_grid, fes_mean, r_cut=r_cut, r_match=(r_cut, 10.0))[0]
+    print(f"{r_cut:5.1f}   {pk_scan:6.2f}")
 
 # %%
 # Nuclear quantum effects
@@ -1160,7 +1165,15 @@ print(
 # enhanced sampling with path-integral molecular dynamics would be very
 # demanding, and incompatible with the accelerated-convergence techniques that
 # make PIMD affordable. Instead, we compute the quantum correction to the free
-# energy *difference* by thermodynamic integration over the nuclear mass. If all
+# energy *difference* by thermodynamic integration over the nuclear mass, which
+# only requires converged averages in two well-defined states, so that those
+# techniques can be used: the production runs below use 32 beads with a
+# standard path-integral Langevin thermostat, but a `PIGLET
+# <https://doi.org/10.1103/PhysRevLett.109.100604>`_ thermostat (see also the
+# `path-integrals recipe
+# <http://atomistic-cookbook.org/examples/path-integrals/path-integrals.html>`_)
+# would give converged kinetic energies with 4 to 6 beads, reducing the cost by
+# a factor of about 6 if needed. If all
 # masses are scaled as :math:`m_k = m^\mathrm{phys}_k/y^2`, so that :math:`y=1`
 # is the physical system and :math:`y\to 0` the classical limit, the quantum
 # correction to the dissociation free energy is
@@ -1175,46 +1188,28 @@ print(
 # dissociated (D) and associated (A) states, computed with the centroid virial
 # estimator. The integrand vanishes linearly for :math:`y\to 0` and is smooth, so
 # that five PIMD simulations per state are sufficient. No bias along :math:`s` is
-# needed: the associated state is stable on its own, and the dissociated state
-# is kept from recombining by a wall on :math:`s` that only acts on the centroid,
-# far from the region of interest.
+# needed: one-sided walls on :math:`s` (acting on the centroid, 5 kJ/mol/Å²)
+# confine the associated state below 3 Å and keep the dissociated state from
+# recombining, beyond 5 Å, far from the region of interest.
 #
 # The i-PI input is similar to the previous ones, with the number of beads,
 # a path-integral Langevin thermostat, the per-atom masses, and the
-# ``kinetic_cv`` estimator in the output (the production inputs, and the
-# script that sets the masses for a given :math:`y`, are in
-# ``data/production-inputs/pimd/``).
+# ``kinetic_cv`` estimator in the output (the production inputs, the two
+# starting structures, and a script that selects the state and sets the
+# masses for a given :math:`y`, are in ``data/production-inputs/pimd/``).
 
-with open("data/input-pimd.xml") as f:
+with open("data/production-inputs/pimd/input.xml") as f:
     input_pimd = f.read()
 print(input_pimd)
 
 # %%
-# For the demonstration we run a handful of steps with 4 beads at the physical
-# masses (:math:`y=1`), starting from the dissociated configuration. Note that
-# the ring polymers start collapsed onto the classical configuration, so that
-# the kinetic energy grows over the first few tens of femtoseconds as they
-# expand.
+# For the demonstration (``data/demo-pimd.xml``) we run a handful of steps with
+# 4 beads at the physical masses (:math:`y=1`, so that the masses need not be
+# specified), starting from the dissociated configuration. Note that the ring
+# polymers start collapsed onto the classical configuration, so that the
+# kinetic energy grows over the first few tens of femtoseconds as they expand.
 
-Y_DEMO = 1.0
-N_BEADS_DEMO = 4
-masses = ase.io.read("data/dissociated.xyz").get_masses() / Y_DEMO**2
-demo_input = prepare_demo(
-    "data/input-pimd.xml",
-    "data/plumed-dissociated.dat",
-    "pimd",
-    replacements=[
-        (
-            "<total_steps> 1000000 </total_steps>",
-            f"<total_steps> {N_STEPS_PIMD} </total_steps>",
-        ),
-        ("__STRUCTURE__", "data/dissociated.xyz"),
-        ("__NBEADS__", str(N_BEADS_DEMO)),
-        ("__MASSES__", "[" + ", ".join(f"{m:.6f}" for m in masses) + "]"),
-        ("__SEED__", "31415"),
-    ],
-)
-run_ipi(demo_input, "pimd.out", N_STEPS_PIMD)
+run_ipi("data/demo-pimd.xml")
 
 output, _ = ipi.scripting.read_output("pimd.out")
 colvar = ipi.scripting.read_trajectory("pimd.colvar_0", format="extras")
@@ -1228,13 +1223,17 @@ ax[1].set_ylabel("$s$ (centroid) / Å")
 plt.show()
 
 # %%
-# The production runs use 32 beads, several hundred thousand steps for each of
-# the 5 values of :math:`y` and each of the two states (about 1.5 days each on
-# two GPUs). The data bundle contains, for each run, the time series of the
-# total centroid-virial kinetic energy. Its correlation time is only a few
-# femtoseconds, so the statistical error of each average, estimated from the
-# integrated autocorrelation time of the series, is small; the errors of the
-# two states are combined, since they come from independent simulations.
+# The production runs use 32 beads, about 390 000 steps (at least 170 ps are
+# needed) for each of the 5 values of :math:`y` and each of the two states
+# (of the order of a day each on a modern GPU). The data bundle contains, for
+# each run,
+# the time series of the total centroid-virial kinetic energy; we use all of
+# it, whereas the paper analyzed the first 330 000 steps, which changes the
+# result by about 0.4 kJ/mol, within the statistical error. Its
+# correlation time is only a few femtoseconds, so the statistical error of
+# each average, estimated from the integrated autocorrelation time of the
+# series, is small; the errors of the two states are combined, since they
+# come from independent simulations.
 
 Y_VALUES = [0.2, 0.4, 0.6, 0.8, 1.0]
 N_EQUIL = 10000  # steps discarded for equilibration (5 ps)
@@ -1292,9 +1291,13 @@ plt.show()
 # %%
 # The kinetic energy of the dissociated state is lower at all masses, and the
 # correction is large and negative: it brings the classical value down by more
-# than three pK units. Its magnitude depends on the potential and on the
-# species, and there is no universal value that can be transferred from one
-# system to another.
+# than three pK units (the paper reports :math:`\Delta\Delta G_\mathrm{NQE} =
+# -20.4 \pm 0.4` kJ/mol, and a classical :math:`\mathrm{p}K_\mathrm{w}` of
+# :math:`17.86\pm0.37` from the ten independent runs, where the error is the
+# standard deviation among runs, giving :math:`14.31\pm0.37` against the
+# experimental 13.93 at 300 K). Its magnitude depends on the potential and
+# on the species, and there is no universal value that can be transferred
+# from one system to another.
 
 pkw_shift = ddg_nqe / (KT * LN10)
 pkw_shift_err = ddg_nqe_err / (KT * LN10)
@@ -1303,20 +1306,53 @@ pkw_quantum_err = np.sqrt(pkw_classical_err**2 + pkw_shift_err**2)
 print(f"classical pKw:        {pkw_classical:6.2f} +/- {pkw_classical_err:.2f}")
 print(f"NQE correction:       {pkw_shift:6.2f} +/- {pkw_shift_err:.2f}")
 print(f"quantum pKw:          {pkw_quantum:6.2f} +/- {pkw_quantum_err:.2f}")
-print("experiment:            14.0")
+print("experiment:            13.93")
 
 # %%
 # Summary
 # ^^^^^^^
 #
-# Each of the steps in this recipe is worth one or more pK units: the estimator,
-# the treatment of long-range interactions and finite-size effects, the
-# thermodynamic ensemble, and the quantum nature of the nuclei. Machine-learning
-# potentials make it affordable to do all of them properly, with a total cost
-# of about 0.1 billion force evaluations (roughly: 10 million for
-# metadynamics, 2 million per replica-exchange run, 32 million per
-# path-integral run). The same protocol applies without changes to the acidic
-# and basic dissociation of a solute, using a signed version of :math:`s`
-# that is measured from the center of the solute, and provides a stringent
-# consistency check for polyprotic species through
-# :math:`\mathrm{p}K_\mathrm{w}=\mathrm{p}K_\mathrm{a}+\mathrm{p}K_\mathrm{b}`.
+# Each of the steps in this recipe is worth one or more pK units: the estimator
+# and its standard state, the treatment of long-range interactions and
+# finite-size effects, the thermodynamic ensemble, and the quantum nature of
+# the nuclei. Machine-learning potentials make it affordable to do all of them
+# properly: the whole quantum correction costs about 120 million force
+# evaluations (32 beads, ten runs of 390 000 steps), and the classical
+# profile about 70 million (8 replicas, ten runs of 435 ps, plus 2.7 ns of
+# metadynamics), i.e. a few GPU-days in total with current hardware.
+#
+# Beyond water: acids and bases
+# -----------------------------
+#
+# The same protocol applies to the acidic and basic dissociation of a solute,
+# with the signed order parameter discussed at the beginning. The paper
+# demonstrates it on the four phosphate species :math:`\mathrm{H_3PO_4}`,
+# :math:`\mathrm{NaH_2PO_4}`, :math:`\mathrm{Na_2HPO_4}` and
+# :math:`\mathrm{Na_3PO_4}` (with sodium counterions, 128 water molecules in a
+# rhombic-dodecahedral box), which together give three :math:`\mathrm{p}K_\mathrm{a}`
+# and three :math:`\mathrm{p}K_\mathrm{b}` values and, through
+# :math:`\mathrm{p}K_\mathrm{a}+\mathrm{p}K_\mathrm{b}=\mathrm{p}K_\mathrm{w}`,
+# a consistency check that does not depend on experiment. The differences with
+# respect to the water case are few:
+#
+# - the two branches of the profile (:math:`s>0` acidic, :math:`s<0` basic) are
+#   analyzed separately, each with its own Coulomb reference computed for the
+#   charges of the two products (e.g. :math:`+1` and :math:`-2` for the acidic
+#   dissociation of :math:`\mathrm{H_2PO_4^-}`; for a pair with a net charge the
+#   Wigner self-energy of the neutralizing background is subtracted), with
+#   :math:`r_\mathrm{c}=7` Å and the association integral over
+#   :math:`[-1, 7]` or :math:`[-7, 1]` Å, and with the solute prefactor
+#   :math:`1/c^\circ`;
+# - the metadynamics parameters (hill height, bias factor) are adapted to the
+#   height of the barrier of each species, and for the two amphiprotic ions
+#   one-sided restraints on :math:`\delta` suppress the autoionization of the
+#   solvent;
+# - the thermodynamic integration is performed for the associated state and
+#   for each dissociated state.
+#
+# The ``metatomic`` model of the order parameter and the complete i-PI and
+# PLUMED inputs for :math:`\mathrm{NaH_2PO_4}` (metadynamics, fixed-bias replica
+# exchange and PIMD), with the parameters of the other species, are provided
+# in ``data/phosphate-template/`` as a starting point; the results, and a
+# discussion of the consistency check between conjugate pairs, can be found
+# in the paper.

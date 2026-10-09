@@ -1,3 +1,5 @@
+# demonstration input: narrow hills deposited every 20 steps (compare with
+# data/production-inputs/metadynamics/plumed.dat)
 # The order parameter is computed by the metatomic model exported by the recipe.
 # SPECIES1 lists the oxygen atoms, SPECIES2 the hydrogen atoms (1-based indices),
 # and SPECIES_TO_TYPES maps them to the atomic types the model expects.
@@ -18,13 +20,13 @@ D: SELECT_COMPONENTS ARG=cv COMPONENTS=1
 mtd: METAD ...
     ARG=D
     HEIGHT=2.494
-    SIGMA=0.3
-    PACE=1000
+    SIGMA=0.01
+    PACE=20
     GRID_MIN=-5
     GRID_MAX=25
-    GRID_BIN=500
+    GRID_BIN=6000
     BIASFACTOR=12
-    FILE=HILLS
+    FILE=HILLS-metad
     TEMP=300
 ...
 
@@ -33,4 +35,4 @@ mtd: METAD ...
 LOWER_WALLS ARG=D AT=-2 KAPPA=10
 UPPER_WALLS ARG=D AT=12 KAPPA=10
 
-PRINT ARG=D,mtd.* FILE=COLVAR
+PRINT ARG=D,mtd.* FILE=COLVAR-metad

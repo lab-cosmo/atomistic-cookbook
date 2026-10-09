@@ -1,8 +1,10 @@
 """Run one PIMD simulation of the mass thermodynamic integration.
 
 ``input.xml`` is complete for the associated state at the physical masses
-(y = 1); this script selects the state and scales all the masses by 1/y^2.
-Usage: python run.py --state {associated,dissociated} -y <y> [--seed <int>]
+(y = 1); this script selects the state (``associated``, ``acidic_disso`` or
+``basic_disso``, with the starting structure ``<state>.xyz`` and the walls of
+``plumed-<state>.dat``) and scales all the masses by 1/y^2.
+Usage: python run.py --state <state> -y <y> [--seed <int>]
 """
 
 import argparse
@@ -29,8 +31,6 @@ if __name__ == "__main__":
         + ", ".join(f"{m:.6f}" for m in masses)
         + "] </masses>\n      "
     )
-    input_xml = input_xml.replace(
-        "<velocities mode='thermal'", masses_xml + "<velocities mode='thermal'"
-    )
+    input_xml = input_xml.replace("<velocities mode='thermal'", masses_xml + "<velocities mode='thermal'")
     sim = InteractiveSimulation(input_xml)
     sim.run(20000000)

@@ -1,3 +1,5 @@
+<!-- demonstration run: 300 steps with PET-MAD-xs; compare with
+     data/production-inputs/metadynamics/input.xml -->
 <simulation verbosity='low'>
   <output prefix='metad'>
     <properties stride='1' filename='out'> [ step, time{picosecond}, conserved{electronvolt},
@@ -6,17 +8,17 @@
     <trajectory filename='pos' stride='10' format='ase'> positions </trajectory>
     <trajectory filename='colvar' stride='1' extra_type='D'> extras_bias </trajectory>
   </output>
-  <total_steps> 10000000 </total_steps>
+  <total_steps> 300 </total_steps>
   <prng> <seed> 32342 </seed> </prng>
   <!-- the MLIP is evaluated in-process through the metatomic interface -->
   <ffdirect name='mlip'>
     <pes> metatomic </pes>
-    <parameters> { template: data/initial_structure.xyz, model: __MODEL__, device: cpu } </parameters>
+    <parameters> { template: data/initial_structure.xyz, model: pet-mad-xs-v1.6.0.pt, device: cpu } </parameters>
   </ffdirect>
   <!-- PLUMED computes the CV and the bias; the CV value is returned as an "extra" -->
   <ffplumed name='plumed'>
     <file mode='ase'> data/initial_structure.xyz </file>
-    <plumed_dat> __PLUMED__ </plumed_dat>
+    <plumed_dat> data/demo-metad.dat </plumed_dat>
     <plumed_extras> [ D ] </plumed_extras>
   </ffplumed>
   <system>
@@ -35,8 +37,8 @@
         <timestep units='femtosecond'> 0.5 </timestep>
         <thermostat mode='svr'> <tau units='femtosecond'> 20 </tau> </thermostat>
         <barostat mode='isotropic'>
-          <tau units='femtosecond'> 100 </tau>
-          <thermostat mode='svr'> <tau units='femtosecond'> 100 </tau> </thermostat>
+          <tau units='femtosecond'> 200 </tau>
+          <thermostat mode='langevin'> <tau units='femtosecond'> 200 </tau> </thermostat>
         </barostat>
       </dynamics>
     </motion>

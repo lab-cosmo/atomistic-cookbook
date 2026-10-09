@@ -1,3 +1,6 @@
+<!-- demonstration run: 4 beads, 20 steps, physical masses (y = 1); compare
+     with data/production-inputs/pimd/input.xml, where the masses are set
+     explicitly for each value of y -->
 <simulation verbosity='low'>
   <output prefix='pimd'>
     <!-- kinetic_cv is the centroid-virial estimator of the quantum kinetic energy -->
@@ -7,24 +10,22 @@
     <trajectory filename='pos' stride='100' format='ase' bead='0'> positions </trajectory>
     <trajectory filename='colvar' stride='1' bead='0' extra_type='D'> extras_bias </trajectory>
   </output>
-  <total_steps> 1000000 </total_steps>
-  <prng> <seed> __SEED__ </seed> </prng>
+  <total_steps> 20 </total_steps>
+  <prng> <seed> 31415 </seed> </prng>
   <!-- all beads are evaluated in a single batched call to the model -->
   <ffdirect name='mlip' threaded='True'>
     <pes> metatomic </pes>
-    <parameters> { template: __STRUCTURE__, model: __MODEL__, device: cpu } </parameters>
-    <batch_size> __NBEADS__ </batch_size>
+    <parameters> { template: data/dissociated.xyz, model: pet-mad-xs-v1.6.0.pt, device: cpu } </parameters>
+    <batch_size> 4 </batch_size>
   </ffdirect>
   <ffplumed name='plumed'>
-    <file mode='ase'> __STRUCTURE__ </file>
-    <plumed_dat> __PLUMED__ </plumed_dat>
+    <file mode='ase'> data/dissociated.xyz </file>
+    <plumed_dat> data/demo-pimd.dat </plumed_dat>
     <plumed_extras> [ D ] </plumed_extras>
   </ffplumed>
   <system>
-    <initialize nbeads='__NBEADS__'>
-      <file mode='ase'> __STRUCTURE__ </file>
-      <!-- masses scaled by 1/y^2 for the mass thermodynamic integration -->
-      <masses mode='manual' units='dalton'> __MASSES__ </masses>
+    <initialize nbeads='4'>
+      <file mode='ase'> data/dissociated.xyz </file>
       <velocities mode='thermal' units='kelvin'> 300 </velocities>
     </initialize>
     <forces> <force forcefield='mlip'/> </forces>
@@ -43,8 +44,8 @@
         <timestep units='femtosecond'> 0.5 </timestep>
         <thermostat mode='pile_l'> <tau units='femtosecond'> 20 </tau> </thermostat>
         <barostat mode='isotropic'>
-          <tau units='femtosecond'> 100 </tau>
-          <thermostat mode='svr'> <tau units='femtosecond'> 100 </tau> </thermostat>
+          <tau units='femtosecond'> 200 </tau>
+          <thermostat mode='langevin'> <tau units='femtosecond'> 200 </tau> </thermostat>
         </barostat>
       </dynamics>
     </motion>
