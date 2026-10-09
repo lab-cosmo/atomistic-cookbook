@@ -4,6 +4,8 @@ dependencies:
   - python=3.12
   - openmm>=8.6.1,<9
   - openmmforcefields
+  - openff-nagl>=0.6.1,<0.7
+  - openff-nagl-models>=2026.09
   - chemiscope
   - matplotlib
   - numpy
@@ -16,6 +18,4 @@ dependencies:
     - metatrain>=2026.3
     - vesin
     - atomistic-cookbook-utils>=0.1,<0.2
-    # Metatomic backend, from the openmm-ml branch that adds
-    # MLPotential("metatomic").
-    - git+https://github.com/EricBoittier/openmm-ml.git@ba32ab49625434c4bda7a11f7d2ff44eea343e6a
+    - openmmml>=1.8

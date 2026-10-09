@@ -4,7 +4,7 @@ OpenMM
 `OpenMM <https://openmm.org>`_ is a molecular-dynamics toolkit with a Python
 API, used widely for biomolecular simulation with classical force fields such
 as Amber. `OpenMM-ML <https://github.com/openmm/openmm-ml>`_ connects that
-API to machine-learning potentials. Its metatomic backend runs any exported
-metatomic model, including mixed ML/MM systems.
+API to machine-learning potentials. A metatomic model is registered with
+it at runtime and then used for the ligand in a mixed ML/MM system.
 
 - examples/openmm-metatomic/benzene-lysozyme
