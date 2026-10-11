@@ -6,10 +6,15 @@ dependencies:
   - pip
   - plumed-metatomic=2.10.1.dev1
   - py-plumed-metatomic=2.10.1.dev1
+  # the PLUMED kernel is linked against the conda libtorch: pin it to the same
+  # version as the torch installed from pip below, so that the solver picks a
+  # PLUMED build whose symbols resolve against the torch loaded by i-PI
+  - libtorch>=2.13,<2.14
+  - pytorch-cpu>=2.13,<2.14
   - matplotlib
   - pip:
     - --extra-index-url https://download.pytorch.org/whl/cpu
-    - torch>=2.12,<2.13
+    - torch>=2.13,<2.14
     - ase
     - numpy
     - scipy

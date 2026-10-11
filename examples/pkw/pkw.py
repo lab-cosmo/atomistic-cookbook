@@ -71,6 +71,7 @@ to the syntax of the day.
 import glob
 import os
 import shutil
+import sys
 import zipfile
 from typing import Dict, List, Optional
 
@@ -97,6 +98,9 @@ from metatomic_ase import MetatomicCalculator
 N_THREADS = 4
 torch.set_num_threads(N_THREADS)
 ENV = dict(os.environ, OMP_NUM_THREADS=str(N_THREADS), MKL_NUM_THREADS=str(N_THREADS))
+# i-PI calls PLUMED through its Python module, which locates the PLUMED library
+# through the PLUMED_KERNEL variable: point it to the one of the environment
+ENV.setdefault("PLUMED_KERNEL", os.path.join(sys.prefix, "lib", "libplumedKernel.so"))
 
 # %%
 # Two sets of external data are used. The machine-learning potential for the live
