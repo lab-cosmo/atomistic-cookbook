@@ -112,9 +112,11 @@ if not os.path.exists(MODEL):
 # files of the metadynamics, the 300 K series of the replica-exchange runs,
 # the PIMD kinetic energies, a short trajectory of a dissociation event, the
 # fine-tuned model ``production/model.pt`` and the template for the phosphate
-# species discussed at the end) are downloaded as a single
-# archive, unless it is already present, and unpacked in the
-# ``data/production`` folder. To reproduce the production runs, point
+# species discussed at the end) are downloaded as a single archive (about
+# 110 MB, from the `atomistic-cookbook-data
+# <https://huggingface.co/datasets/lab-cosmo/atomistic-cookbook-data>`_
+# repository on Hugging Face), unless it is already present, and unpacked in
+# the ``data/production`` folder. To reproduce the production runs, point
 # ``MODEL`` to the fine-tuned model, which
 # is a plain ``metatomic`` model with one peculiarity: it has two energy heads,
 # the one of the base model and the fine-tuned ``energy/pbe0``, and the latter
@@ -122,7 +124,10 @@ if not os.path.exists(MODEL):
 # of the i-PI inputs, as done in the exact production inputs provided in
 # ``data/production-inputs/``.
 
-DATA_URL = "https://zenodo.org/records/0000000/files/pkw-data.zip"  # placeholder
+DATA_URL = (
+    "https://huggingface.co/datasets/lab-cosmo/atomistic-cookbook-data/"
+    "resolve/main/pkw/pkw-data.zip"
+)
 if not os.path.exists("data/production"):
     if not os.path.exists("data/pkw-data.zip"):
         download_with_retry(DATA_URL, "data/pkw-data.zip")
