@@ -3,7 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - python=3.12
-  - lammps-metatomic==2026.03.30.mta1
+  - lammps-metatomic==2026.07.04.mta2
   - pip
   - pip:
     - metatrain>=2026.3.1
