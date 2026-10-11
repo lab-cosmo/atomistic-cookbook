@@ -8,8 +8,8 @@ dependencies:
   - py-plumed-metatomic=2.10.1.dev1
   # keep the conda libtorch (used by the PLUMED kernel) in step with the torch
   # installed from pip, so that the solver picks a compatible PLUMED build
-  - libtorch>=2.12,<2.13
-  - pytorch-cpu>=2.12,<2.13
+  - libtorch>=2.13,<2.14
+  - pytorch-cpu>=2.13,<2.14
   - lammps-metatomic=2026.07.04.mta2
   - matplotlib
   - pip:
