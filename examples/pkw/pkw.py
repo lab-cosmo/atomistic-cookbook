@@ -11,22 +11,22 @@ is the prototypical acid-base equilibrium, and its equilibrium constant
 sets the scale of every :math:`\\mathrm{p}K_\\mathrm{a}` and
 :math:`\\mathrm{p}K_\\mathrm{b}`. Computing it from first principles is a stringent test
 of a simulation protocol, because it combines several ingredients that are each worth
-one or more pK units if neglected: a reactive potential, an order parameter that follows
-the proton as it hops between molecules, enhanced sampling of a free energy of
+one or more pK units if neglected: a reactive potential, collective variables that
+follow the proton as it hops between molecules, enhanced sampling of a free energy of
 about :math:`32\\,k_\\mathrm{B}T`, a well-defined relation between the free-energy
 profile and the equilibrium constant, the long-range Coulomb interaction of the products
 in a small periodic box, and the quantum nature of the nuclei.
 
 This recipe walks through the protocol discussed in `this paper
-<https://doi.org/10.48550/arXiv.2609.99999>`_ (placeholder DOI), stage by stage, using
+<https://arxiv.org/abs/2610.13265>`_, stage by stage, using
 `i-PI <https://ipi-code.org>`_ for the dynamics, `PLUMED <https://plumed.org>`_ for the
 collective variables and the bias, and the `metatomic
 <https://docs.metatensor.org/metatomic>`_ interface both for the machine-learning
 potential and for the collective variable. The stages are:
 
-1. definition of a smooth order parameter for the hydronium-hydroxide separation,
+1. definition of a smooth collective variable for the hydronium-hydroxide separation,
    and its implementation as a ``metatomic`` model that can be used from PLUMED;
-2. well-tempered metadynamics along this order parameter, to build a bias potential;
+2. well-tempered metadynamics along this collective variable, to build a bias potential;
 3. replica-exchange molecular dynamics with the *frozen* bias, to obtain converged
    Boltzmann weights;
 4. reweighting to recover the free-energy profile and the potential of mean force;
@@ -154,13 +154,13 @@ initial_structure = ase.io.read("data/initial_structure.xyz")
 print(initial_structure)
 
 # %%
-# The order parameter
-# ^^^^^^^^^^^^^^^^^^^
+# The collective variable
+# ^^^^^^^^^^^^^^^^^^^^^^^
 #
 # The products of the autoionization are fluxional: the excess proton and the
 # proton hole diffuse through the solvent by a Grotthuss mechanism, and there is no
 # fixed set of atoms that identifies :math:`\mathrm{H_3O^+}` or :math:`\mathrm{OH^-}`.
-# A useful order parameter must therefore first determine the charge state of every
+# A useful collective variable must therefore first determine the charge state of every
 # oxygen atom. We do this by partitioning each hydrogen atom :math:`j` among the oxygen
 # atoms :math:`i` within a cutoff, with smooth weights
 #
@@ -197,7 +197,7 @@ print(initial_structure)
 # and suppress spurious ion pairs.
 #
 # The same construction applies to the dissociation of a solute, with two
-# changes: the reference point is an atom of the solute (the P atom for the
+# changes: the reference point is an atom of the solute (for example, the P atom for the
 # phosphate species), so that
 # :math:`s=\sum_i q_i |\mathrm{mic}(\mathbf{r}_i-\mathbf{r}_\mathrm{ref})|`
 # over the solvent oxygens is *signed*, positive
@@ -267,8 +267,8 @@ print(f"charged oxygens: {charged}, q = {np.round(q[charged], 3)}")
 print(f"s = {s:.3f} A, delta = {delta:.3f}")
 
 # %%
-# A metatomic model for the order parameter
-# -----------------------------------------
+# A metatomic model for the collective variable
+# ---------------------------------------------
 #
 # To use :math:`s` as a collective variable in PLUMED, we implement the same
 # expressions in a ``torch`` module that follows the ``metatomic`` conventions
@@ -485,7 +485,7 @@ chemiscope.show(
 # Well-tempered metadynamics along :math:`s` deposits Gaussian hills that
 # accumulate into a bias :math:`V_\mathrm{bias}(s)`, which in the long-time limit
 # converges to :math:`-(1-1/\gamma)\,G(s)`, with :math:`\gamma` the bias factor and
-# :math:`G(s)` the free energy along the order parameter.
+# :math:`G(s)` the free energy along the collective variable.
 #
 # The exact inputs of the production runs (for this and for the following
 # stages) are collected in ``data/production-inputs/``, and they are the ones
@@ -494,7 +494,7 @@ chemiscope.show(
 # model, the number of steps and a few parameters that are commented in the
 # files themselves, and that can be compared with the production inputs.
 #
-# The PLUMED input evaluates the order parameter with the ``METATOMIC`` action,
+# The PLUMED input evaluates the collective variable with the ``METATOMIC`` action,
 # using the model we just exported, selects the first component :math:`s` and
 # applies well-tempered metadynamics to it, with hills of height
 # :math:`k_\mathrm{B}T` and width 0.3 Å, deposited every 1000 steps (0.5 ps),
@@ -554,7 +554,7 @@ run_ipi("data/demo-metad.xml")
 
 # %%
 # The output of i-PI contains the usual thermodynamic quantities, and the bias
-# energy; the "extras" trajectory contains the value of the order parameter, that
+# energy; the "extras" trajectory contains the value of the collective variable, that
 # is also printed by PLUMED in the ``COLVAR-metad`` file together with the bias.
 # In such a short run :math:`s` just fluctuates around the small values that
 # correspond to the neutral molecules (it does not vanish because of the smooth
@@ -581,7 +581,7 @@ plt.show()
 
 # %%
 # The production run tells a more interesting story. Plotting the bias against
-# the order parameter, with the trajectory colored by time, shows how the
+# the collective variable, with the trajectory colored by time, shows how the
 # metadynamics progressively fills the associated basin, pushes the system to
 # form a contact ion pair and then to dissociate fully, and then keeps going
 # back and forth over an increasingly flat landscape. The ``COLVAR`` file
@@ -915,7 +915,7 @@ print(
 # defined at short range. This is not the case for estimators that read the
 # free energy at specific points of the profile (e.g. the difference between
 # the minima of the associated and dissociated states), which carry the
-# Jacobian of the order parameter and the entropy of the configurations that
+# Jacobian of the collective variable and the entropy of the configurations that
 # map onto each value of :math:`s`, and do not correspond to a well-defined
 # standard state.
 #
@@ -953,7 +953,7 @@ print(
 # distance, :math:`q_L(r) = -k_\mathrm{B}T\ln\langle e^{-\beta E}\rangle_r`,
 # which accounts for the anisotropy of the periodic interaction.
 #
-# There is one more subtlety. The order parameter is a minimum-image
+# There is one more subtlety. The collective variable is a minimum-image
 # separation, so the directions that are accessible at a distance :math:`r`
 # are only those for which every Cartesian component is smaller than
 # :math:`L/2`: beyond :math:`r=L/2` the spherical shell is clipped by the cube,
@@ -1335,7 +1335,7 @@ print("experiment:            13.93")
 # -----------------------------
 #
 # The same protocol applies to the acidic and basic dissociation of a solute,
-# with the signed order parameter discussed at the beginning. The paper
+# with the signed collective variable discussed at the beginning. The paper
 # demonstrates it on the four phosphate species :math:`\mathrm{H_3PO_4}`,
 # :math:`\mathrm{NaH_2PO_4}`, :math:`\mathrm{Na_2HPO_4}` and
 # :math:`\mathrm{Na_3PO_4}` (with sodium counterions, 128 water molecules in a
@@ -1360,7 +1360,7 @@ print("experiment:            13.93")
 # - the thermodynamic integration is performed for the associated state and
 #   for each dissociated state.
 #
-# The ``metatomic`` model of the order parameter and the complete i-PI and
+# The ``metatomic`` model of the collective variable and the complete i-PI and
 # PLUMED inputs for :math:`\mathrm{NaH_2PO_4}` (metadynamics, fixed-bias replica
 # exchange and PIMD), with the parameters of the other species, are provided
 # in the data bundle (``data/production/phosphate-template/``, next to the
