@@ -18,7 +18,7 @@ profile and the equilibrium constant, the long-range Coulomb interaction of the 
 in a small periodic box, and the quantum nature of the nuclei.
 
 This recipe walks through the protocol discussed in `this paper
-<https://doi.org/10.48550/arXiv.2609.99999>`_ (placeholder DOI), stage by stage, using
+<https://arxiv.org/abs/2610.13265>`_, stage by stage, using
 `i-PI <https://ipi-code.org>`_ for the dynamics, `PLUMED <https://plumed.org>`_ for the
 collective variables and the bias, and the `metatomic
 <https://docs.metatensor.org/metatomic>`_ interface both for the machine-learning
