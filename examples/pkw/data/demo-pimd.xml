@@ -1,0 +1,53 @@
+<!-- demonstration run: 4 beads, 20 steps, physical masses (y = 1); compare
+     with data/production-inputs/pimd/input.xml, where the masses are set
+     explicitly for each value of y -->
+<simulation verbosity='low'>
+  <output prefix='pimd'>
+    <!-- kinetic_cv is the centroid-virial estimator of the quantum kinetic energy -->
+    <properties stride='1' filename='out'> [ step, time{picosecond}, conserved{electronvolt},
+      temperature{kelvin}, kinetic_cv{electronvolt}, potential{electronvolt},
+      pressure_cv{bar}, density{g/cm3}, kinetic_td{electronvolt} ] </properties>
+    <trajectory filename='pos' stride='100' format='ase' bead='0'> positions </trajectory>
+    <trajectory filename='colvar' stride='1' bead='0' extra_type='D'> extras_bias </trajectory>
+  </output>
+  <total_steps> 20 </total_steps>
+  <prng> <seed> 31415 </seed> </prng>
+  <!-- all beads are evaluated in a single batched call to the model -->
+  <ffdirect name='mlip' threaded='True'>
+    <pes> metatomic </pes>
+    <parameters> { template: data/dissociated.xyz, model: pet-mad-xs-v1.6.0.pt, device: cpu } </parameters>
+    <batch_size> 4 </batch_size>
+  </ffdirect>
+  <ffplumed name='plumed'>
+    <file mode='ase'> data/dissociated.xyz </file>
+    <plumed_dat> data/demo-pimd.dat </plumed_dat>
+    <plumed_extras> [ D ] </plumed_extras>
+  </ffplumed>
+  <system>
+    <initialize nbeads='4'>
+      <file mode='ase'> data/dissociated.xyz </file>
+      <velocities mode='thermal' units='kelvin'> 300 </velocities>
+    </initialize>
+    <forces> <force forcefield='mlip'/> </forces>
+    <ensemble>
+      <temperature units='kelvin'> 300 </temperature>
+      <pressure units='bar'> 1.0 </pressure>
+      <!-- the restraint acts on the centroid only -->
+      <bias>
+        <force forcefield='plumed' nbeads='1'>
+          <interpolate_extras> [ D ] </interpolate_extras>
+        </force>
+      </bias>
+    </ensemble>
+    <motion mode='dynamics'>
+      <dynamics mode='npt'>
+        <timestep units='femtosecond'> 0.5 </timestep>
+        <thermostat mode='pile_l'> <tau units='femtosecond'> 20 </tau> </thermostat>
+        <barostat mode='isotropic'>
+          <tau units='femtosecond'> 200 </tau>
+          <thermostat mode='langevin'> <tau units='femtosecond'> 200 </tau> </thermostat>
+        </barostat>
+      </dynamics>
+    </motion>
+  </system>
+</simulation>
