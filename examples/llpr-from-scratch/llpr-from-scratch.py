@@ -82,7 +82,41 @@ run_command("mtt eval model-llpr.pt eval.yaml -b 20")
 # plot compares each uncertainty estimate with the absolute energy error.
 
 reference_structures = ase.io.read("evaluation.xyz", ":")
-evaluated_structures = ase.io.read("output.xyz", ":")
+
+# ASE's extended-XYZ reader cannot parse ``::`` in per-atom property names,
+# so temporarily encode the affected part of the Properties schema.
+# Only the in-memory text is modified; output.xyz remains unchanged.
+
+property_name = "mtt::aux::cutoff_stats"
+encoded_property_name = "mttAuxCutoffStatsEncoded"
+
+property_schema = f"{property_name}:R:2"
+encoded_property_schema = f"{encoded_property_name}:R:2"
+
+output_text = Path("output.xyz").read_text()
+
+# Check for a collision before introducing the temporary name.
+if encoded_property_name in output_text:
+    raise ValueError(
+        f"Temporary property name already exists: {encoded_property_name}"
+    )
+
+output_text = output_text.replace(
+    property_schema,
+    encoded_property_schema,
+)
+
+evaluated_structures = ase.io.read(
+    StringIO(output_text),
+    index=":",
+    format="extxyz",
+)
+
+# Restore the original namespaced property name after parsing.
+for atoms in evaluated_structures:
+    if encoded_property_name in atoms.arrays:
+        atoms.arrays[property_name] = atoms.arrays.pop(encoded_property_name)
+
 
 predicted_energies = np.array(
     [atoms.get_potential_energy() for atoms in evaluated_structures]
