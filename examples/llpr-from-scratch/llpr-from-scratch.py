@@ -24,6 +24,8 @@ execute the script.
 # %%
 # Imports
 # -------
+from io import StringIO
+from pathlib import Path
 
 import ase.build
 import ase.io
