@@ -88,6 +88,12 @@ files. If your example needs such data files, there are a few options available:
   ``data/`` folder within the example folder. A zip file will be generated that
   can be downloaded from the example page.
 
+Everything that is in ``data/`` after running the example ends up in the zip
+file, so files that are downloaded or generated at runtime (datasets, model
+checkpoints, ...) should be saved in a ``tmp/`` subfolder of the example, which
+should be listed in the example's ``.gitignore``. The CI will fail if running the
+example creates new files in ``data/``.
+
 Thematic listings
 ~~~~~~~~~~~~~~~~~
 

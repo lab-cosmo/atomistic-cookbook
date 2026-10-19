@@ -462,7 +462,8 @@ with open("data/plumed.dat", "r") as fd:
 # write the LAMMPS structure file
 lammps_initial = minimal.copy()
 lammps_initial.cell = [20, 20, 20]
-ase.io.write("data/minimal.data", lammps_initial, format="lammps-data")
+os.makedirs("tmp", exist_ok=True)
+ase.io.write("tmp/minimal.data", lammps_initial, format="lammps-data")
 
 print(linecache.getline("data/lammps.plumed.in", 25).strip())
 torch_major, torch_minor, *_ = torch.__version__.split(".")
@@ -645,7 +646,7 @@ chemiscope.show(
 # grid and the Gaussian width, consistent with the different range of the SOAP CVs.
 
 src = pathlib.Path("data/plumed.dat")
-dst = pathlib.Path("data/plumed-mts.dat")
+dst = pathlib.Path("tmp/plumed-mts.dat")
 
 content = src.read_text()
 dst.write_text(
