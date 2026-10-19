@@ -1,0 +1,39 @@
+cp2k
+====
+
+CP2K is a quantum chemistry and solid state physics software package that can
+perform atomistic simulations of solid state, liquid, molecular, periodic,
+material, crystal, and biological systems. Learn more about it on its `homepage
+<https://cp2k.org>`_.
+
+
+
+.. grid:: 1 2 2 3
+    :gutter: 1 1 2 3
+
+    .. grid-item::
+
+        .. card:: Batch run of CP2K calculations
+            :link: ../examples/batch-cp2k/reference-trajectory
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/batch-cp2k/images/thumb/sphx_glr_reference-trajectory_thumb.png
+                :alt: This is an example how to perform single point calculations based on list of structures using CP2K using its reftraj functionality. The inputs are a set of structures in :download:`example.xyz` using the DFT parameters defined in :download:`reftraj_template.cp2k`. The reference DFT parameters are taken from Cheng et al. Ab initio thermodynamics of liquid and solid water 2019. Due to the small size of the test structure and convergence issues, we have decreased the size of the CUTOFF_RADIUS from 6.0\,\mathrm{Å} to 3.0\,\mathrm{Å}. For actual production calculations adapt the template!
+                :class: gallery-img
+
+                
+    .. grid-item::
+
+        .. card:: Periodic Hamiltonian learning
+            :link: ../examples/periodic-hamiltonian/periodic-hamiltonian
+            :link-type: doc
+            :text-align: center
+            :shadow: md
+
+            .. image:: ../examples/periodic-hamiltonian/images/thumb/sphx_glr_periodic-hamiltonian_thumb.png
+                :alt: This tutorial explains how to train a machine learning model for the electronic Hamiltonian of a periodic system. Even though we focus on periodic systems, the code and techniques presented here can be directly transferred to molecules.
+                :class: gallery-img
+
+                
