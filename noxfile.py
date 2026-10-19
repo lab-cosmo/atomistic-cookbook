@@ -327,6 +327,18 @@ def post_process_gallery(name, example_dir, files_before):
             # Add the rest of files in the example dir (with an extra check
             # to make sure that they are still there)
             for file in example_files:
+                if file.is_dir():
+                    if file.name == "data":
+                        continue
+                    for child in file.rglob("*"):
+                        if not child.is_file():
+                            continue
+                        if "__pycache__" in child.parts or child.suffix == ".pyc":
+                            continue
+                        if child.name in ("README.rst", ".gitignore"):
+                            continue
+                        zipf.write(child, child.relative_to(example_dir))
+                    continue
                 if file.is_file() and os.path.split(file)[-1] not in [
                     "README.rst",
                     ".gitignore",

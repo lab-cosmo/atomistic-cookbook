@@ -29,4 +29,5 @@ repository <https://github.com/lab-cosmo/chemiscope>`_.
 - examples/pet-relaxation/pet-relaxation
 - examples/water-md/water-md
 - examples/water-ir-spectrum/water-ir-spectrum
+- examples/openmm-metatomic/benzene-lysozyme
 - examples/pkw/pkw

@@ -1,0 +1,21 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - openmm>=8.6.1,<9
+  - openmmforcefields
+  - openff-nagl>=0.6.1,<0.7
+  - openff-nagl-models>=2026.09
+  - chemiscope
+  - matplotlib
+  - numpy
+  - ase
+  - pytorch-cpu
+  - pip
+  - pip:
+    - torch>=2.12,<2.13
+    - metatomic-torch>=0.1.16,<0.2
+    - metatrain>=2026.3
+    - vesin
+    - atomistic-cookbook-utils>=0.1,<0.2
+    - openmmml>=1.8
