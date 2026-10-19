@@ -40,6 +40,7 @@ large (potentially universal) datasets.
 
 # %%
 
+import os
 from time import time
 
 import ase.io
@@ -65,9 +66,10 @@ train = [dataset[i] for i in indices[:n_train]]
 val = [dataset[i] for i in indices[n_train : n_train + n_val]]
 test = [dataset[i] for i in indices[n_train + n_val :]]
 
-ase.io.write("data/ethanol_train.xyz", train, format="extxyz")
-ase.io.write("data/ethanol_val.xyz", val, format="extxyz")
-ase.io.write("data/ethanol_test.xyz", test, format="extxyz")
+os.makedirs("tmp", exist_ok=True)
+ase.io.write("tmp/ethanol_train.xyz", train, format="extxyz")
+ase.io.write("tmp/ethanol_val.xyz", val, format="extxyz")
+ase.io.write("tmp/ethanol_test.xyz", test, format="extxyz")
 
 # %%
 # Non-conservative force training
@@ -151,7 +153,7 @@ run_command("mtt eval nc_model.pt nc_model_eval.yaml")
 #
 #     training_set:
 #       systems:
-#         read_from: data/ethanol_train.xyz
+#         read_from: tmp/ethanol_train.xyz
 #         length_unit: angstrom
 #       targets:
 #         energy:

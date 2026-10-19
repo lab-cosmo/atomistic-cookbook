@@ -16,6 +16,5 @@ RESTART
 log.*
 plumed-*-demo.dat
 input-*-demo.xml
-data/pkw-data.zip
-data/production/
+tmp/
 SRT_*

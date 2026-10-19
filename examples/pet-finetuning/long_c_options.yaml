@@ -12,7 +12,7 @@ architecture:
 # this needs specifying based on the specific dataset
 training_set:
   systems: 
-    read_from: "data/ethanol_train.xyz"  # path to the dataset
+    read_from: "tmp/ethanol_train.xyz"  # path to the dataset
     length_unit: angstrom
   targets:
     energy:
@@ -21,7 +21,7 @@ training_set:
 
 validation_set:
   systems: 
-    read_from: "data/ethanol_val.xyz"
+    read_from: "tmp/ethanol_val.xyz"
     length_unit: angstrom
   targets:
     energy:
@@ -30,7 +30,7 @@ validation_set:
 
 test_set:
   systems: 
-    read_from: "data/ethanol_test.xyz"
+    read_from: "tmp/ethanol_test.xyz"
     length_unit: angstrom
   targets:
     energy:

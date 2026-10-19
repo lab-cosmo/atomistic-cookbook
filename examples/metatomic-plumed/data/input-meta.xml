@@ -5,7 +5,7 @@
    </ffsocket>
    <ffplumed name="plumed">
          <file mode="xyz" units="angstrom"> data/lj-oct.xyz </file>
-         <plumed_dat> data/plumed-mts.dat </plumed_dat>
+         <plumed_dat> tmp/plumed-mts.dat </plumed_dat>
          <plumed_extras> [cv1, cv2] </plumed_extras>
    </ffplumed>
    <prng><seed>12345</seed></prng>  

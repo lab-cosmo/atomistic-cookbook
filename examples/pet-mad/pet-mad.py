@@ -88,7 +88,7 @@ from ipi.scripting import (
 # We fetch the dataset, and load only some of the structures, to speed up the example
 # runtime on CPU. The model can also run (much faster) on GPUs if you have some at hand.
 
-filename = "data/mad-test-mad-settings.xyz"
+filename = "tmp/mad-test-mad-settings.xyz"
 download_with_retry(
     "https://huggingface.co/lab-cosmo/pet-mad/resolve/"
     "main/benchmarks/mad-test-mad-settings.xyz",

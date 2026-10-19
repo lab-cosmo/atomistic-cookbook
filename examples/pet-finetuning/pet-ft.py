@@ -168,9 +168,10 @@ train = [dataset[i] for i in indices[:n_train]]
 val = [dataset[i] for i in indices[n_train : n_train + n_val]]
 test = [dataset[i] for i in indices[n_train + n_val :]]
 
-ase.io.write("data/ethanol_train.xyz", train, format="extxyz")
-ase.io.write("data/ethanol_val.xyz", val, format="extxyz")
-ase.io.write("data/ethanol_test.xyz", test, format="extxyz")
+os.makedirs("tmp", exist_ok=True)
+ase.io.write("tmp/ethanol_train.xyz", train, format="extxyz")
+ase.io.write("tmp/ethanol_val.xyz", val, format="extxyz")
+ase.io.write("tmp/ethanol_test.xyz", test, format="extxyz")
 
 # %%
 # Defines some helper functions
