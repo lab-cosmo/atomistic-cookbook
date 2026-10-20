@@ -63,11 +63,23 @@ def write_con(path, atoms_or_list):
     return path
 
 
-def show_png(path: str, *, figsize=(10, 8)) -> None:
-    """Display a saved plot PNG in the sphinx-gallery page."""
+def show_png(path: str, *, figsize=None) -> None:
+    """Display a saved plot PNG in the sphinx-gallery page.
+
+    ``plot_neb`` leaves its figure open after saving. The gallery would
+    keep that figure and this PNG, so the page shows the plot twice and
+    the open figure is the one with the legend on the axis. Close it,
+    then show the file at its own aspect.
+    """
+    plt.close("all")
+    img = mpimg.imread(path)
+    if figsize is None:
+        height, width = img.shape[:2]
+        fig_w = 10.0
+        figsize = (fig_w, fig_w * height / width)
     fig, ax = plt.subplots(figsize=figsize)
-    ax.imshow(mpimg.imread(path))
-    ax.axis("off")
+    ax.imshow(img)
+    ax.set_axis_off()
     fig.tight_layout(pad=0.15)
     plt.show()
 
