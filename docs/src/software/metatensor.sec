@@ -27,3 +27,5 @@ training and evaluating ML models.
 - examples/water-md/water-md
 - examples/water-ir-spectrum/water-ir-spectrum
 - examples/pkw/pkw
+
+- examples/legacy-torchmodel/legacy-torchmodel
