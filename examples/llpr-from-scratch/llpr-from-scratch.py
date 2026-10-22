@@ -53,8 +53,8 @@ for i in range(1000):
     atoms.rattle(0.3, seed=i)
     atoms.calc = calculator
     atoms.info["energy"] = atoms.get_potential_energy()
-    atoms.arrays["forces"] = atoms.get_forces()
-    atoms.info["stress"] = atoms.get_stress(voigt=False)
+#    atoms.arrays["forces"] = atoms.get_forces()
+#    atoms.info["stress"] = atoms.get_stress(voigt=False)
     atoms.calc = None
     structures.append(atoms)
 
