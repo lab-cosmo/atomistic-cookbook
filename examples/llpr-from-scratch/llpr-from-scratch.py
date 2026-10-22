@@ -141,6 +141,8 @@ def positive_log_limits(array: np.ndarray) -> tuple[float, float]:
     return values.min(), values.max()
 
 
+# Gaussian confidence-interval bounds corresponding to one, two, and
+# three standard deviations; see Bigi et al., MLST 5, 045018 (2024).
 quantile_lines = [0.00916, 0.10256, 0.4309805, 1.71796, 2.5348, 3.44388]
 fig, axes = plt.subplots(1, 2, figsize=(8, 4), sharey=True)
 
