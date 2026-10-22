@@ -1,5 +1,5 @@
 systems: 
-  read_from: data/ethanol_test.xyz
+  read_from: tmp/ethanol_test.xyz
 targets: 
   energy:
     key: energy

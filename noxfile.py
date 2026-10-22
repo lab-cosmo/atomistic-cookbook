@@ -320,9 +320,10 @@ def post_process_gallery(name, example_dir, files_before):
     # We create a zip file for each notebook.
     for py_file, notebook in zip(source_py_files, notebooks):
         with zipfile.ZipFile(docs_example_dir / f"{notebook.stem}.zip", "w") as zipf:
-            # Add files from the data dir (if present)
-            for file in example_dir.rglob("data/*"):
-                zipf.write(file, file.relative_to(example_dir))
+            # Add files from the data dir (if present), including subfolders
+            for file in (example_dir / "data").rglob("*"):
+                if file.is_file() and "__pycache__" not in file.parts:
+                    zipf.write(file, file.relative_to(example_dir))
 
             # Add the rest of files in the example dir (with an extra check
             # to make sure that they are still there)

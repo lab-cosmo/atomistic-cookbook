@@ -105,8 +105,8 @@ calculator = MetatomicCalculator(model_path, device="cpu")
 # final step, we visualize the predicted uncertainties and compare them to a
 # ground truth method.
 
-if not os.path.exists("data/mad-val-100.xyz"):
-    mad_val_full = "data/mad-1.5-r2scan-val.xyz"
+if not os.path.exists("tmp/mad-val-100.xyz"):
+    mad_val_full = "tmp/mad-1.5-r2scan-val.xyz"
     download_with_retry(
         "https://archive.materialscloud.org/records/18tke-tt476/"
         "files/mad-1.5-r2scan-val.xyz",
@@ -116,17 +116,17 @@ if not os.path.exists("data/mad-val-100.xyz"):
     full_dataset = ase.io.read(mad_val_full, index=":")
     stride = max(1, len(full_dataset) // 100)
     subset = full_dataset[::stride][:100]
-    ase.io.write("data/mad-val-100.xyz", subset, format="extxyz")
+    ase.io.write("tmp/mad-val-100.xyz", subset, format="extxyz")
     os.remove(mad_val_full)
 
 # Read the dataset's structures.
-systems = read_systems("data/mad-val-100.xyz")
+systems = read_systems("tmp/mad-val-100.xyz")
 
 # Read the dataset's targets.
 target_config = {
     "energy": {
         "quantity": "energy",
-        "read_from": "data/mad-val-100.xyz",
+        "read_from": "tmp/mad-val-100.xyz",
         "reader": "ase",
         "key": "atomization_energy",
         "unit": "eV",

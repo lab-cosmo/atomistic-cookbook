@@ -120,7 +120,7 @@ if not os.path.exists(MODEL):
 # 110 MB, from the `atomistic-cookbook-data
 # <https://huggingface.co/datasets/lab-cosmo/atomistic-cookbook-data>`_
 # repository on Hugging Face), unless it is already present, and unpacked in
-# the ``data/production`` folder. To reproduce the production runs, point
+# the ``tmp/production`` folder. To reproduce the production runs, point
 # ``MODEL`` to the fine-tuned model, which
 # is a plain ``metatomic`` model with one peculiarity: it has two energy heads,
 # the one of the base model and the fine-tuned ``energy/pbe0``, and the latter
@@ -132,11 +132,11 @@ DATA_URL = (
     "https://huggingface.co/datasets/lab-cosmo/atomistic-cookbook-data/"
     "resolve/main/pkw/pkw-data.zip"
 )
-if not os.path.exists("data/production"):
-    if not os.path.exists("data/pkw-data.zip"):
-        download_with_retry(DATA_URL, "data/pkw-data.zip")
-    with zipfile.ZipFile("data/pkw-data.zip") as zf:
-        zf.extractall("data")
+if not os.path.exists("tmp/production"):
+    if not os.path.exists("tmp/pkw-data.zip"):
+        download_with_retry(DATA_URL, "tmp/pkw-data.zip")
+    with zipfile.ZipFile("tmp/pkw-data.zip") as zf:
+        zf.extractall("tmp")
 
 # %%
 # Finally, a few physical constants and the parameters of the system. The
@@ -422,7 +422,7 @@ print(f"numpy: s = {s:.3f} A, delta = {delta:.3f}")
 # Positions are wrapped into the unit cell, and centered on the final position
 # of the ion pair.
 
-trajectory = ase.io.read("data/production/dissociation_traj.xyz", ":")
+trajectory = ase.io.read("tmp/production/dissociation_traj.xyz", ":")
 charges, separations, deltas, arrows = [], [], [], []
 for frame in trajectory:
     q = apparent_charges(frame)
@@ -588,7 +588,7 @@ plt.show()
 # provided with the data (subsampled every 100 steps) contains time (in MD
 # steps), :math:`s` and the bias.
 
-colvar_prod = np.loadtxt("data/production/metad/COLVAR")
+colvar_prod = np.loadtxt("tmp/production/metad/COLVAR")
 fig, ax = plt.subplots(1, 1, figsize=(5.5, 3.5), constrained_layout=True)
 sc = ax.scatter(
     colvar_prod[:, 1],
@@ -616,7 +616,7 @@ plt.show()
 # ``plumed sum_hills`` tool does. Here we do it explicitly, to show how the
 # estimate evolves.
 
-hills = np.loadtxt("data/production/metad/HILLS")
+hills = np.loadtxt("tmp/production/metad/HILLS")
 gamma = hills[0, 4]
 s_grid = np.linspace(-1, 13, 281)
 
@@ -709,7 +709,7 @@ print(input_remd)
 # production ``HILLS`` file.
 
 demo_temperatures = [300, 313, 326, 339]
-shutil.copy("data/production/metad/HILLS", "HILLS-remd")
+shutil.copy("tmp/production/metad/HILLS", "HILLS-remd")
 run_ipi("data/demo-remd.xml")
 
 # %%
@@ -803,7 +803,7 @@ def reweight(s, bias, temperature=TEMPERATURE, bin_width=0.2, s_max=14.0):
     return centers, fes
 
 
-colvar_files = sorted(glob.glob("data/production/remd/COLVAR_300K_*"))
+colvar_files = sorted(glob.glob("tmp/production/remd/COLVAR_300K_*"))
 runs = [np.loadtxt(f).T for f in colvar_files]  # (s, bias, density) per run
 profiles = []
 for s_run, bias_run, _ in runs:
@@ -1270,7 +1270,7 @@ def mean_and_error(x):
 kinetic = {}
 for state in ["associated", "dissociated"]:
     for y in Y_VALUES:
-        data = np.load(f"data/production/pimd/{state}_y{y}.npz")
+        data = np.load(f"tmp/production/pimd/{state}_y{y}.npz")
         series = data["total"][N_EQUIL:] * EV_TO_KJMOL  # stored in eV
         kinetic[state, y] = mean_and_error(series)
 
@@ -1363,7 +1363,7 @@ print("experiment:            13.93")
 # The ``metatomic`` model of the collective variable and the complete i-PI and
 # PLUMED inputs for :math:`\mathrm{NaH_2PO_4}` (metadynamics, fixed-bias replica
 # exchange and PIMD), with the parameters of the other species, are provided
-# in the data bundle (``data/production/phosphate-template/``, next to the
+# in the data bundle (``tmp/production/phosphate-template/``, next to the
 # fine-tuned model that they require) as a starting point; the results, and a
 # discussion of the consistency check between conjugate pairs, can be found
 # in the paper.

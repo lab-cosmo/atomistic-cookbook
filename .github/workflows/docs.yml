@@ -73,6 +73,16 @@ jobs:
             exit 1
           fi
 
+      - name: check that the build did not create files in data/
+        run: |
+          # everything in data/ ends up in the downloadable zip, so runtime
+          # files (even gitignored ones) should be written to tmp/ instead
+          created="$(git ls-files --others -- "examples/${{ matrix.example-name }}/data" ':!:**/__pycache__/**')"
+          if [ -n "$created" ]; then
+            printf >&2 "Error: running the example created files in data/, write them to tmp/ instead:\n%s\n" "$created"
+            exit 1
+          fi
+
       - name: store example as a github artifact
         uses: actions/upload-artifact@v6
         with:

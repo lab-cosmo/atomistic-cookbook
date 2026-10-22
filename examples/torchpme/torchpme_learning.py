@@ -43,7 +43,7 @@ prefactor = 0.5292  # Unit conversion prefactor.
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-data_dir = "data"
+data_dir = "tmp"
 dataset_url = "https://archive.materialscloud.org/records/405an-d8183/files/point_charges_Training_set_p1.xyz"  # noqa: E501
 dataset_path = os.path.join(data_dir, "point_charges_Training_set.xyz")
 
