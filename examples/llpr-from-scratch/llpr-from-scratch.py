@@ -53,8 +53,10 @@ for i in range(1000):
     atoms.rattle(0.3, seed=i)
     atoms.calc = calculator
     atoms.info["energy"] = atoms.get_potential_energy()
-#    atoms.arrays["forces"] = atoms.get_forces()
-#    atoms.info["stress"] = atoms.get_stress(voigt=False)
+    # Forces and stresses are not required for this recipe. Uncomment these
+    # lines if they are needed for your own application.
+    # atoms.arrays["forces"] = atoms.get_forces()
+    # atoms.info["stress"] = atoms.get_stress(voigt=False)
     atoms.calc = None
     structures.append(atoms)
 
@@ -141,8 +143,7 @@ def positive_log_limits(array: np.ndarray) -> tuple[float, float]:
     return values.min(), values.max()
 
 
-# Gaussian confidence-interval bounds corresponding to one, two, and
-# three standard deviations; see Bigi et al., MLST 5, 045018 (2024).
+
 quantile_lines = [0.00916, 0.10256, 0.4309805, 1.71796, 2.5348, 3.44388]
 fig, axes = plt.subplots(1, 2, figsize=(8, 4), sharey=True)
 
