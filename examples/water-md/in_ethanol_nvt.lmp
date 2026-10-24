@@ -7,7 +7,7 @@ atom_style atomic
 variable seed       index 34567
 variable t_target   equal 400.0
 variable tdamp      equal 100*dt
-variable nsteps     equal 500         # 2000 * 0.5 fs = 1 ps
+variable nsteps     equal 500         # 500 * 0.5 fs = 0.25 ps
 variable dump_every equal 10
 
 read_data data/ethanol_water.data

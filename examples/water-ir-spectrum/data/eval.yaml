@@ -1,0 +1,11 @@
+systems:
+  read_from: test_set.xyz
+  reader: ase
+  length_unit: angstrom
+targets:
+  mtt::dipole:
+    reader: ase
+    key: dft_dipole
+    type:
+      cartesian:
+        rank: 1

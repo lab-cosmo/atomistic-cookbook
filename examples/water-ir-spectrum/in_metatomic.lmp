@@ -1,0 +1,34 @@
+units metal
+atom_style atomic
+
+variable seed       index 24680
+variable t_target   equal 330.0
+variable tdamp      equal 100*dt
+variable nequil     equal 2000     # 1 ps @ 0.5 fs
+variable nprod      equal 10000    # 5 ps @ 0.5 fs
+variable dump_every equal 4        # dump every 2 fs (= 4 * 0.5 fs)
+
+read_data water.data
+mass 1 15.999
+mass 2 1.008
+
+pair_style metatomic pet-mad-xs-v1.5.0_SCAN_dipole.pt device cpu variant scan
+pair_coeff * * 8 1
+
+timestep 0.0005   # 0.5 fs in metal (ps)
+neighbor 2.0 bin
+neigh_modify one 100000 page 1000000 binsize 5.5
+
+thermo_style custom step temp press etotal pe ke
+thermo 1000
+
+velocity all create ${t_target} ${seed} mom yes rot yes
+reset_timestep 0
+
+fix nve_int   all nve
+fix thermostat all temp/csvr ${t_target} ${t_target} ${tdamp} ${seed}
+run ${nequil}
+
+dump traj all custom ${dump_every} pet-xs-scan.lammpstrj id type xu yu zu
+dump_modify traj sort id
+run ${nprod}

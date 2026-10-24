@@ -1,5 +1,5 @@
-Finding Reaction Paths with EON and a Metatomic Potential
+Finding Reaction Paths with eOn and a Metatomic Potential
 =========================================================
 
-Describes the usage of the Nudged Elastic Band with energy weighted springs and
-single ended dimer searches using EON and PET-MAD. Contrasts with ASE.
+Nudged elastic band with energy-weighted springs and OCI-MMF using
+``pyeonclient`` and PET-MAD (ASE climbing-image NEB for comparison).

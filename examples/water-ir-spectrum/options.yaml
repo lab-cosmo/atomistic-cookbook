@@ -1,0 +1,49 @@
+device: cpu
+seed: 0
+
+architecture:
+  name: pet
+  training:
+    batch_size: 32
+    num_epochs: 5000
+    learning_rate: 5e-5
+    warmup_fraction: 0.0
+    scale_targets: true
+    finetune:
+      method: full
+      read_from: pet-mad-xs-v1.5.1.ckpt
+      inherit_heads:
+        energy/scan: energy
+    loss:
+      energy/scan:
+        weight: 0.001
+        gradients:
+          positions:
+            weight: 0.001
+          strain:
+            weight: 0.001
+
+training_set:
+  systems:
+    read_from: water_mlip_dipole_data.xyz
+    reader: ase
+    length_unit: angstrom
+  targets:
+    energy/scan:
+      key: energy
+      quantity: energy
+      unit: eV
+      description: SCAN
+      forces:
+        key: forces
+      stress:
+        key: stress
+    mtt::dipole:
+      key: dft_dipole
+      description: SCAN
+      type:
+        cartesian:
+          rank: 1
+
+validation_set: 0.05
+test_set: 0.05

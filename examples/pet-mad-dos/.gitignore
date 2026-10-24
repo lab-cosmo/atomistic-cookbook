@@ -6,8 +6,7 @@ RESTART
 *.atomic_error*
 *.txt
 *.ckpt
-GaAs_processed*
-GaAs_sample_structures.xyz
-pred.xyz
+data/
+*.xyz
 fine_tune-model*
 outputs/

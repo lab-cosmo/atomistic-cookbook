@@ -1,0 +1,116 @@
+####################################################################### 
+# 
+# This file contains crystal structure data downloaded from the 
+# Cambridge Structural Database (CSD) hosted by the Cambridge 
+# Crystallographic Data Centre (CCDC).
+# 
+# Full information about CCDC data access policies and citation 
+# guidelines are available at http://www.ccdc.cam.ac.uk/access/V1 
+# 
+# Audit and citation data items may have been added by the CCDC. 
+# Please retain this information to preserve the provenance of 
+# this file and to allow appropriate attribution of the data. 
+# 
+#######################################################################
+
+data_TESTOM01
+#This CIF has been generated from an entry in the Cambridge Structural Database
+_database_code_depnum_ccdc_archive 'CCDC 1269491'
+_database_code_CSD               TESTOM01
+_audit_creation_method           'Created from the CSD'
+_audit_update_record             
+;
+2026-08-23 downloaded from the CCDC.
+;
+_database_code_NBS               527219
+_chemical_name_common            'Teaching Subset: Fundamental Chemistry'
+_chemical_formula_moiety         'C19 H28 O2,H2 O1'
+_chemical_name_systematic        'Testosterone monohydrate'
+_chemical_properties_biological  'androgenic activity'
+_chemical_absolute_configuration unk
+_diffrn_ambient_temperature      295
+_exptl_crystal_density_diffrn    1.178
+#These two values have been output from a single CSD field.
+_refine_ls_R_factor_gt           0.051
+_refine_ls_wR_factor_gt          0.051
+_diffrn_radiation_probe          x-ray
+_symmetry_cell_setting           orthorhombic
+_symmetry_space_group_name_H-M   'P 21 21 21'
+_symmetry_Int_Tables_number      19
+_space_group_name_Hall           'P 2ac 2ab'
+loop_
+_symmetry_equiv_pos_site_id
+_symmetry_equiv_pos_as_xyz
+1 x,y,z
+2 1/2+x,1/2-y,-z
+3 -x,1/2+y,1/2-z
+4 1/2-x,-y,1/2+z
+_cell_length_a                   15.966(6)
+_cell_length_b                   13.609(6)
+_cell_length_c                   7.952(4)
+_cell_angle_alpha                90
+_cell_angle_beta                 90
+_cell_angle_gamma                90
+_cell_volume                     1727.82
+_cell_formula_units_Z            4
+_exptl_crystal_recrystallization_method acetone
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+C1 C 0.06583 0.08541 0.14721
+C2 C 0.05639 0.02412 -0.01451
+C3 C 0.12126 -0.12515 0.13969
+C4 C 0.18888 -0.20577 0.14015
+C5 C 0.18806 -0.26320 -0.02510
+C6 C 0.20123 -0.18963 -0.17037
+C7 C 0.22072 -0.25483 -0.32360
+C8 C 0.26790 -0.34280 -0.24908
+C9 C 0.26557 -0.32994 -0.05441
+C10 C 0.10915 -0.32498 -0.04497
+C11 C -0.03232 -0.02020 -0.02592
+C12 C 0.02164 0.18368 0.14156
+C13 C 0.04735 0.24223 -0.01017
+C14 C 0.06973 0.18816 -0.16058
+C15 C 0.07015 0.08883 -0.16974
+C16 C 0.08074 0.03876 -0.33500
+C17 C 0.14902 -0.04144 -0.32776
+C18 C 0.13207 -0.11319 -0.18320
+C19 C 0.12665 -0.05614 -0.01586
+H1 H 0.12790 0.09620 0.15840
+H2 H -0.03170 0.17280 0.12000
+H3 H 0.07850 0.23090 -0.27040
+H4 H 0.02850 0.00610 -0.35980
+H5 H 0.20360 -0.01520 -0.31560
+H6 H 0.07960 -0.14760 -0.20390
+H7 H 0.18680 -0.01960 -0.00880
+H8 H 0.06380 -0.15680 0.13910
+H9 H 0.24830 -0.17720 0.14940
+H10 H 0.26180 -0.15080 -0.13090
+H11 H 0.26850 -0.22190 -0.38670
+H12 H 0.23980 -0.40860 -0.28320
+H13 H 0.32430 -0.29580 -0.01750
+H14 H 0.11170 -0.36670 -0.15610
+H15 H -0.03840 -0.06320 -0.13310
+H17 H 0.04800 0.04520 0.23300
+H18 H 0.02390 0.21970 0.25130
+H19 H 0.09320 0.09150 -0.41690
+H20 H 0.14670 -0.08450 -0.43560
+H22 H 0.13120 -0.07970 0.25530
+H23 H 0.18140 -0.25360 0.24670
+H24 H 0.16550 -0.27320 -0.38650
+H25 H 0.32950 -0.34020 -0.26850
+H26 H 0.06400 -0.28730 -0.04190
+H27 H -0.07730 0.03680 -0.02200
+H28 H 0.10400 -0.37930 0.03810
+H29 H -0.03840 -0.06030 0.06490
+H30 H 0.27850 -0.42100 0.11580
+O2 O 0.04694 0.33287 -0.00719
+O3 O 0.26130 -0.42392 0.02369
+H16 H 0.35010 -0.41380 0.35920
+H21 H 0.28730 -0.47030 0.41320
+O1 O 0.29997 -0.41377 0.35319
+
+#END

@@ -39,7 +39,7 @@ directives.register_directive("toctree", DummyToctree)
 ROOT = os.path.realpath(os.path.dirname(__file__))
 
 sys.path.insert(0, ROOT)
-from src.get_examples import get_examples  # noqa: E402
+from src.get_examples import get_examples
 
 # global nox options
 nox.needs_version = ">=2024"
@@ -80,13 +80,13 @@ def filter_files(tracked_files):
     returns = []
     for file in tracked_files.splitlines():
         tmp = file.split(".")[-1]
-        if tmp in ["rst", "py"]:  # skips all files that are not rst or py
-            if os.path.split(file)[-1] not in [
-                ".gitignore",
-                "README.rst",
-                "INSTALLING.rst",
-            ]:
-                returns.append(file)
+        basename = os.path.basename(file)
+        if tmp in ["rst", "py"] and basename not in [
+            ".gitignore",
+            "README.rst",
+            "INSTALLING.rst",
+        ]:
+            returns.append(file)
 
     return returns
 
@@ -320,9 +320,10 @@ def post_process_gallery(name, example_dir, files_before):
     # We create a zip file for each notebook.
     for py_file, notebook in zip(source_py_files, notebooks):
         with zipfile.ZipFile(docs_example_dir / f"{notebook.stem}.zip", "w") as zipf:
-            # Add files from the data dir (if present)
-            for file in example_dir.rglob("data/*"):
-                zipf.write(file, file.relative_to(example_dir))
+            # Add files from the data dir (if present), including subfolders
+            for file in (example_dir / "data").rglob("*"):
+                if file.is_file() and "__pycache__" not in file.parts:
+                    zipf.write(file, file.relative_to(example_dir))
 
             # Add the rest of files in the example dir (with an extra check
             # to make sure that they are still there)
@@ -351,6 +352,34 @@ DEPENCENCIES_UPDATES = {
 }
 
 
+def _solved_packages_from_dry_run(data):
+    """Return ``channel::name==ver`` strings from ``conda --json --dry-run``.
+
+    Older ``conda env create`` printed a ``dependencies`` list. conda 26.7
+    aliases that command to ``conda create``, so the information is now
+    ``actions.LINK`` (package records).
+    """
+    if "dependencies" in data:
+        return data["dependencies"]
+
+    actions = data.get("actions")
+    if not isinstance(actions, dict) or "LINK" not in actions:
+        return None
+
+    packages = []
+    for pkg in actions["LINK"] or []:
+        if isinstance(pkg, str):
+            packages.append(pkg)
+            continue
+        name = pkg.get("name") if isinstance(pkg, dict) else None
+        if not name:
+            continue
+        channel = pkg.get("channel") or ""
+        version = pkg.get("version") or ""
+        packages.append(f"{channel}::{name}=={version}")
+    return packages
+
+
 def update_dependencies(environment_yml, session):
     with tempfile.TemporaryFile(mode="w+", encoding="utf-8") as stderr:
         output = session.run(
@@ -377,12 +406,18 @@ def update_dependencies(environment_yml, session):
 
     try:
         data = json.loads(output)
-        dependencies = data["dependencies"]
     except json.JSONDecodeError:
         session.error(
             "Conda did not return valid JSON while resolving dependencies. "
             "stdout was:\n"
             f"{output}"
+        )
+
+    dependencies = _solved_packages_from_dry_run(data)
+    if dependencies is None:
+        session.error(
+            "Conda dry-run JSON has neither 'dependencies' nor 'actions.LINK'. "
+            f"keys={list(data)!r}\n{output}"
         )
 
     new_deps = set()
@@ -518,7 +553,7 @@ that are not part of any of the other sections.
     :gutter: 1 1 2 3
 """)
         # sort by title
-        for _, metadata in sorted(
+        for _, metadata in sorted(  # noqa: FURB122
             all_examples_rst.items(), key=(lambda kw: kw[1]["title"])
         ):
             # generates a thumbnail link
@@ -613,8 +648,7 @@ def lint(session):
     if not session.virtualenv._reused:
         session.install("blackdoc")
         session.install("ruff")
-        session.install("flake8", "flake8-bugbear", "flake8-sphinx-links")
-        # session.install("isort")
+        session.install("flake8-sphinx-links")
         session.install("sphinx-lint")
 
     # Get files
@@ -623,17 +657,8 @@ def lint(session):
     # Formatting
     session.run("ruff", "format", "--check", "--diff", *LINT_FILES)
     session.run("blackdoc", "--check", "--diff", *LINT_FILES)
-    # session.run("isort", "--check-only", "--diff", *LINT_FILES)
 
     # Linting
-    session.run(
-        "flake8",
-        "--max-line-length=88",
-        "--exclude=docs/src/examples/",
-        "--extend-ignore=E203",
-        *LINT_FILES,
-    )
-
     session.run(
         "sphinx-lint",
         "--enable=line-too-long",

@@ -1,0 +1,13 @@
+dataset.xyz
+evaluation.xyz
+output.xyz
+
+model.ckpt
+model-llpr.ckpt
+model.pt
+model-llpr.pt
+extensions
+outputs
+
+*.log
+*.txt

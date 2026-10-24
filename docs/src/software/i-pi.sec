@@ -21,3 +21,5 @@ it on the `ipi-code website <http://ipi-code.org>`_, the `documentation pages
 - examples/ring-polymer-instanton/rpi-rates
 - examples/mendeleev/mendeleev
 - examples/pet-phonons/pet-phonons
+- examples/bosons-fermions-pimd/bosons-fermions-pimd
+- examples/pkw/pkw

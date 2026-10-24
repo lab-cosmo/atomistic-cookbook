@@ -11,13 +11,18 @@ as the driver to simulate the `q-TIP4P/f water
 model <http://doi.org/10.1063/1.3167790>`_.
 """
 
+import os
 import subprocess
 import time
 
+import ase.io
 import chemiscope
 import ipi
 import matplotlib.pyplot as plt
 import numpy as np
+import upet
+from atomistic_cookbook_utils import run_command
+from huggingface_hub import hf_hub_download
 
 
 # %%
@@ -389,5 +394,117 @@ chemiscope.show(
             "shape": ["kinetic_cv"],
             "unitCell": True,
         }
+    ),
+)
+
+# %%
+# Path integrals with a machine-learning potential
+# ------------------------------------------------
+#
+# The simulations above use an empirical forcefield, that describes the
+# inter-atomic potential with a simple, fixed functional form. Machine-learning
+# interatomic potentials, that are trained on electronic-structure calculations,
+# approximate the Born-Oppenheimer potential energy surface, and therefore
+# require an explicit treatment of nuclear quantum effects to model light atoms.
+# *Universal* potentials, such as
+# `PET-MAD <https://arxiv.org/abs/2503.14118>`_, are trained on databases that
+# cover a large fraction of known compounds, and can therefore be applied,
+# without further training, to systems beyond the reach of empirical models.
+# As an example, we simulate a Li\ :sup:`+` and an OH\ :sup:`-` ion solvated
+# in liquid water. We build the starting configuration by mutating two of the
+# molecules in the water box used in the previous sections: one water is turned
+# into Li\ :sup:`+`, and a second (distant) one loses a proton to become a
+# hydroxide ion, so that the box stays charge-neutral.
+
+atoms = ase.io.read("data/water_32.pdb")
+# the box contains contiguous O,H,H triplets; the first molecule becomes Li+...
+atoms.symbols[0] = "Li"
+# ... deleting its two H atoms, together with one H of the 6th molecule (OH-)
+del atoms[[1, 2, 16]]
+
+# strips the PDB-specific arrays, and saves the structure keeping cell information
+atoms = ase.Atoms(atoms.symbols, atoms.positions, cell=atoms.cell, pbc=True)
+ase.io.write("water_lioh.xyz", atoms)
+
+# %%
+# We use the extra-small version of PET-MAD, which is fast enough to run this
+# example on CPU. We download the model checkpoint directly from the
+# Hugging Face repository, and use the ``upet`` package to export it as a
+# torchscript file.
+
+model_path = "pet-mad-xs-v1.5.0.pt"
+if not os.path.exists(model_path):
+    checkpoint = hf_hub_download(
+        repo_id="lab-cosmo/upet",
+        filename="pet-mad-xs-v1.5.0.ckpt",
+        subfolder="models",
+    )
+    upet.save_upet(checkpoint_path=checkpoint, output=model_path)
+
+# %%
+# ``i-PI`` can evaluate the model directly, through the ``metatomic`` interface:
+# rather than launching a separate driver connected by a socket, the input uses
+# a ``ffdirect`` forcefield clause that computes energy and forces in the same
+# process. Everything else in the input file -- including the PIGLET
+# thermostat, that is transferable between systems at the same temperature --
+# is unchanged relative to the previous section.
+
+with open("data/input_pet_piglet.xml", "r") as file:
+    xml_content = file.read()
+print(
+    xml_content[
+        xml_content.find("<ffdirect") : xml_content.find("</ffdirect>")
+        + len("</ffdirect>")
+    ]
+)
+
+run_command("i-pi data/input_pet_piglet.xml")
+
+# %%
+# Even this very short trajectory shows the fast equilibration of the
+# kinetic energy induced by the PIGLET thermostat.
+
+output_pet, desc_pet = ipi.read_output("simulation_pet.out")
+
+fig, ax = plt.subplots(1, 1, figsize=(4, 3), constrained_layout=True)
+ax.plot(
+    output_pet["time"],
+    output_pet["potential"] - output_pet["potential"][0],
+    "b-",
+    label="Potential, $V$",
+)
+ax.plot(
+    output_pet["time"],
+    output_pet["kinetic_cv"],
+    "r-",
+    label="Centroid virial, $K_{CV}$",
+)
+ax.set_xlabel(r"$t$ / ps")
+ax.set_ylabel(r"energy / eV")
+ax.legend()
+plt.show()
+
+# %%
+# We visualize the ring polymers by simply superimposing the
+# configurations of all the beads in each frame. Note the large
+# spread of the beads of the protons compared with the compact ring polymer
+# of the (heavier) Li\ :sup:`+` ion, that is easy to spot given that atoms
+# are colored by element.
+
+traj_pet = [ipi.read_trajectory(f"simulation_pet.pos_{i}.xyz")[1:] for i in range(8)]
+nbeads, nframes = len(traj_pet), len(traj_pet[0])
+
+full_frames = []
+for i in range(nframes):
+    struc = traj_pet[0][i].copy()
+    for k in range(1, nbeads):
+        struc += traj_pet[k][i]
+    full_frames.append(struc)
+
+chemiscope.show(
+    full_frames,
+    mode="structure",
+    settings=chemiscope.quick_settings(
+        trajectory=True, structure_settings={"bonds": False, "unitCell": True}
     ),
 )
