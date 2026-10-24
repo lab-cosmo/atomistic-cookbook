@@ -155,13 +155,14 @@ calculators = build_calculators()
 # database <https://cmr.fysik.dtu.dk/uafd/uafd.html>`_, and the solid-state
 # experimental references (with the prototypes needed to build the structures) come
 # as CSV tables. The small ``G3-99.csv`` table of experimental molecular atomization
-# targets ships with the recipe.
+# targets ships with the recipe in ``data/``; downloads go to ``tmp/``.
 
 DATA_DIR = "data"
-os.makedirs(DATA_DIR, exist_ok=True)
-UAFD_DB = os.path.join(DATA_DIR, "uafd.db")
+TMP_DIR = "tmp"
+os.makedirs(TMP_DIR, exist_ok=True)
+UAFD_DB = os.path.join(TMP_DIR, "uafd.db")
 CSV = {
-    p: os.path.join(DATA_DIR, f"{p}.csv")
+    p: os.path.join(TMP_DIR, f"{p}.csv")
     for p in ("lattice_constants", "cohesive_energies", "bulk_moduli")
 }
 
