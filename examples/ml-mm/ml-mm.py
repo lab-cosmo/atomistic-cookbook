@@ -18,22 +18,26 @@ similar ideas to QM/MM.
     mechanics, while the rest uses a classical force field.  ML/MM follows the same
     principle, replacing the QM Hamiltonian with a machine learning potential.
 
-    The GROMACS *Metatomic* plugin implements **mechanical embedding**: the classical
-    bonded interactions (bonds, angles, dihedrals) and non-bonded interactions
-    (Lennard-Jones, Coulomb) *within* the ML region are removed from the force field
-    and replaced by the ML model's energy and forces.  Interactions between ML and MM
-    atoms (the coupling terms) are handled by the classical force field.  This is
-    closely related to the ONIOM subtractive scheme [2]_:
+    Here we use the subtractive ONIOM scheme [2]_ with mechanical embedding:
 
     .. math::
 
         E_\\text{tot} = E_\\text{MM}(\\text{full}) + E_\\text{ML}(\\text{solute})
         - E_\\text{MM}(\\text{solute})
 
-    where the MM contribution of the solute is subtracted to avoid double-counting.
-    Currently, boundary interactions (angles and dihedrals spanning the ML/MM
-    interface) are kept in the MM evaluation, which introduces a small inconsistency
-    at the boundary.
+    The whole system is described with the force field, the solute is also described
+    with the ML model, and the force field energy of the isolated solute is subtracted
+    to avoid counting it twice.  The solute and the solvent interact only through the
+    force field (Lennard-Jones and fixed point charges).
+
+    The GROMACS *Metatomic* plugin does not compute
+    :math:`E_\\text{MM}(\\text{solute})` explicitly.  Instead, ``grompp`` removes the
+    corresponding terms from the topology: bonds, angles, dihedrals and 1-4 pairs
+    between ML atoms are deleted, and Lennard-Jones and Coulomb interactions between ML
+    atoms are excluded.  Here the ML region is a whole molecule (capped with ACE and
+    NME groups), so no covalent bond crosses the ML/MM boundary, and this removes
+    exactly :math:`E_\\text{MM}(\\text{solute})`.  We check this numerically after
+    running the simulation.
 
     .. [1] Warshel & Levitt, J. Mol. Biol. 103, 227 (1976).
     .. [2] Chung et al., Chem. Rev. 115, 5678 (2015).
@@ -48,18 +52,23 @@ from the `UPET <https://huggingface.co/lab-cosmo/upet>`_ family.
 
 .. warning ::
 
-    **Limitations of the current implementation**
+    **Limitations of the current setup**
 
     1. PET-MAD is trained on a broad materials dataset (r2SCAN functional) and is *not*
        optimized for biomolecular systems.  It is used here to demonstrate the workflow.
        For production work, use a model fine-tuned on relevant biochemical data.
 
-    2. The current GROMACS metatomic interface does not yet implement full ONIOM
-       subtractive correction at the ML/MM boundary.  Boundary bonded interactions
-       (angles and dihedrals that span the interface) are double-counted, which can
-       cause energy drift.  A proper ONIOM implementation is in progress.
+    2. With mechanical embedding, the ML model does not see the solvent.  The
+       solute-solvent interaction comes entirely from the force field, with fixed point
+       charges on the solute atoms, so the polarization of the solute by the solvent is
+       not captured.
 
-    3. Energy conservation holds in **conservative mode** (the default), where forces
+    3. The ML region must contain whole molecules.  If the ML/MM boundary cuts covalent
+       bonds (for example a side chain treated with ML inside an MM protein), link atoms
+       and a careful treatment of the bonded terms at the boundary are needed.  The
+       version of the GROMACS metatomic interface used here does not support this.
+
+    4. Energy conservation holds in **conservative mode** (the default), where forces
        are obtained via automatic differentiation of the ML energy.  The
        **non-conservative** mode (direct force output) does not guarantee energy
        conservation.
@@ -154,6 +163,93 @@ print(f"Successfully exported {fname}.")
 run_command(f"{GMX} grompp -f grompp.mdp -c data/conf.gro -p data/topol.top")
 
 run_command(f"{GMX} mdrun")
+
+# %%
+# Checking the ONIOM energy
+# -------------------------
+#
+# Since :math:`E_\text{MM}(\text{solute})` is subtracted by modifying the topology, we
+# check that the simulation indeed runs on the ONIOM energy.  We recompute the force
+# field energy of the saved frames with ``mdrun -rerun``: once for the full system
+# without the ML model, giving :math:`E_\text{MM}(\text{full})`, and once for the
+# solute alone, giving :math:`E_\text{MM}(\text{solute})`.  Both reruns use the same
+# settings as the ML/MM simulation, without the Metatomic section and the thermostat.
+
+mdp = Path("grompp.mdp").read_text().splitlines()
+skip = ("metatomic", "tcoupl", "tc-grps", "tau-t", "ref-t")
+Path("mm.mdp").write_text("\n".join(line for line in mdp if not line.startswith(skip)))
+
+run_command(f"{GMX} grompp -f mm.mdp -c data/conf.gro -p data/topol.top -o mm-full")
+run_command(f"{GMX} mdrun -rerun traj.trr -deffnm mm-full")
+
+# Topology, structure and trajectory of the solute alone
+topology = Path("data/topol.top").read_text()
+Path("solute.top").write_text(
+    topology.split("[ molecules ]")[0] + "[ molecules ]\nProtein_chain_A 1\n"
+)
+ala_initial.write("solute.gro")
+subprocess.run(
+    [GMX, "trjconv", "-f", "traj.trr", "-s", "topol.tpr", "-o", "solute.trr"],
+    input=b"1\n",  # select Protein group
+    check=True,
+)
+
+run_command(f"{GMX} grompp -f mm.mdp -c solute.gro -p solute.top -o mm-solute")
+run_command(f"{GMX} mdrun -rerun solute.trr -deffnm mm-solute")
+
+
+# %%
+# We read the energies (in kJ/mol) with ``gmx energy``.  The ML/MM run stores both the
+# total potential energy and the ML contribution, :math:`E_\text{ML}(\text{solute})`.
+
+
+def read_energy(edr, term):
+    """Read the time and one energy term from a GROMACS ``.edr`` file."""
+    xvg = f"{Path(edr).stem}-{term}.xvg"
+    subprocess.run(
+        [GMX, "energy", "-f", edr, "-o", xvg], input=f"{term}\n\n".encode(), check=True
+    )
+    data = np.loadtxt(xvg, comments=["#", "@"])
+    return data[:, 0], data[:, 1]
+
+
+time_energy, e_tot = read_energy("ener.edr", "Potential")
+_, e_ml = read_energy("ener.edr", "Metatomic-Potential")
+_, e_mm_full = read_energy("mm-full.edr", "Potential")
+_, e_mm_solute = read_energy("mm-solute.edr", "Potential")
+
+e_oniom = e_mm_full + e_ml - e_mm_solute
+error = np.abs(e_tot - e_oniom).max()
+print(f"E_MM(solute): {e_mm_solute.min():.1f} to {e_mm_solute.max():.1f} kJ/mol")
+print(f"largest difference between E_tot and the ONIOM energy: {error:.3f} kJ/mol")
+
+# %%
+# The energy that GROMACS removed from the force field matches
+# :math:`E_\text{MM}(\text{solute})` within a fraction of a kJ/mol along the whole
+# trajectory, so the simulation runs on the ONIOM energy.
+
+plt.figure(figsize=(6, 3))
+plt.plot(
+    time_energy,
+    e_mm_full + e_ml - e_tot,
+    linewidth=2,
+    label=r"$E_\mathrm{MM}(\mathrm{full}) + E_\mathrm{ML}(\mathrm{solute})"
+    r" - E_\mathrm{tot}$",
+)
+plt.plot(
+    time_energy,
+    e_mm_solute,
+    "--",
+    color="black",
+    linewidth=0.8,
+    label=r"$E_\mathrm{MM}(\mathrm{solute})$",
+)
+plt.xlabel("Time (ps)")
+plt.ylabel("Energy (kJ/mol)")
+plt.legend(fontsize=8)
+plt.tight_layout()
+
+assert error < 1.0, "the ML/MM energy does not follow the ONIOM scheme"
 
 # %%
 # RMSD analysis
