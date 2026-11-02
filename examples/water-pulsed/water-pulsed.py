@@ -149,7 +149,7 @@ for i_ts, ts in enumerate(u.trajectory):
     cos_theta = maicos.lib.weights.diporder_weights(
         u.atoms,
         grouping="molecules",
-        order_parameter="cos_theta",
+        order_parameter="P1",
         get_unit_vectors=get_unit_vectors,
     )
     matrix = np.outer(cos_theta, cos_theta)
