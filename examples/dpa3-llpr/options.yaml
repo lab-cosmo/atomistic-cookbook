@@ -1,0 +1,41 @@
+seed: 42
+device: cpu
+base_precision: 32
+
+architecture:
+  name: experimental.dpa3
+
+  model:
+    descriptor:
+      repflow:
+        n_dim: 32
+        e_dim: 16
+        a_dim: 8
+        nlayers: 1
+        e_sel: 64
+        a_sel: 32
+        axis_neuron: 4
+
+    fitting_net:
+      neuron:
+        - 32
+        - 32
+      precision: 32
+
+  training:
+    batch_size: 5
+    num_epochs: 100
+    learning_rate: 0.001
+    log_interval: 1
+    checkpoint_interval: 5
+
+training_set:
+  systems:
+    read_from: dataset.xyz
+    length_unit: angstrom
+  targets:
+    energy:
+      key: energy
+      unit: eV
+
+validation_set: 0.2

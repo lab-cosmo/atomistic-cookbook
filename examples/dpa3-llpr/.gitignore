@@ -1,0 +1,18 @@
+# Generated datasets and predictions
+dataset.xyz
+evaluation.xyz
+output.xyz
+
+# Trained models and checkpoints
+model.ckpt
+model-llpr.ckpt
+model.pt
+model-llpr.pt
+
+# Exported extensions and training outputs
+extensions/
+outputs/
+
+# Logs and temporary text files
+*.log
+*.txt
