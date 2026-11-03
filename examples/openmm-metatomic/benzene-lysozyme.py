@@ -1,0 +1,165 @@
+"""
+Mechanical embedding
+====================
+
+:Authors: Eric Boittier `@EricBoittier <https://github.com/EricBoittier>`_
+
+Mechanical embedding is a type of 'subtractive' scheme (literally, see the
+equation below) used in QM/MM. A small region is described by a higher-level
+model and the rest by a force field. The higher-level region is not polarized
+by the surroundings. That speeds the calculation up at the cost of accuracy.
+The interaction between the two regions stays in the force field, and the
+force-field energy of the small region is subtracted so as not to
+double-count it [1]_.
+
+.. math::
+
+    E = E_\\text{MM}(\\text{all})
+      + E_\\text{ML}(\\text{region})
+      - E_\\text{MM}(\\text{region}).
+
+We use a familiar test system in small-molecule design. Here the small region
+is a ligand in the T4 lysozyme L99A cavity, benzene or o-xylene, and the
+higher-level model is PET-SPICE-S, a metatomic potential trained on SPICE.
+Lysozyme is Amber ff14SB.
+
+.. [1] Bakowies and Thiel, J. Phys. Chem. 100, 10580 (1996).
+   `DOI:10.1021/jp9536514 <https://doi.org/10.1021/jp9536514>`_
+"""
+
+# sphinx_gallery_thumbnail_path = '../../examples/openmm-metatomic/mechanical-embedding.png'
+
+# %%
+# Structures
+# ----------
+#
+# The coordinates are T4 lysozyme L99A from the OpenMM workshop, with
+# benzene or o-xylene in the cavity. The ligand charges and the valence
+# terms Amber does not know come from OpenFF 2.2.1.
+
+import os
+import sys
+import warnings
+
+import chemiscope
+import MDAnalysis as mda
+import openmm as mm
+import openmm.app as app
+import openmm.unit as unit
+from atomistic_cookbook_utils import download_with_retry, run_command
+from openff.toolkit import Molecule
+from openff.toolkit import Topology as OffTopology
+from openff.units.openmm import to_openmm
+from openmmforcefields.generators import SMIRNOFFTemplateGenerator
+from openmmml import MLPotential
+
+CPU = mm.Platform.getPlatformByName("CPU")
+
+WORKSHOP = "https://raw.githubusercontent.com/openmm/openmm_workshops/main/section_1"
+for filename in ("lysozyme.pdb", "benzene.sdf", "o-xylene.sdf"):
+    download_with_retry(f"{WORKSHOP}/{filename}", filename)
+
+protein_pdb = app.PDBFile("lysozyme.pdb")
+n_protein = protein_pdb.topology.getNumAtoms()
+
+molecules = [Molecule.from_file(name) for name in ("benzene.sdf", "o-xylene.sdf")]
+# OpenFF 2.2.1 expects AM1-BCC charges. The NAGL model assigns them.
+for molecule in molecules:
+    molecule.assign_partial_charges("openff-gnn-am1bcc-1.0.0.pt")
+warnings.filterwarnings("ignore", message="Preset charges were provided")
+forcefield = app.ForceField("amber14-all.xml", "amber14/tip3pfb.xml")
+forcefield.registerTemplateGenerator(
+    SMIRNOFFTemplateGenerator(molecules=molecules, forcefield="openff-2.2.1").generator
+)
+
+names = ("benzene", "o-xylene")
+systems = {}
+for name, molecule in zip(names, molecules):
+    ligand_topology = OffTopology.from_molecules(molecules=[molecule]).to_openmm()
+    ligand_positions = to_openmm(molecule.conformers[0])
+    modeller = app.Modeller(protein_pdb.topology, protein_pdb.positions)
+    modeller.add(ligand_topology, ligand_positions)
+    ligand_atoms = list(range(n_protein, modeller.topology.getNumAtoms()))
+    systems[name] = {
+        "topology": modeller.topology,
+        "positions": modeller.positions,
+        "ligand_atoms": ligand_atoms,
+    }
+
+# %%
+# MDAnalysis reads the OpenMM ``Modeller`` directly, including residues and
+# chains, so chemiscope can draw the protein as a cartoon. Both ligands sit in
+# the same cavity; ``modeller`` holds the last complex, o-xylene.
+
+chemiscope.show(
+    mda.Universe(modeller).atoms,
+    mode="structure",
+    settings=chemiscope.quick_settings(structure_settings={"cartoon": True}),
+)
+
+# %%
+# Metatomic potential
+# -------------------
+#
+# Released OpenMM-ML does not ship a metatomic backend yet
+# (`openmm-ml#174 <https://github.com/openmm/openmm-ml/pull/174>`_), so this
+# recipe brings its own in ``metatomicpotential.py`` and registers it under
+# the name ``"metatomic"``. PET-SPICE-S is exported to TorchScript with
+# ``mtt export``.
+
+# sphinx-gallery runs the recipe from its folder, which is not on sys.path
+sys.path.insert(0, os.getcwd())
+from metatomicpotential import MetatomicPotentialImplFactory  # noqa: E402
+
+MLPotential.registerImplFactory("metatomic", MetatomicPotentialImplFactory())
+
+if not os.path.exists("pet-spice-s.pt"):
+    run_command(
+        "mtt export https://huggingface.co/lab-cosmo/upet/resolve/main/"
+        "models/pet-spice-s-v0.2.0.ckpt -o pet-spice-s.pt",
+        print_output=True,
+    )
+potential = MLPotential("metatomic", model="pet-spice-s.pt", device="cpu")
+
+# %%
+# Energies
+# --------
+#
+# ``Context.getState`` can return the energy of a single force if that
+# force is placed in its own force group. The metatomic contribution is
+# the ligand. Bonded terms that lie entirely inside the ligand are
+# removed, so the Amber terms that remain are the protein and the
+# protein-ligand interaction.
+
+vacuum = {
+    "nonbondedMethod": app.NoCutoff,
+    "constraints": app.HBonds,
+    "rigidWater": True,
+    "removeCMMotion": False,
+}
+for name in names:
+    entry = systems[name]
+    mm_system = forcefield.createSystem(entry["topology"], **vacuum)
+    mixed = potential.createMixedSystem(
+        entry["topology"],
+        mm_system,
+        entry["ligand_atoms"],
+        embedding="mechanical",
+        removeConstraints=True,
+    )
+    for index, force in enumerate(mixed.getForces()):
+        force.setForceGroup(index)
+    context = mm.Context(mixed, mm.VerletIntegrator(1.0 * unit.femtoseconds), CPU)
+    context.setPositions(entry["positions"])
+    print(name)
+    for index, force in enumerate(mixed.getForces()):
+        group = context.getState(getEnergy=True, groups={index})
+        energy = group.getPotentialEnergy().value_in_unit(unit.kilojoule_per_mole)
+        if isinstance(force, mm.PythonForce):
+            label = "metatomic ligand"
+        else:
+            label = force.getName()
+        print(f"  {label:24s} {energy:14.2f} kJ/mol")
+    total = context.getState(getEnergy=True).getPotentialEnergy()
+    total = total.value_in_unit(unit.kilojoule_per_mole)
+    print(f"  {'total':24s} {total:14.2f} kJ/mol")

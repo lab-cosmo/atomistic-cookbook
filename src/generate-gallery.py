@@ -56,6 +56,8 @@ class PseudoSphinxApp:
         self.config.default_role = ""
         self.config.sphinx_gallery_conf = {
             "filename_pattern": ".*",
+            # modules imported by a recipe are not gallery pages
+            "ignore_pattern": r"(__init__|metatomicpotential)\.py",
             "examples_dirs": os.path.join(ROOT, example),
             "gallery_dirs": gallery_dir,
             "write_computation_times": False,
