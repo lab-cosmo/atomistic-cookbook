@@ -9,7 +9,7 @@ dependencies:
   - chemiscope
   - matplotlib
   - numpy
-  - ase
+  - mdanalysis
   - pytorch-cpu
   - pip
   - pip:

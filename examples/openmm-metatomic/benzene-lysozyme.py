@@ -41,13 +41,11 @@ import os
 import sys
 import warnings
 
-import ase
 import chemiscope
-import numpy as np
+import MDAnalysis as mda
 import openmm as mm
 import openmm.app as app
 import openmm.unit as unit
-from ase.data import vdw_radii
 from atomistic_cookbook_utils import download_with_retry, run_command
 from openff.toolkit import Molecule
 from openff.toolkit import Topology as OffTopology
@@ -60,35 +58,6 @@ CPU = mm.Platform.getPlatformByName("CPU")
 WORKSHOP = "https://raw.githubusercontent.com/openmm/openmm_workshops/main/section_1"
 for filename in ("lysozyme.pdb", "benzene.sdf", "o-xylene.sdf"):
     download_with_retry(f"{WORKSHOP}/{filename}", filename)
-
-# CPK colors for the ligand overlay. Anything else is gray.
-_CPK = {1: 0xFFFFFF, 6: 0x909090, 7: 0x3050F8, 8: 0xFF0D0D}
-
-
-def topology_to_atoms(topology, positions):
-    """ASE atoms from an OpenMM topology, with positions in angstrom."""
-    symbols = [atom.element.symbol for atom in topology.atoms()]
-    if isinstance(positions, unit.Quantity):
-        xyz = positions.value_in_unit(unit.angstrom)
-    else:
-        xyz = unit.Quantity(positions, unit.nanometer).value_in_unit(unit.angstrom)
-    return ase.Atoms(symbols=symbols, positions=np.asarray(xyz))
-
-
-def ligand_vdw_spheres(frames, ligand_atoms):
-    """Chemiscope shape: van der Waals spheres on the ligand atoms."""
-    structure = []
-    for frame, atoms in zip(frames, ligand_atoms):
-        numbers = frame.numbers[list(atoms)]
-        structure.append(
-            {
-                "centers": frame.positions[list(atoms)].tolist(),
-                "radii": [float(vdw_radii[z]) for z in numbers],
-                "colors": [_CPK.get(int(z), 0x808080) for z in numbers],
-            }
-        )
-    return {"ligand": {"kind": "spheres", "parameters": {"structure": structure}}}
-
 
 protein_pdb = app.PDBFile("lysozyme.pdb")
 n_protein = protein_pdb.topology.getNumAtoms()
@@ -105,7 +74,6 @@ forcefield.registerTemplateGenerator(
 
 names = ("benzene", "o-xylene")
 systems = {}
-complex_frames = []
 for name, molecule in zip(names, molecules):
     ligand_topology = OffTopology.from_molecules(molecules=[molecule]).to_openmm()
     ligand_positions = to_openmm(molecule.conformers[0])
@@ -117,19 +85,16 @@ for name, molecule in zip(names, molecules):
         "positions": modeller.positions,
         "ligand_atoms": ligand_atoms,
     }
-    frame = topology_to_atoms(modeller.topology, modeller.positions)
-    complex_frames.append(frame)
+
+# %%
+# MDAnalysis reads the OpenMM ``Modeller`` directly, including residues and
+# chains, so chemiscope can draw the protein as a cartoon. Both ligands sit in
+# the same cavity; ``modeller`` holds the last complex, o-xylene.
 
 chemiscope.show(
-    complex_frames,
-    properties={"ligand": list(names)},
-    shapes=ligand_vdw_spheres(
-        complex_frames, [systems[name]["ligand_atoms"] for name in names]
-    ),
+    mda.Universe(modeller).atoms,
     mode="structure",
-    settings={
-        "structure": [{"bonds": True, "keepOrientation": True, "shape": "ligand"}]
-    },
+    settings=chemiscope.quick_settings(structure_settings={"cartoon": True}),
 )
 
 # %%
