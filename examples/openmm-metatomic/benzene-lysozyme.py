@@ -21,9 +21,7 @@ double-count it [1]_.
 We use a familiar test system in small-molecule design. Here the small region
 is a ligand in the T4 lysozyme L99A cavity, benzene or o-xylene, and the
 higher-level model is PET-SPICE-S, a metatomic potential trained on SPICE.
-Lysozyme is Amber ff14SB. This example includes ``openmm_metatomic`` and
-registers it on the ``openmmml.potentials`` entry point before OpenMM-ML
-is imported.
+Lysozyme is Amber ff14SB.
 
 .. [1] Bakowies and Thiel, J. Phys. Chem. 100, 10580 (1996).
    `DOI:10.1021/jp9536514 <https://doi.org/10.1021/jp9536514>`_
@@ -36,13 +34,12 @@ is imported.
 # ----------
 #
 # The coordinates are T4 lysozyme L99A from the OpenMM workshop, with
-# benzene or o-xylene in the cavity. ``prepare.py`` registers the
-# metatomic potential and exports PET-SPICE-S. The ligand charges and the
-# valence terms Amber does not know come from OpenFF 2.2.1.
+# benzene or o-xylene in the cavity. The ligand charges and the valence
+# terms Amber does not know come from OpenFF 2.2.1.
 
+import os
 import sys
 import warnings
-from pathlib import Path
 
 import ase
 import chemiscope
@@ -51,15 +48,18 @@ import openmm as mm
 import openmm.app as app
 import openmm.unit as unit
 from ase.data import vdw_radii
+from atomistic_cookbook_utils import download_with_retry, run_command
 from openff.toolkit import Molecule
 from openff.toolkit import Topology as OffTopology
 from openff.units.openmm import to_openmm
 from openmmforcefields.generators import SMIRNOFFTemplateGenerator
-
-sys.path.insert(0, str(Path.cwd()))
-from prepare import potential  # noqa: E402
+from openmmml import MLPotential
 
 CPU = mm.Platform.getPlatformByName("CPU")
+
+WORKSHOP = "https://raw.githubusercontent.com/openmm/openmm_workshops/main/section_1"
+for filename in ("lysozyme.pdb", "benzene.sdf", "o-xylene.sdf"):
+    download_with_retry(f"{WORKSHOP}/{filename}", filename)
 
 # CPK colors for the ligand overlay. Anything else is gray.
 _CPK = {1: 0xFFFFFF, 6: 0x909090, 7: 0x3050F8, 8: 0xFF0D0D}
@@ -131,6 +131,30 @@ chemiscope.show(
         "structure": [{"bonds": True, "keepOrientation": True, "shape": "ligand"}]
     },
 )
+
+# %%
+# Metatomic potential
+# -------------------
+#
+# Released OpenMM-ML does not ship a metatomic backend yet
+# (`openmm-ml#174 <https://github.com/openmm/openmm-ml/pull/174>`_), so this
+# recipe brings its own in ``metatomicpotential.py`` and registers it under
+# the name ``"metatomic"``. PET-SPICE-S is exported to TorchScript with
+# ``mtt export``.
+
+# sphinx-gallery runs the recipe from its folder, which is not on sys.path
+sys.path.insert(0, os.getcwd())
+from metatomicpotential import MetatomicPotentialImplFactory  # noqa: E402
+
+MLPotential.registerImplFactory("metatomic", MetatomicPotentialImplFactory())
+
+if not os.path.exists("pet-spice-s.pt"):
+    run_command(
+        "mtt export https://huggingface.co/lab-cosmo/upet/resolve/main/"
+        "models/pet-spice-s-v0.2.0.ckpt -o pet-spice-s.pt",
+        print_output=True,
+    )
+potential = MLPotential("metatomic", model="pet-spice-s.pt", device="cpu")
 
 # %%
 # Energies
