@@ -1,0 +1,12 @@
+# outputs of the recipe
+npt-*
+ase-mtk.dat
+lmp-*.dat
+*.time
+RESTART*
+EXIT
+# raw outputs of data/run_scan.py
+scan/
+\#*
+# metatomic model exported by the user (see the recipe)
+qtip4pf.pt
