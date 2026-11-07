@@ -19,6 +19,7 @@ discussed in much detail in the book "Understanding Molecular Simulations"
 by Daan Frenkel and Berend Smit.
 """
 
+import gzip
 import os
 import subprocess
 import time
@@ -314,8 +315,8 @@ def autocorrelation(x, maxlag, mean):
 
 # %%
 # We take the mean volume, and compare the ACF, with the results from much
-# longer simulations with the same parameters (several independent runs of
-# 200 ps, see ``data/run_scan.py``). Even though the short run is noisy, it
+# longer simulations with the same parameters (four independent runs of
+# 250 ps, see ``data/run_scan.py``). Even though the short run is noisy, it
 # agrees well with the reference. Most of the decay happens within a few
 # hundred fs, as the piston oscillates and the lattice responds to it, but
 # :math:`c_{VV}` then has a long tail, that decays over a few ps. Its
@@ -325,8 +326,8 @@ def autocorrelation(x, maxlag, mean):
 
 def load_reference():
     """Loads the volume ACFs and the summary of the reference runs"""
-    acf = np.loadtxt("data/reference_vacf.dat")
-    with open("data/reference_vacf.dat") as f:
+    acf = np.loadtxt("data/reference_vacf.dat.gz")
+    with gzip.open("data/reference_vacf.dat.gz", "rt") as f:
         names = f.readline().split()[2:]
     acf = {name: acf[:, [0, i + 1]] for i, name in enumerate(names)}
     scan = np.genfromtxt("data/reference_scan.dat", dtype=None, encoding="utf-8")
@@ -486,8 +487,8 @@ plt.show()
 # The slow tail also makes :math:`\tau_V` hard to converge. Plotting the
 # integral of :math:`c_{VV}` up to a time :math:`t` shows that with SVR it
 # keeps growing for several ps, while with GLE (and Langevin) it levels off
-# after a couple of ps, at a much smaller value. Note that even these 200 ps
-# reference runs are not long enough to compute these integrals precisely:
+# after a couple of ps, at a much smaller value. Note that even 1 ns of
+# reference runs is not long enough to compute these integrals precisely:
 # comparing independent runs is the safest way to estimate the statistical
 # error on the mean volume.
 
