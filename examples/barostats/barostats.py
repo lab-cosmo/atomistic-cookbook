@@ -701,9 +701,12 @@ plt.show()
 # (with error bars estimated from the autocorrelation times, using the
 # integral of :math:`c_{VV}` up to 20 ps for the volume). Taking into
 # account the cost of each code per ps of simulation (measured from the
-# runs performed above with the default setup), we can also estimate how
+# runs performed in this recipe), we can also estimate how
 # long it takes to generate an uncorrelated sample of the volume, which is the
 # ultimate measure of the efficiency of a simulation setup.
+# The timings should not be taken too literally: there can be high
+# variability between runs, and they depend strongly on the hardware
+# and on how the codes are compiled and set up.
 
 kT = ase.units.kB * 270  # eV
 mass = 96 * 18.015 / ase.units.mol  # g
