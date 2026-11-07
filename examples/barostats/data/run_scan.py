@@ -156,7 +156,7 @@ def run_ipi(r, nsteps, folder, address):
     root.find("ffsocket/address").text = address
     system = SYSTEMS[r.get("system", "ice")]
     root.find("system/initialize/file").text = os.path.join(
-        ROOT, "data", system["structure"] + ".xyz"
+        ROOT, "data", system["structure"] + ".extxyz"
     )
     root.find("system/initialize/velocities").text = str(system["temp"])
     root.find("system/ensemble/temperature").text = str(system["temp"])
@@ -276,8 +276,7 @@ def ase_worker(folder, address, nsteps, tau_baro, tdamp, system="ice"):
 
     temp = SYSTEMS[system]["temp"]
     structure = SYSTEMS[system]["structure"]
-    atoms = ipi.read_trajectory(os.path.join(ROOT, "data", structure + ".xyz"))[0]
-    atoms.pbc = True
+    atoms = ipi.read_trajectory(os.path.join(ROOT, "data", structure + ".extxyz"))[0]
     seed = zlib.crc32(os.path.basename(folder).encode()) % 100000
     thermalize_momenta(atoms, temperature_K=temp, rng=np.random.default_rng(seed))
 

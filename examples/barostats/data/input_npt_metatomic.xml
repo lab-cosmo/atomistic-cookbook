@@ -12,11 +12,11 @@
   </prng>
   <ffdirect name='qtip4pf' pbc='false'>
     <pes> metatomic </pes>
-    <parameters> {template:data/ice_96.xyz,model:qtip4pf.pt,device:cuda} </parameters>
+    <parameters> {template:data/ice_96.extxyz,model:qtip4pf.pt,device:cuda} </parameters>
   </ffdirect>
   <system>
     <initialize nbeads='1'>
-      <file mode='xyz'> data/ice_96.xyz </file>
+      <file mode='ase'> data/ice_96.extxyz </file>
       <velocities mode='thermal' units='kelvin'> 270 </velocities>
     </initialize>
     <forces>

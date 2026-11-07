@@ -9,8 +9,9 @@ molecular dynamics simulations, and discusses how to choose the
 parameters of a barostat to sample efficiently the fluctuations of
 the volume.
 
-As an example we use a small box of ice Ih, described with a
-flexible water model, which shows clearly how the barostat interacts with the
+As an example we use a small box of ice Ih, described with the
+flexible `q-TIP4P/f water model <http://doi.org/10.1063/1.3167790>`_,
+which shows clearly how the barostat interacts with the
 dynamics of the atoms. This recipe is a companion
 to the `thermostats recipe
 <https://atomistic-cookbook.org/examples/thermostats/thermostats.html>`_,
@@ -33,6 +34,8 @@ import numpy as np
 from ase.calculators.socketio import SocketIOCalculator
 from ase.md.nose_hoover_chain import IsotropicMTKNPT
 from ase.md.velocitydistribution import thermalize_momenta
+from atomistic_cookbook_utils import run_command
+from ipi.scripting import InteractiveSimulation
 
 
 # we will run several simulations at once, so let's avoid oversubscribing the
@@ -98,9 +101,8 @@ os.environ["OMP_NUM_THREADS"] = "1"
 # Barostat time scales
 # ~~~~~~~~~~~~~~~~~~~~
 #
-# The tricky part about barostats is not writing down the equations of motion,
-# but choosing their parameters. There are (at least) three time scales
-# that need to be taken into account.
+# There are (at least) three time scales that need to be taken into account
+# to maximise the sampling efficiency of an NPT simulation:
 #
 # 1. **The piston.** Linearizing
 #    :math:`P_\mathrm{int}(V)` around the mean volume, the piston behaves as a
@@ -152,8 +154,8 @@ os.environ["OMP_NUM_THREADS"] = "1"
 # We use `i-PI <http://ipi-code.org>`_ together with a ``LAMMPS`` driver
 # to simulate a box containing 96 molecules of ice Ih, described with the
 # `q-TIP4P/f water model <http://doi.org/10.1063/1.3167790>`_, at 270 K.
-# This is a rather high temperature for this model, so the crystal is
-# quite anharmonic, but it does not melt on the time scale of our simulations.
+# This is close to the melting point temperature for this model, so the
+# crystal is quite anharmonic.
 # The ``fix ipi`` command in the ``LAMMPS`` input connects it to ``i-PI``
 # through a UNIX socket.
 #
@@ -193,37 +195,57 @@ print("    " + ET.tostring(xmlroot.find(".//ensemble"), encoding="unicode"))
 # or from Python
 
 ipi_process = None
-if not os.path.exists("npt-default.out"):
+if not os.path.exists("npt-default.time"):
     ipi_process = subprocess.Popen(["i-pi", "data/input_npt.xml"])
     time.sleep(4)  # wait for i-PI to start
+    ipi_start = time.time()
     lmp_process = subprocess.Popen(["lmp", "-in", "data/in.lmp", "-log", "none"])
 
 # %%
-# If you have a GPU you can also store the
+# ... and wait for the simulation to finish (it'll take a minute or two).
+# We also store the wall-clock time, to compare the cost of different codes
+# at the end of the recipe.
+
+if ipi_process is not None:
+    ipi_process.wait()
+    lmp_process.wait()
+    np.savetxt("npt-default.time", [time.time() - ipi_start])
+
+# %%
+# Other ways to run ``i-PI``
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# We used the most traditional setup above: ``i-PI`` running on the CPU,
+# connected to a separate ``LAMMPS`` process through a socket. You can
+# run the same simulation in a few other ways, which can be much faster
+# in other cases. Most of them need a GPU, so we only describe them here,
+# except for a short CPU test of ``InteractiveSimulation`` at the end.
+#
+# **GPU integrator.** If you have a GPU you can also store the
 # state of the simulation and run the integrator on the GPU, by launching
 #
 # .. code-block:: bash
 #
 #    i-pi --backend torch --device cuda --jit data/input_npt.xml
 #
-# where ``--jit`` records the MD steps as CUDA graphs, and replays them
-# to reduce the overhead of launching many small GPU operations.
+# where ``--backend torch`` stores and processes all the arrays with
+# PyTorch, ``--device cuda`` puts them on the GPU, and ``--jit`` records
+# the MD steps as CUDA graphs and replays them, to reduce the overhead
+# of launching many small GPU operations.
 # For a small system and a cheap potential like this this is not
 # worth it, as the time is dominated by the communication between ``i-PI``
 # and ``LAMMPS``, but it pays off for large simulations with
 # machine-learning potentials that are also evaluated on the GPU.
-
-# %%
-# The q-TIP4P/f potential is also available as a
+#
+# **Metatomic models.** The q-TIP4P/f potential is also available as a
 # `metatomic <https://docs.metatensor.org/metatomic/latest/index.html>`_
 # model written in PyTorch (the `metatomic-qtip4pf
 # <https://github.com/ceriottm/qtip4pf-test>`_ package, which is installed
 # in the environment of this recipe). ``i-PI`` can evaluate it directly,
 # without a separate client process, so that on a GPU both the integrator
-# and the force evaluation run on the device. We don't run it here, but if
-# you have a GPU you can export the model (the exported file depends on the
-# version of PyTorch, so it is not distributed with the recipe) and launch
-# ``i-PI`` with
+# and the force evaluation run on the device. You can export the model
+# (the exported file depends on the version of PyTorch, so it is not
+# distributed with the recipe) and launch ``i-PI`` with
 #
 # .. code-block:: bash
 #
@@ -235,17 +257,47 @@ if not os.path.exists("npt-default.out"):
 # input. The input ``data/input_npt_metatomic.xml`` is the same as
 # ``data/input_npt.xml``, except for the forcefield section, which loads the
 # model inside ``i-PI``. The ``template`` structure is only used to read
-# the atom types, and setting ``device:cpu`` runs the model on the CPU.
+# the atom types, and ``device:cuda`` evaluates the model on the GPU.
+# ``data/input_npt_metatomic_cpu.xml`` is identical, except that it
+# uses ``device:cpu`` (and a different output prefix), so that it can be
+# run on a machine without a GPU.
+# The ``ffdirect`` metatomic driver is not limited to this simple potential:
+# it can be used in exactly the same way with any metatomic model, including
+# machine-learning interatomic potentials, as discussed e.g. in the
+# `PET-MAD recipe <https://atomistic-cookbook.org/examples/pet-mad/pet-mad.html>`_.
 
 xmlroot = ET.parse("data/input_npt_metatomic.xml").getroot()
 print("    " + ET.tostring(xmlroot.find("ffdirect"), encoding="unicode"))
 
 # %%
-# ... and wait for the simulation to finish (it'll take a minute or two).
+# **Interactive simulations.** Finally, you can drive ``i-PI`` from
+# Python, without launching it as a separate process, using
+# ``InteractiveSimulation``. This is particularly convenient together
+# with a forcefield that is evaluated inside ``i-PI``, such as the
+# metatomic model above, because no client process needs to be started.
+# Here we run a short test on the CPU: first we export the model
+# (if it has not been exported already) ...
 
-if ipi_process is not None:
-    ipi_process.wait()
-    lmp_process.wait()
+if not os.path.exists("qtip4pf.pt"):
+    run_command("metatomic-qtip4pf --ewald-accuracy 1e-5 -o qtip4pf.pt")
+
+# %%
+# ... and then we create the simulation. The backend, device and compilation
+# options are given when creating the simulation object, e.g. you could use
+# ``device="cuda", jit=True`` together with ``data/input_npt_metatomic.xml``
+# to run the whole simulation on the GPU.
+
+with open("data/input_npt_metatomic_cpu.xml") as f:
+    sim = InteractiveSimulation(f, backend="torch", device="cpu")
+
+# %%
+# ``sim.run(n)`` advances the simulation by ``n`` steps, writing outputs as
+# specified in the input file, and the current state can be inspected
+# between calls with ``sim.properties`` and ``sim.get_structures``.
+# We only run 100 steps, just to check that everything works.
+
+sim.run(100)
+print(f"Volume after 100 steps: {sim.properties('volume'):.1f} Å^3")
 
 # %%
 # Analysis of the trajectory
@@ -446,7 +498,9 @@ plt.show()
 # that scan :math:`\tau` (keeping the piston critically damped,
 # :math:`\tau_\mathrm{cell}\approx 0.08\tau`), using either SVR or a
 # "smart-sampling" generalized Langevin equation (GLE) thermostat on the atoms
-# (see the thermostats recipe), as well as a strongly-coupled Langevin
+# (see the `thermostats recipe
+# <https://atomistic-cookbook.org/examples/thermostats/thermostats.html#generalized-langevin-equation-thermostat>`_),
+# as well as a strongly-coupled Langevin
 # thermostat. We plot the autocorrelation time of the volume :math:`\tau_V`,
 # that determines the error in the mean volume, and that of
 # :math:`\delta V^2`, that determines the error in :math:`\kappa_T`
@@ -517,9 +571,17 @@ plt.show()
 # atoms and the piston. To use exactly the same potential, we use a
 # ``SocketIOCalculator``, that makes ASE act as a server for the same
 # protocol used by ``i-PI``, and connect ``LAMMPS`` to it.
+# Alternatively, ASE can use the metatomic version of q-TIP4P/f discussed
+# above, which gives the same energies and forces, without having to launch
+# ``LAMMPS``
+#
+# .. code-block:: python
+#
+#    from metatomic.torch.ase_calculator import MetatomicCalculator
+#
+#    atoms.calc = MetatomicCalculator("qtip4pf.pt", device="cpu")
 
-atoms = ipi.read_trajectory("data/ice_96.xyz")[0]
-atoms.pbc = True
+atoms = ipi.read_trajectory("data/ice_96.extxyz")[0]
 thermalize_momenta(atoms, temperature_K=270, rng=np.random.default_rng(12345))
 
 
@@ -541,7 +603,7 @@ def launch_lammps(atoms, properties, port, unixsocket):
 
 ASE_PDAMP = 200  # fs
 
-if not os.path.exists("ase-mtk.dat"):
+if not os.path.exists("ase-mtk.time"):
     calc = SocketIOCalculator(unixsocket="ase-mtk", launch_client=launch_lammps)
     atoms.calc = calc
     dyn = IsotropicMTKNPT(
@@ -557,9 +619,11 @@ if not os.path.exists("ase-mtk.dat"):
         lambda: ase_data.append([dyn.get_time() / ase.units.fs, atoms.get_volume()]),
         interval=4,
     )
+    ase_start = time.time()
     dyn.run(40000)
     calc.close()
     np.savetxt("ase-mtk.dat", np.array(ase_data))
+    np.savetxt("ase-mtk.time", [time.time() - ase_start])
 
 # %%
 # With ``pdamp`` = 200 fs, ``IsotropicMTKNPT`` samples the volume about as
@@ -605,8 +669,10 @@ with open("data/in_npt_mtk.lmp", "r") as file:
 # %%
 # The simulation can be run as usual
 
-if not os.path.exists("lmp-mtk.dat"):
-    subprocess.run(["lmp", "-in", "data/in_npt_mtk.lmp", "-log", "none"], check=True)
+if not os.path.exists("lmp-mtk.time"):
+    lmp_start = time.time()
+    run_command("lmp -in data/in_npt_mtk.lmp -log none")
+    np.savetxt("lmp-mtk.time", [time.time() - lmp_start])
 
 # %%
 # ``fix npt`` behaves similarly to the ASE integrator, as expected, including
@@ -633,7 +699,8 @@ plt.show()
 # by comparing density and compressibility from the long reference runs
 # (with error bars estimated from the autocorrelation times, using the
 # integral of :math:`c_{VV}` up to 20 ps for the volume). Taking into
-# account the cost of each code per ps of simulation, we can also estimate how
+# account the cost of each code per ps of simulation (measured from the
+# runs performed above with the default setup), we can also estimate how
 # long it takes to generate an uncorrelated sample of the volume, which is the
 # ultimate measure of the efficiency of a simulation setup.
 
@@ -647,12 +714,14 @@ best = {
     "LAMMPS npt": "ice_lmp_mtk_b200",
 }
 
-# wall-clock time per ps for each code, taking the fastest reference run (the
-# reference runs were executed on a busy workstation, so this is approximate)
-cost_per_ps = {}
-for name, row in ref_scan.items():
-    code = name.split("_")[1]
-    cost_per_ps[code] = min(cost_per_ps.get(code, np.inf), row[8] / row[7])
+# wall-clock time per ps for each code, measured from the runs in this recipe
+cost_per_ps = {
+    "ipi": np.loadtxt("npt-default.time") / output_data["time"][-1],
+    "ase": np.loadtxt("ase-mtk.time") / (ase_data[-1, 0] * 1e-3),
+    "lmp": np.loadtxt("lmp-mtk.time") / (lmp_data[-1, 0] * 0.5e-3),
+}
+for code, cost_ps in cost_per_ps.items():
+    print(f"{code:>4s}: {cost_ps:6.2f} s/ps")
 
 rho, rho_err, kappa, kappa_err, cost = [], [], [], [], []
 for name in best.values():
