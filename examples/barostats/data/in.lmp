@@ -1,0 +1,24 @@
+# q-TIP4P/f water model (Habershon, Markland, Manolopoulos, JCP 131, 024501 (2009))
+# used as a force client for i-PI (or ASE) through the i-PI socket protocol.
+# The socket address can be set from the command line with `-var address <name>`
+
+variable        address index npt-default
+
+units           real
+atom_style      full
+
+pair_style      lj/cut/tip4p/long 1 2 1 1 0.14715 9.0
+bond_style      class2
+angle_style     harmonic
+kspace_style    pppm/tip4p 1.0e-5
+
+variable        data index data/ice_96.lmp
+read_data       ${data}
+pair_coeff      * * 0.0 0.0
+pair_coeff      1 1 0.18521 3.1589
+
+neighbor        2.0 bin
+
+fix             1 all ipi ${address} 32342 unix
+
+run             100000000

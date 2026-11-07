@@ -8,6 +8,7 @@ efficient domain decomposition scheme. Learn more about LAMMPS on its `homepage
 <https://www.lammps.org>`_.
 
 - examples/thermostats/thermostats
+- examples/barostats/barostats
 - examples/path-integrals/path-integrals
 - examples/heat-capacity/heat-capacity
 - examples/water-model/water-model
