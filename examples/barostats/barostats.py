@@ -19,7 +19,6 @@ discussed in much detail in the book "Understanding Molecular Simulations"
 by Daan Frenkel and Berend Smit.
 """
 
-import gzip
 import os
 import subprocess
 import time
@@ -190,28 +189,10 @@ print("    " + ET.tostring(xmlroot.find(".//ensemble"), encoding="unicode"))
 #    sleep 2
 #    lmp -in data/in.lmp &
 #
-# or from Python. We also record the wall-clock time of the simulation, to
-# compare the cost of different codes at the end of the recipe.
-
-
-def save_wall_time(fname, seconds):
-    """Stores the wall-clock time of a simulation"""
-    with open(fname, "w") as f:
-        f.write(f"{seconds}\n")
-
-
-def load_wall_time(fname):
-    """Wall-clock time of a simulation, NaN if it was not recorded"""
-    try:
-        with open(fname) as f:
-            return float(f.read())
-    except FileNotFoundError:
-        return np.nan
-
+# or from Python
 
 ipi_process = None
 if not os.path.exists("npt-default.out"):
-    ipi_start = time.time()
     ipi_process = subprocess.Popen(["i-pi", "data/input_npt.xml"])
     time.sleep(4)  # wait for i-PI to start
     lmp_process = subprocess.Popen(["lmp", "-in", "data/in.lmp", "-log", "none"])
@@ -245,10 +226,12 @@ if not os.path.exists("npt-default.out"):
 #
 # .. code-block:: bash
 #
-#    metatomic-qtip4pf -o qtip4pf.pt
+#    metatomic-qtip4pf --ewald-accuracy 1e-5 -o qtip4pf.pt
 #    i-pi --backend torch --device cuda --jit data/input_npt_metatomic.xml
 #
-# The input ``data/input_npt_metatomic.xml`` is the same as
+# The cutoff (9 Å by default) and the accuracy of the Ewald sum are fixed
+# when the model is exported, and are chosen here to match the ``LAMMPS``
+# input. The input ``data/input_npt_metatomic.xml`` is the same as
 # ``data/input_npt.xml``, except for the forcefield section, which loads the
 # model inside ``i-PI``. The ``template`` structure is only used to read
 # the atom types, and setting ``device:cpu`` runs the model on the CPU.
@@ -257,12 +240,11 @@ xmlroot = ET.parse("data/input_npt_metatomic.xml").getroot()
 print("    " + ET.tostring(xmlroot.find("ffdirect"), encoding="unicode"))
 
 # %%
-# ... and wait for the simulation to finish (it'll take a couple of minutes).
+# ... and wait for the simulation to finish (it'll take a minute or two).
 
 if ipi_process is not None:
     ipi_process.wait()
     lmp_process.wait()
-    save_wall_time("npt-default.time", time.time() - ipi_start)
 
 # %%
 # Analysis of the trajectory
@@ -343,8 +325,8 @@ def autocorrelation(x, maxlag, mean):
 
 def load_reference():
     """Loads the volume ACFs and the summary of the reference runs"""
-    acf = np.loadtxt("data/reference_vacf.dat.gz")
-    with gzip.open("data/reference_vacf.dat.gz", "rt") as f:
+    acf = np.loadtxt("data/reference_vacf.dat")
+    with open("data/reference_vacf.dat") as f:
         names = f.readline().split()[2:]
     acf = {name: acf[:, [0, i + 1]] for i, name in enumerate(names)}
     scan = np.genfromtxt("data/reference_scan.dat", dtype=None, encoding="utf-8")
@@ -367,7 +349,7 @@ def plot_acf(ax, name, style, label):
     ax.plot(ref_acf[name][:, 0], ref_acf[name][:, 1], style, label=label)
 
 
-EQUIL = 1.0  # ps of equilibration to discard
+EQUIL = 2.0  # ps of equilibration to discard
 dt = output_data["time"][1] - output_data["time"][0]
 lags = np.arange(int(5.0 / dt)) * dt
 volume = output_data["volume"][output_data["time"] > EQUIL]
@@ -387,9 +369,8 @@ plt.show()
 # ~~~~~~~~~~~~~~~~~~~
 #
 # Let's see what happens when we change the parameters. We generate
-# modified inputs, each with a different output prefix and socket address.
-# The simulations could run at the same time, but we run them one after the
-# other, so that we can also compare their wall-clock time.
+# modified inputs, each with a different output prefix and socket address,
+# so that we can run the simulations at the same time.
 
 
 def make_input(name, tau, tau_cell, thermostat=("svr", 10)):
@@ -414,19 +395,24 @@ variants = {
     "langevin": dict(tau=360, tau_cell=30, thermostat=("langevin", 10)),
 }
 
+processes = []
 for name, params in variants.items():
     if not os.path.exists(f"npt-{name}.out"):
         make_input(f"npt-{name}", **params)
-        start = time.time()
-        ipi_process = subprocess.Popen(["i-pi", f"npt-{name}.xml"])
+        processes.append(subprocess.Popen(["i-pi", f"npt-{name}.xml"]))
         time.sleep(4)  # wait for i-PI to start
-        lmp_process = subprocess.Popen(
-            ["lmp", "-in", "data/in.lmp", "-log", "none"]
-            + ["-var", "address", f"npt-{name}"]
+        processes.append(
+            subprocess.Popen(
+                ["lmp", "-in", "data/in.lmp", "-log", "none"]
+                + ["-var", "address", f"npt-{name}"]
+            )
         )
-        ipi_process.wait()
-        lmp_process.wait()
-        save_wall_time(f"npt-{name}.time", time.time() - start)
+
+# %%
+# ... and wait
+
+for process in processes:
+    process.wait()
 
 # %%
 # The results are consistent with the discussion above.
@@ -555,7 +541,6 @@ def launch_lammps(atoms, properties, port, unixsocket):
 ASE_PDAMP = 200  # fs
 
 if not os.path.exists("ase-mtk.dat"):
-    ase_start = time.time()
     calc = SocketIOCalculator(unixsocket="ase-mtk", launch_client=launch_lammps)
     atoms.calc = calc
     dyn = IsotropicMTKNPT(
@@ -571,9 +556,8 @@ if not os.path.exists("ase-mtk.dat"):
         lambda: ase_data.append([dyn.get_time() / ase.units.fs, atoms.get_volume()]),
         interval=4,
     )
-    dyn.run(20000)
+    dyn.run(40000)
     calc.close()
-    save_wall_time("ase-mtk.time", time.time() - ase_start)
     np.savetxt("ase-mtk.dat", np.array(ase_data))
 
 # %%
@@ -621,9 +605,7 @@ with open("data/in_npt_mtk.lmp", "r") as file:
 # The simulation can be run as usual
 
 if not os.path.exists("lmp-mtk.dat"):
-    lmp_start = time.time()
     subprocess.run(["lmp", "-in", "data/in_npt_mtk.lmp", "-log", "none"], check=True)
-    save_wall_time("lmp-mtk.time", time.time() - lmp_start)
 
 # %%
 # ``fix npt`` behaves similarly to the ASE integrator, as expected, including
@@ -653,14 +635,6 @@ plt.show()
 # account the cost of each code per ps of simulation, we can also estimate how
 # long it takes to generate an uncorrelated sample of the volume, which is the
 # ultimate measure of the efficiency of a simulation setup.
-#
-# The cost per ps is taken from the 10 ps simulations we ran above, on the
-# machine that built this page (including the time needed to start the codes).
-# The cost per step of ``i-PI`` hardly depends on the thermostat, so we use
-# for all ``i-PI`` setups (including GLE, that we did not run here) the
-# median over the five ``i-PI`` runs. Comparing the individual runs gives an
-# idea of the scatter of these timings, which can be of tens of percent,
-# depending on the hardware and on what else is running on it.
 
 kT = ase.units.kB * 270  # eV
 mass = 96 * 18.015 / ase.units.mol  # g
@@ -672,27 +646,15 @@ best = {
     "LAMMPS npt": "ice_lmp_mtk_b200",
 }
 
-# wall-clock time per ps of simulation, from the runs above
-ipi_runs = {}
-for name in ["default"] + list(variants):
-    data, _ = ipi.read_output(f"npt-{name}.out")
-    ipi_runs[name] = load_wall_time(f"npt-{name}.time") / data["time"][-1]
-ipi_cost = np.median(list(ipi_runs.values()))
-cost_per_ps = {
-    "i-PI (SVR)": ipi_cost,
-    "i-PI (GLE)": ipi_cost,
-    "i-PI (Langevin)": ipi_cost,
-    "ASE MTK": load_wall_time("ase-mtk.time") / (ase_data[-1, 0] * 1e-3),
-    "LAMMPS npt": load_wall_time("lmp-mtk.time") / (lmp_data[-1, 0] * 0.5e-3),
-}
-print("wall-clock time per ps (s)")
-for name, cost in ipi_runs.items():
-    print(f"  i-PI, {name:12s} {cost:6.2f}")
-print(f"  {'ASE':18s} {cost_per_ps['ASE MTK']:6.2f}")
-print(f"  {'LAMMPS':18s} {cost_per_ps['LAMMPS npt']:6.2f}")
+# wall-clock time per ps for each code, taking the fastest reference run (the
+# reference runs were executed on a busy workstation, so this is approximate)
+cost_per_ps = {}
+for name, row in ref_scan.items():
+    code = name.split("_")[1]
+    cost_per_ps[code] = min(cost_per_ps.get(code, np.inf), row[8] / row[7])
 
 rho, rho_err, kappa, kappa_err, cost = [], [], [], [], []
-for label, name in best.items():
+for name in best.values():
     vmean, vvar, _, tau_v2, length = ref_scan[name][3:8]
     tau_v, n_runs = ref_scan[name][10], ref_scan[name][13]
     length = length * n_runs  # total length of the independent runs
@@ -700,7 +662,7 @@ for label, name in best.items():
     rho_err.append(rho[-1] * np.sqrt(2 * tau_v * vvar / length) / vmean)
     kappa.append(vvar / (kT * vmean) * ase.units.GPa)
     kappa_err.append(kappa[-1] * np.sqrt(4 * tau_v2 / length))
-    cost.append(cost_per_ps[label] * 2 * tau_v)
+    cost.append(cost_per_ps[name.split("_")[1]] * 2 * tau_v)
 
 y = np.arange(len(best))
 fig, ax = plt.subplots(1, 3, figsize=(8, 3), constrained_layout=True, sharey=True)
@@ -716,7 +678,7 @@ ax[2].tick_params(axis="x", colors="#4060c0")
 ax_raw = ax[2].twiny()
 ax_raw.barh(
     y + 0.2,
-    [cost_per_ps[label] for label in best],
+    [cost_per_ps[name.split("_")[1]] for name in best.values()],
     height=0.4,
     color="#c04040",
 )
@@ -727,15 +689,14 @@ plt.show()
 
 # %%
 # All setups agree on the density (to about 0.1%, which is comparable to the
-# statistical error) and on the compressibility. The cost per step is usually
-# lowest for ``LAMMPS``, that runs natively, while ``i-PI`` and ASE pay the
-# overhead of the socket communication, which dominates for such a cheap
-# potential (``i-PI`` is designed for expensive simulations, where this
-# overhead is negligible). The cost per *independent sample*, however, depends
-# just as much on the choice of the thermostat for the atoms: with a GLE,
-# ``i-PI`` generates uncorrelated volume samples several times faster than
-# with SVR, and at least as fast as ``LAMMPS``, even though the latter is
-# about twice as cheap per step.
+# statistical error) and on the compressibility. The cost per step is lowest
+# for ``LAMMPS``, that runs natively, while ``i-PI`` and ASE pay the overhead
+# of the socket communication, which dominates for such a cheap potential
+# (``i-PI`` is designed for expensive simulations, where this overhead is
+# negligible). The cost per *independent sample*, however, depends just as
+# much on the choice of the thermostat for the atoms: with a GLE, ``i-PI``
+# generates uncorrelated volume samples several times faster than any of the
+# setups that use global (SVR or Nosé-Hoover) thermostats.
 #
 # Keep in mind that in a liquid the fluctuations of the volume are coupled to
 # the slow rearrangements of its structure, so whatever the parameters of the
