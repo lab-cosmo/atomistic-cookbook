@@ -233,9 +233,10 @@ if ipi_process is not None:
 # the MD steps as CUDA graphs and replays them, to reduce the overhead
 # of launching many small GPU operations.
 # For a small system and a cheap potential like this this is not
-# worth it, as the time is dominated by the communication between ``i-PI``
-# and ``LAMMPS``, but it pays off for large simulations with
-# machine-learning potentials that are also evaluated on the GPU.
+# worth it, as the cost of the integrator is small compared to that of the
+# force evaluation in ``LAMMPS`` and of the communication with it, but it
+# pays off for large simulations with machine-learning potentials that are
+# also evaluated on the GPU.
 #
 # **Metatomic models.** The q-TIP4P/f potential is also available as a
 # `metatomic <https://docs.metatensor.org/metatomic/latest/index.html>`_
@@ -759,14 +760,14 @@ plt.show()
 
 # %%
 # All setups agree on the density (to about 0.1%, which is comparable to the
-# statistical error) and on the compressibility. The cost per step is lowest
-# for ``LAMMPS``, that runs natively, while ``i-PI`` and ASE pay the overhead
-# of the socket communication, which dominates for such a cheap potential
-# (``i-PI`` is designed for expensive simulations, where this overhead is
-# negligible). The cost per *independent sample*, however, depends just as
-# much on the choice of the thermostat for the atoms: with a GLE, ``i-PI``
-# generates uncorrelated volume samples several times faster than any of the
-# setups that use global (SVR or Nosé-Hoover) thermostats.
+# statistical error) and on the compressibility. The cost per step is
+# similar for the three codes: ``LAMMPS``, that runs natively, is somewhat
+# faster, while ``i-PI`` and ASE pay a modest overhead for the socket
+# communication, which becomes negligible for more expensive potentials.
+# The cost per *independent sample* depends much more on the choice of the
+# thermostat for the atoms: with a GLE, ``i-PI`` generates uncorrelated
+# volume samples at least twice as fast as any of the setups that use
+# global (SVR or Nosé-Hoover) thermostats.
 #
 # Keep in mind that in a liquid the fluctuations of the volume are coupled to
 # the slow rearrangements of its structure, so whatever the parameters of the
