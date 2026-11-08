@@ -1,9 +1,11 @@
 channels:
+  - metatensor
   - conda-forge
 dependencies:
   - python=3.12
   - pip
-  - lammps
+  # no-MPI build (selected by the noxfile), that can also run metatomic models
+  - lammps-metatomic==2026.07.04.mta2
   - pip:
     - ase>=3.29
     - atomistic-cookbook-utils >=0.1,<0.2

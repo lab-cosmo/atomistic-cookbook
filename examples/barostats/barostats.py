@@ -204,11 +204,20 @@ if not os.path.exists("npt-default.time"):
 # %%
 # ... and wait for the simulation to finish (it'll take a minute or two).
 # We also store the wall-clock time, to compare the cost of different codes
-# at the end of the recipe.
+# at the end of the recipe. ``LAMMPS`` exits when ``i-PI`` is done, so we wait
+# for it first: if it fails, ``i-PI`` would otherwise wait forever for a client.
+
+
+def wait_for(ipi_process, lmp_process):
+    """Waits for i-PI and its LAMMPS client, and stops i-PI if LAMMPS fails"""
+    if lmp_process.wait() != 0:
+        ipi_process.kill()
+        raise RuntimeError(f"LAMMPS exited with status {lmp_process.returncode}")
+    ipi_process.wait()
+
 
 if ipi_process is not None:
-    ipi_process.wait()
-    lmp_process.wait()
+    wait_for(ipi_process, lmp_process)
     np.savetxt("npt-default.time", [time.time() - ipi_start])
 
 # %%
@@ -453,20 +462,19 @@ processes = []
 for name, params in variants.items():
     if not os.path.exists(f"npt-{name}.out"):
         make_input(f"npt-{name}", **params)
-        processes.append(subprocess.Popen(["i-pi", f"npt-{name}.xml"]))
+        ipi_process = subprocess.Popen(["i-pi", f"npt-{name}.xml"])
         time.sleep(4)  # wait for i-PI to start
-        processes.append(
-            subprocess.Popen(
-                ["lmp", "-in", "data/in.lmp", "-log", "none"]
-                + ["-var", "address", f"npt-{name}"]
-            )
+        lmp_process = subprocess.Popen(
+            ["lmp", "-in", "data/in.lmp", "-log", "none"]
+            + ["-var", "address", f"npt-{name}"]
         )
+        processes.append((ipi_process, lmp_process))
 
 # %%
 # ... and wait
 
-for process in processes:
-    process.wait()
+for ipi_process, lmp_process in processes:
+    wait_for(ipi_process, lmp_process)
 
 # %%
 # The results are consistent with the discussion above.
@@ -691,6 +699,37 @@ ax.set_xlabel(r"$t$ / ps")
 ax.set_ylabel(r"$c_{VV}(t)$")
 ax.legend()
 plt.show()
+
+# %%
+# LAMMPS with metatomic
+# ~~~~~~~~~~~~~~~~~~~~~
+#
+# The ``LAMMPS`` build used in this recipe (``lammps-metatomic``) can also
+# evaluate metatomic models, through ``pair_style metatomic``, so that the
+# metatomic version of q-TIP4P/f (or any other metatomic model, including
+# machine-learning potentials) can be combined with the native ``LAMMPS``
+# integrators. The input ``data/in_npt_metatomic.lmp`` uses the same
+# ``fix npt`` setup as above, but computes all the interactions with
+# the model exported earlier. A few details are worth noting: the model
+# expects the atoms to be ordered as O, H, H, so ``LAMMPS`` must not sort
+# them (``atom_modify sort 0 0.0``); bonds and angles are still read from
+# the data file, but their energy is set to zero, as the intra-molecular
+# terms are part of the model; ``special_bonds lj/coul 1.0 1.0 1.0`` keeps
+# the bonded pairs in the neighbor list that is passed to the model; and
+# ``pair_style metatomic`` has to be defined after ``read_data``.
+
+keywords = ("atom_modify", "bond_style", "angle_style", "special_bonds", "pair_")
+with open("data/in_npt_metatomic.lmp", "r") as file:
+    print("".join(line for line in file if line.startswith(keywords)))
+
+# %%
+# As for ``InteractiveSimulation``, we only run a few steps to check that
+# everything works, as the metatomic model is slower than the native
+# ``LAMMPS`` implementation on a CPU.
+
+run_command("lmp -in data/in_npt_metatomic.lmp -var nsteps 100 -log none")
+lmp_mta_data = np.loadtxt("lmp-metatomic.dat")
+print(f"Volume after 100 steps: {lmp_mta_data[-1, 1]:.1f} Å^3")
 
 # %%
 # How do they compare?

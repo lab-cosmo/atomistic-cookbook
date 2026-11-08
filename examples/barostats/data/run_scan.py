@@ -211,12 +211,14 @@ LMP_HEADER = """
 units           real
 atom_style      full
 pair_style      lj/cut/tip4p/long 1 2 1 1 0.14715 9.0
-bond_style      class2
+# quartic O-H bond, tabulated (equivalent to bond_style class2)
+bond_style      table spline 1000
 angle_style     harmonic
 kspace_style    pppm/tip4p 1.0e-5
 read_data       data/{structure}.lmp
 pair_coeff      * * 0.0 0.0
 pair_coeff      1 1 0.18521 3.1589
+bond_coeff      1 data/qtip4pf_bond.table QTIP4PF_OH
 neighbor        2.0 bin
 timestep        {dt}
 velocity        all create {T} {seed} mom yes rot yes dist gaussian
