@@ -1,128 +1,122 @@
 """
-Runs the (long) simulations that are used as a reference in the barostats
+Runs the long simulations that are used as a reference in the barostats
 recipe, and post-processes them into small text files that are stored in
-``data/``. This takes a few hours on a ~20-core workstation, and is *not*
-executed when building the recipe.
+``data/``. This is *not* executed when building the recipe: each of the 16
+setups is run 4 times (with different random seeds) for 250 ps, and the setups
+compared in the last figure of the recipe 8 times. This takes about 110 CPU
+hours, i.e. less than a day running 6 simulations at a time.
 
-Usage (from the recipe folder)::
+Usage (from the recipe folder, with ``i-pi`` and ``lmp`` in the ``PATH``)::
 
-    python data/run_scan.py run      --nproc 3 --time 100
-    python data/run_scan.py run      --nproc 3 --time 1000 --names NAME1,NAME2
+    python data/run_scan.py run --nproc 3
+    python data/run_scan.py run --nproc 3 --only lmp_mtk
     python data/run_scan.py analyze
 
-Raw outputs are written to ``scan/`` (or to the first of the folders listed,
-separated by ``:``, in the ``BAROSCAN_DIR`` environment variable). The analysis
-uses, for each run, the longest trajectory found in any of these folders.
+Raw outputs are written to ``scan/<setup>_r<k>/`` (use ``--scan`` to change the
+folder). Runs whose ``volume.dat`` already exists are skipped, so an interrupted
+``run`` can simply be restarted.
 """
 
 import argparse
+import glob
 import os
-import re
 import subprocess
 import sys
 import time
-import zlib
 import xml.etree.ElementTree as ET
+import zlib
 from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 
 
 ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
-SCAN_DIRS = os.environ.get("BAROSCAN_DIR", os.path.join(ROOT, "scan")).split(":")
-SCAN = SCAN_DIRS[0]
+STRUCTURE = "ice_96"
+TEMP = 270.0  # K
+PRESS = 1.0  # bar
+BULK_MODULUS = 9.0  # GPa, estimate that sets the mass of the i-PI piston
 DT = 0.5  # fs
 STRIDE = 4  # output stride (steps), i.e. 2 fs
+N_REPLICAS = 4
+# more replicas for the setups compared in the last figure of the recipe
+N_REPLICAS_BEST = 8
+BEST = [
+    "ice_ipi_b360_c30_svr10",
+    "ice_ipi_b360_c30_glesmart",
+    "ice_ipi_b110_c9_glesmart",
+    "ice_ipi_b360_c30_langevin10",
+    "ice_ase_mtk_b200",
+    "ice_lmp_mtk_b200",
+]
+RUN_TIME = 250.0  # ps per run
 # avoid oversubscription when running many simulations in parallel
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
-PRESS = 1.0  # bar
-# systems: initial structure, temperature (K), estimate of the bulk modulus (GPa)
-SYSTEMS = {
-    "ice": dict(structure="ice_96", temp=270.0, bulk_modulus=9.0),
-}
 
 
 # --------------------------------------------------------------------------------
-# list of runs
+# list of setups
 # --------------------------------------------------------------------------------
-def run_list():
-    runs = []
-    # i-PI BZP barostat, critically damped, with a fast global thermostat or an
-    # optimal-sampling GLE on the atoms
-    for th in [("svr", 10), ("gle", "smart")]:
-        for tb in [10, 30, 100, 300, 1000]:
-            tc = round(0.3 * tb, 1)
-            runs.append(
-                dict(
-                    name=f"ice_ipi_b{tb}_c{tc:g}_{th[0]}{th[1]}",
-                    code="ipi",
-                    system="ice",
-                    tau_baro=tb,
-                    tau_cell=tc,
-                    atoms=th,
-                )
-            )
-    # other codes, and the effect of the thermostats
-    for tb in [100, 200, 500, 1000, 2000]:
-        for code in ["lmp_mtk", "ase_mtk"]:
-            runs.append(
-                dict(
-                    name=f"ice_{code}_b{tb}",
-                    code=code,
-                    system="ice",
-                    tau_baro=tb,
-                    tdamp=100,
-                )
-            )
-    for tb, tc, th in [
-        (30, 9, ("langevin", 10)),
-        (100, 30, ("langevin", 10)),
-        (100, 1000, ("svr", 10)),
-        (300, 3000, ("svr", 10)),
-    ]:
-        runs.append(
-            dict(
-                name=f"ice_ipi_b{tb}_c{tc:g}_{th[0]}{th[1]}",
-                code="ipi",
-                system="ice",
-                tau_baro=tb,
-                tau_cell=tc,
-                atoms=th,
-            )
-        )
-    # GLE combined with a fast SVR, with tau given directly as the period
-    runs.append(
-        dict(
-            name="ice_ipi_b100_c8_glesvr10",
-            code="ipi",
-            system="ice",
-            tau_baro=100 * np.sqrt(3) / (2 * np.pi),
-            tau_period=100,
-            tau_cell=8,
-            atoms=("multi", "glesvr10"),
-        )
+# i-PI pistons: tau is the period of the volume oscillations, and
+# tau_cell ~ tau / 4 pi gives critical damping (both in fs)
+PISTONS = [(36, 3), (110, 9), (360, 30), (1100, 90), (3600, 300)]
+
+
+def ipi_setup(tau, tau_cell, thermostat):
+    return dict(
+        name=f"ice_ipi_b{tau}_c{tau_cell:g}_{thermostat[0]}{thermostat[1]}",
+        code="ipi",
+        tau=tau,
+        tau_cell=tau_cell,
+        thermostat=thermostat,
     )
-    # independent replicas (different random seeds) of the most relevant setups,
-    # to estimate the statistical error and to average the ACF
-    base = {r["name"]: r for r in runs}
-    for name in REPLICATED:
-        for k in range(1, N_REPLICAS.get(name, N_REPLICAS[None])):
-            runs.append({**base[name], "name": f"{name}_r{k}"})
-    return runs
 
 
-REPLICATED = [
-    "ice_ipi_b100_c30_svr10",
-    "ice_ipi_b100_c30_glesmart",
-    "ice_ipi_b100_c30_langevin10",
-    "ice_ipi_b1000_c300_svr10",
-    "ice_lmp_mtk_b200",
-    "ice_ase_mtk_b200",
-]
-# number of replicas (including the original run): more for LAMMPS fix npt, whose
-# mean volume is slightly smaller than that of the other setups
-N_REPLICAS = {None: 4, "ice_lmp_mtk_b200": 6}
+def mtk_setup(code, pdamp, tdamp=100):
+    return dict(name=f"ice_{code}_b{pdamp}", code=code, pdamp=pdamp, tdamp=tdamp)
+
+
+def setups():
+    """The setups used in the recipe"""
+    result = []
+    # critically damped pistons, with a global SVR thermostat or with an
+    # optimal-sampling GLE on the atoms
+    for thermostat in [("svr", 10), ("gle", "smart")]:
+        for tau, tau_cell in PISTONS:
+            result.append(ipi_setup(tau, tau_cell, thermostat))
+    # a strong local Langevin thermostat on the atoms
+    for tau, tau_cell in PISTONS[1:3]:
+        result.append(ipi_setup(tau, tau_cell, ("langevin", 10)))
+    # an under-damped piston
+    result.append(ipi_setup(360, 1000, ("svr", 10)))
+    # the MTK integrators of ASE and LAMMPS (pdamp, tdamp in fs)
+    result.append(mtk_setup("ase_mtk", 200))
+    result.append(mtk_setup("ase_mtk", 1000))
+    result.append(mtk_setup("lmp_mtk", 200))
+    for s in result:
+        s["replicas"] = N_REPLICAS_BEST if s["name"] in BEST else N_REPLICAS
+    return result
+
+
+def run_list(n_replicas=None):
+    """
+    Independent runs of all the setups, one replica of each setup at a time.
+    ``n_replicas``, if given, replaces the number of replicas of every setup.
+    """
+    runs = setups()
+    if n_replicas is not None:
+        for s in runs:
+            s["replicas"] = n_replicas
+    return [
+        {**s, "name": f"{s['name']}_r{k}"}
+        for k in range(max(s["replicas"] for s in runs))
+        for s in runs
+        if k < s["replicas"]
+    ]
+
+
+def seed(name):
+    return zlib.crc32(name.encode()) % 100000 + 1
 
 
 # --------------------------------------------------------------------------------
@@ -136,11 +130,10 @@ def wait_socket(address, proc, timeout=60):
         time.sleep(0.2)
 
 
-def lmp_client(address, folder, system="ice"):
-    structure = SYSTEMS[system]["structure"]
+def lmp_client(address, folder):
     return subprocess.Popen(
         ["lmp", "-in", "data/in.lmp", "-var", "address", address]
-        + ["-var", "data", f"data/{structure}.lmp"]
+        + ["-var", "data", f"data/{STRUCTURE}.lmp"]
         + ["-log", "none", "-screen", os.path.join(folder, "lmp.screen")],
         cwd=ROOT,
     )
@@ -152,43 +145,29 @@ def run_ipi(r, nsteps, folder, address):
     root.find("output").set("prefix", os.path.join(folder, "sim"))
     root.find("output/trajectory").set("stride", "10000")
     root.find("total_steps").text = str(nsteps)
-    root.find("prng/seed").text = str(zlib.crc32(r["name"].encode()) % 100000)
+    root.find("prng/seed").text = str(seed(r["name"]))
     root.find("ffsocket/address").text = address
-    system = SYSTEMS[r.get("system", "ice")]
     root.find("system/initialize/file").text = os.path.join(
-        ROOT, "data", system["structure"] + ".extxyz"
+        ROOT, "data", STRUCTURE + ".extxyz"
     )
-    root.find("system/initialize/velocities").text = str(system["temp"])
-    root.find("system/ensemble/temperature").text = str(system["temp"])
+    root.find("system/initialize/velocities").text = str(TEMP)
+    root.find("system/ensemble/temperature").text = str(TEMP)
+    root.find("system/ensemble/pressure").text = str(PRESS)
     dyn = root.find("system/motion/dynamics")
     th = dyn.find("thermostat")
-    th.set("mode", r["atoms"][0])
-
-    def add_gle(parent):
-        # optimal-sampling GLE (the second element of r["atoms"] is just a label)
+    th.set("mode", r["thermostat"][0])
+    if r["thermostat"][0] == "gle":
+        # optimal-sampling GLE (the second element of r["thermostat"] is a label)
+        th.remove(th.find("tau"))
         A = np.loadtxt(os.path.join(ROOT, "data", "gle_smart.A"))
-        ET.SubElement(parent, "A", shape=str(A.shape)).text = (
+        ET.SubElement(th, "A", shape=str(A.shape)).text = (
             "[" + ", ".join(f"{a:.12e}" for a in A.flatten()) + "]"
         )
-
-    if r["atoms"][0] == "gle":
-        th.remove(th.find("tau"))
-        add_gle(th)
-    elif r["atoms"][0] == "multi":
-        # optimal-sampling GLE combined with a fast global SVR thermostat
-        th.remove(th.find("tau"))
-        add_gle(ET.SubElement(th, "thermostat", mode="gle"))
-        svr = ET.SubElement(th, "thermostat", mode="svr")
-        ET.SubElement(svr, "tau", units="femtosecond").text = "10"
     else:
-        th.find("tau").text = str(r["atoms"][1])
+        th.find("tau").text = str(r["thermostat"][1])
     baro = dyn.find("barostat")
-    # tau_baro follows the old i-PI convention (see LEGACY_TAU), converted to the
-    # period of the volume oscillations that recent versions of i-PI expect,
-    # unless the period is given directly
-    period = r.get("tau_period", r["tau_baro"] * 2 * np.pi / np.sqrt(3))
-    baro.find("tau").text = str(period)
-    baro.find("bulk_modulus").text = str(system["bulk_modulus"])
+    baro.find("tau").text = str(r["tau"])
+    baro.find("bulk_modulus").text = str(BULK_MODULUS)
     baro.find("thermostat/tau").text = str(r["tau_cell"])
     xml.write(os.path.join(folder, "input.xml"))
 
@@ -199,7 +178,7 @@ def run_ipi(r, nsteps, folder, address):
         stderr=subprocess.STDOUT,
     )
     wait_socket(address, ipi)
-    lmp = lmp_client(address, folder, r.get("system", "ice"))
+    lmp = lmp_client(address, folder)
     ipi.wait()
     lmp.wait()
     out = np.loadtxt(os.path.join(folder, "sim.out"))
@@ -234,16 +213,10 @@ run             {nsteps}
 
 
 def run_lmp(r, nsteps, folder, address):
-    system = SYSTEMS[r.get("system", "ice")]
-    temp = system["temp"]
-    seed = zlib.crc32(r["name"].encode()) % 100000 + 1
     pa = PRESS / 1.01325  # bar -> atm
-    fixes = (
-        f"fix 1 all npt temp {temp} {temp} {r['tdamp']} iso {pa} {pa} {r['tau_baro']}\n"
-    )
     inp = (
-        LMP_HEADER.format(dt=DT, T=temp, seed=seed, structure=system["structure"])
-        + fixes
+        LMP_HEADER.format(dt=DT, T=TEMP, seed=seed(r["name"]), structure=STRUCTURE)
+        + f"fix 1 all npt temp {TEMP} {TEMP} {r['tdamp']} iso {pa} {pa} {r['pdamp']}\n"
         + LMP_FOOTER.format(stride=STRIDE, folder=folder, nsteps=nsteps)
     )
     with open(os.path.join(folder, "in.lmp"), "w") as f:
@@ -262,38 +235,36 @@ def run_ase(r, nsteps, folder, address):
     # runs in a separate process to avoid GIL contention between runs
     subprocess.run(
         [sys.executable, __file__, "ase-worker", folder, address]
-        + [str(nsteps), str(r["tau_baro"]), str(r["tdamp"]), r.get("system", "ice")],
+        + [str(nsteps), str(r["pdamp"]), str(r["tdamp"])],
         cwd=ROOT,
         check=True,
     )
     return np.loadtxt(os.path.join(folder, "sim.out"))
 
 
-def ase_worker(folder, address, nsteps, tau_baro, tdamp, system="ice"):
+def ase_worker(folder, address, nsteps, pdamp, tdamp):
     import ase.units
     import ipi
     from ase.calculators.socketio import SocketIOCalculator
     from ase.md.nose_hoover_chain import IsotropicMTKNPT
     from ase.md.velocitydistribution import thermalize_momenta
 
-    temp = SYSTEMS[system]["temp"]
-    structure = SYSTEMS[system]["structure"]
-    atoms = ipi.read_trajectory(os.path.join(ROOT, "data", structure + ".extxyz"))[0]
-    seed = zlib.crc32(os.path.basename(folder).encode()) % 100000
-    thermalize_momenta(atoms, temperature_K=temp, rng=np.random.default_rng(seed))
+    atoms = ipi.read_trajectory(os.path.join(ROOT, "data", STRUCTURE + ".extxyz"))[0]
+    rng = np.random.default_rng(seed(os.path.basename(folder)))
+    thermalize_momenta(atoms, temperature_K=TEMP, rng=rng)
 
     def launch(atoms, properties, port, unixsocket):
-        return lmp_client(unixsocket, folder, system)
+        return lmp_client(unixsocket, folder)
 
     calc = SocketIOCalculator(unixsocket=address, launch_client=launch)
     atoms.calc = calc
     dyn = IsotropicMTKNPT(
         atoms,
         timestep=DT * ase.units.fs,
-        temperature_K=temp,
+        temperature_K=TEMP,
         pressure_au=PRESS * ase.units.bar,
         tdamp=tdamp * ase.units.fs,
-        pdamp=tau_baro * ase.units.fs,
+        pdamp=pdamp * ase.units.fs,
     )
     data = []
 
@@ -317,14 +288,17 @@ def ase_worker(folder, address, nsteps, tau_baro, tdamp, system="ice"):
 RUNNERS = dict(ipi=run_ipi, lmp_mtk=run_lmp, ase_mtk=run_ase)
 
 
-def run_one(r, nsteps, idx):
-    folder = os.path.join(SCAN, r["name"])
+def run_one(r, nsteps, scan, address):
+    folder = os.path.join(scan, r["name"])
     if os.path.exists(os.path.join(folder, "volume.dat")):
         return
     os.makedirs(folder, exist_ok=True)
-    address = f"baroscan{idx}"
     t0 = time.time()
-    data = RUNNERS[r["code"]](r, nsteps, folder, address)
+    try:
+        data = RUNNERS[r["code"]](r, nsteps, folder, address)
+    except Exception as e:
+        print(f"{r['name']}: FAILED ({e})", flush=True)
+        return
     walltime = time.time() - t0
     np.savetxt(
         os.path.join(folder, "volume.dat"),
@@ -363,83 +337,38 @@ def correlation_time(x, dt, mean, block=10.0):
     return 0.5 * block * np.mean((means - mean) ** 2) / np.mean((x - mean) ** 2)
 
 
-def find_output(name):
-    """The longest trajectory for the run ``name`` in any of the scan folders"""
-    best, best_size = None, 0
-    for folder in SCAN_DIRS:
-        fname = os.path.join(folder, name, "volume.dat")
-        if not os.path.exists(fname):
-            continue
-        with open(fname) as f:
-            if not f.readline().startswith("# walltime"):
-                continue  # not the output of a completed run
-        if os.path.getsize(fname) > best_size:
-            best, best_size = fname, os.path.getsize(fname)
-    return best
-
-
-# The i-PI runs in the scan were made before i-PI redefined tau as the period
-# of the volume oscillations, i.e. with W = 3 V B tau^2 rather than
-# W = 9 V B (tau / 2 pi)^2. In the reference files they are labelled with the
-# equivalent value of tau in the new convention, 2 pi / sqrt(3) ~ 3.63 times
-# larger, rounded.
-LEGACY_TAU = {10: 36, 30: 110, 100: 360, 300: 1100, 1000: 3600}
-
-
-def reference_label(r):
-    """Name of the setup of run ``r`` in the reference files, and its tau"""
-    name = re.sub(r"_r\d+$", "", r["name"])  # replicas -> setup
-    if r["code"] != "ipi":
-        return name, r["tau_baro"]
-    if "tau_period" in r:
-        return name, r["tau_period"]
-    tau = LEGACY_TAU[r["tau_baro"]]
-    return name.replace(f"_b{r['tau_baro']}_", f"_b{tau}_"), tau
-
-
-def analyze(equil=10.0, system="ice", maxlag=20.0, resolution=0.02):
-    from ase.units import kB
-
-    # load all the runs, grouping the independent replicas of the same setup
-    groups = {}
-    for r in run_list():
-        if r.get("system", "ice") != system:
-            continue
-        fname = find_output(r["name"])
-        if fname is None:
-            continue
+def load_runs(scan, name, equil):
+    """The completed runs of the setup ``name``, without the first ``equil`` ps"""
+    runs = []
+    for fname in sorted(glob.glob(os.path.join(scan, f"{name}_r*", "volume.dat"))):
         with open(fname) as f:
             walltime = float(f.readline().split()[2])
         d = np.loadtxt(fname)
-        d = d[d[:, 0] > equil]
-        base, tau_baro = reference_label(r)
-        groups.setdefault(base, (r, tau_baro, []))[2].append((d, walltime))
+        runs.append((d[d[:, 0] > equil], walltime))
+    return runs
+
+
+def analyze(scan, equil=10.0, maxlag=20.0, resolution=0.02):
+    from ase.units import kB
+
+    groups = [(s, load_runs(scan, s["name"], equil)) for s in setups()]
+    groups = [(s, runs) for s, runs in groups if runs]
 
     # the converged mean volume, pooling all the i-PI trajectories (weighted by
     # their length: the estimates of the correlation time are too noisy to be
     # used here), so that a misbehaving barostat cannot bias the reference
     vols = np.concatenate(
-        [
-            d[:, 1]
-            for r, _, runs in groups.values()
-            if r["code"] == "ipi"
-            for d, _ in runs
-        ]
+        [d[:, 1] for s, runs in groups if s["code"] == "ipi" for d, _ in runs]
     )
     vmean = vols.mean()
 
     rows, acfs = [], {}
-    for base, (r, tau_baro, runs) in groups.items():
+    for s, runs in groups:
         dt = runs[0][0][1, 0] - runs[0][0][0, 0]
         nlag = int(round(maxlag / dt)) + 1
         # ACF averaged over the replicas, always around the same converged mean
-        # ACFs of runs that are too short are padded with NaN
-        acf = np.full((len(runs), nlag), np.nan)
-        for i, (d, _) in enumerate(runs):
-            n = min(nlag, len(d) // 2)
-            acf[i, :n] = autocorrelation(d[:, 1], n, vmean)
-        acf = acf.mean(axis=0)
-        acfs[base] = acf[:: int(round(resolution / dt))]
+        acf = np.mean([autocorrelation(d[:, 1], nlag, vmean) for d, _ in runs], axis=0)
+        acfs[s["name"]] = acf[:: int(round(resolution / dt))]
         vol = np.concatenate([d[:, 1] for d, _ in runs])
         dv2 = (vol - vmean) ** 2
         length = np.mean([d[-1, 0] - d[0, 0] for d, _ in runs])
@@ -459,13 +388,18 @@ def analyze(equil=10.0, system="ice", maxlag=20.0, resolution=0.02):
             tau_rep = length * means.var(ddof=1) / (2 * np.mean(dv2))
         else:
             err_v = tau_rep = np.nan
-        tau_atoms = r.get("atoms", (r["code"], r.get("tdamp", 0)))[1]
+        if s["code"] == "ipi":
+            tau_baro, tau_cell = s["tau"], s["tau_cell"]
+            tau_atoms = s["thermostat"][1]
+            tau_atoms = tau_atoms if isinstance(tau_atoms, (int, float)) else 0
+        else:
+            tau_baro, tau_cell, tau_atoms = s["pdamp"], 0, s["tdamp"]
         rows.append(
-            [base]
+            [s["name"]]
             + [
                 tau_baro,
-                r.get("tau_cell", 0),
-                tau_atoms if isinstance(tau_atoms, (int, float)) else 0,
+                tau_cell,
+                tau_atoms,
                 np.mean(vol),
                 np.mean(dv2),
                 tau_v,
@@ -480,13 +414,13 @@ def analyze(equil=10.0, system="ice", maxlag=20.0, resolution=0.02):
             ]
         )
         print(
-            f"{base:28s} n={len(runs)} <V>={np.mean(vol):8.2f} "
+            f"{s['name']:28s} n={len(runs)} <V>={np.mean(vol):8.2f}+-{err_v:5.2f} "
             f"std(V)={np.sqrt(np.mean(dv2)):6.2f} tau_blk={tau_v:5.2f} "
             f"int(5ps)={tau_5:5.2f} int(20ps)={tau_20:5.2f} tau_rep={tau_rep:5.2f} ps"
         )
 
     v2 = np.mean((vols - vmean) ** 2)
-    kappa = v2 / (kB * SYSTEMS[system]["temp"] * vmean) / 160.21766208  # A^3/eV->1/GPa
+    kappa = v2 / (kB * TEMP * vmean) / 160.21766208  # A^3/eV -> 1/GPa
     print(f"pooled <V> = {vmean:.2f} A^3; kappa_T = {kappa:.4f} 1/GPa")
 
     with open(os.path.join(ROOT, "data", "reference_scan.dat"), "w") as f:
@@ -513,31 +447,29 @@ def analyze(equil=10.0, system="ice", maxlag=20.0, resolution=0.02):
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "ase-worker":
-        f, a, n, tb, td, system = sys.argv[2:8]
-        ase_worker(f, a, int(n), float(tb), float(td), system)
+        folder, address, nsteps, pdamp, tdamp = sys.argv[2:7]
+        ase_worker(folder, address, int(nsteps), float(pdamp), float(tdamp))
         sys.exit(0)
 
     parser = argparse.ArgumentParser()
     parser.add_argument("action", choices=["run", "analyze"])
-    parser.add_argument("--nproc", type=int, default=8)
-    parser.add_argument("--time", type=float, default=200.0, help="ps per run")
-    parser.add_argument("--only", default="", help="substring filter on run names")
+    parser.add_argument("--scan", default=os.path.join(ROOT, "scan"))
+    parser.add_argument("--nproc", type=int, default=3)
+    parser.add_argument("--time", type=float, default=RUN_TIME, help="ps per run")
     parser.add_argument(
-        "--names", default="", help="comma-separated run names, run in this order"
+        "--replicas", type=int, default=None, help="replicas of every setup"
     )
+    parser.add_argument("--only", default="", help="substring filter on run names")
     parser.add_argument("--equil", type=float, default=10.0, help="ps to discard")
-    parser.add_argument("--system", default="ice", choices=list(SYSTEMS))
     args = parser.parse_args()
+    scan = os.path.realpath(args.scan)
 
     if args.action == "run":
-        nsteps = int(args.time * 1000 / DT)
-        runs = [r for r in run_list() if args.only in r["name"]]
-        if args.names:
-            by_name = {r["name"]: r for r in runs}
-            runs = [by_name[n] for n in args.names.split(",")]
+        nsteps = int(round(args.time * 1000 / DT))
+        runs = [r for r in run_list(args.replicas) if args.only in r["name"]]
         with ThreadPoolExecutor(args.nproc) as pool:
-            futures = [pool.submit(run_one, r, nsteps, i) for i, r in enumerate(runs)]
-            for fut in futures:
-                fut.result()
+            for r in runs:
+                # a socket name per run, so that several runners can share a machine
+                pool.submit(run_one, r, nsteps, scan, f"baroref_{r['name']}")
     else:
-        analyze(args.equil, args.system)
+        analyze(scan, args.equil)

@@ -377,7 +377,7 @@ def autocorrelation(x, maxlag, mean):
 
 # %%
 # We take the mean volume, and compare the ACF, with the results from much
-# longer simulations with the same parameters (four independent runs of
+# longer simulations with the same parameters (eight independent runs of
 # 250 ps, see ``data/run_scan.py``). Even though the short run is noisy, it
 # agrees well with the reference. Most of the decay happens within a few
 # hundred fs, as the piston oscillates and the lattice responds to it, but
@@ -542,15 +542,17 @@ plt.show()
 # With SVR, the piston time scale makes little difference, as long as the
 # period is below about 1 ps: the sampling of the volume is limited by the
 # atoms. The GLE thermostat, which is designed to sample efficiently
-# vibrations over a broad range of frequencies, reduces :math:`\tau_V` by
-# up to an order of magnitude. Then the piston matters more, and heavy
-# pistons clearly degrade the sampling, while the differences between
-# pistons with periods of a few hundred fs or less are within the noise.
+# vibrations over a broad range of frequencies, reduces :math:`\tau_V` by a
+# factor between two and four, unless the piston is very heavy. Then the
+# piston becomes the bottleneck, and its time scale matters more: heavy
+# pistons clearly degrade the sampling, and even with the default
+# :math:`\tau=360` fs, :math:`\tau_V` is about twice as long as with
+# pistons with a period of about 100 fs or less.
 #
 # The slow tail also makes :math:`\tau_V` hard to converge. Plotting the
 # integral of :math:`c_{VV}` up to a time :math:`t` shows that with SVR it
 # keeps growing for several ps, while with GLE (and Langevin) it levels off
-# after a couple of ps, at a much smaller value. Note that even 1 ns of
+# after a couple of ps, at a much smaller value. Note that even 1-2 ns of
 # reference runs is not long enough to compute these integrals precisely:
 # comparing independent runs is the safest way to estimate the statistical
 # error on the mean volume.
@@ -607,7 +609,7 @@ def launch_lammps(atoms, properties, port, unixsocket):
 # ideal gas, :math:`W\propto Nk_\mathrm{B}T\,\mathrm{pdamp}^2`, so (as
 # discussed above for ``i-PI`` without ``bulk_modulus``) the period of the
 # volume oscillations depends on the material and on the temperature: for
-# our ice it is about :math:`0.7\,\mathrm{pdamp}`.
+# our ice it is between :math:`0.6` and :math:`0.7\,\mathrm{pdamp}`.
 # ``tdamp`` sets the time scale of the Nosé-Hoover thermostats.
 
 ASE_PDAMP = 200  # fs
@@ -636,13 +638,13 @@ if not os.path.exists("ase-mtk.time"):
 
 # %%
 # With ``pdamp`` = 200 fs, ``IsotropicMTKNPT`` samples the volume about as
-# efficiently as ``i-PI`` with SVR: the Nosé-Hoover chain attached to the
-# atoms is, as far as the slow lattice vibrations are concerned, similar to
-# a global thermostat. The piston is attached to a deterministic Nosé-Hoover
-# chain, that does a poor job at damping its oscillations: the volume
-# oscillates with a period of about 0.14 ps, and with a heavier piston (e.g.
-# ``pdamp`` = 1000 fs) it rings for several ps, as shown by the reference
-# curve.
+# efficiently as ``i-PI`` with SVR (slightly better, in fact): the
+# Nosé-Hoover chain attached to the atoms is, as far as the slow lattice
+# vibrations are concerned, similar to a global thermostat. The piston is
+# attached to a deterministic Nosé-Hoover chain, that does a poor job at
+# damping its oscillations: the volume oscillates with a period of about
+# 0.12 ps, and with a heavier piston (e.g. ``pdamp`` = 1000 fs) it rings for
+# several ps, as shown by the reference curve.
 
 ase_data = np.loadtxt("ase-mtk.dat")
 ase_volume = ase_data[ase_data[:, 0] * 1e-3 > EQUIL, 1]
@@ -752,6 +754,7 @@ mass = 96 * 18.015 / ase.units.mol  # g
 best = {
     "i-PI (SVR)": ref_name(360, 30),
     "i-PI (GLE)": ref_name(360, 30, ("gle", "smart")),
+    "i-PI (GLE, 110 fs)": ref_name(110, 9, ("gle", "smart")),
     "i-PI (Langevin)": ref_name(360, 30, ("langevin", 10)),
     "ASE MTK": f"ice_ase_mtk_b{ASE_PDAMP}",
     "LAMMPS npt": "ice_lmp_mtk_b200",
@@ -781,6 +784,7 @@ y = np.arange(len(best))
 fig, ax = plt.subplots(1, 3, figsize=(8, 3), constrained_layout=True, sharey=True)
 ax[0].errorbar(rho, y, xerr=rho_err, fmt="ko")
 ax[0].set_xlabel(r"$\rho$ / g cm$^{-3}$")
+ax[0].locator_params(axis="x", nbins=3)
 ax[1].errorbar(kappa, y, xerr=kappa_err, fmt="ko")
 ax[1].set_xlabel(r"$\kappa_T$ / GPa$^{-1}$")
 # wall time per independent sample (bottom axis, blue) and per ps (top axis,
@@ -801,15 +805,17 @@ ax[0].set_yticks(y, list(best.keys()))
 plt.show()
 
 # %%
-# All setups agree on the density (to about 0.1%, which is comparable to the
-# statistical error) and on the compressibility. The cost per step is
+# All setups agree on the density (to better than 0.1%) and on the
+# compressibility (within the statistical error). The cost per step is
 # similar for the three codes: ``LAMMPS``, that runs natively, is somewhat
 # faster, while ``i-PI`` and ASE pay a modest overhead for the socket
 # communication, which becomes negligible for more expensive potentials.
 # The cost per *independent sample* depends much more on the choice of the
-# thermostat for the atoms: with a GLE, ``i-PI`` generates uncorrelated
-# volume samples at least twice as fast as any of the setups that use
-# global (SVR or Nosé-Hoover) thermostats.
+# thermostat for the atoms: with a GLE, ``i-PI`` needs 1.5 to 3 times fewer
+# steps per uncorrelated volume sample than the setups that use global (SVR
+# or Nosé-Hoover) thermostats, and 3 to 6 times fewer with a lighter piston
+# (:math:`\tau=110` fs), which more than makes up for the overhead of the
+# socket communication.
 #
 # Keep in mind that in a liquid the fluctuations of the volume are coupled to
 # the slow rearrangements of its structure, so whatever the parameters of the
@@ -820,8 +826,10 @@ plt.show()
 # it the sampling of the volume.
 #
 # In summary: choose the time scale of the piston based on an estimate of the
-# period of the volume oscillations, damp the piston close to critical damping,
-# be careful about the meaning of the barostat parameters in different codes,
-# and pay as much attention to the atomic thermostat as to the barostat.
+# period of the volume oscillations (or shorter, if the atoms are thermostatted
+# efficiently, so that the piston becomes the bottleneck), damp the piston
+# close to critical damping, be careful about the meaning of the barostat
+# parameters in different codes, and pay as much attention to the atomic
+# thermostat as to the barostat.
 # Check the volume autocorrelation function over long times, and use
 # independent runs to estimate the error on volume-dependent averages.
