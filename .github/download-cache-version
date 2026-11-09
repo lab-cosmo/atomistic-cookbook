@@ -5,4 +5,4 @@
 # change start from an empty cache, and once merged, main builds a new cache
 # from scratch. Use it to pick up a file that changed upstream without a change
 # of URL, or to discard a corrupted cache.
-1
+2

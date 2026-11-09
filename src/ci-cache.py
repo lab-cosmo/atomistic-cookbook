@@ -53,6 +53,14 @@ CONDA_DIR = "conda"
 CONDA_URLS = PurePosixPath(CONDA_DIR, "urls.txt")
 CONDA_ARCHIVES = (".conda", ".tar.bz2")
 
+# pip stores each HTTP response in two files, `<key>` with the headers and
+# `<key>.body` with the content, and only rewrites the headers when it revalidates
+# a cached response. The two files are archived together or not at all, so that
+# merging the archives of different jobs never pairs the headers of a response
+# with the content of another version of it.
+PIP_HTTP_CACHE = ("xdg", "pip", "http-v2")
+PIP_BODY_SUFFIX = ".body"
+
 # Unfinished downloads and lock files
 EXCLUDED_SUFFIXES = (".part", ".partial", ".incomplete", ".lock")
 EXCLUDED_DIRS = {".locks"}
@@ -99,6 +107,15 @@ def is_too_large(relpath: PurePosixPath, size: int, max_size) -> bool:
 
 def max_file_size(args):
     return None if args.max_file_size_mb is None else args.max_file_size_mb * 1e6
+
+
+def pip_partner(relpath: PurePosixPath):
+    """The other file of a pip HTTP cache entry, or None for other files"""
+    if relpath.parts[: len(PIP_HTTP_CACHE)] != PIP_HTTP_CACHE:
+        return None
+    if relpath.name.endswith(PIP_BODY_SUFFIX):
+        return relpath.with_name(relpath.name[: -len(PIP_BODY_SUFFIX)])
+    return relpath.with_name(relpath.name + PIP_BODY_SUFFIX)
 
 
 def walk_files(root: Path):
@@ -248,8 +265,8 @@ def collect(args):
     marker_mtime = marker.stat().st_mtime_ns
     max_size = max_file_size(args)
 
-    new_files = []
-    size = 0
+    # size of the new files, indexed by path relative to the root
+    new_files = {}
     if root.exists():
         for path, relpath, stat in walk_files(root):
             if (
@@ -257,9 +274,15 @@ def collect(args):
                 and is_cacheable(relpath, path.is_symlink())
                 and not is_too_large(relpath, stat.st_size, max_size)
             ):
-                new_files.append(relpath)
-                size += stat.st_size
+                new_files[relpath] = stat.st_size
 
+    # pip cache entries where only one of the files is new
+    for relpath in list(new_files):
+        partner = pip_partner(relpath)
+        if partner is not None and partner not in new_files:
+            del new_files[relpath]
+
+    size = sum(new_files.values())
     if not new_files:
         print("no new files in the download cache")
         output.unlink(missing_ok=True)
