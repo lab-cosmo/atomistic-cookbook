@@ -37,12 +37,13 @@ download_with_retry(
 ```
 
 If the `ATOMISTIC_COOKBOOK_CACHE` environment variable points to a
-directory, downloads go through a cache in that directory, keyed by URL,
-so a file fetched once (e.g. by another recipe) is copied from there
-instead of being downloaded again. The cookbook CI uses this to share
-data files across recipes. With the variable unset nothing changes, any
-problem with the cache directory falls back to a direct download, and
-`overwrite=True` always bypasses the cache.
+directory, downloads go through a cache in that directory, keyed by URL:
+a file that is already in the cache (e.g. because another recipe
+downloaded it) is copied from there instead of being downloaded again.
+The cookbook CI uses this to share data files across recipes. If the
+variable is not set, files are downloaded directly to their destination.
+Any problem with the cache directory also falls back to a direct
+download, and `overwrite=True` always bypasses the cache.
 
 ### `run_command`
 

@@ -13,9 +13,9 @@ repository.
 
 On CI, the ``ATOMISTIC_COOKBOOK_CACHE`` environment variable makes
 :func:`~atomistic_cookbook_utils.download_with_retry` go through a
-download cache shared by all recipes, so that each file is only fetched
-once. When running a recipe locally the variable is not set, and files are
-downloaded as usual.
+download cache shared by all recipes, so that a file fetched by one recipe
+can be reused by the others. When the variable is not set (e.g. when running a
+recipe locally), files are downloaded directly to their destination.
 
 API reference
 -------------
