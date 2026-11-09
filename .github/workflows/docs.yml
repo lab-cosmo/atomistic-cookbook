@@ -136,13 +136,13 @@ jobs:
       # it added to the download cache, and the update-download-cache job merges
       # them. Files downloaded by a failed example are uploaded too.
       - name: archive the files added to the download cache
-        if: ${{ always() && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch') }}
+        if: ${{ always() && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request') }}
         run: |
           python src/ci-cache.py collect --root ~/cookbook-cache \
             --marker ~/cookbook-cache.marker --output ~/cache-delta/cache-delta.tar
 
       - name: upload the files added to the download cache
-        if: ${{ always() && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch') }}
+        if: ${{ always() && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request') }}
         uses: actions/upload-artifact@v6
         with:
           name: cache-delta-${{ matrix.example-name }}
@@ -155,7 +155,7 @@ jobs:
     # Merges the files downloaded by all the examples into a new download cache,
     # and deletes the other caches of this branch
     needs: generate-example
-    if: ${{ always() && needs.generate-example.result != 'skipped' && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch') }}
+    if: ${{ always() && needs.generate-example.result != 'skipped' && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request') }}
     runs-on: ubuntu-latest
     permissions:
       actions: write  # to delete caches
