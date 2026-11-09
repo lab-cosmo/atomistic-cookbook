@@ -1,0 +1,70 @@
+name: Clear download cache
+
+# Deletes the download cache of the documentation workflow (see docs.yml), so
+# that the next runs download all models and data files again. It is
+# triggered by a comment on a pull request or an issue whose first line is
+# `cache clear`, from someone with write access to the repository, or by running
+# this workflow from the Actions tab.
+on:
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  clear-download-cache:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.comment.body, 'cache clear')
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write # delete the caches
+      issues: write # react to the comment
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: check the comment
+        id: comment
+        if: github.event_name == 'issue_comment'
+        env:
+          BODY: ${{ github.event.comment.body }}
+        run: |
+          # the first line must be exactly "cache clear", so that a comment like
+          # "cache clearing did not help" does not clear the cache
+          python3 -c '
+          import os
+          first_line = os.environ["BODY"].strip().splitlines()[0]
+          match = first_line.strip().lower() == "cache clear"
+          print("match=" + str(match).lower())
+          ' >> "$GITHUB_OUTPUT"
+
+      - name: check that the author of the comment has write access
+        if: steps.comment.outputs.match == 'true'
+        env:
+          AUTHOR: ${{ github.event.comment.user.login }}
+        run: |
+          permission=$(gh api "repos/$GH_REPO/collaborators/$AUTHOR/permission" --jq .permission)
+          if [[ "$permission" != "admin" && "$permission" != "write" ]]; then
+            echo "::error::$AUTHOR does not have write access to $GH_REPO"
+            exit 1
+          fi
+
+      - name: delete the download caches
+        if: github.event_name == 'workflow_dispatch' || steps.comment.outputs.match == 'true'
+        run: |
+          gh cache list --key cookbook-downloads- --limit 100 --json id,key,ref \
+            --jq '.[] | "\(.id) \(.key) \(.ref)"' > caches.txt
+          if [[ ! -s caches.txt ]]; then
+            echo "there is no download cache to delete"
+          fi
+          while read -r id key ref; do
+            echo "deleting $key ($ref)"
+            gh cache delete "$id"
+          done < caches.txt
+
+      - name: react to the comment
+        if: always() && steps.comment.outputs.match == 'true'
+        env:
+          REACTION: ${{ job.status == 'success' && 'rocket' || 'confused' }}
+        run: |
+          gh api --method POST \
+            "repos/$GH_REPO/issues/comments/${{ github.event.comment.id }}/reactions" \
+            -f content="$REACTION" > /dev/null

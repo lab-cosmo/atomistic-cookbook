@@ -24,8 +24,9 @@ version range, e.g.
 ### `download_with_retry`
 
 Download a file with automatic retries on transient HTTP errors
-(429, 500, 502, 503, 504). Skips the download if the file already
-exists, creates parent directories as needed.
+(429, 500, 502, 503, 504), restarting the download if the connection
+breaks while the file is being received. Skips the download if the file
+already exists, creates parent directories as needed.
 
 ```python
 from atomistic_cookbook_utils import download_with_retry

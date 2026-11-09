@@ -12,18 +12,16 @@ on:
   workflow_dispatch:
 
 env:
-  # Packages, models and datasets downloaded while running the examples are
-  # stored in a cache shared by all examples (see src/ci-cache.py), and files
-  # are removed from the cache this many days after being downloaded. The
-  # cache can be reset by editing .github/download-cache-version, or cleared
-  # with the clear-download-cache.yml workflow.
+  # Models and datasets downloaded by the examples (from HuggingFace, Zenodo,
+  # ...) are stored in a cache shared by all examples (see src/ci-cache.py),
+  # and files are removed from the cache this many days after being downloaded.
+  # The cache can be reset by editing .github/download-cache-version, or
+  # cleared with the clear-download-cache.yml workflow.
   DOWNLOAD_CACHE_MAX_AGE_DAYS: 10
-  # Packages are always cached, but files downloaded by the examples themselves
-  # (models, datasets) are only cached if they are smaller than this
+  # Files larger than this are not cached
   DOWNLOAD_CACHE_MAX_FILE_SIZE_MB: 150
-  # The largest files are removed if the cache gets bigger than this, to stay
-  # below the 10 GB of cache storage of the repository
-  DOWNLOAD_CACHE_MAX_SIZE_GB: 8
+  # The largest files are removed if the cache gets bigger than this
+  DOWNLOAD_CACHE_MAX_SIZE_GB: 2
 
 jobs:
   setup:
@@ -67,8 +65,8 @@ jobs:
 
       - name: configure the download cache
         run: |
-          echo "CONDA_PKGS_DIRS=$HOME/cookbook-cache/conda" >> $GITHUB_ENV
-          # pip, huggingface_hub, shiftml, ... store their files here
+          # huggingface_hub and shiftml store their files here (the files of
+          # other tools using this directory, such as pip, are not cached)
           echo "XDG_CACHE_HOME=$HOME/cookbook-cache/xdg" >> $GITHUB_ENV
           # used by atomistic_cookbook_utils.download_with_retry
           echo "ATOMISTIC_COOKBOOK_CACHE=$HOME/cookbook-cache/downloads" >> $GITHUB_ENV
@@ -110,7 +108,6 @@ jobs:
           PIP_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
         run: |
           conda config --set notify_outdated_conda false
-          conda config --show pkgs_dirs
           nox -e ${{ matrix.example-name }} -- --no-website
 
       - name: check that the build did not create additional files in git
