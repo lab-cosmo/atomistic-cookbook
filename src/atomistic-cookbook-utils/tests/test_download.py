@@ -117,3 +117,85 @@ def test_download_exhausts_retries(http_server, tmp_path):
     assert not dest.exists()
     # The .part file should also have been cleaned up.
     assert not dest.with_suffix(dest.suffix + ".part").exists()
+
+
+# ---------------------------------------------------------------------------- #
+#                      shared cache ($ATOMISTIC_COOKBOOK_CACHE)                 #
+# ---------------------------------------------------------------------------- #
+
+
+def test_cache_is_off_by_default(http_server, tmp_path, monkeypatch):
+    monkeypatch.delenv("ATOMISTIC_COOKBOOK_CACHE", raising=False)
+    url, state = http_server(fail_first_n=0)
+
+    download_with_retry(url, tmp_path / "a" / "file.bin")
+    download_with_retry(url, tmp_path / "b" / "file.bin")
+
+    assert state["calls"] == 2
+
+
+def test_cache_shared_between_destinations(http_server, tmp_path, monkeypatch):
+    cache = tmp_path / "cache"
+    monkeypatch.setenv("ATOMISTIC_COOKBOOK_CACHE", str(cache))
+    url, state = http_server(fail_first_n=0)
+
+    first = tmp_path / "recipe-a" / "file.bin"
+    second = tmp_path / "recipe-b" / "renamed.dat"
+    download_with_retry(url, first)
+    download_with_retry(url, second)
+
+    assert first.read_bytes() == PAYLOAD
+    assert second.read_bytes() == PAYLOAD
+    assert state["calls"] == 1
+
+    # the cache holds one copy, named after the URL, plus the URL itself
+    (entry,) = cache.iterdir()
+    assert (entry / "file.bin").read_bytes() == PAYLOAD
+    assert (entry / "url.txt").read_text().strip() == url
+    assert not list(cache.rglob("*.part"))
+
+    # the destination is a copy: modifying it leaves the cache intact
+    second.write_bytes(b"modified")
+    assert (entry / "file.bin").read_bytes() == PAYLOAD
+
+
+def test_cache_bypassed_by_overwrite(http_server, tmp_path, monkeypatch):
+    cache = tmp_path / "cache"
+    monkeypatch.setenv("ATOMISTIC_COOKBOOK_CACHE", str(cache))
+    url, state = http_server(fail_first_n=0)
+
+    download_with_retry(url, tmp_path / "a.bin")
+    download_with_retry(url, tmp_path / "b.bin", overwrite=True)
+
+    assert (tmp_path / "b.bin").read_bytes() == PAYLOAD
+    assert state["calls"] == 2
+
+
+def test_cache_falls_back_when_unusable(http_server, tmp_path, monkeypatch):
+    # the "cache directory" is a regular file, so it cannot be created
+    not_a_dir = tmp_path / "cache"
+    not_a_dir.write_text("")
+    monkeypatch.setenv("ATOMISTIC_COOKBOOK_CACHE", str(not_a_dir))
+    url, state = http_server(fail_first_n=0)
+    dest = tmp_path / "file.bin"
+
+    with pytest.warns(UserWarning, match="download cache"):
+        download_with_retry(url, dest)
+
+    assert dest.read_bytes() == PAYLOAD
+    assert state["calls"] == 1
+
+
+def test_cache_does_not_mask_http_errors(http_server, tmp_path, monkeypatch):
+    monkeypatch.setenv("ATOMISTIC_COOKBOOK_CACHE", str(tmp_path / "cache"))
+    url, state = http_server(fail_first_n=10)
+    dest = tmp_path / "file.bin"
+
+    with pytest.raises(requests.exceptions.RetryError):
+        download_with_retry(url, dest, retries=2, backoff_factor=0.0)
+
+    # the HTTP error is raised after one round of retries, without falling
+    # back to a direct download
+    assert state["calls"] == 3
+    assert not dest.exists()
+    assert not list((tmp_path / "cache").rglob("*.bin*"))

@@ -36,6 +36,14 @@ download_with_retry(
 )
 ```
 
+If the `ATOMISTIC_COOKBOOK_CACHE` environment variable points to a
+directory, downloads go through a cache in that directory, keyed by URL,
+so a file fetched once (e.g. by another recipe) is copied from there
+instead of being downloaded again. The cookbook CI uses this to share
+data files across recipes. With the variable unset nothing changes, any
+problem with the cache directory falls back to a direct download, and
+`overwrite=True` always bypasses the cache.
+
 ### `run_command`
 
 Run a shell-like command string without invoking a shell. The string is

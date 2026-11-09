@@ -1,0 +1,8 @@
+# The hash of this file is part of the key of the CI download cache (see
+# .github/workflows/docs.yml and src/ci-cache.py), which holds the packages,
+# models and datasets downloaded by the recipes for up to 10 days. Changing it
+# (e.g. incrementing the number below) gives a new key: runs of the PR with the
+# change start from an empty cache, and once merged, main builds a new cache
+# from scratch. Use it to pick up a file that changed upstream without a change
+# of URL, or to discard a corrupted cache.
+1

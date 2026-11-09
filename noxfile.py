@@ -60,6 +60,7 @@ def get_lint_files():
         "src/ipynb-to-gallery.py",
         "src/generate-gallery.py",
         "src/latest_docs_run.py",
+        "src/ci-cache.py",
         "noxfile.py",
         "docs/src/conf.py",
         "src/get_examples.py",
