@@ -8,12 +8,19 @@ and the files fetched by ``atomistic_cookbook_utils.download_with_retry``
 (``downloads/``). Each job then archives the files it downloaded on top of
 the restored cache, and a final job merges these archives into a new cache.
 
+Packages are always cached, while the files downloaded by the recipes
+themselves (models, datasets) are only cached up to a maximum size: large files
+are typically used by a single recipe, and keeping them would slow down the
+restoring of the cache in every job to save a few requests.
+
 Subcommands:
 
 - ``prune``: removes files older than the maximum age (the date of a file is
-  the time it was downloaded), then the oldest files until the cache fits in
-  the size budget, as well as any file that should not be cached. Optionally
-  creates a marker file, used by ``collect`` to recognize new files.
+  the time it was downloaded) and any file that should not be cached, then the
+  largest files until the cache fits in the size budget. Removing the largest
+  files first keeps as many files as possible in the cache: rate limits apply
+  to the number of requests rather than to their size. Optionally creates a
+  marker file, used by ``collect`` to recognize new files.
 - ``collect``: archives the cacheable files newer than the marker.
 - ``merge``: extracts archives created by ``collect`` into the cache.
 """
@@ -26,13 +33,18 @@ import time
 from pathlib import Path, PurePosixPath
 
 
+# Directories (relative to the cache root) containing the files downloaded by the
+# recipes, which are only cached up to a maximum size
+HF_HUB = ("xdg", "huggingface", "hub")
+RECIPE_DOWNLOADS = [HF_HUB, ("xdg", "shiftml"), ("downloads",)]
+
 # Directories (relative to the cache root) whose whole content is cached
-CACHED_TREES = [
-    ("xdg", "pip"),
-    ("xdg", "huggingface", "hub"),
-    ("xdg", "shiftml"),
-    ("downloads",),
-]
+CACHED_TREES = [("xdg", "pip"), *RECIPE_DOWNLOADS]
+
+# In the HuggingFace cache, the files in `snapshots/` are links to the downloaded
+# files. Regular files in there are created by other tools (e.g. models exported
+# by flashmd), and are not cached.
+HF_SNAPSHOTS = "snapshots"
 
 # conda keeps the downloaded archives and the extracted packages in the same
 # directory: only the archives are cached, together with `urls.txt`, which conda
@@ -55,7 +67,13 @@ REPORT_CATEGORIES = [
 ]
 
 
-def is_cacheable(relpath: PurePosixPath) -> bool:
+def in_trees(relpath: PurePosixPath, trees) -> bool:
+    """Whether a path is inside one of the given directories"""
+    parts = relpath.parts
+    return any(len(parts) > len(tree) and parts[: len(tree)] == tree for tree in trees)
+
+
+def is_cacheable(relpath: PurePosixPath, is_symlink: bool) -> bool:
     """Whether a file (given relative to the cache root) belongs in the cache"""
     parts = relpath.parts
     if any(part in EXCLUDED_DIRS for part in parts):
@@ -66,9 +84,21 @@ def is_cacheable(relpath: PurePosixPath) -> bool:
     if len(parts) == 2 and parts[0] == CONDA_DIR:
         return relpath == CONDA_URLS or relpath.name.endswith(CONDA_ARCHIVES)
 
-    return any(
-        len(parts) > len(tree) and parts[: len(tree)] == tree for tree in CACHED_TREES
+    if parts[: len(HF_HUB)] == HF_HUB and HF_SNAPSHOTS in parts and not is_symlink:
+        return False
+
+    return in_trees(relpath, CACHED_TREES)
+
+
+def is_too_large(relpath: PurePosixPath, size: int, max_size) -> bool:
+    """Whether a file downloaded by a recipe is larger than the maximum size"""
+    return (
+        max_size is not None and size > max_size and in_trees(relpath, RECIPE_DOWNLOADS)
     )
+
+
+def max_file_size(args):
+    return None if args.max_file_size_mb is None else args.max_file_size_mb * 1e6
 
 
 def walk_files(root: Path):
@@ -144,33 +174,41 @@ def prune(args):
     now = time.time()
     max_age = args.max_age_days * 86400
     budget = None if args.max_size_gb is None else args.max_size_gb * 1e9
+    max_size = max_file_size(args)
 
-    removed = {"expired": 0, "not cacheable": 0, "over budget": 0, "dangling": 0}
+    # number of files and total size removed for each reason
+    reasons = ["expired", "not cacheable", "too large", "over budget", "dangling"]
+    removed = {reason: [0, 0] for reason in reasons}
+
+    def remove(path, size, reason):
+        path.unlink()
+        removed[reason][0] += 1
+        removed[reason][1] += size
+
     kept = []
     for path, relpath, stat in walk_files(root):
-        if not is_cacheable(relpath):
-            path.unlink()
-            removed["not cacheable"] += 1
+        if not is_cacheable(relpath, path.is_symlink()):
+            remove(path, stat.st_size, "not cacheable")
+        elif is_too_large(relpath, stat.st_size, max_size):
+            remove(path, stat.st_size, "too large")
         elif relpath != CONDA_URLS and now - stat.st_mtime > max_age:
-            path.unlink()
-            removed["expired"] += 1
+            remove(path, stat.st_size, "expired")
         elif not path.is_symlink() and relpath != CONDA_URLS:
-            kept.append((stat.st_mtime, stat.st_size, path))
+            kept.append((stat.st_size, stat.st_mtime, path))
 
     if budget is not None:
-        total = sum(size for _, size, _ in kept)
-        for _, size, path in sorted(kept, key=lambda entry: entry[0]):
+        total = sum(size for size, _, _ in kept)
+        # largest first, and the oldest first among files of the same size
+        for size, _, path in sorted(kept, key=lambda entry: (-entry[0], entry[1])):
             if total <= budget:
                 break
-            path.unlink()
+            remove(path, size, "over budget")
             total -= size
-            removed["over budget"] += 1
 
     # dangling links (e.g. HuggingFace snapshots pointing to a pruned blob)
-    for path, _, _ in walk_files(root):
+    for path, _, stat in walk_files(root):
         if path.is_symlink() and not path.exists():
-            path.unlink()
-            removed["dangling"] += 1
+            remove(path, stat.st_size, "dangling")
 
     # keep only the lines of urls.txt for archives present in the cache
     urls_txt = root / CONDA_URLS
@@ -184,11 +222,12 @@ def prune(args):
     remove_empty_dirs(root)
 
     print(f"removed from the download cache in {root}:")
-    for reason, count in removed.items():
-        print(f"    {count:>7} files ({reason})")
+    for reason, (count, size) in removed.items():
+        print(f"    {reason:<18} {count:>7} files {human_size(size):>10}")
 
     report(root, args.summary)
-    set_github_output("pruned", "true" if sum(removed.values()) > 0 else "false")
+    n_removed = sum(count for count, _ in removed.values())
+    set_github_output("pruned", "true" if n_removed > 0 else "false")
 
     if args.marker is not None:
         marker = Path(args.marker)
@@ -207,12 +246,17 @@ def collect(args):
         print(f"{marker} does not exist, not collecting anything")
         return
     marker_mtime = marker.stat().st_mtime_ns
+    max_size = max_file_size(args)
 
     new_files = []
     size = 0
     if root.exists():
-        for _, relpath, stat in walk_files(root):
-            if stat.st_mtime_ns > marker_mtime and is_cacheable(relpath):
+        for path, relpath, stat in walk_files(root):
+            if (
+                stat.st_mtime_ns > marker_mtime
+                and is_cacheable(relpath, path.is_symlink())
+                and not is_too_large(relpath, stat.st_size, max_size)
+            ):
                 new_files.append(relpath)
                 size += stat.st_size
 
@@ -261,7 +305,9 @@ def merge(args):
                         if url and url not in known_urls:
                             urls.append(url)
                             known_urls.add(url)
-                elif (member.isfile() or member.issym()) and is_cacheable(relpath):
+                elif (member.isfile() or member.issym()) and is_cacheable(
+                    relpath, member.issym()
+                ):
                     members.append(member)
 
             print(f"extracting {len(members)} files from {archive}")
@@ -273,6 +319,15 @@ def merge(args):
         urls_txt.write_text("".join(f"{url}\n" for url in urls))
 
     set_github_output("merged", "true" if extracted > 0 else "false")
+
+
+def add_max_file_size_argument(parser):
+    parser.add_argument(
+        "--max-file-size-mb",
+        type=float,
+        help="do not cache files downloaded by the recipes that are larger than "
+        "this (packages are always cached)",
+    )
 
 
 if __name__ == "__main__":
@@ -292,8 +347,9 @@ if __name__ == "__main__":
     prune_parser.add_argument(
         "--max-size-gb",
         type=float,
-        help="remove the oldest files until the cache is smaller than this",
+        help="remove the largest files until the cache is smaller than this",
     )
+    add_max_file_size_argument(prune_parser)
     prune_parser.add_argument(
         "--marker", help="create this file once the cache has been pruned"
     )
@@ -314,6 +370,7 @@ if __name__ == "__main__":
     collect_parser.add_argument(
         "--output", required=True, help="archive to create (if there are new files)"
     )
+    add_max_file_size_argument(collect_parser)
     collect_parser.set_defaults(function=collect)
 
     merge_parser = subparsers.add_parser("merge", help="merge archives in the cache")
