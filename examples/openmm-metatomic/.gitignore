@@ -1,0 +1,5 @@
+*.pdb
+*.sdf
+*.pt
+*.ckpt
+extensions/
