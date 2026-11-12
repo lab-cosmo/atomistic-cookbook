@@ -8,6 +8,21 @@ on:
     # Check all PR
   schedule:
     - cron: '0 8 * * 1' # run every Monday at 8am UTC
+  # manual runs, which also update the download cache
+  workflow_dispatch:
+
+env:
+  # Models and datasets downloaded by the examples (from HuggingFace, Zenodo,
+  # ...) are stored in a cache shared by all examples (see src/ci-cache.py),
+  # and files are removed from the cache this many days after being downloaded.
+  # The cache can be cleared with the clear-download-cache.yml workflow.
+  DOWNLOAD_CACHE_MAX_AGE_DAYS: 10
+  # Files larger than this are not cached
+  DOWNLOAD_CACHE_MAX_FILE_SIZE_MB: 150
+  # The largest files are removed if the cache gets bigger than this
+  DOWNLOAD_CACHE_MAX_SIZE_GB: 2
+  # Prefix of the keys of the cache (also used in clear-download-cache.yml)
+  DOWNLOAD_CACHE_PREFIX: cookbook-downloads-
 
 jobs:
   setup:
@@ -49,10 +64,34 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: configure the download cache
+        run: |
+          # huggingface_hub and shiftml store their files here (the files of
+          # other tools using this directory, such as pip, are not cached)
+          echo "XDG_CACHE_HOME=$HOME/cookbook-cache/xdg" >> $GITHUB_ENV
+          # used by atomistic_cookbook_utils.download_with_retry
+          echo "ATOMISTIC_COOKBOOK_CACHE=$HOME/cookbook-cache/downloads" >> $GITHUB_ENV
+
+      - name: restore the download cache
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/cookbook-cache
+          # never matches exactly: restores the latest cache with the prefix, from
+          # this branch or from main
+          key: ${{ env.DOWNLOAD_CACHE_PREFIX }}${{ github.run_id }}
+          restore-keys: ${{ env.DOWNLOAD_CACHE_PREFIX }}
+
       - name: setup Python
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+
+      - name: remove outdated files from the download cache
+        run: |
+          python src/ci-cache.py prune --root ~/cookbook-cache \
+            --max-age-days ${{ env.DOWNLOAD_CACHE_MAX_AGE_DAYS }} \
+            --max-file-size-mb ${{ env.DOWNLOAD_CACHE_MAX_FILE_SIZE_MB }} \
+            --marker ~/cookbook-cache.marker
 
       - name: install dependencies
         run: python -m pip install -r requirements.txt
@@ -95,6 +134,91 @@ jobs:
           name: example-${{ matrix.example-name }}
           path: docs/src/examples/*  # folders for each example will be merged later
           overwrite: true  # only keep the latest version of the example
+
+      # Runs on main and on manual runs (PRs read the cache of main, but a cache
+      # saved by a PR is only visible to that PR). Each example uploads the files
+      # it added to the download cache, and the update-download-cache job merges
+      # them. Files downloaded by a failed example are uploaded too. The artifacts
+      # of a run are shared by all its attempts, so their names include the
+      # attempt, and re-runs only merge the files they downloaded.
+      - name: archive the files added to the download cache
+        if: ${{ always() && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch') }}
+        run: |
+          python src/ci-cache.py collect --root ~/cookbook-cache \
+            --max-file-size-mb ${{ env.DOWNLOAD_CACHE_MAX_FILE_SIZE_MB }} \
+            --marker ~/cookbook-cache.marker --output ~/cache-delta/cache-delta.tar
+
+      - name: upload the files added to the download cache
+        if: ${{ always() && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch') }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: cache-delta-${{ github.run_attempt }}-${{ matrix.example-name }}
+          path: ~/cache-delta/cache-delta.tar
+          retention-days: 1
+          compression-level: 0  # the content is already compressed
+          if-no-files-found: ignore
+
+  update-download-cache:
+    # Merges the files downloaded by all the examples into a new download cache,
+    # and deletes the other caches of this branch
+    needs: generate-example
+    if: ${{ always() && needs.generate-example.result != 'skipped' && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch') }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write  # to delete caches
+      contents: read
+    concurrency:
+      # concurrent runs update the cache one at a time
+      group: update-download-cache-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: restore the download cache
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/cookbook-cache
+          key: ${{ env.DOWNLOAD_CACHE_PREFIX }}${{ github.run_id }}
+          restore-keys: ${{ env.DOWNLOAD_CACHE_PREFIX }}
+
+      - name: download the files added by each example
+        uses: actions/download-artifact@v7
+        with:
+          pattern: cache-delta-${{ github.run_attempt }}-*
+          path: ~/cache-deltas
+
+      - name: update the download cache
+        id: update
+        run: |
+          python src/ci-cache.py merge --root ~/cookbook-cache ~/cache-deltas
+          python src/ci-cache.py prune --root ~/cookbook-cache \
+            --max-age-days ${{ env.DOWNLOAD_CACHE_MAX_AGE_DAYS }} \
+            --max-file-size-mb ${{ env.DOWNLOAD_CACHE_MAX_FILE_SIZE_MB }} \
+            --max-size-gb ${{ env.DOWNLOAD_CACHE_MAX_SIZE_GB }} \
+            --summary
+
+      - name: save the download cache
+        if: ${{ steps.update.outputs.merged == 'true' || steps.update.outputs.pruned == 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: ~/cookbook-cache
+          key: ${{ env.DOWNLOAD_CACHE_PREFIX }}${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: delete the previous download caches
+        if: ${{ steps.update.outputs.merged == 'true' || steps.update.outputs.pruned == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEW_KEY: ${{ env.DOWNLOAD_CACHE_PREFIX }}${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          # every download cache of this branch except the new one
+          gh cache list --ref "${{ github.ref }}" --key "$DOWNLOAD_CACHE_PREFIX" \
+            --limit 100 --json id,key --jq ".[] | select(.key != \"$NEW_KEY\") | .id" \
+            | xargs -r -n1 gh cache delete
 
   build-and-publish:
     # Run this job even if the generate-example job was skipped due to

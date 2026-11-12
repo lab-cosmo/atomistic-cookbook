@@ -60,6 +60,7 @@ def get_lint_files():
         "src/ipynb-to-gallery.py",
         "src/generate-gallery.py",
         "src/latest_docs_run.py",
+        "src/ci-cache.py",
         "noxfile.py",
         "docs/src/conf.py",
         "src/get_examples.py",
@@ -345,8 +346,9 @@ def post_process_gallery(name, example_dir, files_before):
 
 
 # For each of the dependencies as keys, add the value as an extra dependency
-DEPENCENCIES_UPDATES = {
+DEPENDENCIES_UPDATES = {
     "libtorch": "pytorch-cpu",
+    "lammps": "lammps * *nompi*",
     "lammps-metatomic": "lammps-metatomic * cpu*nompi*",
     "plumed-metatomic": "plumed-metatomic * *nompi*",
 }
@@ -422,7 +424,7 @@ def update_dependencies(environment_yml, session):
 
     new_deps = set()
     for dep in dependencies:
-        for to_update, new_dep in DEPENCENCIES_UPDATES.items():
+        for to_update, new_dep in DEPENDENCIES_UPDATES.items():
             if f"::{to_update}==" in dep:
                 new_deps.add(new_dep)
 

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "atomistic-cookbook-utils"
-version = "0.1.0"
+version = "0.1.1"
 description = "Shared utilities for recipes in the Atomistic Cookbook."
 readme = "README.md"
 license = { text = "BSD-3-Clause" }

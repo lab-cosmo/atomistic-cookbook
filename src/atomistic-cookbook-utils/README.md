@@ -24,8 +24,9 @@ version range, e.g.
 ### `download_with_retry`
 
 Download a file with automatic retries on transient HTTP errors
-(429, 500, 502, 503, 504). Skips the download if the file already
-exists, creates parent directories as needed.
+(429, 500, 502, 503, 504), restarting the download if the connection
+breaks while the file is being received. Skips the download if the file
+already exists, creates parent directories as needed.
 
 ```python
 from atomistic_cookbook_utils import download_with_retry
@@ -35,6 +36,15 @@ download_with_retry(
     "data/gaas_training.xyz",
 )
 ```
+
+If the `ATOMISTIC_COOKBOOK_CACHE` environment variable points to a
+directory, downloads go through a cache in that directory, keyed by URL:
+a file that is already in the cache (e.g. because another recipe
+downloaded it) is copied from there instead of being downloaded again.
+The cookbook CI uses this to share data files across recipes. If the
+variable is not set, files are downloaded directly to their destination.
+Any problem with the cache directory also falls back to a direct
+download, and `overwrite=True` always bypasses the cache.
 
 ### `run_command`
 

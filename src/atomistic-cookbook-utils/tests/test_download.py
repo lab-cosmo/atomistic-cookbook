@@ -14,7 +14,10 @@ from atomistic_cookbook_utils import download_with_retry
 PAYLOAD = b"hello cookbook\n" * 1000
 
 
-def _make_handler(fail_first_n: int, payload: bytes = PAYLOAD):
+def _make_handler(fail_first_n: int, truncate_first_n: int, payload: bytes = PAYLOAD):
+    """Handler answering the first ``fail_first_n`` requests with a 503, and
+    closing the connection in the middle of the file for the next
+    ``truncate_first_n`` requests."""
     state = {"calls": 0}
 
     class Handler(BaseHTTPRequestHandler):
@@ -30,6 +33,9 @@ def _make_handler(fail_first_n: int, payload: bytes = PAYLOAD):
             self.send_response(200)
             self.send_header("Content-Length", str(len(payload)))
             self.end_headers()
+            if state["calls"] <= fail_first_n + truncate_first_n:
+                self.wfile.write(payload[: len(payload) // 2])
+                return
             self.wfile.write(payload)
 
     return Handler, state
@@ -39,8 +45,8 @@ def _make_handler(fail_first_n: int, payload: bytes = PAYLOAD):
 def http_server():
     servers = []
 
-    def _start(fail_first_n: int):
-        handler, state = _make_handler(fail_first_n)
+    def _start(fail_first_n: int, truncate_first_n: int = 0):
+        handler, state = _make_handler(fail_first_n, truncate_first_n)
         server = HTTPServer(("127.0.0.1", 0), handler)
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
@@ -117,3 +123,123 @@ def test_download_exhausts_retries(http_server, tmp_path):
     assert not dest.exists()
     # The .part file should also have been cleaned up.
     assert not dest.with_suffix(dest.suffix + ".part").exists()
+
+
+def test_download_restarts_broken_transfer(http_server, tmp_path):
+    url, state = http_server(fail_first_n=0, truncate_first_n=2)
+    dest = tmp_path / "file.bin"
+
+    with pytest.warns(UserWarning, match="was interrupted"):
+        download_with_retry(url, dest, retries=5, backoff_factor=0.0)
+
+    assert dest.read_bytes() == PAYLOAD
+    assert state["calls"] == 3  # two broken transfers then a complete one
+
+
+def test_download_gives_up_on_broken_transfers(http_server, tmp_path):
+    url, state = http_server(fail_first_n=0, truncate_first_n=10)
+    dest = tmp_path / "file.bin"
+
+    interrupted = pytest.warns(UserWarning, match="was interrupted")
+    with interrupted, pytest.raises(requests.exceptions.ChunkedEncodingError):
+        download_with_retry(url, dest, retries=2, backoff_factor=0.0)
+
+    assert state["calls"] == 3
+    assert not dest.exists()
+    assert not dest.with_suffix(dest.suffix + ".part").exists()
+
+
+# ---------------------------------------------------------------------------- #
+#                      shared cache ($ATOMISTIC_COOKBOOK_CACHE)                 #
+# ---------------------------------------------------------------------------- #
+
+
+def test_cache_is_off_by_default(http_server, tmp_path, monkeypatch):
+    monkeypatch.delenv("ATOMISTIC_COOKBOOK_CACHE", raising=False)
+    url, state = http_server(fail_first_n=0)
+
+    download_with_retry(url, tmp_path / "a" / "file.bin")
+    download_with_retry(url, tmp_path / "b" / "file.bin")
+
+    assert state["calls"] == 2
+
+
+def test_cache_shared_between_destinations(http_server, tmp_path, monkeypatch):
+    cache = tmp_path / "cache"
+    monkeypatch.setenv("ATOMISTIC_COOKBOOK_CACHE", str(cache))
+    url, state = http_server(fail_first_n=0)
+
+    first = tmp_path / "recipe-a" / "file.bin"
+    second = tmp_path / "recipe-b" / "renamed.dat"
+    download_with_retry(url, first)
+    download_with_retry(url, second)
+
+    assert first.read_bytes() == PAYLOAD
+    assert second.read_bytes() == PAYLOAD
+    assert state["calls"] == 1
+
+    # the cache holds one copy, named after the URL, plus the URL itself
+    (entry,) = cache.iterdir()
+    assert (entry / "file.bin").read_bytes() == PAYLOAD
+    assert (entry / "url.txt").read_text().strip() == url
+    assert not list(cache.rglob("*.part"))
+
+    # the destination is a copy: modifying it leaves the cache intact
+    second.write_bytes(b"modified")
+    assert (entry / "file.bin").read_bytes() == PAYLOAD
+
+
+def test_cache_bypassed_by_overwrite(http_server, tmp_path, monkeypatch):
+    cache = tmp_path / "cache"
+    monkeypatch.setenv("ATOMISTIC_COOKBOOK_CACHE", str(cache))
+    url, state = http_server(fail_first_n=0)
+
+    download_with_retry(url, tmp_path / "a.bin")
+    download_with_retry(url, tmp_path / "b.bin", overwrite=True)
+
+    assert (tmp_path / "b.bin").read_bytes() == PAYLOAD
+    assert state["calls"] == 2
+
+
+def test_cache_falls_back_when_unusable(http_server, tmp_path, monkeypatch):
+    # the "cache directory" is a regular file, so it cannot be created
+    not_a_dir = tmp_path / "cache"
+    not_a_dir.write_text("")
+    monkeypatch.setenv("ATOMISTIC_COOKBOOK_CACHE", str(not_a_dir))
+    url, state = http_server(fail_first_n=0)
+    dest = tmp_path / "file.bin"
+
+    with pytest.warns(UserWarning, match="download cache"):
+        download_with_retry(url, dest)
+
+    assert dest.read_bytes() == PAYLOAD
+    assert state["calls"] == 1
+
+
+def test_cache_does_not_mask_http_errors(http_server, tmp_path, monkeypatch):
+    monkeypatch.setenv("ATOMISTIC_COOKBOOK_CACHE", str(tmp_path / "cache"))
+    url, state = http_server(fail_first_n=10)
+    dest = tmp_path / "file.bin"
+
+    with pytest.raises(requests.exceptions.RetryError):
+        download_with_retry(url, dest, retries=2, backoff_factor=0.0)
+
+    # the HTTP error is raised after one round of retries, without falling
+    # back to a direct download
+    assert state["calls"] == 3
+    assert not dest.exists()
+    assert not list((tmp_path / "cache").rglob("*.bin*"))
+
+
+def test_cache_holds_complete_files(http_server, tmp_path, monkeypatch):
+    cache = tmp_path / "cache"
+    monkeypatch.setenv("ATOMISTIC_COOKBOOK_CACHE", str(cache))
+    url, _ = http_server(fail_first_n=0, truncate_first_n=1)
+
+    with pytest.warns(UserWarning, match="was interrupted"):
+        download_with_retry(url, tmp_path / "file.bin", backoff_factor=0.0)
+
+    # the interrupted transfer leaves nothing behind in the cache
+    files = sorted(path.name for path in cache.rglob("*") if path.is_file())
+    assert files == ["file.bin", "url.txt"]
+    assert next(cache.rglob("file.bin")).read_bytes() == PAYLOAD

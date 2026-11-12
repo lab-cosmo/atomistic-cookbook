@@ -94,6 +94,17 @@ checkpoints, ...) should be saved in a ``tmp/`` subfolder of the example, which
 should be listed in the example's ``.gitignore``. The CI will fail if running the
 example creates new files in ``data/``.
 
+To avoid hitting rate limits, the CI keeps a cache of the models and datasets
+downloaded by the recipes (HuggingFace models and the files fetched with
+``download_with_retry`` from ``atomistic-cookbook-utils``, if they are smaller
+than 150 MB), so that a file fetched by one recipe is reused by the others.
+Files stay in this cache for up to 10 days. If you update a file without
+changing its URL (e.g. a file on a git branch, or on the ``main`` revision of a
+HuggingFace repository), the CI might keep using the old version for a while: to
+force a fresh download, clear the cache by commenting ``cache clear`` on your pull
+request (or by running the "Clear download cache" workflow from the Actions tab),
+and then re-run the checks. The cache is rebuilt by the next run on ``main``.
+
 Thematic listings
 ~~~~~~~~~~~~~~~~~
 
