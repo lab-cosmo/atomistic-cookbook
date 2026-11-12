@@ -101,11 +101,9 @@ than 150 MB), so that a file fetched by one recipe is reused by the others.
 Files stay in this cache for up to 10 days. If you update a file without
 changing its URL (e.g. a file on a git branch, or on the ``main`` revision of a
 HuggingFace repository), the CI might keep using the old version for a while: to
-force a fresh download, change the counter in ``.github/download-cache-version``
-in your pull request. People with write access to the repository can also clear
-the cache by commenting ``cache clear`` on a pull request (or by running the
-"Clear download cache" workflow from the Actions tab), and then re-run the
-checks. The cache is rebuilt by the next run on ``main``.
+force a fresh download, clear the cache by commenting ``cache clear`` on your pull
+request (or by running the "Clear download cache" workflow from the Actions tab),
+and then re-run the checks. The cache is rebuilt by the next run on ``main``.
 
 Thematic listings
 ~~~~~~~~~~~~~~~~~
