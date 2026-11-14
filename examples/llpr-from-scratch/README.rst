@@ -1,6 +1,6 @@
-End-to-end uncertainty quantification
-=====================================
+Training a Model with Uncertainties from Scratch
+=================================================
 
-An example showing LLPR integration, PET-MAD 1.5 ensemble uncertainties for
-static energetics, and uncertainty propagation to a molecular RDF by
-trajectory reweighting.
+This recipe shows how to train a small baseline potential and equip it with
+uncertainty quantification (UQ) capabilities using LLPR, including a shallow
+last-layer ensemble.
