@@ -1,0 +1,45 @@
+<simulation verbosity='low' safe_stride='100'>
+  <output prefix='npt-metatomic'>
+    <properties stride='4' filename='out'>
+      [ step, time{picosecond}, conserved{electronvolt}, temperature{kelvin},
+        potential{electronvolt}, pressure_md{bar}, volume{angstrom3} ]
+    </properties>
+    <trajectory filename='pos' stride='400' format='xyz' cell_units='angstrom'> positions{angstrom} </trajectory>
+  </output>
+  <total_steps> 20000 </total_steps>
+  <prng>
+    <seed> 32342 </seed>
+  </prng>
+  <ffdirect name='qtip4pf' pbc='false'>
+    <pes> metatomic </pes>
+    <parameters> {template:data/ice_96.extxyz,model:qtip4pf.pt,device:cuda} </parameters>
+  </ffdirect>
+  <system>
+    <initialize nbeads='1'>
+      <file mode='ase'> data/ice_96.extxyz </file>
+      <velocities mode='thermal' units='kelvin'> 270 </velocities>
+    </initialize>
+    <forces>
+      <force forcefield='qtip4pf'> </force>
+    </forces>
+    <ensemble>
+      <temperature units='kelvin'> 270 </temperature>
+      <pressure units='bar'> 1 </pressure>
+    </ensemble>
+    <motion mode='dynamics'>
+      <dynamics mode='npt'>
+        <timestep units='femtosecond'> 0.5 </timestep>
+        <thermostat mode='svr'>
+          <tau units='femtosecond'> 10 </tau>
+        </thermostat>
+        <barostat mode='isotropic'>
+          <tau units='femtosecond'> 360 </tau>
+          <bulk_modulus units='gigapascal'> 9 </bulk_modulus>
+          <thermostat mode='langevin'>
+            <tau units='femtosecond'> 30 </tau>
+          </thermostat>
+        </barostat>
+      </dynamics>
+    </motion>
+  </system>
+</simulation>

@@ -1,0 +1,42 @@
+# q-TIP4P/f ice Ih, constant-pressure simulation with LAMMPS (fix npt), using
+# the metatomic version of q-TIP4P/f (exported with metatomic-qtip4pf).
+# Needs a LAMMPS build with the metatomic package (e.g. lammps-metatomic).
+# Pressure is in atm (units real); 1 bar = 0.986923 atm
+
+variable        nsteps index 20000
+
+units           real
+atom_style      full
+# the model expects the atoms in O,H,H order, so LAMMPS must not sort them
+atom_modify     sort 0 0.0
+
+# all the interactions (including the intra-molecular terms) are computed by
+# the metatomic model. Bonds are still read from the data file, and
+# special_bonds keeps the bonded pairs in the neighbor list
+bond_style      zero nocoeff
+angle_style     zero nocoeff
+special_bonds   lj/coul 1.0 1.0 1.0
+
+read_data       data/ice_96.lmp
+bond_coeff      1
+angle_coeff     1
+
+# pair_style metatomic must be defined after read_data
+pair_style      metatomic qtip4pf.pt device cpu
+# maps LAMMPS atom types to atomic numbers (1 -> O, 2 -> H)
+pair_coeff      * * 8 1
+
+neighbor        2.0 bin
+
+timestep        0.5
+velocity        all create 270.0 4928459 mom yes rot yes dist gaussian
+
+fix             1 all npt temp 270.0 270.0 100.0 iso 0.986923 0.986923 200.0
+
+variable        V equal vol
+variable        P equal press*1.01325
+variable        T equal temp
+fix             out all ave/time 4 1 4 v_V v_P v_T file lmp-metatomic.dat
+
+thermo          20
+run             ${nsteps}

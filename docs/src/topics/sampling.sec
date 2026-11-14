@@ -6,6 +6,7 @@ evaluates dynamical properties, or otherwise computes the properties of a
 set of configurations of an atomistic system.
 
 - examples/thermostats/thermostats
+- examples/barostats/barostats
 - examples/path-integrals/path-integrals
 - examples/pi-metad/pi-metad
 - examples/batch-cp2k/reference-trajectory
