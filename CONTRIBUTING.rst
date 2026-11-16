@@ -62,6 +62,29 @@ This way if the example breaks further down the line it is easy to
 bring it back to a working state converting these to strict pinnings,
 yet most harmless updates will be applied automatically.
 
+All recipes are executed on CPU-only continuous-integration runners. For
+packages installed with ``pip``, the CI workflow sets
+``PIP_EXTRA_INDEX_URL`` to the PyTorch CPU wheel index:
+
+.. code-block:: text
+
+   https://download.pytorch.org/whl/cpu
+
+Because this setting is supplied by the CI workflow, resolving the same
+``environment.yml`` locally without it may select a CUDA-enabled PyTorch build
+and download additional CUDA runtime dependencies. This can be inconvenient
+for users who only need CPU support, since these dependencies can substantially
+increase the download size and disk-space requirements.
+
+Recipes that depend on PyTorch must therefore remain executable without a GPU.
+
+Contributors can reproduce the dependency selection used in CI with:
+
+.. code-block:: bash
+
+   PIP_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cpu \
+       conda env create --prefix <recipe-env-path> --file environment.yml
+
 Shared utilities
 ~~~~~~~~~~~~~~~~
 
