@@ -9,6 +9,7 @@ it on the `ipi-code website <http://ipi-code.org>`_, the `documentation pages
 <https://github.com/i-pi/i-pi>`_.
 
 - examples/thermostats/thermostats
+- examples/barostats/barostats
 - examples/path-integrals/path-integrals
 - examples/pi-metad/pi-metad
 - examples/heat-capacity/heat-capacity

@@ -1,0 +1,34 @@
+# q-TIP4P/f ice Ih, constant-pressure simulation run natively with LAMMPS
+# MTK barostat with Nose-Hoover chains on atoms and piston (fix npt)
+# Pressure is in atm (units real); 1 bar = 0.986923 atm
+
+variable        nsteps index 20000
+
+units           real
+atom_style      full
+
+pair_style      lj/cut/tip4p/long 1 2 1 1 0.14715 9.0
+# quartic O-H bond, tabulated (equivalent to bond_style class2)
+bond_style      table spline 1000
+angle_style     harmonic
+kspace_style    pppm/tip4p 1.0e-5
+
+read_data       data/ice_96.lmp
+pair_coeff      * * 0.0 0.0
+pair_coeff      1 1 0.18521 3.1589
+bond_coeff      1 data/qtip4pf_bond.table QTIP4PF_OH
+
+neighbor        2.0 bin
+
+timestep        0.5
+velocity        all create 270.0 4928459 mom yes rot yes dist gaussian
+
+fix             1 all npt temp 270.0 270.0 100.0 iso 0.986923 0.986923 200.0
+
+variable        V equal vol
+variable        P equal press*1.01325
+variable        T equal temp
+fix             out all ave/time 4 1 4 v_V v_P v_T file lmp-mtk.dat
+
+thermo          2000
+run             ${nsteps}
