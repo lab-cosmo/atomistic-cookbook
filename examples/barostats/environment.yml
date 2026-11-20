@@ -10,10 +10,9 @@ dependencies:
     - ase>=3.29
     - atomistic-cookbook-utils >=0.1,<0.2
     - chemiscope>=1.0
-    # development (next) branch of i-PI, needed for the bulk_modulus option of
-    # the barostat and for the torch backend. To be replaced with the next
-    # i-PI release
-    - ipi @ git+https://github.com/i-pi/i-pi.git@next
+    # alpha release of i-PI 4.0, needed for the bulk_modulus option of the
+    # barostat and for the torch backend
+    - ipi>=4.0.0a1,<5
     - matplotlib
     # q-TIP4P/f as a metatomic model, to run with the i-PI metatomic driver
     # (only a short test run is performed when building the page)

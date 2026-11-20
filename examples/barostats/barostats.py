@@ -164,8 +164,7 @@ os.environ["OMP_NUM_THREADS"] = "1"
 # you would rather let the shape of the cell fluctuate too, using the
 # ``flexible`` barostat, but here we focus on the fluctuations of the volume.
 #
-# NB: this recipe uses the development (``next``) branch of ``i-PI``,
-# which will become the next release.
+# NB: this recipe uses an alpha release of ``i-PI`` 4.0.
 
 xmlroot = ET.parse("data/input_npt.xml").getroot()
 print("    " + ET.tostring(xmlroot.find(".//motion"), encoding="unicode"))
