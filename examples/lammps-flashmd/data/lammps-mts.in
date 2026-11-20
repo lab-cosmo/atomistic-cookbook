@@ -1,0 +1,33 @@
+units metal
+
+atom_style atomic
+read_data data/water.data
+
+pair_style hybrid/overlay &
+     metatomic_1 pet-mad-s-v1.5.0.pt device cpu non_conservative on scale 1.0 &
+     metatomic_2 pet-mad-s-v1.5.0.pt device cpu non_conservative on scale -1.0 &
+     metatomic_3 pet-mad-s-v1.5.0.pt device cpu non_conservative off scale 1.0
+
+pair_coeff * * metatomic_1 8 1
+pair_coeff * * metatomic_2 8 1
+pair_coeff * * metatomic_3 8 1
+
+neighbor 2.0 bin
+neigh_modify one 100000 page 1000000 binsize 5.5
+
+# 2 RESPA levels, with step sizes a factor of 8 apart. The hybrid/overlay
+# components are assigned to levels 1 (inner), 2, and 2 respectively.
+run_style respa 2 8 hybrid 1 2 2
+timestep 0.004
+
+thermo 1
+thermo_style custom step temp pe ke etotal
+
+velocity all create 300.0 87287 mom yes rot yes dist gaussian
+fix thermostat all langevin 300.0 300.0 0.1 928733 zero yes
+fix integration all nve
+
+dump trajectory all custom 1 mts.lammpstrj id type element x y z
+dump_modify trajectory sort id element O H
+
+run 12
