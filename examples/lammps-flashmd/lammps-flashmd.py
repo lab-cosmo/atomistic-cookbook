@@ -23,6 +23,7 @@ the O-H radial distribution function from each trajectory.
 # LAMMPS inputs and the FlashMD driver to ``cuda`` on GPU machines.
 
 import linecache
+import os
 import time
 
 import ase.io
@@ -56,8 +57,9 @@ FLASHMD_STEPS = 8
 water = ase.io.read("data/water.xyz")
 water.wrap()
 
+os.makedirs("tmp", exist_ok=True)
 ase.io.write(
-    "data/water.data",
+    "tmp/water.data",
     water,
     format="lammps-data",
     atom_style="atomic",

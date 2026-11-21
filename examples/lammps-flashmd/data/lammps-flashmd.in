@@ -1,7 +1,7 @@
 units metal
 
 atom_style atomic
-read_data data/water.data
+read_data tmp/water.data
 
 neighbor 2.0 bin
 neigh_modify one 5000
