@@ -10,3 +10,7 @@
 *.tpr
 confout.gro
 mdout.mdp
+*.xvg
+mm.mdp
+solute.gro
+solute.top
