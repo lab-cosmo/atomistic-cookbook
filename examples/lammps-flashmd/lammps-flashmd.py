@@ -15,6 +15,11 @@ model, through the same LAMMPS executable and from the same initial structure.
 
 For each method we print an indicative throughput in ns/day. We also compute
 the O-H radial distribution function from each trajectory.
+
+For a more pedagogic discussion, you can see the `non-conservative MD
+<https://atomistic-cookbook.org/examples/pet-mad-nc/pet-mad-nc.html>`_ and
+`FlashMD <https://atomistic-cookbook.org/examples/flashmd/flashmd-demo.html>`_
+recipes, that use `i-PI <https://ipi-code.org>`_ as engine.
 """
 
 # %%
