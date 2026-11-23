@@ -19,7 +19,7 @@ dependencies:
     - numpy
     - scipy
     - chemiscope>=1.0
-    - ipi>=3.3.0
+    - ipi>=4.0.0a1,<5
     - metatomic-torch>=0.1.16,<0.2
     - metatomic-ase>=0.1.4,<0.2
     - torch-pme>=0.5,<0.6

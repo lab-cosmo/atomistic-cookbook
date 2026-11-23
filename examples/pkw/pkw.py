@@ -538,19 +538,9 @@ print(input_metad)
 # should instead be comparable to the resolution one wants for the profile.
 # Everything runs in a single process, so we can simply invoke ``i-pi`` with the
 # demonstration input (``data/demo-metad.xml``, that points to
-# ``data/demo-metad.dat`` for PLUMED). The small wrapper only tolerates the
-# occasional abort of the process during its teardown, after the simulation
-# has completed and all outputs have been written, which the combination of
-# ``torch`` threads and PLUMED produces now and then.
+# ``data/demo-metad.dat`` for PLUMED).
 
-
-def run_ipi(input_file):
-    result = run_command(f"i-pi {input_file}", env=ENV, check=False)
-    if result.returncode not in (0, -6):  # -6 is SIGABRT at exit
-        raise RuntimeError(f"i-PI failed with return code {result.returncode}")
-
-
-run_ipi("data/demo-metad.xml")
+run_command("i-pi data/demo-metad.xml", env=ENV)
 
 # %%
 # The output of i-PI contains the usual thermodynamic quantities, and the bias
@@ -710,7 +700,7 @@ print(input_remd)
 
 demo_temperatures = [300, 313, 326, 339]
 shutil.copy("tmp/production/metad/HILLS", "HILLS-remd")
-run_ipi("data/demo-remd.xml")
+run_command("i-pi data/demo-remd.xml", env=ENV)
 
 # %%
 # i-PI writes one set of output files per replica (``rep-*``) and a
@@ -1219,7 +1209,7 @@ print(input_pimd)
 # polymers start collapsed onto the classical configuration, so that the
 # kinetic energy grows over the first few tens of femtoseconds as they expand.
 
-run_ipi("data/demo-pimd.xml")
+run_command("i-pi data/demo-pimd.xml", env=ENV)
 
 output, _ = ipi.scripting.read_output("pimd.out")
 colvar = ipi.scripting.read_trajectory("pimd.colvar_0", format="extras")
