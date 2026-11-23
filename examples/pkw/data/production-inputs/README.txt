@@ -14,7 +14,7 @@ thermostat (20 fs), isotropic barostat (200 fs).
 
 metadynamics/  well-tempered metadynamics (hills of 1 kT every 0.5 ps, width
                0.3 A, bias factor 12, walls at -2 and 12 A) from the
-               equilibrated 15.6482 A box ``initial_structure.xyz``; ~2.7 ns
+               equilibrated 15.6482 A box ``initial_structure.xyz``; ~3.0 ns
 remd/          fixed-bias replica exchange, 8 replicas between 300 and 400 K,
                exchanges every 50 steps, reading the ``HILLS`` file of the
                metadynamics run; ``input.xml`` starts from ``seeds/0.xyz`` and
@@ -23,10 +23,12 @@ remd/          fixed-bias replica exchange, 8 replicas between 300 and 400 K,
 pimd/          32-bead PIMD (PILE-L thermostat); ``input.xml`` is the
                associated state at the physical masses, ``run.py --state
                <state> -y <y>`` selects the state and scales the masses by
-               1/y^2; at least 170 ps per run. The walls that confine the two
-               states follow the Supporting Information of the paper (KAPPA=5
-               in PLUMED, whose walls are KAPPA*(s-AT)^2, at +-3 A for the
-               associated and 5 A for the dissociated state).
+               1/y^2; at least 145 ps per run. The walls that confine the two
+               states follow the Supporting Information of the paper (PLUMED
+               walls are KAPPA*(s-AT)^2): KAPPA=10 at 4 A for the associated
+               and KAPPA=100 at 7 A for the dissociated state, the latter
+               continued linearly below 6.7 A. The production runs used this
+               capped wall at y = 1 and the plain harmonic wall at y < 1.
 
 Software: i-PI 3.3.0, PLUMED 2.10, metatomic-torch 0.1.16, torch 2.12. The
 GPU device settings (``device:cuda``) reflect the production hardware.

@@ -38,8 +38,8 @@ potential and for the collective variable. The stages are:
    correction to the free energy of dissociation by thermodynamic integration.
 
 Every stage is demonstrated live, on the actual 128-molecule water box used in the
-paper. Each converged stage takes of the order of a day on a modern GPU, so the live
-runs are just a few tens of MD steps, meant to show the mechanics of the workflow;
+paper. Each production run takes two to three days on a single modern GPU, so the
+live runs are just a few tens of MD steps, meant to show the mechanics of the workflow;
 the analysis is then performed on the converged outputs of the production runs, that
 are downloaded as a data bundle. The live runs use the general-purpose `PET-MAD
 <https://arxiv.org/abs/2503.14118>`_ potential (extra-small version, which is fast
@@ -526,7 +526,7 @@ print(input_metad)
 
 # %%
 # The simulation is far too short to see anything happen (the production run is
-# 2.7 ns, and this one is 150 fs at most), so for the demonstration
+# 3.0 ns, and this one is 150 fs at most), so for the demonstration
 # we also deposit hills much more often than in the production run, and make
 # them much narrower (0.01 Å instead of 0.3 Å). In such a short run :math:`s`
 # only fluctuates by a few hundredths of an Å around the neutral state, and a
@@ -640,9 +640,9 @@ plt.show()
 # use the bias it has built as a fixed potential, and sample it with replica
 # exchange.
 #
-# **How long to run:** the production metadynamics is about 5.6 million
-# steps (2.7 ns, of the order of a day on a modern GPU with the fine-tuned
-# model). Convergence
+# **How long to run:** the production metadynamics is about 5.95 million
+# steps (3.0 ns; a step takes 41 ms on one NVIDIA GH200 GPU, i.e. about 1 ns
+# per day, so the run takes almost three days). Convergence
 # should be judged from the number of recrossings between the associated and
 # dissociated states (a handful is enough for the bias to be "reasonable"),
 # not from the flattening of the free-energy estimate.
@@ -748,9 +748,11 @@ plt.show()
 
 # %%
 # **How long to run:** each of the 10 independent production runs is about
-# 870 000 steps (435 ps per replica, 4.3 ns in total for the 8 replicas; about
-# one day on one GPU with the fine-tuned model). Convergence is monitored
-# through the spread of the reweighted profiles among the independent runs.
+# 875 000 steps, i.e. 435 ps for each of the 8 replicas, and the ten runs
+# together give 4.3 ns at each temperature. With the 8 replicas evaluated in a
+# single batch, a step takes 198 ms on one NVIDIA GH200 GPU, so each run takes
+# about two days. Convergence is monitored through the spread of the reweighted
+# profiles among the independent runs.
 
 # %%
 # Reweighting
@@ -897,7 +899,7 @@ print(
 #     e^{-\beta W(r)}\,\mathrm{d}r\right\}^{-1},
 #
 # i.e. :math:`\mathrm{p}K_\mathrm{w}` is larger than the solute-like estimate
-# by :math:`\log_{10}(c^\circ V)`, about 0.36 for a box of 128 molecules (see
+# by :math:`\log_{10}(c^\circ V)`, about 0.39 for a box of 128 molecules (see
 # the Supporting Information of the paper for the derivation). The integral
 # is dominated by the associated basin, so the result is
 # insensitive to :math:`r_\mathrm{c}` as long as it lies beyond the barrier, and
@@ -1100,9 +1102,8 @@ print(f"classical pKw = {pkw_classical:.2f} +/- {pkw_classical_err:.2f}")
 print(f"Gibbs free energy of dissociation: {pkw_classical * KT * LN10:.1f} kJ/mol")
 
 # %%
-# The paper reports :math:`\mathrm{p}K_\mathrm{w}=17.86\pm0.37` (102.6 kJ/mol),
-# where the error is the standard deviation among the ten independent runs
-# (0.12 as a standard error of the mean).
+# The paper reports :math:`\mathrm{p}K_\mathrm{w}=17.87\pm0.12` (102.7 kJ/mol),
+# where the error is the standard error of the mean over the independent runs.
 
 fig, ax = plt.subplots(1, 1, figsize=(5, 3.5), constrained_layout=True)
 for fes in profiles:  # aligned potential of mean force of each run
@@ -1188,9 +1189,12 @@ for r_cut in [4.0, 5.0, 6.0, 7.0, 8.0]:
 # dissociated (D) and associated (A) states, computed with the centroid virial
 # estimator. The integrand vanishes linearly for :math:`y\to 0` and is smooth, so
 # that five PIMD simulations per state are sufficient. No bias along :math:`s` is
-# needed: one-sided walls on :math:`s` (acting on the centroid, 5 kJ/mol/Å²)
-# confine the associated state below 3 Å and keep the dissociated state from
-# recombining, beyond 5 Å, far from the region of interest.
+# needed: one-sided walls on :math:`s` (acting on the centroid) confine the
+# associated state below 4 Å (10 kJ/mol/Å²) and keep the dissociated state from
+# recombining, beyond 7 Å (100 kJ/mol/Å²). The latter wall is continued
+# linearly below 6.7 Å, which keeps the run stable when :math:`s` jumps deep
+# into the wall in a single step (the production runs of the paper used this
+# cap at the physical masses only).
 #
 # The i-PI input is similar to the previous ones, with the number of beads,
 # a path-integral Langevin thermostat, the per-atom masses, and the
@@ -1223,17 +1227,16 @@ ax[1].set_ylabel("$s$ (centroid) / Å")
 plt.show()
 
 # %%
-# The production runs use 32 beads, about 390 000 steps (at least 170 ps are
-# needed) for each of the 5 values of :math:`y` and each of the two states
-# (of the order of a day each on a modern GPU). The data bundle contains, for
-# each run,
-# the time series of the total centroid-virial kinetic energy; we use all of
-# it, whereas the paper analyzed the first 330 000 steps, which changes the
-# result by about 0.4 kJ/mol, within the statistical error. Its
-# correlation time is only a few femtoseconds, so the statistical error of
-# each average, estimated from the integrated autocorrelation time of the
-# series, is small; the errors of the two states are combined, since they
-# come from independent simulations.
+# The production runs use 32 beads, about 390 000 steps for the associated
+# state and 300 000 steps for the dissociated state (at least 145 ps) for each
+# of the 5 values of :math:`y`. With the 32 beads evaluated in a single batch, a
+# step takes 561 ms on one NVIDIA GH200 GPU, so each run takes at least two days
+# to complete. The data bundle contains, for each run, the time series of the
+# total centroid-virial kinetic energy, of which we discard the first 10 000
+# steps, as in the paper. Its correlation time is only a few femtoseconds, so
+# the statistical error of each average, estimated from the integrated
+# autocorrelation time of the series, is small; the errors of the two states
+# are combined, since they come from independent simulations.
 
 Y_VALUES = [0.2, 0.4, 0.6, 0.8, 1.0]
 N_EQUIL = 10000  # steps discarded for equilibration (5 ps)
@@ -1292,9 +1295,9 @@ plt.show()
 # The kinetic energy of the dissociated state is lower at all masses, and the
 # correction is large and negative: it brings the classical value down by more
 # than three pK units (the paper reports :math:`\Delta\Delta G_\mathrm{NQE} =
-# -20.4 \pm 0.4` kJ/mol, and a classical :math:`\mathrm{p}K_\mathrm{w}` of
-# :math:`17.86\pm0.37` from the ten independent runs, where the error is the
-# standard deviation among runs, giving :math:`14.31\pm0.37` against the
+# -20.14 \pm 0.37` kJ/mol, and a classical :math:`\mathrm{p}K_\mathrm{w}` of
+# :math:`17.87\pm0.12` from the independent runs, where the error is the
+# standard error of the mean, giving :math:`14.37\pm0.14` against the
 # experimental 13.93 at 300 K). Its magnitude depends on the potential and
 # on the species, and there is no universal value that can be transferred
 # from one system to another.
@@ -1316,10 +1319,12 @@ print("experiment:            13.93")
 # and its standard state, the treatment of long-range interactions and
 # finite-size effects, the thermodynamic ensemble, and the quantum nature of
 # the nuclei. Machine-learning potentials make it affordable to do all of them
-# properly: the whole quantum correction costs about 120 million force
-# evaluations (32 beads, ten runs of 390 000 steps), and the classical
-# profile about 70 million (8 replicas, ten runs of 435 ps, plus 2.7 ns of
-# metadynamics), i.e. a few GPU-days in total with current hardware.
+# properly: the whole quantum correction costs about 107 million force
+# evaluations (32 beads, ten runs of 300 000 to 390 000 steps), and the classical
+# profile about 75 million (8 replicas, ten runs of 435 ps, plus 3.0 ns of
+# metadynamics). On one NVIDIA GH200 GPU this amounts to about 45 GPU-days, but
+# except from the metadynamics run, all other runs are independent runs that can be
+# performed in parallel.
 #
 # Beyond water: acids and bases
 # -----------------------------
