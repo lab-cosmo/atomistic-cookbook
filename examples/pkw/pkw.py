@@ -641,11 +641,9 @@ plt.show()
 # exchange.
 #
 # **How long to run:** the production metadynamics is about 5.95 million
-# steps (3.0 ns; a step takes 41 ms on one NVIDIA GH200 GPU, i.e. about 1 ns
-# per day, so the run takes almost three days). Convergence
-# should be judged from the number of recrossings between the associated and
-# dissociated states (a handful is enough for the bias to be "reasonable"),
-# not from the flattening of the free-energy estimate.
+# steps (3.0 ns). Convergence should be judged from the number of recrossings
+# between the associated and dissociated states (a handful is enough for the
+# bias to be "reasonable"), not from the flattening of the free-energy estimate.
 
 # %%
 # Replica exchange with a fixed bias
@@ -749,10 +747,8 @@ plt.show()
 # %%
 # **How long to run:** each of the 10 independent production runs is about
 # 875 000 steps, i.e. 435 ps for each of the 8 replicas, and the ten runs
-# together give 4.3 ns at each temperature. With the 8 replicas evaluated in a
-# single batch, a step takes 198 ms on one NVIDIA GH200 GPU, so each run takes
-# about two days. Convergence is monitored through the spread of the reweighted
-# profiles among the independent runs.
+# together give 4.3 ns at each temperature. Convergence is monitored through
+# the spread of the reweighted profiles among the independent runs.
 
 # %%
 # Reweighting
@@ -1229,14 +1225,12 @@ plt.show()
 # %%
 # The production runs use 32 beads, about 390 000 steps for the associated
 # state and 300 000 steps for the dissociated state (at least 145 ps) for each
-# of the 5 values of :math:`y`. With the 32 beads evaluated in a single batch, a
-# step takes 561 ms on one NVIDIA GH200 GPU, so each run takes at least two days
-# to complete. The data bundle contains, for each run, the time series of the
-# total centroid-virial kinetic energy, of which we discard the first 10 000
-# steps, as in the paper. Its correlation time is only a few femtoseconds, so
-# the statistical error of each average, estimated from the integrated
-# autocorrelation time of the series, is small; the errors of the two states
-# are combined, since they come from independent simulations.
+# of the 5 values of :math:`y`. The data bundle contains, for each run, the time
+# series of the total centroid-virial kinetic energy, of which we discard the first
+# 10 000 steps, as in the paper. Its correlation time is only a few femtoseconds, so
+# the statistical error of each average, estimated from the integrated autocorrelation
+# time of the series, is small; the errors of the two states are combined, since
+# they come from independent simulations.
 
 Y_VALUES = [0.2, 0.4, 0.6, 0.8, 1.0]
 N_EQUIL = 10000  # steps discarded for equilibration (5 ps)
@@ -1322,9 +1316,8 @@ print("experiment:            13.93")
 # properly: the whole quantum correction costs about 107 million force
 # evaluations (32 beads, ten runs of 300 000 to 390 000 steps), and the classical
 # profile about 75 million (8 replicas, ten runs of 435 ps, plus 3.0 ns of
-# metadynamics). On one NVIDIA GH200 GPU this amounts to about 45 GPU-days, but
-# except from the metadynamics run, all other runs are independent runs that can be
-# performed in parallel.
+# metadynamics). It should be noted that, except from the metadynamics run, all
+# other runs are independent runs that can be performed in parallel.
 #
 # Beyond water: acids and bases
 # -----------------------------
