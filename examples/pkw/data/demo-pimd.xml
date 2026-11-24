@@ -13,7 +13,7 @@
   <total_steps> 20 </total_steps>
   <prng> <seed> 31415 </seed> </prng>
   <!-- all beads are evaluated in a single batched call to the model -->
-  <ffdirect name='mlip' threaded='True'>
+  <ffdirect name='mlip'>
     <pes> metatomic </pes>
     <parameters> { template: data/dissociated.xyz, model: pet-mad-xs-v1.6.0.pt, device: cpu } </parameters>
     <batch_size> 4 </batch_size>

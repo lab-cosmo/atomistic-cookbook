@@ -12,12 +12,12 @@
   <total_steps> 50 </total_steps>
   <prng> <seed> 12345 </seed> </prng>
   <!-- all replicas are evaluated in a single batched call to the model -->
-  <ffdirect name='mlip' threaded='True'>
+  <ffdirect name='mlip'>
     <pes> metatomic </pes>
     <parameters> { template: data/initial_structure.xyz, model: pet-mad-xs-v1.6.0.pt, device: cpu } </parameters>
     <batch_size> 4 </batch_size>
   </ffdirect>
-  <ffplumed name='plumed' threaded='True'>
+  <ffplumed name='plumed'>
     <file mode='ase'> data/initial_structure.xyz </file>
     <plumed_dat> data/demo-remd.dat </plumed_dat>
     <plumed_extras> [ D, mtd.bias ] </plumed_extras>
