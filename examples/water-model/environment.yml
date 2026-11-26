@@ -5,12 +5,13 @@ dependencies:
   - python=3.12
   - lammps-metatomic
   - pip
+  # TEMPORARY (see the pip pins below): libmetatensor 0.2.7 does not work with
+  # libmetatensor-torch 0.10.8
+  - libmetatensor <0.2.7
   - pip:
     - ase
     - chemiscope>=1.0
     - ipi>=3.2.0
-    - metatensor-torch>=0.10,<0.11
-    - metatensor-operations
     - matplotlib
     - metatomic-torch
     - metatomic-ase
@@ -18,3 +19,11 @@ dependencies:
     - vesin-torch>=0.5.4
     - torch-pme>=0.5
     - atomistic-cookbook-utils >=0.1,<0.2
+    # TEMPORARY: the conda LAMMPS/PLUMED are linked to libmetatensor-torch
+    # 0.10.8, and cannot load models exported with metatensor-torch 0.10.9.
+    # Keep the pip packages to the matching releases, and remove these pins
+    # (and libmetatensor above) when libmetatensor-torch 0.10.9 is on
+    # conda-forge.
+    - metatensor-torch <0.10.9
+    - metatensor-operations <0.5.1
+    - metatensor-core <0.2.7
