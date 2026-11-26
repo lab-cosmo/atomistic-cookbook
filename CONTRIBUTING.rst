@@ -11,6 +11,22 @@ If you intend to submit a new recipe, please read
 the guidelines below to ensure that your contributions
 fit within the scope and the general style of the cookbook.
 
+What is a recipe
+----------------
+
+An atomistic recipe is a self-contained demonstration of a useful modeling
+workflow: how to compute phonons, how to run molecular dynamics efficiently,
+how to use a brand new technique or model. It is not meant to be an exercise
+(nobody is here to check or give feedback) but it can and often should have
+a pedagogic component, explaining also *why* things have to be done in a
+certain way. Importantly, a recipe is meant to be something that is easy
+to run, and easy to adapt to one's specific use case: besides the HTML page
+that is rendered and included in the cookbook, each recipe also generates
+an archive that can be downloaded and used to run locally. Read carefully
+this document to have a better idea of what you should and should not do to
+have your recipe merged quickly. If there are any problems, the maintainers
+will be happy to help.
+
 Requirements for new contributions
 ----------------------------------
 

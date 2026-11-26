@@ -198,21 +198,21 @@ ax.set_title("Morse potential for an OH-like diatomic")
 #     you run ``i-pi`` from.
 #
 # The i-PI inputs, checkpoints and pre-computed spectra used below are
-# fetched from Zenodo.
+# fetched from Zenodo and unpacked in the ``tmp/data`` folder.
 
 with ZipFile(
     download_with_retry(
         f"https://zenodo.org/records/{ZENODO_RECORD_ID}/files/pi-vibrations-data.zip",
-        "pi-vibrations-data.zip",
+        "tmp/pi-vibrations-data.zip",
     )
 ) as archive:
-    archive.extractall(path=".")
+    archive.extractall(path="tmp")
 
 # %%
 # 1. Classical spectrum
 # ^^^^^^^^^^^^^^^^^^^^^^
 # We provide several i-PI checkpoints from a classical NVT simulation in the
-# folder ``data/class-therm``. From these checkpoints we can start several
+# folder ``tmp/data/class-therm``. From these checkpoints we can start several
 # classical NVE simulations from which we can extract the vibrational density
 # of states (VDOS) from the velocity autocorrelation function,
 #
@@ -232,10 +232,10 @@ with ZipFile(
 #    seeds an independent constant-energy (NVE) trajectory. The correlation
 #    function is then averaged over the NVE segments.
 #
-# An input for the NVE simulations is found in ``data/inputs/nve.xml``. Read
+# An input for the NVE simulations is found in ``tmp/data/inputs/nve.xml``. Read
 # the input carefully! Let us echo it here:
 
-with open("data/inputs/nve.xml") as f:
+with open("tmp/data/inputs/nve.xml") as f:
     print(f.read())
 
 # %%
@@ -258,7 +258,7 @@ with open("data/inputs/nve.xml") as f:
 #
 # You will run i-PI in a **separate terminal** - not directly from this
 # recipe. Pre-thermalized starting points for these child NVE trajectories
-# can be found in ``data/class-therm/``.
+# can be found in ``tmp/data/class-therm/``.
 #
 # 1. Make several different folders and add different thermalized checkpoints
 #    to each of them.
@@ -309,7 +309,7 @@ with open("data/inputs/nve.xml") as f:
 # ([Craig2004]_).
 #
 # We provide several i-PI checkpoints from a quantum PIMD simulation in the
-# folder ``data/pimd-therm``. From these checkpoints we can start several
+# folder ``tmp/data/pimd-therm``. From these checkpoints we can start several
 # RPMD simulations from which we can extract the vibrational spectra. For
 # linear observables such as velocity, the RPMD centroid trajectory already
 # gives the correct Kubo-transformed correlation function to a good
@@ -330,10 +330,10 @@ with open("data/inputs/nve.xml") as f:
 #    without a thermostat, and the centroid velocity autocorrelation function
 #    is averaged over the resulting segments.
 #
-# An input for the RPMD simulations is found in ``data/inputs/rpmd.xml``.
+# An input for the RPMD simulations is found in ``tmp/data/inputs/rpmd.xml``.
 # Let us echo it here as well:
 
-with open("data/inputs/rpmd.xml") as f:
+with open("tmp/data/inputs/rpmd.xml") as f:
     print(f.read())
 
 # %%
@@ -395,8 +395,8 @@ with open("data/inputs/rpmd.xml") as f:
 # elevated-temperature centroid molecular dynamics (PA-Te-CMD,
 # [Castro2025]_).
 #
-# The files ``data/inputs/trpmd.xml``, ``data/inputs/trpmd-gle.xml``,
-# ``data/inputs/cmd.xml`` and ``data/inputs/hot-pa-cmd.xml`` contain the
+# The files ``tmp/data/inputs/trpmd.xml``, ``tmp/data/inputs/trpmd-gle.xml``,
+# ``tmp/data/inputs/cmd.xml`` and ``tmp/data/inputs/hot-pa-cmd.xml`` contain the
 # corresponding inputs, and are run in exactly the same way as the RPMD input
 # above. Unlike RPMD, all four attach a thermostat somewhere in the dynamics,
 # and yet they still yield meaningful real-time correlation functions. The
@@ -500,15 +500,15 @@ with open("data/inputs/rpmd.xml") as f:
 # How the reference data was generated
 # --------------------------------------
 #
-# If you could not run all the simulations yourself, the ``data`` directory
+# If you could not run all the simulations yourself, the ``tmp/data`` directory
 # fetched above already contains pre-computed spectra, as
 # ``<method>_facf_avg.dat``. They were produced as follows.
 #
 # For each method, **ten independent trajectories of 10 ps each** were run
-# with i-PI 3.3.0, using the inputs in ``data/inputs`` unchanged apart from
+# with i-PI 3.3.0, using the inputs in ``tmp/data/inputs`` unchanged apart from
 # the random seed and the name of the checkpoint used to initialize. The
-# classical trajectories start from the checkpoints in ``data/class-therm``,
-# and all path-integral ones from those in ``data/pimd-therm``, so that each
+# classical trajectories start from the checkpoints in ``tmp/data/class-therm``,
+# and all path-integral ones from those in ``tmp/data/pimd-therm``, so that each
 # trajectory begins from an independent, pre-thermalized configuration.
 #
 # The time step and bead number differ between methods, but the total
@@ -583,7 +583,7 @@ with open("data/inputs/rpmd.xml") as f:
 fig, ax = plt.subplots(figsize=(7, 4.5), constrained_layout=True)
 
 for mm in METHODS:
-    velFT = np.loadtxt(f"data/{mm}_facf_avg.dat", usecols=(0, 1))
+    velFT = np.loadtxt(f"tmp/data/{mm}_facf_avg.dat", usecols=(0, 1))
     # Here we convert from atomic units of frequency (1/Ha) to cm-1
     ax.plot(
         velFT[:, 0] * HARTREE_TO_CM1,
@@ -671,7 +671,7 @@ ax.legend(frameon=False)
 fig, ax = plt.subplots(figsize=(7, 4.5), constrained_layout=True)
 
 for mm in METHODS:
-    velFT = np.loadtxt(f"data/{mm}_facf_avg.dat", usecols=(0, 1))
+    velFT = np.loadtxt(f"tmp/data/{mm}_facf_avg.dat", usecols=(0, 1))
     ax.plot(
         velFT[:, 0] * HARTREE_TO_CM1,
         velFT[:, 1],
@@ -697,8 +697,8 @@ ax.legend(frameon=False)
 # the ``<frequencies style='pa-cmd'>`` tag in ``cmd.xml`` sets that target to
 # 13000 cm :math:`^{-1}`. A logarithmic scale makes the effect obvious:
 
-cmd_c = np.loadtxt("data/cmd_facf_avg.dat", usecols=(0, 1))
-cmd_b = np.loadtxt("data/cmd-bead_facf_avg.dat", usecols=(0, 1))
+cmd_c = np.loadtxt("tmp/data/cmd_facf_avg.dat", usecols=(0, 1))
+cmd_b = np.loadtxt("tmp/data/cmd-bead_facf_avg.dat", usecols=(0, 1))
 
 fig, ax = plt.subplots(figsize=(7, 4.5), constrained_layout=True)
 ax.semilogy(
@@ -735,7 +735,7 @@ ax.legend(frameon=False)
 #
 # .. tip::
 #
-#     ``data/harmonic`` contains i-PI inputs to compute the harmonic
+#     ``tmp/data/harmonic`` contains i-PI inputs to compute the harmonic
 #     vibrational frequency of this potential directly, using i-PI's
 #     geometry optimization and normal-mode analysis. The resulting
 #     ``*.eigval`` file stores the **squared** frequencies in atomic units --
