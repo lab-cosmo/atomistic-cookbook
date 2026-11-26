@@ -15,3 +15,7 @@ dependencies:
     - matplotlib>=3.10,<4.0
     - vesin>=0.4.2
     - atomistic-cookbook-utils >=0.1,<0.2
+    # TEMPORARY: models exported with metatensor-torch 0.10.9 cannot be loaded
+    # by the conda LAMMPS/PLUMED, linked to libmetatensor-torch 0.10.8. Remove
+    # when libmetatensor-torch 0.10.9 is on conda-forge.
+    - metatensor-torch <0.10.9
