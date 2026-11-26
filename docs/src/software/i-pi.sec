@@ -24,3 +24,4 @@ it on the `ipi-code website <http://ipi-code.org>`_, the `documentation pages
 - examples/pet-phonons/pet-phonons
 - examples/bosons-fermions-pimd/bosons-fermions-pimd
 - examples/pkw/pkw
+- examples/pi-vibrations/morse_time_correlation_recipe
