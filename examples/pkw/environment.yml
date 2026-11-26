@@ -12,6 +12,9 @@ dependencies:
   - libtorch>=2.13,<2.14
   - pytorch-cpu>=2.13,<2.14
   - matplotlib
+  # TEMPORARY (see the pip pins below): libmetatensor 0.2.7 does not work with
+  # libmetatensor-torch 0.10.8
+  - libmetatensor <0.2.7
   - pip:
     - --extra-index-url https://download.pytorch.org/whl/cpu
     - torch>=2.13,<2.14
@@ -25,9 +28,13 @@ dependencies:
     - torch-pme>=0.5,<0.6
     - upet>=0.3,<0.4
     - atomistic-cookbook-utils >=0.1,<0.2
-    # TEMPORARY: models exported with metatensor-torch 0.10.9 cannot be loaded
-    # by the conda LAMMPS/PLUMED, linked to libmetatensor-torch 0.10.8. Remove
-    # when libmetatensor-torch 0.10.9 is on conda-forge.
+    # TEMPORARY: the conda LAMMPS/PLUMED are linked to libmetatensor-torch
+    # 0.10.8, and cannot load models exported with metatensor-torch 0.10.9.
+    # Keep the pip packages to the matching releases, and remove these pins
+    # (and libmetatensor above) when libmetatensor-torch 0.10.9 is on
+    # conda-forge.
     - metatensor-torch <0.10.9
+    - metatensor-operations <0.5.1
+    - metatensor-core <0.2.7
 variables:
   PIP_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
