@@ -10,6 +10,9 @@ dependencies:
   # libtorch/pytorch-cpu is compatible without a forced BLAS vendor pin.
   - libtorch
   - pytorch-cpu
+  # TEMPORARY (see the pip pins below): libmetatensor 0.2.7 does not work with
+  # libmetatensor-torch 0.10.8
+  - libmetatensor <0.2.7
   - matplotlib
   - mdanalysis
   - python=3.12
@@ -24,3 +27,10 @@ dependencies:
     - metatomic-torch>=0.1.16,<0.2
     - metatomic-ase
     - atomistic-cookbook-utils >=0.1,<0.2
+    # TEMPORARY: the conda GROMACS is linked to libmetatensor-torch 0.10.8, and
+    # cannot load models exported with metatensor-torch 0.10.9. Keep the pip
+    # packages to the matching releases, and remove these pins (and
+    # libmetatensor above) when libmetatensor-torch 0.10.9 is on conda-forge.
+    - metatensor-torch <0.10.9
+    - metatensor-operations <0.5.1
+    - metatensor-core <0.2.7
