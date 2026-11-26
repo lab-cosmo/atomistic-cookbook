@@ -10,4 +10,4 @@ dependencies:
     - atomistic-cookbook-utils >=0.1,<0.2
     # not imported by the recipe itself, which only post-processes the
     # precomputed spectra, but needed to run the i-PI inputs in data/inputs
-    - ipi >=3.2.0,<4.0
+    - ipi >=4.0.0a1,<5
