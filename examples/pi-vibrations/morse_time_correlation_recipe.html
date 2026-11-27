@@ -1,0 +1,1277 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="search" title="Search" href="../../search.html"><link rel="next" title="Path integral metadynamics" href="../pi-metad/pi-metad.html"><link rel="prev" title="PCA/PCovR Visualization of a training dataset for a potential" href="../gaas-map/gaas-map.html">
+        <link rel="canonical" href="https://atomistic-cookbook.org/examples/pi-vibrations/morse_time_correlation_recipe.html">
+        <link rel="prefetch" href="../../_static/cookbook-icon.svg" as="image">
+
+    <link rel="shortcut icon" href="../../_static/cookbook-icon.png"><!-- Generated with Sphinx 9.1.1 and Furo 2025.12.19 -->
+        <title>Path integral approximations to real-time correlations - The Atomistic Cookbook</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/cookbook.css?v=d86cfb60" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=c83e6b79" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=6a604523" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">The Atomistic Cookbook</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/cookbook-icon.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">The Atomistic Cookbook</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../topics/index.html">Recipes grouped by topic</a><input aria-label="Toggle navigation of Recipes grouped by topic" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/sampling.html">Statistical sampling and dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/analysis.html">Analysis and post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/ml-models.html">Machine learning models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/universal.html">Universal ML models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../topics/nqes.html">Nuclear quantum effects</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../software/index.html">Recipes grouped by software used</a><input aria-label="Toggle navigation of Recipes grouped by software used" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../software/chemiscope.html">chemiscope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/cp2k.html">cp2k</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/eon.html">eon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/featomic.html">featomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/gromacs.html">GROMACS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/i-pi.html">i-PI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/kaldo.html">kALDo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/lammps.html">LAMMPS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/metatensor.html">metatensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/plumed.html">PLUMED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/scikit-matter.html">scikit-matter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../software/torch-pme.html">torch-pme</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../all-examples.html">List of all recipes</a><input aria-label="Toggle navigation of List of all recipes" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-dos/pet-mad-dos.html">A Guide to PET-MAD-DOS: Model Inference and Fine-Tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dos-align/dos-align.html">A ML model for the electron density of states</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../shiftml4/shiftml-example.html">Accurate NMR chemical shifts with ShiftML4 and PET-MOLS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-model/water-model.html">Atomistic Water Model for Molecular Dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../batch-cp2k/reference-trajectory.html">Batch run of CP2K calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../shiftml/shiftml-example.html">Computing NMR shielding tensors using ShiftML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pkw/pkw.html">Computing the pKw of water with a machine-learning potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft-nc.html">Conservative fine-tuning for a PET model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../barostats/barostats.html">Constant-pressure MD and barostats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermostats/thermostats.html">Constant-temperature MD and thermostats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-rho-omol25/pet-rho-omol25.html">Electron densities and electrostatic potentials with PET-<span class="math notranslate nohighlight">\(\rho\)</span>-OMol25</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../polarizability/polarizability.html">Equivariant linear model for polarizability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../learn-tensors-with-mcov/learn-tensors-with-mcov.html">Equivariant model for tensorial properties based on scalar features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../eon-pet-neb/eon-pet-neb.html">Finding Reaction Paths with eOn and a Metatomic Potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-finetuning/pet-ft.html">Fine-tuning the PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../roy-gch/roy-gch.html">Generalized Convex Hull construction for the polymorphs of ROY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-relaxation/pet-relaxation.html">Geometry relaxation with unconstrained MLIPs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hamiltonian-qm7/hamiltonian-qm7.html">Hamiltonian Learning for Molecules with Indirect Targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-md/water-md.html">Introduction to foundational models for molecular dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../torchpme/torchpme_learning.html">Learning Capabilities with torchpme</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lpr/lpr.html">Local Prediction Rigidity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lode-linear/lode-linear.html">Long-distance Equivariants: a tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flashmd/flashmd-demo.html">Long-stride trajectories with a universal FlashMD model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-nc/pet-mad-nc.html">MD using direct-force predictions with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../metatomic-plumed/metatomic-plumed.html">ML collective variables in PLUMED with metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ml-density/ml-density.html">ML surrogate for the electron density and derived properties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ml-mm/ml-mm.html">ML/MM Simulations with GROMACS and Metatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-ir-spectrum/water-ir-spectrum.html">Machine-learned dipoles and infrared spectroscopy of liquid water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../mendeleev/mendeleev.html">Mendeleev clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-mts-rpc/mts-rpc.html">Multiple time stepping and ring-polymer contraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../shiftml-structure-match/shiftml-structure-match.html">NMR-shielding-driven structure determination with ShiftML3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../gaas-map/gaas-map.html">PCA/PCovR Visualization of a training dataset for a potential</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Path integral approximations to real-time correlations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pi-metad/pi-metad.html">Path integral metadynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../path-integrals/path-integrals.html">Path integral molecular dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bosons-fermions-pimd/bosons-fermions-pimd.html">Path integral molecular dynamics of bosons and fermions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../periodic-hamiltonian/periodic-hamiltonian.html">Periodic Hamiltonian learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kaldo-phonons-uq/kaldo-phonons-uq.html">Phonon dispersions with committee uncertainty using kALDo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-phonons/pet-phonons.html">Phonon dispersions with unconstrained models and uncertainty quantification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../heat-capacity/heat-capacity.html">Quantum heat capacity of water</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ring-polymer-instanton/rpi-rates.html">Ring Polymer Instanton Rate Theory: Tunneling Rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rotate-equivariants/rotate-equivariants.html">Rotating equivariants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sample-selection/sample-selection.html">Sample and Feature Selection with FPS and CUR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad/pet-mad.html">The PET-MAD universal potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../thermal-conductivity-bte/thermal-conductivity-bte.html">Thermal conductivity from the Boltzmann transport equation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../llpr-from-scratch/llpr-from-scratch.html">Training a Model with Uncertainties from Scratch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pet-mad-uq/pet-mad-uq.html">Uncertainty Quantification with PET-MAD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../lammps-flashmd/lammps-flashmd.html">Using non-conservative forces and FlashMD in LAMMPS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../water-pulsed/water-pulsed.html">Water orientation in a pulsed electric field</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../downloading.html">Downloading and running the recipes</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../contributing.html">Contributing a recipe</a><input aria-label="Toggle navigation of Contributing a recipe" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../utils.html">Shared utilities</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-examples-pi-vibrations-morse-time-correlation-recipe-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="path-integral-approximations-to-real-time-correlations">
+<span id="sphx-glr-examples-pi-vibrations-morse-time-correlation-recipe-py"></span><h1>Path integral approximations to real-time correlations<a class="headerlink" href="#path-integral-approximations-to-real-time-correlations" title="Link to this heading">¶</a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Authors<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Mariana Rossi (translator to Cookbook format - older tutorials by
+more authors)</p>
+</dd>
+</dl>
+<p>Vibrational spectra are the Fourier transform of a real-time quantum
+correlation function, and computing that (quantum) object exactly is out of
+reach for anything but the smallest systems. Path-integral methods sidestep
+the problem by replacing the exact correlation function with an approximate
+correlation function evaluated with some protocol on top of the dynamics of
+the ring-polymer.</p>
+<p>This recipe uses a 3D Morse oscillator, a model cheap enough that different
+approximations can be compared side by side, to show what each approximation
+does to a vibrational lineshape and where each one breaks down. Its radial
+part is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[V(r) = D\{\exp[-2 a (r-r_0)]- 2 \exp[-a (r-r_0)]\},\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(D\)</span> is 5.101744 eV, <span class="math notranslate nohighlight">\(a\)</span> is 2.1930272 <span class="math notranslate nohighlight">\(\mathring{A}^{-1}\)</span>
+and <span class="math notranslate nohighlight">\(r_0\)</span> is 0.96966 <span class="math notranslate nohighlight">\(\mathring{A}\)</span>. These parameters are very close
+to those that describe an OH radical, as tabulated in books such as
+<a class="reference internal" href="#huber1979" id="id1"><span>[Huber1979]</span></a>.</p>
+<p>The potential is central: it depends only on the interatomic distance
+<span class="math notranslate nohighlight">\(r = |\mathbf{r}_1 - \mathbf{r}_2|\)</span>, so the molecule rotates freely and
+the two angular degrees of freedom are unconstrained. This is why the spectra
+below show a rotational band at low frequency in addition to the stretch.</p>
+<p>This tutorial will use the i-PI code to perform the simulations.
+To avoid any conversion problems, the values of these quantities
+in atomic units are <span class="math notranslate nohighlight">\(D=0.18748563\)</span>, <span class="math notranslate nohighlight">\(a=1.1605\)</span> and
+<span class="math notranslate nohighlight">\(r_0=1.8323918\)</span>. These are parameters that can be passed directly
+into the i-PI potential.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">zipfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZipFile</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">atomistic_cookbook_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_with_retry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+
+
+<span class="c1"># The i-PI inputs, checkpoints and pre-computed spectra for this recipe are</span>
+<span class="c1"># hosted on Zenodo; see the "Vibrational Spectra" section below for the</span>
+<span class="c1"># download step.</span>
+<span class="n">ZENODO_RECORD_ID</span> <span class="o">=</span> <span class="s2">"21607883"</span>
+
+<span class="c1"># Conversion factors used throughout</span>
+<span class="n">HARTREE_TO_CM1</span> <span class="o">=</span> <span class="mf">219474.63</span>  <span class="c1"># atomic units of frequency -&gt; cm^-1</span>
+<span class="n">CM1_TO_EV</span> <span class="o">=</span> <span class="mf">1.239841984e-4</span>
+
+<span class="c1"># Spectroscopic constants of the model, in cm^-1</span>
+<span class="n">WE</span> <span class="o">=</span> <span class="mf">3737.76</span>  <span class="c1"># harmonic frequency</span>
+<span class="n">XE</span> <span class="o">=</span> <span class="mf">84.881</span>  <span class="c1"># first anharmonicity constant</span>
+
+<span class="c1"># One colour per method, reused in every figure so the curves stay comparable</span>
+<span class="n">COLORS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"nve"</span><span class="p">:</span> <span class="s2">"#4c72b0"</span><span class="p">,</span>
+    <span class="s2">"rpmd"</span><span class="p">:</span> <span class="s2">"#dd8452"</span><span class="p">,</span>
+    <span class="s2">"trpmd"</span><span class="p">:</span> <span class="s2">"#55a868"</span><span class="p">,</span>
+    <span class="s2">"trpmd-gle"</span><span class="p">:</span> <span class="s2">"#c44e52"</span><span class="p">,</span>
+    <span class="s2">"cmd"</span><span class="p">:</span> <span class="s2">"#8172b3"</span><span class="p">,</span>
+    <span class="s2">"hot-pa-cmd"</span><span class="p">:</span> <span class="s2">"#937860"</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">LABELS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"nve"</span><span class="p">:</span> <span class="s2">"Classical (NVE)"</span><span class="p">,</span>
+    <span class="s2">"rpmd"</span><span class="p">:</span> <span class="s2">"RPMD"</span><span class="p">,</span>
+    <span class="s2">"trpmd"</span><span class="p">:</span> <span class="s2">"TRPMD"</span><span class="p">,</span>
+    <span class="s2">"trpmd-gle"</span><span class="p">:</span> <span class="s2">"TRPMD-GLE"</span><span class="p">,</span>
+    <span class="s2">"cmd"</span><span class="p">:</span> <span class="s2">"PA-CMD"</span><span class="p">,</span>
+    <span class="s2">"hot-pa-cmd"</span><span class="p">:</span> <span class="s2">"PA-Te-CMD"</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c1"># order used consistently in every comparison figure and table</span>
+<span class="n">METHODS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"nve"</span><span class="p">,</span> <span class="s2">"rpmd"</span><span class="p">,</span> <span class="s2">"trpmd"</span><span class="p">,</span> <span class="s2">"trpmd-gle"</span><span class="p">,</span> <span class="s2">"cmd"</span><span class="p">,</span> <span class="s2">"hot-pa-cmd"</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="the-potential">
+<h2>The potential<a class="headerlink" href="#the-potential" title="Link to this heading">¶</a></h2>
+<p>Let us plot the potential to visualize it. Because the Morse oscillator is
+one of the few anharmonic potentials with an analytic spectrum, we also know
+exactly where its vibrational levels sit,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[E_v = \omega_e \left(v + \tfrac{1}{2}\right)
+      - \omega_e x_e \left(v + \tfrac{1}{2}\right)^2,\]</div>
+</div>
+<p>which gives a fundamental <span class="math notranslate nohighlight">\(0 \rightarrow 1\)</span> transition at 3568
+cm <span class="math notranslate nohighlight">\(^{-1}\)</span>, red-shifted from the harmonic frequency of 3738
+cm <span class="math notranslate nohighlight">\(^{-1}\)</span>. Every method below is judged against that exact number.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">r0</span> <span class="o">=</span> <span class="mf">0.96966</span>  <span class="c1"># A</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">VmorseOH</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">r0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Morse potential for the OH-like model, in eV."""</span>
+    <span class="n">hbar</span> <span class="o">=</span> <span class="mf">6.582119569e-16</span>  <span class="c1"># eV s</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="mf">2.99792458e10</span>  <span class="c1"># cm/s</span>
+    <span class="n">hc</span> <span class="o">=</span> <span class="n">hbar</span> <span class="o">*</span> <span class="n">c</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>  <span class="c1"># eV*cm</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">hc</span> <span class="o">*</span> <span class="n">WE</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">XE</span><span class="p">)</span>  <span class="c1"># eV</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="mf">2.1930272</span>  <span class="c1"># 1/A</span>
+    <span class="k">return</span> <span class="n">D</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="n">r</span> <span class="o">-</span> <span class="n">r0</span><span class="p">))</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="n">r</span> <span class="o">-</span> <span class="n">r0</span><span class="p">)))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">morse_level</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Energy of vibrational level ``v`` above the potential minimum, in eV."""</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">WE</span> <span class="o">*</span> <span class="p">(</span><span class="n">v</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">-</span> <span class="n">XE</span> <span class="o">*</span> <span class="p">(</span><span class="n">v</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">CM1_TO_EV</span>
+
+
+<span class="n">grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.6</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
+<span class="n">well_depth</span> <span class="o">=</span> <span class="o">-</span><span class="n">VmorseOH</span><span class="p">(</span><span class="n">r0</span><span class="p">,</span> <span class="n">r0</span><span class="p">)</span>  <span class="c1"># dissociation energy D, in eV</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">6.5</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">VmorseOH</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">r0</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="s2">"black"</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.8</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="n">ARROW_X</span> <span class="o">=</span> <span class="mf">1.55</span>  <span class="c1"># where the transition arrow is drawn, clear of the potential</span>
+<span class="n">level_energy</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="c1"># Draw the two lowest vibrational levels across the classically allowed region,</span>
+<span class="c1"># with a dashed guide extending out to the annotation</span>
+<span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+    <span class="n">energy</span> <span class="o">=</span> <span class="o">-</span><span class="n">well_depth</span> <span class="o">+</span> <span class="n">morse_level</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+    <span class="n">level_energy</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy</span>
+    <span class="n">inside</span> <span class="o">=</span> <span class="n">grid</span><span class="p">[</span><span class="n">VmorseOH</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">r0</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">energy</span><span class="p">]</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">inside</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">inside</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span>
+        <span class="p">[</span><span class="n">energy</span><span class="p">,</span> <span class="n">energy</span><span class="p">],</span>
+        <span class="n">color</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="s2">"trpmd-gle"</span><span class="p">],</span>
+        <span class="n">lw</span><span class="o">=</span><span class="mf">1.6</span><span class="p">,</span>
+        <span class="n">zorder</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">inside</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">ARROW_X</span><span class="p">],</span>
+        <span class="p">[</span><span class="n">energy</span><span class="p">,</span> <span class="n">energy</span><span class="p">],</span>
+        <span class="n">color</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="s2">"trpmd-gle"</span><span class="p">],</span>
+        <span class="n">lw</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+        <span class="n">ls</span><span class="o">=</span><span class="s2">"--"</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">inside</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.03</span><span class="p">,</span> <span class="n">energy</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"$v=</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">$"</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"right"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+
+<span class="c1"># Annotate the fundamental transition</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+    <span class="s2">""</span><span class="p">,</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">ARROW_X</span><span class="p">,</span> <span class="n">level_energy</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+    <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="n">ARROW_X</span><span class="p">,</span> <span class="n">level_energy</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+    <span class="n">arrowprops</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arrowstyle</span><span class="o">=</span><span class="s2">"&lt;-&gt;"</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="s2">"trpmd-gle"</span><span class="p">],</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.3</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+    <span class="n">ARROW_X</span> <span class="o">+</span> <span class="mf">0.06</span><span class="p">,</span>
+    <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">level_energy</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">level_energy</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+    <span class="sa">r</span><span class="s2">"$0\rightarrow1$"</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="sa">r</span><span class="s2">"3568 cm$^{-1}$"</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="s2">"trpmd-gle"</span><span class="p">],</span>
+    <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span>
+    <span class="n">va</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"gray"</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">":"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">2.95</span><span class="p">,</span> <span class="mf">0.08</span><span class="p">,</span> <span class="s2">"dissociation"</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"gray"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"right"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mf">0.6</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="o">-</span><span class="mf">5.4</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Energy (eV)"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">"OH Distance $r$ ($\AA$)"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Morse potential for an OH-like diatomic"</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_morse_time_correlation_recipe_001.png" srcset="../../_images/sphx_glr_morse_time_correlation_recipe_001.png" alt="Morse potential for an OH-like diatomic" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Text(0.5, 1.0, 'Morse potential for an OH-like diatomic')
+</pre></div>
+</div>
+</section>
+<section id="vibrational-spectra">
+<h2>Vibrational Spectra<a class="headerlink" href="#vibrational-spectra" title="Link to this heading">¶</a></h2>
+<p>We will now run: classical simulations, RPMD simulations, two flavors of
+TRPMD simulations, and two flavors of partially-adiabatic CMD simulations
+(PA-CMD). The goal is to compare these spectra and understand the
+differences between the methods.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The PI simulations of this exercise are run at 109 K, but using 32
+beads. Reaching convergence with respect to the number of beads for this
+quantity requires many more beads at this temperature. These settings
+are only sufficient for the pedagogical purposes of this exercise. Do
+not use them for production calculations.</p>
+<p>In addition, we only perform short/few simulations, which also do not
+represent statistical convergence.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>All the inputs below use <code class="docutils literal notranslate"><span class="pre">ffdirect</span></code> with a custom potential
+(<code class="docutils literal notranslate"><span class="pre">morsedia_ffdirect.py</span></code>) instead of a socket driver, so i-PI evaluates
+the Morse model internally and no separate driver process has to be
+started. The <code class="docutils literal notranslate"><span class="pre">pes_path</span></code> entry in each XML is a relative path, so it
+must match the location of <code class="docutils literal notranslate"><span class="pre">morsedia_ffdirect.py</span></code> relative to wherever
+you run <code class="docutils literal notranslate"><span class="pre">i-pi</span></code> from.</p>
+</div>
+<p>The i-PI inputs, checkpoints and pre-computed spectra used below are
+fetched from Zenodo and unpacked in the <code class="docutils literal notranslate"><span class="pre">tmp/data</span></code> folder.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">ZipFile</span><span class="p">(</span>
+    <span class="n">download_with_retry</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"https://zenodo.org/records/</span><span class="si">{</span><span class="n">ZENODO_RECORD_ID</span><span class="si">}</span><span class="s2">/files/pi-vibrations-data.zip"</span><span class="p">,</span>
+        <span class="s2">"tmp/pi-vibrations-data.zip"</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span> <span class="k">as</span> <span class="n">archive</span><span class="p">:</span>
+    <span class="n">archive</span><span class="o">.</span><span class="n">extractall</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">"tmp"</span><span class="p">)</span>
+</pre></div>
+</div>
+<section id="classical-spectrum">
+<h3>1. Classical spectrum<a class="headerlink" href="#classical-spectrum" title="Link to this heading">¶</a></h3>
+<p>We provide several i-PI checkpoints from a classical NVT simulation in the
+folder <code class="docutils literal notranslate"><span class="pre">tmp/data/class-therm</span></code>. From these checkpoints we can start several
+classical NVE simulations from which we can extract the vibrational density
+of states (VDOS) from the velocity autocorrelation function,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[I(\omega) \propto \int e^{i\omega t}\sum_i^{3N} \langle v_i(0) v_i(t) \rangle dt\]</div>
+</div>
+<p>The idea is to start many NVE trajectories from these pre-thermalized
+checkpoints, as sketched below.</p>
+<figure class="align-center" id="id15">
+<a class="reference internal image-reference" href="../../_images/nve-from-nvt.png"><img alt="../../_images/nve-from-nvt.png" src="../../_images/nve-from-nvt.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-text">A single thermostatted (NVT) trajectory is used as a reservoir of
+initial conditions: configurations are harvested along it and each one
+seeds an independent constant-energy (NVE) trajectory. The correlation
+function is then averaged over the NVE segments.</span><a class="headerlink" href="#id15" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>An input for the NVE simulations is found in <code class="docutils literal notranslate"><span class="pre">tmp/data/inputs/nve.xml</span></code>. Read
+the input carefully! Let us echo it here:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"tmp/data/inputs/nve.xml"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;simulation verbosity='low'&gt;
+  &lt;output prefix='simulation'&gt;
+    &lt;properties stride='200' filename='out'&gt;  [ step, time{picosecond}, conserved, temperature{kelvin}, kinetic_md{electronvolt}, kinetic_cv{electronvolt}, potential{electronvolt} ] &lt;/properties&gt;
+    &lt;trajectory filename='pos' stride='2' flush='200'&gt; positions{angstrom} &lt;/trajectory&gt;
+    &lt;trajectory filename='vel' stride='2' flush='200'&gt; velocities &lt;/trajectory&gt;
+    &lt;checkpoint stride='4000'/&gt;
+  &lt;/output&gt;
+  &lt;total_steps&gt;20000&lt;/total_steps&gt;
+  &lt;prng&gt;
+    &lt;seed&gt;32415&lt;/seed&gt;
+  &lt;/prng&gt;
+  &lt;ffdirect name='driver' pbc='false'&gt;
+    &lt;pes&gt; custom &lt;/pes&gt;
+    &lt;pes_path&gt; ../../morsedia_ffdirect.py &lt;/pes_path&gt;
+    &lt;parameters&gt; { D: 0.18748563, a: 1.1605, r0: 1.8323918 } &lt;/parameters&gt;
+  &lt;/ffdirect&gt;
+  &lt;system&gt;
+    &lt;initialize nbeads='1'&gt;
+      &lt;file mode='chk'&gt; therm.chk &lt;/file&gt;
+    &lt;/initialize&gt;
+    &lt;forces&gt;
+      &lt;force forcefield='driver'&gt; &lt;/force&gt;
+    &lt;/forces&gt;
+    &lt;motion mode='dynamics'&gt;
+      &lt;fixcom&gt; False &lt;/fixcom&gt;
+      &lt;dynamics mode='nve'&gt;
+        &lt;timestep units='femtosecond'&gt; 0.5 &lt;/timestep&gt;
+      &lt;/dynamics&gt;
+    &lt;/motion&gt;
+    &lt;ensemble&gt;
+      &lt;temperature units='kelvin'&gt; 109 &lt;/temperature&gt;
+    &lt;/ensemble&gt;
+  &lt;/system&gt;
+&lt;/simulation&gt;
+</pre></div>
+</div>
+<p>The block that governs the dynamics is the following:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;motion</span><span class="w"> </span><span class="na">mode=</span><span class="s">'dynamics'</span><span class="nt">&gt;</span>
+<span class="w">  </span><span class="nt">&lt;fixcom&gt;</span><span class="w"> </span>False<span class="w"> </span><span class="nt">&lt;/fixcom&gt;</span>
+<span class="w">  </span><span class="nt">&lt;dynamics</span><span class="w"> </span><span class="na">mode=</span><span class="s">'nve'</span><span class="nt">&gt;</span>
+<span class="w">    </span><span class="nt">&lt;timestep</span><span class="w"> </span><span class="na">units=</span><span class="s">'femtosecond'</span><span class="nt">&gt;</span><span class="w"> </span>0.5<span class="w"> </span><span class="nt">&lt;/timestep&gt;</span>
+<span class="w">  </span><span class="nt">&lt;/dynamics&gt;</span>
+<span class="nt">&lt;/motion&gt;</span>
+</pre></div>
+</div>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">mode='nve'</span></code> means no thermostat is attached, so the dynamics is
+purely Hamiltonian, and that <code class="docutils literal notranslate"><span class="pre">fixcom</span></code> is set to <code class="docutils literal notranslate"><span class="pre">False</span></code>, so the centre of
+mass is free to drift. We note that one could also attach a very gently
+global thermostat to the centroid to improve ergodicity without further
+consequences.</p>
+<p>You will run i-PI in a <strong>separate terminal</strong> - not directly from this
+recipe. Pre-thermalized starting points for these child NVE trajectories
+can be found in <code class="docutils literal notranslate"><span class="pre">tmp/data/class-therm/</span></code>.</p>
+<ol class="arabic">
+<li><p>Make several different folders and add different thermalized checkpoints
+to each of them.</p></li>
+<li><p>Enter one of the folders and copy the file <code class="docutils literal notranslate"><span class="pre">nve.xml</span></code> there. Make sure
+this file is referencing the right checkpoint file to initialize, and
+that <code class="docutils literal notranslate"><span class="pre">pes_path</span></code> points at <code class="docutils literal notranslate"><span class="pre">morsedia_ffdirect.py</span></code>.</p></li>
+<li><p>Start one simulation inside a given folder. Run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>i-pi<span class="w"> </span>nve.xml<span class="w"> </span><span class="p">&amp;</span>&gt;<span class="w"> </span>log.ipi
+</pre></div>
+</div>
+</li>
+</ol>
+<p>Around 10 trajectories starting from different starting points should give a
+reasonably converged result. However,
+a single one is already fine to see qualitative results.</p>
+<p>You can watch the trajectory to see how the OH molecule is moving, if you
+are using your computer. Programs like Ovito and VMD can easily do this.</p>
+<p>When the simulation is done, build the velocity autocorrelation function
+and its Fourier transform. This can be easily achieved with the
+<code class="docutils literal notranslate"><span class="pre">i-pi-getacf</span></code> script. In a folder where you have run your trajectory,
+type:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>i-pi-getacf<span class="w"> </span>-ifile<span class="w"> </span>simulation.vel_0.xyz<span class="w"> </span>-mlag<span class="w"> </span><span class="m">1024</span><span class="w"> </span>-ftpad<span class="w"> </span><span class="m">3072</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-ftwin<span class="w"> </span>cosine-hanning<span class="w"> </span>-dt<span class="w"> </span><span class="s2">"1.0 femtosecond"</span><span class="w"> </span>-oprefix<span class="w"> </span>nve
+</pre></div>
+</div>
+<p>This computes the autocorrelation of the system velocity <code class="docutils literal notranslate"><span class="pre">acf</span></code> and its
+Fourier transform <code class="docutils literal notranslate"><span class="pre">facf</span></code>, which gives you the VDOS. Note that to smoothen
+the VDOS we have used a <a class="reference external" href="https://en.wikipedia.org/wiki/Hann_function">cosine-hanning window function</a>. Read the help function of
+the script for more details, <code class="docutils literal notranslate"><span class="pre">i-pi-getacf</span> <span class="pre">-h</span></code>. Feel free to increase
+<code class="docutils literal notranslate"><span class="pre">mlag</span></code>, and play with different window functions to see how they affect
+the spectrum.</p>
+<p>If you have many trajectories, run the script above for each trajectory in
+each directory and average the VDOS.</p>
+</section>
+<section id="rpmd-spectrum">
+<h3>2. RPMD spectrum<a class="headerlink" href="#rpmd-spectrum" title="Link to this heading">¶</a></h3>
+<p>We will now start to introduce nuclear quantum effects on these spectra.
+The first method we will try out is ring-polymer molecular dynamics
+(<a class="reference internal" href="#craig2004" id="id2"><span>[Craig2004]</span></a>).</p>
+<p>We provide several i-PI checkpoints from a quantum PIMD simulation in the
+folder <code class="docutils literal notranslate"><span class="pre">tmp/data/pimd-therm</span></code>. From these checkpoints we can start several
+RPMD simulations from which we can extract the vibrational spectra. For
+linear observables such as velocity, the RPMD centroid trajectory already
+gives the correct Kubo-transformed correlation function to a good
+approximation <a class="reference internal" href="#craig2004" id="id3"><span>[Craig2004]</span></a>, which is why only the centroid velocities are
+needed here. For genuinely non-linear quantities (e.g. a dipole moment),
+centroid and bead-averaged expectation values no longer coincide, so a
+bead-averaged estimator has to be used instead.</p>
+<p>The workflow mirrors the classical case, with PIMD playing the role of the
+thermostatted reservoir and RPMD the role of the constant-energy segments:</p>
+<figure class="align-center" id="id16">
+<a class="reference internal image-reference" href="../../_images/rpmd-from-pimd.png"><img alt="../../_images/rpmd-from-pimd.png" src="../../_images/rpmd-from-pimd.png" style="width: 500px;" />
+</a>
+<figcaption>
+<p><span class="caption-text">Initial conditions for the RPMD trajectories are harvested along a
+thermostatted PIMD run. Each ring-polymer configuration then propagates
+without a thermostat, and the centroid velocity autocorrelation function
+is averaged over the resulting segments.</span><a class="headerlink" href="#id16" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>An input for the RPMD simulations is found in <code class="docutils literal notranslate"><span class="pre">tmp/data/inputs/rpmd.xml</span></code>.
+Let us echo it here as well:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"tmp/data/inputs/rpmd.xml"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;simulation verbosity='low'&gt;
+  &lt;output prefix='simulation'&gt;
+    &lt;properties stride='200' filename='out'&gt;  [ step, time{picosecond}, conserved, temperature{kelvin}, kinetic_md{electronvolt}, kinetic_cv{electronvolt}, potential{electronvolt} ] &lt;/properties&gt;
+    &lt;!-- &lt;trajectory filename='vel' stride='200' bead='1'&gt; velocities &lt;/trajectory&gt;
+    &lt;trajectory filename='pos' stride='200' bead='1'&gt; positions{angstrom} &lt;/trajectory&gt; --&gt;
+    &lt;trajectory filename='xc' stride='4' &gt; x_centroid{angstrom} &lt;/trajectory&gt;
+    &lt;trajectory filename='vc' stride='4' &gt; v_centroid &lt;/trajectory&gt;
+    &lt;!-- &lt;checkpoint stride='4000' overwrite='False'/&gt; --&gt;
+  &lt;/output&gt;
+  &lt;total_steps&gt;40000&lt;/total_steps&gt;
+  &lt;prng&gt;
+    &lt;seed&gt;3241&lt;/seed&gt;
+  &lt;/prng&gt;
+  &lt;ffdirect name='driver' pbc='False'&gt;
+    &lt;pes&gt; custom &lt;/pes&gt;
+    &lt;pes_path&gt; ../../morsedia_ffdirect.py &lt;/pes_path&gt;
+    &lt;parameters&gt; { D: 0.18748563, a: 1.1605, r0: 1.8323918 } &lt;/parameters&gt;
+  &lt;/ffdirect&gt;
+  &lt;system&gt;
+    &lt;initialize nbeads='32'&gt;
+      &lt;file mode='chk'&gt; therm_checkpoint.chk &lt;/file&gt;
+      &lt;!-- &lt;cell mode='abc'&gt; [100.0, 100.0, 100.0] &lt;/cell&gt; --&gt;
+      &lt;!-- &lt;velocities mode='thermal' units='kelvin'&gt; 109 &lt;/velocities&gt; --&gt;
+    &lt;/initialize&gt;
+    &lt;forces&gt;
+      &lt;force forcefield='driver'&gt; &lt;/force&gt;
+    &lt;/forces&gt;
+    &lt;motion mode='dynamics'&gt;
+      &lt;fixcom&gt; False  &lt;/fixcom&gt;
+      &lt;dynamics mode='nve'&gt;
+        &lt;timestep units='femtosecond'&gt; 0.25 &lt;/timestep&gt;
+        &lt;!-- &lt;thermostat mode='pile_l'&gt;
+          &lt;tau units='femtosecond'&gt; 10 &lt;/tau&gt;
+        &lt;/thermostat&gt; --&gt;
+      &lt;/dynamics&gt;
+    &lt;/motion&gt;
+    &lt;ensemble&gt;
+      &lt;temperature units='kelvin'&gt; 109 &lt;/temperature&gt;
+    &lt;/ensemble&gt;
+  &lt;/system&gt;
+&lt;/simulation&gt;
+</pre></div>
+</div>
+<p>The block that governs the dynamics is the following:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;initialize</span><span class="w"> </span><span class="na">nbeads=</span><span class="s">'32'</span><span class="nt">&gt;</span>
+<span class="w">  </span><span class="nt">&lt;file</span><span class="w"> </span><span class="na">mode=</span><span class="s">'chk'</span><span class="nt">&gt;</span><span class="w"> </span>therm_checkpoint.chk<span class="w"> </span><span class="nt">&lt;/file&gt;</span>
+<span class="nt">&lt;/initialize&gt;</span>
+...
+<span class="nt">&lt;motion</span><span class="w"> </span><span class="na">mode=</span><span class="s">'dynamics'</span><span class="nt">&gt;</span>
+<span class="w">  </span><span class="nt">&lt;fixcom&gt;</span><span class="w"> </span>False<span class="w">  </span><span class="nt">&lt;/fixcom&gt;</span>
+<span class="w">  </span><span class="nt">&lt;dynamics</span><span class="w"> </span><span class="na">mode=</span><span class="s">'nve'</span><span class="nt">&gt;</span>
+<span class="w">    </span><span class="nt">&lt;timestep</span><span class="w"> </span><span class="na">units=</span><span class="s">'femtosecond'</span><span class="nt">&gt;</span><span class="w"> </span>0.25<span class="w"> </span><span class="nt">&lt;/timestep&gt;</span>
+<span class="w">  </span><span class="nt">&lt;/dynamics&gt;</span>
+<span class="nt">&lt;/motion&gt;</span>
+</pre></div>
+</div>
+<p>Compared with the classical input, two things have changed. The system is
+now initialized with <code class="docutils literal notranslate"><span class="pre">nbeads='32'</span></code> instead of a single replica, so that
+the ring polymer can represent the quantum statistics of the nucleus. And
+the time step has been reduced from 0.5 fs to 0.25 fs. Although the dynamics
+would be stable here with a time step of 0.5 fs, the smaller one is more
+accurate. The dynamics is still <code class="docutils literal notranslate"><span class="pre">mode='nve'</span></code>, with no
+thermostat, exactly as in the classical case: the 109 K quantum statistics
+already entered through the thermostatted PIMD reservoir that generated the
+initial conditions, not through the correlation segment itself.</p>
+<ol class="arabic">
+<li><p>Make several different folders and add different thermalized checkpoints
+to each of them.</p></li>
+<li><p>Enter one of the folders and copy the file <code class="docutils literal notranslate"><span class="pre">rpmd.xml</span></code> there. Make sure
+this file is referencing the right checkpoint file to initialize.</p></li>
+<li><p>Start one simulation inside a given folder. Run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>i-pi<span class="w"> </span>rpmd.xml<span class="w"> </span><span class="p">&amp;</span>&gt;<span class="w"> </span>log.ipi
+</pre></div>
+</div>
+</li>
+</ol>
+<p>The same notes as for the classical spectrum also apply here.</p>
+<p>When the simulation is done, build the centroid velocity autocorrelation
+function and its Fourier transform, again with <code class="docutils literal notranslate"><span class="pre">i-pi-getacf</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>i-pi-getacf<span class="w"> </span>-ifile<span class="w"> </span>simulation.vc.xyz<span class="w"> </span>-mlag<span class="w"> </span><span class="m">1024</span><span class="w"> </span>-ftpad<span class="w"> </span><span class="m">3072</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-ftwin<span class="w"> </span>cosine-hanning<span class="w"> </span>-dt<span class="w"> </span><span class="s2">"1.0 femtosecond"</span><span class="w"> </span>-oprefix<span class="w"> </span>rpmd
+</pre></div>
+</div>
+</section>
+<section id="trpmd-trpmd-gle-cmd-and-te-cmd-spectra">
+<h3>3. TRPMD, TRPMD-GLE, CMD and Te-CMD spectra<a class="headerlink" href="#trpmd-trpmd-gle-cmd-and-te-cmd-spectra" title="Link to this heading">¶</a></h3>
+<p>We will now try out other approximations based on path integrals, which
+include nuclear quantum effects to some degree.</p>
+<p>We will try thermostatted RPMD (TRPMD, <a class="reference internal" href="#rossi2014" id="id4"><span>[Rossi2014]</span></a>), TRPMD with GLE
+thermostats (TRPMD-GLE, <a class="reference internal" href="#rossi2018" id="id5"><span>[Rossi2018]</span></a>), partially-adiabatic centroid
+molecular dynamics (PA-CMD, <a class="reference internal" href="#cao1994" id="id6"><span>[Cao1994]</span></a>, <a class="reference internal" href="#hone2006" id="id7"><span>[Hone2006]</span></a>) and partially-adiabatic
+elevated-temperature centroid molecular dynamics (PA-Te-CMD,
+<a class="reference internal" href="#castro2025" id="id8"><span>[Castro2025]</span></a>).</p>
+<p>The files <code class="docutils literal notranslate"><span class="pre">tmp/data/inputs/trpmd.xml</span></code>, <code class="docutils literal notranslate"><span class="pre">tmp/data/inputs/trpmd-gle.xml</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tmp/data/inputs/cmd.xml</span></code> and <code class="docutils literal notranslate"><span class="pre">tmp/data/inputs/hot-pa-cmd.xml</span></code> contain the
+corresponding inputs, and are run in exactly the same way as the RPMD input
+above. Unlike RPMD, all four attach a thermostat somewhere in the dynamics,
+and yet they still yield meaningful real-time correlation functions. The
+reason is that the thermostat is applied mainly to the internal
+ring-polymer modes rather than to the centroid, since the centroid has to
+stay close to Newtonian dynamics for the correlation function to remain
+physical.</p>
+<p><strong>TRPMD</strong> couples a global PILE thermostat to the ring-polymer normal
+modes:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;thermostat</span><span class="w"> </span><span class="na">mode=</span><span class="s">'pile_g'</span><span class="nt">&gt;</span>
+<span class="w">  </span><span class="nt">&lt;tau</span><span class="w"> </span><span class="na">units=</span><span class="s">'femtosecond'</span><span class="nt">&gt;</span><span class="w"> </span>1000<span class="w"> </span><span class="nt">&lt;/tau&gt;</span>
+<span class="w">  </span><span class="nt">&lt;pile_lambda&gt;</span><span class="w"> </span>0.5<span class="w"> </span><span class="nt">&lt;/pile_lambda&gt;</span>
+<span class="nt">&lt;/thermostat&gt;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">pile_lambda</span></code> sets the damping strength of the Langevin thermostat to damp
+each internal ring-polymer normal mode optimally, and <code class="docutils literal notranslate"><span class="pre">tau</span></code>
+sets the centroid
+coupling relaxation time for the global stochastic velocity-rescaling
+thermostat that couples to it.</p>
+<p><strong>TRPMD-GLE</strong> replaces this thermostat with a colored-noise (generalized
+Langevin equation) one, fitted to a target spectral density:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;thermostat</span><span class="w"> </span><span class="na">mode=</span><span class="s">'nm_gle'</span><span class="nt">&gt;</span>
+<span class="w">  </span><span class="nt">&lt;A</span><span class="w"> </span><span class="na">shape=</span><span class="s">'(32,2,2)'</span><span class="nt">&gt;</span>
+<span class="w">    </span>[<span class="w"> </span>...<span class="w"> </span>]
+<span class="w">  </span><span class="nt">&lt;/A&gt;</span>
+<span class="nt">&lt;/thermostat&gt;</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">A</span></code> matrix (one 2x2 drift block per ring-polymer normal mode, omitted
+above for brevity) was generated with <a class="reference external" href="http://gle4md.org/">gle4md</a> and is
+tuned to minimize spurious coupling on high-frequency stretches and bends
+<a class="reference internal" href="#rossi2018" id="id9"><span>[Rossi2018]</span></a>; see <a class="reference external" href="https://pubs.aip.org/aip/jcp/article/148/10/102301/197471">this paper</a> for the exact
+fitting procedure used here.</p>
+<p><strong>PA-CMD</strong> instead pushes the internal modes to high frequency rather than
+damping them at the physical frequency. Effectively, this creates
+the centroid potential of mean force on the fly. The code is:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;normal_modes&gt;</span>
+<span class="w">  </span><span class="nt">&lt;frequencies</span><span class="w"> </span><span class="na">style=</span><span class="s">'pa-cmd'</span><span class="w"> </span><span class="na">units=</span><span class="s">"inversecm"</span><span class="nt">&gt;</span><span class="w"> </span>[13000]<span class="w"> </span><span class="nt">&lt;/frequencies&gt;</span>
+<span class="nt">&lt;/normal_modes&gt;</span>
+...
+<span class="nt">&lt;thermostat</span><span class="w"> </span><span class="na">mode=</span><span class="s">'pile_g'</span><span class="nt">&gt;</span>
+<span class="w">  </span><span class="nt">&lt;tau</span><span class="w"> </span><span class="na">units=</span><span class="s">'femtosecond'</span><span class="nt">&gt;</span><span class="w"> </span>1000<span class="w"> </span><span class="nt">&lt;/tau&gt;</span>
+<span class="w">  </span><span class="nt">&lt;pile_lambda&gt;</span><span class="w"> </span>0.01<span class="w"> </span><span class="nt">&lt;/pile_lambda&gt;</span>
+<span class="nt">&lt;/thermostat&gt;</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">&lt;frequencies</span> <span class="pre">style='pa-cmd'&gt;</span></code> tag rescales the mass of every
+non-centroid mode so that it oscillates at 13000 cm
+<span class="math notranslate nohighlight">\(^{-1}\)</span> for the free ring-polymer,
+far above the physical stretch – this adiabatic separation
+is revisited in the “Where do the beads vibrate?” figure below.
+The underdamped thermostat acting on the internal modes of the RP
+(<code class="docutils literal notranslate"><span class="pre">pile_lambda=0.01</span></code>) is needed, so it
+does not broaden them enough to interact with the physical system – see
+the supplementary material of <a class="reference external" href="https://doi.org/10.1063/1.4901214">this paper</a>, Figs. S1 and S2, for the underlying
+argument.</p>
+<p><strong>PA-Te-CMD</strong> (<code class="docutils literal notranslate"><span class="pre">hot-pa-cmd.xml</span></code>) combines the same adiabatic separation
+with an elevated ensemble temperature, therefore also requiring fewer beads:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;initialize</span><span class="w"> </span><span class="na">nbeads=</span><span class="s">'16'</span><span class="nt">&gt;</span>
+<span class="w">  </span>...
+<span class="nt">&lt;/initialize&gt;</span>
+...
+<span class="nt">&lt;thermostat</span><span class="w"> </span><span class="na">mode=</span><span class="s">'pile_g'</span><span class="nt">&gt;</span>
+<span class="w">  </span><span class="nt">&lt;tau</span><span class="w"> </span><span class="na">units=</span><span class="s">'femtosecond'</span><span class="nt">&gt;</span><span class="w"> </span>10<span class="w"> </span><span class="nt">&lt;/tau&gt;</span>
+<span class="w">  </span><span class="nt">&lt;pile_lambda&gt;</span><span class="w"> </span>0.001<span class="w"> </span><span class="nt">&lt;/pile_lambda&gt;</span>
+<span class="w">  </span><span class="nt">&lt;pile_centroid_t</span><span class="w"> </span><span class="na">units=</span><span class="s">'kelvin'</span><span class="nt">&gt;</span><span class="w"> </span>109<span class="w"> </span><span class="nt">&lt;/pile_centroid_t&gt;</span>
+<span class="nt">&lt;/thermostat&gt;</span>
+...
+<span class="nt">&lt;ensemble&gt;</span>
+<span class="w">  </span><span class="nt">&lt;temperature</span><span class="w"> </span><span class="na">units=</span><span class="s">'kelvin'</span><span class="nt">&gt;</span><span class="w"> </span>400<span class="w"> </span><span class="nt">&lt;/temperature&gt;</span>
+<span class="nt">&lt;/ensemble&gt;</span>
+</pre></div>
+</div>
+<p>Raising the ensemble temperature to 400 K dramatically alleviates
+the curvature-driven smearing of the centroid potential of mean force.
+The <code class="docutils literal notranslate"><span class="pre">pile_centroid_t</span></code> entry decouples the centroid from this elevated
+temperature, so that it is still thermostatted at the physical 109 K.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p><code class="docutils literal notranslate"><span class="pre">pile_centroid_t</span></code> needs an
+explicit <code class="docutils literal notranslate"><span class="pre">units='kelvin'</span></code> (or any other temperature unit) attribute,
+unless you define the temperature in atomic units.</p>
+</div>
+</section>
+</section>
+<section id="how-the-reference-data-was-generated">
+<h2>How the reference data was generated<a class="headerlink" href="#how-the-reference-data-was-generated" title="Link to this heading">¶</a></h2>
+<p>If you could not run all the simulations yourself, the <code class="docutils literal notranslate"><span class="pre">tmp/data</span></code> directory
+fetched above already contains pre-computed spectra, as
+<code class="docutils literal notranslate"><span class="pre">&lt;method&gt;_facf_avg.dat</span></code>. They were produced as follows.</p>
+<p>For each method, <strong>ten independent trajectories of 10 ps each</strong> were run
+with i-PI 3.3.0, using the inputs in <code class="docutils literal notranslate"><span class="pre">tmp/data/inputs</span></code> unchanged apart from
+the random seed and the name of the checkpoint used to initialize. The
+classical trajectories start from the checkpoints in <code class="docutils literal notranslate"><span class="pre">tmp/data/class-therm</span></code>,
+and all path-integral ones from those in <code class="docutils literal notranslate"><span class="pre">tmp/data/pimd-therm</span></code>, so that each
+trajectory begins from an independent, pre-thermalized configuration.</p>
+<p>The time step and bead number differ between methods, but the total
+simulated time does not:</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30.8%" />
+<col style="width: 15.4%" />
+<col style="width: 17.9%" />
+<col style="width: 17.9%" />
+<col style="width: 17.9%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>method</p></th>
+<th class="head"><p>beads</p></th>
+<th class="head"><p>time step</p></th>
+<th class="head"><p>steps</p></th>
+<th class="head"><p>ensemble T</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Classical (NVE)</p></td>
+<td><p>1</p></td>
+<td><p>0.5 fs</p></td>
+<td><p>20000</p></td>
+<td><p>109 K</p></td>
+</tr>
+<tr class="row-odd"><td><p>RPMD, TRPMD, TRPMD-GLE</p></td>
+<td><p>32</p></td>
+<td><p>0.25 fs</p></td>
+<td><p>40000</p></td>
+<td><p>109 K</p></td>
+</tr>
+<tr class="row-even"><td><p>PA-CMD</p></td>
+<td><p>32</p></td>
+<td><p>0.025 fs</p></td>
+<td><p>400000</p></td>
+<td><p>109 K</p></td>
+</tr>
+<tr class="row-odd"><td><p>PA-Te-CMD</p></td>
+<td><p>16</p></td>
+<td><p>0.025 fs</p></td>
+<td><p>400000</p></td>
+<td><p>400 K</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Each trajectory was then post-processed with <code class="docutils literal notranslate"><span class="pre">i-pi-getacf</span></code> using the same
+settings quoted earlier in this recipe – <code class="docutils literal notranslate"><span class="pre">-mlag</span> <span class="pre">1024</span> <span class="pre">-ftpad</span> <span class="pre">3072</span> <span class="pre">-ftwin</span>
+<span class="pre">cosine-hanning</span> <span class="pre">-dt</span> <span class="pre">&quot;1.0</span> <span class="pre">femtosecond&quot;</span></code> – applied to the full-system
+velocities (<code class="docutils literal notranslate"><span class="pre">simulation.vel_0.xyz</span></code>) for the classical run, and to the
+centroid velocities (<code class="docutils literal notranslate"><span class="pre">simulation.vc.xyz</span></code>) for all path-integral runs. The
+<code class="docutils literal notranslate"><span class="pre">cmd-bead</span></code> spectrum instead uses the velocities of a single bead.</p>
+<p>Finally the ten resulting <code class="docutils literal notranslate"><span class="pre">facf</span></code> spectra were combined into the shipped
+files by taking a plain arithmetic mean of the intensities, on the common
+frequency grid. No smoothing, windowing or baseline correction was applied
+beyond the window function already used by <code class="docutils literal notranslate"><span class="pre">i-pi-getacf</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Ten trajectories of 10 ps are enough to make the qualitative
+comparisons below, but not to converge the lineshapes. All the raw
+checkpoints and the resulting spectra are hosted on Zenodo (see above)
+rather than checked into this repository.</p>
+</div>
+</section>
+<section id="plotting-and-analysing">
+<h2>Plotting and Analysing<a class="headerlink" href="#plotting-and-analysing" title="Link to this heading">¶</a></h2>
+<p>Let us now plot everything and try to make sense of what we got. You should
+try plotting your own trajectories, but just in case they are not
+available, we provide the pre-computed spectra described above.</p>
+<p><code class="docutils literal notranslate"><span class="pre">i-pi-getacf</span></code> writes frequencies in atomic units (inverse hartree), so
+they have to be converted before plotting. The conversion factor is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[1\ E_\mathrm{h} / \hbar = 219474.63\ \mathrm{cm}^{-1},\]</div>
+</div>
+<p>and it is the same factor used for the harmonic frequencies discussed at
+the end of this recipe.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">mm</span> <span class="ow">in</span> <span class="n">METHODS</span><span class="p">:</span>
+    <span class="n">velFT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="sa">f</span><span class="s2">"tmp/data/</span><span class="si">{</span><span class="n">mm</span><span class="si">}</span><span class="s2">_facf_avg.dat"</span><span class="p">,</span> <span class="n">usecols</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="c1"># Here we convert from atomic units of frequency (1/Ha) to cm-1</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+        <span class="n">velFT</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">HARTREE_TO_CM1</span><span class="p">,</span>
+        <span class="n">velFT</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">LABELS</span><span class="p">[</span><span class="n">mm</span><span class="p">],</span>
+        <span class="n">color</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="n">mm</span><span class="p">],</span>
+        <span class="n">lw</span><span class="o">=</span><span class="mf">1.6</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<span class="c1"># Exact fundamental transition, and the harmonic frequency for reference</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">3568</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"black"</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">"--"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+    <span class="mi">3568</span><span class="p">,</span>
+    <span class="mf">5.85e-5</span><span class="p">,</span>
+    <span class="sa">r</span><span class="s2">"exact $0\rightarrow1$"</span><span class="p">,</span>
+    <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span>
+    <span class="n">ha</span><span class="o">=</span><span class="s2">"right"</span><span class="p">,</span>
+    <span class="n">va</span><span class="o">=</span><span class="s2">"top"</span><span class="p">,</span>
+    <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">WE</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"gray"</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">":"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+    <span class="n">WE</span> <span class="o">+</span> <span class="mi">30</span><span class="p">,</span>
+    <span class="mf">5.85e-5</span><span class="p">,</span>
+    <span class="s2">"harmonic"</span><span class="p">,</span>
+    <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span>
+    <span class="n">ha</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span>
+    <span class="n">va</span><span class="o">=</span><span class="s2">"top"</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">"gray"</span><span class="p">,</span>
+    <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mi">1500</span><span class="p">,</span> <span class="mi">4500</span><span class="p">])</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mf">6e-5</span><span class="p">])</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">"$C_</span><span class="si">{vv}</span><span class="s2">(\omega)$"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">"$\omega\ /\ \mathrm</span><span class="si">{cm}</span><span class="s2">^{-1}$"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"OH stretch band: comparison of methods"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_morse_time_correlation_recipe_002.png" srcset="../../_images/sphx_glr_morse_time_correlation_recipe_002.png" alt="OH stretch band: comparison of methods" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;matplotlib.legend.Legend object at 0x709d4f053e00&gt;
+</pre></div>
+</div>
+<p>In the plot above, simulations are not fully converged. More statistics
+would be needed for that, and that would remove some of the noise.
+Nevertheless, the qualitative features we may want to look at are already
+clear. The lineshapes are best compared by eye against the two vertical
+markers.</p>
+<p>The classical NVE peak sits close to the harmonic frequency rather than the
+(lower) quantum fundamental.
+At 109 K the thermal amplitude of the classical trajectory is
+much smaller than the zero-point delocalization of the quantum particle, so
+the classical motion probes a more harmonic region of the well than the
+quantum ground state does.</p>
+<p>RPMD spectra can show extra, unphysical high-frequency features tied to the
+free ring-polymer normal modes – a well documented artifact <a class="reference internal" href="#rossi2014" id="id11"><span>[Rossi2014]</span></a> –
+which is why thermostatted variants were developed. TRPMD removes these
+spurious resonances by damping the internal modes; TRPMD-GLE instead
+couples a colored-noise thermostat fitted to the physical spectral density
+<a class="reference internal" href="#rossi2018" id="id12"><span>[Rossi2018]</span></a>, which makes the stretch band sharper.
+See <a class="reference external" href="https://doi.org/10.1063/1.4990536">this reference</a> for a detailed
+discussion of the trade-offs between the two.</p>
+<p>PA-CMD shows a pronounced red-shift relative to all the other methods, a
+well known artifact known as the curvature problem: the centroid potential
+of mean force is smeared out by the delocalization of the ring polymer.</p>
+<p>The elevated-temperature proposal was first discussed in <a class="reference internal" href="#musil2022" id="id13"><span>[Musil2022]</span></a>, where
+the centroid potential of mean force is evaluated at a temperature high
+enough that the curvature problem is negligible, while the system itself
+evolves at the physical temperature. It is a very practical method that
+yields accurate spectra. The partially-adiabatic version of this method
+(<a class="reference internal" href="#castro2025" id="id14"><span>[Castro2025]</span></a>), which obtains the centroid force on the fly with a
+two-temperature path-integral Langevin thermostat rather than from a
+precomputed potential of mean force, is what we are running here.</p>
+<section id="the-rotational-band">
+<h3>The rotational band<a class="headerlink" href="#the-rotational-band" title="Link to this heading">¶</a></h3>
+<p>The discussion above focused on the stretch band, but the low-frequency
+part of the spectrum is worth a look too. Let us zoom in on it. This region
+is dominated by the free rotation of the diatomic, and the methods differ
+here as well:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">mm</span> <span class="ow">in</span> <span class="n">METHODS</span><span class="p">:</span>
+    <span class="n">velFT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="sa">f</span><span class="s2">"tmp/data/</span><span class="si">{</span><span class="n">mm</span><span class="si">}</span><span class="s2">_facf_avg.dat"</span><span class="p">,</span> <span class="n">usecols</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+        <span class="n">velFT</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">HARTREE_TO_CM1</span><span class="p">,</span>
+        <span class="n">velFT</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">LABELS</span><span class="p">[</span><span class="n">mm</span><span class="p">],</span>
+        <span class="n">color</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="n">mm</span><span class="p">],</span>
+        <span class="n">lw</span><span class="o">=</span><span class="mf">1.6</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1200</span><span class="p">])</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mf">3.5e-4</span><span class="p">])</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">"$C_</span><span class="si">{vv}</span><span class="s2">(\omega)$"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">"$\omega\ /\ \mathrm</span><span class="si">{cm}</span><span class="s2">^{-1}$"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Rotational band"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_morse_time_correlation_recipe_003.png" srcset="../../_images/sphx_glr_morse_time_correlation_recipe_003.png" alt="Rotational band" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;matplotlib.legend.Legend object at 0x709d4c9dcf50&gt;
+</pre></div>
+</div>
+</section>
+<section id="where-do-the-beads-vibrate">
+<h3>Where do the beads vibrate?<a class="headerlink" href="#where-do-the-beads-vibrate" title="Link to this heading">¶</a></h3>
+<p>In the CMD run we also printed out the bead positions, so we can compare the
+VDOS obtained from the centroid with the one obtained from an individual
+bead. The whole point of the partially-adiabatic scheme is to push the
+internal ring-polymer modes to frequencies far above the physical ones, and
+the <code class="docutils literal notranslate"><span class="pre">&lt;frequencies</span> <span class="pre">style='pa-cmd'&gt;</span></code> tag in <code class="docutils literal notranslate"><span class="pre">cmd.xml</span></code> sets that target to
+13000 cm <span class="math notranslate nohighlight">\(^{-1}\)</span>. A logarithmic scale makes the effect obvious:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">cmd_c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="s2">"tmp/data/cmd_facf_avg.dat"</span><span class="p">,</span> <span class="n">usecols</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">cmd_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="s2">"tmp/data/cmd-bead_facf_avg.dat"</span><span class="p">,</span> <span class="n">usecols</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span>
+    <span class="n">cmd_c</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">HARTREE_TO_CM1</span><span class="p">,</span>
+    <span class="n">cmd_c</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+    <span class="n">color</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="s2">"cmd"</span><span class="p">],</span>
+    <span class="n">lw</span><span class="o">=</span><span class="mf">1.6</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">"centroid"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span>
+    <span class="n">cmd_b</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">HARTREE_TO_CM1</span><span class="p">,</span>
+    <span class="n">cmd_b</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">"black"</span><span class="p">,</span>
+    <span class="n">lw</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">"single bead"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">13000</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"gray"</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">":"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+    <span class="mi">12800</span><span class="p">,</span> <span class="mf">3e-5</span><span class="p">,</span> <span class="s2">"pa-cmd target</span><span class="se">\n</span><span class="s2">13000 cm$^{-1}$"</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"right"</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"gray"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">16000</span><span class="p">])</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="mf">1e-10</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">])</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">"$C_</span><span class="si">{vv}</span><span class="s2">(\omega)$"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">"$\omega\ /\ \mathrm</span><span class="si">{cm}</span><span class="s2">^{-1}$"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"PA-CMD: centroid versus bead dynamics"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../../_images/sphx_glr_morse_time_correlation_recipe_004.png" srcset="../../_images/sphx_glr_morse_time_correlation_recipe_004.png" alt="PA-CMD: centroid versus bead dynamics" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;matplotlib.legend.Legend object at 0x709d4ca56210&gt;
+</pre></div>
+</div>
+<p>The bead spectrum carries a large peak close to the requested adiabatic
+frequency, which is entirely absent from the centroid spectrum. This is the
+adiabatic separation doing its job: the internal modes are driven so fast
+that they no longer mix with the physical stretch, and the centroid is left
+to move on the (curvature-affected) centroid potential of mean force.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p><code class="docutils literal notranslate"><span class="pre">tmp/data/harmonic</span></code> contains i-PI inputs to compute the harmonic
+vibrational frequency of this potential directly, using i-PI’s
+geometry optimization and normal-mode analysis. The resulting
+<code class="docutils literal notranslate"><span class="pre">*.eigval</span></code> file stores the <strong>squared</strong> frequencies in atomic units –
+take the square root and multiply by 219474.63 to get cm
+<span class="math notranslate nohighlight">\(^{-1}\)</span>, the same conversion factor used for the spectra above –
+if you would like to compare it with the anharmonic spectra.</p>
+</div>
+</section>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading">¶</a></h2>
+<div role="list" class="citation-list">
+<div class="citation" id="huber1979" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">Huber1979</a><span class="fn-bracket">]</span></span>
+<p>K. P. Huber and G. Herzberg, Molecular Spectra and Molecular
+Structure IV. Constants of Diatomic Molecules (Van Nostrand Reinhold,
+New York, 1979), p. 508.</p>
+</div>
+<div class="citation" id="cao1994" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id6">Cao1994</a><span class="fn-bracket">]</span></span>
+<p>J. Cao and G. A. Voth, <em>The formulation of quantum statistical
+mechanics based on the Feynman path centroid density. II. Dynamical
+properties</em>, J. Chem. Phys. <strong>100</strong>, 5106 (1994).
+<a class="reference external" href="https://doi.org/10.1063/1.467176">https://doi.org/10.1063/1.467176</a></p>
+</div>
+<div class="citation" id="craig2004" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>Craig2004<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id2">1</a>,<a role="doc-backlink" href="#id3">2</a>)</span>
+<p>I. R. Craig and D. E. Manolopoulos, <em>Quantum statistics and
+classical mechanics: Real time correlation functions from ring polymer
+molecular dynamics</em>, J. Chem. Phys. <strong>121</strong>, 3368 (2004).
+<a class="reference external" href="https://doi.org/10.1063/1.1777575">https://doi.org/10.1063/1.1777575</a></p>
+</div>
+<div class="citation" id="hone2006" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id7">Hone2006</a><span class="fn-bracket">]</span></span>
+<p>T. D. Hone, P. J. Rossky and G. A. Voth, <em>A comparative study
+of imaginary time path integral based methods for quantum dynamics</em>,
+J. Chem. Phys. <strong>124</strong>, 154103 (2006). <a class="reference external" href="https://doi.org/10.1063/1.2186636">https://doi.org/10.1063/1.2186636</a></p>
+</div>
+<div class="citation" id="rossi2014" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>Rossi2014<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id4">1</a>,<a role="doc-backlink" href="#id11">2</a>)</span>
+<p>M. Rossi, M. Ceriotti and D. E. Manolopoulos, <em>How to remove
+the spurious resonances from ring polymer molecular dynamics</em>,
+J. Chem. Phys. <strong>140</strong>, 234116 (2014). <a class="reference external" href="https://doi.org/10.1063/1.4883861">https://doi.org/10.1063/1.4883861</a></p>
+</div>
+<div class="citation" id="rossi2018" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>Rossi2018<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id5">1</a>,<a role="doc-backlink" href="#id9">2</a>,<a role="doc-backlink" href="#id12">3</a>)</span>
+<p>M. Rossi, V. Kapil and M. Ceriotti, <em>Fine tuning classical and
+quantum molecular dynamics using a generalized Langevin equation</em>,
+J. Chem. Phys. <strong>148</strong>, 102301 (2018).
+<a class="reference external" href="https://doi.org/10.1063/1.4990536">https://doi.org/10.1063/1.4990536</a></p>
+</div>
+<div class="citation" id="musil2022" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id13">Musil2022</a><span class="fn-bracket">]</span></span>
+<p>F. Musil, I. Zaporozhets, F. Noe, C. Clementi and V. Kapil,
+<em>Quantum dynamics using path integral coarse-graining</em>, J. Chem. Phys.
+<strong>157</strong>, 181102 (2022). <a class="reference external" href="https://doi.org/10.1063/5.0120386">https://doi.org/10.1063/5.0120386</a></p>
+</div>
+<div class="citation" id="castro2025" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>Castro2025<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id8">1</a>,<a role="doc-backlink" href="#id14">2</a>)</span>
+<p>J. Castro, G. Trenins, V. Kapil and M. Rossi, <em>Vibrational
+spectra of materials and molecules from partially adiabatic
+elevated-temperature centroid molecular dynamics</em>, J. Chem. Phys.
+<strong>163</strong>, 204102 (2025). <a class="reference external" href="https://doi.org/10.1063/5.0300048">https://doi.org/10.1063/5.0300048</a></p>
+</div>
+</div>
+<p>sphinx_gallery_thumbnail_number = 2</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.577 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-pi-vibrations-morse-time-correlation-recipe-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/1076a4e06ab5687405efa463420cef49/morse_time_correlation_recipe.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">morse_time_correlation_recipe.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/4284fea7176e49f6f98fbcf25ea9f83c/morse_time_correlation_recipe.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">morse_time_correlation_recipe.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/b4186b31374156e85218528c7d265005/morse_time_correlation_recipe.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">recipe:</span> <span class="pre">morse_time_correlation_recipe.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../pi-metad/pi-metad.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Path integral metadynamics</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../gaas-map/gaas-map.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">PCA/PCovR Visualization of a training dataset for a potential</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; BSD 3-Clause License, Copyright (c) 2026, The atomistic cookbook team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Path integral approximations to real-time correlations</a><ul>
+<li><a class="reference internal" href="#the-potential">The potential</a></li>
+<li><a class="reference internal" href="#vibrational-spectra">Vibrational Spectra</a><ul>
+<li><a class="reference internal" href="#classical-spectrum">1. Classical spectrum</a></li>
+<li><a class="reference internal" href="#rpmd-spectrum">2. RPMD spectrum</a></li>
+<li><a class="reference internal" href="#trpmd-trpmd-gle-cmd-and-te-cmd-spectra">3. TRPMD, TRPMD-GLE, CMD and Te-CMD spectra</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#how-the-reference-data-was-generated">How the reference data was generated</a></li>
+<li><a class="reference internal" href="#plotting-and-analysing">Plotting and Analysing</a><ul>
+<li><a class="reference internal" href="#the-rotational-band">The rotational band</a></li>
+<li><a class="reference internal" href="#where-do-the-beads-vibrate">Where do the beads vibrate?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../../_static/design-tabs.js?v=fcb327ea"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script data-domain="atomistic-cookbook.org" defer="defer" src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"></script>
+    <script src="../../_static/all-examples-data.js?v=34f34957"></script>
+    <script src="../../_static/daily-recipe.js?v=b5e71911"></script>
+    </body>
+</html>
