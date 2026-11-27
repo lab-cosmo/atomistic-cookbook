@@ -32,6 +32,37 @@ If you have never used conda before, you may want to read this
    conda env create --prefix <recipe-env-path> --file environment.yml
 
 
+Some recipes depend on PyTorch, either directly or through another package.
+The PyTorch build selected by ``pip`` can differ between the Cookbook CI and
+a local installation. The CI runners are CPU-only and set
+``PIP_EXTRA_INDEX_URL`` to the PyTorch CPU wheel index. When the same
+``environment.yml`` is used locally without this setting, ``pip`` may instead
+download a CUDA-enabled PyTorch build and its CUDA runtime dependencies, even
+on a machine without a GPU.
+
+To reproduce the CPU-only dependency selection used in CI, create the
+environment with:
+
+.. code-block:: bash
+
+   PIP_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cpu \
+       conda env create --prefix <recipe-env-path> --file environment.yml
+
+Some recipe environment files already contain the following entry in their
+``pip`` dependency list:
+
+.. code-block:: yaml
+
+   - pip:
+     - --extra-index-url https://download.pytorch.org/whl/cpu
+
+Such an environment also makes the CPU wheel index available during local
+dependency resolution. To install a GPU-enabled PyTorch build, remove this
+CPU-specific entry or replace it with the package index recommended for your
+CUDA or ROCm version in the `PyTorch installation guide
+<https://pytorch.org/get-started/locally/>`_. Make this change before creating
+the conda environment.
+
 Whenever you want to run the recipe you just need to activate the environment
 and run the recipe file. 
 
